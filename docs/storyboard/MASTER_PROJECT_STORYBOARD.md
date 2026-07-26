@@ -13,7 +13,7 @@
 | 9   | Authentication and onboarding | started  |
 | 10  | Core review engine            | started  |
 | 11  | Cards, images, and audio      | started  |
-| 12  | Personal vocabulary           | planned  |
+| 12  | Personal vocabulary           | started  |
 | 13  | Gamification                  | planned  |
 | 14  | Progress analytics            | planned  |
 | 15  | Offline sync                  | planned  |

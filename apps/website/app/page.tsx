@@ -13,7 +13,7 @@ import { ProgressScreen } from './components/ProgressScreen';
 
 type Grade = 'forgot' | 'hard' | 'remembered' | 'mastered';
 
-const savedWords = [
+const initialSavedWords = [
   { german: 'das Haus', persian: 'خانه', progress: 72 },
   { german: 'die Zeit', persian: 'زمان', progress: 48 },
   { german: 'lernen', persian: 'یاد گرفتن', progress: 31 },
@@ -58,6 +58,10 @@ export default function Home() {
   const [onboarded, setOnboarded] = useState(false);
   const [learningGoal, setLearningGoal] = useState<'life' | 'career' | 'travel'>('life');
   const [wordQuery, setWordQuery] = useState('');
+  const [savedWords, setSavedWords] = useState(initialSavedWords);
+  const [addingWord, setAddingWord] = useState(false);
+  const [newGerman, setNewGerman] = useState('');
+  const [newPersian, setNewPersian] = useState('');
   const [screen, setScreen] = useState<'today' | 'card' | 'complete' | 'progress' | 'words'>(
     'today',
   );
@@ -82,6 +86,16 @@ export default function Home() {
     }
 
     setScreen('complete');
+  };
+  const addPersonalWord = () => {
+    if (!newGerman.trim() || !newPersian.trim()) return;
+    setSavedWords((words) => [
+      { german: newGerman.trim(), persian: newPersian.trim(), progress: 0 },
+      ...words,
+    ]);
+    setNewGerman('');
+    setNewPersian('');
+    setAddingWord(false);
   };
 
   if (!authenticated) {
@@ -115,6 +129,38 @@ export default function Home() {
         </header>
         <section className="words-list" aria-labelledby="words-title">
           <h1 id="words-title">واژه‌های من</h1>
+          <button
+            className="add-word-button"
+            type="button"
+            onClick={() => setAddingWord((open) => !open)}
+          >
+            {addingWord ? 'بستن' : 'افزودن واژه'}
+          </button>
+          {addingWord ? (
+            <form
+              className="add-word-form"
+              onSubmit={(event) => {
+                event.preventDefault();
+                addPersonalWord();
+              }}
+            >
+              <label>
+                <span>واژهٔ آلمانی</span>
+                <input
+                  value={newGerman}
+                  onChange={(event) => setNewGerman(event.target.value)}
+                  dir="ltr"
+                />
+              </label>
+              <label>
+                <span>معنی فارسی</span>
+                <input value={newPersian} onChange={(event) => setNewPersian(event.target.value)} />
+              </label>
+              <button className="primary-button" type="submit">
+                ذخیره در واژه‌های من
+              </button>
+            </form>
+          ) : null}
           <label className="word-search">
             <span className="sr-only">جست‌وجوی واژه</span>
             <input

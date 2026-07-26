@@ -378,6 +378,49 @@ button {
   margin-bottom: 27px;
   font-size: clamp(39px, 10vw, 48px);
 }
+.add-word-button {
+  margin: -14px 0 24px;
+  border: 0;
+  background: transparent;
+  color: var(--primary);
+  cursor: pointer;
+  font-size: 17px;
+  font-weight: 700;
+}
+.add-word-form {
+  display: grid;
+  gap: 13px;
+  margin-bottom: 25px;
+  padding: 20px;
+  border: 1px solid #e8e5f4;
+  border-radius: 23px;
+  background: var(--surface);
+  box-shadow: 0 12px 28px #34426f09;
+}
+.add-word-form label {
+  display: grid;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 700;
+}
+.add-word-form input {
+  width: 100%;
+  border: 1px solid #e5e3ec;
+  border-radius: 14px;
+  outline: none;
+  padding: 13px;
+  color: var(--ink);
+  font: 400 16px/1.5 var(--persian-font);
+}
+.add-word-form input:focus {
+  border-color: #aeb9ff;
+  box-shadow: 0 0 0 4px #4d6bfe12;
+}
+.add-word-form .primary-button {
+  margin-top: 4px;
+  padding: 15px;
+  font-size: 17px;
+}
 .word-search {
   position: relative;
   display: block;
