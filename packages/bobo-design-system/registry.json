@@ -1,5 +1,11 @@
 {
   "canonicalVersion": null,
-  "status": "awaiting-approved-artwork",
-  "expressions": ["welcome", "encourage", "celebrate", "recovery", "focus"]
+  "status": "awaiting-owner-approved-artwork",
+  "expressions": ["welcome", "encourage", "celebrate", "recovery", "focus"],
+  "usageRules": {
+    "canShameLearner": false,
+    "canBlockStudy": false,
+    "requiresReducedMotionFallback": true,
+    "requiresOwnerApprovalForCanonicalAppearance": true
+  }
 }
