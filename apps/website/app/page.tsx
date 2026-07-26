@@ -280,11 +280,7 @@ export default function Home() {
         <p className="session-remaining">{remainingCount} کارت برای تمرین امروز مانده است.</p>
         <section className="study-card">
           {!flipped ? (
-            <button
-              className="card-face"
-              onClick={() => setFlipped(true)}
-              aria-label="برگرداندن کارت"
-            >
+            <div className="card-face">
               {currentItem.article ? <span className="article">{currentItem.article}</span> : null}
               <h1 lang="de" dir="ltr">
                 {currentItem.german}
@@ -304,8 +300,10 @@ export default function Home() {
                 </div>
               )}
               <p className="hint">{currentItem.hint}</p>
-              <span className="flip-hint">برای دیدن معنی، کارت را برگردان</span>
-            </button>
+              <button className="flip-hint" onClick={() => setFlipped(true)}>
+                برای دیدن معنی، کارت را برگردان
+              </button>
+            </div>
           ) : (
             <div className="card-face card-back">
               <button className="flip-again" onClick={() => setFlipped(false)}>
