@@ -3,6 +3,12 @@ export type LearningState =
   'new' | 'learning' | 'review' | 'relearning' | 'mastered' | 'suspended' | 'archived';
 
 export { createRecoveryPlan, type RecoveryCandidate, type RecoveryPlan } from './recovery.js';
+export {
+  createDailySessionPlan,
+  type DailySessionInput,
+  type DailySessionPlan,
+  type NewCardCandidate,
+} from './session.js';
 
 export interface CardSchedule {
   state: LearningState;
