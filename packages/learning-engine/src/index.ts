@@ -2,6 +2,8 @@ export type ReviewGrade = 'forgot' | 'hard' | 'remembered' | 'mastered';
 export type LearningState =
   'new' | 'learning' | 'review' | 'relearning' | 'mastered' | 'suspended' | 'archived';
 
+export { createRecoveryPlan, type RecoveryCandidate, type RecoveryPlan } from './recovery.js';
+
 export interface CardSchedule {
   state: LearningState;
   stabilityDays: number;
