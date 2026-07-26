@@ -1034,6 +1034,11 @@ p {
   line-height: 1.8;
   margin-bottom: 32px;
 }
+.completion .sync-status {
+  margin: 16px 0 0;
+  color: #5d6079;
+  font-size: 13px;
+}
 @media (max-width: 420px) {
   .app-shell {
     padding: 22px 16px 36px;

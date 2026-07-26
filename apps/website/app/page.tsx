@@ -2,7 +2,8 @@
 
 import Image from 'next/image';
 import type { CSSProperties } from 'react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { loadSyncQueue, saveSyncQueue, type PendingSyncEvent } from '@learnbox/learning-engine';
 
 import { LearnerNav } from './components/LearnerNav';
 import { AuthGate } from './components/AuthGate';
@@ -12,6 +13,14 @@ import { OnboardingGoal } from './components/OnboardingGoal';
 import { ProgressScreen } from './components/ProgressScreen';
 
 type Grade = 'forgot' | 'hard' | 'remembered' | 'mastered';
+
+type QueuedReview = {
+  cardId: string;
+  grade: Grade;
+  reviewedAt: string;
+};
+
+const reviewSyncStorageKey = 'learnbox:review-sync:v1:local-prototype';
 
 const initialSavedWords = [
   { german: 'das Haus', persian: 'خانه', progress: 72 },
@@ -70,6 +79,15 @@ export default function Home() {
   const [sessionIndex, setSessionIndex] = useState(0);
   const [reviewedToday, setReviewedToday] = useState(0);
   const [streakDays, setStreakDays] = useState(3);
+  const [pendingReviewCount, setPendingReviewCount] = useState(0);
+
+  useEffect(() => {
+    if (!authenticated || typeof window === 'undefined') return;
+    setPendingReviewCount(
+      loadSyncQueue<QueuedReview>(window.localStorage, reviewSyncStorageKey).length,
+    );
+  }, [authenticated]);
+
   const begin = () => {
     setScreen('card');
     setFlipped(false);
@@ -77,6 +95,27 @@ export default function Home() {
     setSessionIndex(0);
   };
   const recordGrade = (nextGrade: Grade) => {
+    if (typeof window !== 'undefined') {
+      const queue = loadSyncQueue<QueuedReview>(window.localStorage, reviewSyncStorageKey);
+      const clientEventId =
+        window.crypto?.randomUUID?.() ??
+        `review-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      const nextQueue: PendingSyncEvent<QueuedReview>[] = [
+        ...queue,
+        {
+          clientEventId,
+          payload: {
+            cardId: studyItems[sessionIndex].german,
+            grade: nextGrade,
+            reviewedAt: new Date().toISOString(),
+          },
+          attempts: 0,
+          nextAttemptAt: new Date(),
+        },
+      ];
+      saveSyncQueue(window.localStorage, reviewSyncStorageKey, nextQueue);
+      setPendingReviewCount(nextQueue.length);
+    }
     setGrade(nextGrade);
     setReviewedToday((count) => count + 1);
 
@@ -211,6 +250,11 @@ export default function Home() {
           <button className="primary-button" onClick={() => setScreen('today')}>
             بازگشت به امروز
           </button>
+          {pendingReviewCount ? (
+            <p className="sync-status" role="status">
+              {pendingReviewCount} پاسخ برای همگام‌سازی امن نگه‌داری شد.
+            </p>
+          ) : null}
         </section>
       </main>
     );
