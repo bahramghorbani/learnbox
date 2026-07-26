@@ -1,8 +1,8 @@
 # Status
 
-- **Current stage:** 1 of 30 — Product foundation
-- **Completed:** local private repository, monorepo foundation, architecture records, initial shells, database draft, quality gates
-- **Next:** stage 2 — source-backed market and user understanding, followed by the learning-model refinement
+- **Current stage:** 2 of 30 — Market and user understanding
+- **Completed:** product foundation; source-backed market/user hypotheses and a privacy-conscious ten-person validation plan
+- **Next:** validate the hypotheses through interviews, then refine the learning model in stage 3
 - **Blockers:** Flutter SDK is not present on the current machine; CI will validate mobile after SDK availability
-- **Owner action:** none
+- **Owner action:** none until participant recruitment is ready; then owner approval is required before contacting people on their behalf
 - **Last updated:** 2026-07-26
