@@ -1,0 +1,12 @@
+{
+  "enabled": false,
+  "maximumParticipants": 20,
+  "invitationMode": "allowlist",
+  "telemetry": "minimal",
+  "services": {
+    "billing": false,
+    "notifications": false,
+    "realSms": false
+  },
+  "requiredApprovals": ["participant-list", "invitation-channel", "consent-wording"]
+}
