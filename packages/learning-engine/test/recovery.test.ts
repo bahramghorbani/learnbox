@@ -43,4 +43,16 @@ describe('createRecoveryPlan', () => {
     const cards = Array.from({ length: 20 }, (_, index) => candidate({ cardId: `card-${index}` }));
     expect(createRecoveryPlan(cards, 5, now).cardIds).toHaveLength(12);
   });
+
+  it('keeps each recovery card unique when candidates are duplicated', () => {
+    const plan = createRecoveryPlan(
+      [
+        candidate({ cardId: 'repeat' }),
+        candidate({ cardId: 'repeat', dueAt: new Date('2026-07-20T12:00:00Z') }),
+      ],
+      5,
+      now,
+    );
+    expect(plan.cardIds).toEqual(['repeat']);
+  });
 });

@@ -37,12 +37,23 @@ export function createRecoveryPlan(
   durationMinutes: RecoveryPlan['durationMinutes'],
   now: Date,
 ): RecoveryPlan {
-  const dueCandidates = candidates
-    .filter(
-      (candidate) =>
-        candidate.dueAt <= now && candidate.state !== 'suspended' && candidate.state !== 'archived',
-    )
-    .sort((a, b) => riskScore(b, now) - riskScore(a, now) || a.cardId.localeCompare(b.cardId));
+  const uniqueCandidates = new Map<string, RecoveryCandidate>();
+  for (const candidate of candidates) {
+    if (
+      candidate.dueAt > now ||
+      candidate.state === 'suspended' ||
+      candidate.state === 'archived'
+    ) {
+      continue;
+    }
+    const existing = uniqueCandidates.get(candidate.cardId);
+    if (!existing || candidate.dueAt < existing.dueAt)
+      uniqueCandidates.set(candidate.cardId, candidate);
+  }
+
+  const dueCandidates = [...uniqueCandidates.values()].sort(
+    (a, b) => riskScore(b, now) - riskScore(a, now) || a.cardId.localeCompare(b.cardId),
+  );
 
   return {
     durationMinutes,

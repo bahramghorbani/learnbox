@@ -48,4 +48,21 @@ describe('createDailySessionPlan', () => {
     );
     expect(plan.reviewCardIds).toEqual([]);
   });
+
+  it('does not repeat review work or introduce an already-due card as new', () => {
+    const plan = createDailySessionPlan(
+      input({
+        dueCards: [dueCard('review-1'), { ...dueCard('review-1'), dueAt: new Date('2026-07-24') }],
+        newCards: [
+          { cardId: 'review-1', importance: 100 },
+          { cardId: 'new-high', importance: 3 },
+          { cardId: 'new-high', importance: 2 },
+          { cardId: 'new-low', importance: 1 },
+        ],
+      }),
+    );
+
+    expect(plan.reviewCardIds).toEqual(['review-1']);
+    expect(plan.newCardIds).toEqual(['new-high', 'new-low']);
+  });
 });
