@@ -1,7 +1,35 @@
 {
   "canonicalVersion": "1.0.0",
   "status": "canonical-owner-approved",
+  "canonicalReference": "docs/design/concepts/bobo-expression-review-v2.png",
   "expressions": ["welcome", "encourage", "celebrate", "recovery", "focus"],
+  "assets": {
+    "welcome": {
+      "assetId": "bobo-welcome-v1",
+      "path": "/images/bobo/welcome-v1.png",
+      "canonicalVersion": "1.0.0"
+    },
+    "encourage": {
+      "assetId": "bobo-encourage-v1",
+      "path": "/images/bobo/encourage-v1.png",
+      "canonicalVersion": "1.0.0"
+    },
+    "celebrate": {
+      "assetId": "bobo-celebrate-v1",
+      "path": "/images/bobo/celebrate-v1.png",
+      "canonicalVersion": "1.0.0"
+    },
+    "recovery": {
+      "assetId": "bobo-recovery-v1",
+      "path": "/images/bobo/recovery-v1.png",
+      "canonicalVersion": "1.0.0"
+    },
+    "focus": {
+      "assetId": "bobo-focus-v1",
+      "path": "/images/bobo/focus-v1.png",
+      "canonicalVersion": "1.0.0"
+    }
+  },
   "usageRules": {
     "canShameLearner": false,
     "canBlockStudy": false,
