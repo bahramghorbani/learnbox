@@ -1,0 +1,113 @@
+'use client';
+
+import { FormEvent, useState } from 'react';
+
+interface AuthGateProps {
+  onAuthenticated: () => void;
+}
+
+export function AuthGate({ onAuthenticated }: AuthGateProps) {
+  const [stage, setStage] = useState<'phone' | 'code'>('phone');
+  const [phone, setPhone] = useState('');
+  const [code, setCode] = useState('');
+  const [error, setError] = useState('');
+
+  const submitPhone = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const digits = phone.replace(/\D/g, '');
+
+    if (digits.length < 10) {
+      setError('شمارهٔ موبایل را کامل وارد کن.');
+      return;
+    }
+
+    setError('');
+    setStage('code');
+  };
+
+  const submitCode = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (code.replace(/\D/g, '').length < 5) {
+      setError('کد ۵ رقمی را کامل وارد کن.');
+      return;
+    }
+
+    onAuthenticated();
+  };
+
+  return (
+    <main className="app-shell auth-shell" data-testid="learnbox-auth">
+      <header className="auth-brand">
+        <span className="brand">LearnBox</span>
+      </header>
+      {stage === 'phone' ? (
+        <section className="auth-content" aria-labelledby="auth-title">
+          <h1 id="auth-title">به LearnBox خوش آمدی</h1>
+          <p>برای ادامه، شمارهٔ موبایل خودت را وارد کن.</p>
+          <form className="auth-form" onSubmit={submitPhone} noValidate>
+            <label htmlFor="mobile-number">شمارهٔ موبایل</label>
+            <div className="phone-input-row">
+              <span dir="ltr">+98</span>
+              <input
+                id="mobile-number"
+                inputMode="numeric"
+                autoComplete="tel"
+                value={phone}
+                onChange={(event) => {
+                  setPhone(event.target.value);
+                  setError('');
+                }}
+                placeholder="۹۱۲ ۱۲۳ ۴۵۶۷"
+                aria-describedby="auth-error"
+              />
+            </div>
+            {error ? (
+              <p className="auth-error" id="auth-error" role="alert">
+                {error}
+              </p>
+            ) : null}
+            <button className="primary-button" type="submit">
+              ارسال کد ورود
+            </button>
+          </form>
+          <p className="auth-note">
+            با ادامه، با شرایط استفاده و سیاست حریم خصوصی LearnBox موافقت می‌کنی.
+          </p>
+        </section>
+      ) : (
+        <section className="auth-content" aria-labelledby="code-title">
+          <button className="text-button auth-back" type="button" onClick={() => setStage('phone')}>
+            تغییر شماره
+          </button>
+          <h1 id="code-title">کد ورود را وارد کن</h1>
+          <p>کد ۵ رقمی را برای شمارهٔ {phone} وارد کن.</p>
+          <form className="auth-form" onSubmit={submitCode} noValidate>
+            <label htmlFor="login-code">کد ورود</label>
+            <input
+              className="auth-code"
+              id="login-code"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              value={code}
+              onChange={(event) => {
+                setCode(event.target.value);
+                setError('');
+              }}
+              placeholder="— — — — —"
+              aria-describedby="auth-error"
+            />
+            {error ? (
+              <p className="auth-error" id="auth-error" role="alert">
+                {error}
+              </p>
+            ) : null}
+            <button className="primary-button" type="submit">
+              ورود به LearnBox
+            </button>
+          </form>
+        </section>
+      )}
+    </main>
+  );
+}

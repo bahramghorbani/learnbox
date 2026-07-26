@@ -10,7 +10,7 @@
 | 6   | UI design direction           | complete |
 | 7   | Clickable prototype           | started  |
 | 8   | Technical foundation          | complete |
-| 9   | Authentication and onboarding | planned  |
+| 9   | Authentication and onboarding | started  |
 | 10  | Core review engine            | started  |
 | 11  | Cards, images, and audio      | planned  |
 | 12  | Personal vocabulary           | planned  |

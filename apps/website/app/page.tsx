@@ -5,6 +5,7 @@ import type { CSSProperties } from 'react';
 import { useState } from 'react';
 
 import { LearnerNav } from './components/LearnerNav';
+import { AuthGate } from './components/AuthGate';
 import { Bobo } from './components/Bobo';
 import { OnboardingGoal } from './components/OnboardingGoal';
 import { ProgressScreen } from './components/ProgressScreen';
@@ -52,6 +53,7 @@ const grades: Array<{ id: Grade; label: string; detail: string }> = [
 ];
 
 export default function Home() {
+  const [authenticated, setAuthenticated] = useState(false);
   const [onboarded, setOnboarded] = useState(false);
   const [learningGoal, setLearningGoal] = useState<'life' | 'career' | 'travel'>('life');
   const [wordQuery, setWordQuery] = useState('');
@@ -80,6 +82,10 @@ export default function Home() {
 
     setScreen('complete');
   };
+
+  if (!authenticated) {
+    return <AuthGate onAuthenticated={() => setAuthenticated(true)} />;
+  }
 
   if (!onboarded) {
     return (
