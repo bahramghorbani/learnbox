@@ -3,11 +3,19 @@ import { LearnerNav } from './LearnerNav';
 interface ProgressScreenProps {
   onStartReview: () => void;
   onNavigate: (destination: 'today' | 'words' | 'progress') => void;
+  reviewedToday: number;
+  streakDays: number;
 }
 
 const weekDays = ['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج'];
 
-export function ProgressScreen({ onStartReview, onNavigate }: ProgressScreenProps) {
+export function ProgressScreen({
+  onStartReview,
+  onNavigate,
+  reviewedToday,
+  streakDays,
+}: ProgressScreenProps) {
+  const weeklyReviews = 42 + reviewedToday;
   return (
     <main className="app-shell progress-shell" data-testid="learnbox-progress">
       <header className="progress-brand">
@@ -15,12 +23,16 @@ export function ProgressScreen({ onStartReview, onNavigate }: ProgressScreenProp
       </header>
       <section className="progress-intro" aria-labelledby="progress-title">
         <h1 id="progress-title">پیشرفت تو</h1>
-        <p>این هفته، آرام و پیوسته جلو رفتی.</p>
+        <p>
+          {reviewedToday
+            ? `امروز ${reviewedToday} کارت را ثبت کردی.`
+            : 'این هفته، آرام و پیوسته جلو رفتی.'}
+        </p>
       </section>
       <section className="weekly-chart" aria-labelledby="weekly-chart-title">
         <div className="chart-heading">
           <h2 id="weekly-chart-title">مرورهای این هفته</h2>
-          <span>۴۲ کارت مرور شد</span>
+          <span>{weeklyReviews} کارت مرور شد</span>
         </div>
         <div className="chart-visual" aria-hidden="true">
           <svg viewBox="0 0 336 184" preserveAspectRatio="none">
@@ -86,6 +98,13 @@ export function ProgressScreen({ onStartReview, onNavigate }: ProgressScreenProp
           <p>شب‌ها، حدود ساعت ۸</p>
         </div>
         <span className="insight-ripple" aria-hidden="true" />
+      </section>
+      <section className="streak-insight" aria-label="زنجیرهٔ یادگیری">
+        <span aria-hidden="true">✦</span>
+        <div>
+          <h2>{streakDays} روز همراه LearnBox</h2>
+          <p>هر روزی که برگردی، زنجیره ادامه دارد.</p>
+        </div>
       </section>
       <button className="primary-button progress-cta" type="button" onClick={onStartReview}>
         ادامهٔ مرور

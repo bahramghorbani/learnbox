@@ -15,7 +15,7 @@
 | 11  | Cards, images, and audio      | started  |
 | 12  | Personal vocabulary           | started  |
 | 13  | Gamification                  | started  |
-| 14  | Progress analytics            | planned  |
+| 14  | Progress analytics            | started  |
 | 15  | Offline sync                  | planned  |
 | 16  | AI content pipeline           | planned  |
 | 17  | Admin panel                   | planned  |

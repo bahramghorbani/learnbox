@@ -292,6 +292,38 @@ button {
   background: var(--surface);
   box-shadow: 0 12px 28px #34426f0a;
 }
+.streak-insight {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin: -5px 0 27px;
+  padding: 19px 21px;
+  border: 1px solid #f1eff9;
+  border-radius: 23px;
+  background: #fffaf3;
+}
+.streak-insight > span {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 50%;
+  background: #fff0df;
+  color: #e87c23;
+  font-size: 22px;
+}
+.streak-insight h2,
+.streak-insight p {
+  margin: 0;
+}
+.streak-insight h2 {
+  font-size: 17px;
+}
+.streak-insight p {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 13px;
+}
 .time-insight p {
   margin: 8px 0 0;
   color: var(--muted);

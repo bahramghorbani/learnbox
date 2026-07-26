@@ -116,7 +116,12 @@ export default function Home() {
 
   if (screen === 'progress') {
     return (
-      <ProgressScreen onStartReview={begin} onNavigate={(destination) => setScreen(destination)} />
+      <ProgressScreen
+        onStartReview={begin}
+        onNavigate={(destination) => setScreen(destination)}
+        reviewedToday={reviewedToday}
+        streakDays={streakDays}
+      />
     );
   }
 
