@@ -10,7 +10,7 @@
 | Progress screen | [`progress-screen-concept.png`](./concepts/progress-screen-concept.png)     | مقصد تعاملی پیشرفت با روند هفتگی، بینش و اقدام بعدی |
 | Onboarding      | [`onboarding-goal-concept.png`](./concepts/onboarding-goal-concept.png)     | تعیین هدف اولیه و ورود بی‌فشار به برنامه            |
 | Words           | [`words-screen-concept.png`](./concepts/words-screen-concept.png)           | جست‌وجو و مرور واژه‌های ذخیره‌شده                   |
-| Bobo review     | [`bobo-expression-review-v1.png`](./concepts/bobo-expression-review-v1.png) | برگهٔ بررسی پنج حالت پیشنهادی؛ هنوز غیررسمی         |
+| Bobo            | [`bobo-expression-review-v2.png`](./concepts/bobo-expression-review-v2.png) | مرجع رسمی نسخهٔ 1.0.0؛ شخصیت سفید و پشمالو          |
 
 ## قفل طراحی
 

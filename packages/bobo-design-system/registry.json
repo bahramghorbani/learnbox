@@ -1,6 +1,6 @@
 {
-  "canonicalVersion": null,
-  "status": "awaiting-owner-approved-artwork",
+  "canonicalVersion": "1.0.0",
+  "status": "canonical-owner-approved",
   "expressions": ["welcome", "encourage", "celebrate", "recovery", "focus"],
   "usageRules": {
     "canShameLearner": false,
