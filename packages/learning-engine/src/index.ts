@@ -11,11 +11,26 @@ export interface CardSchedule {
 }
 
 const factors: Record<ReviewGrade, number> = {
-  forgot: 0.3,
+  forgot: 0.35,
   hard: 0.8,
   remembered: 1.8,
   mastered: 3,
 };
+
+const MINUTE_IN_MS = 60_000;
+const DAY_IN_MS = 86_400_000;
+const minimumStabilityDays = 10 / (24 * 60);
+
+function stateAfterReview(
+  state: LearningState,
+  grade: ReviewGrade,
+  stabilityDays: number,
+): LearningState {
+  if (grade === 'forgot') return 'relearning';
+  if (state === 'new') return 'learning';
+  if (grade === 'mastered' && stabilityDays >= 21) return 'mastered';
+  return 'review';
+}
 
 /** Deterministic, conservative scheduling seam; replaceable without changing clients. */
 export function scheduleReview(
@@ -24,18 +39,14 @@ export function scheduleReview(
   now: Date,
 ): CardSchedule {
   const isLapse = grade === 'forgot';
-  const stabilityDays = Math.max(1 / 24, schedule.stabilityDays * factors[grade]);
-  const state: LearningState = isLapse
-    ? 'relearning'
-    : grade === 'mastered'
-      ? 'mastered'
-      : 'review';
+  const stabilityDays = Math.max(minimumStabilityDays, schedule.stabilityDays * factors[grade]);
+  const intervalMs = Math.max(MINUTE_IN_MS, stabilityDays * DAY_IN_MS);
   return {
     ...schedule,
-    state,
+    state: stateAfterReview(schedule.state, grade, stabilityDays),
     stabilityDays,
     difficulty: Math.min(10, Math.max(1, schedule.difficulty + (isLapse ? 0.5 : -0.1))),
     lapses: schedule.lapses + Number(isLapse),
-    dueAt: new Date(now.getTime() + stabilityDays * 86_400_000),
+    dueAt: new Date(now.getTime() + intervalMs),
   };
 }
