@@ -9,6 +9,13 @@ export {
   type DailySessionPlan,
   type NewCardCandidate,
 } from './session.js';
+export {
+  recordReviewEvent,
+  type PersistedReviewEvent,
+  type ReviewEventInput,
+  type ReviewEventStore,
+  type ReviewEventWriteResult,
+} from './review-event.js';
 
 export interface CardSchedule {
   state: LearningState;
