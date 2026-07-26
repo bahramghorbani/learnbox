@@ -24,7 +24,7 @@
 | 20  | PWA and website               | started  |
 | 21  | Security and compliance       | started  |
 | 22  | Automated testing             | started  |
-| 23  | Closed alpha                  | planned  |
+| 23  | Closed alpha                  | started  |
 | 24  | Beta and load testing         | planned  |
 | 25  | Cafe Bazaar submission        | planned  |
 | 26  | Public v1.0                   | planned  |
