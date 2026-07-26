@@ -7,4 +7,5 @@ export default [
   js.configs.recommended,
   ...tseslint.configs.recommended,
   { files: ['**/*.{js,mjs,ts}'], languageOptions: { globals: globals.node } },
+  { files: ['**/*.d.ts'], rules: { '@typescript-eslint/triple-slash-reference': 'off' } },
 ];
