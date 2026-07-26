@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { evaluateAiSuggestion, validateWordCard, type WordCardDraft } from '../src/index.js';
+import {
+  evaluateAiSuggestion,
+  transitionContentReview,
+  validateWordCard,
+  type WordCardDraft,
+} from '../src/index.js';
 
 const validCard: WordCardDraft = {
   id: 'synthetic-haus-001',
@@ -74,5 +79,16 @@ describe('validateWordCard', () => {
     expect(decision.nextStatus).toBe('needs_review');
     expect(decision.issues.map((issue) => issue.field)).toContain('persianMeanings');
     expect(decision.requiresHumanReview).toBe(true);
+  });
+
+  it('keeps review approval separate from publication', () => {
+    expect(transitionContentReview('auto_validated', 'approve')).toEqual({
+      nextStatus: 'approved',
+      action: 'approve',
+      requiresPublisher: true,
+    });
+    expect(() => transitionContentReview('published', 'approve')).toThrow(
+      'Only review-queue content can receive a review decision.',
+    );
   });
 });

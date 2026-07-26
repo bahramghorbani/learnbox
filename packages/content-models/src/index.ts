@@ -48,6 +48,14 @@ export interface AiContentReviewDecision {
   requiresHumanReview: true;
 }
 
+export type ContentReviewAction = 'approve' | 'return_for_revision';
+
+export interface ContentReviewTransition {
+  nextStatus: 'approved' | 'needs_review';
+  action: ContentReviewAction;
+  requiresPublisher: boolean;
+}
+
 export function validateWordCard(card: WordCardDraft): ContentValidationIssue[] {
   const issues: ContentValidationIssue[] = [];
   if (!card.id.trim()) issues.push({ field: 'id', message: 'شناسهٔ کارت الزامی است.' });
@@ -114,4 +122,17 @@ export function evaluateAiSuggestion(
     issues,
     requiresHumanReview: true,
   };
+}
+
+/** A reviewer can approve editorial readiness, but only a separate publisher may release it. */
+export function transitionContentReview(
+  currentStatus: ContentStatus,
+  action: ContentReviewAction,
+): ContentReviewTransition {
+  if (currentStatus !== 'auto_validated' && currentStatus !== 'needs_review') {
+    throw new Error('Only review-queue content can receive a review decision.');
+  }
+  return action === 'approve'
+    ? { nextStatus: 'approved', action, requiresPublisher: true }
+    : { nextStatus: 'needs_review', action, requiresPublisher: false };
 }
