@@ -1,3 +1,15 @@
 # User flows
 
-Onboarding is short and skippable at each educational moment. Review starts from one prominent action, flip has a reduced-motion alternative, grades are clear, and recovery offers 5/10/15-minute sessions.
+## جلسهٔ امروز
+
+Today → انتخاب زمان 5/10/15 دقیقه → برنامهٔ جلسه → کارت → flip → درجهٔ پاسخ → ذخیرهٔ محلی رویداد → پایان کوتاه و گام بعد.
+
+## بازگشت پس از وقفه
+
+Today با backlog زیاد → Recovery Mode → انتخاب زمان → فقط کارت‌های مهم و سررسید → بدون کارت تازه → پیام تشویقی → پایان.
+
+## واژهٔ شخصی آفلاین
+
+واژه‌های من → افزودن واژهٔ آلمانی و معنی اختیاری → ذخیرهٔ محلی → نمایش وضعیت همگام‌سازی → ارسال idempotent هنگام اتصال.
+
+Onboarding کوتاه و آموزش‌محور است. flip جایگزین reduced-motion دارد، درجه‌ها روشن‌اند و هیچ مرحله‌ای کاربر را بابت وقفه سرزنش نمی‌کند.
