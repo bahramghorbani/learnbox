@@ -6,6 +6,7 @@ import { useState } from 'react';
 
 import { LearnerNav } from './components/LearnerNav';
 import { AuthGate } from './components/AuthGate';
+import { PronunciationButton } from './components/PronunciationButton';
 import { Bobo } from './components/Bobo';
 import { OnboardingGoal } from './components/OnboardingGoal';
 import { ProgressScreen } from './components/ProgressScreen';
@@ -191,9 +192,7 @@ export default function Home() {
               <h1 lang="de" dir="ltr">
                 {currentItem.german}
               </h1>
-              <span className="audio-mark" aria-hidden="true">
-                ◖))
-              </span>
+              <PronunciationButton text={currentItem.german} />
               {sessionIndex === 0 ? (
                 <Image
                   src="/images/haus-card.png"

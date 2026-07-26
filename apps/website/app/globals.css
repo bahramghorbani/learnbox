@@ -815,11 +815,27 @@ p {
   font-size: 20px;
   direction: ltr;
 }
-.audio-mark {
-  display: block;
+.audio-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 11px 0 17px;
+  border: 0;
+  border-radius: 12px;
+  background: #f0eeff;
   color: var(--primary);
-  font-weight: 800;
-  margin: 10px 0 17px;
+  cursor: pointer;
+  padding: 9px 12px;
+  font-size: 14px;
+  font-weight: 700;
+}
+.audio-button svg {
+  width: 20px;
+  height: 20px;
+}
+.audio-button:hover,
+.audio-button-playing {
+  background: #e2deff;
 }
 .card-face img {
   width: 100%;

@@ -12,7 +12,7 @@
 | 8   | Technical foundation          | complete |
 | 9   | Authentication and onboarding | started  |
 | 10  | Core review engine            | started  |
-| 11  | Cards, images, and audio      | planned  |
+| 11  | Cards, images, and audio      | started  |
 | 12  | Personal vocabulary           | planned  |
 | 13  | Gamification                  | planned  |
 | 14  | Progress analytics            | planned  |
