@@ -7,6 +7,7 @@
   --apricot: #ffb36b;
   --lavender: #f3ecff;
   --border: #e7e3ff;
+  --persian-font: IRANSans, 'IRANSansWeb', Tahoma, Arial, sans-serif;
 }
 * {
   box-sizing: border-box;
@@ -15,7 +16,7 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--ink);
-  font-family: Vazirmatn, Tahoma, Arial, sans-serif;
+  font-family: var(--persian-font);
 }
 button {
   font: inherit;
@@ -146,7 +147,7 @@ button {
   border-radius: 50%;
   color: white;
   font-size: 22px;
-  font-weight: 800;
+  font-weight: 700;
 }
 .goal-option-selected .goal-radio {
   border-color: var(--primary);
@@ -195,7 +196,7 @@ button {
   color: var(--primary);
   cursor: pointer;
   font-size: 18px;
-  font-weight: 800;
+  font-weight: 700;
 }
 .mascot {
   display: grid;
@@ -214,7 +215,7 @@ button {
 .eyeline {
   color: #6678d8;
   font-size: 15px;
-  font-weight: 800;
+  font-weight: 700;
   margin: 0 0 10px;
 }
 h1,
@@ -272,7 +273,7 @@ p {
   padding: 20px;
   background: var(--primary);
   color: #fff;
-  font-weight: 800;
+  font-weight: 700;
   font-size: 20px;
   cursor: pointer;
   box-shadow: 0 12px 24px #4d6bfe35;
@@ -415,7 +416,7 @@ p {
   direction: ltr;
 }
 .card-back h1 {
-  font-family: Vazirmatn, Tahoma, sans-serif;
+  font-family: var(--persian-font);
   direction: rtl;
 }
 .article {
@@ -471,7 +472,7 @@ p {
 }
 .instruction {
   margin: 23px 0 12px;
-  font-weight: 800;
+  font-weight: 700;
 }
 .grade-grid {
   display: grid;
@@ -484,7 +485,7 @@ p {
   padding: 16px 8px;
   cursor: pointer;
   color: var(--ink);
-  font-weight: 800;
+  font-weight: 700;
   background: #fff;
 }
 .grade-forgot {

@@ -75,7 +75,7 @@ export function OnboardingGoal({ selectedGoal, onSelectGoal, onContinue }: Onboa
           ادامه
         </button>
         <button className="skip-button" type="button" onClick={onContinue}>
-          فعلاً بعداً
+          عبور از این مرحله
         </button>
       </div>
     </main>
