@@ -12,6 +12,7 @@ The current implementation is deterministic and conservative rather than a claim
 - a new card remains in `learning` after its first answer; only long-term stability can enter `mastered`;
 - difficulty remains between 1 and 10;
 - a daily session never repeats a card or presents a due card again as new;
+- persisted `card_schedules` is the current projection; append-only review events remain the authority for replay and reconciliation;
 - the client records immutable, idempotent review events; the server is the reconciliation authority.
 
 Before any algorithm replacement, replay synthetic histories against both engines, inspect interval/backlog changes, feature-flag the rollout and retain rollback to the old policy.
