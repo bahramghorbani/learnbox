@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#6b4bd8" />
+    <title>فعلاً آفلاینی | LearnBox</title>
+    <style>
+      @font-face {
+        font-family: 'IRANSansX LearnBox';
+        src: url('/fonts/IRANSansX-Regular.woff2') format('woff2');
+        font-display: swap;
+        font-weight: 400;
+      }
+      @font-face {
+        font-family: 'IRANSansX LearnBox';
+        src: url('/fonts/IRANSansX-Bold.woff2') format('woff2');
+        font-display: swap;
+        font-weight: 700;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        display: grid;
+        min-height: 100vh;
+        min-height: 100dvh;
+        margin: 0;
+        place-items: center;
+        overflow: hidden;
+        padding: 28px 22px;
+        background:
+          radial-gradient(circle at 8% 8%, #e8dcff 0 3px, transparent 4px),
+          radial-gradient(circle at 91% 14%, #ffd9b5 0 4px, transparent 5px),
+          linear-gradient(155deg, #fdf9ff 0%, #fffaf4 49%, #f6f1ff 100%);
+        color: #25213b;
+        font-family: 'IRANSansX LearnBox', Tahoma, Arial, sans-serif;
+        text-align: center;
+      }
+      main {
+        width: min(100%, 440px);
+      }
+      .illustration {
+        position: relative;
+        display: grid;
+        height: clamp(214px, 43vw, 280px);
+        margin: 0 auto 4px;
+        place-items: end center;
+      }
+      .illustration::before,
+      .illustration::after,
+      .spark {
+        position: absolute;
+        border-radius: 50%;
+        content: '';
+      }
+      .illustration::before {
+        top: 30%;
+        right: 18%;
+        width: 12px;
+        height: 12px;
+        background: #ffb36b;
+      }
+      .illustration::after {
+        top: 16%;
+        left: 23%;
+        width: 9px;
+        height: 9px;
+        background: #8c77ef;
+      }
+      .spark {
+        bottom: 19%;
+        left: 14%;
+        width: 6px;
+        height: 6px;
+        background: #92c7b4;
+      }
+      img {
+        position: relative;
+        z-index: 1;
+        width: clamp(142px, 42vw, 190px);
+        max-height: 100%;
+        object-fit: contain;
+        object-position: bottom;
+      }
+      .kicker {
+        margin: 10px 0 14px;
+        color: #6855bf;
+        font-size: 15px;
+        font-weight: 700;
+      }
+      h1 {
+        max-width: 10ch;
+        margin: 0 auto 16px;
+        font-size: clamp(33px, 9vw, 46px);
+        line-height: 1.38;
+      }
+      .message {
+        max-width: 26ch;
+        margin: 0 auto;
+        color: #4f566b;
+        font-size: 17px;
+        line-height: 2;
+      }
+      .reassurance {
+        margin: 22px auto 25px;
+        color: #67617b;
+        font-size: 14px;
+        line-height: 1.9;
+      }
+      .retry {
+        display: inline-grid;
+        width: min(100%, 308px);
+        min-height: 58px;
+        place-items: center;
+        border-radius: 18px;
+        background: #4d6bfe;
+        box-shadow: 0 12px 22px #4d6bfe35;
+        color: #fff;
+        font-size: 17px;
+        font-weight: 700;
+        text-decoration: none;
+      }
+      .retry:focus-visible {
+        outline: 3px solid #25213b;
+        outline-offset: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="illustration">
+        <span class="spark"></span>
+        <img src="/images/bobo/recovery-v1.png" alt="بوبو برای ادامه‌دادن همراه تو است" />
+      </div>
+      <p class="kicker">LearnBox کنار تو می‌ماند</p>
+      <h1>فعلاً به اینترنت وصل نیستی</h1>
+      <p class="message">اشکالی ندارد؛ وقتی دوباره آنلاین شدی، از همین‌جا ادامه می‌دهیم.</p>
+      <p class="reassurance">پاسخ‌های قبلی‌ات با خیال راحت روی دستگاهت می‌مانند.</p>
+      <a class="retry" href="/">دوباره تلاش می‌کنم</a>
+    </main>
+  </body>
+</html>

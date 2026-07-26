@@ -4,13 +4,15 @@ import { readFile } from 'node:fs/promises';
 const root = new URL('../', import.meta.url);
 const read = (path) => readFile(new URL(path, root), 'utf8');
 
-const [websiteConfig, adminConfig, serviceWorker, manifest, apiBootstrap] = await Promise.all([
-  read('apps/website/next.config.mjs'),
-  read('apps/admin/next.config.mjs'),
-  read('apps/website/public/sw.js'),
-  read('apps/website/app/manifest.ts'),
-  read('apps/api/src/main.ts'),
-]);
+const [websiteConfig, adminConfig, serviceWorker, offlineFallback, manifest, apiBootstrap] =
+  await Promise.all([
+    read('apps/website/next.config.mjs'),
+    read('apps/admin/next.config.mjs'),
+    read('apps/website/public/sw.js'),
+    read('apps/website/public/offline.html'),
+    read('apps/website/app/manifest.ts'),
+    read('apps/api/src/main.ts'),
+  ]);
 
 for (const [name, config] of [
   ['website', websiteConfig],
@@ -29,10 +31,15 @@ for (const [name, config] of [
   }
 }
 
-assert.ok(serviceWorker.includes("const OFFLINE_URL = '/offline'"));
-assert.ok(serviceWorker.includes("event.request.mode !== 'navigate'"));
+assert.ok(serviceWorker.includes("const OFFLINE_URL = '/offline.html'"));
+assert.ok(serviceWorker.includes("'/images/bobo/recovery-v1.png'"));
+assert.ok(serviceWorker.includes("'/fonts/IRANSansX-Regular.woff2'"));
+assert.ok(serviceWorker.includes("event.request.method !== 'GET'"));
+assert.ok(serviceWorker.includes('caches.match(event.request)'));
 assert.ok(!serviceWorker.includes('localStorage'), 'service worker must not cache learner state');
 assert.ok(!serviceWorker.includes('Authorization'), 'service worker must not cache credentials');
+assert.ok(offlineFallback.includes('/images/bobo/recovery-v1.png'));
+assert.ok(offlineFallback.includes('IRANSansX LearnBox'));
 assert.ok(manifest.includes("display: 'standalone'"));
 assert.ok(manifest.includes("start_url: '/'"));
 assert.ok(apiBootstrap.includes("response.setHeader('X-Content-Type-Options', 'nosniff')"));
