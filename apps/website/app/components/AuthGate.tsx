@@ -6,6 +6,12 @@ interface AuthGateProps {
   onAuthenticated: () => void;
 }
 
+function normalizeDigits(value: string) {
+  return value
+    .replace(/[۰-۹]/g, (digit) => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(digit)))
+    .replace(/[٠-٩]/g, (digit) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(digit)));
+}
+
 export function AuthGate({ onAuthenticated }: AuthGateProps) {
   const [stage, setStage] = useState<'phone' | 'code'>('phone');
   const [phone, setPhone] = useState('');
@@ -14,7 +20,7 @@ export function AuthGate({ onAuthenticated }: AuthGateProps) {
 
   const submitPhone = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const digits = phone.replace(/\D/g, '');
+    const digits = normalizeDigits(phone).replace(/\D/g, '');
 
     if (digits.length < 10) {
       setError('شمارهٔ موبایل را کامل وارد کن.');
@@ -28,7 +34,7 @@ export function AuthGate({ onAuthenticated }: AuthGateProps) {
   const submitCode = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (code.replace(/\D/g, '').length < 5) {
+    if (normalizeDigits(code).replace(/\D/g, '').length < 5) {
       setError('کد ۵ رقمی را کامل وارد کن.');
       return;
     }
