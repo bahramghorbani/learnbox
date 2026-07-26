@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "start": "next start",
     "typecheck": "pnpm --filter @learnbox/learning-engine build && tsc --noEmit"
   },
   "dependencies": {

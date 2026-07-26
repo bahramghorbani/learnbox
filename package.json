@@ -17,7 +17,8 @@
     "test": "pnpm -r --if-present test",
     "verify:security": "node scripts/validate-web-security.mjs",
     "verify:alpha": "node scripts/validate-closed-alpha.mjs",
-    "dev": "pnpm --filter @learnbox/website dev"
+    "dev": "pnpm --filter @learnbox/website dev",
+    "preview:web": "pnpm --filter @learnbox/website exec next start --hostname 127.0.0.1 --port 3010"
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",
