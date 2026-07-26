@@ -16,6 +16,12 @@ export {
   type ReviewEventStore,
   type ReviewEventWriteResult,
 } from './review-event.js';
+export {
+  acknowledgeSyncEvents,
+  queueForRetry,
+  retryAfter,
+  type PendingSyncEvent,
+} from './offline-sync.js';
 
 export interface CardSchedule {
   state: LearningState;

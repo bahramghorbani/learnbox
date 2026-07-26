@@ -16,7 +16,7 @@
 | 12  | Personal vocabulary           | started  |
 | 13  | Gamification                  | started  |
 | 14  | Progress analytics            | started  |
-| 15  | Offline sync                  | planned  |
+| 15  | Offline sync                  | started  |
 | 16  | AI content pipeline           | planned  |
 | 17  | Admin panel                   | planned  |
 | 18  | Notifications                 | planned  |
