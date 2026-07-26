@@ -12,3 +12,4 @@ coverage/
 build/
 android/.gradle/
 ios/Pods/
+.vercel
