@@ -25,3 +25,7 @@
 تصاویر مفهومی از یک شکل عمومیِ تشویقی استفاده می‌کنند. تا ثبت دارایی رسمی Bobo، هیچ‌کدام به‌عنوان Bobo نهایی یا asset محصول منتشر نمی‌شوند. شمارها در تصاویر نیز صرفاً نمونهٔ طراحی‌اند و نباید ادعای دادهٔ واقعی تلقی شوند.
 
 در مفهوم Onboarding، نشان کتابِ تولیدشده فقط برای هدایت ترکیب‌بندی است؛ تا زمان ثبت نشان رسمی، پیاده‌سازی محصول از نام نوشتاری LearnBox و الگوی خنثیِ موج حافظه استفاده می‌کند.
+
+# Admin content review
+
+The approved implementation reference for the first admin content-review surface is [`admin-content-review-concept-v1.png`](concepts/admin-content-review-concept-v1.png). It uses a true-white RTL workspace, right navigation, a central card editor and a separate review inspector. Actual publishing remains unavailable until secure authentication and role enforcement are connected.

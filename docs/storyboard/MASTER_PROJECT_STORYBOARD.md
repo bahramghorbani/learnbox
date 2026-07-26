@@ -18,7 +18,7 @@
 | 14  | Progress analytics            | started  |
 | 15  | Offline sync                  | started  |
 | 16  | AI content pipeline           | started  |
-| 17  | Admin panel                   | planned  |
+| 17  | Admin panel                   | started  |
 | 18  | Notifications                 | planned  |
 | 19  | Billing and products          | planned  |
 | 20  | PWA and website               | planned  |
