@@ -1,3 +1,19 @@
+@font-face {
+  font-family: 'IRANSansX LearnBox';
+  src: url('/fonts/IRANSansX-Regular.woff2') format('woff2');
+  font-display: swap;
+  font-style: normal;
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: 'IRANSansX LearnBox';
+  src: url('/fonts/IRANSansX-Bold.woff2') format('woff2');
+  font-display: swap;
+  font-style: normal;
+  font-weight: 700;
+}
+
 :root {
   --bg: #fffaf4;
   --surface: #fff;
@@ -7,7 +23,7 @@
   --apricot: #ffb36b;
   --lavender: #f3ecff;
   --border: #e7e3ff;
-  --persian-font: IRANSans, 'IRANSansWeb', Tahoma, Arial, sans-serif;
+  --persian-font: 'IRANSansX LearnBox', Tahoma, Arial, sans-serif;
 }
 * {
   box-sizing: border-box;
