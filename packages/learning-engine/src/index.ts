@@ -22,6 +22,7 @@ export {
   retryAfter,
   type PendingSyncEvent,
 } from './offline-sync.js';
+export { loadSyncQueue, saveSyncQueue, type SyncQueueStorage } from './offline-sync-storage.js';
 
 export interface CardSchedule {
   state: LearningState;
