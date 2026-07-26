@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { validateWordCard, type WordCardDraft } from '../src/index.js';
+import { evaluateAiSuggestion, validateWordCard, type WordCardDraft } from '../src/index.js';
 
 const validCard: WordCardDraft = {
   id: 'synthetic-haus-001',
   version: 1,
-  status: 'in_review',
+  status: 'needs_review',
   lemma: 'Haus',
   article: 'das',
   partOfSpeech: 'noun',
@@ -45,5 +45,34 @@ describe('validateWordCard', () => {
       media: [{ ...validCard.media[0], url: 'http://insecure.example.test/haus.webp' }],
     });
     expect(issues.map((issue) => issue.field)).toEqual(['persianMeanings', 'media']);
+  });
+
+  it('routes AI suggestions through validation and human review', () => {
+    const decision = evaluateAiSuggestion(
+      { ...validCard, status: 'ai_generated', source: { provider: 'ai_suggestion' } },
+      0.92,
+    );
+
+    expect(decision).toMatchObject({
+      nextStatus: 'auto_validated',
+      issues: [],
+      requiresHumanReview: true,
+    });
+  });
+
+  it('escalates low-confidence or invalid AI suggestions without publishing them', () => {
+    const decision = evaluateAiSuggestion(
+      {
+        ...validCard,
+        status: 'ai_generated',
+        source: { provider: 'ai_suggestion' },
+        persianMeanings: [],
+      },
+      0.4,
+    );
+
+    expect(decision.nextStatus).toBe('needs_review');
+    expect(decision.issues.map((issue) => issue.field)).toContain('persianMeanings');
+    expect(decision.requiresHumanReview).toBe(true);
   });
 });

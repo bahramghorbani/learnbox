@@ -17,7 +17,7 @@
 | 13  | Gamification                  | started  |
 | 14  | Progress analytics            | started  |
 | 15  | Offline sync                  | started  |
-| 16  | AI content pipeline           | planned  |
+| 16  | AI content pipeline           | started  |
 | 17  | Admin panel                   | planned  |
 | 18  | Notifications                 | planned  |
 | 19  | Billing and products          | planned  |

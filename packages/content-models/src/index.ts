@@ -1,5 +1,12 @@
 export type CefrLevel = 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
-export type ContentStatus = 'draft' | 'in_review' | 'approved' | 'published' | 'archived';
+export type ContentStatus =
+  | 'draft'
+  | 'ai_generated'
+  | 'auto_validated'
+  | 'needs_review'
+  | 'approved'
+  | 'published'
+  | 'deprecated';
 export type PartOfSpeech = 'noun' | 'verb' | 'adjective' | 'adverb' | 'phrase' | 'other';
 
 export interface VersionedMediaAsset {
@@ -32,6 +39,13 @@ export interface WordCardDraft {
 export interface ContentValidationIssue {
   field: string;
   message: string;
+}
+
+export interface AiContentReviewDecision {
+  nextStatus: 'auto_validated' | 'needs_review';
+  confidence: number;
+  issues: ContentValidationIssue[];
+  requiresHumanReview: true;
 }
 
 export function validateWordCard(card: WordCardDraft): ContentValidationIssue[] {
@@ -76,4 +90,28 @@ export function validateWordCard(card: WordCardDraft): ContentValidationIssue[] 
     issues.push({ field: 'source', message: 'پیشنهاد AI بدون بازبینی انسانی منتشر نمی‌شود.' });
   }
   return issues;
+}
+
+/**
+ * Deterministic gate for an AI suggestion. Passing automation never publishes a card:
+ * it only makes it eligible for an editor's explicit approval.
+ */
+export function evaluateAiSuggestion(
+  card: WordCardDraft,
+  confidence: number,
+): AiContentReviewDecision {
+  const issues = validateWordCard(card);
+  if (card.source.provider !== 'ai_suggestion') {
+    issues.push({ field: 'source', message: 'این دروازه فقط برای پیشنهادهای AI است.' });
+  }
+  if (!Number.isFinite(confidence) || confidence < 0 || confidence > 1) {
+    issues.push({ field: 'confidence', message: 'اطمینان باید عددی بین صفر و یک باشد.' });
+  }
+
+  return {
+    nextStatus: issues.length === 0 && confidence >= 0.85 ? 'auto_validated' : 'needs_review',
+    confidence,
+    issues,
+    requiresHumanReview: true,
+  };
 }
