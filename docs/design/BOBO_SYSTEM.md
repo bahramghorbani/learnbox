@@ -22,6 +22,8 @@ Bobo is LearnBox's optional study companion: warm, concise, and never a gatekeep
 
 ## Asset governance
 
-The canonical Bobo appearance was owner-approved as version `1.0.0`: a white, softly furry, round companion with short rounded ears, dark expressive eyes and gentle peach cheeks. Every shipped Bobo asset needs an `assetId` and canonical version `1.0.0`; an unversioned asset is a placeholder only.
+The canonical Bobo appearance was owner-approved as version `1.0.0`: a white, softly furry, single-piece round companion with no visible neck; two short, attached ears next to each other; dark expressive eyes and gentle peach cheeks. Every shipped Bobo asset must be derived from the approved canonical reference sheet, needs an `assetId` and canonical version `1.0.0`; an unversioned asset is a placeholder only.
+
+Do not generate, substitute, or ship a rabbit-like variant: long separated ears, a visible neck, or a separate head/body silhouette are not Bobo.
 
 Changing Bobo's canonical appearance, core expressions, voice, or physical character cues requires explicit owner approval. This preserves a coherent public identity and prevents an AI-generated or temporary visual from silently becoming the product mascot.
