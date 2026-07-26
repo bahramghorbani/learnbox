@@ -7,6 +7,7 @@ coverage/
 .env.*
 !.env.example
 *.log
+*.tsbuildinfo
 .dart_tool/
 build/
 android/.gradle/
