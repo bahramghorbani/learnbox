@@ -1,6 +1,6 @@
 /* global caches, self */
 
-const CACHE_NAME = 'learnbox-public-shell-v1';
+const CACHE_NAME = 'learnbox-public-shell-v2';
 const OFFLINE_URL = '/offline';
 
 self.addEventListener('install', (event) => {
