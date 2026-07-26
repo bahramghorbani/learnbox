@@ -1,8 +1,10 @@
-# Bobo visual review v1
+# Bobo visual review v2
 
-![برگهٔ بررسی پنج حالت پیشنهادی بوبو](./concepts/bobo-expression-review-v1.png)
+![برگهٔ بررسی پنج حالت پیشنهادی بوبو](./concepts/bobo-expression-review-v2.png)
 
 این تصویر فقط یک پیشنهاد برای بررسی است و هنوز دارایی رسمی محصول نیست.
+
+این نسخه بر اساس نمونه‌های تأییدشدهٔ مالک بازطراحی شده است: بوبوی سفید، پشمالو، گرد و گوش‌کوتاه با چشم‌های تیره و گونه‌های صورتی.
 
 ترتیب حالت‌ها از چپ به راست: `welcome`، `encourage`، `celebrate`، `recovery` و `focus`.
 
