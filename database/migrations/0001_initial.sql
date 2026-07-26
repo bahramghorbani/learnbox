@@ -20,3 +20,5 @@ CREATE TABLE review_events (
   occurred_at TIMESTAMPTZ NOT NULL,
   client_event_id UUID UNIQUE NOT NULL
 );
+
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
