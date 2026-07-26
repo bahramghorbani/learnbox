@@ -152,6 +152,12 @@ importers:
         specifier: ^3.2.4
         version: 3.2.7(@types/node@24.13.3)
 
+  services/notification-worker:
+    devDependencies:
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@24.13.3)
+
 packages:
   '@borewit/text-codec@0.2.2':
     resolution:

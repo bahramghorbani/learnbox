@@ -19,7 +19,7 @@
 | 15  | Offline sync                  | started  |
 | 16  | AI content pipeline           | started  |
 | 17  | Admin panel                   | started  |
-| 18  | Notifications                 | planned  |
+| 18  | Notifications                 | started  |
 | 19  | Billing and products          | planned  |
 | 20  | PWA and website               | planned  |
 | 21  | Security and compliance       | started  |
