@@ -69,6 +69,7 @@ export default function Home() {
   const [grade, setGrade] = useState<Grade | null>(null);
   const [sessionIndex, setSessionIndex] = useState(0);
   const [reviewedToday, setReviewedToday] = useState(0);
+  const [streakDays, setStreakDays] = useState(3);
   const begin = () => {
     setScreen('card');
     setFlipped(false);
@@ -85,6 +86,7 @@ export default function Home() {
       return;
     }
 
+    setStreakDays((days) => Math.max(days, 4));
     setScreen('complete');
   };
   const addPersonalWord = () => {
@@ -317,17 +319,17 @@ export default function Home() {
         </span>
       </button>
       <section className="progress-note">
-        <div className="progress-icon" aria-hidden="true">
-          ⌁
+        <div className="progress-icon streak-icon" aria-hidden="true">
+          ✦
         </div>
         <div>
-          <h2>پیشرفت امروز</h2>
-          <p>هر روز، یک قدم جلوتر</p>
+          <h2>زنجیرهٔ آرام تو</h2>
+          <p>هر روزی که برگردی، ادامه می‌دهیم.</p>
           <div className="progress-bar">
-            <span />
+            <span style={{ width: `${Math.min(100, streakDays * 10)}%` }} />
           </div>
         </div>
-        <span>۳ از ۱۰</span>
+        <span>{streakDays} روز</span>
       </section>
       <LearnerNav current="today" onNavigate={(destination) => setScreen(destination)} />
     </main>

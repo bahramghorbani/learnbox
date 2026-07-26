@@ -14,7 +14,7 @@
 | 10  | Core review engine            | started  |
 | 11  | Cards, images, and audio      | started  |
 | 12  | Personal vocabulary           | started  |
-| 13  | Gamification                  | planned  |
+| 13  | Gamification                  | started  |
 | 14  | Progress analytics            | planned  |
 | 15  | Offline sync                  | planned  |
 | 16  | AI content pipeline           | planned  |
