@@ -64,6 +64,7 @@ button {
   z-index: 1;
   width: clamp(142px, 42vw, 190px);
   height: 100%;
+  mix-blend-mode: multiply;
   object-position: bottom;
   animation: bobo-offline-arrive 620ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
