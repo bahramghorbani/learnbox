@@ -37,6 +37,135 @@ body {
 button {
   font: inherit;
 }
+.offline-shell {
+  display: grid;
+  min-height: 100dvh;
+  place-items: center;
+  overflow: hidden;
+  padding: 28px 22px;
+  background:
+    radial-gradient(circle at 8% 8%, #e8dcff 0 3px, transparent 4px),
+    radial-gradient(circle at 91% 14%, #ffd9b5 0 4px, transparent 5px),
+    linear-gradient(155deg, #fdf9ff 0%, #fffaf4 49%, #f6f1ff 100%);
+}
+.offline-content {
+  width: min(100%, 440px);
+  text-align: center;
+}
+.offline-illustration {
+  position: relative;
+  display: grid;
+  height: clamp(214px, 43vw, 280px);
+  margin: 0 auto 4px;
+  place-items: end center;
+}
+.bobo-offline {
+  position: relative;
+  z-index: 1;
+  width: clamp(142px, 42vw, 190px);
+  height: 100%;
+  object-position: bottom;
+  animation: bobo-offline-arrive 620ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.offline-spark {
+  position: absolute;
+  z-index: 0;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+.offline-spark-one {
+  top: 30%;
+  right: 18%;
+  background: #ffb36b;
+}
+.offline-spark-two {
+  top: 16%;
+  left: 23%;
+  width: 9px;
+  height: 9px;
+  background: #8c77ef;
+}
+.offline-spark-three {
+  bottom: 19%;
+  left: 14%;
+  width: 6px;
+  height: 6px;
+  background: #92c7b4;
+}
+.offline-kicker {
+  margin: 10px 0 14px;
+  color: #6855bf;
+  font-size: 15px;
+  font-weight: 700;
+}
+.offline-content h1 {
+  max-width: 10ch;
+  margin: 0 auto 16px;
+  color: #25213b;
+  font-size: clamp(33px, 9vw, 46px);
+  font-weight: 700;
+  line-height: 1.38;
+}
+.offline-message {
+  max-width: 26ch;
+  margin: 0 auto;
+  color: #4f566b;
+  font-size: 17px;
+  line-height: 2;
+}
+.offline-reassurance {
+  margin: 22px auto 25px;
+  color: #67617b;
+  font-size: 14px;
+  line-height: 1.9;
+}
+.offline-retry {
+  width: min(100%, 308px);
+  min-height: 58px;
+  border: 0;
+  border-radius: 18px;
+  background: #4d6bfe;
+  box-shadow: 0 12px 22px #4d6bfe35;
+  color: #fff;
+  cursor: pointer;
+  font-size: 17px;
+  font-weight: 700;
+  transition:
+    transform 180ms ease,
+    background-color 180ms ease,
+    box-shadow 180ms ease;
+}
+.offline-retry:hover {
+  background: #425fec;
+  box-shadow: 0 15px 25px #4d6bfe42;
+  transform: translateY(-2px);
+}
+.offline-retry:focus-visible {
+  outline: 3px solid #25213b;
+  outline-offset: 4px;
+}
+.offline-retry:active {
+  transform: translateY(0);
+}
+@keyframes bobo-offline-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bobo-offline {
+    animation: none;
+  }
+  .offline-retry {
+    transition: none;
+  }
+}
 .app-shell {
   width: min(100%, 520px);
   min-height: 100vh;

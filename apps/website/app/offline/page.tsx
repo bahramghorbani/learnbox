@@ -1,16 +1,25 @@
 'use client';
 
+import { Bobo } from '../components/Bobo';
+
 export default function OfflinePage() {
   return (
     <main className="offline-shell">
-      <section>
-        <span className="offline-mark" aria-hidden="true">
-          ◇
-        </span>
+      <section className="offline-content" aria-labelledby="offline-title">
+        <div className="offline-illustration" aria-hidden="true">
+          <span className="offline-spark offline-spark-one" />
+          <span className="offline-spark offline-spark-two" />
+          <span className="offline-spark offline-spark-three" />
+          <Bobo expression="recovery" className="bobo bobo-offline" priority />
+        </div>
+        <p className="offline-kicker">LearnBox کنار تو می‌ماند</p>
         <h1>فعلاً به اینترنت وصل نیستی</h1>
-        <p>پاسخ‌های ثبت‌شده روی دستگاهت امن می‌مانند. وقتی دوباره آنلاین شدی، ادامه می‌دهیم.</p>
-        <button type="button" onClick={() => window.location.reload()}>
-          تلاش دوباره
+        <p className="offline-message">
+          اشکالی ندارد؛ وقتی دوباره آنلاین شدی، از همین‌جا ادامه می‌دهیم.
+        </p>
+        <p className="offline-reassurance">پاسخ‌های قبلی‌ات با خیال راحت روی دستگاهت می‌مانند.</p>
+        <button className="offline-retry" type="button" onClick={() => window.location.reload()}>
+          دوباره تلاش می‌کنم
         </button>
       </section>
     </main>
