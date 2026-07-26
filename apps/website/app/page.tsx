@@ -3,7 +3,9 @@
 import Image from 'next/image';
 import { useState } from 'react';
 
+import { LearnerNav } from './components/LearnerNav';
 import { OnboardingGoal } from './components/OnboardingGoal';
+import { ProgressScreen } from './components/ProgressScreen';
 
 type Grade = 'forgot' | 'hard' | 'remembered' | 'mastered';
 
@@ -17,7 +19,9 @@ const grades: Array<{ id: Grade; label: string; detail: string }> = [
 export default function Home() {
   const [onboarded, setOnboarded] = useState(false);
   const [learningGoal, setLearningGoal] = useState<'life' | 'career' | 'travel'>('life');
-  const [screen, setScreen] = useState<'today' | 'card' | 'complete'>('today');
+  const [screen, setScreen] = useState<'today' | 'card' | 'complete' | 'progress' | 'words'>(
+    'today',
+  );
   const [flipped, setFlipped] = useState(false);
   const [grade, setGrade] = useState<Grade | null>(null);
   const begin = () => {
@@ -33,6 +37,30 @@ export default function Home() {
         onSelectGoal={setLearningGoal}
         onContinue={() => setOnboarded(true)}
       />
+    );
+  }
+
+  if (screen === 'progress') {
+    return (
+      <ProgressScreen onStartReview={begin} onNavigate={(destination) => setScreen(destination)} />
+    );
+  }
+
+  if (screen === 'words') {
+    return (
+      <main className="app-shell words-shell" data-testid="learnbox-words">
+        <header className="progress-brand">
+          <span className="brand">LearnBox</span>
+        </header>
+        <section className="words-empty" aria-labelledby="words-title">
+          <h1 id="words-title">واژه‌های من</h1>
+          <p>پس از چند مرور، واژه‌های مهمت اینجا کنار هم می‌آیند.</p>
+          <button className="primary-button" type="button" onClick={begin}>
+            شروع مرور
+          </button>
+        </section>
+        <LearnerNav current="words" onNavigate={(destination) => setScreen(destination)} />
+      </main>
     );
   }
 
@@ -170,6 +198,7 @@ export default function Home() {
         </div>
         <span>۳ از ۱۰</span>
       </section>
+      <LearnerNav current="today" onNavigate={(destination) => setScreen(destination)} />
     </main>
   );
 }

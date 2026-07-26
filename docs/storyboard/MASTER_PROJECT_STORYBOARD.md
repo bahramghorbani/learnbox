@@ -7,8 +7,8 @@
 | 3   | Learning model                | planned  |
 | 4   | Information architecture      | planned  |
 | 5   | Brand and Bobo system         | started  |
-| 6   | UI design direction           | planned  |
-| 7   | Clickable prototype           | planned  |
+| 6   | UI design direction           | complete |
+| 7   | Clickable prototype           | started  |
 | 8   | Technical foundation          | complete |
 | 9   | Authentication and onboarding | planned  |
 | 10  | Core review engine            | started  |

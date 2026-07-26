@@ -105,6 +105,164 @@ button {
   left: -5px;
   background: var(--primary);
 }
+.progress-shell,
+.words-shell {
+  display: flex;
+  min-height: 100dvh;
+  flex-direction: column;
+  padding-top: 42px;
+}
+.progress-brand {
+  direction: ltr;
+}
+.progress-intro {
+  padding: 74px 4px 31px;
+}
+.progress-intro h1,
+.words-empty h1 {
+  margin-bottom: 14px;
+  font-size: clamp(39px, 10vw, 48px);
+  line-height: 1.28;
+}
+.progress-intro p,
+.words-empty p {
+  color: var(--muted);
+  font-size: 17px;
+  line-height: 1.9;
+}
+.weekly-chart {
+  border: 1px solid #f1eff9;
+  border-radius: 30px;
+  background: var(--surface);
+  box-shadow: 0 16px 34px #34426f0b;
+  padding: 27px 22px 20px;
+}
+.chart-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 18px;
+}
+.chart-heading h2,
+.time-insight h2 {
+  margin: 0;
+  font-size: 21px;
+  line-height: 1.4;
+}
+.chart-heading span {
+  color: var(--muted);
+  font-size: 14px;
+  white-space: nowrap;
+}
+.chart-visual {
+  height: 192px;
+  margin: 20px -4px 6px;
+}
+.chart-visual svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.week-labels {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  color: #4d5667;
+  font-size: 14px;
+  text-align: center;
+}
+.time-insight {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 128px;
+  margin: 23px 0 28px;
+  padding: 25px 27px;
+  overflow: hidden;
+  border: 1px solid #f1eff9;
+  border-radius: 25px;
+  background: var(--surface);
+  box-shadow: 0 12px 28px #34426f0a;
+}
+.time-insight p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 17px;
+}
+.insight-ripple,
+.insight-ripple::before,
+.insight-ripple::after {
+  position: absolute;
+  display: block;
+  border: 1px solid #ffe1c1;
+  border-radius: 50%;
+  content: '';
+}
+.insight-ripple {
+  width: 67px;
+  height: 67px;
+  left: 30px;
+  background: #ffc889;
+  box-shadow: 0 0 0 17px #fff4e8;
+}
+.insight-ripple::before {
+  width: 101px;
+  height: 101px;
+  top: -18px;
+  left: -18px;
+}
+.insight-ripple::after {
+  width: 133px;
+  height: 133px;
+  top: -34px;
+  left: -34px;
+}
+.progress-cta {
+  margin-bottom: 26px;
+}
+.learner-nav {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin: auto -22px -42px;
+  padding: 20px 18px 17px;
+  border-radius: 28px 28px 0 0;
+  background: #fff;
+  box-shadow: 0 -9px 25px #34426f0a;
+}
+.learner-nav button {
+  position: relative;
+  min-height: 43px;
+  border: 0;
+  background: transparent;
+  color: #3d4656;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 700;
+}
+.learner-nav-active {
+  color: var(--primary) !important;
+}
+.learner-nav-active::after {
+  position: absolute;
+  right: 28%;
+  bottom: -6px;
+  left: 28%;
+  height: 4px;
+  border-radius: 99px;
+  background: var(--primary);
+  content: '';
+}
+.words-empty {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  padding: 34px 4px 80px;
+}
+.words-empty p {
+  margin-bottom: 31px;
+}
 .onboarding-intro {
   padding: 76px 4px 34px;
 }
@@ -562,6 +720,39 @@ p {
   }
   .onboarding-shell {
     padding-top: 25px;
+  }
+  .progress-shell,
+  .words-shell {
+    padding-top: 25px;
+  }
+  .progress-intro {
+    padding-top: 32px;
+  }
+  .weekly-chart {
+    padding: 22px 17px 18px;
+  }
+  .chart-visual {
+    height: 160px;
+  }
+  .time-insight {
+    min-height: 101px;
+    margin: 18px 0 23px;
+    padding: 20px 21px;
+  }
+  .time-insight h2 {
+    font-size: 19px;
+  }
+  .time-insight p {
+    font-size: 15px;
+  }
+  .insight-ripple {
+    left: 27px;
+    transform: scale(0.8);
+  }
+  .learner-nav {
+    margin-right: -16px;
+    margin-bottom: -36px;
+    margin-left: -16px;
   }
   .onboarding-intro {
     padding-top: 47px;
