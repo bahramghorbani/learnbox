@@ -17,6 +17,33 @@ const savedWords = [
   { german: 'lernen', persian: 'یاد گرفتن', progress: 31 },
 ];
 
+const studyItems = [
+  {
+    article: 'das',
+    german: 'das Haus',
+    persian: 'خانه',
+    hint: 'جایی که زندگی می‌کنیم.',
+    exampleGerman: 'Ich komme nach Hause.',
+    examplePersian: 'من به خانه برمی‌گردم.',
+  },
+  {
+    article: 'die',
+    german: 'die Zeit',
+    persian: 'زمان',
+    hint: 'چیزی که با آن قرارهایمان را تنظیم می‌کنیم.',
+    exampleGerman: 'Die Zeit ist wichtig.',
+    examplePersian: 'زمان مهم است.',
+  },
+  {
+    article: '',
+    german: 'lernen',
+    persian: 'یاد گرفتن',
+    hint: 'کاری که با تمرین بهتر می‌شود.',
+    exampleGerman: 'Ich lerne jeden Tag Deutsch.',
+    examplePersian: 'من هر روز آلمانی یاد می‌گیرم.',
+  },
+];
+
 const grades: Array<{ id: Grade; label: string; detail: string }> = [
   { id: 'forgot', label: 'فراموش کردم', detail: 'زودتر دوباره می‌بینیمش.' },
   { id: 'hard', label: 'سخت بود', detail: 'با فاصلهٔ کوتاه‌تری برمی‌گردد.' },
@@ -33,10 +60,25 @@ export default function Home() {
   );
   const [flipped, setFlipped] = useState(false);
   const [grade, setGrade] = useState<Grade | null>(null);
+  const [sessionIndex, setSessionIndex] = useState(0);
+  const [reviewedToday, setReviewedToday] = useState(0);
   const begin = () => {
     setScreen('card');
     setFlipped(false);
     setGrade(null);
+    setSessionIndex(0);
+  };
+  const recordGrade = (nextGrade: Grade) => {
+    setGrade(nextGrade);
+    setReviewedToday((count) => count + 1);
+
+    if (sessionIndex < studyItems.length - 1) {
+      setSessionIndex((index) => index + 1);
+      setFlipped(false);
+      return;
+    }
+
+    setScreen('complete');
   };
 
   if (!onboarded) {
@@ -115,17 +157,23 @@ export default function Home() {
   }
 
   if (screen === 'card') {
+    const currentItem = studyItems[sessionIndex];
+    const completedCount = sessionIndex;
+    const remainingCount = studyItems.length - completedCount;
     return (
       <main className="app-shell" data-testid="learnbox-app">
         <header className="session-header">
           <button className="text-button" onClick={() => setScreen('today')}>
             خروج از جلسه
           </button>
-          <span>۱ از ۱۲</span>
+          <span>
+            {sessionIndex + 1} از {studyItems.length}
+          </span>
         </header>
         <div className="session-track" aria-label="پیشرفت جلسه">
-          <span />
+          <span style={{ width: `${(completedCount / studyItems.length) * 100}%` }} />
         </div>
+        <p className="session-remaining">{remainingCount} کارت برای تمرین امروز مانده است.</p>
         <section className="study-card">
           {!flipped ? (
             <button
@@ -133,21 +181,27 @@ export default function Home() {
               onClick={() => setFlipped(true)}
               aria-label="برگرداندن کارت"
             >
-              <span className="article">das</span>
+              {currentItem.article ? <span className="article">{currentItem.article}</span> : null}
               <h1 lang="de" dir="ltr">
-                das Haus
+                {currentItem.german}
               </h1>
               <span className="audio-mark" aria-hidden="true">
                 ◖))
               </span>
-              <Image
-                src="/images/haus-card.png"
-                alt="خانه‌ای با سقف سفالی"
-                width={1280}
-                height={960}
-                priority
-              />
-              <p className="hint">جایی که زندگی می‌کنیم.</p>
+              {sessionIndex === 0 ? (
+                <Image
+                  src="/images/haus-card.png"
+                  alt="خانه‌ای با سقف سفالی"
+                  width={1280}
+                  height={960}
+                  priority
+                />
+              ) : (
+                <div className={`word-visual word-visual-${sessionIndex}`} aria-hidden="true">
+                  <span>{sessionIndex === 1 ? '◷' : '✦'}</span>
+                </div>
+              )}
+              <p className="hint">{currentItem.hint}</p>
               <span className="flip-hint">برای دیدن معنی، کارت را برگردان</span>
             </button>
           ) : (
@@ -155,10 +209,10 @@ export default function Home() {
               <button className="flip-again" onClick={() => setFlipped(false)}>
                 برگرداندن کارت
               </button>
-              <h1>خانه</h1>
+              <h1>{currentItem.persian}</h1>
               <div className="example" dir="ltr">
-                <strong>Ich komme nach Hause.</strong>
-                <span dir="rtl">من به خانه برمی‌گردم.</span>
+                <strong>{currentItem.exampleGerman}</strong>
+                <span dir="rtl">{currentItem.examplePersian}</span>
               </div>
               <p className="instruction">چقدر یادت آمد؟</p>
               <div className="grade-grid" role="group" aria-label="درجهٔ یادآوری">
@@ -166,10 +220,7 @@ export default function Home() {
                   <button
                     key={item.id}
                     className={`grade grade-${item.id}`}
-                    onClick={() => {
-                      setGrade(item.id);
-                      setScreen('complete');
-                    }}
+                    onClick={() => recordGrade(item.id)}
                   >
                     {item.label}
                   </button>
@@ -196,8 +247,8 @@ export default function Home() {
       <section className="summary" aria-label="پیشنهاد امروز">
         <div>
           <span>مرورهای امروز</span>
-          <strong>۲۴</strong>
-          <small>منتظر مرور</small>
+          <strong>{24 - reviewedToday}</strong>
+          <small>{reviewedToday ? `${reviewedToday} کارت ثبت شد` : 'منتظر مرور'}</small>
         </div>
         <div>
           <span>کلمهٔ پیشنهادی</span>
