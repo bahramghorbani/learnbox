@@ -2,6 +2,8 @@
 
 import type { ReactNode } from 'react';
 
+import { Bobo } from './Bobo';
+
 type GoalId = 'life' | 'career' | 'travel';
 
 interface OnboardingGoalProps {
@@ -36,9 +38,7 @@ export function OnboardingGoal({ selectedGoal, onSelectGoal, onContinue }: Onboa
     <main className="app-shell onboarding-shell" data-testid="learnbox-onboarding">
       <header className="onboarding-brand">
         <span className="brand">LearnBox</span>
-        <span className="brand-orbit" aria-hidden="true">
-          <i />
-        </span>
+        <Bobo expression="welcome" className="bobo bobo-onboarding" priority />
       </header>
       <section className="onboarding-intro" aria-labelledby="onboarding-title">
         <h1 id="onboarding-title">برای چه چیزی آلمانی می‌خوانی؟</h1>

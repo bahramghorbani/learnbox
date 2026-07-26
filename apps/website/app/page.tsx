@@ -5,6 +5,7 @@ import type { CSSProperties } from 'react';
 import { useState } from 'react';
 
 import { LearnerNav } from './components/LearnerNav';
+import { Bobo } from './components/Bobo';
 import { OnboardingGoal } from './components/OnboardingGoal';
 import { ProgressScreen } from './components/ProgressScreen';
 
@@ -101,9 +102,7 @@ export default function Home() {
     return (
       <main className="app-shell" data-testid="learnbox-app">
         <section className="completion" aria-live="polite">
-          <span className="mascot" aria-hidden="true">
-            ✦
-          </span>
+          <Bobo expression="celebrate" className="bobo bobo-completion" priority />
           <p className="eyeline">یک قدم آرام و پیوسته</p>
           <h1>آفرین، ثبت شد.</h1>
           <p>{response?.detail}</p>
@@ -187,9 +186,7 @@ export default function Home() {
     <main className="app-shell" data-testid="learnbox-app">
       <header className="brand-row">
         <span className="brand">LearnBox</span>
-        <span className="mascot" aria-label="همراه یادگیری">
-          ●
-        </span>
+        <Bobo expression="encourage" className="bobo bobo-header" priority />
       </header>
       <section className="today-intro">
         <p className="eyeline">امروز</p>
@@ -212,7 +209,7 @@ export default function Home() {
         شروع مرور <span aria-hidden="true">←</span>
       </button>
       <button className="recovery" onClick={begin}>
-        <span aria-hidden="true">↺</span>
+        <Bobo expression="recovery" className="bobo bobo-recovery" />
         <span>
           <strong>چند روزی از دست رفته؟</strong>از آخرین مرور ادامه بده
         </span>

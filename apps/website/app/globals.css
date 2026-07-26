@@ -72,6 +72,16 @@ button {
   align-items: center;
   justify-content: space-between;
 }
+.bobo {
+  display: block;
+  width: auto;
+  object-fit: contain;
+}
+.bobo-onboarding {
+  width: 86px;
+  height: 126px;
+  margin: -20px -8px -18px 0;
+}
 .brand-orbit {
   position: relative;
   width: 86px;
@@ -471,16 +481,10 @@ button {
   font-size: 18px;
   font-weight: 700;
 }
-.mascot {
-  display: grid;
-  place-items: center;
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  background: #ffe0be;
-  color: #e67c35;
-  font-size: 22px;
-  box-shadow: 0 8px 18px #eebf8a40;
+.bobo-header {
+  width: 64px;
+  height: 92px;
+  margin: -14px -4px -10px 0;
 }
 .today-intro {
   padding: 54px 6px 28px;
@@ -578,6 +582,12 @@ p {
 .recovery > span:first-child {
   color: var(--primary);
   font-size: 27px;
+}
+.bobo-recovery {
+  width: 52px;
+  height: 76px;
+  flex: 0 0 auto;
+  margin: -12px 0 -12px -5px;
 }
 .recovery strong,
 .recovery span span {
@@ -785,11 +795,10 @@ p {
   text-align: center;
   padding: 24px;
 }
-.completion .mascot {
-  margin: 0 auto 28px;
-  width: 82px;
-  height: 82px;
-  font-size: 34px;
+.bobo-completion {
+  width: 156px;
+  height: 218px;
+  margin: -22px auto 4px;
 }
 .completion h1 {
   font-size: 40px;
