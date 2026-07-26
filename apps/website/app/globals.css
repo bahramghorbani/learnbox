@@ -263,6 +263,105 @@ button {
 .words-empty p {
   margin-bottom: 31px;
 }
+.words-list {
+  flex: 1;
+  padding: 72px 4px 86px;
+}
+.words-list h1 {
+  margin-bottom: 27px;
+  font-size: clamp(39px, 10vw, 48px);
+}
+.word-search {
+  position: relative;
+  display: block;
+}
+.word-search input {
+  width: 100%;
+  border: 1px solid #eceaf3;
+  border-radius: 22px;
+  outline: none;
+  background: var(--surface);
+  color: var(--ink);
+  padding: 18px 56px 18px 20px;
+  font: 400 17px/1.5 var(--persian-font);
+  box-shadow: 0 10px 25px #34426f0a;
+}
+.word-search input:focus {
+  border-color: #aeb9ff;
+  box-shadow: 0 0 0 4px #4d6bfe12;
+}
+.word-search > span:last-child {
+  position: absolute;
+  top: 11px;
+  right: 18px;
+  color: #687287;
+  font:
+    32px/1 Arial,
+    sans-serif;
+}
+.words-count {
+  margin: 35px 0 18px;
+  color: var(--muted);
+  font-size: 17px;
+}
+.word-rows {
+  background: var(--surface);
+  border-radius: 25px;
+  box-shadow: 0 12px 28px #34426f09;
+}
+.word-row {
+  display: grid;
+  grid-template-columns: 1fr 1.25fr auto;
+  align-items: center;
+  width: 100%;
+  min-height: 103px;
+  border: 0;
+  border-bottom: 1px solid #eeedf4;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  padding: 18px 20px;
+  text-align: right;
+}
+.word-row:last-child {
+  border-bottom: 0;
+}
+.word-row:hover {
+  background: #fcfcff;
+}
+.word-meaning {
+  font-size: 20px;
+}
+.word-row strong {
+  font:
+    700 24px/1.3 -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+  text-align: center;
+}
+.word-ring {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: conic-gradient(var(--primary) var(--word-progress), #ebe9ff 0);
+}
+.word-ring::after {
+  position: absolute;
+  inset: 6px;
+  border-radius: inherit;
+  background: var(--surface);
+  content: '';
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
 .onboarding-intro {
   padding: 76px 4px 34px;
 }

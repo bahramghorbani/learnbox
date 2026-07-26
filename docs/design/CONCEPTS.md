@@ -9,6 +9,7 @@
 | Progress        | [`progress-concept.png`](./concepts/progress-concept.png)               | بازخورد آرام، روند هفتگی و گام بعد                  |
 | Progress screen | [`progress-screen-concept.png`](./concepts/progress-screen-concept.png) | مقصد تعاملی پیشرفت با روند هفتگی، بینش و اقدام بعدی |
 | Onboarding      | [`onboarding-goal-concept.png`](./concepts/onboarding-goal-concept.png) | تعیین هدف اولیه و ورود بی‌فشار به برنامه            |
+| Words           | [`words-screen-concept.png`](./concepts/words-screen-concept.png)       | جست‌وجو و مرور واژه‌های ذخیره‌شده                   |
 
 ## قفل طراحی
 

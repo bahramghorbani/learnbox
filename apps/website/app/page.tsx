@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import type { CSSProperties } from 'react';
 import { useState } from 'react';
 
 import { LearnerNav } from './components/LearnerNav';
@@ -8,6 +9,12 @@ import { OnboardingGoal } from './components/OnboardingGoal';
 import { ProgressScreen } from './components/ProgressScreen';
 
 type Grade = 'forgot' | 'hard' | 'remembered' | 'mastered';
+
+const savedWords = [
+  { german: 'das Haus', persian: 'خانه', progress: 72 },
+  { german: 'die Zeit', persian: 'زمان', progress: 48 },
+  { german: 'lernen', persian: 'یاد گرفتن', progress: 31 },
+];
 
 const grades: Array<{ id: Grade; label: string; detail: string }> = [
   { id: 'forgot', label: 'فراموش کردم', detail: 'زودتر دوباره می‌بینیمش.' },
@@ -19,6 +26,7 @@ const grades: Array<{ id: Grade; label: string; detail: string }> = [
 export default function Home() {
   const [onboarded, setOnboarded] = useState(false);
   const [learningGoal, setLearningGoal] = useState<'life' | 'career' | 'travel'>('life');
+  const [wordQuery, setWordQuery] = useState('');
   const [screen, setScreen] = useState<'today' | 'card' | 'complete' | 'progress' | 'words'>(
     'today',
   );
@@ -47,17 +55,41 @@ export default function Home() {
   }
 
   if (screen === 'words') {
+    const visibleWords = savedWords.filter((word) =>
+      `${word.german} ${word.persian}`.toLocaleLowerCase().includes(wordQuery.toLocaleLowerCase()),
+    );
     return (
       <main className="app-shell words-shell" data-testid="learnbox-words">
         <header className="progress-brand">
           <span className="brand">LearnBox</span>
         </header>
-        <section className="words-empty" aria-labelledby="words-title">
+        <section className="words-list" aria-labelledby="words-title">
           <h1 id="words-title">واژه‌های من</h1>
-          <p>پس از چند مرور، واژه‌های مهمت اینجا کنار هم می‌آیند.</p>
-          <button className="primary-button" type="button" onClick={begin}>
-            شروع مرور
-          </button>
+          <label className="word-search">
+            <span className="sr-only">جست‌وجوی واژه</span>
+            <input
+              value={wordQuery}
+              onChange={(event) => setWordQuery(event.target.value)}
+              placeholder="جست‌وجوی واژه"
+            />
+            <span aria-hidden="true">⌕</span>
+          </label>
+          <p className="words-count">{visibleWords.length} واژه برای مرور</p>
+          <div className="word-rows">
+            {visibleWords.map((word) => (
+              <button className="word-row" key={word.german} type="button" onClick={begin}>
+                <span className="word-meaning">{word.persian}</span>
+                <strong lang="de" dir="ltr">
+                  {word.german}
+                </strong>
+                <span
+                  className="word-ring"
+                  style={{ '--word-progress': `${word.progress}%` } as CSSProperties}
+                  aria-hidden="true"
+                />
+              </button>
+            ))}
+          </div>
         </section>
         <LearnerNav current="words" onNavigate={(destination) => setScreen(destination)} />
       </main>
