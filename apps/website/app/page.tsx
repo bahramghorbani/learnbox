@@ -3,6 +3,8 @@
 import Image from 'next/image';
 import { useState } from 'react';
 
+import { OnboardingGoal } from './components/OnboardingGoal';
+
 type Grade = 'forgot' | 'hard' | 'remembered' | 'mastered';
 
 const grades: Array<{ id: Grade; label: string; detail: string }> = [
@@ -13,6 +15,8 @@ const grades: Array<{ id: Grade; label: string; detail: string }> = [
 ];
 
 export default function Home() {
+  const [onboarded, setOnboarded] = useState(false);
+  const [learningGoal, setLearningGoal] = useState<'life' | 'career' | 'travel'>('life');
   const [screen, setScreen] = useState<'today' | 'card' | 'complete'>('today');
   const [flipped, setFlipped] = useState(false);
   const [grade, setGrade] = useState<Grade | null>(null);
@@ -21,6 +25,16 @@ export default function Home() {
     setFlipped(false);
     setGrade(null);
   };
+
+  if (!onboarded) {
+    return (
+      <OnboardingGoal
+        selectedGoal={learningGoal}
+        onSelectGoal={setLearningGoal}
+        onContinue={() => setOnboarded(true)}
+      />
+    );
+  }
 
   if (screen === 'complete') {
     const response = grades.find((item) => item.id === grade);
