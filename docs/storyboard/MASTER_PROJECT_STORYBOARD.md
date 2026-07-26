@@ -21,7 +21,7 @@
 | 17  | Admin panel                   | started  |
 | 18  | Notifications                 | started  |
 | 19  | Billing and products          | started  |
-| 20  | PWA and website               | planned  |
+| 20  | PWA and website               | started  |
 | 21  | Security and compliance       | started  |
 | 22  | Automated testing             | started  |
 | 23  | Closed alpha                  | planned  |

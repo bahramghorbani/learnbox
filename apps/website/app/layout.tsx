@@ -1,12 +1,22 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 
-export const metadata: Metadata = { title: 'LearnBox', description: 'یادگیری واژگان آلمانی' };
-export const viewport: Viewport = { width: 'device-width', initialScale: 1 };
+import { ServiceWorkerRegistration } from './components/ServiceWorkerRegistration';
+
+export const metadata: Metadata = {
+  title: 'LearnBox',
+  description: 'یادگیری واژگان آلمانی',
+  manifest: '/manifest.webmanifest',
+  appleWebApp: { capable: true, title: 'LearnBox', statusBarStyle: 'default' },
+};
+export const viewport: Viewport = { width: 'device-width', initialScale: 1, themeColor: '#6b4bd8' };
 export default function Layout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="fa" dir="rtl">
-      <body>{children}</body>
+      <body>
+        <ServiceWorkerRegistration />
+        {children}
+      </body>
     </html>
   );
 }
