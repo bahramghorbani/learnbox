@@ -12,3 +12,7 @@ The first slice is a validation task, not content publication. It must be balanc
 | Daily expressions and questions |            4 | practical scenario, not text in image |
 
 For every item: complete `LearningVocabularyItem` data, word/sentence audio, approved image, schedule creation, review grading, offline download/recovery, progress update and appropriate Bobo example. Validate in PWA and mobile, at card size and offline, with linguistic, visual, audio and UX acceptance recorded. Only then may the first ~50-item batch be proposed.
+
+The first source-referenced intake basket is stored at
+`content/packs/learnbox-start/validation/start-a1-slice-candidates.json`. Its candidates are
+explicitly pending linguistic review and are not learner-facing cards or a release.

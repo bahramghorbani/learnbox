@@ -18,6 +18,32 @@ export interface ContentBatchValidation {
   issues: ContentValidationIssue[];
 }
 
+export type StartSliceCandidateCategory =
+  'household_noun' | 'food_drink' | 'place' | 'verb' | 'adjective_emotion' | 'daily_expression';
+
+export interface SourceCandidate {
+  candidateId: string;
+  lemmaHint: string;
+  category: StartSliceCandidateCategory;
+  selectionRationale: string;
+  sourceUrl: string;
+  sourceEntryVerification: 'pending_linguistic_review' | 'verified';
+}
+
+export interface SourceCandidateValidation {
+  readyForLinguisticReview: boolean;
+  issues: ContentValidationIssue[];
+}
+
+const requiredStartSliceCategories: StartSliceCandidateCategory[] = [
+  'household_noun',
+  'food_drink',
+  'place',
+  'verb',
+  'adjective_emotion',
+  'daily_expression',
+];
+
 /** Normalization is deterministic so duplicate checks do not depend on a content provider. */
 export function normalizeGermanLemma(lemma: string): string {
   return lemma.trim().toLocaleLowerCase('de-DE').replaceAll(/\s+/g, ' ');
@@ -30,6 +56,39 @@ export function findDuplicateContentIds(items: ReadonlyArray<LearningVocabularyI
     idsByLemma.set(normalized, [...(idsByLemma.get(normalized) ?? []), item.id]);
   }
   return [...idsByLemma.values()].filter((ids) => ids.length > 1).flat();
+}
+
+/** Candidate intake deliberately contains no learner-facing definition, translation, media or publish state. */
+export function validateStartSliceCandidates(
+  candidates: ReadonlyArray<SourceCandidate>,
+  expectedItemCount = 20,
+): SourceCandidateValidation {
+  const issues: ContentValidationIssue[] = [];
+  if (candidates.length !== expectedItemCount) {
+    issues.push({ field: 'candidates', message: 'تعداد نامزدها با هدف برش اولیه برابر نیست.' });
+  }
+  const ids = new Set<string>();
+  const lemmas = new Set<string>();
+  for (const candidate of candidates) {
+    if (!candidate.candidateId.trim() || ids.has(candidate.candidateId)) {
+      issues.push({ field: 'candidateId', message: 'شناسهٔ نامزد الزامی و یکتا است.' });
+    }
+    ids.add(candidate.candidateId);
+    const normalized = normalizeGermanLemma(candidate.lemmaHint);
+    if (!normalized || lemmas.has(normalized)) {
+      issues.push({ field: 'lemmaHint', message: 'مدخلِ نامزد الزامی و بدون تکرار است.' });
+    }
+    lemmas.add(normalized);
+    if (!candidate.selectionRationale.trim() || !candidate.sourceUrl.startsWith('https://')) {
+      issues.push({ field: 'source', message: 'دلیل انتخاب و مرجع HTTPS الزامی است.' });
+    }
+  }
+  for (const category of requiredStartSliceCategories) {
+    if (!candidates.some((candidate) => candidate.category === category)) {
+      issues.push({ field: 'category', message: `گروه ضروریِ برش اولیه موجود نیست: ${category}` });
+    }
+  }
+  return { readyForLinguisticReview: issues.length === 0, issues };
 }
 
 /**

@@ -4,6 +4,7 @@ import {
   findDuplicateContentIds,
   normalizeGermanLemma,
   validateContentBatch,
+  validateStartSliceCandidates,
 } from '../src/index.js';
 
 const item = (id: string, lemma: string) => ({
@@ -69,5 +70,21 @@ describe('content factory batch validation', () => {
     });
     expect(result.readyForHumanReview).toBe(false);
     expect(result.issues.map((issue) => issue.field)).toEqual(['items', 'items.normalizedLemma']);
+  });
+
+  it('requires every Start slice candidate category before linguistic review', () => {
+    const candidates = [
+      {
+        candidateId: 'candidate-1',
+        lemmaHint: 'Haus',
+        category: 'household_noun' as const,
+        selectionRationale: 'home',
+        sourceUrl: 'https://example.test/a1',
+        sourceEntryVerification: 'pending_linguistic_review' as const,
+      },
+    ];
+    const result = validateStartSliceCandidates(candidates, 1);
+    expect(result.readyForLinguisticReview).toBe(false);
+    expect(result.issues.map((issue) => issue.field)).toContain('category');
   });
 });

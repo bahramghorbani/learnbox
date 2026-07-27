@@ -1,0 +1,152 @@
+{
+  "batchId": "learnbox-start-a1-vertical-slice-candidates-v1",
+  "status": "source_referenced_pending_linguistic_review",
+  "purpose": "Candidate intake only. This is not learner-facing card content and has no media or publish approval.",
+  "source": {
+    "name": "Goethe-Zertifikat A1: Start Deutsch 1 Wortliste",
+    "url": "https://www.goethe.de/pro/relaunch/prf/de/A1_SD1_Wortliste_02.pdf",
+    "use": "A1 scope and topic reference; each candidate still requires German and Persian editorial review."
+  },
+  "candidates": [
+    {
+      "candidateId": "start-a1-haus",
+      "lemmaHint": "Haus",
+      "category": "household_noun",
+      "selectionRationale": "Everyday home concept with clear visual hierarchy.",
+      "sourceEntryVerification": "pending_linguistic_review"
+    },
+    {
+      "candidateId": "start-a1-tisch",
+      "lemmaHint": "Tisch",
+      "category": "household_noun",
+      "selectionRationale": "Concrete household object with one clear visual concept.",
+      "sourceEntryVerification": "pending_linguistic_review"
+    },
+    {
+      "candidateId": "start-a1-tuer",
+      "lemmaHint": "Tür",
+      "category": "household_noun",
+      "selectionRationale": "Practical home and navigation object.",
+      "sourceEntryVerification": "pending_linguistic_review"
+    },
+    {
+      "candidateId": "start-a1-bett",
+      "lemmaHint": "Bett",
+      "category": "household_noun",
+      "selectionRationale": "High-value everyday household noun.",
+      "sourceEntryVerification": "pending_linguistic_review"
+    },
+    {
+      "candidateId": "start-a1-apfel",
+      "lemmaHint": "Apfel",
+      "category": "food_drink",
+      "selectionRationale": "Concrete food with unambiguous visual teaching potential.",
+      "sourceEntryVerification": "pending_linguistic_review"
+    },
+    {
+      "candidateId": "start-a1-brot",
+      "lemmaHint": "Brot",
+      "category": "food_drink",
+      "selectionRationale": "Frequent practical food vocabulary.",
+      "sourceEntryVerification": "pending_linguistic_review"
+    },
+    {
+      "candidateId": "start-a1-wasser",
+      "lemmaHint": "Wasser",
+      "category": "food_drink",
+      "selectionRationale": "Essential daily drink vocabulary.",
+      "sourceEntryVerification": "pending_linguistic_review"
+    },
+    {
+      "candidateId": "start-a1-bahnhof",
+      "lemmaHint": "Bahnhof",
+      "category": "place",
+      "selectionRationale": "Migration-relevant public place; environment should lead the image.",
+      "sourceEntryVerification": "pending_linguistic_review"
+    },
+    {
+      "candidateId": "start-a1-schule",
+      "lemmaHint": "Schule",
+      "category": "place",
+      "selectionRationale": "Core education place and clear environmental concept.",
+      "sourceEntryVerification": "pending_linguistic_review"
+    },
+    {
+      "candidateId": "start-a1-lernen",
+      "lemmaHint": "lernen",
+      "category": "verb",
+      "selectionRationale": "Core product action; Bobo may demonstrate the action.",
+      "sourceEntryVerification": "pending_linguistic_review"
+    },
+    {
+      "candidateId": "start-a1-wohnen",
+      "lemmaHint": "wohnen",
+      "category": "verb",
+      "selectionRationale": "Essential housing and introduction verb.",
+      "sourceEntryVerification": "pending_linguistic_review"
+    },
+    {
+      "candidateId": "start-a1-kaufen",
+      "lemmaHint": "kaufen",
+      "category": "verb",
+      "selectionRationale": "Essential shopping action.",
+      "sourceEntryVerification": "pending_linguistic_review"
+    },
+    {
+      "candidateId": "start-a1-warten",
+      "lemmaHint": "warten",
+      "category": "verb",
+      "selectionRationale": "Frequent public-life action with a clear visual scenario.",
+      "sourceEntryVerification": "pending_linguistic_review"
+    },
+    {
+      "candidateId": "start-a1-gluecklich",
+      "lemmaHint": "glücklich",
+      "category": "adjective_emotion",
+      "selectionRationale": "Readable positive emotion; Bobo may lead the image.",
+      "sourceEntryVerification": "pending_linguistic_review"
+    },
+    {
+      "candidateId": "start-a1-muede",
+      "lemmaHint": "müde",
+      "category": "adjective_emotion",
+      "selectionRationale": "Common daily state with a distinct visual scenario.",
+      "sourceEntryVerification": "pending_linguistic_review"
+    },
+    {
+      "candidateId": "start-a1-klein",
+      "lemmaHint": "klein",
+      "category": "adjective_emotion",
+      "selectionRationale": "Foundational descriptive adjective with contrast potential.",
+      "sourceEntryVerification": "pending_linguistic_review"
+    },
+    {
+      "candidateId": "start-a1-guten-tag",
+      "lemmaHint": "Guten Tag",
+      "category": "daily_expression",
+      "selectionRationale": "High-frequency formal greeting for real situations.",
+      "sourceEntryVerification": "pending_linguistic_review"
+    },
+    {
+      "candidateId": "start-a1-wie-geht-es-ihnen",
+      "lemmaHint": "Wie geht es Ihnen?",
+      "category": "daily_expression",
+      "selectionRationale": "Practical polite check-in expression.",
+      "sourceEntryVerification": "pending_linguistic_review"
+    },
+    {
+      "candidateId": "start-a1-danke",
+      "lemmaHint": "danke",
+      "category": "daily_expression",
+      "selectionRationale": "Essential courteous daily expression.",
+      "sourceEntryVerification": "pending_linguistic_review"
+    },
+    {
+      "candidateId": "start-a1-entschuldigung",
+      "lemmaHint": "Entschuldigung",
+      "category": "daily_expression",
+      "selectionRationale": "Essential polite repair and attention-getting expression.",
+      "sourceEntryVerification": "pending_linguistic_review"
+    }
+  ]
+}

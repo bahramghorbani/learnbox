@@ -7,3 +7,7 @@ in-app validation. Stable content IDs name all derived media and preserve rollba
 Expected directories: `vocabulary/`, `examples/`, `grammar/`, `prompts/`, `images/`, `audio/`,
 `validation/`, and `versions/`. Empty directories are intentionally not tracked until the first
 reviewed batch exists.
+
+`validation/start-a1-slice-candidates.json` is a source-referenced intake basket, not published
+content. It contains neither learner-facing translations/examples nor media and must pass German
+and Persian editorial review before individual cards are drafted.
