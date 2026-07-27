@@ -11,3 +11,7 @@ reviewed batch exists.
 `validation/start-a1-slice-candidates.json` is a source-referenced intake basket, not published
 content. It contains neither learner-facing translations/examples nor media and must pass German
 and Persian editorial review before individual cards are drafted.
+
+`vocabulary/start-a1-vertical-slice-drafts.json` contains the matching 20 structured linguistic
+drafts. They are review-queued AI-assisted material: no production media, visual/audio QA or
+publication claim is present.

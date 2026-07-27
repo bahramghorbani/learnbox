@@ -1,0 +1,584 @@
+{
+  "batchId": "learnbox-start-a1-vertical-slice-drafts-v1",
+  "status": "needs_editorial_review",
+  "purpose": "Structured linguistic drafts only. No item is published or has production media.",
+  "sourceReference": "https://www.goethe.de/pro/relaunch/prf/de/A1_SD1_Wortliste_02.pdf",
+  "items": [
+    {
+      "id": "start-a1-haus",
+      "version": 1,
+      "status": "needs_review",
+      "lemma": "Haus",
+      "normalizedLemma": "haus",
+      "article": "das",
+      "partOfSpeech": "noun",
+      "cefr": "A1",
+      "persianMeanings": ["خانه"],
+      "simpleGermanDefinition": "Ein Gebäude, in dem Menschen wohnen.",
+      "essentialInflection": "die Häuser",
+      "pronunciation": { "ipa": "haʊs", "locale": "de-DE" },
+      "examples": [{ "german": "Das Haus ist klein.", "persian": "خانه کوچک است." }],
+      "grammarNote": "اسم خنثی؛ جمع با تغییر واکه ساخته می‌شود.",
+      "topicTags": ["home", "household"],
+      "difficulty": 1,
+      "visualConcept": "A small house is the clear primary object; Bobo may stand near the door.",
+      "imagePrompt": "Soft 3D small house, house dominant, clean background, small canonical Bobo near the door, no text or watermark.",
+      "media": [],
+      "source": {
+        "provider": "ai_suggestion",
+        "reference": "Goethe A1 scope reference; editorial verification pending."
+      },
+      "provenance": {
+        "sourceType": "ai_assisted",
+        "sourceReference": "Goethe A1 scope reference; German and Persian review pending."
+      }
+    },
+    {
+      "id": "start-a1-tisch",
+      "version": 1,
+      "status": "needs_review",
+      "lemma": "Tisch",
+      "normalizedLemma": "tisch",
+      "article": "der",
+      "partOfSpeech": "noun",
+      "cefr": "A1",
+      "persianMeanings": ["میز"],
+      "simpleGermanDefinition": "Ein Möbelstück mit einer flachen Fläche.",
+      "essentialInflection": "die Tische",
+      "pronunciation": { "ipa": "tɪʃ", "locale": "de-DE" },
+      "examples": [{ "german": "Der Tisch ist groß.", "persian": "میز بزرگ است." }],
+      "grammarNote": "اسم مذکر؛ جمع با -e.",
+      "topicTags": ["home", "household"],
+      "difficulty": 1,
+      "visualConcept": "A table is the only dominant object; no Bobo needed.",
+      "imagePrompt": "Soft 3D wooden table, object dominant, simple controlled background, no text or watermark.",
+      "media": [],
+      "source": {
+        "provider": "ai_suggestion",
+        "reference": "Goethe A1 scope reference; editorial verification pending."
+      },
+      "provenance": {
+        "sourceType": "ai_assisted",
+        "sourceReference": "Goethe A1 scope reference; German and Persian review pending."
+      }
+    },
+    {
+      "id": "start-a1-tuer",
+      "version": 1,
+      "status": "needs_review",
+      "lemma": "Tür",
+      "normalizedLemma": "tür",
+      "article": "die",
+      "partOfSpeech": "noun",
+      "cefr": "A1",
+      "persianMeanings": ["در"],
+      "simpleGermanDefinition": "Man öffnet und schließt sie, um in einen Raum zu gehen.",
+      "essentialInflection": "die Türen",
+      "pronunciation": { "ipa": "tyːɐ̯", "locale": "de-DE" },
+      "examples": [{ "german": "Die Tür ist offen.", "persian": "در باز است." }],
+      "grammarNote": "اسم مؤنث؛ جمع با -en.",
+      "topicTags": ["home", "household"],
+      "difficulty": 1,
+      "visualConcept": "An open door clearly shows the concept; Bobo can be small beside it.",
+      "imagePrompt": "Soft 3D open apartment door, door dominant, small canonical Bobo beside it, no text or watermark.",
+      "media": [],
+      "source": {
+        "provider": "ai_suggestion",
+        "reference": "Goethe A1 scope reference; editorial verification pending."
+      },
+      "provenance": {
+        "sourceType": "ai_assisted",
+        "sourceReference": "Goethe A1 scope reference; German and Persian review pending."
+      }
+    },
+    {
+      "id": "start-a1-bett",
+      "version": 1,
+      "status": "needs_review",
+      "lemma": "Bett",
+      "normalizedLemma": "bett",
+      "article": "das",
+      "partOfSpeech": "noun",
+      "cefr": "A1",
+      "persianMeanings": ["تخت"],
+      "simpleGermanDefinition": "Ein Möbelstück zum Schlafen.",
+      "essentialInflection": "die Betten",
+      "pronunciation": { "ipa": "bɛt", "locale": "de-DE" },
+      "examples": [{ "german": "Das Bett ist im Zimmer.", "persian": "تخت در اتاق است." }],
+      "grammarNote": "اسم خنثی؛ جمع با -en.",
+      "topicTags": ["home", "household"],
+      "difficulty": 1,
+      "visualConcept": "A bed is the dominant object in a simple room.",
+      "imagePrompt": "Soft 3D bed in a simple bedroom, bed dominant, no text or watermark.",
+      "media": [],
+      "source": {
+        "provider": "ai_suggestion",
+        "reference": "Goethe A1 scope reference; editorial verification pending."
+      },
+      "provenance": {
+        "sourceType": "ai_assisted",
+        "sourceReference": "Goethe A1 scope reference; German and Persian review pending."
+      }
+    },
+    {
+      "id": "start-a1-apfel",
+      "version": 1,
+      "status": "needs_review",
+      "lemma": "Apfel",
+      "normalizedLemma": "apfel",
+      "article": "der",
+      "partOfSpeech": "noun",
+      "cefr": "A1",
+      "persianMeanings": ["سیب"],
+      "simpleGermanDefinition": "Eine runde Frucht, die man essen kann.",
+      "essentialInflection": "die Äpfel",
+      "pronunciation": { "ipa": "ˈapfəl", "locale": "de-DE" },
+      "examples": [{ "german": "Der Apfel ist rot.", "persian": "سیب قرمز است." }],
+      "grammarNote": "اسم مذکر؛ جمع با تغییر واکه و -el.",
+      "topicTags": ["food", "shopping"],
+      "difficulty": 1,
+      "visualConcept": "One red apple fills the visual focus; Bobo may point at it.",
+      "imagePrompt": "Soft 3D red apple, apple dominant, simple background, optional small canonical Bobo pointing, no text or watermark.",
+      "media": [],
+      "source": {
+        "provider": "ai_suggestion",
+        "reference": "Goethe A1 scope reference; editorial verification pending."
+      },
+      "provenance": {
+        "sourceType": "ai_assisted",
+        "sourceReference": "Goethe A1 scope reference; German and Persian review pending."
+      }
+    },
+    {
+      "id": "start-a1-brot",
+      "version": 1,
+      "status": "needs_review",
+      "lemma": "Brot",
+      "normalizedLemma": "brot",
+      "article": "das",
+      "partOfSpeech": "noun",
+      "cefr": "A1",
+      "persianMeanings": ["نان"],
+      "simpleGermanDefinition": "Ein Lebensmittel aus Mehl, Wasser und Hefe.",
+      "essentialInflection": "die Brote",
+      "pronunciation": { "ipa": "bʁoːt", "locale": "de-DE" },
+      "examples": [{ "german": "Ich esse Brot.", "persian": "من نان می‌خورم." }],
+      "grammarNote": "اسم خنثی؛ جمع با -e.",
+      "topicTags": ["food", "daily_life"],
+      "difficulty": 1,
+      "visualConcept": "A loaf of bread is the dominant object.",
+      "imagePrompt": "Soft 3D loaf of bread on a plain surface, bread dominant, no text or watermark.",
+      "media": [],
+      "source": {
+        "provider": "ai_suggestion",
+        "reference": "Goethe A1 scope reference; editorial verification pending."
+      },
+      "provenance": {
+        "sourceType": "ai_assisted",
+        "sourceReference": "Goethe A1 scope reference; German and Persian review pending."
+      }
+    },
+    {
+      "id": "start-a1-wasser",
+      "version": 1,
+      "status": "needs_review",
+      "lemma": "Wasser",
+      "normalizedLemma": "wasser",
+      "article": "das",
+      "partOfSpeech": "noun",
+      "cefr": "A1",
+      "persianMeanings": ["آب"],
+      "simpleGermanDefinition": "Eine klare Flüssigkeit zum Trinken.",
+      "essentialInflection": "kein Plural im üblichen Gebrauch",
+      "pronunciation": { "ipa": "ˈvasɐ", "locale": "de-DE" },
+      "examples": [{ "german": "Das Wasser ist kalt.", "persian": "آب سرد است." }],
+      "grammarNote": "اسم خنثی؛ معمولاً غیرقابل‌شمارش است.",
+      "topicTags": ["food", "daily_life"],
+      "difficulty": 1,
+      "visualConcept": "A clear glass of water is the dominant object.",
+      "imagePrompt": "Soft 3D clear glass of water, glass dominant, simple controlled background, no text or watermark.",
+      "media": [],
+      "source": {
+        "provider": "ai_suggestion",
+        "reference": "Goethe A1 scope reference; editorial verification pending."
+      },
+      "provenance": {
+        "sourceType": "ai_assisted",
+        "sourceReference": "Goethe A1 scope reference; German and Persian review pending."
+      }
+    },
+    {
+      "id": "start-a1-bahnhof",
+      "version": 1,
+      "status": "needs_review",
+      "lemma": "Bahnhof",
+      "normalizedLemma": "bahnhof",
+      "article": "der",
+      "partOfSpeech": "noun",
+      "cefr": "A1",
+      "persianMeanings": ["ایستگاه قطار"],
+      "simpleGermanDefinition": "Ein Ort, an dem Züge ankommen und abfahren.",
+      "essentialInflection": "die Bahnhöfe",
+      "pronunciation": { "ipa": "ˈbaːnhoːf", "locale": "de-DE" },
+      "examples": [{ "german": "Der Bahnhof ist nah.", "persian": "ایستگاه قطار نزدیک است." }],
+      "grammarNote": "اسم مذکر؛ جمع با تغییر واکه و -e.",
+      "topicTags": ["transport", "city"],
+      "difficulty": 2,
+      "visualConcept": "The station building and tracks carry the meaning; Bobo is a small traveler.",
+      "imagePrompt": "Soft 3D German train station exterior and tracks, environment dominant, small canonical Bobo as traveler, no text or watermark.",
+      "media": [],
+      "source": {
+        "provider": "ai_suggestion",
+        "reference": "Goethe A1 scope reference; editorial verification pending."
+      },
+      "provenance": {
+        "sourceType": "ai_assisted",
+        "sourceReference": "Goethe A1 scope reference; German and Persian review pending."
+      }
+    },
+    {
+      "id": "start-a1-schule",
+      "version": 1,
+      "status": "needs_review",
+      "lemma": "Schule",
+      "normalizedLemma": "schule",
+      "article": "die",
+      "partOfSpeech": "noun",
+      "cefr": "A1",
+      "persianMeanings": ["مدرسه"],
+      "simpleGermanDefinition": "Ein Ort, an dem Kinder und Jugendliche lernen.",
+      "essentialInflection": "die Schulen",
+      "pronunciation": { "ipa": "ˈʃuːlə", "locale": "de-DE" },
+      "examples": [{ "german": "Die Schule ist heute offen.", "persian": "مدرسه امروز باز است." }],
+      "grammarNote": "اسم مؤنث؛ جمع با -n.",
+      "topicTags": ["education", "place"],
+      "difficulty": 1,
+      "visualConcept": "A school building is the main subject; Bobo may be a small student.",
+      "imagePrompt": "Soft 3D school building, environment dominant, small canonical Bobo as student, no text or watermark.",
+      "media": [],
+      "source": {
+        "provider": "ai_suggestion",
+        "reference": "Goethe A1 scope reference; editorial verification pending."
+      },
+      "provenance": {
+        "sourceType": "ai_assisted",
+        "sourceReference": "Goethe A1 scope reference; German and Persian review pending."
+      }
+    },
+    {
+      "id": "start-a1-lernen",
+      "version": 1,
+      "status": "needs_review",
+      "lemma": "lernen",
+      "normalizedLemma": "lernen",
+      "partOfSpeech": "verb",
+      "cefr": "A1",
+      "persianMeanings": ["یاد گرفتن"],
+      "simpleGermanDefinition": "Etwas Neues verstehen und üben.",
+      "essentialInflection": "lernt, lernte, hat gelernt",
+      "pronunciation": { "ipa": "ˈlɛʁnən", "locale": "de-DE" },
+      "examples": [{ "german": "Ich lerne Deutsch.", "persian": "من آلمانی یاد می‌گیرم." }],
+      "grammarNote": "فعل باقاعده؛ در جملهٔ خبری معمولاً جایگاه دوم می‌آید.",
+      "topicTags": ["education", "core_verb"],
+      "difficulty": 1,
+      "visualConcept": "Bobo studies with a book and is the clear action subject.",
+      "imagePrompt": "Soft 3D canonical Bobo studying with an open book, action clear, no text or watermark.",
+      "media": [],
+      "source": {
+        "provider": "ai_suggestion",
+        "reference": "Goethe A1 scope reference; editorial verification pending."
+      },
+      "provenance": {
+        "sourceType": "ai_assisted",
+        "sourceReference": "Goethe A1 scope reference; German and Persian review pending."
+      }
+    },
+    {
+      "id": "start-a1-wohnen",
+      "version": 1,
+      "status": "needs_review",
+      "lemma": "wohnen",
+      "normalizedLemma": "wohnen",
+      "partOfSpeech": "verb",
+      "cefr": "A1",
+      "persianMeanings": ["زندگی کردن؛ ساکن بودن"],
+      "simpleGermanDefinition": "An einem Ort sein Zuhause haben.",
+      "essentialInflection": "wohnt, wohnte, hat gewohnt",
+      "pronunciation": { "ipa": "ˈvoːnən", "locale": "de-DE" },
+      "examples": [{ "german": "Ich wohne in Berlin.", "persian": "من در برلین زندگی می‌کنم." }],
+      "grammarNote": "فعل باقاعده؛ برای گفتن محل زندگی معمولاً با in می‌آید.",
+      "topicTags": ["home", "core_verb"],
+      "difficulty": 1,
+      "visualConcept": "Bobo is comfortably at home in a simple room.",
+      "imagePrompt": "Soft 3D canonical Bobo at home in a simple room, action and home context clear, no text or watermark.",
+      "media": [],
+      "source": {
+        "provider": "ai_suggestion",
+        "reference": "Goethe A1 scope reference; editorial verification pending."
+      },
+      "provenance": {
+        "sourceType": "ai_assisted",
+        "sourceReference": "Goethe A1 scope reference; German and Persian review pending."
+      }
+    },
+    {
+      "id": "start-a1-kaufen",
+      "version": 1,
+      "status": "needs_review",
+      "lemma": "kaufen",
+      "normalizedLemma": "kaufen",
+      "partOfSpeech": "verb",
+      "cefr": "A1",
+      "persianMeanings": ["خریدن"],
+      "simpleGermanDefinition": "Etwas gegen Geld bekommen.",
+      "essentialInflection": "kauft, kaufte, hat gekauft",
+      "pronunciation": { "ipa": "ˈkaʊfn̩", "locale": "de-DE" },
+      "examples": [{ "german": "Ich kaufe Brot.", "persian": "من نان می‌خرم." }],
+      "grammarNote": "فعل باقاعده؛ مفعول مستقیم معمولاً در حالت Akkusativ می‌آید.",
+      "topicTags": ["shopping", "core_verb"],
+      "difficulty": 1,
+      "visualConcept": "Bobo buys bread at a simple shop counter.",
+      "imagePrompt": "Soft 3D canonical Bobo buying bread at a simple shop counter, action clear, no text or watermark.",
+      "media": [],
+      "source": {
+        "provider": "ai_suggestion",
+        "reference": "Goethe A1 scope reference; editorial verification pending."
+      },
+      "provenance": {
+        "sourceType": "ai_assisted",
+        "sourceReference": "Goethe A1 scope reference; German and Persian review pending."
+      }
+    },
+    {
+      "id": "start-a1-warten",
+      "version": 1,
+      "status": "needs_review",
+      "lemma": "warten",
+      "normalizedLemma": "warten",
+      "partOfSpeech": "verb",
+      "cefr": "A1",
+      "persianMeanings": ["منتظر ماندن"],
+      "simpleGermanDefinition": "Bleiben, bis etwas oder jemand kommt.",
+      "essentialInflection": "wartet, wartete, hat gewartet",
+      "pronunciation": { "ipa": "ˈvaʁtn̩", "locale": "de-DE" },
+      "examples": [{ "german": "Ich warte auf den Bus.", "persian": "من منتظر اتوبوس هستم." }],
+      "grammarNote": "اغلب با auf + Akkusativ به‌کار می‌رود.",
+      "topicTags": ["transport", "core_verb"],
+      "difficulty": 2,
+      "visualConcept": "Bobo waits at a bus stop; the waiting action is unmistakable.",
+      "imagePrompt": "Soft 3D canonical Bobo waiting at a bus stop, action clear, no text or watermark.",
+      "media": [],
+      "source": {
+        "provider": "ai_suggestion",
+        "reference": "Goethe A1 scope reference; editorial verification pending."
+      },
+      "provenance": {
+        "sourceType": "ai_assisted",
+        "sourceReference": "Goethe A1 scope reference; German and Persian review pending."
+      }
+    },
+    {
+      "id": "start-a1-gluecklich",
+      "version": 1,
+      "status": "needs_review",
+      "lemma": "glücklich",
+      "normalizedLemma": "glücklich",
+      "partOfSpeech": "adjective",
+      "cefr": "A1",
+      "persianMeanings": ["خوشحال"],
+      "simpleGermanDefinition": "Man fühlt sich sehr gut und zufrieden.",
+      "essentialInflection": "nicht flektiert im Lernhinweis",
+      "pronunciation": { "ipa": "ˈɡlʏklɪç", "locale": "de-DE" },
+      "examples": [{ "german": "Ich bin glücklich.", "persian": "من خوشحالم." }],
+      "grammarNote": "صفت؛ بعد از sein بدون پسوند می‌آید.",
+      "topicTags": ["emotion", "adjective"],
+      "difficulty": 1,
+      "visualConcept": "A clearly happy Bobo is the primary subject.",
+      "imagePrompt": "Soft 3D canonical Bobo visibly happy, clear joyful expression, no text or watermark.",
+      "media": [],
+      "source": {
+        "provider": "ai_suggestion",
+        "reference": "Goethe A1 scope reference; editorial verification pending."
+      },
+      "provenance": {
+        "sourceType": "ai_assisted",
+        "sourceReference": "Goethe A1 scope reference; German and Persian review pending."
+      }
+    },
+    {
+      "id": "start-a1-muede",
+      "version": 1,
+      "status": "needs_review",
+      "lemma": "müde",
+      "normalizedLemma": "müde",
+      "partOfSpeech": "adjective",
+      "cefr": "A1",
+      "persianMeanings": ["خسته"],
+      "simpleGermanDefinition": "Man braucht Schlaf oder Ruhe.",
+      "essentialInflection": "nicht flektiert im Lernhinweis",
+      "pronunciation": { "ipa": "ˈmyːdə", "locale": "de-DE" },
+      "examples": [{ "german": "Ich bin müde.", "persian": "من خسته‌ام." }],
+      "grammarNote": "صفت؛ بعد از sein بدون پسوند می‌آید.",
+      "topicTags": ["emotion", "adjective"],
+      "difficulty": 1,
+      "visualConcept": "A sleepy Bobo and a simple bedside lamp clarify the state.",
+      "imagePrompt": "Soft 3D canonical Bobo visibly sleepy beside a simple lamp, state clear, no text or watermark.",
+      "media": [],
+      "source": {
+        "provider": "ai_suggestion",
+        "reference": "Goethe A1 scope reference; editorial verification pending."
+      },
+      "provenance": {
+        "sourceType": "ai_assisted",
+        "sourceReference": "Goethe A1 scope reference; German and Persian review pending."
+      }
+    },
+    {
+      "id": "start-a1-klein",
+      "version": 1,
+      "status": "needs_review",
+      "lemma": "klein",
+      "normalizedLemma": "klein",
+      "partOfSpeech": "adjective",
+      "cefr": "A1",
+      "persianMeanings": ["کوچک"],
+      "simpleGermanDefinition": "Nicht groß.",
+      "essentialInflection": "klein, kleiner, am kleinsten",
+      "pronunciation": { "ipa": "klaɪn", "locale": "de-DE" },
+      "examples": [{ "german": "Das Haus ist klein.", "persian": "خانه کوچک است." }],
+      "grammarNote": "صفت؛ در جایگاه خبری بعد از sein بدون پسوند می‌آید.",
+      "topicTags": ["adjective", "description"],
+      "difficulty": 1,
+      "visualConcept": "A small house beside a much larger tree gives a single clear comparison.",
+      "imagePrompt": "Soft 3D small house beside a larger tree, size relationship clear, no text or watermark.",
+      "media": [],
+      "source": {
+        "provider": "ai_suggestion",
+        "reference": "Goethe A1 scope reference; editorial verification pending."
+      },
+      "provenance": {
+        "sourceType": "ai_assisted",
+        "sourceReference": "Goethe A1 scope reference; German and Persian review pending."
+      }
+    },
+    {
+      "id": "start-a1-guten-tag",
+      "version": 1,
+      "status": "needs_review",
+      "lemma": "Guten Tag",
+      "normalizedLemma": "guten tag",
+      "partOfSpeech": "phrase",
+      "cefr": "A1",
+      "persianMeanings": ["روز بخیر؛ سلام"],
+      "simpleGermanDefinition": "Eine höfliche Begrüßung am Tag.",
+      "essentialInflection": "ثابت",
+      "pronunciation": { "ipa": "ˈɡuːtn̩ taːk", "locale": "de-DE" },
+      "examples": [{ "german": "Guten Tag, Frau Müller.", "persian": "روز بخیر، خانم مولر." }],
+      "grammarNote": "عبارت سلام رسمی؛ معمولاً با حرف بزرگ شروع می‌شود.",
+      "topicTags": ["greeting", "daily_expression"],
+      "difficulty": 1,
+      "visualConcept": "Two people greet each other; no written words in the image.",
+      "imagePrompt": "Soft 3D polite daytime greeting between canonical Bobo and a person, gesture clear, no text or watermark.",
+      "media": [],
+      "source": {
+        "provider": "ai_suggestion",
+        "reference": "Goethe A1 scope reference; editorial verification pending."
+      },
+      "provenance": {
+        "sourceType": "ai_assisted",
+        "sourceReference": "Goethe A1 scope reference; German and Persian review pending."
+      }
+    },
+    {
+      "id": "start-a1-wie-geht-es-ihnen",
+      "version": 1,
+      "status": "needs_review",
+      "lemma": "Wie geht es Ihnen?",
+      "normalizedLemma": "wie geht es ihnen?",
+      "partOfSpeech": "phrase",
+      "cefr": "A1",
+      "persianMeanings": ["حال شما چطور است؟"],
+      "simpleGermanDefinition": "Eine höfliche Frage nach dem Befinden.",
+      "essentialInflection": "ثابت",
+      "pronunciation": { "ipa": "viː ɡeːt ɛs ˈiːnən", "locale": "de-DE" },
+      "examples": [
+        { "german": "Guten Tag. Wie geht es Ihnen?", "persian": "روز بخیر. حال شما چطور است؟" }
+      ],
+      "grammarNote": "عبارت رسمی؛ Ihnen با حرف بزرگ نوشته می‌شود.",
+      "topicTags": ["greeting", "daily_expression"],
+      "difficulty": 2,
+      "visualConcept": "A polite Bobo asks a person how they are; conversational gesture only.",
+      "imagePrompt": "Soft 3D canonical Bobo politely greeting a person, conversational gesture clear, no text or watermark.",
+      "media": [],
+      "source": {
+        "provider": "ai_suggestion",
+        "reference": "Goethe A1 scope reference; editorial verification pending."
+      },
+      "provenance": {
+        "sourceType": "ai_assisted",
+        "sourceReference": "Goethe A1 scope reference; German and Persian review pending."
+      }
+    },
+    {
+      "id": "start-a1-danke",
+      "version": 1,
+      "status": "needs_review",
+      "lemma": "danke",
+      "normalizedLemma": "danke",
+      "partOfSpeech": "phrase",
+      "cefr": "A1",
+      "persianMeanings": ["ممنون؛ سپاسگزارم"],
+      "simpleGermanDefinition": "Man sagt es, wenn jemand geholfen hat oder freundlich war.",
+      "essentialInflection": "ثابت",
+      "pronunciation": { "ipa": "ˈdaŋkə", "locale": "de-DE" },
+      "examples": [{ "german": "Danke für deine Hilfe.", "persian": "ممنون برای کمکت." }],
+      "grammarNote": "عبارت تشکر؛ danke für با Akkusativ می‌آید.",
+      "topicTags": ["politeness", "daily_expression"],
+      "difficulty": 1,
+      "visualConcept": "Bobo thanks someone with a warm gesture.",
+      "imagePrompt": "Soft 3D canonical Bobo thanking a person with a warm gesture, no text or watermark.",
+      "media": [],
+      "source": {
+        "provider": "ai_suggestion",
+        "reference": "Goethe A1 scope reference; editorial verification pending."
+      },
+      "provenance": {
+        "sourceType": "ai_assisted",
+        "sourceReference": "Goethe A1 scope reference; German and Persian review pending."
+      }
+    },
+    {
+      "id": "start-a1-entschuldigung",
+      "version": 1,
+      "status": "needs_review",
+      "lemma": "Entschuldigung",
+      "normalizedLemma": "entschuldigung",
+      "partOfSpeech": "phrase",
+      "cefr": "A1",
+      "persianMeanings": ["ببخشید؛ معذرت می‌خواهم"],
+      "simpleGermanDefinition": "Man sagt es, wenn man höflich um Aufmerksamkeit bittet oder sich entschuldigt.",
+      "essentialInflection": "ثابت",
+      "pronunciation": { "ipa": "ɛntˈʃʊldɪɡʊŋ", "locale": "de-DE" },
+      "examples": [
+        {
+          "german": "Entschuldigung, wo ist der Bahnhof?",
+          "persian": "ببخشید، ایستگاه قطار کجاست؟"
+        }
+      ],
+      "grammarNote": "برای عذرخواهی یا شروع پرسش مؤدبانه به‌کار می‌رود.",
+      "topicTags": ["politeness", "daily_expression"],
+      "difficulty": 1,
+      "visualConcept": "Bobo politely asks a passerby for attention; no written signs.",
+      "imagePrompt": "Soft 3D canonical Bobo politely asking a passerby for attention, clear gesture, no text or watermark.",
+      "media": [],
+      "source": {
+        "provider": "ai_suggestion",
+        "reference": "Goethe A1 scope reference; editorial verification pending."
+      },
+      "provenance": {
+        "sourceType": "ai_assisted",
+        "sourceReference": "Goethe A1 scope reference; German and Persian review pending."
+      }
+    }
+  ]
+}

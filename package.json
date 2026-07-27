@@ -9,7 +9,7 @@
   },
   "scripts": {
     "build": "pnpm -r --if-present build",
-    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm verify:security && pnpm verify:alpha && pnpm verify:product-config && pnpm verify:start-slice",
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm verify:security && pnpm verify:alpha && pnpm verify:product-config && pnpm verify:start-slice && pnpm verify:start-drafts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint . --max-warnings=0",
@@ -19,6 +19,7 @@
     "verify:alpha": "node scripts/validate-closed-alpha.mjs",
     "verify:product-config": "node scripts/validate-product-experience.mjs",
     "verify:start-slice": "node scripts/validate-start-slice-candidates.mjs",
+    "verify:start-drafts": "node scripts/validate-start-slice-drafts.mjs",
     "dev": "pnpm --filter @learnbox/website dev",
     "preview:web": "pnpm --filter @learnbox/website exec next start --hostname 127.0.0.1 --port 3010"
   },

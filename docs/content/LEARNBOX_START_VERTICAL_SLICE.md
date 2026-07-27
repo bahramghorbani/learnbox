@@ -16,3 +16,7 @@ For every item: complete `LearningVocabularyItem` data, word/sentence audio, app
 The first source-referenced intake basket is stored at
 `content/packs/learnbox-start/validation/start-a1-slice-candidates.json`. Its candidates are
 explicitly pending linguistic review and are not learner-facing cards or a release.
+
+The matching 20 complete linguistic drafts are stored at
+`content/packs/learnbox-start/vocabulary/start-a1-vertical-slice-drafts.json`. They remain in
+`needs_review`; production image/audio, media QA, app integration and publication are not implied.
