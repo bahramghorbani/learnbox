@@ -9,3 +9,7 @@ primary-concept clarity, mobile readability, generated text, watermark and clutt
 actions and emotions, but never a concrete noun or place image. For audio, separately confirm the
 word recording, sentence recording and absence of truncation or distortion. These fields are
 required for a published vocabulary item and do not replace human linguistic review.
+
+The review ledger has six required dimensions: German linguistic review, Persian translation,
+provenance, visual QA, audio QA and app-flow validation. A pending check cannot be treated as a
+pass; every completed result records the reviewer and review time.

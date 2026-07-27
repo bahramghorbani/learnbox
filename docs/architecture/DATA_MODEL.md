@@ -6,6 +6,11 @@ Core entities: User, DeviceSession, OTPChallenge, Card, CardVersion, Pack, Revie
 
 `CardVersion` stores immutable versioned editorial content. `AdminRoleAssignment` gives a user the limited `content_reviewer`, `content_publisher`, or `super_admin` role. `ContentReviewDecision` is append-only and carries an idempotency key; `AuditLog` records each sensitive decision. Reviewer approval changes content to `approved`, never directly to `published`; a separate publisher role is required for release.
 
+`ContentReviewCheck` records six independently auditable gates for each card version: German
+linguistic review, Persian translation, provenance, visual QA, audio QA and app-flow validation.
+Each starts `pending`; a named reviewer and timestamp are required to mark it `passed` or
+`failed`. Rejection is a durable status and never deletes the reviewed record.
+
 Product tiers use stable identifiers `learnbox_start` and `learnbox_plus`; subscription periods
 use `monthly`, `three_month` and `annual`. The `entitlement_tiers` catalog represents both tiers;
 `billing_products.tier_id` maps provider-neutral paid products to a tier after verification.
