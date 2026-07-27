@@ -5,3 +5,10 @@ Core entities: User, DeviceSession, OTPChallenge, Card, CardVersion, Pack, Revie
 `ReviewEvent` is append-only; `CardSchedule` is a mutable projection keyed by `(user_id, card_id)`. The server applies one idempotent event at a time and updates the projection in the same transaction. A due-card query uses the user-scoped `due_at` index and excludes suspended and archived states.
 
 `CardVersion` stores immutable versioned editorial content. `AdminRoleAssignment` gives a user the limited `content_reviewer`, `content_publisher`, or `super_admin` role. `ContentReviewDecision` is append-only and carries an idempotency key; `AuditLog` records each sensitive decision. Reviewer approval changes content to `approved`, never directly to `published`; a separate publisher role is required for release.
+
+Product tiers use stable identifiers `learnbox_start` and `learnbox_plus`; subscription periods
+use `monthly`, `three_month` and `annual`. The `entitlement_tiers` catalog represents both tiers;
+`billing_products.tier_id` maps provider-neutral paid products to a tier after verification.
+Remote configuration supplies display labels, limits, offers and eligibility versions. A future
+configuration audit table must preserve the configuration version that informed a paywall or limit
+decision without storing sensitive learner content.

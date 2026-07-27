@@ -27,3 +27,15 @@ The canonical Bobo appearance was owner-approved as version `1.0.0`: a white, so
 Do not generate, substitute, or ship a rabbit-like variant: long separated ears, a visible neck, or a separate head/body silhouette are not Bobo.
 
 Changing Bobo's canonical appearance, core expressions, voice, or physical character cues requires explicit owner approval. This preserves a coherent public identity and prevents an AI-generated or temporary visual from silently becoming the product mascot.
+
+## Vocabulary-image direction
+
+Bobo supports memory rather than dominating every image. It may lead actions, emotions and human
+situations; the concrete object must lead noun cards; the environment must lead place cards; and
+abstract concepts use one Bobo scenario only when it clarifies the meaning. Roughly 70% presence
+is an art-direction target, never a quota.
+
+Every vocabulary image has one primary concept, a controlled soft-3D background, no generated
+text or watermark, no unapproved Bobo variation, clear mobile-card hierarchy and minimal
+irrelevant detail. Visual QA checks semantics, canonical consistency, small-size readability,
+clutter, cultural ambiguity, near-duplicates, asset size and light/dark usability.

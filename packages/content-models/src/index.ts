@@ -6,7 +6,8 @@ export type ContentStatus =
   | 'needs_review'
   | 'approved'
   | 'published'
-  | 'deprecated';
+  | 'deprecated'
+  | 'rejected';
 export type PartOfSpeech = 'noun' | 'verb' | 'adjective' | 'adverb' | 'phrase' | 'other';
 
 export interface VersionedMediaAsset {
@@ -34,6 +35,38 @@ export interface WordCardDraft {
   examples: ExampleSentence[];
   media: VersionedMediaAsset[];
   source: { provider: 'editorial' | 'user' | 'ai_suggestion'; reference?: string };
+}
+
+/**
+ * The production contract for pack vocabulary. It deliberately extends the existing card draft
+ * instead of replacing it, so current review flows remain compatible while the factory grows.
+ */
+export interface LearningVocabularyItem extends WordCardDraft {
+  normalizedLemma: string;
+  simpleGermanDefinition: string;
+  essentialInflection?: string;
+  pronunciation?: { ipa?: string; locale: 'de-DE' };
+  grammarNote: string;
+  topicTags: string[];
+  difficulty: 1 | 2 | 3 | 4 | 5;
+  visualConcept: string;
+  imagePrompt: string;
+  provenance: {
+    sourceType: 'editorial' | 'licensed_source' | 'ai_assisted';
+    sourceReference: string;
+    reviewedBy?: string;
+  };
+}
+
+export interface ContentPackManifest {
+  id: string;
+  version: number;
+  tierId: 'learnbox_start' | 'learnbox_plus';
+  displayName: string;
+  locale: 'de-DE';
+  targetCefr: CefrLevel;
+  targetItemCount: number;
+  releaseStatus: 'draft' | 'staging' | 'published' | 'deprecated';
 }
 
 export interface ContentValidationIssue {
@@ -96,6 +129,34 @@ export function validateWordCard(card: WordCardDraft): ContentValidationIssue[] 
   }
   if (card.source.provider === 'ai_suggestion' && card.status === 'published') {
     issues.push({ field: 'source', message: 'پیشنهاد AI بدون بازبینی انسانی منتشر نمی‌شود.' });
+  }
+  return issues;
+}
+
+export function validateLearningVocabularyItem(
+  item: LearningVocabularyItem,
+): ContentValidationIssue[] {
+  const issues = validateWordCard(item);
+  if (!item.normalizedLemma.trim()) {
+    issues.push({ field: 'normalizedLemma', message: 'صورتِ نرمال‌شدهٔ مدخل الزامی است.' });
+  }
+  if (!item.simpleGermanDefinition.trim()) {
+    issues.push({ field: 'simpleGermanDefinition', message: 'تعریف سادهٔ آلمانی الزامی است.' });
+  }
+  if (!item.grammarNote.trim()) {
+    issues.push({ field: 'grammarNote', message: 'یادداشت دستوری الزامی است.' });
+  }
+  if (item.topicTags.length === 0 || item.topicTags.some((tag) => !tag.trim())) {
+    issues.push({ field: 'topicTags', message: 'حداقل یک برچسب موضوعیِ معتبر لازم است.' });
+  }
+  if (!Number.isInteger(item.difficulty) || item.difficulty < 1 || item.difficulty > 5) {
+    issues.push({ field: 'difficulty', message: 'درجهٔ سختی باید عددی بین ۱ و ۵ باشد.' });
+  }
+  if (!item.visualConcept.trim() || !item.imagePrompt.trim()) {
+    issues.push({ field: 'visual', message: 'مفهوم بصری و راهنمای تصویر الزامی‌اند.' });
+  }
+  if (!item.provenance.sourceReference.trim()) {
+    issues.push({ field: 'provenance', message: 'منبع یا مرجع تولید محتوا الزامی است.' });
   }
   return issues;
 }

@@ -2,6 +2,38 @@ export type BillingProvider = 'cafe_bazaar' | 'direct_web' | 'google_play' | 'ap
 export type BillingEnvironment = 'sandbox' | 'production';
 export type ProductKind = 'subscription' | 'one_time_pack';
 export type PurchaseStatus = 'verified' | 'revoked' | 'refunded' | 'rejected';
+export type LearnBoxTierId = 'learnbox_start' | 'learnbox_plus';
+export type LearnBoxSubscriptionPeriod = 'monthly' | 'three_month' | 'annual';
+
+/**
+ * Stable, non-localized identifiers. Public labels, prices and limits are supplied by remote
+ * configuration rather than being embedded in clients or provider product IDs.
+ */
+export const LEARNBOX_TIER_IDS = ['learnbox_start', 'learnbox_plus'] as const;
+export const LEARNBOX_SUBSCRIPTION_PERIODS = ['monthly', 'three_month', 'annual'] as const;
+
+export interface LearnBoxTierAccess {
+  tierId: LearnBoxTierId;
+  canReviewDueContent: boolean;
+  retainsLearnedContent: boolean;
+}
+
+export function resolveLearnBoxTierAccess(entitlements: ReadonlySet<string>): LearnBoxTierAccess {
+  if (entitlements.has('learnbox_plus')) {
+    return {
+      tierId: 'learnbox_plus',
+      canReviewDueContent: true,
+      retainsLearnedContent: true,
+    };
+  }
+
+  // Start is permanent. A payment state must never remove due reviews or learned free content.
+  return {
+    tierId: 'learnbox_start',
+    canReviewDueContent: true,
+    retainsLearnedContent: true,
+  };
+}
 
 export interface BillingProduct {
   id: string;

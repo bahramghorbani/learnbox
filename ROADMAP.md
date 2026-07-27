@@ -9,3 +9,16 @@
 | 0.5 Monetization   | Bazaar and PWA billing with restore                        | 19                |
 | 0.6 Beta           | A1, selected A2, load/security review                      | 21–24             |
 | 1.0 Public release | stable Cafe Bazaar release                                 | 25–27             |
+
+## Current compatibility work — Stage 23 of 30
+
+Approved product decisions are being integrated without resetting completed storyboard work:
+
+- formal Start/Plus entitlement and safe remote-configuration contract;
+- controlled LearnBox Start A1 pack: schema, 20-item vertical-slice gate, then versioned batches;
+- reusable Learning Content Factory architecture and review-state hardening;
+- Bobo vocabulary-image policy and visual-QA criteria;
+- paywall and analytics specifications, before a real payment provider or public offer.
+
+These are Stage 23 compatibility and hardening tasks. A real paid provider, production pricing,
+public paywall activation and bulk media generation remain later, owner-gated work.

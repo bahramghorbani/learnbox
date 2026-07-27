@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   evaluateAiSuggestion,
   transitionContentReview,
+  validateLearningVocabularyItem,
   validateWordCard,
+  type LearningVocabularyItem,
   type WordCardDraft,
 } from '../src/index.js';
 
@@ -26,6 +28,20 @@ const validCard: WordCardDraft = {
     },
   ],
   source: { provider: 'editorial', reference: 'synthetic fixture' },
+};
+
+const validVocabularyItem: LearningVocabularyItem = {
+  ...validCard,
+  normalizedLemma: 'haus',
+  simpleGermanDefinition: 'Ein Gebäude, in dem Menschen wohnen.',
+  essentialInflection: 'die Häuser',
+  pronunciation: { ipa: 'haʊs', locale: 'de-DE' },
+  grammarNote: 'Neutrum; Plural mit Umlaut.',
+  topicTags: ['household'],
+  difficulty: 1,
+  visualConcept: 'A clear house with a small Bobo at the door.',
+  imagePrompt: 'Soft 3D house, object dominant, no text.',
+  provenance: { sourceType: 'editorial', sourceReference: 'synthetic fixture' },
 };
 
 describe('validateWordCard', () => {
@@ -90,5 +106,16 @@ describe('validateWordCard', () => {
     expect(() => transitionContentReview('published', 'approve')).toThrow(
       'Only review-queue content can receive a review decision.',
     );
+  });
+
+  it('validates the complete reusable vocabulary-item contract', () => {
+    expect(validateLearningVocabularyItem(validVocabularyItem)).toEqual([]);
+    expect(
+      validateLearningVocabularyItem({
+        ...validVocabularyItem,
+        topicTags: [],
+        imagePrompt: '',
+      }).map((issue) => issue.field),
+    ).toEqual(['topicTags', 'visual']);
   });
 });

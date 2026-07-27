@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { resolveEntitlements, validatePurchaseForEnvironment } from '../src/index.js';
+import {
+  resolveEntitlements,
+  resolveLearnBoxTierAccess,
+  validatePurchaseForEnvironment,
+} from '../src/index.js';
 
 const products = [
   { id: 'premium', kind: 'subscription' as const, entitlementKeys: ['premium'], active: true },
@@ -68,5 +72,21 @@ describe('billing entitlements', () => {
         status: 'verified',
       }),
     ).toBe(false);
+  });
+
+  it('keeps Start review access permanent when Plus is absent or expires', () => {
+    expect(resolveLearnBoxTierAccess(new Set())).toEqual({
+      tierId: 'learnbox_start',
+      canReviewDueContent: true,
+      retainsLearnedContent: true,
+    });
+  });
+
+  it('recognizes the stable Plus entitlement without hardcoded public labels', () => {
+    expect(resolveLearnBoxTierAccess(new Set(['learnbox_plus']))).toMatchObject({
+      tierId: 'learnbox_plus',
+      canReviewDueContent: true,
+      retainsLearnedContent: true,
+    });
   });
 });

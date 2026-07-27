@@ -1,0 +1,16 @@
+{
+  "id": "learnbox_start_a1_essentials",
+  "version": 1,
+  "tierId": "learnbox_start",
+  "displayName": "LearnBox Start — German A1 Essentials",
+  "locale": "de-DE",
+  "targetCefr": "A1",
+  "targetItemCount": 350,
+  "releaseStatus": "draft",
+  "verticalSlice": {
+    "targetItemCount": 20,
+    "publicationGate": "linguistic_visual_audio_app_validation"
+  },
+  "assetNaming": "{contentId}/{assetKind}/v{version}",
+  "contentVersioning": { "batchSizeTarget": 50, "rollbackRequired": true }
+}

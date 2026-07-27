@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "tiers": {
+    "learnbox_start": {
+      "displayName": "LearnBox Start",
+      "permanent": true,
+      "packIds": ["learnbox_start_a1_essentials"],
+      "recommendedNewWordsPerDay": { "minimum": 10, "maximum": 15, "default": 12 },
+      "personalWordLimit": 30,
+      "reviewAccess": { "dueReviewsUnlimited": true, "learnedContentRetained": true }
+    },
+    "learnbox_plus": {
+      "displayName": "LearnBox Plus",
+      "subscriptionPeriods": ["monthly", "three_month", "annual"],
+      "reviewAccess": { "dueReviewsUnlimited": true, "learnedContentRetained": true }
+    }
+  },
+  "paywall": {
+    "firstSeriousOfferNotBeforeActiveDays": 3,
+    "eligibility": {
+      "learningCycleWords": { "minimum": 80, "maximum": 100 },
+      "completedSessions": 3,
+      "activeDays": 3,
+      "firstCollectionCompleted": true,
+      "meaningfulProgressReportReceived": true
+    },
+    "supportiveCopy": "تا اینجا خیلی خوب پیش رفتی! برای ادامه مسیر و دسترسی به مجموعه‌های کامل‌تر، LearnBox Plus کنارت هست.",
+    "forbiddenTactics": ["fear", "guilt", "countdown", "streak_threat", "false_scarcity"]
+  }
+}
