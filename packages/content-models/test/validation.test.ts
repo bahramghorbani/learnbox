@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   evaluateAiSuggestion,
   transitionContentReview,
+  validateVocabularyMediaQa,
   validateLearningVocabularyItem,
   validateWordCard,
   type LearningVocabularyItem,
@@ -125,5 +126,35 @@ describe('validateWordCard', () => {
         imagePrompt: '',
       }).map((issue) => issue.field),
     ).toEqual(['topicTags', 'visual']);
+  });
+
+  it('requires approved semantic, Bobo and audio QA for released vocabulary media', () => {
+    const invalidQa = {
+      visual: {
+        semanticRole: 'concrete_noun' as const,
+        boboRole: 'primary' as const,
+        boboCanonicalVersion: '1.0.0' as const,
+        semanticAccurate: true,
+        primaryConceptClear: true,
+        mobileReadable: true,
+        hasGeneratedText: false,
+        hasWatermark: false,
+        hasUnnecessaryClutter: false,
+      },
+      audio: {
+        wordAudioVerified: true,
+        sentenceAudioVerified: false,
+        noTruncationOrDistortion: true,
+      },
+    };
+    expect(validateVocabularyMediaQa(invalidQa).map((issue) => issue.field)).toEqual([
+      'mediaQa.visual.bobo',
+      'mediaQa.audio',
+    ]);
+    expect(
+      validateLearningVocabularyItem({ ...validVocabularyItem, status: 'published' }).map(
+        (issue) => issue.field,
+      ),
+    ).toContain('mediaQa');
   });
 });

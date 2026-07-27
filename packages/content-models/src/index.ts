@@ -56,6 +56,30 @@ export interface LearningVocabularyItem extends WordCardDraft {
     sourceReference: string;
     reviewedBy?: string;
   };
+  mediaQa?: VocabularyMediaQa;
+}
+
+export type VocabularyVisualSemanticRole =
+  'action_or_emotion' | 'concrete_noun' | 'place' | 'abstract';
+export type BoboImageRole = 'absent' | 'supporting' | 'primary';
+
+export interface VocabularyMediaQa {
+  visual: {
+    semanticRole: VocabularyVisualSemanticRole;
+    boboRole: BoboImageRole;
+    boboCanonicalVersion?: '1.0.0';
+    semanticAccurate: boolean;
+    primaryConceptClear: boolean;
+    mobileReadable: boolean;
+    hasGeneratedText: boolean;
+    hasWatermark: boolean;
+    hasUnnecessaryClutter: boolean;
+  };
+  audio: {
+    wordAudioVerified: boolean;
+    sentenceAudioVerified: boolean;
+    noTruncationOrDistortion: boolean;
+  };
 }
 
 export interface ContentPackManifest {
@@ -157,6 +181,48 @@ export function validateLearningVocabularyItem(
   }
   if (!item.provenance.sourceReference.trim()) {
     issues.push({ field: 'provenance', message: 'منبع یا مرجع تولید محتوا الزامی است.' });
+  }
+  if (item.mediaQa) issues.push(...validateVocabularyMediaQa(item.mediaQa));
+  if (item.status === 'published' && !item.mediaQa) {
+    issues.push({ field: 'mediaQa', message: 'محتوای منتشرشده به تأیید تصویر و صدا نیاز دارد.' });
+  }
+  return issues;
+}
+
+/**
+ * A media QA pass enforces the approved Bobo vocabulary policy before a card can be released.
+ * It is intentionally provider-free and only validates recorded reviewer observations.
+ */
+export function validateVocabularyMediaQa(qa: VocabularyMediaQa): ContentValidationIssue[] {
+  const issues: ContentValidationIssue[] = [];
+  const { visual, audio } = qa;
+  if (!visual.semanticAccurate || !visual.primaryConceptClear || !visual.mobileReadable) {
+    issues.push({
+      field: 'mediaQa.visual',
+      message: 'معنا، مفهوم اصلی و خوانایی کارت باید تأیید شوند.',
+    });
+  }
+  if (visual.hasGeneratedText || visual.hasWatermark || visual.hasUnnecessaryClutter) {
+    issues.push({
+      field: 'mediaQa.visual',
+      message: 'تصویر نباید متن، واترمارک یا شلوغی غیرضروری داشته باشد.',
+    });
+  }
+  if (
+    visual.boboRole !== 'absent' &&
+    (visual.boboCanonicalVersion !== '1.0.0' ||
+      (visual.semanticRole !== 'action_or_emotion' && visual.boboRole === 'primary'))
+  ) {
+    issues.push({
+      field: 'mediaQa.visual.bobo',
+      message: 'بوبو باید نسخهٔ رسمی باشد و در اسم‌ها و مکان‌ها موضوع اصلی تصویر نباشد.',
+    });
+  }
+  if (!audio.wordAudioVerified || !audio.sentenceAudioVerified || !audio.noTruncationOrDistortion) {
+    issues.push({
+      field: 'mediaQa.audio',
+      message: 'صدای واژه و مثال باید کامل و تأییدشده باشند.',
+    });
   }
   return issues;
 }
