@@ -1,0 +1,30 @@
+{
+  "batchId": "learnbox-start-a1-vertical-slice-drafts-v1",
+  "approvalReference": "product-owner-confirmation-2026-07-27",
+  "approvedByRole": "product_owner",
+  "approvedAt": "2026-07-27",
+  "approvedDimensions": ["german_linguistic", "persian_translation"],
+  "itemIds": [
+    "start-a1-haus",
+    "start-a1-tisch",
+    "start-a1-tuer",
+    "start-a1-bett",
+    "start-a1-apfel",
+    "start-a1-brot",
+    "start-a1-wasser",
+    "start-a1-bahnhof",
+    "start-a1-schule",
+    "start-a1-lernen",
+    "start-a1-wohnen",
+    "start-a1-kaufen",
+    "start-a1-warten",
+    "start-a1-gluecklich",
+    "start-a1-muede",
+    "start-a1-klein",
+    "start-a1-guten-tag",
+    "start-a1-wie-geht-es-ihnen",
+    "start-a1-danke",
+    "start-a1-entschuldigung"
+  ],
+  "stillRequiredBeforePublication": ["provenance", "visual", "audio", "app_flow"]
+}

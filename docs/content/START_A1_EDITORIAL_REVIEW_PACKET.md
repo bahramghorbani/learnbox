@@ -1,7 +1,7 @@
 # LearnBox Start — editorial review packet
 
 **Batch:** `learnbox-start-a1-vertical-slice-drafts-v1`  
-**State:** awaiting a named qualified reviewer; publication blocked
+**State:** German and Persian review confirmed by the product owner on 2026-07-27; publication blocked
 
 ## Reviewer instruction
 
@@ -9,6 +9,10 @@ For every item, record a separate pass/fail decision for German linguistic accur
 translation, provenance, visual QA, audio QA and app-flow validation. Do not approve any item
 until all six decisions are recorded by the appropriate reviewer. A failed check returns the item
 to `needs_review`; it never silently becomes published.
+
+The product owner confirmed the German linguistic and Persian translation dimensions for all 20
+drafts. Provenance, visual QA, audio QA and app-flow validation remain deliberately pending
+because no production media or in-app slice has been created.
 
 ## Linguistic and Persian review list
 
@@ -39,6 +43,7 @@ to `needs_review`; it never silently becomes published.
 
 The complete draft data is in
 `content/packs/learnbox-start/vocabulary/start-a1-vertical-slice-drafts.json`. This packet does
-not approve any content and does not ask a reviewer to create media. After a qualified reviewer
-is named, record review outcomes in the content-review ledger; only then may the media plan move
-from `not_requested` to a provider-specific staging task.
+not approve any content and does not ask a reviewer to create media. The confirmed linguistic
+outcomes must be recorded in the content-review ledger. Only after the remaining provenance,
+visual, audio and app-flow outcomes are recorded may the media plan move from `not_requested` to
+a provider-specific staging task.
