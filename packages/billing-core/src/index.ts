@@ -18,6 +18,28 @@ export interface LearnBoxTierAccess {
   retainsLearnedContent: boolean;
 }
 
+export interface PersonalWordLimitResult {
+  canAdd: boolean;
+  remaining: number;
+}
+
+/** A configured personal-word limit never affects review access or previously saved words. */
+export function evaluatePersonalWordLimit(
+  currentWordCount: number,
+  configuredLimit: number,
+): PersonalWordLimitResult {
+  if (!Number.isInteger(currentWordCount) || currentWordCount < 0) {
+    throw new Error('Current personal word count must be a non-negative integer.');
+  }
+  if (!Number.isInteger(configuredLimit) || configuredLimit < 0) {
+    throw new Error('Personal word limit must be a non-negative integer.');
+  }
+  return {
+    canAdd: currentWordCount < configuredLimit,
+    remaining: Math.max(0, configuredLimit - currentWordCount),
+  };
+}
+
 export function resolveLearnBoxTierAccess(entitlements: ReadonlySet<string>): LearnBoxTierAccess {
   if (entitlements.has('learnbox_plus')) {
     return {

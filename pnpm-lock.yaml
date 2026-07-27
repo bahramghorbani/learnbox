@@ -102,6 +102,9 @@ importers:
 
   apps/website:
     dependencies:
+      '@learnbox/billing-core':
+        specifier: workspace:*
+        version: link:../../packages/billing-core
       '@learnbox/learning-engine':
         specifier: workspace:*
         version: link:../../packages/learning-engine

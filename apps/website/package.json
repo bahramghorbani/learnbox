@@ -6,9 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "typecheck": "pnpm --filter @learnbox/learning-engine build && tsc --noEmit"
+    "typecheck": "pnpm --filter @learnbox/learning-engine build && pnpm --filter @learnbox/billing-core build && tsc --noEmit"
   },
   "dependencies": {
+    "@learnbox/billing-core": "workspace:*",
     "@learnbox/learning-engine": "workspace:*",
     "next": "^15.4.5",
     "react": "^19.1.1",

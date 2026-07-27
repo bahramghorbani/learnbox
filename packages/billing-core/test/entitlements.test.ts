@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  evaluatePersonalWordLimit,
   resolveEntitlements,
   resolveLearnBoxTierAccess,
   validatePurchaseForEnvironment,
@@ -88,5 +89,10 @@ describe('billing entitlements', () => {
       canReviewDueContent: true,
       retainsLearnedContent: true,
     });
+  });
+
+  it('applies a personal-word limit without removing saved words or review access', () => {
+    expect(evaluatePersonalWordLimit(29, 30)).toEqual({ canAdd: true, remaining: 1 });
+    expect(evaluatePersonalWordLimit(30, 30)).toEqual({ canAdd: false, remaining: 0 });
   });
 });

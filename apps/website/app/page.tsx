@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import type { CSSProperties } from 'react';
 import { useEffect, useState } from 'react';
+import { evaluatePersonalWordLimit } from '@learnbox/billing-core';
 import { loadSyncQueue, saveSyncQueue, type PendingSyncEvent } from '@learnbox/learning-engine';
 
 import { LearnerNav } from './components/LearnerNav';
@@ -11,6 +12,7 @@ import { PronunciationButton } from './components/PronunciationButton';
 import { Bobo } from './components/Bobo';
 import { OnboardingGoal } from './components/OnboardingGoal';
 import { ProgressScreen } from './components/ProgressScreen';
+import { defaultSuggestedNewWords, personalWordLimit } from './product-experience';
 
 type Grade = 'forgot' | 'hard' | 'remembered' | 'mastered';
 
@@ -71,6 +73,7 @@ export default function Home() {
   const [addingWord, setAddingWord] = useState(false);
   const [newGerman, setNewGerman] = useState('');
   const [newPersian, setNewPersian] = useState('');
+  const [personalWordNotice, setPersonalWordNotice] = useState('');
   const [screen, setScreen] = useState<'today' | 'card' | 'complete' | 'progress' | 'words'>(
     'today',
   );
@@ -130,6 +133,13 @@ export default function Home() {
   };
   const addPersonalWord = () => {
     if (!newGerman.trim() || !newPersian.trim()) return;
+    const limit = evaluatePersonalWordLimit(savedWords.length, personalWordLimit);
+    if (!limit.canAdd) {
+      setPersonalWordNotice(
+        `فعلاً تا ${personalWordLimit} واژهٔ شخصی می‌توانی اضافه کنی. واژه‌های فعلی‌ات همیشه برای مرور در دسترس‌اند.`,
+      );
+      return;
+    }
     setSavedWords((words) => [
       { german: newGerman.trim(), persian: newPersian.trim(), progress: 0 },
       ...words,
@@ -137,6 +147,7 @@ export default function Home() {
     setNewGerman('');
     setNewPersian('');
     setAddingWord(false);
+    setPersonalWordNotice('');
   };
 
   if (!authenticated) {
@@ -175,6 +186,9 @@ export default function Home() {
         </header>
         <section className="words-list" aria-labelledby="words-title">
           <h1 id="words-title">واژه‌های من</h1>
+          <p className="words-count">
+            {savedWords.length} از {personalWordLimit} واژهٔ شخصی
+          </p>
           <button
             className="add-word-button"
             type="button"
@@ -205,6 +219,7 @@ export default function Home() {
               <button className="primary-button" type="submit">
                 ذخیره در واژه‌های من
               </button>
+              {personalWordNotice ? <p role="status">{personalWordNotice}</p> : null}
             </form>
           ) : null}
           <label className="word-search">
@@ -352,7 +367,7 @@ export default function Home() {
         </div>
         <div>
           <span>کلمهٔ پیشنهادی</span>
-          <strong>۱۲</strong>
+          <strong>{defaultSuggestedNewWords}</strong>
           <small>جدید برای یادگیری</small>
         </div>
       </section>
