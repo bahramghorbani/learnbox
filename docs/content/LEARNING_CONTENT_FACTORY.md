@@ -16,4 +16,8 @@ An item may be `rejected` at any gate. AI success only reaches an editorial queu
 
 ## Initial implementation boundary
 
-The repository now has the data contract and pack manifest. Provider adapters, duplicate engine, audio/image generators, content-admin release controls and bulk generation stay backlog tasks. Paid external services are inactive pending cost estimate and explicit owner approval.
+The repository now has the data contract, pack manifest and a provider-free batch validator in
+`@learnbox/content-factory`. It normalizes lemmas, finds within-batch duplicates and validates a
+batch only for human review; it cannot publish or call an external provider. Provider adapters,
+audio/image generators, content-admin release controls and bulk generation stay backlog tasks.
+Paid external services are inactive pending cost estimate and explicit owner approval.

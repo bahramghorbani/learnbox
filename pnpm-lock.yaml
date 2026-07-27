@@ -160,6 +160,16 @@ importers:
 
   packages/shared: {}
 
+  services/content-factory:
+    dependencies:
+      '@learnbox/content-models':
+        specifier: workspace:*
+        version: link:../../packages/content-models
+    devDependencies:
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@24.13.3)
+
   services/content-pipeline:
     dependencies:
       '@learnbox/content-models':

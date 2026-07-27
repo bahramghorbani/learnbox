@@ -108,6 +108,14 @@ describe('validateWordCard', () => {
     );
   });
 
+  it('records a rejected editorial outcome without publishing', () => {
+    expect(transitionContentReview('needs_review', 'reject')).toEqual({
+      nextStatus: 'rejected',
+      action: 'reject',
+      requiresPublisher: false,
+    });
+  });
+
   it('validates the complete reusable vocabulary-item contract', () => {
     expect(validateLearningVocabularyItem(validVocabularyItem)).toEqual([]);
     expect(

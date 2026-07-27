@@ -5,6 +5,7 @@
 | Tier resolver    | no Plus purchase, expired purchase, valid Plus | Start retains due/learned review; Plus resolves with stable ID.                              |
 | Config contract  | JSON schema/value validation                   | No public labels/limits/prices hardcoded in client paths; forbidden tactics remain excluded. |
 | Content model    | complete item and invalid metadata             | `rejected` accepted; full item validates; missing metadata fails.                            |
+| Content batch    | normalized lemmas, count and duplicates        | batch reaches only the human-review queue; no automatic publish.                             |
 | AI/review flow   | generated draft to release                     | AI cannot publish; reviewer and publisher remain separate.                                   |
 | 20-item slice    | PWA/mobile card and offline flow               | media, audio, schedule, progress and recovery work offline.                                  |
 | Bobo visual QA   | nouns/actions/places/abstract cards            | semantic subject wins; canonical Bobo only; no text/watermark/clutter.                       |

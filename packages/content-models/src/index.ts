@@ -81,10 +81,10 @@ export interface AiContentReviewDecision {
   requiresHumanReview: true;
 }
 
-export type ContentReviewAction = 'approve' | 'return_for_revision';
+export type ContentReviewAction = 'approve' | 'return_for_revision' | 'reject';
 
 export interface ContentReviewTransition {
-  nextStatus: 'approved' | 'needs_review';
+  nextStatus: 'approved' | 'needs_review' | 'rejected';
   action: ContentReviewAction;
   requiresPublisher: boolean;
 }
@@ -193,7 +193,12 @@ export function transitionContentReview(
   if (currentStatus !== 'auto_validated' && currentStatus !== 'needs_review') {
     throw new Error('Only review-queue content can receive a review decision.');
   }
-  return action === 'approve'
-    ? { nextStatus: 'approved', action, requiresPublisher: true }
-    : { nextStatus: 'needs_review', action, requiresPublisher: false };
+  if (action === 'approve') {
+    return { nextStatus: 'approved', action, requiresPublisher: true };
+  }
+  return {
+    nextStatus: action === 'reject' ? 'rejected' : 'needs_review',
+    action,
+    requiresPublisher: false,
+  };
 }
