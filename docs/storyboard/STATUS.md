@@ -5,6 +5,6 @@
 - **Next:** complete the remaining closed-alpha checks and the approved Stage 23 compatibility
   work (Start/Plus config, controlled content slice and factory contracts), then obtain owner
   approval before inviting any participant
-- **Blockers:** explicit owner approval is still required before any alpha invitation. Real-device evidence is recorded for the main learning path; transparent Bobo assets are deferred because the image API billing limit is reached; the local machine has no Flutter SDK, but the latest GitHub CI mobile job passed.
+- **Blockers:** explicit owner approval is still required before any alpha invitation. Real-device evidence is recorded for the main learning path; transparent Bobo assets are deferred because the image API billing limit is reached; the 20-card Start slice is awaiting a named qualified German/Persian reviewer before media production; the local machine has no Flutter SDK, but the latest GitHub CI mobile job passed.
 - **Owner action:** none for the local prototype. Before any real alpha invitation, the owner must approve the participant list, invitation channel and consent wording. A real provider account and acceptance of its terms are required before production SMS sign-in can be activated.
 - **Last updated:** 2026-07-27
