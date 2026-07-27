@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   findDuplicateContentIds,
+  createPendingMediaPlan,
   normalizeGermanLemma,
   prepareContentBatchForReview,
   validateContentBatch,
@@ -124,5 +125,43 @@ describe('content factory batch validation', () => {
       publicationBlocked: true,
       itemIds: expect.arrayContaining(['start-a1-haus', 'start-a1-entschuldigung']),
     });
+  });
+
+  it('plans, but never requests, exactly three stable media assets per real draft', () => {
+    const drafts = JSON.parse(
+      readFileSync(
+        new URL(
+          '../../../content/packs/learnbox-start/vocabulary/start-a1-vertical-slice-drafts.json',
+          import.meta.url,
+        ),
+        'utf8',
+      ),
+    ) as { items: LearningVocabularyItem[] };
+    const plan = createPendingMediaPlan(drafts.items);
+    expect(plan).toHaveLength(60);
+    expect(plan.filter((asset) => asset.state === 'not_requested')).toHaveLength(60);
+    expect(plan.slice(0, 3)).toEqual([
+      {
+        assetId: 'start-a1-haus-image-v1',
+        contentId: 'start-a1-haus',
+        kind: 'image',
+        storageKey: 'start-a1-haus/image/v1',
+        state: 'not_requested',
+      },
+      {
+        assetId: 'start-a1-haus-word_audio-v1',
+        contentId: 'start-a1-haus',
+        kind: 'word_audio',
+        storageKey: 'start-a1-haus/word_audio/v1',
+        state: 'not_requested',
+      },
+      {
+        assetId: 'start-a1-haus-sentence_audio-v1',
+        contentId: 'start-a1-haus',
+        kind: 'sentence_audio',
+        storageKey: 'start-a1-haus/sentence_audio/v1',
+        state: 'not_requested',
+      },
+    ]);
   });
 });

@@ -18,3 +18,7 @@ publication claim is present.
 
 `validation/start-a1-slice-review-queue.json` records the review boundary for this batch. It is
 publication-blocked until every named linguistic, media and in-app validation step is complete.
+
+`prompts/start-a1-slice-media-production-spec.json` records the stable asset naming and QA
+requirements for future image and audio work. Its state is planning-only; it has no provider
+configuration or production media.

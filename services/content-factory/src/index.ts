@@ -25,6 +25,14 @@ export interface PreparedReviewQueue {
   publicationBlocked: true;
 }
 
+export interface PlannedMediaAsset {
+  assetId: string;
+  contentId: string;
+  kind: 'image' | 'word_audio' | 'sentence_audio';
+  storageKey: string;
+  state: 'not_requested';
+}
+
 export type StartSliceCandidateCategory =
   'household_noun' | 'food_drink' | 'place' | 'verb' | 'adjective_emotion' | 'daily_expression';
 
@@ -153,4 +161,25 @@ export function prepareContentBatchForReview(input: ContentBatchInput): Prepared
     itemIds: input.items.map((item) => item.id),
     publicationBlocked: true,
   };
+}
+
+/**
+ * Creates stable names for future production media without requesting any provider or changing a
+ * card's review status. The returned plan is intentionally non-executable.
+ */
+export function createPendingMediaPlan(
+  items: ReadonlyArray<LearningVocabularyItem>,
+): PlannedMediaAsset[] {
+  return items.flatMap((item) => {
+    if (item.status !== 'needs_review') {
+      throw new Error('Media can only be planned for review-queued vocabulary items.');
+    }
+    return (['image', 'word_audio', 'sentence_audio'] as const).map((kind) => ({
+      assetId: `${item.id}-${kind}-v1`,
+      contentId: item.id,
+      kind,
+      storageKey: `${item.id}/${kind}/v1`,
+      state: 'not_requested',
+    }));
+  });
 }

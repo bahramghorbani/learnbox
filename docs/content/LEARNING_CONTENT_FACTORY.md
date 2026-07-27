@@ -28,3 +28,7 @@ recorded semantic, Bobo, mobile-readability, text/watermark/clutter and audio ch
 `prepareContentBatchForReview` is the executable queue boundary. It accepts only a fully valid
 batch whose items are still `needs_review`, returns a publication-blocked review record and has no
 publish operation.
+
+`createPendingMediaPlan` creates three stable future asset names per review-queued card (image,
+word audio and sentence audio). It makes no provider request and labels every asset
+`not_requested` until the linguistic review gate passes.
