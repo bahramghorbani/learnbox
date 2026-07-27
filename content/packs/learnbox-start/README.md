@@ -15,3 +15,6 @@ and Persian editorial review before individual cards are drafted.
 `vocabulary/start-a1-vertical-slice-drafts.json` contains the matching 20 structured linguistic
 drafts. They are review-queued AI-assisted material: no production media, visual/audio QA or
 publication claim is present.
+
+`validation/start-a1-slice-review-queue.json` records the review boundary for this batch. It is
+publication-blocked until every named linguistic, media and in-app validation step is complete.

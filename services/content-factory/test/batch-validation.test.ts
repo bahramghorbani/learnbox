@@ -1,11 +1,15 @@
+import { readFileSync } from 'node:fs';
+
 import { describe, expect, it } from 'vitest';
 
 import {
   findDuplicateContentIds,
   normalizeGermanLemma,
+  prepareContentBatchForReview,
   validateContentBatch,
   validateStartSliceCandidates,
 } from '../src/index.js';
+import type { ContentPackManifest, LearningVocabularyItem } from '@learnbox/content-models';
 
 const item = (id: string, lemma: string) => ({
   id,
@@ -86,5 +90,39 @@ describe('content factory batch validation', () => {
     const result = validateStartSliceCandidates(candidates, 1);
     expect(result.readyForLinguisticReview).toBe(false);
     expect(result.issues.map((issue) => issue.field)).toContain('category');
+  });
+
+  it('connects all 20 real slice drafts to a publication-blocked review queue', () => {
+    const drafts = JSON.parse(
+      readFileSync(
+        new URL(
+          '../../../content/packs/learnbox-start/vocabulary/start-a1-vertical-slice-drafts.json',
+          import.meta.url,
+        ),
+        'utf8',
+      ),
+    ) as { batchId: string; items: LearningVocabularyItem[] };
+    const actualManifest: ContentPackManifest = {
+      id: 'learnbox_start_a1_essentials',
+      version: 1,
+      tierId: 'learnbox_start',
+      displayName: 'LearnBox Start — German A1 Essentials',
+      locale: 'de-DE',
+      targetCefr: 'A1',
+      targetItemCount: 350,
+      releaseStatus: 'draft',
+    };
+    expect(
+      prepareContentBatchForReview({
+        batchId: drafts.batchId,
+        manifest: actualManifest,
+        expectedItemCount: 20,
+        items: drafts.items,
+      }),
+    ).toMatchObject({
+      state: 'awaiting_human_review',
+      publicationBlocked: true,
+      itemIds: expect.arrayContaining(['start-a1-haus', 'start-a1-entschuldigung']),
+    });
   });
 });

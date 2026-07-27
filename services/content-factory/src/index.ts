@@ -18,6 +18,13 @@ export interface ContentBatchValidation {
   issues: ContentValidationIssue[];
 }
 
+export interface PreparedReviewQueue {
+  batchId: string;
+  state: 'awaiting_human_review';
+  itemIds: string[];
+  publicationBlocked: true;
+}
+
 export type StartSliceCandidateCategory =
   'household_noun' | 'food_drink' | 'place' | 'verb' | 'adjective_emotion' | 'daily_expression';
 
@@ -126,4 +133,24 @@ export function validateContentBatch(input: ContentBatchInput): ContentBatchVali
     }
   }
   return { batchId: input.batchId, readyForHumanReview: issues.length === 0, issues };
+}
+
+/**
+ * Prepares a validated batch for editorial work only. This is a one-way safety boundary: it
+ * exposes no publish transition, and all items must remain in the review queue.
+ */
+export function prepareContentBatchForReview(input: ContentBatchInput): PreparedReviewQueue {
+  const validation = validateContentBatch(input);
+  if (!validation.readyForHumanReview) {
+    throw new Error('Only a valid content batch can enter the human review queue.');
+  }
+  if (input.items.some((item) => item.status !== 'needs_review')) {
+    throw new Error('Every queued item must remain in needs_review status.');
+  }
+  return {
+    batchId: input.batchId,
+    state: 'awaiting_human_review',
+    itemIds: input.items.map((item) => item.id),
+    publicationBlocked: true,
+  };
 }

@@ -24,3 +24,7 @@ Paid external services are inactive pending cost estimate and explicit owner app
 
 The content model now also records provider-free visual and audio QA. Publication requires the
 recorded semantic, Bobo, mobile-readability, text/watermark/clutter and audio checks to pass.
+
+`prepareContentBatchForReview` is the executable queue boundary. It accepts only a fully valid
+batch whose items are still `needs_review`, returns a publication-blocked review record and has no
+publish operation.

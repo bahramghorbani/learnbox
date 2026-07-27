@@ -1,0 +1,14 @@
+{
+  "batchId": "learnbox-start-a1-vertical-slice-drafts-v1",
+  "state": "awaiting_human_review",
+  "publicationBlocked": true,
+  "requiredBeforeStaging": [
+    "German linguistic review",
+    "Persian translation review",
+    "source/provenance review",
+    "production image QA",
+    "word and sentence audio QA",
+    "PWA and mobile app-flow validation"
+  ],
+  "itemCount": 20
+}
