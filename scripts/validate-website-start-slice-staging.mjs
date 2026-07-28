@@ -9,10 +9,12 @@ const approvalFile = new URL(
   import.meta.url,
 );
 const stagingModule = new URL('../apps/website/app/start-slice.ts', import.meta.url);
+const websitePage = new URL('../apps/website/app/page.tsx', import.meta.url);
 
 const drafts = JSON.parse(await readFile(draftFile, 'utf8'));
 const approval = JSON.parse(await readFile(approvalFile, 'utf8'));
 const stagingSource = await readFile(stagingModule, 'utf8');
+const websiteSource = await readFile(websitePage, 'utf8');
 
 if (drafts.items.length !== 20) {
   throw new Error('The web staging slice must contain the approved 20 draft items.');
@@ -32,6 +34,26 @@ if (!stagingSource.includes('start-a1-vertical-slice-drafts.json')) {
 
 if (!stagingSource.includes('dailySessionSize = 3')) {
   throw new Error('The staged daily session must remain limited to three cards.');
+}
+
+const coveredItemIds = new Set();
+for (let dayNumber = 0; dayNumber < drafts.items.length; dayNumber += 1) {
+  const firstIndex = (dayNumber * 3) % drafts.items.length;
+  for (let offset = 0; offset < 3; offset += 1) {
+    coveredItemIds.add(drafts.items[(firstIndex + offset) % drafts.items.length].id);
+  }
+}
+
+if (coveredItemIds.size !== drafts.items.length) {
+  throw new Error('The daily schedule must expose every Start card across the cycle.');
+}
+
+if (!websiteSource.includes('cardId: studyItems[sessionIndex].id')) {
+  throw new Error('Offline review events must record the stable Start card identifier.');
+}
+
+if (!websiteSource.includes('تصویر و صدای این کارت در حال آماده‌سازی است.')) {
+  throw new Error('Staged cards must clearly disclose pending production media.');
 }
 
 console.info('Website Start slice staging is valid and remains publication-blocked.');
