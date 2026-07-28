@@ -4,4 +4,10 @@ REST/OpenAPI boundary, versioned endpoints, short-lived access tokens, rotated r
 
 The review-write boundary accepts one authenticated learner's grade, occurrence time and `client_event_id`. Its PostgreSQL adapter claims that idempotency key before updating `card_schedules` in the same database transaction. The HTTP controller remains disabled until real authentication is connected; clients must not send a user identifier as a substitute for authentication.
 
-The planned admin review boundary will derive the editor identity and roles from the authenticated session, not from request fields. It will accept only an idempotency key, the version to review, an approve/return action, and an optional editorial reason. It must atomically append the decision and audit log, then update the version only if it is still in the review queue. Publishing is a separate, role-gated operation.
+The server-side admin review core derives authorization from `admin_role_assignments`, never from a
+browser request. Its future authenticated route will supply only the session-derived actor ID, an
+idempotency key, the version to review, an approve/return/reject action and an optional editorial
+reason. One PostgreSQL transaction locks the version, appends the decision and audit log, and then
+changes a reviewable version only to `approved` or durable `rejected`. It has no publication
+operation: publishing remains a separate, role-gated boundary for a content publisher or super
+admin.
