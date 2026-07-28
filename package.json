@@ -34,6 +34,8 @@
     "generate:avalai:card-candidates": "node scripts/generate-avalai-card-candidates.mjs",
     "generate:avalai:audio-pilot": "node scripts/generate-avalai-audio-pilot.mjs",
     "generate:avalai:audio-candidates": "node scripts/generate-avalai-audio-candidates.mjs",
+    "repair:avalai:audio-candidates": "node scripts/repair-avalai-audio-candidates.mjs",
+    "verify:avalai:audio-candidates": "node scripts/verify-avalai-audio-candidates.mjs",
     "dev": "pnpm --filter @learnbox/website dev",
     "preview:web": "pnpm --filter @learnbox/website exec next start --hostname 127.0.0.1 --port 3010"
   },

@@ -22,3 +22,14 @@ publication-blocked until every named linguistic, media and in-app validation st
 `prompts/start-a1-slice-media-production-spec.json` records the stable asset naming and QA
 requirements for future image and audio work. Its state is planning-only; it has no provider
 configuration or production media.
+
+## Local candidate media — 2026-07-28
+
+The `images/` directory contains 20 visually reviewed, local image candidates. The `audio/`
+directory contains 40 local de-DE audio candidates (one word and one example sentence for each
+item). The audio transcription check matched all 40 expected German strings; its evidence is in
+`validation/start-a1-avalai-audio-transcription-qa.json`.
+
+These files are versioned candidate material only. They are not attached to learner cards, do
+not change the planning-only media handoff, and are not published. Publication remains blocked
+until the existing linguistic, provenance, visual, audio and in-app gates are closed.
