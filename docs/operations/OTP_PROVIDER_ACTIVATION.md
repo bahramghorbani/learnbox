@@ -2,7 +2,11 @@
 
 ## Current state
 
-The owner selected SMS.ir for the future Iranian OTP delivery adapter. It is not connected: no API key, template ID, deployment secret, route, real delivery, or learner session has been enabled. The phone entry screen is therefore still a local closed-alpha prototype; it does not prove an identity, issue a production session, or enable private media for a learner.
+The owner selected SMS.ir for the future Iranian OTP delivery adapter. A tested server-only delivery
+client is prepared but remains disabled: no API key, template ID, deployment secret, route, real
+delivery, or learner session has been enabled. The phone entry screen is therefore still a local
+closed-alpha prototype; it does not prove an identity, issue a production session, or enable
+private media for a learner.
 
 The default provider is intentionally disabled. It fails closed and cannot deliver a code by accident.
 
@@ -10,7 +14,14 @@ The default provider is intentionally disabled. It fails closed and cannot deliv
 
 Before activation, the owner must provide the approved SMS.ir verification-template ID and place its private API key only in the deployment secret store. SMS.ir's verification endpoint delivers a parameterized template but does not verify a code for LearnBox, so LearnBox must keep the opaque challenge, hashed code, expiry, resend cooldown, attempts, and final identity binding on its own server. These actions are external, potentially paid, and must not be automated by Codex.
 
-The required SMS.ir adapter is server-only and will use its `POST /v1/send/verify` endpoint with the `X-API-KEY` header, the owner-approved template ID, and a single code parameter. The browser must never receive those values. LearnBox's tested OTP core, database migrations and atomic PostgreSQL store already cover opaque challenge lifecycle, five-minute expiry, one-minute resend cooldown, five attempts, keyed hashes, one-time consumption and persistence-backed 15-minute request-rate limits (three requests per phone hash and ten per IP hash); only routes and the delivery adapter remain inactive.
+The prepared SMS.ir delivery client is server-only and uses its `POST /v1/send/verify` endpoint
+with the `X-API-KEY` header, the owner-approved template ID, and a single code parameter. It is
+tested with mocked delivery and generic outage handling; it does not issue sessions or expose a
+browser SDK. The browser must never receive those values. LearnBox's tested OTP core, database
+migrations and atomic PostgreSQL store already cover opaque challenge lifecycle, five-minute
+expiry, one-minute resend cooldown, five attempts, keyed hashes, one-time consumption and
+persistence-backed 15-minute request-rate limits (three requests per phone hash and ten per IP
+hash); routes and activation remain inactive.
 
 ## Adapter contract
 
