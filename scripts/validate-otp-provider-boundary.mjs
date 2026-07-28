@@ -31,4 +31,10 @@ if (authGateSource.includes('/api/auth/') || authGateSource.includes('/api/devel
   throw new Error('The local alpha phone UI must not call an unaudited server OTP/session route.');
 }
 
+for (const required of ['در این نسخهٔ آزمایشی، پیامکی ارسال نمی‌شود', 'ورود آزمایشی به LearnBox']) {
+  if (!authGateSource.includes(required)) {
+    throw new Error(`The local alpha phone UI must disclose its prototype status: ${required}`);
+  }
+}
+
 console.info('OTP provider boundary is disabled by default and ready for an approved adapter.');

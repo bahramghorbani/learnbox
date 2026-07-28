@@ -50,7 +50,7 @@ export function AuthGate({ onAuthenticated }: AuthGateProps) {
       {stage === 'phone' ? (
         <section className="auth-content" aria-labelledby="auth-title">
           <h1 id="auth-title">به LearnBox خوش آمدی</h1>
-          <p>برای ادامه، شمارهٔ موبایل خودت را وارد کن.</p>
+          <p>برای ادامهٔ آزمایشی، شمارهٔ موبایل خودت را وارد کن.</p>
           <form className="auth-form" onSubmit={submitPhone} noValidate>
             <label htmlFor="mobile-number">شمارهٔ موبایل</label>
             <div className="phone-input-row">
@@ -74,9 +74,13 @@ export function AuthGate({ onAuthenticated }: AuthGateProps) {
               </p>
             ) : null}
             <button className="primary-button" type="submit">
-              ارسال کد ورود
+              ادامهٔ آزمایشی
             </button>
           </form>
+          <p className="auth-prototype-notice" role="status">
+            در این نسخهٔ آزمایشی، پیامکی ارسال نمی‌شود و می‌توانی در مرحلهٔ بعد هر کد ۵ رقمی را وارد
+            کنی.
+          </p>
           <p className="auth-note">
             با ادامه، با شرایط استفاده و سیاست حریم خصوصی LearnBox موافقت می‌کنی.
           </p>
@@ -86,8 +90,8 @@ export function AuthGate({ onAuthenticated }: AuthGateProps) {
           <button className="text-button auth-back" type="button" onClick={() => setStage('phone')}>
             تغییر شماره
           </button>
-          <h1 id="code-title">کد ورود را وارد کن</h1>
-          <p>کد ۵ رقمی را برای شمارهٔ {phone} وارد کن.</p>
+          <h1 id="code-title">کد آزمایشی را وارد کن</h1>
+          <p>برای ادامه، هر کد ۵ رقمی را برای شمارهٔ {phone} وارد کن.</p>
           <form className="auth-form" onSubmit={submitCode} noValidate>
             <label htmlFor="login-code">کد ورود</label>
             <input
@@ -109,7 +113,7 @@ export function AuthGate({ onAuthenticated }: AuthGateProps) {
               </p>
             ) : null}
             <button className="primary-button" type="submit">
-              ورود به LearnBox
+              ورود آزمایشی به LearnBox
             </button>
           </form>
         </section>

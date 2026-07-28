@@ -313,6 +313,17 @@ button {
   line-height: 1.9;
   text-align: center;
 }
+.auth-prototype-notice {
+  margin: 20px 6px 0;
+  border: 1px solid #ded7ff;
+  border-radius: 16px;
+  padding: 12px 14px;
+  background: #f7f5ff;
+  color: #514779;
+  font-size: 14px;
+  line-height: 1.9;
+  text-align: right;
+}
 .auth-error {
   margin: 0;
   color: #bd3f3f;
