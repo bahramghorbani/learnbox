@@ -14,7 +14,7 @@
 | Analytics                    | minor_implementation_change              | Allowlisted, consent-gated delivery seam added; no provider or telemetry is activated.            |
 | Content schema               | minor_implementation_change              | Additive full vocabulary-item contract and `rejected` status added.                               |
 | Content pipeline             | documentation_update                     | Existing human gate is compatible; factory adapters remain next work.                             |
-| Admin                        | requires_new_task                        | Existing review UI is reusable; configuration/release controls are not yet built.                 |
+| Admin                        | minor_implementation_change              | Release-readiness gate now enforces publisher separation and complete pack QA.                    |
 | Bobo system                  | documentation_update                     | Vocabulary image policy added without changing owner-approved assets.                             |
 | Start pack                   | configuration_update                     | Draft manifest, methodology and slice plan added; no production content/media generated.          |
 | PWA/mobile                   | requires_new_task                        | Must consume remote config and validate the 20-item slice in app.                                 |
