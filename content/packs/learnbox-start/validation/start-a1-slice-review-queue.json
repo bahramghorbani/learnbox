@@ -1,6 +1,6 @@
 {
   "batchId": "learnbox-start-a1-vertical-slice-drafts-v1",
-  "state": "candidate_qa_complete",
+  "state": "private_media_attested_not_attached",
   "publicationBlocked": true,
   "completedChecks": [
     "german_linguistic",
@@ -8,10 +8,11 @@
     "candidate_provenance",
     "candidate_visual",
     "candidate_audio",
-    "candidate_app_flow"
+    "candidate_app_flow",
+    "private_storage_checksum_attestation"
   ],
   "requiredBeforeStaging": [
-    "production media attachment receipts",
+    "server session authorization for private media",
     "owner release approval",
     "participant invitation approval"
   ],

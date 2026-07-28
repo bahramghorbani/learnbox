@@ -1,6 +1,6 @@
 # ADR 0005 — Private media storage for controlled alpha
 
-- **Status:** accepted, pending owner account action
+- **Status:** accepted, storage verified and card attachment blocked
 - **Date:** 2026-07-28
 
 ## Context
@@ -28,8 +28,10 @@ project-scoped storage credential.
 ## Consequences
 
 This choice adds one Vercel account action and may have provider costs. It preserves private
-delivery, rollback through versioned paths, and the existing media-receipt gate. The local media
-preview remains unchanged and production attachment remains blocked until a store is connected.
+delivery, rollback through versioned paths, and the existing media-receipt gate. The 60 uploaded
+objects are checksum-attested without storing their private URLs in Git. The local media preview
+remains unchanged and card attachment remains blocked until a server-side learner session can
+authorize reads and the owner approves release.
 
 ## Reversal trigger
 

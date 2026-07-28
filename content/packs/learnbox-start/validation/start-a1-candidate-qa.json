@@ -22,7 +22,7 @@
   },
   "publicationBlocked": true,
   "remainingReleaseGates": [
-    "production_media_attachment_receipts",
+    "server_session_authorization_for_private_media",
     "owner_release_approval",
     "participant_invitation_approval"
   ]
