@@ -32,8 +32,13 @@ type QueuedReview = {
   reviewedAt: string;
 };
 
+type QueuedPersonalVocabulary = PersonalVocabularyEntry & {
+  savedAt: string;
+};
+
 const reviewSyncStorageKey = 'learnbox:review-sync:v1:local-prototype';
 const personalVocabularyStorageKey = 'learnbox:personal-vocabulary:v1:local-prototype';
+const personalVocabularySyncStorageKey = 'learnbox:personal-vocabulary-sync:v1:local-prototype';
 
 const initialSavedWords = stagedStartSlice.slice(0, 3).map((item, index) => ({
   german: item.article ? `${item.article} ${item.german}` : item.german,
@@ -56,6 +61,7 @@ export default function Home() {
   const [wordQuery, setWordQuery] = useState('');
   const [personalWords, setPersonalWords] = useState<PersonalVocabularyEntry[]>([]);
   const [personalWordsLoaded, setPersonalWordsLoaded] = useState(false);
+  const [pendingPersonalWordSyncCount, setPendingPersonalWordSyncCount] = useState(0);
   const [addingWord, setAddingWord] = useState(false);
   const [newGerman, setNewGerman] = useState('');
   const [newPersian, setNewPersian] = useState('');
@@ -82,6 +88,10 @@ export default function Home() {
 
   useEffect(() => {
     setPersonalWords(loadPersonalVocabulary(window.localStorage, personalVocabularyStorageKey));
+    setPendingPersonalWordSyncCount(
+      loadSyncQueue<QueuedPersonalVocabulary>(window.localStorage, personalVocabularySyncStorageKey)
+        .length,
+    );
     setPersonalWordsLoaded(true);
   }, []);
 
@@ -101,6 +111,27 @@ export default function Home() {
     setFlipped(false);
     setGrade(null);
     setSessionIndex(0);
+  };
+  const queuePersonalVocabularySync = (entry: PersonalVocabularyEntry) => {
+    if (typeof window === 'undefined') return;
+    const queue = loadSyncQueue<QueuedPersonalVocabulary>(
+      window.localStorage,
+      personalVocabularySyncStorageKey,
+    );
+    const clientEventId =
+      window.crypto?.randomUUID?.() ??
+      `personal-word-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    const nextQueue: PendingSyncEvent<QueuedPersonalVocabulary>[] = [
+      ...queue,
+      {
+        clientEventId,
+        payload: { ...entry, savedAt: new Date().toISOString() },
+        attempts: 0,
+        nextAttemptAt: new Date(),
+      },
+    ];
+    saveSyncQueue(window.localStorage, personalVocabularySyncStorageKey, nextQueue);
+    setPendingPersonalWordSyncCount(nextQueue.length);
   };
   const recordGrade = (nextGrade: Grade) => {
     if (typeof window !== 'undefined') {
@@ -150,10 +181,9 @@ export default function Home() {
       );
       return;
     }
-    setPersonalWords((words) => [
-      { german: newGerman.trim(), persian: newPersian.trim(), progress: 0 },
-      ...words,
-    ]);
+    const entry = { german: newGerman.trim(), persian: newPersian.trim(), progress: 0 };
+    setPersonalWords((words) => [entry, ...words]);
+    queuePersonalVocabularySync(entry);
     setNewGerman('');
     setNewPersian('');
     setAddingWord(false);
@@ -201,6 +231,11 @@ export default function Home() {
           <p className="words-count">
             {savedWords.length} از {personalWordLimit} واژهٔ شخصی
           </p>
+          {pendingPersonalWordSyncCount ? (
+            <p className="sync-status" role="status">
+              {pendingPersonalWordSyncCount} واژه برای همگام‌سازی امن آماده است.
+            </p>
+          ) : null}
           <button
             className="add-word-button"
             type="button"

@@ -1456,6 +1456,12 @@ p {
   color: #5d6079;
   font-size: 13px;
 }
+.words-list .sync-status {
+  margin: -12px 0 20px;
+  color: #5d6079;
+  font-size: 13px;
+  line-height: 1.8;
+}
 @media (max-width: 420px) {
   .app-shell {
     padding: 22px 16px 36px;
