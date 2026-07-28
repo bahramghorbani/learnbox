@@ -10,6 +10,22 @@ export interface PersonalVocabularyStorage {
   removeItem(key: string): void;
 }
 
+function normalizeGerman(value: string) {
+  return value.trim().replace(/\s+/g, ' ').toLocaleLowerCase('de-DE');
+}
+
+/** Uses the German prompt as the local identity, independent of spacing or letter case. */
+export function hasPersonalVocabularyDuplicate(
+  entries: PersonalVocabularyEntry[],
+  german: string,
+): boolean {
+  const normalizedGerman = normalizeGerman(german);
+  return (
+    normalizedGerman.length > 0 &&
+    entries.some((entry) => normalizeGerman(entry.german) === normalizedGerman)
+  );
+}
+
 function isPersonalVocabularyEntry(value: unknown): value is PersonalVocabularyEntry {
   if (!value || typeof value !== 'object') return false;
   const entry = value as Record<string, unknown>;

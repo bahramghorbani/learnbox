@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  hasPersonalVocabularyDuplicate,
   loadPersonalVocabulary,
   savePersonalVocabulary,
   type PersonalVocabularyStorage,
@@ -50,5 +51,12 @@ describe('personal vocabulary storage', () => {
     ]);
     savePersonalVocabulary(storage, 'personal-words:v1', []);
     expect(storage.getItem('personal-words:v1')).toBeNull();
+  });
+
+  it('finds German duplicates despite letter case and extra spacing', () => {
+    const entries = [{ german: 'das Haus', persian: 'خانه', progress: 72 }];
+
+    expect(hasPersonalVocabularyDuplicate(entries, '  DAS   Haus  ')).toBe(true);
+    expect(hasPersonalVocabularyDuplicate(entries, 'der Tisch')).toBe(false);
   });
 });

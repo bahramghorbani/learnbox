@@ -4,6 +4,7 @@ import type { CSSProperties } from 'react';
 import { useEffect, useState } from 'react';
 import { evaluatePersonalWordLimit } from '@learnbox/billing-core';
 import {
+  hasPersonalVocabularyDuplicate,
   loadPersonalVocabulary,
   loadSyncQueue,
   savePersonalVocabulary,
@@ -138,6 +139,10 @@ export default function Home() {
   };
   const addPersonalWord = () => {
     if (!newGerman.trim() || !newPersian.trim()) return;
+    if (hasPersonalVocabularyDuplicate(savedWords, newGerman)) {
+      setPersonalWordNotice('این واژه از قبل در فهرست تو هست.');
+      return;
+    }
     const limit = evaluatePersonalWordLimit(savedWords.length, personalWordLimit);
     if (!limit.canAdd) {
       setPersonalWordNotice(
