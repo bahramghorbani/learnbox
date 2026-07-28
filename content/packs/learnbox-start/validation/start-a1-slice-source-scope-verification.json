@@ -1,0 +1,44 @@
+{
+  "batchId": "learnbox-start-a1-vertical-slice-drafts-v1",
+  "verificationType": "official_a1_lexical_scope",
+  "verifiedAt": "2026-07-28",
+  "verifiedBy": "codex_source_verification",
+  "source": {
+    "publisher": "Goethe-Institut",
+    "title": "GOETHE-ZERTIFIKAT A1 — Start Deutsch 1 Wortliste",
+    "url": "https://www.goethe.de/pro/relaunch/prf/de/A1_SD1_Wortliste_02.pdf",
+    "scope": "The document describes the A1 lexical inventory and its topic areas."
+  },
+  "scopeSupportedItemIds": [
+    "start-a1-haus",
+    "start-a1-tisch",
+    "start-a1-tuer",
+    "start-a1-bett",
+    "start-a1-apfel",
+    "start-a1-brot",
+    "start-a1-wasser",
+    "start-a1-bahnhof",
+    "start-a1-schule",
+    "start-a1-lernen",
+    "start-a1-wohnen",
+    "start-a1-kaufen",
+    "start-a1-warten",
+    "start-a1-gluecklich",
+    "start-a1-muede",
+    "start-a1-klein",
+    "start-a1-guten-tag",
+    "start-a1-wie-geht-es-ihnen",
+    "start-a1-danke",
+    "start-a1-entschuldigung"
+  ],
+  "evidencePages": {
+    "nouns": [9, 10, 11, 16, 22, 23, 24],
+    "verbsAndAdjectives": [15, 17, 18, 19, 24, 25],
+    "greetingsAndPhrases": [12, 13, 16, 21]
+  },
+  "limitations": [
+    "This verifies A1 lexical scope, not ownership or licensing of generated media.",
+    "The Goethe list is not the source of LearnBox's generated definitions, Persian translations or examples.",
+    "Visual QA, audio QA and app-flow validation remain required before publication."
+  ]
+}
