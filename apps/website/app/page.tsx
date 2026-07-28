@@ -9,7 +9,10 @@ import {
   loadSyncQueue,
   createMemoryStorage,
   createResilientStorage,
+  clearReviewSession,
+  loadReviewSession,
   savePersonalVocabulary,
+  saveReviewSession,
   saveSyncQueue,
   type DeviceStorage,
   type PendingSyncEvent,
@@ -44,6 +47,7 @@ const reviewSyncStorageKey = 'learnbox:review-sync:v1:local-prototype';
 const personalVocabularyStorageKey = 'learnbox:personal-vocabulary:v1:local-prototype';
 const personalVocabularySyncStorageKey = 'learnbox:personal-vocabulary-sync:v1:local-prototype';
 const onboardingGoalStorageKey = 'learnbox:onboarding-goal:v1:local-prototype';
+const reviewSessionStorageKey = 'learnbox:review-session:v1:local-prototype';
 const temporaryDeviceStorage = createMemoryStorage();
 
 function getDeviceStorage(): DeviceStorage {
@@ -90,6 +94,7 @@ export default function Home() {
   const [reviewedToday, setReviewedToday] = useState(0);
   const [streakDays, setStreakDays] = useState(3);
   const [pendingReviewCount, setPendingReviewCount] = useState(0);
+  const [resumableSessionIndex, setResumableSessionIndex] = useState<number | null>(null);
   const [completedSessions, setCompletedSessions] = useState(0);
   const [plusOfferDismissed, setPlusOfferDismissed] = useState(false);
   const [isLocalMediaPreview, setIsLocalMediaPreview] = useState(false);
@@ -98,7 +103,14 @@ export default function Home() {
     if (!authenticated || typeof window === 'undefined') return;
     const storage = getDeviceStorage();
     setPendingReviewCount(loadSyncQueue<QueuedReview>(storage, reviewSyncStorageKey).length);
-  }, [authenticated]);
+    const savedSession = loadReviewSession(storage, reviewSessionStorageKey);
+    if (savedSession && savedSession.nextCardIndex < studyItems.length) {
+      setResumableSessionIndex(savedSession.nextCardIndex);
+      return;
+    }
+    if (savedSession) clearReviewSession(storage, reviewSessionStorageKey);
+    setResumableSessionIndex(null);
+  }, [authenticated, studyItems.length]);
 
   useEffect(() => {
     const storage = getDeviceStorage();
@@ -128,10 +140,13 @@ export default function Home() {
   }, []);
 
   const begin = () => {
+    const nextIndex = resumableSessionIndex ?? 0;
     setScreen('card');
     setFlipped(false);
     setGrade(null);
-    setSessionIndex(0);
+    setSessionIndex(nextIndex);
+    saveReviewSession(getDeviceStorage(), reviewSessionStorageKey, { nextCardIndex: nextIndex });
+    setResumableSessionIndex(nextIndex);
   };
   const completeOnboarding = () => {
     getDeviceStorage().setItem(onboardingGoalStorageKey, learningGoal);
@@ -186,11 +201,16 @@ export default function Home() {
     setReviewedToday((count) => count + 1);
 
     if (sessionIndex < studyItems.length - 1) {
-      setSessionIndex((index) => index + 1);
+      const nextIndex = sessionIndex + 1;
+      saveReviewSession(getDeviceStorage(), reviewSessionStorageKey, { nextCardIndex: nextIndex });
+      setResumableSessionIndex(nextIndex);
+      setSessionIndex(nextIndex);
       setFlipped(false);
       return;
     }
 
+    clearReviewSession(getDeviceStorage(), reviewSessionStorageKey);
+    setResumableSessionIndex(null);
     setCompletedSessions((sessions) => sessions + 1);
     setStreakDays((days) => Math.max(days, 4));
     setScreen('complete');
@@ -468,7 +488,8 @@ export default function Home() {
         </div>
       </section>
       <button className="primary-button" onClick={begin}>
-        شروع مرور <span aria-hidden="true">←</span>
+        {resumableSessionIndex === null ? 'شروع مرور' : 'ادامهٔ مرور'}{' '}
+        <span aria-hidden="true">←</span>
       </button>
       <button className="recovery" onClick={begin}>
         <Bobo expression="recovery" className="bobo bobo-recovery" />

@@ -29,6 +29,12 @@ export {
   type DeviceStorage,
 } from './device-storage.js';
 export {
+  clearReviewSession,
+  loadReviewSession,
+  saveReviewSession,
+  type ReviewSessionProgress,
+} from './review-session-storage.js';
+export {
   hasPersonalVocabularyDuplicate,
   loadPersonalVocabulary,
   savePersonalVocabulary,
