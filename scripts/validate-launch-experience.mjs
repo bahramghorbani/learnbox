@@ -33,6 +33,8 @@ for (const required of [
   'role="status"',
   "state === 'hidden'",
   'imageReady',
+  'imageFailed',
+  'launch-screen-fallback',
   'onLoad={() => setImageReady(true)}',
 ]) {
   if (!launchScreenSource.includes(required)) {

@@ -10,6 +10,7 @@ type LaunchState = 'visible' | 'exiting' | 'hidden';
 export function LaunchScreen() {
   const [state, setState] = useState<LaunchState>('visible');
   const [imageReady, setImageReady] = useState(false);
+  const [imageFailed, setImageFailed] = useState(false);
 
   useEffect(() => {
     if (!imageReady) return;
@@ -37,17 +38,27 @@ export function LaunchScreen() {
       role="status"
       aria-label="در حال آماده‌سازی LearnBox"
     >
-      <Image
-        alt=""
-        className="launch-screen-image"
-        src={activeLaunchExperience.imagePath}
-        fill
-        priority
-        unoptimized
-        sizes="100vw"
-        onLoad={() => setImageReady(true)}
-        onError={() => setImageReady(true)}
-      />
+      {imageFailed ? (
+        <div className="launch-screen-fallback" aria-hidden="true">
+          <span className="launch-screen-fallback-mark">LB</span>
+          <span className="launch-screen-fallback-name">LearnBox</span>
+        </div>
+      ) : (
+        <Image
+          alt=""
+          className="launch-screen-image"
+          src={activeLaunchExperience.imagePath}
+          fill
+          priority
+          unoptimized
+          sizes="100vw"
+          onLoad={() => setImageReady(true)}
+          onError={() => {
+            setImageFailed(true);
+            setImageReady(true);
+          }}
+        />
+      )}
       <span className="launch-screen-shade" aria-hidden="true" />
       <span className="launch-screen-loader" aria-hidden="true">
         <i />
