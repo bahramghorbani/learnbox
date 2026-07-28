@@ -1,0 +1,534 @@
+{
+  "batchId": "learnbox-start-a1-vertical-slice-drafts-v1",
+  "state": "planning_only",
+  "generatedAt": "2026-07-28",
+  "providerRequestAllowed": false,
+  "publicationBlocked": true,
+  "requirements": {
+    "image": "Use the draft image prompt and complete visual/Bobo QA before attachment.",
+    "wordAudio": "Generate one clear de-DE pronunciation of the lemma or expression.",
+    "sentenceAudio": "Generate one clear de-DE pronunciation of the practical example."
+  },
+  "assets": [
+    {
+      "assetId": "start-a1-haus-image-v1",
+      "contentId": "start-a1-haus",
+      "kind": "image",
+      "storageKey": "start-a1-haus/image/v1",
+      "state": "not_requested",
+      "prompt": "Soft 3D small house, house dominant, clean background, small canonical Bobo near the door, no text or watermark."
+    },
+    {
+      "assetId": "start-a1-haus-word-audio-v1",
+      "contentId": "start-a1-haus",
+      "kind": "word_audio",
+      "storageKey": "start-a1-haus/word_audio/v1",
+      "state": "not_requested",
+      "locale": "de-DE",
+      "text": "Haus"
+    },
+    {
+      "assetId": "start-a1-haus-sentence-audio-v1",
+      "contentId": "start-a1-haus",
+      "kind": "sentence_audio",
+      "storageKey": "start-a1-haus/sentence_audio/v1",
+      "state": "not_requested",
+      "locale": "de-DE",
+      "text": "Das Haus ist klein."
+    },
+    {
+      "assetId": "start-a1-tisch-image-v1",
+      "contentId": "start-a1-tisch",
+      "kind": "image",
+      "storageKey": "start-a1-tisch/image/v1",
+      "state": "not_requested",
+      "prompt": "Soft 3D wooden table, object dominant, simple controlled background, no text or watermark."
+    },
+    {
+      "assetId": "start-a1-tisch-word-audio-v1",
+      "contentId": "start-a1-tisch",
+      "kind": "word_audio",
+      "storageKey": "start-a1-tisch/word_audio/v1",
+      "state": "not_requested",
+      "locale": "de-DE",
+      "text": "Tisch"
+    },
+    {
+      "assetId": "start-a1-tisch-sentence-audio-v1",
+      "contentId": "start-a1-tisch",
+      "kind": "sentence_audio",
+      "storageKey": "start-a1-tisch/sentence_audio/v1",
+      "state": "not_requested",
+      "locale": "de-DE",
+      "text": "Der Tisch ist groß."
+    },
+    {
+      "assetId": "start-a1-tuer-image-v1",
+      "contentId": "start-a1-tuer",
+      "kind": "image",
+      "storageKey": "start-a1-tuer/image/v1",
+      "state": "not_requested",
+      "prompt": "Soft 3D open apartment door, door dominant, small canonical Bobo beside it, no text or watermark."
+    },
+    {
+      "assetId": "start-a1-tuer-word-audio-v1",
+      "contentId": "start-a1-tuer",
+      "kind": "word_audio",
+      "storageKey": "start-a1-tuer/word_audio/v1",
+      "state": "not_requested",
+      "locale": "de-DE",
+      "text": "Tür"
+    },
+    {
+      "assetId": "start-a1-tuer-sentence-audio-v1",
+      "contentId": "start-a1-tuer",
+      "kind": "sentence_audio",
+      "storageKey": "start-a1-tuer/sentence_audio/v1",
+      "state": "not_requested",
+      "locale": "de-DE",
+      "text": "Die Tür ist offen."
+    },
+    {
+      "assetId": "start-a1-bett-image-v1",
+      "contentId": "start-a1-bett",
+      "kind": "image",
+      "storageKey": "start-a1-bett/image/v1",
+      "state": "not_requested",
+      "prompt": "Soft 3D bed in a simple bedroom, bed dominant, no text or watermark."
+    },
+    {
+      "assetId": "start-a1-bett-word-audio-v1",
+      "contentId": "start-a1-bett",
+      "kind": "word_audio",
+      "storageKey": "start-a1-bett/word_audio/v1",
+      "state": "not_requested",
+      "locale": "de-DE",
+      "text": "Bett"
+    },
+    {
+      "assetId": "start-a1-bett-sentence-audio-v1",
+      "contentId": "start-a1-bett",
+      "kind": "sentence_audio",
+      "storageKey": "start-a1-bett/sentence_audio/v1",
+      "state": "not_requested",
+      "locale": "de-DE",
+      "text": "Das Bett ist im Zimmer."
+    },
+    {
+      "assetId": "start-a1-apfel-image-v1",
+      "contentId": "start-a1-apfel",
+      "kind": "image",
+      "storageKey": "start-a1-apfel/image/v1",
+      "state": "not_requested",
+      "prompt": "Soft 3D red apple, apple dominant, simple background, optional small canonical Bobo pointing, no text or watermark."
+    },
+    {
+      "assetId": "start-a1-apfel-word-audio-v1",
+      "contentId": "start-a1-apfel",
+      "kind": "word_audio",
+      "storageKey": "start-a1-apfel/word_audio/v1",
+      "state": "not_requested",
+      "locale": "de-DE",
+      "text": "Apfel"
+    },
+    {
+      "assetId": "start-a1-apfel-sentence-audio-v1",
+      "contentId": "start-a1-apfel",
+      "kind": "sentence_audio",
+      "storageKey": "start-a1-apfel/sentence_audio/v1",
+      "state": "not_requested",
+      "locale": "de-DE",
+      "text": "Der Apfel ist rot."
+    },
+    {
+      "assetId": "start-a1-brot-image-v1",
+      "contentId": "start-a1-brot",
+      "kind": "image",
+      "storageKey": "start-a1-brot/image/v1",
+      "state": "not_requested",
+      "prompt": "Soft 3D loaf of bread on a plain surface, bread dominant, no text or watermark."
+    },
+    {
+      "assetId": "start-a1-brot-word-audio-v1",
+      "contentId": "start-a1-brot",
+      "kind": "word_audio",
+      "storageKey": "start-a1-brot/word_audio/v1",
+      "state": "not_requested",
+      "locale": "de-DE",
+      "text": "Brot"
+    },
+    {
+      "assetId": "start-a1-brot-sentence-audio-v1",
+      "contentId": "start-a1-brot",
+      "kind": "sentence_audio",
+      "storageKey": "start-a1-brot/sentence_audio/v1",
+      "state": "not_requested",
+      "locale": "de-DE",
+      "text": "Ich esse Brot."
+    },
+    {
+      "assetId": "start-a1-wasser-image-v1",
+      "contentId": "start-a1-wasser",
+      "kind": "image",
+      "storageKey": "start-a1-wasser/image/v1",
+      "state": "not_requested",
+      "prompt": "Soft 3D clear glass of water, glass dominant, simple controlled background, no text or watermark."
+    },
+    {
+      "assetId": "start-a1-wasser-word-audio-v1",
+      "contentId": "start-a1-wasser",
+      "kind": "word_audio",
+      "storageKey": "start-a1-wasser/word_audio/v1",
+      "state": "not_requested",
+      "locale": "de-DE",
+      "text": "Wasser"
+    },
+    {
+      "assetId": "start-a1-wasser-sentence-audio-v1",
+      "contentId": "start-a1-wasser",
+      "kind": "sentence_audio",
+      "storageKey": "start-a1-wasser/sentence_audio/v1",
+      "state": "not_requested",
+      "locale": "de-DE",
+      "text": "Das Wasser ist kalt."
+    },
+    {
+      "assetId": "start-a1-bahnhof-image-v1",
+      "contentId": "start-a1-bahnhof",
+      "kind": "image",
+      "storageKey": "start-a1-bahnhof/image/v1",
+      "state": "not_requested",
+      "prompt": "Soft 3D German train station exterior and tracks, environment dominant, small canonical Bobo as traveler, no text or watermark."
+    },
+    {
+      "assetId": "start-a1-bahnhof-word-audio-v1",
+      "contentId": "start-a1-bahnhof",
+      "kind": "word_audio",
+      "storageKey": "start-a1-bahnhof/word_audio/v1",
+      "state": "not_requested",
+      "locale": "de-DE",
+      "text": "Bahnhof"
+    },
+    {
+      "assetId": "start-a1-bahnhof-sentence-audio-v1",
+      "contentId": "start-a1-bahnhof",
+      "kind": "sentence_audio",
+      "storageKey": "start-a1-bahnhof/sentence_audio/v1",
+      "state": "not_requested",
+      "locale": "de-DE",
+      "text": "Der Bahnhof ist nah."
+    },
+    {
+      "assetId": "start-a1-schule-image-v1",
+      "contentId": "start-a1-schule",
+      "kind": "image",
+      "storageKey": "start-a1-schule/image/v1",
+      "state": "not_requested",
+      "prompt": "Soft 3D school building, environment dominant, small canonical Bobo as student, no text or watermark."
+    },
+    {
+      "assetId": "start-a1-schule-word-audio-v1",
+      "contentId": "start-a1-schule",
+      "kind": "word_audio",
+      "storageKey": "start-a1-schule/word_audio/v1",
+      "state": "not_requested",
+      "locale": "de-DE",
+      "text": "Schule"
+    },
+    {
+      "assetId": "start-a1-schule-sentence-audio-v1",
+      "contentId": "start-a1-schule",
+      "kind": "sentence_audio",
+      "storageKey": "start-a1-schule/sentence_audio/v1",
+      "state": "not_requested",
+      "locale": "de-DE",
+      "text": "Die Schule ist heute offen."
+    },
+    {
+      "assetId": "start-a1-lernen-image-v1",
+      "contentId": "start-a1-lernen",
+      "kind": "image",
+      "storageKey": "start-a1-lernen/image/v1",
+      "state": "not_requested",
+      "prompt": "Soft 3D canonical Bobo studying with an open book, action clear, no text or watermark."
+    },
+    {
+      "assetId": "start-a1-lernen-word-audio-v1",
+      "contentId": "start-a1-lernen",
+      "kind": "word_audio",
+      "storageKey": "start-a1-lernen/word_audio/v1",
+      "state": "not_requested",
+      "locale": "de-DE",
+      "text": "lernen"
+    },
+    {
+      "assetId": "start-a1-lernen-sentence-audio-v1",
+      "contentId": "start-a1-lernen",
+      "kind": "sentence_audio",
+      "storageKey": "start-a1-lernen/sentence_audio/v1",
+      "state": "not_requested",
+      "locale": "de-DE",
+      "text": "Ich lerne Deutsch."
+    },
+    {
+      "assetId": "start-a1-wohnen-image-v1",
+      "contentId": "start-a1-wohnen",
+      "kind": "image",
+      "storageKey": "start-a1-wohnen/image/v1",
+      "state": "not_requested",
+      "prompt": "Soft 3D canonical Bobo at home in a simple room, action and home context clear, no text or watermark."
+    },
+    {
+      "assetId": "start-a1-wohnen-word-audio-v1",
+      "contentId": "start-a1-wohnen",
+      "kind": "word_audio",
+      "storageKey": "start-a1-wohnen/word_audio/v1",
+      "state": "not_requested",
+      "locale": "de-DE",
+      "text": "wohnen"
+    },
+    {
+      "assetId": "start-a1-wohnen-sentence-audio-v1",
+      "contentId": "start-a1-wohnen",
+      "kind": "sentence_audio",
+      "storageKey": "start-a1-wohnen/sentence_audio/v1",
+      "state": "not_requested",
+      "locale": "de-DE",
+      "text": "Ich wohne in Berlin."
+    },
+    {
+      "assetId": "start-a1-kaufen-image-v1",
+      "contentId": "start-a1-kaufen",
+      "kind": "image",
+      "storageKey": "start-a1-kaufen/image/v1",
+      "state": "not_requested",
+      "prompt": "Soft 3D canonical Bobo buying bread at a simple shop counter, action clear, no text or watermark."
+    },
+    {
+      "assetId": "start-a1-kaufen-word-audio-v1",
+      "contentId": "start-a1-kaufen",
+      "kind": "word_audio",
+      "storageKey": "start-a1-kaufen/word_audio/v1",
+      "state": "not_requested",
+      "locale": "de-DE",
+      "text": "kaufen"
+    },
+    {
+      "assetId": "start-a1-kaufen-sentence-audio-v1",
+      "contentId": "start-a1-kaufen",
+      "kind": "sentence_audio",
+      "storageKey": "start-a1-kaufen/sentence_audio/v1",
+      "state": "not_requested",
+      "locale": "de-DE",
+      "text": "Ich kaufe Brot."
+    },
+    {
+      "assetId": "start-a1-warten-image-v1",
+      "contentId": "start-a1-warten",
+      "kind": "image",
+      "storageKey": "start-a1-warten/image/v1",
+      "state": "not_requested",
+      "prompt": "Soft 3D canonical Bobo waiting at a bus stop, action clear, no text or watermark."
+    },
+    {
+      "assetId": "start-a1-warten-word-audio-v1",
+      "contentId": "start-a1-warten",
+      "kind": "word_audio",
+      "storageKey": "start-a1-warten/word_audio/v1",
+      "state": "not_requested",
+      "locale": "de-DE",
+      "text": "warten"
+    },
+    {
+      "assetId": "start-a1-warten-sentence-audio-v1",
+      "contentId": "start-a1-warten",
+      "kind": "sentence_audio",
+      "storageKey": "start-a1-warten/sentence_audio/v1",
+      "state": "not_requested",
+      "locale": "de-DE",
+      "text": "Ich warte auf den Bus."
+    },
+    {
+      "assetId": "start-a1-gluecklich-image-v1",
+      "contentId": "start-a1-gluecklich",
+      "kind": "image",
+      "storageKey": "start-a1-gluecklich/image/v1",
+      "state": "not_requested",
+      "prompt": "Soft 3D canonical Bobo visibly happy, clear joyful expression, no text or watermark."
+    },
+    {
+      "assetId": "start-a1-gluecklich-word-audio-v1",
+      "contentId": "start-a1-gluecklich",
+      "kind": "word_audio",
+      "storageKey": "start-a1-gluecklich/word_audio/v1",
+      "state": "not_requested",
+      "locale": "de-DE",
+      "text": "glücklich"
+    },
+    {
+      "assetId": "start-a1-gluecklich-sentence-audio-v1",
+      "contentId": "start-a1-gluecklich",
+      "kind": "sentence_audio",
+      "storageKey": "start-a1-gluecklich/sentence_audio/v1",
+      "state": "not_requested",
+      "locale": "de-DE",
+      "text": "Ich bin glücklich."
+    },
+    {
+      "assetId": "start-a1-muede-image-v1",
+      "contentId": "start-a1-muede",
+      "kind": "image",
+      "storageKey": "start-a1-muede/image/v1",
+      "state": "not_requested",
+      "prompt": "Soft 3D canonical Bobo visibly sleepy beside a simple lamp, state clear, no text or watermark."
+    },
+    {
+      "assetId": "start-a1-muede-word-audio-v1",
+      "contentId": "start-a1-muede",
+      "kind": "word_audio",
+      "storageKey": "start-a1-muede/word_audio/v1",
+      "state": "not_requested",
+      "locale": "de-DE",
+      "text": "müde"
+    },
+    {
+      "assetId": "start-a1-muede-sentence-audio-v1",
+      "contentId": "start-a1-muede",
+      "kind": "sentence_audio",
+      "storageKey": "start-a1-muede/sentence_audio/v1",
+      "state": "not_requested",
+      "locale": "de-DE",
+      "text": "Ich bin müde."
+    },
+    {
+      "assetId": "start-a1-klein-image-v1",
+      "contentId": "start-a1-klein",
+      "kind": "image",
+      "storageKey": "start-a1-klein/image/v1",
+      "state": "not_requested",
+      "prompt": "Soft 3D small house beside a larger tree, size relationship clear, no text or watermark."
+    },
+    {
+      "assetId": "start-a1-klein-word-audio-v1",
+      "contentId": "start-a1-klein",
+      "kind": "word_audio",
+      "storageKey": "start-a1-klein/word_audio/v1",
+      "state": "not_requested",
+      "locale": "de-DE",
+      "text": "klein"
+    },
+    {
+      "assetId": "start-a1-klein-sentence-audio-v1",
+      "contentId": "start-a1-klein",
+      "kind": "sentence_audio",
+      "storageKey": "start-a1-klein/sentence_audio/v1",
+      "state": "not_requested",
+      "locale": "de-DE",
+      "text": "Das Haus ist klein."
+    },
+    {
+      "assetId": "start-a1-guten-tag-image-v1",
+      "contentId": "start-a1-guten-tag",
+      "kind": "image",
+      "storageKey": "start-a1-guten-tag/image/v1",
+      "state": "not_requested",
+      "prompt": "Soft 3D polite daytime greeting between canonical Bobo and a person, gesture clear, no text or watermark."
+    },
+    {
+      "assetId": "start-a1-guten-tag-word-audio-v1",
+      "contentId": "start-a1-guten-tag",
+      "kind": "word_audio",
+      "storageKey": "start-a1-guten-tag/word_audio/v1",
+      "state": "not_requested",
+      "locale": "de-DE",
+      "text": "Guten Tag"
+    },
+    {
+      "assetId": "start-a1-guten-tag-sentence-audio-v1",
+      "contentId": "start-a1-guten-tag",
+      "kind": "sentence_audio",
+      "storageKey": "start-a1-guten-tag/sentence_audio/v1",
+      "state": "not_requested",
+      "locale": "de-DE",
+      "text": "Guten Tag, Frau Müller."
+    },
+    {
+      "assetId": "start-a1-wie-geht-es-ihnen-image-v1",
+      "contentId": "start-a1-wie-geht-es-ihnen",
+      "kind": "image",
+      "storageKey": "start-a1-wie-geht-es-ihnen/image/v1",
+      "state": "not_requested",
+      "prompt": "Soft 3D canonical Bobo politely greeting a person, conversational gesture clear, no text or watermark."
+    },
+    {
+      "assetId": "start-a1-wie-geht-es-ihnen-word-audio-v1",
+      "contentId": "start-a1-wie-geht-es-ihnen",
+      "kind": "word_audio",
+      "storageKey": "start-a1-wie-geht-es-ihnen/word_audio/v1",
+      "state": "not_requested",
+      "locale": "de-DE",
+      "text": "Wie geht es Ihnen?"
+    },
+    {
+      "assetId": "start-a1-wie-geht-es-ihnen-sentence-audio-v1",
+      "contentId": "start-a1-wie-geht-es-ihnen",
+      "kind": "sentence_audio",
+      "storageKey": "start-a1-wie-geht-es-ihnen/sentence_audio/v1",
+      "state": "not_requested",
+      "locale": "de-DE",
+      "text": "Guten Tag. Wie geht es Ihnen?"
+    },
+    {
+      "assetId": "start-a1-danke-image-v1",
+      "contentId": "start-a1-danke",
+      "kind": "image",
+      "storageKey": "start-a1-danke/image/v1",
+      "state": "not_requested",
+      "prompt": "Soft 3D canonical Bobo thanking a person with a warm gesture, no text or watermark."
+    },
+    {
+      "assetId": "start-a1-danke-word-audio-v1",
+      "contentId": "start-a1-danke",
+      "kind": "word_audio",
+      "storageKey": "start-a1-danke/word_audio/v1",
+      "state": "not_requested",
+      "locale": "de-DE",
+      "text": "danke"
+    },
+    {
+      "assetId": "start-a1-danke-sentence-audio-v1",
+      "contentId": "start-a1-danke",
+      "kind": "sentence_audio",
+      "storageKey": "start-a1-danke/sentence_audio/v1",
+      "state": "not_requested",
+      "locale": "de-DE",
+      "text": "Danke für deine Hilfe."
+    },
+    {
+      "assetId": "start-a1-entschuldigung-image-v1",
+      "contentId": "start-a1-entschuldigung",
+      "kind": "image",
+      "storageKey": "start-a1-entschuldigung/image/v1",
+      "state": "not_requested",
+      "prompt": "Soft 3D canonical Bobo politely asking a passerby for attention, clear gesture, no text or watermark."
+    },
+    {
+      "assetId": "start-a1-entschuldigung-word-audio-v1",
+      "contentId": "start-a1-entschuldigung",
+      "kind": "word_audio",
+      "storageKey": "start-a1-entschuldigung/word_audio/v1",
+      "state": "not_requested",
+      "locale": "de-DE",
+      "text": "Entschuldigung"
+    },
+    {
+      "assetId": "start-a1-entschuldigung-sentence-audio-v1",
+      "contentId": "start-a1-entschuldigung",
+      "kind": "sentence_audio",
+      "storageKey": "start-a1-entschuldigung/sentence_audio/v1",
+      "state": "not_requested",
+      "locale": "de-DE",
+      "text": "Entschuldigung, wo ist der Bahnhof?"
+    }
+  ]
+}
