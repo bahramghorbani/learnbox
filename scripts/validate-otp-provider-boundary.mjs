@@ -17,6 +17,10 @@ const otpMigrationSource = await readFile(
   new URL('../database/migrations/0007_otp_challenges.sql', import.meta.url),
   'utf8',
 );
+const otpStoreSource = await readFile(
+  new URL('../apps/api/src/auth/postgres-otp-challenge.store.ts', import.meta.url),
+  'utf8',
+);
 
 for (const required of [
   'interface OtpProvider',
@@ -52,6 +56,17 @@ for (const required of [
 for (const required of ['CREATE TABLE otp_challenges', 'phone_hash', 'code_hash', 'consumed_at']) {
   if (!otpMigrationSource.includes(required)) {
     throw new Error(`OTP challenge migration requirement missing: ${required}`);
+  }
+}
+
+for (const required of [
+  'FOR UPDATE',
+  'SET consumed_at',
+  'SET attempt_count',
+  "client.query('COMMIT')",
+]) {
+  if (!otpStoreSource.includes(required)) {
+    throw new Error(`OTP challenge persistence requirement missing: ${required}`);
   }
 }
 
