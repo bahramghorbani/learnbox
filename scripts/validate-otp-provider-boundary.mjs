@@ -27,7 +27,7 @@ for (const required of [
   'OtpProviderUnavailableError',
   'providerSubject',
   'clientIpHash',
-  "export type OtpPurpose = 'sign-in'",
+  "export type OtpPurpose = 'sign_in'",
   'return new DisabledOtpProvider()',
 ]) {
   if (!providerSource.includes(required)) {
@@ -44,6 +44,7 @@ for (const required of [
   'createOtpCode',
   'hashOtpCode',
   'evaluateOtpVerification',
+  "export type OtpPurpose = 'sign_in'",
   "status: 'used'",
   "status: 'expired'",
   "status: 'locked'",

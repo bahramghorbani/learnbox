@@ -6,7 +6,8 @@
  * current phone screen remains a local-only alpha prototype.
  */
 
-export type OtpPurpose = 'sign-in';
+/** Stable wire value shared with the server persistence contract. */
+export type OtpPurpose = 'sign_in';
 
 export type OtpChallengeRequest = {
   phoneE164: string;
