@@ -28,6 +28,7 @@
     "verify:media-handoff": "node scripts/build-start-slice-media-handoff.mjs",
     "verify:website-start-slice": "node scripts/validate-website-start-slice-staging.mjs",
     "check:avalai": "node scripts/check-avalai-connection.mjs",
+    "generate:avalai:bobo-pilot": "node scripts/generate-avalai-bobo-pilot.mjs",
     "dev": "pnpm --filter @learnbox/website dev",
     "preview:web": "pnpm --filter @learnbox/website exec next start --hostname 127.0.0.1 --port 3010"
   },
