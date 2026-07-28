@@ -808,10 +808,16 @@ p {
   line-height: 1.25;
   margin-bottom: 14px;
 }
-.today-intro p:last-child {
+.today-intro > p:not(.eyeline) {
   color: var(--muted);
   font-size: 17px;
   line-height: 1.8;
+}
+.staging-note {
+  margin: 14px 0 0;
+  color: #6678d8 !important;
+  font-size: 14px !important;
+  font-weight: 700;
 }
 .summary {
   display: grid;
@@ -1080,9 +1086,24 @@ p {
   background: #fff0df;
   color: #e87c23;
 }
+.word-visual-staged {
+  min-height: 170px;
+  background: linear-gradient(145deg, #f5f0ff 0%, #fff 100%);
+  color: #8d7bd8;
+}
+.word-visual-staged span {
+  width: 88px;
+  height: 88px;
+  font-size: 48px;
+}
 .hint {
   font-size: 18px;
   margin: 18px 0 8px;
+}
+.media-pending {
+  margin: 0 0 9px;
+  color: var(--muted);
+  font-size: 13px;
 }
 .flip-hint {
   border: 0;

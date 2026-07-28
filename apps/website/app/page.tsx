@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import type { CSSProperties } from 'react';
 import { useEffect, useState } from 'react';
 import { evaluatePersonalWordLimit } from '@learnbox/billing-core';
@@ -13,6 +12,7 @@ import { Bobo } from './components/Bobo';
 import { OnboardingGoal } from './components/OnboardingGoal';
 import { ProgressScreen } from './components/ProgressScreen';
 import { defaultSuggestedNewWords, personalWordLimit } from './product-experience';
+import { selectTodayStartSession, stagedStartSlice } from './start-slice';
 
 type Grade = 'forgot' | 'hard' | 'remembered' | 'mastered';
 
@@ -24,38 +24,11 @@ type QueuedReview = {
 
 const reviewSyncStorageKey = 'learnbox:review-sync:v1:local-prototype';
 
-const initialSavedWords = [
-  { german: 'das Haus', persian: 'خانه', progress: 72 },
-  { german: 'die Zeit', persian: 'زمان', progress: 48 },
-  { german: 'lernen', persian: 'یاد گرفتن', progress: 31 },
-];
-
-const studyItems = [
-  {
-    article: 'das',
-    german: 'das Haus',
-    persian: 'خانه',
-    hint: 'جایی که زندگی می‌کنیم.',
-    exampleGerman: 'Ich komme nach Hause.',
-    examplePersian: 'من به خانه برمی‌گردم.',
-  },
-  {
-    article: 'die',
-    german: 'die Zeit',
-    persian: 'زمان',
-    hint: 'چیزی که با آن قرارهایمان را تنظیم می‌کنیم.',
-    exampleGerman: 'Die Zeit ist wichtig.',
-    examplePersian: 'زمان مهم است.',
-  },
-  {
-    article: '',
-    german: 'lernen',
-    persian: 'یاد گرفتن',
-    hint: 'کاری که با تمرین بهتر می‌شود.',
-    exampleGerman: 'Ich lerne jeden Tag Deutsch.',
-    examplePersian: 'من هر روز آلمانی یاد می‌گیرم.',
-  },
-];
+const initialSavedWords = stagedStartSlice.slice(0, 3).map((item, index) => ({
+  german: item.article ? `${item.article} ${item.german}` : item.german,
+  persian: item.persian,
+  progress: [72, 48, 31][index],
+}));
 
 const grades: Array<{ id: Grade; label: string; detail: string }> = [
   { id: 'forgot', label: 'فراموش کردم', detail: 'زودتر دوباره می‌بینیمش.' },
@@ -65,6 +38,7 @@ const grades: Array<{ id: Grade; label: string; detail: string }> = [
 ];
 
 export default function Home() {
+  const studyItems = selectTodayStartSession();
   const [authenticated, setAuthenticated] = useState(false);
   const [onboarded, setOnboarded] = useState(false);
   const [learningGoal, setLearningGoal] = useState<'life' | 'career' | 'travel'>('life');
@@ -108,7 +82,7 @@ export default function Home() {
         {
           clientEventId,
           payload: {
-            cardId: studyItems[sessionIndex].german,
+            cardId: studyItems[sessionIndex].id,
             grade: nextGrade,
             reviewedAt: new Date().toISOString(),
           },
@@ -301,20 +275,13 @@ export default function Home() {
                 {currentItem.german}
               </h1>
               <PronunciationButton text={currentItem.german} />
-              {sessionIndex === 0 ? (
-                <Image
-                  src="/images/haus-card.png"
-                  alt="خانه‌ای با سقف سفالی"
-                  width={1280}
-                  height={960}
-                  priority
-                />
-              ) : (
-                <div className={`word-visual word-visual-${sessionIndex}`} aria-hidden="true">
-                  <span>{sessionIndex === 1 ? '◷' : '✦'}</span>
-                </div>
-              )}
-              <p className="hint">{currentItem.hint}</p>
+              <div className="word-visual word-visual-staged" aria-hidden="true">
+                <span>◌</span>
+              </div>
+              <p className="hint" lang="de" dir="ltr">
+                {currentItem.germanDefinition}
+              </p>
+              <p className="media-pending">تصویر و صدای این کارت در حال آماده‌سازی است.</p>
               <button className="flip-hint" onClick={() => setFlipped(true)}>
                 برای دیدن معنی، کارت را برگردان
               </button>
@@ -358,6 +325,7 @@ export default function Home() {
         <p className="eyeline">امروز</p>
         <h1>با چند دقیقه شروع کن</h1>
         <p>مرور کوتاه امروز، مسیر یادگیریت را زنده نگه می‌دارد.</p>
+        <p className="staging-note">۳ کارت از بستهٔ آزمایشی Start برای امروز آماده است.</p>
       </section>
       <section className="summary" aria-label="پیشنهاد امروز">
         <div>
