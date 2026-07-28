@@ -107,6 +107,7 @@ export default function Home() {
   const [isLocalMediaPreview, setIsLocalMediaPreview] = useState(false);
   const [isRecordingGrade, setIsRecordingGrade] = useState(false);
   const gradeSubmissionRef = useRef(false);
+  const remainingTodayReviews = Math.max(0, studyItems.length - reviewedToday);
 
   useEffect(() => {
     if (!authenticated || typeof window === 'undefined') return;
@@ -536,8 +537,12 @@ export default function Home() {
       <section className="summary" aria-label="پیشنهاد امروز">
         <div>
           <span>مرورهای امروز</span>
-          <strong>{24 - reviewedToday}</strong>
-          <small>{reviewedToday ? `${reviewedToday} کارت ثبت شد` : 'منتظر مرور'}</small>
+          <strong>{remainingTodayReviews}</strong>
+          <small>
+            {reviewedToday
+              ? `${reviewedToday} کارت امروز ثبت شد`
+              : `${studyItems.length} کارت برای شروع آماده است`}
+          </small>
         </div>
         <div>
           <span>کلمهٔ پیشنهادی</span>
