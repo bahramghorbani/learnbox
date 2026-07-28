@@ -30,6 +30,7 @@
     "check:avalai": "node scripts/check-avalai-connection.mjs",
     "generate:avalai:bobo-pilot": "node scripts/generate-avalai-bobo-pilot.mjs",
     "generate:avalai:bobo": "node scripts/generate-avalai-bobo-pilot.mjs",
+    "generate:avalai:card-pilot": "node scripts/generate-avalai-card-pilot.mjs",
     "dev": "pnpm --filter @learnbox/website dev",
     "preview:web": "pnpm --filter @learnbox/website exec next start --hostname 127.0.0.1 --port 3010"
   },

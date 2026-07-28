@@ -22,6 +22,14 @@ the existing editorial and receipt gates, and Bobo's approved `1.0.0` identity m
 - Benchmark a lower-cost provider/model separately for concrete vocabulary images before bulk
   production; it must pass semantic, mobile-readability and visual-QA checks.
 
+## Pilot result
+
+The `start-a1-tisch` pilot passed visual QA at 1024×1024 with AvalAI `flux.2-pro`: the table is
+unambiguous, dominant, free of generated text and readable at card size. Its recorded provider
+cost was `0.03` unit. Use this model for simple concrete-object card candidates. Do not ask it to
+draw Bobo; when Bobo is genuinely useful, reuse a separately approved transparent Bobo asset in a
+reviewed composition instead.
+
 ## Consequences
 
 The local commands `pnpm check:avalai` and `pnpm generate:avalai:bobo -- <expression>` are
