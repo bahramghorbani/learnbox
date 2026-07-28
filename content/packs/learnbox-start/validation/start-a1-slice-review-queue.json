@@ -1,13 +1,19 @@
 {
   "batchId": "learnbox-start-a1-vertical-slice-drafts-v1",
-  "state": "awaiting_human_review",
+  "state": "candidate_qa_complete",
   "publicationBlocked": true,
-  "completedChecks": ["german_linguistic", "persian_translation"],
+  "completedChecks": [
+    "german_linguistic",
+    "persian_translation",
+    "candidate_provenance",
+    "candidate_visual",
+    "candidate_audio",
+    "candidate_app_flow"
+  ],
   "requiredBeforeStaging": [
-    "source/provenance review",
-    "production image QA",
-    "word and sentence audio QA",
-    "PWA and mobile app-flow validation"
+    "production media attachment receipts",
+    "owner release approval",
+    "participant invitation approval"
   ],
   "itemCount": 20
 }

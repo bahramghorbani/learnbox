@@ -1,0 +1,29 @@
+{
+  "batchId": "learnbox-start-a1-vertical-slice-drafts-v1",
+  "status": "candidate_qa_complete_not_released",
+  "checkedAt": "2026-07-28",
+  "checks": {
+    "provenance": {
+      "outcome": "passed_for_candidate_stage",
+      "evidence": "start-a1-provenance-ledger.json: 20/20 items have official Goethe A1 lexical-scope evidence and candidate-media terms are recorded."
+    },
+    "visual": {
+      "outcome": "passed_for_candidate_stage",
+      "evidence": "20/20 local image candidates were inspected for a clear primary concept, no generated text, no watermark and no unapproved Bobo variation. Representative object, place and conversational cards were rechecked on 2026-07-28."
+    },
+    "audio": {
+      "outcome": "passed_for_candidate_stage",
+      "evidence": "40/40 word and sentence MP3 candidates matched their expected German text by transcription QA; one word and one sentence were also played in the local learning flow."
+    },
+    "app_flow": {
+      "outcome": "passed_for_candidate_stage",
+      "evidence": "Local browser flow: phone entry -> code entry -> onboarding skip -> daily card -> image and word audio -> card flip -> sentence audio -> three review grades -> completion. No relevant console warnings or errors."
+    }
+  },
+  "publicationBlocked": true,
+  "remainingReleaseGates": [
+    "production_media_attachment_receipts",
+    "owner_release_approval",
+    "participant_invitation_approval"
+  ]
+}
