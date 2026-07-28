@@ -26,5 +26,12 @@
     },
     "supportiveCopy": "تا اینجا خیلی خوب پیش رفتی! برای ادامه مسیر و دسترسی به مجموعه‌های کامل‌تر، LearnBox Plus کنارت هست.",
     "forbiddenTactics": ["fear", "guilt", "countdown", "streak_threat", "false_scarcity"]
+  },
+  "features": {
+    "supportivePlusOffer": {
+      "enabled": false,
+      "offerVersion": "v1",
+      "placement": "session_completion"
+    }
   }
 }

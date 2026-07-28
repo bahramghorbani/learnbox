@@ -11,7 +11,9 @@ import { PronunciationButton } from './components/PronunciationButton';
 import { Bobo } from './components/Bobo';
 import { OnboardingGoal } from './components/OnboardingGoal';
 import { ProgressScreen } from './components/ProgressScreen';
+import { SupportivePlusOffer } from './components/SupportivePlusOffer';
 import { defaultSuggestedNewWords, personalWordLimit } from './product-experience';
+import { resolveSupportivePlusOffer } from './paywall';
 import { selectTodayStartSession, stagedStartSlice } from './start-slice';
 
 type Grade = 'forgot' | 'hard' | 'remembered' | 'mastered';
@@ -57,6 +59,8 @@ export default function Home() {
   const [reviewedToday, setReviewedToday] = useState(0);
   const [streakDays, setStreakDays] = useState(3);
   const [pendingReviewCount, setPendingReviewCount] = useState(0);
+  const [completedSessions, setCompletedSessions] = useState(0);
+  const [plusOfferDismissed, setPlusOfferDismissed] = useState(false);
 
   useEffect(() => {
     if (!authenticated || typeof window === 'undefined') return;
@@ -102,6 +106,7 @@ export default function Home() {
       return;
     }
 
+    setCompletedSessions((sessions) => sessions + 1);
     setStreakDays((days) => Math.max(days, 4));
     setScreen('complete');
   };
@@ -229,6 +234,13 @@ export default function Home() {
 
   if (screen === 'complete') {
     const response = grades.find((item) => item.id === grade);
+    const plusOffer = resolveSupportivePlusOffer({
+      activeDays: streakDays,
+      learningCycleWords: reviewedToday,
+      completedSessions,
+      firstCollectionCompleted: false,
+      meaningfulProgressReportReceived: false,
+    });
     return (
       <main className="app-shell" data-testid="learnbox-app">
         <section className="completion" aria-live="polite">
@@ -236,6 +248,12 @@ export default function Home() {
           <p className="eyeline">یک قدم آرام و پیوسته</p>
           <h1>آفرین، ثبت شد.</h1>
           <p>{response?.detail}</p>
+          {!plusOfferDismissed ? (
+            <SupportivePlusOffer
+              decision={plusOffer}
+              onDismiss={() => setPlusOfferDismissed(true)}
+            />
+          ) : null}
           <button className="primary-button" onClick={() => setScreen('today')}>
             بازگشت به امروز
           </button>

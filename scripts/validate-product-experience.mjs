@@ -39,5 +39,13 @@ const forbidden = new Set(paywall.forbiddenTactics);
 for (const tactic of ['fear', 'guilt', 'countdown', 'streak_threat', 'false_scarcity']) {
   if (!forbidden.has(tactic)) fail(`missing forbidden tactic: ${tactic}`);
 }
+const supportivePlusOffer = config.features?.supportivePlusOffer;
+if (!supportivePlusOffer || typeof supportivePlusOffer.enabled !== 'boolean') {
+  fail('supportive Plus offer feature flag is required');
+}
+if (supportivePlusOffer.enabled) fail('supportive Plus offer must remain disabled in closed alpha');
+if (supportivePlusOffer.placement !== 'session_completion') {
+  fail('supportive Plus offer placement is missing or unstable');
+}
 
 console.log('Product experience config is valid.');

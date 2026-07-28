@@ -99,3 +99,5 @@ export function validatePurchaseForEnvironment(purchase: VerifiedPurchase): bool
     (purchase.environment === 'sandbox' || purchase.environment === 'production')
   );
 }
+
+export * from './supportive-plus-offer.js';

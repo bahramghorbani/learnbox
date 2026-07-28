@@ -175,6 +175,20 @@ button {
   background: var(--bg);
   overflow: hidden;
 }
+.supportive-plus-offer {
+  margin: 18px 0 0;
+  border: 1px solid #ddd5ff;
+  border-radius: 18px;
+  padding: 16px;
+  background: #f7f4ff;
+  color: #403962;
+  font-size: 15px;
+  line-height: 1.9;
+  text-align: right;
+}
+.supportive-plus-offer p {
+  margin: 0 0 8px;
+}
 .brand-row,
 .session-header {
   display: flex;
