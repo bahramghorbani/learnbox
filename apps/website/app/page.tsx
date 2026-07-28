@@ -3,7 +3,14 @@
 import type { CSSProperties } from 'react';
 import { useEffect, useState } from 'react';
 import { evaluatePersonalWordLimit } from '@learnbox/billing-core';
-import { loadSyncQueue, saveSyncQueue, type PendingSyncEvent } from '@learnbox/learning-engine';
+import {
+  loadPersonalVocabulary,
+  loadSyncQueue,
+  savePersonalVocabulary,
+  saveSyncQueue,
+  type PendingSyncEvent,
+  type PersonalVocabularyEntry,
+} from '@learnbox/learning-engine';
 
 import { LearnerNav } from './components/LearnerNav';
 import { AuthGate } from './components/AuthGate';
@@ -25,6 +32,7 @@ type QueuedReview = {
 };
 
 const reviewSyncStorageKey = 'learnbox:review-sync:v1:local-prototype';
+const personalVocabularyStorageKey = 'learnbox:personal-vocabulary:v1:local-prototype';
 
 const initialSavedWords = stagedStartSlice.slice(0, 3).map((item, index) => ({
   german: item.article ? `${item.article} ${item.german}` : item.german,
@@ -45,7 +53,8 @@ export default function Home() {
   const [onboarded, setOnboarded] = useState(false);
   const [learningGoal, setLearningGoal] = useState<'life' | 'career' | 'travel'>('life');
   const [wordQuery, setWordQuery] = useState('');
-  const [savedWords, setSavedWords] = useState(initialSavedWords);
+  const [personalWords, setPersonalWords] = useState<PersonalVocabularyEntry[]>([]);
+  const [personalWordsLoaded, setPersonalWordsLoaded] = useState(false);
   const [addingWord, setAddingWord] = useState(false);
   const [newGerman, setNewGerman] = useState('');
   const [newPersian, setNewPersian] = useState('');
@@ -69,6 +78,16 @@ export default function Home() {
       loadSyncQueue<QueuedReview>(window.localStorage, reviewSyncStorageKey).length,
     );
   }, [authenticated]);
+
+  useEffect(() => {
+    setPersonalWords(loadPersonalVocabulary(window.localStorage, personalVocabularyStorageKey));
+    setPersonalWordsLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (!personalWordsLoaded) return;
+    savePersonalVocabulary(window.localStorage, personalVocabularyStorageKey, personalWords);
+  }, [personalWords, personalWordsLoaded]);
 
   useEffect(() => {
     setIsLocalMediaPreview(
@@ -126,7 +145,7 @@ export default function Home() {
       );
       return;
     }
-    setSavedWords((words) => [
+    setPersonalWords((words) => [
       { german: newGerman.trim(), persian: newPersian.trim(), progress: 0 },
       ...words,
     ]);
@@ -135,6 +154,8 @@ export default function Home() {
     setAddingWord(false);
     setPersonalWordNotice('');
   };
+
+  const savedWords = [...personalWords, ...initialSavedWords];
 
   if (!authenticated) {
     return <AuthGate onAuthenticated={() => setAuthenticated(true)} />;

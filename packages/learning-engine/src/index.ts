@@ -23,6 +23,12 @@ export {
   type PendingSyncEvent,
 } from './offline-sync.js';
 export { loadSyncQueue, saveSyncQueue, type SyncQueueStorage } from './offline-sync-storage.js';
+export {
+  loadPersonalVocabulary,
+  savePersonalVocabulary,
+  type PersonalVocabularyEntry,
+  type PersonalVocabularyStorage,
+} from './personal-vocabulary-storage.js';
 
 export interface CardSchedule {
   state: LearningState;
