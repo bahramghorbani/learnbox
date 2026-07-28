@@ -15,6 +15,10 @@ An authenticated admin publisher will create a **draft** launch experience with 
 
 When an experience ends, expires or fails validation, the previous approved fallback remains active. Changes must be auditable and rollbackable by selection ID, without deleting the underlying asset.
 
+The shared selection core deterministically considers only valid records: it selects a live
+scheduled candidate first, then an active one, and otherwise returns the approved fallback. Draft,
+rejected, future-dated, expired or invalid records cannot become visible through this resolver.
+
 ## Icon boundary
 
 The web/PWA install icon is declared in the manifest. A later icon upload may be staged and reviewed in the admin panel, but changing the icon already displayed on a person's home screen is not an instant remote operation. Native mobile launcher icons are packaged for each release; iOS alternate icons must also be included in the app bundle. The admin panel will therefore manage icon candidates and release selection, not promise an immediate change to an installed app's icon.

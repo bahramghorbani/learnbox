@@ -28,6 +28,11 @@ export interface LaunchPublicationReadiness {
   blockers: string[];
 }
 
+export type LaunchExperienceResolution = {
+  record: LaunchExperienceRecord | null;
+  source: 'scheduled' | 'active' | 'fallback' | 'unavailable';
+};
+
 const opaqueId = /^[a-z0-9][a-z0-9-]{2,63}$/;
 const sha256 = /^[a-f0-9]{64}$/;
 
@@ -115,4 +120,49 @@ export function evaluateLaunchPublicationReadiness(
     blockers.push('فقط نسخهٔ تأییدشده یا زمان‌بندی‌شده برای انتشار آماده است.');
   }
   return { canPublish: blockers.length === 0, blockers };
+}
+
+/**
+ * Resolves only an already-approved selection. It never promotes a draft and returns the immutable
+ * fallback when a timed candidate is invalid, future-dated or expired.
+ */
+export function resolveLaunchExperience(
+  records: readonly LaunchExperienceRecord[],
+  kind: LaunchExperienceKind,
+  fallbackId: string,
+  now = new Date(),
+): LaunchExperienceResolution {
+  const validRecords = records.filter(
+    (record) => record.kind === kind && validateLaunchExperience(record).length === 0,
+  );
+  const fallback = validRecords.find(
+    (record) =>
+      record.id === fallbackId && (record.status === 'approved' || isActiveAt(record, now)),
+  );
+  const scheduled = validRecords
+    .filter((record) => record.status === 'scheduled' && isActiveAt(record, now))
+    .sort(compareLatestStart)[0];
+  if (scheduled) return { record: scheduled, source: 'scheduled' };
+
+  const active = validRecords
+    .filter((record) => record.status === 'active' && isActiveAt(record, now))
+    .sort(compareLatestStart)[0];
+  if (active) return { record: active, source: 'active' };
+
+  return fallback
+    ? { record: fallback, source: 'fallback' }
+    : { record: null, source: 'unavailable' };
+}
+
+function isActiveAt(record: LaunchExperienceRecord, now: Date): boolean {
+  const nowMs = now.getTime();
+  const startsAt = record.startsAt ? Date.parse(record.startsAt) : Number.NEGATIVE_INFINITY;
+  const endsAt = record.endsAt ? Date.parse(record.endsAt) : Number.POSITIVE_INFINITY;
+  return Number.isFinite(nowMs) && startsAt <= nowMs && nowMs < endsAt;
+}
+
+function compareLatestStart(left: LaunchExperienceRecord, right: LaunchExperienceRecord): number {
+  const leftStart = left.startsAt ? Date.parse(left.startsAt) : Number.NEGATIVE_INFINITY;
+  const rightStart = right.startsAt ? Date.parse(right.startsAt) : Number.NEGATIVE_INFINITY;
+  return rightStart - leftStart || left.id.localeCompare(right.id);
 }

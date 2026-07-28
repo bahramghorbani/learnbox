@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   evaluateLaunchPublicationReadiness,
+  resolveLaunchExperience,
   validateLaunchExperience,
   type LaunchExperienceRecord,
 } from '../src/index.js';
@@ -71,5 +72,57 @@ describe('launch experience validation', () => {
     expect(
       evaluateLaunchPublicationReadiness(approvedSplash, 'content_reviewer').blockers,
     ).toContain('فقط ناشر مجاز می‌تواند تجربهٔ آغاز را منتشر یا زمان‌بندی کند.');
+  });
+
+  it('chooses a valid live scheduled splash and falls back when the schedule expires', () => {
+    const fallback = {
+      ...approvedSplash,
+      id: 'default-welcome-v1',
+      fallbackId: 'germany-welcome-v1',
+    };
+    const seasonal = {
+      ...approvedSplash,
+      id: 'winter-welcome-v1',
+      status: 'scheduled' as const,
+      startsAt: '2026-12-20T00:00:00Z',
+      endsAt: '2026-12-27T00:00:00Z',
+      fallbackId: fallback.id,
+    };
+
+    expect(
+      resolveLaunchExperience(
+        [fallback, seasonal],
+        'launch_screen',
+        fallback.id,
+        new Date('2026-12-25T12:00:00Z'),
+      ),
+    ).toMatchObject({ record: { id: seasonal.id }, source: 'scheduled' });
+    expect(
+      resolveLaunchExperience(
+        [fallback, seasonal],
+        'launch_screen',
+        fallback.id,
+        new Date('2026-12-28T12:00:00Z'),
+      ),
+    ).toMatchObject({ record: { id: fallback.id }, source: 'fallback' });
+  });
+
+  it('never selects an invalid or draft candidate', () => {
+    const invalidDraft = {
+      ...approvedSplash,
+      id: 'draft-bad-v1',
+      status: 'draft' as const,
+      fallbackId: 'default-welcome-v1',
+      asset: { ...approvedSplash.asset, width: 400 },
+    };
+
+    expect(
+      resolveLaunchExperience(
+        [invalidDraft],
+        'launch_screen',
+        'default-welcome-v1',
+        new Date('2026-12-25T12:00:00Z'),
+      ),
+    ).toEqual({ record: null, source: 'unavailable' });
   });
 });
