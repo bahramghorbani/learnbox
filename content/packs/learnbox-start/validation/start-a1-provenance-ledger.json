@@ -61,12 +61,17 @@
     "generationProviders": ["AvalAI image and speech APIs"],
     "attachmentAllowed": false,
     "publicationAllowed": false,
-    "licenseReview": "Pending confirmation against the active provider and underlying-model terms before any public or paid release."
+    "licenseReview": {
+      "status": "platform_terms_reviewed_not_legal_opinion",
+      "reviewedAt": "2026-07-28",
+      "source": "https://avalai.ir/terms-of-use-avalai/",
+      "assessment": "Published AvalAI terms state that users retain rights in their content and may use it commercially subject to the terms and applicable law; outputs may not be unique and the user remains responsible for rights compliance."
+    }
   },
   "remainingReleaseGates": [
-    "media_license_review",
     "final_visual_qa",
     "final_audio_qa",
-    "app_flow_approval"
+    "app_flow_approval",
+    "owner_release_approval"
   ]
 }

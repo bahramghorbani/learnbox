@@ -38,9 +38,11 @@ if (formalCheckIn?.evidenceType !== 'scope_adaptation') {
 if (
   ledger.candidateMedia.attachmentAllowed ||
   ledger.candidateMedia.publicationAllowed ||
-  !ledger.remainingReleaseGates.includes('media_license_review')
+  ledger.candidateMedia.licenseReview.status !== 'platform_terms_reviewed_not_legal_opinion' ||
+  !ledger.candidateMedia.licenseReview.source.startsWith('https://avalai.ir/') ||
+  !ledger.remainingReleaseGates.includes('owner_release_approval')
 ) {
-  throw new Error('Documented provenance must not bypass the candidate-media release gate.');
+  throw new Error('Documented media terms must not bypass the candidate-media release gate.');
 }
 
 console.info('Start A1 provenance ledger is complete and remains release-gated.');

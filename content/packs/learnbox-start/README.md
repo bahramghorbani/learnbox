@@ -36,4 +36,5 @@ until the existing linguistic, provenance, visual, audio and in-app gates are cl
 
 `validation/start-a1-provenance-ledger.json` records page-level lexical-scope evidence from the
 official Goethe A1 list, clearly separates LearnBox's original editorial text from that source,
-and keeps candidate media licence review as a separate release gate.
+and records the platform-terms assessment for candidate media. The remaining visual, audio,
+app-flow and owner-release gates still apply.
