@@ -9,8 +9,10 @@ import {
   loadSyncQueue,
   createMemoryStorage,
   createResilientStorage,
+  loadDailyReviewProgress,
   clearReviewSession,
   loadReviewSession,
+  saveDailyReviewProgress,
   savePersonalVocabulary,
   saveReviewSession,
   saveSyncQueue,
@@ -48,6 +50,7 @@ const personalVocabularyStorageKey = 'learnbox:personal-vocabulary:v1:local-prot
 const personalVocabularySyncStorageKey = 'learnbox:personal-vocabulary-sync:v1:local-prototype';
 const onboardingGoalStorageKey = 'learnbox:onboarding-goal:v1:local-prototype';
 const reviewSessionStorageKey = 'learnbox:review-session:v1:local-prototype';
+const dailyReviewStorageKey = 'learnbox:daily-review:v1:local-prototype';
 const temporaryDeviceStorage = createMemoryStorage();
 
 function getDeviceStorage(): DeviceStorage {
@@ -119,6 +122,15 @@ export default function Home() {
       loadSyncQueue<QueuedPersonalVocabulary>(storage, personalVocabularySyncStorageKey).length,
     );
     setPersonalWordsLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    const progress = loadDailyReviewProgress(
+      getDeviceStorage(),
+      dailyReviewStorageKey,
+      getLocalDateKey(),
+    );
+    setReviewedToday(progress?.reviewedCount ?? 0);
   }, []);
 
   useEffect(() => {
@@ -198,7 +210,14 @@ export default function Home() {
       setPendingReviewCount(nextQueue.length);
     }
     setGrade(nextGrade);
-    setReviewedToday((count) => count + 1);
+    setReviewedToday((count) => {
+      const reviewedCount = count + 1;
+      saveDailyReviewProgress(getDeviceStorage(), dailyReviewStorageKey, {
+        dateKey: getLocalDateKey(),
+        reviewedCount,
+      });
+      return reviewedCount;
+    });
 
     if (sessionIndex < studyItems.length - 1) {
       const nextIndex = sessionIndex + 1;
@@ -522,4 +541,11 @@ function readStoredLearningGoal(storage: Pick<Storage, 'getItem'>): LearningGoal
   } catch {
     return null;
   }
+}
+
+function getLocalDateKey(now = new Date()): string {
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }

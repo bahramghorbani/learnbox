@@ -35,6 +35,12 @@ export {
   type ReviewSessionProgress,
 } from './review-session-storage.js';
 export {
+  clearDailyReviewProgress,
+  loadDailyReviewProgress,
+  saveDailyReviewProgress,
+  type DailyReviewProgress,
+} from './daily-review-storage.js';
+export {
   hasPersonalVocabularyDuplicate,
   loadPersonalVocabulary,
   savePersonalVocabulary,

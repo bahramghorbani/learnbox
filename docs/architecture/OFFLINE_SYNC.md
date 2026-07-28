@@ -16,4 +16,6 @@ The web client wraps browser storage with an in-memory fallback. If a browser de
 
 An interrupted daily review stores only the index of its next card in a versioned device key. On return, the primary action becomes `ادامهٔ مرور` and resumes that card; a completed session or malformed/out-of-range index is cleared. The individual review grades remain in the existing idempotent queue, so resuming never duplicates an already-recorded answer. This is device-only, emits no analytics and can be rolled back by clearing the review-session key.
 
+The current day’s review count is a separate, versioned device-local value. It is restored only when its local date matches the learner’s current day; stale or malformed values are cleared, so yesterday’s progress never appears as today’s. It is not an analytics event or a server record. A future authenticated profile can replace it, and rollback consists of clearing the daily-review key.
+
 Acceptance criteria: a queued review survives an app restart; an acknowledgement is persisted before the next retry; malformed local data does not crash the learner flow or create a server request. This is a local reliability improvement with no learner analytics emitted. It can be rolled back by disabling the client-side queue integration while the server-side idempotency boundary remains intact.
