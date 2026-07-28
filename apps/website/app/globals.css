@@ -1429,6 +1429,10 @@ p {
   border-color: #bae0bf;
   background: #f8fff8;
 }
+.grade:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
 .completion {
   min-height: 80vh;
   display: flex;

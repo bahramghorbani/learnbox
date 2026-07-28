@@ -1,7 +1,7 @@
 'use client';
 
 import type { CSSProperties } from 'react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { evaluatePersonalWordLimit } from '@learnbox/billing-core';
 import {
   hasPersonalVocabularyDuplicate,
@@ -101,6 +101,8 @@ export default function Home() {
   const [completedSessions, setCompletedSessions] = useState(0);
   const [plusOfferDismissed, setPlusOfferDismissed] = useState(false);
   const [isLocalMediaPreview, setIsLocalMediaPreview] = useState(false);
+  const [isRecordingGrade, setIsRecordingGrade] = useState(false);
+  const gradeSubmissionRef = useRef(false);
 
   useEffect(() => {
     if (!authenticated || typeof window === 'undefined') return;
@@ -151,6 +153,11 @@ export default function Home() {
     );
   }, []);
 
+  useEffect(() => {
+    gradeSubmissionRef.current = false;
+    setIsRecordingGrade(false);
+  }, [screen, sessionIndex]);
+
   const begin = () => {
     const nextIndex = resumableSessionIndex ?? 0;
     setScreen('card');
@@ -187,6 +194,9 @@ export default function Home() {
     setPendingPersonalWordSyncCount(nextQueue.length);
   };
   const recordGrade = (nextGrade: Grade) => {
+    if (gradeSubmissionRef.current) return;
+    gradeSubmissionRef.current = true;
+    setIsRecordingGrade(true);
     if (typeof window !== 'undefined') {
       const storage = getDeviceStorage();
       const queue = loadSyncQueue<QueuedReview>(storage, reviewSyncStorageKey);
@@ -464,12 +474,18 @@ export default function Home() {
                 src={isLocalMediaPreview ? currentItem.candidateMedia.sentenceAudio : undefined}
               />
               <p className="instruction">چقدر یادت آمد؟</p>
-              <div className="grade-grid" role="group" aria-label="درجهٔ یادآوری">
+              <div
+                className="grade-grid"
+                role="group"
+                aria-label="درجهٔ یادآوری"
+                aria-busy={isRecordingGrade}
+              >
                 {grades.map((item) => (
                   <button
                     key={item.id}
                     className={`grade grade-${item.id}`}
                     onClick={() => recordGrade(item.id)}
+                    disabled={isRecordingGrade}
                   >
                     {item.label}
                   </button>

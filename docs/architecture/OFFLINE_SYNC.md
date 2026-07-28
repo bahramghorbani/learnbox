@@ -18,4 +18,6 @@ An interrupted daily review stores only the index of its next card in a versione
 
 The current day’s review count is a separate, versioned device-local value. It is restored only when its local date matches the learner’s current day; stale or malformed values are cleared, so yesterday’s progress never appears as today’s. It is not an analytics event or a server record. A future authenticated profile can replace it, and rollback consists of clearing the daily-review key.
 
+The learner UI also guards a grade action until the next card or completion state is rendered. A rapid second tap cannot create a second local review event, queue entry or daily-count increment. This is a client-side reliability guard only; the existing future server idempotency boundary remains authoritative. It emits no analytics and can be rolled back by removing the UI guard.
+
 Acceptance criteria: a queued review survives an app restart; an acknowledgement is persisted before the next retry; malformed local data does not crash the learner flow or create a server request. This is a local reliability improvement with no learner analytics emitted. It can be rolled back by disabling the client-side queue integration while the server-side idempotency boundary remains intact.
