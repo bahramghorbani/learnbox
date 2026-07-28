@@ -20,4 +20,6 @@ The current day’s review count is a separate, versioned device-local value. It
 
 The learner UI also guards a grade action until the next card or completion state is rendered. A rapid second tap cannot create a second local review event, queue entry or daily-count increment. This is a client-side reliability guard only; the existing future server idempotency boundary remains authoritative. It emits no analytics and can be rolled back by removing the UI guard.
 
+The calm streak uses a separate device-local record containing only the last active local date and count. One or more grades on the same day count once; an adjacent day extends it; a later return starts gently at one rather than surfacing a loss message. It never sends analytics or notifications and can be rolled back by clearing the learning-streak key. Planned rest days and streak protection remain future, explicit product work rather than silent assumptions in this prototype.
+
 Acceptance criteria: a queued review survives an app restart; an acknowledgement is persisted before the next retry; malformed local data does not crash the learner flow or create a server request. This is a local reliability improvement with no learner analytics emitted. It can be rolled back by disabling the client-side queue integration while the server-side idempotency boundary remains intact.

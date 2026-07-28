@@ -9,9 +9,12 @@ import {
   loadSyncQueue,
   createMemoryStorage,
   createResilientStorage,
+  getCurrentStreakDays,
   loadDailyReviewProgress,
+  loadLearningStreak,
   clearReviewSession,
   loadReviewSession,
+  recordLearningStreak,
   saveDailyReviewProgress,
   savePersonalVocabulary,
   saveReviewSession,
@@ -51,6 +54,7 @@ const personalVocabularySyncStorageKey = 'learnbox:personal-vocabulary-sync:v1:l
 const onboardingGoalStorageKey = 'learnbox:onboarding-goal:v1:local-prototype';
 const reviewSessionStorageKey = 'learnbox:review-session:v1:local-prototype';
 const dailyReviewStorageKey = 'learnbox:daily-review:v1:local-prototype';
+const learningStreakStorageKey = 'learnbox:learning-streak:v1:local-prototype';
 const temporaryDeviceStorage = createMemoryStorage();
 
 function getDeviceStorage(): DeviceStorage {
@@ -95,7 +99,7 @@ export default function Home() {
   const [grade, setGrade] = useState<Grade | null>(null);
   const [sessionIndex, setSessionIndex] = useState(0);
   const [reviewedToday, setReviewedToday] = useState(0);
-  const [streakDays, setStreakDays] = useState(3);
+  const [streakDays, setStreakDays] = useState(0);
   const [pendingReviewCount, setPendingReviewCount] = useState(0);
   const [resumableSessionIndex, setResumableSessionIndex] = useState<number | null>(null);
   const [completedSessions, setCompletedSessions] = useState(0);
@@ -133,6 +137,17 @@ export default function Home() {
       getLocalDateKey(),
     );
     setReviewedToday(progress?.reviewedCount ?? 0);
+  }, []);
+
+  useEffect(() => {
+    const now = new Date();
+    setStreakDays(
+      getCurrentStreakDays(
+        loadLearningStreak(getDeviceStorage(), learningStreakStorageKey),
+        getLocalDateKey(now),
+        getPreviousDateKey(now),
+      ),
+    );
   }, []);
 
   useEffect(() => {
@@ -227,6 +242,15 @@ export default function Home() {
         reviewedCount,
       });
       return reviewedCount;
+    });
+    setStreakDays(() => {
+      const now = new Date();
+      return recordLearningStreak(
+        getDeviceStorage(),
+        learningStreakStorageKey,
+        getLocalDateKey(now),
+        getPreviousDateKey(now),
+      ).days;
     });
 
     if (sessionIndex < studyItems.length - 1) {
@@ -543,7 +567,7 @@ export default function Home() {
             <span style={{ width: `${Math.min(100, streakDays * 10)}%` }} />
           </div>
         </div>
-        <span>{streakDays} روز</span>
+        <span>{streakDays ? `${streakDays} روز` : 'شروع تازه'}</span>
       </section>
       <LearnerNav current="today" onNavigate={(destination) => setScreen(destination)} />
     </main>
@@ -564,4 +588,10 @@ function getLocalDateKey(now = new Date()): string {
   const month = String(now.getMonth() + 1).padStart(2, '0');
   const day = String(now.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
+}
+
+function getPreviousDateKey(now: Date): string {
+  const previousDay = new Date(now);
+  previousDay.setDate(previousDay.getDate() - 1);
+  return getLocalDateKey(previousDay);
 }

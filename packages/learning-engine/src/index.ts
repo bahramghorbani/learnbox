@@ -41,6 +41,13 @@ export {
   type DailyReviewProgress,
 } from './daily-review-storage.js';
 export {
+  clearLearningStreak,
+  getCurrentStreakDays,
+  loadLearningStreak,
+  recordLearningStreak,
+  type LearningStreak,
+} from './learning-streak-storage.js';
+export {
   hasPersonalVocabularyDuplicate,
   loadPersonalVocabulary,
   savePersonalVocabulary,
