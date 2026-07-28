@@ -31,6 +31,14 @@ for (const [name, config] of [
   }
 }
 
+for (const assetPath of ['/images/launch/:path*', '/icons/:path*']) {
+  assert.ok(websiteConfig.includes(assetPath), `Website cache policy is missing ${assetPath}`);
+}
+assert.ok(
+  websiteConfig.includes("value: 'public, max-age=31536000, immutable'"),
+  'Versioned public launch assets must use immutable caching',
+);
+
 assert.ok(serviceWorker.includes("const OFFLINE_URL = '/offline.html'"));
 assert.ok(serviceWorker.includes("const CACHE_PREFIX = 'learnbox-public-shell-'"));
 assert.ok(
