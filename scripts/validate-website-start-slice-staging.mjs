@@ -52,8 +52,12 @@ if (!websiteSource.includes('cardId: studyItems[sessionIndex].id')) {
   throw new Error('Offline review events must record the stable Start card identifier.');
 }
 
-if (!websiteSource.includes('تصویر و صدای این کارت در حال آماده‌سازی است.')) {
+if (!websiteSource.includes('تصویر و صدای ضبط‌شدهٔ این کارت در حال آماده‌سازی است.')) {
   throw new Error('Staged cards must clearly disclose pending production media.');
+}
+
+if (!websiteSource.includes('PronunciationButton text={currentItem.german} preview')) {
+  throw new Error('Staged cards must identify browser pronunciation as a preview.');
 }
 
 console.info('Website Start slice staging is valid and remains publication-blocked.');

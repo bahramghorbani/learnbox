@@ -274,14 +274,14 @@ export default function Home() {
               <h1 lang="de" dir="ltr">
                 {currentItem.german}
               </h1>
-              <PronunciationButton text={currentItem.german} />
+              <PronunciationButton text={currentItem.german} preview />
               <div className="word-visual word-visual-staged" aria-hidden="true">
                 <span>◌</span>
               </div>
               <p className="hint" lang="de" dir="ltr">
                 {currentItem.germanDefinition}
               </p>
-              <p className="media-pending">تصویر و صدای این کارت در حال آماده‌سازی است.</p>
+              <p className="media-pending">تصویر و صدای ضبط‌شدهٔ این کارت در حال آماده‌سازی است.</p>
               <button className="flip-hint" onClick={() => setFlipped(true)}>
                 برای دیدن معنی، کارت را برگردان
               </button>

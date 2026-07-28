@@ -4,9 +4,10 @@ import { useState } from 'react';
 
 interface PronunciationButtonProps {
   text: string;
+  preview?: boolean;
 }
 
-export function PronunciationButton({ text }: PronunciationButtonProps) {
+export function PronunciationButton({ text, preview = false }: PronunciationButtonProps) {
   const [status, setStatus] = useState<'idle' | 'playing' | 'unavailable'>('idle');
 
   const play = () => {
@@ -27,10 +28,14 @@ export function PronunciationButton({ text }: PronunciationButtonProps) {
 
   const label =
     status === 'playing'
-      ? 'در حال پخش تلفظ'
+      ? preview
+        ? 'در حال پخش تلفظ آزمایشی مرورگر'
+        : 'در حال پخش تلفظ'
       : status === 'unavailable'
         ? 'پخش تلفظ در این مرورگر در دسترس نیست'
-        : `پخش تلفظ ${text}`;
+        : preview
+          ? `پخش تلفظ آزمایشی مرورگر برای ${text}`
+          : `پخش تلفظ ${text}`;
 
   return (
     <button
@@ -41,7 +46,13 @@ export function PronunciationButton({ text }: PronunciationButtonProps) {
       title={label}
     >
       <SpeakerIcon />
-      <span>{status === 'unavailable' ? 'صدا در دسترس نیست' : 'شنیدن تلفظ'}</span>
+      <span>
+        {status === 'unavailable'
+          ? 'صدا در دسترس نیست'
+          : preview
+            ? 'شنیدن تلفظ آزمایشی'
+            : 'شنیدن تلفظ'}
+      </span>
     </button>
   );
 }
