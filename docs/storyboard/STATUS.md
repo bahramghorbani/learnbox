@@ -2,8 +2,8 @@
 
 - **Current stage:** 23 of 30 — Closed alpha
 - **Completed:** product foundation; market/user hypotheses; tested recovery and daily-session model; content validation; key UI concepts and learner information architecture; approved Bobo canonical assets and governance; accessible web onboarding, Today, personal vocabulary, Progress, recovery and review-completion flows; local phone and code-entry authentication prototype; persistent web review queue; AI content review-gate and draft-job contract with CEFR mismatch protection and non-executable media-plan completeness checks; media-receipt validation with version, checksum and QA protection; visual admin review prototype; notification policy foundation; provider-neutral billing foundation and a client adapter for the versioned Start/Plus configuration; privacy-safe consent-gated analytics delivery seam; a supportive Plus-offer component protected by a disabled closed-alpha flag; release-readiness gate with publisher separation and complete pack QA; installable web foundation with safe offline fallback; baseline web and API security headers; controlled web staging of three daily cards from the linguistically approved 20-card Start slice; staged-card mobile web flow verified through login, review and response; automated unit, integration, security-contract and browser-flow checks
-- **Next:** prepare production media attachment receipts and obtain owner approval before inviting
-  any participant.
+- **Next:** create the private Vercel media store, then generate checksum-validated production
+  attachment receipts and obtain owner approval before inviting any participant.
 - **Blockers:** explicit owner approval is still required before any alpha invitation. Candidate
   provenance, visual, audio and app-flow QA is complete for the 20-card Start slice, but the
   media is local-only and has no production attachment receipts. The local machine has no Flutter
