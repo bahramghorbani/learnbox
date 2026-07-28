@@ -37,6 +37,18 @@ if (!adminPreview.includes('تأیید در پیش‌نمایش')) {
 if (!adminPreview.includes('انتشار واقعی نیازمند ورود امن و ناشر مجاز')) {
   errors.push('Admin preview must disclose the secure publisher boundary.');
 }
+if (!adminPreview.includes('پیش‌نمایش محلی')) {
+  errors.push('Admin preview must identify itself as a local preview.');
+}
+if (!adminPreview.includes('بدون ورود یا دسترسی انتشار')) {
+  errors.push('Admin preview must not imply authenticated publishing access.');
+}
+if (!adminPreview.includes('این صفحه فقط نمونهٔ رابط مدیریت است')) {
+  errors.push('Admin preview must disclose that it does not operate on real data.');
+}
+if (adminPreview.includes('مریم رضایی')) {
+  errors.push('Admin preview must not show a fictional authenticated editor identity.');
+}
 
 if (errors.length > 0) {
   throw new Error(`Closed-alpha configuration is unsafe:\n- ${errors.join('\n- ')}`);

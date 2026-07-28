@@ -118,6 +118,17 @@ button {
   font-size: 34px;
   line-height: 1.2;
 }
+.admin-preview-notice {
+  max-width: 1170px;
+  margin: 20px auto -10px;
+  padding: 12px 18px;
+  color: #514080;
+  background: #f7f4ff;
+  border: 1px solid #e4dcff;
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 1.8;
+}
 .editor-identity {
   display: flex;
   align-items: center;
@@ -389,6 +400,10 @@ button {
     padding: 0 20px;
     grid-template-columns: 1fr;
   }
+  .admin-preview-notice {
+    margin-right: 20px;
+    margin-left: 20px;
+  }
   .review-inspector {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -448,6 +463,11 @@ button {
   .review-layout {
     margin-top: 18px;
     padding: 0 14px 22px;
+  }
+  .admin-preview-notice {
+    margin: 14px 14px -4px;
+    padding: 10px 14px;
+    font-size: 13px;
   }
   .review-card {
     min-height: auto;

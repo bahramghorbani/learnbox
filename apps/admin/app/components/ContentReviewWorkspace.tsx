@@ -22,14 +22,21 @@ export function ContentReviewWorkspace() {
       <section className="admin-workspace">
         <header className="admin-topbar">
           <h1>بازبینی محتوا</h1>
-          <div className="editor-identity">
-            <span className="editor-avatar">م.ر</span>
+          <div className="editor-identity" aria-label="وضعیت پنل">
+            <span className="editor-avatar" aria-hidden="true">
+              پ
+            </span>
             <span>
-              <strong>مریم رضایی</strong>
-              <small>ویرایشگر محتوا</small>
+              <strong>پیش‌نمایش محلی</strong>
+              <small>بدون ورود یا دسترسی انتشار</small>
             </span>
           </div>
         </header>
+
+        <p className="admin-preview-notice" role="status">
+          این صفحه فقط نمونهٔ رابط مدیریت است؛ هیچ تغییر، انتشار، زمان‌بندی یا دسترسی به دادهٔ واقعی
+          انجام نمی‌شود.
+        </p>
 
         <div className="review-layout">
           <section className="review-card" aria-labelledby="card-title">
