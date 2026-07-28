@@ -12,4 +12,6 @@ The current web prototype records each card grade as a client event in that loca
 
 The learner's completed onboarding goal is also a device-only preference in the prototype, so returning to the same browser does not show the setup screen again. It is not treated as an authenticated account profile and is never sent anywhere; a real sign-in integration will replace this with server-owned learner preferences.
 
+The web client wraps browser storage with an in-memory fallback. If a browser denies access to durable storage, the learner can still complete onboarding, review cards and add a word during the open app session; no exception can block the flow and nothing is sent externally. Durable storage remains preferred, and the temporary fallback naturally disappears when the app is closed. This has no analytics intent and can be rolled back by removing the wrapper while leaving the versioned storage schemas unchanged.
+
 Acceptance criteria: a queued review survives an app restart; an acknowledgement is persisted before the next retry; malformed local data does not crash the learner flow or create a server request. This is a local reliability improvement with no learner analytics emitted. It can be rolled back by disabling the client-side queue integration while the server-side idempotency boundary remains intact.

@@ -24,6 +24,11 @@ export {
 } from './offline-sync.js';
 export { loadSyncQueue, saveSyncQueue, type SyncQueueStorage } from './offline-sync-storage.js';
 export {
+  createMemoryStorage,
+  createResilientStorage,
+  type DeviceStorage,
+} from './device-storage.js';
+export {
   hasPersonalVocabularyDuplicate,
   loadPersonalVocabulary,
   savePersonalVocabulary,

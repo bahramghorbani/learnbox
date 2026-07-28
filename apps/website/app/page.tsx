@@ -7,8 +7,11 @@ import {
   hasPersonalVocabularyDuplicate,
   loadPersonalVocabulary,
   loadSyncQueue,
+  createMemoryStorage,
+  createResilientStorage,
   savePersonalVocabulary,
   saveSyncQueue,
+  type DeviceStorage,
   type PendingSyncEvent,
   type PersonalVocabularyEntry,
 } from '@learnbox/learning-engine';
@@ -41,6 +44,16 @@ const reviewSyncStorageKey = 'learnbox:review-sync:v1:local-prototype';
 const personalVocabularyStorageKey = 'learnbox:personal-vocabulary:v1:local-prototype';
 const personalVocabularySyncStorageKey = 'learnbox:personal-vocabulary-sync:v1:local-prototype';
 const onboardingGoalStorageKey = 'learnbox:onboarding-goal:v1:local-prototype';
+const temporaryDeviceStorage = createMemoryStorage();
+
+function getDeviceStorage(): DeviceStorage {
+  if (typeof window === 'undefined') return temporaryDeviceStorage;
+  try {
+    return createResilientStorage(window.localStorage, temporaryDeviceStorage);
+  } catch {
+    return temporaryDeviceStorage;
+  }
+}
 
 const initialSavedWords = stagedStartSlice.slice(0, 3).map((item, index) => ({
   german: item.article ? `${item.article} ${item.german}` : item.german,
@@ -83,22 +96,21 @@ export default function Home() {
 
   useEffect(() => {
     if (!authenticated || typeof window === 'undefined') return;
-    setPendingReviewCount(
-      loadSyncQueue<QueuedReview>(window.localStorage, reviewSyncStorageKey).length,
-    );
+    const storage = getDeviceStorage();
+    setPendingReviewCount(loadSyncQueue<QueuedReview>(storage, reviewSyncStorageKey).length);
   }, [authenticated]);
 
   useEffect(() => {
-    setPersonalWords(loadPersonalVocabulary(window.localStorage, personalVocabularyStorageKey));
+    const storage = getDeviceStorage();
+    setPersonalWords(loadPersonalVocabulary(storage, personalVocabularyStorageKey));
     setPendingPersonalWordSyncCount(
-      loadSyncQueue<QueuedPersonalVocabulary>(window.localStorage, personalVocabularySyncStorageKey)
-        .length,
+      loadSyncQueue<QueuedPersonalVocabulary>(storage, personalVocabularySyncStorageKey).length,
     );
     setPersonalWordsLoaded(true);
   }, []);
 
   useEffect(() => {
-    const storedGoal = readStoredLearningGoal(window.localStorage);
+    const storedGoal = readStoredLearningGoal(getDeviceStorage());
     if (!storedGoal) return;
     setLearningGoal(storedGoal);
     setOnboarded(true);
@@ -106,7 +118,7 @@ export default function Home() {
 
   useEffect(() => {
     if (!personalWordsLoaded) return;
-    savePersonalVocabulary(window.localStorage, personalVocabularyStorageKey, personalWords);
+    savePersonalVocabulary(getDeviceStorage(), personalVocabularyStorageKey, personalWords);
   }, [personalWords, personalWordsLoaded]);
 
   useEffect(() => {
@@ -122,17 +134,14 @@ export default function Home() {
     setSessionIndex(0);
   };
   const completeOnboarding = () => {
-    try {
-      window.localStorage.setItem(onboardingGoalStorageKey, learningGoal);
-    } catch {
-      // The prototype remains usable when device storage is unavailable.
-    }
+    getDeviceStorage().setItem(onboardingGoalStorageKey, learningGoal);
     setOnboarded(true);
   };
   const queuePersonalVocabularySync = (entry: PersonalVocabularyEntry) => {
     if (typeof window === 'undefined') return;
+    const storage = getDeviceStorage();
     const queue = loadSyncQueue<QueuedPersonalVocabulary>(
-      window.localStorage,
+      storage,
       personalVocabularySyncStorageKey,
     );
     const clientEventId =
@@ -147,12 +156,13 @@ export default function Home() {
         nextAttemptAt: new Date(),
       },
     ];
-    saveSyncQueue(window.localStorage, personalVocabularySyncStorageKey, nextQueue);
+    saveSyncQueue(storage, personalVocabularySyncStorageKey, nextQueue);
     setPendingPersonalWordSyncCount(nextQueue.length);
   };
   const recordGrade = (nextGrade: Grade) => {
     if (typeof window !== 'undefined') {
-      const queue = loadSyncQueue<QueuedReview>(window.localStorage, reviewSyncStorageKey);
+      const storage = getDeviceStorage();
+      const queue = loadSyncQueue<QueuedReview>(storage, reviewSyncStorageKey);
       const clientEventId =
         window.crypto?.randomUUID?.() ??
         `review-${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -169,7 +179,7 @@ export default function Home() {
           nextAttemptAt: new Date(),
         },
       ];
-      saveSyncQueue(window.localStorage, reviewSyncStorageKey, nextQueue);
+      saveSyncQueue(storage, reviewSyncStorageKey, nextQueue);
       setPendingReviewCount(nextQueue.length);
     }
     setGrade(nextGrade);
