@@ -149,6 +149,21 @@ button {
 .offline-retry:active {
   transform: translateY(0);
 }
+.error-actions {
+  display: grid;
+  justify-items: center;
+  gap: 15px;
+}
+.error-home-link {
+  color: #5543a7;
+  font-size: 15px;
+  font-weight: 700;
+  text-underline-offset: 4px;
+}
+.error-home-link:focus-visible {
+  outline: 3px solid #25213b;
+  outline-offset: 4px;
+}
 @keyframes bobo-offline-arrive {
   from {
     opacity: 0;
@@ -1218,47 +1233,6 @@ p {
   margin: 16px 0 0;
   color: #5d6079;
   font-size: 13px;
-}
-.offline-shell {
-  min-height: 100vh;
-  display: grid;
-  place-items: center;
-  padding: 24px;
-  text-align: center;
-  background: #fff;
-}
-.offline-shell section {
-  max-width: 390px;
-}
-.offline-mark {
-  display: grid;
-  place-items: center;
-  width: 70px;
-  height: 70px;
-  margin: 0 auto 24px;
-  border-radius: 22px;
-  background: #f0ebff;
-  color: #6b4bd8;
-  font-size: 42px;
-}
-.offline-shell h1 {
-  margin: 0 0 14px;
-  font-size: 30px;
-}
-.offline-shell p {
-  margin: 0 0 28px;
-  color: var(--muted);
-  line-height: 1.9;
-}
-.offline-shell button {
-  min-height: 48px;
-  padding: 0 22px;
-  border: 0;
-  border-radius: 14px;
-  background: var(--purple);
-  color: #fff;
-  font: inherit;
-  font-weight: 700;
 }
 @media (max-width: 420px) {
   .app-shell {
