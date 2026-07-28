@@ -41,7 +41,9 @@ if (!environmentSource.includes('OTP_DEVELOPMENT_MODE=false')) {
 
 for (const required of [
   'otpPolicy',
+  'otpRequestPolicy',
   'createOtpCode',
+  'evaluateOtpRequestRateLimit',
   'hashOtpCode',
   'evaluateOtpVerification',
   "export type OtpPurpose = 'sign_in'",

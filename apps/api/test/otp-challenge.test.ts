@@ -3,10 +3,12 @@ import { describe, expect, it } from 'vitest';
 import {
   createOtpChallenge,
   createOtpCode,
+  evaluateOtpRequestRateLimit,
   evaluateOtpVerification,
   hashOtpCode,
   hashOtpPhone,
   otpPolicy,
+  otpRequestPolicy,
 } from '../src/auth/otp-challenge.js';
 
 const secret = 'otp-challenge-test-secret-that-is-long-enough';
@@ -74,5 +76,46 @@ describe('OTP challenge core', () => {
         new Date(now.getTime() + otpPolicy.expiresInMs),
       ),
     ).toEqual({ status: 'expired' });
+  });
+
+  it('allows a small number of recent request attempts then limits the phone subject', () => {
+    const now = new Date('2026-07-28T12:00:00Z');
+    const requestTimes = Array.from(
+      { length: otpRequestPolicy.maxRequestsPerPhone },
+      (_value, index) => new Date(now.getTime() - index * 1_000),
+    );
+
+    expect(
+      evaluateOtpRequestRateLimit({
+        phoneRequestTimes: requestTimes.slice(1),
+        ipRequestTimes: [],
+        now,
+      }),
+    ).toEqual({ status: 'allowed' });
+    expect(
+      evaluateOtpRequestRateLimit({ phoneRequestTimes: requestTimes, ipRequestTimes: [], now }),
+    ).toMatchObject({ status: 'rate_limited', scope: 'phone' });
+  });
+
+  it('limits an abusive IP independently and ignores timestamps outside the sliding window', () => {
+    const now = new Date('2026-07-28T12:00:00Z');
+    const recentIpTimes = Array.from(
+      { length: otpRequestPolicy.maxRequestsPerIp },
+      (_value, index) => new Date(now.getTime() - index * 1_000),
+    );
+
+    expect(
+      evaluateOtpRequestRateLimit({
+        phoneRequestTimes: [],
+        ipRequestTimes: [
+          new Date(now.getTime() - otpRequestPolicy.windowMs),
+          ...recentIpTimes.slice(1),
+        ],
+        now,
+      }),
+    ).toEqual({ status: 'allowed' });
+    expect(
+      evaluateOtpRequestRateLimit({ phoneRequestTimes: [], ipRequestTimes: recentIpTimes, now }),
+    ).toMatchObject({ status: 'rate_limited', scope: 'ip' });
   });
 });

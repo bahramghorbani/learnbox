@@ -7,6 +7,12 @@ export const otpPolicy = {
   maxAttempts: 5,
 } as const;
 
+export const otpRequestPolicy = {
+  windowMs: 15 * 60 * 1000,
+  maxRequestsPerPhone: 3,
+  maxRequestsPerIp: 10,
+} as const;
+
 export type OtpPurpose = 'sign_in';
 
 export type OtpChallengeRecord = {
@@ -27,11 +33,20 @@ export type OtpVerificationOutcome =
   | { status: 'locked'; record: OtpChallengeRecord }
   | { status: 'expired' | 'used' };
 
+export type OtpRequestRateLimitOutcome =
+  { status: 'allowed' } | { status: 'rate_limited'; scope: 'phone' | 'ip'; retryAfterMs: number };
+
 type CreateOtpChallengeInput = {
   id: string;
   phoneHash: string;
   codeHash: string;
   purpose: OtpPurpose;
+  now?: Date;
+};
+
+type OtpRequestRateLimitInput = {
+  phoneRequestTimes: readonly Date[];
+  ipRequestTimes: readonly Date[];
   now?: Date;
 };
 
@@ -83,6 +98,25 @@ export function createOtpChallenge({
 }
 
 /**
+ * Applies the server-side sliding-window guard before an SMS provider is called. Callers supply
+ * only timestamps for already-normalized, hashed phone/IP subjects; this core never needs the
+ * sensitive values themselves.
+ */
+export function evaluateOtpRequestRateLimit({
+  phoneRequestTimes,
+  ipRequestTimes,
+  now = new Date(),
+}: OtpRequestRateLimitInput): OtpRequestRateLimitOutcome {
+  const phoneLimit = limitFor(phoneRequestTimes, otpRequestPolicy.maxRequestsPerPhone, now);
+  if (phoneLimit) return { status: 'rate_limited', scope: 'phone', retryAfterMs: phoneLimit };
+
+  const ipLimit = limitFor(ipRequestTimes, otpRequestPolicy.maxRequestsPerIp, now);
+  if (ipLimit) return { status: 'rate_limited', scope: 'ip', retryAfterMs: ipLimit };
+
+  return { status: 'allowed' };
+}
+
+/**
  * Calculates a single verification transition. Persistence must atomically store the returned
  * record, so concurrent requests cannot consume or increment the same challenge twice.
  */
@@ -118,4 +152,22 @@ function isOpaqueId(value: string): boolean {
 
 function isHash(value: string): boolean {
   return /^[a-zA-Z0-9_-]{32,128}$/.test(value);
+}
+
+function limitFor(requestTimes: readonly Date[], maximum: number, now: Date): number | null {
+  const nowMs = now.getTime();
+  if (!Number.isFinite(nowMs)) throw new Error('OTP request timestamp is invalid.');
+
+  const windowStart = nowMs - otpRequestPolicy.windowMs;
+  const recent = requestTimes
+    .map((timestamp) => timestamp.getTime())
+    .map((timestamp) => {
+      if (!Number.isFinite(timestamp)) throw new Error('OTP request timestamp is invalid.');
+      return timestamp;
+    })
+    .filter((timestamp) => timestamp > windowStart && timestamp <= nowMs)
+    .sort((left, right) => left - right);
+
+  if (recent.length < maximum) return null;
+  return Math.max(1, recent[0] + otpRequestPolicy.windowMs - nowMs);
 }
