@@ -1,10 +1,13 @@
 /* global caches, self */
 
-const CACHE_NAME = 'learnbox-public-shell-v6';
+const CACHE_NAME = 'learnbox-public-shell-v7';
 const OFFLINE_URL = '/offline.html';
 const OFFLINE_ASSETS = [
   OFFLINE_URL,
   '/images/bobo/recovery-v2.png',
+  '/images/launch/germany-welcome-v1.png',
+  '/icons/learnbox-v1-192.png',
+  '/icons/learnbox-v1-512.png',
   '/fonts/IRANSansX-Regular.woff2',
   '/fonts/IRANSansX-Bold.woff2',
 ];
@@ -37,6 +40,7 @@ self.addEventListener('fetch', (event) => {
       requestUrl.pathname.startsWith('/_next/static/') ||
       requestUrl.pathname.startsWith('/fonts/') ||
       requestUrl.pathname.startsWith('/images/') ||
+      requestUrl.pathname.startsWith('/icons/') ||
       requestUrl.pathname === '/icon.svg' ||
       requestUrl.pathname === '/manifest.webmanifest');
 

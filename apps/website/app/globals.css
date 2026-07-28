@@ -37,6 +37,64 @@ body {
 button {
   font: inherit;
 }
+.launch-screen {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  overflow: hidden;
+  background: #1d0d54;
+  pointer-events: auto;
+  transition:
+    opacity 240ms ease,
+    visibility 240ms ease;
+}
+.launch-screen-exiting {
+  opacity: 0;
+  visibility: hidden;
+}
+.launch-screen-image {
+  object-fit: cover;
+  object-position: center center;
+}
+.launch-screen-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    #1a063280 0%,
+    transparent 26%,
+    transparent 72%,
+    #1604268c 100%
+  );
+}
+.launch-screen-loader {
+  position: absolute;
+  right: 50%;
+  bottom: max(34px, env(safe-area-inset-bottom));
+  display: flex;
+  gap: 8px;
+  transform: translateX(50%);
+}
+.launch-screen-loader i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 7px #17053280;
+  animation: launch-dot 850ms ease-in-out infinite alternate;
+}
+.launch-screen-loader i:nth-child(2) {
+  animation-delay: 120ms;
+}
+.launch-screen-loader i:nth-child(3) {
+  animation-delay: 240ms;
+}
+@keyframes launch-dot {
+  to {
+    opacity: 0.35;
+    transform: translateY(-5px);
+  }
+}
 .offline-shell {
   display: grid;
   min-height: 100dvh;
@@ -175,6 +233,12 @@ button {
   }
 }
 @media (prefers-reduced-motion: reduce) {
+  .launch-screen {
+    transition: none;
+  }
+  .launch-screen-loader i {
+    animation: none;
+  }
   .bobo-offline {
     animation: none;
   }
