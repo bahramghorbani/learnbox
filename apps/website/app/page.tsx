@@ -532,7 +532,10 @@ export default function Home() {
         <p className="eyeline">امروز</p>
         <h1>با چند دقیقه شروع کن</h1>
         <p>مرور کوتاه امروز، مسیر یادگیریت را زنده نگه می‌دارد.</p>
-        <p className="staging-note">۳ کارت از بستهٔ آزمایشی Start برای امروز آماده است.</p>
+        <p className="staging-note">
+          {studyItems.length.toLocaleString('fa-IR')} کارت از بستهٔ آزمایشی Start برای امروز آماده
+          است.
+        </p>
       </section>
       <section className="summary" aria-label="پیشنهاد امروز">
         <div>
