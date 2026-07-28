@@ -18,7 +18,7 @@ describe('Bobo design-system policy', () => {
         expression: 'welcome',
         assetId: 'bobo-welcome',
         canonicalVersion: null,
-        path: '/images/bobo/welcome-v1.png',
+        path: '/images/bobo/welcome-v2.png',
       }),
     ).toBe(false);
     expect(boboUsageRules.canShameLearner).toBe(false);

@@ -14,32 +14,32 @@ export const boboCanonicalReference = 'docs/design/concepts/bobo-expression-revi
 export const boboCanonicalAssets: Record<BoboExpression, BoboAssetReference> = {
   welcome: {
     expression: 'welcome',
-    assetId: 'bobo-welcome-v1',
-    path: '/images/bobo/welcome-v1.png',
+    assetId: 'bobo-welcome-v2',
+    path: '/images/bobo/welcome-v2.png',
     canonicalVersion: '1.0.0',
   },
   encourage: {
     expression: 'encourage',
-    assetId: 'bobo-encourage-v1',
-    path: '/images/bobo/encourage-v1.png',
+    assetId: 'bobo-encourage-v2',
+    path: '/images/bobo/encourage-v2.png',
     canonicalVersion: '1.0.0',
   },
   celebrate: {
     expression: 'celebrate',
-    assetId: 'bobo-celebrate-v1',
-    path: '/images/bobo/celebrate-v1.png',
+    assetId: 'bobo-celebrate-v2',
+    path: '/images/bobo/celebrate-v2.png',
     canonicalVersion: '1.0.0',
   },
   recovery: {
     expression: 'recovery',
-    assetId: 'bobo-recovery-v1',
-    path: '/images/bobo/recovery-v1.png',
+    assetId: 'bobo-recovery-v2',
+    path: '/images/bobo/recovery-v2.png',
     canonicalVersion: '1.0.0',
   },
   focus: {
     expression: 'focus',
-    assetId: 'bobo-focus-v1',
-    path: '/images/bobo/focus-v1.png',
+    assetId: 'bobo-focus-v2',
+    path: '/images/bobo/focus-v2.png',
     canonicalVersion: '1.0.0',
   },
 };

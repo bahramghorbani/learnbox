@@ -8,14 +8,14 @@
 
 ## فایل‌های قابل استفاده در محصول
 
-پنج فایل زیر مستقیماً از همین برگهٔ تأییدشده برش خورده‌اند؛ تولید یا بازتفسیر تازه‌ای در آن‌ها انجام نشده است. تنها همین فایل‌ها مجازند در رابط کاربری استفاده شوند:
+پنج فایل زیر نسخه‌های شفافِ تأییدشده‌اند. هر کدام با مرجع رسمی `1.0.0` ساخته، از نظر ظاهر بررسی و به‌صورت PNG دارای کانال شفاف آماده شده‌اند. تنها همین فایل‌ها مجازند در رابط کاربری استفاده شوند:
 
-- `apps/website/public/images/bobo/welcome-v1.png`
-- `apps/website/public/images/bobo/encourage-v1.png`
-- `apps/website/public/images/bobo/celebrate-v1.png`
-- `apps/website/public/images/bobo/recovery-v1.png`
-- `apps/website/public/images/bobo/focus-v1.png`
+- `apps/website/public/images/bobo/welcome-v2.png`
+- `apps/website/public/images/bobo/encourage-v2.png`
+- `apps/website/public/images/bobo/celebrate-v2.png`
+- `apps/website/public/images/bobo/recovery-v2.png`
+- `apps/website/public/images/bobo/focus-v2.png`
 
 ## کارِ برگشتی ثبت‌شده
 
-نسخه‌های PNG فعلی پس‌زمینهٔ شفاف ندارند. ایجاد مجموعهٔ شفافِ واقعی تا فعال‌شدن اعتبار API تصویر به تعویق افتاده است. تا آن زمان، هیچ خروجی بازتولیدشده یا ناقصی جایگزین فایل‌های تأییدشدهٔ بالا نمی‌شود؛ پس از آماده‌شدن اعتبار، پنج حالت باید با بررسی بصری و تأیید مالک جایگزین شوند.
+مجموعهٔ شفاف در ۲۸ ژوئیهٔ ۲۰۲۶ با AvalAI و پس از بررسی بصری مالک آماده شد. فایل‌های `v1` برای بازگشت سریع در مخزن باقی مانده‌اند و رابط کاربری فقط به نسخه‌های `v2` اشاره می‌کند.

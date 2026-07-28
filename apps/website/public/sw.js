@@ -1,10 +1,10 @@
 /* global caches, self */
 
-const CACHE_NAME = 'learnbox-public-shell-v5';
+const CACHE_NAME = 'learnbox-public-shell-v6';
 const OFFLINE_URL = '/offline.html';
 const OFFLINE_ASSETS = [
   OFFLINE_URL,
-  '/images/bobo/recovery-v1.png',
+  '/images/bobo/recovery-v2.png',
   '/fonts/IRANSansX-Regular.woff2',
   '/fonts/IRANSansX-Bold.woff2',
 ];
