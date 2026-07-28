@@ -4,13 +4,22 @@ import { useState } from 'react';
 
 interface PronunciationButtonProps {
   text: string;
-  preview?: boolean;
+  src?: string;
 }
 
-export function PronunciationButton({ text, preview = false }: PronunciationButtonProps) {
+export function PronunciationButton({ text, src }: PronunciationButtonProps) {
   const [status, setStatus] = useState<'idle' | 'playing' | 'unavailable'>('idle');
 
   const play = () => {
+    if (src) {
+      const audio = new Audio(src);
+      audio.onplay = () => setStatus('playing');
+      audio.onended = () => setStatus('idle');
+      audio.onerror = () => setStatus('unavailable');
+      void audio.play().catch(() => setStatus('unavailable'));
+      return;
+    }
+
     if (!('speechSynthesis' in window)) {
       setStatus('unavailable');
       return;
@@ -28,14 +37,10 @@ export function PronunciationButton({ text, preview = false }: PronunciationButt
 
   const label =
     status === 'playing'
-      ? preview
-        ? 'در حال پخش تلفظ آزمایشی مرورگر'
-        : 'در حال پخش تلفظ'
+      ? 'در حال پخش تلفظ'
       : status === 'unavailable'
         ? 'پخش تلفظ در این مرورگر در دسترس نیست'
-        : preview
-          ? `پخش تلفظ آزمایشی مرورگر برای ${text}`
-          : `پخش تلفظ ${text}`;
+        : `پخش تلفظ ${text}`;
 
   return (
     <button
@@ -46,13 +51,7 @@ export function PronunciationButton({ text, preview = false }: PronunciationButt
       title={label}
     >
       <SpeakerIcon />
-      <span>
-        {status === 'unavailable'
-          ? 'صدا در دسترس نیست'
-          : preview
-            ? 'شنیدن تلفظ آزمایشی'
-            : 'شنیدن تلفظ'}
-      </span>
+      <span>{status === 'unavailable' ? 'صدا در دسترس نیست' : 'شنیدن تلفظ'}</span>
     </button>
   );
 }

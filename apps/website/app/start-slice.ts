@@ -11,6 +11,11 @@ export type StartSliceItem = {
   persian: string;
   exampleGerman: string;
   examplePersian: string;
+  candidateMedia: {
+    image: string;
+    wordAudio: string;
+    sentenceAudio: string;
+  };
 };
 
 export const stagedStartSlice: StartSliceItem[] = startA1DraftsJson.items.map((item) => ({
@@ -21,6 +26,11 @@ export const stagedStartSlice: StartSliceItem[] = startA1DraftsJson.items.map((i
   persian: item.persianMeanings[0],
   exampleGerman: item.examples[0].german,
   examplePersian: item.examples[0].persian,
+  candidateMedia: {
+    image: `/api/local-preview-media/${item.id}/image`,
+    wordAudio: `/api/local-preview-media/${item.id}/word-audio`,
+    sentenceAudio: `/api/local-preview-media/${item.id}/sentence-audio`,
+  },
 }));
 
 export function selectTodayStartSession(day: Date = new Date()): StartSliceItem[] {

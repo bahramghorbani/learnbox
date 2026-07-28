@@ -61,6 +61,7 @@ export default function Home() {
   const [pendingReviewCount, setPendingReviewCount] = useState(0);
   const [completedSessions, setCompletedSessions] = useState(0);
   const [plusOfferDismissed, setPlusOfferDismissed] = useState(false);
+  const [isLocalMediaPreview, setIsLocalMediaPreview] = useState(false);
 
   useEffect(() => {
     if (!authenticated || typeof window === 'undefined') return;
@@ -68,6 +69,12 @@ export default function Home() {
       loadSyncQueue<QueuedReview>(window.localStorage, reviewSyncStorageKey).length,
     );
   }, [authenticated]);
+
+  useEffect(() => {
+    setIsLocalMediaPreview(
+      window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1',
+    );
+  }, []);
 
   const begin = () => {
     setScreen('card');
@@ -292,14 +299,25 @@ export default function Home() {
               <h1 lang="de" dir="ltr">
                 {currentItem.german}
               </h1>
-              <PronunciationButton text={currentItem.german} preview />
+              <PronunciationButton
+                text={currentItem.german}
+                src={isLocalMediaPreview ? currentItem.candidateMedia.wordAudio : undefined}
+              />
               <div className="word-visual word-visual-staged" aria-hidden="true">
-                <span>◌</span>
+                {isLocalMediaPreview ? (
+                  <img src={currentItem.candidateMedia.image} alt="" />
+                ) : (
+                  <span>◌</span>
+                )}
               </div>
               <p className="hint" lang="de" dir="ltr">
                 {currentItem.germanDefinition}
               </p>
-              <p className="media-pending">تصویر و صدای ضبط‌شدهٔ این کارت در حال آماده‌سازی است.</p>
+              <p className="media-pending">
+                {isLocalMediaPreview
+                  ? 'تصویر و صدای نامزد فقط برای بررسی محلی نمایش داده می‌شوند.'
+                  : 'تصویر و صدای ضبط‌شدهٔ این کارت در حال آماده‌سازی است.'}
+              </p>
               <button className="flip-hint" onClick={() => setFlipped(true)}>
                 برای دیدن معنی، کارت را برگردان
               </button>
@@ -314,6 +332,10 @@ export default function Home() {
                 <strong>{currentItem.exampleGerman}</strong>
                 <span dir="rtl">{currentItem.examplePersian}</span>
               </div>
+              <PronunciationButton
+                text={currentItem.exampleGerman}
+                src={isLocalMediaPreview ? currentItem.candidateMedia.sentenceAudio : undefined}
+              />
               <p className="instruction">چقدر یادت آمد؟</p>
               <div className="grade-grid" role="group" aria-label="درجهٔ یادآوری">
                 {grades.map((item) => (

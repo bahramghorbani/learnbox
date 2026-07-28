@@ -56,8 +56,12 @@ if (!websiteSource.includes('تصویر و صدای ضبط‌شدهٔ این ک�
   throw new Error('Staged cards must clearly disclose pending production media.');
 }
 
-if (!websiteSource.includes('PronunciationButton text={currentItem.german} preview')) {
-  throw new Error('Staged cards must identify browser pronunciation as a preview.');
+if (!websiteSource.includes('isLocalMediaPreview')) {
+  throw new Error('Candidate media may only appear in the local preview.');
+}
+
+if (!stagingSource.includes('/api/local-preview-media/${item.id}/image')) {
+  throw new Error('The staged Start slice must map image candidates through the local-only route.');
 }
 
 console.info('Website Start slice staging is valid and remains publication-blocked.');
