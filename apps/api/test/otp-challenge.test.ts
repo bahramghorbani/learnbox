@@ -56,7 +56,10 @@ describe('OTP challenge core', () => {
       record = result.record;
     }
 
-    expect(evaluateOtpVerification(record, incorrectHash, now)).toEqual({ status: 'locked' });
+    expect(evaluateOtpVerification(record, incorrectHash, now)).toMatchObject({
+      status: 'locked',
+      record: { attemptCount: otpPolicy.maxAttempts },
+    });
   });
 
   it('rejects expired codes before comparison', () => {

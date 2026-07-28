@@ -24,7 +24,8 @@ export type OtpChallengeRecord = {
 export type OtpVerificationOutcome =
   | { status: 'verified'; record: OtpChallengeRecord }
   | { status: 'invalid'; record: OtpChallengeRecord }
-  | { status: 'expired' | 'locked' | 'used' };
+  | { status: 'locked'; record: OtpChallengeRecord }
+  | { status: 'expired' | 'used' };
 
 type CreateOtpChallengeInput = {
   id: string;
@@ -93,7 +94,7 @@ export function evaluateOtpVerification(
   if (!isHash(suppliedCodeHash)) throw new Error('OTP verification input is invalid.');
   if (record.consumedAt) return { status: 'used' };
   if (record.expiresAt.getTime() <= now.getTime()) return { status: 'expired' };
-  if (record.attemptCount >= record.maxAttempts) return { status: 'locked' };
+  if (record.attemptCount >= record.maxAttempts) return { status: 'locked', record };
 
   if (safeEqual(record.codeHash, suppliedCodeHash)) {
     return { status: 'verified', record: { ...record, consumedAt: now } };
@@ -101,7 +102,7 @@ export function evaluateOtpVerification(
 
   const nextRecord = { ...record, attemptCount: record.attemptCount + 1 };
   return nextRecord.attemptCount >= nextRecord.maxAttempts
-    ? { status: 'locked' }
+    ? { status: 'locked', record: nextRecord }
     : { status: 'invalid', record: nextRecord };
 }
 

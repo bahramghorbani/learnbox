@@ -33,10 +33,12 @@ learner identity.
 ## Consequences
 
 SMS.ir is now the documented candidate for OTP delivery, while the project remains fail-closed.
-The required account actions are small and deferred until the server adapter reaches activation:
-an approved verification template, its identifier and a restricted API key in the deployment
-secret store. This preserves provider replaceability because challenge lifecycle and identity
-verification stay in LearnBox rather than inside the vendor integration.
+The opaque challenge core, database migration and atomic PostgreSQL transition store are present;
+they do not expose a route, issue a learner session or deliver a message. The required account
+actions are small and deferred until the server adapter reaches activation: an approved verification
+template, its identifier and a restricted API key in the deployment secret store. This preserves
+provider replaceability because challenge lifecycle and identity verification stay in LearnBox
+rather than inside the vendor integration.
 
 ## Reversal trigger
 

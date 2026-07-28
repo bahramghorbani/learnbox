@@ -6,7 +6,8 @@ Core entities: User, DeviceSession, OTPChallenge, Card, CardVersion, Pack, Revie
 expiry, resend cooldown, attempt count and one-time consumption timestamp. Raw phone numbers and
 OTP values do not enter the challenge table. The current server-core policy uses a five-digit code,
 five-minute expiry, one-minute resend cooldown and five verification attempts; its database
-migration and unit-tested transition contract are present, but no route or SMS delivery is active.
+migration, atomic PostgreSQL store and unit-tested transition contract are present, but no route
+or SMS delivery is active.
 
 `ReviewEvent` is append-only; `CardSchedule` is a mutable projection keyed by `(user_id, card_id)`. The server applies one idempotent event at a time and updates the projection in the same transaction. A due-card query uses the user-scoped `due_at` index and excludes suspended and archived states.
 
