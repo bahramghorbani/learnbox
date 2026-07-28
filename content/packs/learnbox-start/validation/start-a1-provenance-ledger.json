@@ -1,0 +1,72 @@
+{
+  "batchId": "learnbox-start-a1-vertical-slice-drafts-v1",
+  "releaseState": "documented_not_released",
+  "verifiedAt": "2026-07-28",
+  "lexicalScopeSource": {
+    "publisher": "Goethe-Institut",
+    "title": "GOETHE-ZERTIFIKAT A1 — Start Deutsch 1 Wortliste",
+    "url": "https://www.goethe.de/pro/relaunch/prf/de/A1_SD1_Wortliste_02.pdf",
+    "pageNumbering": "PDF page number",
+    "verificationMethod": "Direct PDF extraction and manual contextual review"
+  },
+  "items": [
+    { "itemId": "start-a1-haus", "evidencePages": [17], "evidenceType": "headword_or_context" },
+    { "itemId": "start-a1-tisch", "evidencePages": [24], "evidenceType": "headword_or_context" },
+    { "itemId": "start-a1-tuer", "evidencePages": [21, 22], "evidenceType": "headword_or_context" },
+    { "itemId": "start-a1-bett", "evidencePages": [11], "evidenceType": "headword_or_context" },
+    { "itemId": "start-a1-apfel", "evidencePages": [10], "evidenceType": "headword_or_context" },
+    { "itemId": "start-a1-brot", "evidencePages": [12], "evidenceType": "headword_or_context" },
+    { "itemId": "start-a1-wasser", "evidencePages": [25], "evidenceType": "headword_or_context" },
+    { "itemId": "start-a1-bahnhof", "evidencePages": [11], "evidenceType": "headword_or_context" },
+    { "itemId": "start-a1-schule", "evidencePages": [23], "evidenceType": "headword_or_context" },
+    { "itemId": "start-a1-lernen", "evidencePages": [19], "evidenceType": "headword_or_context" },
+    { "itemId": "start-a1-wohnen", "evidencePages": [26], "evidenceType": "headword_or_context" },
+    { "itemId": "start-a1-kaufen", "evidencePages": [18], "evidenceType": "headword_or_context" },
+    { "itemId": "start-a1-warten", "evidencePages": [25], "evidenceType": "headword_or_context" },
+    {
+      "itemId": "start-a1-gluecklich",
+      "evidencePages": [16],
+      "evidenceType": "headword_or_context"
+    },
+    { "itemId": "start-a1-muede", "evidencePages": [20], "evidenceType": "headword_or_context" },
+    { "itemId": "start-a1-klein", "evidencePages": [18], "evidenceType": "headword_or_context" },
+    {
+      "itemId": "start-a1-guten-tag",
+      "evidencePages": [15, 17],
+      "evidenceType": "headword_or_context"
+    },
+    {
+      "itemId": "start-a1-wie-geht-es-ihnen",
+      "evidencePages": [13, 15, 16],
+      "evidenceType": "scope_adaptation",
+      "note": "The formal phrase is LearnBox editorial wording; the source supports the A1 greeting/check-in pattern and formal-register vocabulary, not this exact phrasing."
+    },
+    {
+      "itemId": "start-a1-danke",
+      "evidencePages": [13, 16, 23],
+      "evidenceType": "headword_or_context"
+    },
+    {
+      "itemId": "start-a1-entschuldigung",
+      "evidencePages": [14],
+      "evidenceType": "headword_or_context"
+    }
+  ],
+  "learnBoxEditorialText": {
+    "definitionExampleAndTranslationSource": "Original LearnBox editorial drafts; German and Persian dimensions were confirmed by the product owner on 2026-07-27.",
+    "licensedFromGoethe": false
+  },
+  "candidateMedia": {
+    "status": "local_candidate_only",
+    "generationProviders": ["AvalAI image and speech APIs"],
+    "attachmentAllowed": false,
+    "publicationAllowed": false,
+    "licenseReview": "Pending confirmation against the active provider and underlying-model terms before any public or paid release."
+  },
+  "remainingReleaseGates": [
+    "media_license_review",
+    "final_visual_qa",
+    "final_audio_qa",
+    "app_flow_approval"
+  ]
+}

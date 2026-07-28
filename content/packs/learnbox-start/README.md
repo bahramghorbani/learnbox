@@ -33,3 +33,7 @@ item). The audio transcription check matched all 40 expected German strings; its
 These files are versioned candidate material only. They are not attached to learner cards, do
 not change the planning-only media handoff, and are not published. Publication remains blocked
 until the existing linguistic, provenance, visual, audio and in-app gates are closed.
+
+`validation/start-a1-provenance-ledger.json` records page-level lexical-scope evidence from the
+official Goethe A1 list, clearly separates LearnBox's original editorial text from that source,
+and keeps candidate media licence review as a separate release gate.
