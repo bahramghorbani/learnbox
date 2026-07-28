@@ -9,19 +9,43 @@ const { put } = await import(websiteRequire.resolve('@vercel/blob'));
 
 const contentRoot = new URL('../content/packs/learnbox-start/', import.meta.url);
 const draftFile = new URL('validation/start-a1-media-attachment-draft.json', contentRoot);
-const localEnvPath = resolve('.env.vercel.local');
+const localEnvPaths = [resolve('apps/website/.env.vercel.local'), resolve('.env.vercel.local')];
 const receiptDirectory = '/Users/test/.codex/tmp/learnbox-vercel';
 const receiptPath = `${receiptDirectory}/start-a1-private-upload-receipt.json`;
 const execute = process.argv.includes('--execute');
 const ownerApproved = process.argv.includes('--owner-approved');
 
-function localToken() {
-  if (process.env.BLOB_READ_WRITE_TOKEN?.trim()) return process.env.BLOB_READ_WRITE_TOKEN.trim();
-  if (!existsSync(localEnvPath)) return undefined;
-  const line = readFileSync(localEnvPath, 'utf8')
-    .split(/\r?\n/)
-    .find((candidate) => candidate.startsWith('BLOB_READ_WRITE_TOKEN='));
-  return line?.slice('BLOB_READ_WRITE_TOKEN='.length).trim() || undefined;
+function localEnvironmentValue(key) {
+  if (process.env[key]?.trim()) return process.env[key].trim();
+
+  for (const localEnvPath of localEnvPaths) {
+    if (!existsSync(localEnvPath)) continue;
+    const line = readFileSync(localEnvPath, 'utf8')
+      .split(/\r?\n/)
+      .find((candidate) => candidate.startsWith(`${key}=`));
+    if (!line) continue;
+
+    const value = line
+      .slice(`${key}=`.length)
+      .trim()
+      .replace(/^['"]|['"]$/g, '');
+    if (value) return value;
+  }
+
+  return undefined;
+}
+
+function blobCredentials() {
+  const token = localEnvironmentValue('BLOB_READ_WRITE_TOKEN');
+  if (token) return { mode: 'read-write-token', token };
+
+  const oidcToken = localEnvironmentValue('VERCEL_OIDC_TOKEN');
+  const storeId = localEnvironmentValue('BLOB_STORE_ID');
+  if (oidcToken && storeId) return { mode: 'oidc', oidcToken, storeId };
+
+  throw new Error(
+    'دسترسی خصوصی Vercel آماده نیست. ابتدا محیط توسعهٔ فروشگاه را با Vercel CLI روی همین دستگاه همگام‌سازی کنید.',
+  );
 }
 
 const draft = JSON.parse(await readFile(draftFile, 'utf8'));
@@ -53,10 +77,7 @@ if (!execute) {
   process.exit(0);
 }
 
-const token = localToken();
-if (!token) {
-  throw new Error('کلید خصوصی Vercel Blob روی همین دستگاه وارد نشده است.');
-}
+const credentials = blobCredentials();
 
 const uploaded = [];
 for (const asset of validatedAssets) {
@@ -64,7 +85,9 @@ for (const asset of validatedAssets) {
     access: 'private',
     addRandomSuffix: false,
     contentType: asset.localCandidate.mimeType,
-    token,
+    ...(credentials.mode === 'oidc'
+      ? { oidcToken: credentials.oidcToken, storeId: credentials.storeId }
+      : { token: credentials.token }),
   });
   uploaded.push({
     assetId: asset.assetId,
@@ -88,6 +111,7 @@ await writeFile(
       batchId: draft.batchId,
       state: 'private_upload_complete_not_attached',
       publicationBlocked: true,
+      authentication: credentials.mode,
       assets: uploaded,
     },
     null,
