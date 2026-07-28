@@ -8,6 +8,7 @@ import {
   normalizeGermanLemma,
   prepareContentBatchForReview,
   validateContentBatch,
+  validatePendingMediaPlan,
   validateStartSliceCandidates,
 } from '../src/index.js';
 import type { ContentPackManifest, LearningVocabularyItem } from '@learnbox/content-models';
@@ -163,5 +164,16 @@ describe('content factory batch validation', () => {
         state: 'not_requested',
       },
     ]);
+    expect(validatePendingMediaPlan(drafts.items, plan)).toEqual([]);
+  });
+
+  it('rejects an incomplete or unknown media-plan entry before a provider is requested', () => {
+    const planned = createPendingMediaPlan([item('start-haus-001', 'Haus')]);
+    expect(
+      validatePendingMediaPlan(
+        [item('start-haus-001', 'Haus')],
+        [...planned.slice(0, 2), { ...planned[2], contentId: 'unknown-card' }],
+      ).map((issue) => issue.field),
+    ).toEqual(expect.arrayContaining(['start-haus-001.media', 'media']));
   });
 });

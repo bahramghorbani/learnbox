@@ -32,6 +32,23 @@ export interface CompletedContentDraftJob {
   review: AiContentReviewDecision;
 }
 
+/** Provider output may propose text, but it cannot silently change the requested CEFR level. */
+export function evaluateContentDraftProposal(
+  request: ContentGenerationRequest,
+  proposal: GeneratedCardProposal,
+): AiContentReviewDecision {
+  const review = evaluateAiSuggestion(proposal.card, proposal.confidence);
+  if (proposal.card.cefr === request.targetCefr) return review;
+  return {
+    ...review,
+    nextStatus: 'needs_review',
+    issues: [
+      ...review.issues,
+      { field: 'cefr', message: 'سطح CEFR پیشنهاد با سطح درخواستی هم‌خوان نیست.' },
+    ],
+  };
+}
+
 export function createContentDraftJob(request: ContentGenerationRequest): ContentDraftJob {
   if (!request.jobId.trim()) throw new Error('Content job ID is required.');
   if (!request.promptTemplateVersion.trim())
@@ -62,7 +79,7 @@ export function completeContentDraftJob(
     throw new Error('Completion timestamp must be an ISO date.');
   }
 
-  const review = evaluateAiSuggestion(proposal.card, proposal.confidence);
+  const review = evaluateContentDraftProposal(job.request, proposal);
   return {
     job: { ...job, state: 'awaiting_review', completedAt },
     review,

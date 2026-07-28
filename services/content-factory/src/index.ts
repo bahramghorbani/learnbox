@@ -183,3 +183,37 @@ export function createPendingMediaPlan(
     }));
   });
 }
+
+/**
+ * Checks the non-executable media plan before any provider can be considered. Every review-queued
+ * card needs exactly one image, word audio and sentence audio with the stable storage convention.
+ */
+export function validatePendingMediaPlan(
+  items: ReadonlyArray<LearningVocabularyItem>,
+  plan: ReadonlyArray<PlannedMediaAsset>,
+): ContentValidationIssue[] {
+  const issues: ContentValidationIssue[] = [];
+  const expectedKinds = ['image', 'word_audio', 'sentence_audio'] as const;
+  for (const item of items) {
+    const assets = plan.filter((asset) => asset.contentId === item.id);
+    if (assets.length !== expectedKinds.length) {
+      issues.push({ field: `${item.id}.media`, message: 'برنامهٔ رسانه برای کارت کامل نیست.' });
+      continue;
+    }
+    for (const kind of expectedKinds) {
+      const asset = assets.find((candidate) => candidate.kind === kind);
+      if (
+        !asset ||
+        asset.assetId !== `${item.id}-${kind}-v1` ||
+        asset.storageKey !== `${item.id}/${kind}/v1` ||
+        asset.state !== 'not_requested'
+      ) {
+        issues.push({ field: `${item.id}.media.${kind}`, message: 'برنامهٔ رسانه معتبر نیست.' });
+      }
+    }
+  }
+  if (plan.some((asset) => !items.some((item) => item.id === asset.contentId))) {
+    issues.push({ field: 'media', message: 'برنامهٔ رسانه به کارت ناشناخته اشاره می‌کند.' });
+  }
+  return issues;
+}

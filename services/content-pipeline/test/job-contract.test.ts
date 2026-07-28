@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   completeContentDraftJob,
   createContentDraftJob,
+  evaluateContentDraftProposal,
   startContentDraftJob,
 } from '../src/index.js';
 
@@ -53,5 +54,19 @@ describe('content draft job contract', () => {
         '2026-07-26T12:01:00.000Z',
       ),
     ).toThrow('Proposal does not match its content job.');
+  });
+
+  it('routes a CEFR mismatch to human review even when the generated card is otherwise valid', () => {
+    expect(
+      evaluateContentDraftProposal(request, {
+        jobId: request.jobId,
+        card: { ...aiCard, cefr: 'A2' },
+        confidence: 0.93,
+      }),
+    ).toMatchObject({
+      nextStatus: 'needs_review',
+      issues: [{ field: 'cefr' }],
+      requiresHumanReview: true,
+    });
   });
 });
