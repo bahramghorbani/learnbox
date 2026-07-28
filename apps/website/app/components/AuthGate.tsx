@@ -13,6 +13,9 @@ function normalizeDigits(value: string) {
     .replace(/[٠-٩]/g, (digit) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(digit)));
 }
 
+const iranMobileInputPattern = /^9\d{9}$/;
+const otpLength = 5;
+
 export function AuthGate({ onAuthenticated }: AuthGateProps) {
   const [stage, setStage] = useState<'phone' | 'code'>('phone');
   const [phone, setPhone] = useState('');
@@ -23,8 +26,8 @@ export function AuthGate({ onAuthenticated }: AuthGateProps) {
     event.preventDefault();
     const digits = normalizeDigits(phone).replace(/\D/g, '');
 
-    if (digits.length < 10) {
-      setError('شمارهٔ موبایل را کامل وارد کن.');
+    if (!iranMobileInputPattern.test(digits)) {
+      setError('شمارهٔ موبایل ایرانی را کامل وارد کن.');
       return;
     }
 
@@ -35,7 +38,7 @@ export function AuthGate({ onAuthenticated }: AuthGateProps) {
   const submitCode = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (normalizeDigits(code).replace(/\D/g, '').length < 5) {
+    if (normalizeDigits(code).replace(/\D/g, '').length !== otpLength) {
       setError('کد ۵ رقمی را کامل وارد کن.');
       return;
     }
