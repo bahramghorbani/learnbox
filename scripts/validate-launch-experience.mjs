@@ -21,7 +21,7 @@ const serviceWorkerSource = await readFile(
   'utf8',
 );
 
-for (const required of ['germany-welcome-v1', 'imagePath', 'durationMs: 1700']) {
+for (const required of ['germany-welcome-v1', 'germany-welcome-v1.jpg', 'durationMs: 1700']) {
   if (!launchExperienceSource.includes(required)) {
     throw new Error(`Launch experience requirement missing: ${required}`);
   }
@@ -50,14 +50,14 @@ for (const required of ['learnbox-v1-192.png', 'learnbox-v1-512.png']) {
   }
 }
 
-for (const required of ['germany-welcome-v1.png', 'learnbox-v1-192.png', 'learnbox-v1-512.png']) {
+for (const required of ['germany-welcome-v1.jpg', 'learnbox-v1-192.png', 'learnbox-v1-512.png']) {
   if (!serviceWorkerSource.includes(required)) {
     throw new Error(`Offline launch asset missing: ${required}`);
   }
 }
 
 await Promise.all([
-  access(new URL('../apps/website/public/images/launch/germany-welcome-v1.png', import.meta.url)),
+  access(new URL('../apps/website/public/images/launch/germany-welcome-v1.jpg', import.meta.url)),
   access(new URL('../apps/website/public/icons/learnbox-v1-192.png', import.meta.url)),
   access(new URL('../apps/website/public/icons/learnbox-v1-512.png', import.meta.url)),
 ]);

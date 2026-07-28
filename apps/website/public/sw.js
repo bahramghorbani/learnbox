@@ -5,7 +5,7 @@ const OFFLINE_URL = '/offline.html';
 const OFFLINE_ASSETS = [
   OFFLINE_URL,
   '/images/bobo/recovery-v2.png',
-  '/images/launch/germany-welcome-v1.png',
+  '/images/launch/germany-welcome-v1.jpg',
   '/icons/learnbox-v1-192.png',
   '/icons/learnbox-v1-512.png',
   '/fonts/IRANSansX-Regular.woff2',

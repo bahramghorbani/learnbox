@@ -10,6 +10,6 @@ export type LaunchExperience = {
  */
 export const activeLaunchExperience: LaunchExperience = {
   id: 'germany-welcome-v1',
-  imagePath: '/images/launch/germany-welcome-v1.png',
+  imagePath: '/images/launch/germany-welcome-v1.jpg',
   durationMs: 1700,
 };

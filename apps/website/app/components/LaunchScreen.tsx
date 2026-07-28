@@ -43,6 +43,7 @@ export function LaunchScreen() {
         src={activeLaunchExperience.imagePath}
         fill
         priority
+        unoptimized
         sizes="100vw"
         onLoad={() => setImageReady(true)}
         onError={() => setImageReady(true)}
