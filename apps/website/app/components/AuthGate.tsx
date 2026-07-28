@@ -1,6 +1,7 @@
 'use client';
 
 import { FormEvent, useState } from 'react';
+import Link from 'next/link';
 
 interface AuthGateProps {
   onAuthenticated: () => void;
@@ -84,6 +85,9 @@ export function AuthGate({ onAuthenticated }: AuthGateProps) {
           <p className="auth-note">
             با ادامه، با شرایط استفاده و سیاست حریم خصوصی LearnBox موافقت می‌کنی.
           </p>
+          <Link className="auth-install-link" href="/install">
+            راهنمای افزودن LearnBox به صفحهٔ اصلی گوشی
+          </Link>
         </section>
       ) : (
         <section className="auth-content" aria-labelledby="code-title">
