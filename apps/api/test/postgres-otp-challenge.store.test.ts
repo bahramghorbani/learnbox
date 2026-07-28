@@ -105,4 +105,38 @@ describe('PostgresOtpChallengeStore', () => {
       calls.find(({ sql }) => sql.startsWith('UPDATE otp_challenges SET attempt_count'))?.params,
     ).toEqual([challengeId, 1]);
   });
+
+  it('rolls back and releases the connection when persisting a verification fails', async () => {
+    const calls: string[] = [];
+    let released = false;
+    const client = {
+      query: async (sql: string) => {
+        calls.push(sql);
+        if (sql.includes('FOR UPDATE')) return { rows: [toRow(record)] };
+        if (sql.startsWith('UPDATE otp_challenges SET consumed_at')) {
+          throw new Error('database unavailable');
+        }
+        return { rows: [] };
+      },
+      release: () => {
+        released = true;
+      },
+    };
+    const pool = {
+      connect: async () => client,
+    } as unknown as Pool;
+
+    await expect(
+      new PostgresOtpChallengeStore(pool).verify(
+        challengeId,
+        'sign_in',
+        hashOtpCode(secret, challengeId, '12345'),
+        now,
+      ),
+    ).rejects.toThrow('database unavailable');
+
+    expect(calls).toContain('ROLLBACK');
+    expect(calls).not.toContain('COMMIT');
+    expect(released).toBe(true);
+  });
 });
