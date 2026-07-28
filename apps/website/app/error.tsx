@@ -1,5 +1,7 @@
 'use client';
 
+import Link from 'next/link';
+
 import { Bobo } from './components/Bobo';
 
 export default function ErrorPage({
@@ -23,9 +25,9 @@ export default function ErrorPage({
           <button className="offline-retry" type="button" onClick={reset}>
             دوباره تلاش می‌کنم
           </button>
-          <a className="error-home-link" href="/">
+          <Link className="error-home-link" href="/">
             بازگشت به صفحهٔ اصلی
-          </a>
+          </Link>
         </div>
       </section>
     </main>
