@@ -42,3 +42,7 @@ owner-release gates still apply.
 `validation/start-a1-candidate-qa.json` records candidate-stage passes for provenance, visual,
 audio and local app flow. It explicitly does not attach or publish media; release still needs
 production receipts and owner approval.
+
+`validation/start-a1-media-attachment-draft.json` lists the exact 60 local candidate files,
+their checksums and the intended private storage keys. It intentionally contains no URL, upload
+operation or publication approval.
