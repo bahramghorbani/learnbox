@@ -1,0 +1,35 @@
+# ADR 0004 — AvalAI media-generation seam
+
+- **Status:** accepted
+- **Date:** 2026-07-28
+
+## Context
+
+LearnBox needs five transparent Bobo expressions, controlled vocabulary images and German
+pronunciation audio. The owner provided an AvalAI API account. Generated media must not bypass
+the existing editorial and receipt gates, and Bobo's approved `1.0.0` identity must remain intact.
+
+## Decision
+
+- Keep the provider credential only in local `.env.avalai.local`; never commit or expose it to the
+  web client.
+- Use AvalAI `gpt-image-1.5` at high quality for Bobo reference edits, because character
+  consistency and precise identity preservation matter more than the lowest per-image price.
+- Generate Bobo outputs on a flat chroma-key background, remove that key locally, validate alpha,
+  and keep every result as a review candidate until a human visually approves it.
+- Do not replace any canonical Bobo asset, attach media to cards or publish generated output as a
+  consequence of successful generation alone.
+- Benchmark a lower-cost provider/model separately for concrete vocabulary images before bulk
+  production; it must pass semantic, mobile-readability and visual-QA checks.
+
+## Consequences
+
+The local commands `pnpm check:avalai` and `pnpm generate:avalai:bobo -- <expression>` are
+operator tools, not runtime product features. The latter incurs provider cost and writes only
+review candidates outside the repository. Media remains subject to the planned checksum, URL and
+QA receipt validation before any later attachment decision.
+
+## Reversal trigger
+
+Replace AvalAI if it cannot reliably preserve Bobo's approved silhouette, its cost-quality ratio
+is no longer appropriate, or its API terms and availability no longer meet LearnBox requirements.

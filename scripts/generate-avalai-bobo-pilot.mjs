@@ -2,8 +2,25 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, resolve } from 'node:path';
 
 const localEnvPath = resolve('.env.avalai.local');
-const sourcePath = resolve('apps/website/public/images/bobo/welcome-v1.png');
 const outputDirectory = '/Users/test/.codex/tmp/learnbox-avalai';
+const expression = process.argv[2] ?? 'welcome';
+const expressionDirections = {
+  welcome: 'Welcome expression: one small paw lifted in a quiet friendly greeting.',
+  encourage:
+    'Encouragement expression: calm supportive warmth, one small paw held gently near the heart.',
+  celebrate:
+    'Celebration expression: brief joyful delight with both small paws raised, never frantic.',
+  recovery:
+    'Recovery expression: calm open welcome after a break, relaxed posture and reassuring smile.',
+  focus:
+    'Focus expression: calm attentive readiness to study, with one clear small forward gesture.',
+};
+
+if (!(expression in expressionDirections)) {
+  throw new Error(`حالت بوبو معتبر نیست: ${expression}`);
+}
+
+const sourcePath = resolve(`apps/website/public/images/bobo/${expression}-v1.png`);
 const source = readFileSync(sourcePath);
 
 function getAvalaiKey() {
@@ -28,7 +45,7 @@ const prompt = [
   'Keep a white softly furry single-piece round body with no visible neck, two short attached ears',
   'side by side, dark expressive eyes, gentle peach cheeks and a tiny friendly open smile.',
   'Do not make a rabbit: no long separated ears, no head-and-body split, no clothing, no logo.',
-  'Welcome expression: one small paw lifted in a quiet friendly greeting.',
+  expressionDirections[expression],
   'Center the complete character with generous padding.',
   'Use a perfectly flat solid #00FF00 chroma-key background only: no floor, no shadow, no reflection,',
   'no texture, no gradient, no text and no watermark. Do not use green on the character.',
@@ -58,7 +75,7 @@ const encodedImage = image?.b64_json;
 const imageUrl = image?.url ?? image?.image_url?.url;
 
 mkdirSync(outputDirectory, { recursive: true });
-const outputPath = `${outputDirectory}/bobo-welcome-v2-chromakey.png`;
+const outputPath = `${outputDirectory}/bobo-${expression}-v2-chromakey.png`;
 if (typeof encodedImage === 'string') {
   writeFileSync(outputPath, Buffer.from(encodedImage, 'base64'));
 } else if (typeof imageUrl === 'string') {
