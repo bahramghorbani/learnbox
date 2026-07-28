@@ -11,7 +11,7 @@
 | Remote config                | configuration_update                     | Versioned default parameters added; hosted delivery is a later task.                              |
 | Free review protection       | already_compliant / minor implementation | Explicit tests now preserve due and learned-content access.                                       |
 | Paywall                      | requires_new_task                        | Specification only; no offer is enabled in alpha.                                                 |
-| Analytics                    | documentation_update                     | Required privacy-safe event contract added; delivery adapter remains backlog work.                |
+| Analytics                    | minor_implementation_change              | Allowlisted, consent-gated delivery seam added; no provider or telemetry is activated.            |
 | Content schema               | minor_implementation_change              | Additive full vocabulary-item contract and `rejected` status added.                               |
 | Content pipeline             | documentation_update                     | Existing human gate is compatible; factory adapters remain next work.                             |
 | Admin                        | requires_new_task                        | Existing review UI is reusable; configuration/release controls are not yet built.                 |

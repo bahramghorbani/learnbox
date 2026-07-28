@@ -131,6 +131,12 @@ importers:
         specifier: ^5.9.2
         version: 5.9.3
 
+  packages/analytics-core:
+    devDependencies:
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@24.13.3)
+
   packages/billing-core:
     devDependencies:
       vitest:
