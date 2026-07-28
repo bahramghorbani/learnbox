@@ -642,22 +642,30 @@ button {
   font-size: 14px;
   white-space: nowrap;
 }
-.chart-visual {
-  height: 192px;
-  margin: 20px -4px 6px;
-}
-.chart-visual svg {
-  display: block;
-  width: 100%;
-  height: 100%;
-  overflow: visible;
-}
-.week-labels {
+.chart-summary {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  color: #4d5667;
-  font-size: 14px;
+  min-height: 192px;
+  place-content: center;
+  justify-items: center;
+  gap: 6px;
+  padding: 20px 8px 4px;
   text-align: center;
+}
+.chart-summary strong {
+  color: var(--primary);
+  font-size: 64px;
+  line-height: 1;
+}
+.chart-summary span {
+  color: #4d5667;
+  font-size: 16px;
+}
+.chart-summary p {
+  max-width: 250px;
+  margin: 7px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.8;
 }
 .time-insight {
   position: relative;
