@@ -265,7 +265,6 @@ export default function Home() {
     clearReviewSession(getDeviceStorage(), reviewSessionStorageKey);
     setResumableSessionIndex(null);
     setCompletedSessions((sessions) => sessions + 1);
-    setStreakDays((days) => Math.max(days, 4));
     setScreen('complete');
   };
   const addPersonalWord = () => {
