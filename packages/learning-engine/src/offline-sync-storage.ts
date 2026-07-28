@@ -17,16 +17,25 @@ export function loadSyncQueue<T>(storage: SyncQueueStorage, key: string): Pendin
 
   try {
     const decoded: unknown = JSON.parse(raw);
-    if (!Array.isArray(decoded)) return [];
+    if (!Array.isArray(decoded)) return discardCorruptQueue(storage, key);
 
-    return decoded.flatMap((item): PendingSyncEvent<T>[] => {
-      if (!isPersistedSyncEvent(item)) return [];
+    const restored = decoded.map((item): PendingSyncEvent<T> | null => {
+      if (!isPersistedSyncEvent(item)) return null;
       const nextAttemptAt = new Date(item.nextAttemptAt);
-      if (Number.isNaN(nextAttemptAt.getTime())) return [];
-      return [{ ...item, payload: item.payload as T, nextAttemptAt }];
+      if (
+        Number.isNaN(nextAttemptAt.getTime()) ||
+        nextAttemptAt.toISOString() !== item.nextAttemptAt
+      ) {
+        return null;
+      }
+      return { ...item, payload: item.payload as T, nextAttemptAt };
     });
+
+    return restored.some((event) => event === null)
+      ? discardCorruptQueue(storage, key)
+      : (restored as PendingSyncEvent<T>[]);
   } catch {
-    return [];
+    return discardCorruptQueue(storage, key);
   }
 }
 
@@ -52,8 +61,16 @@ function isPersistedSyncEvent(value: unknown): value is PersistedSyncEvent<unkno
   const candidate = value as Record<string, unknown>;
   return (
     typeof candidate.clientEventId === 'string' &&
+    candidate.clientEventId.trim().length > 0 &&
     typeof candidate.attempts === 'number' &&
+    Number.isSafeInteger(candidate.attempts) &&
+    candidate.attempts >= 0 &&
     typeof candidate.nextAttemptAt === 'string' &&
     'payload' in candidate
   );
+}
+
+function discardCorruptQueue(storage: SyncQueueStorage, key: string): [] {
+  storage.removeItem(key);
+  return [];
 }
