@@ -5,7 +5,7 @@ import { createRequire } from 'node:module';
 import { resolve } from 'node:path';
 
 const websiteRequire = createRequire(resolve('apps/website/package.json'));
-const { put } = await import(websiteRequire.resolve('@vercel/blob'));
+const { head, list, put } = await import(websiteRequire.resolve('@vercel/blob'));
 
 const contentRoot = new URL('../content/packs/learnbox-start/', import.meta.url);
 const draftFile = new URL('validation/start-a1-media-attachment-draft.json', contentRoot);
@@ -78,18 +78,73 @@ if (!execute) {
 }
 
 const credentials = blobCredentials();
+const authentication =
+  credentials.mode === 'oidc'
+    ? { oidcToken: credentials.oidcToken, storeId: credentials.storeId }
+    : { token: credentials.token };
+const existing = await list({
+  prefix: 'learnbox-start/',
+  limit: 1000,
+  ...authentication,
+});
+if (existing.hasMore) {
+  throw new Error('فهرست رسانه‌های خصوصی بیش از حد انتظار طولانی است و باید دستی بررسی شود.');
+}
+const existingByPathname = new Map(existing.blobs.map((blob) => [blob.pathname, blob]));
 
-const uploaded = [];
-for (const asset of validatedAssets) {
-  const blob = await put(asset.pathname, asset.bytes, {
-    access: 'private',
-    addRandomSuffix: false,
-    contentType: asset.localCandidate.mimeType,
-    ...(credentials.mode === 'oidc'
-      ? { oidcToken: credentials.oidcToken, storeId: credentials.storeId }
-      : { token: credentials.token }),
-  });
-  uploaded.push({
+async function uploadOrResume(asset) {
+  const priorUpload = existingByPathname.get(asset.pathname);
+  if (priorUpload) {
+    if (priorUpload.size !== asset.bytes.byteLength) {
+      throw new Error(`نسخهٔ موجود ${asset.assetId} با اندازهٔ فایل تأییدشده یکسان نیست.`);
+    }
+    console.info(`Validated existing private candidate: ${asset.assetId}`);
+    return {
+      assetId: asset.assetId,
+      contentId: asset.contentId,
+      kind: asset.kind,
+      storageKey: asset.storageKey,
+      pathname: priorUpload.pathname,
+      url: priorUpload.url,
+      mimeType: asset.localCandidate.mimeType,
+      sha256: asset.localCandidate.sha256,
+      qaStatus: 'approved',
+      resumed: true,
+    };
+  }
+
+  let blob;
+  try {
+    blob = await put(asset.pathname, asset.bytes, {
+      access: 'private',
+      addRandomSuffix: false,
+      contentType: asset.localCandidate.mimeType,
+      ...authentication,
+    });
+  } catch (error) {
+    if (!(error instanceof Error) || !error.message.includes('already exists')) throw error;
+
+    const concurrentlyUploaded = await head(asset.pathname, authentication);
+    if (concurrentlyUploaded.size !== asset.bytes.byteLength) {
+      throw new Error(`نسخهٔ هم‌زمان ${asset.assetId} با اندازهٔ فایل تأییدشده یکسان نیست.`);
+    }
+    console.info(`Validated concurrently uploaded private candidate: ${asset.assetId}`);
+    return {
+      assetId: asset.assetId,
+      contentId: asset.contentId,
+      kind: asset.kind,
+      storageKey: asset.storageKey,
+      pathname: concurrentlyUploaded.pathname,
+      url: concurrentlyUploaded.url,
+      mimeType: asset.localCandidate.mimeType,
+      sha256: asset.localCandidate.sha256,
+      qaStatus: 'approved',
+      resumed: true,
+    };
+  }
+
+  console.info(`Uploaded private candidate: ${asset.assetId}`);
+  return {
     assetId: asset.assetId,
     contentId: asset.contentId,
     kind: asset.kind,
@@ -99,9 +154,20 @@ for (const asset of validatedAssets) {
     mimeType: asset.localCandidate.mimeType,
     sha256: asset.localCandidate.sha256,
     qaStatus: 'approved',
-  });
-  console.info(`Uploaded private candidate: ${asset.assetId}`);
+  };
 }
+
+const uploaded = new Array(validatedAssets.length);
+let nextAssetIndex = 0;
+const concurrency = 4;
+await Promise.all(
+  Array.from({ length: concurrency }, async () => {
+    while (nextAssetIndex < validatedAssets.length) {
+      const assetIndex = nextAssetIndex++;
+      uploaded[assetIndex] = await uploadOrResume(validatedAssets[assetIndex]);
+    }
+  }),
+);
 
 await mkdir(receiptDirectory, { recursive: true });
 await writeFile(
