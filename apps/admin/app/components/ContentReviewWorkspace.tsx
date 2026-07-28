@@ -111,7 +111,7 @@ export function ContentReviewWorkspace() {
                 type="button"
                 onClick={() => chooseStatus('approved')}
               >
-                تأیید برای انتشار
+                تأیید در پیش‌نمایش
               </button>
               <button
                 className="return-button"
@@ -120,11 +120,10 @@ export function ContentReviewWorkspace() {
               >
                 بازگرداندن برای اصلاح
               </button>
-              {status !== 'needs_review' ? (
-                <p className="prototype-note" role="status">
-                  تغییر فقط در پیش‌نمایش محلی ثبت شد؛ انتشار واقعی نیازمند ورود امن است.
-                </p>
-              ) : null}
+              <p className="prototype-note" role="status">
+                تغییر فقط در پیش‌نمایش محلی ثبت می‌شود؛ انتشار واقعی نیازمند ورود امن و ناشر مجاز
+                است.
+              </p>
             </div>
           </aside>
         </div>
