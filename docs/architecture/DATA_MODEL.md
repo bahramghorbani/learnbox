@@ -17,3 +17,10 @@ use `monthly`, `three_month` and `annual`. The `entitlement_tiers` catalog repre
 Remote configuration supplies display labels, limits, offers and eligibility versions. A future
 configuration audit table must preserve the configuration version that informed a paywall or limit
 decision without storing sensitive learner content.
+
+`LaunchExperience` stores a versioned launch-screen or install-icon candidate with a checksum,
+dimensions, optional crop focal point, UTC schedule and immutable fallback selection. It follows
+the same reviewer/publisher separation as content: a future server transaction records the audit
+event and activates only an approved or scheduled candidate. An installed launcher icon is still
+release-packaged; the model schedules the candidate for that release instead of promising a remote
+home-screen icon change.
