@@ -30,6 +30,12 @@ cost was `0.03` unit. Use this model for simple concrete-object card candidates.
 draw Bobo; when Bobo is genuinely useful, reuse a separately approved transparent Bobo asset in a
 reviewed composition instead.
 
+The first 20-card candidate batch exposed seven text or semantic failures. Those candidates were
+discarded and regenerated with prompt-specific visual directions; the resulting 20 candidates
+passed visual review. Forty German `word` and `sentence` audio candidates were generated with
+`eleven_flash_v2_5` and passed file-format and duration checks. Neither candidate set is attached
+to a published card or a production media receipt.
+
 ## Consequences
 
 The local commands `pnpm check:avalai` and `pnpm generate:avalai:bobo -- <expression>` are
