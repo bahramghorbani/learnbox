@@ -22,6 +22,8 @@ learner identity.
   secret configuration.
 - Generate an opaque challenge ID and a cryptographically secure one-time code inside LearnBox;
   persist only a keyed hash of that code with expiry, attempt count and resend cooldown.
+- Use the initial policy of five digits, five-minute expiry, one-minute resend cooldown and five
+  attempts. These values are server-owned and covered by the challenge-core unit tests.
 - Verify the code within LearnBox's server boundary, then derive a stable internal identity before
   issuing the existing signed learner session. A provider message ID is an audit reference, not a
   learner identifier.
