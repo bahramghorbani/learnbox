@@ -3,6 +3,7 @@ import './globals.css';
 
 import { ServiceWorkerRegistration } from './components/ServiceWorkerRegistration';
 import { LaunchScreen } from './components/LaunchScreen';
+import { NetworkStatus } from './components/NetworkStatus';
 
 export const metadata: Metadata = {
   title: 'LearnBox',
@@ -24,6 +25,7 @@ export default function Layout({ children }: Readonly<{ children: React.ReactNod
       <body>
         <LaunchScreen />
         <ServiceWorkerRegistration />
+        <NetworkStatus />
         {children}
       </body>
     </html>
