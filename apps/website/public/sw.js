@@ -1,6 +1,7 @@
 /* global caches, self */
 
-const CACHE_NAME = 'learnbox-public-shell-v7';
+const CACHE_PREFIX = 'learnbox-public-shell-';
+const CACHE_NAME = `${CACHE_PREFIX}v8`;
 const OFFLINE_URL = '/offline.html';
 const OFFLINE_ASSETS = [
   OFFLINE_URL,
@@ -22,7 +23,11 @@ self.addEventListener('activate', (event) => {
     caches
       .keys()
       .then((names) =>
-        Promise.all(names.filter((name) => name !== CACHE_NAME).map((name) => caches.delete(name))),
+        Promise.all(
+          names
+            .filter((name) => name.startsWith(CACHE_PREFIX) && name !== CACHE_NAME)
+            .map((name) => caches.delete(name)),
+        ),
       )
       .then(() => self.clients.claim()),
   );

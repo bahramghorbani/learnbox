@@ -32,6 +32,11 @@ for (const [name, config] of [
 }
 
 assert.ok(serviceWorker.includes("const OFFLINE_URL = '/offline.html'"));
+assert.ok(serviceWorker.includes("const CACHE_PREFIX = 'learnbox-public-shell-'"));
+assert.ok(
+  serviceWorker.includes('name.startsWith(CACHE_PREFIX) && name !== CACHE_NAME'),
+  'service worker must only remove LearnBox-owned cache versions',
+);
 assert.ok(serviceWorker.includes("'/images/bobo/recovery-v2.png'"));
 assert.ok(serviceWorker.includes("'/fonts/IRANSansX-Regular.woff2'"));
 assert.ok(serviceWorker.includes("event.request.method !== 'GET'"));
