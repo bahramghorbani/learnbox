@@ -9,6 +9,14 @@ const authGateSource = await readFile(
   'utf8',
 );
 const environmentSource = await readFile(new URL('../.env.example', import.meta.url), 'utf8');
+const otpChallengeSource = await readFile(
+  new URL('../apps/api/src/auth/otp-challenge.ts', import.meta.url),
+  'utf8',
+);
+const otpMigrationSource = await readFile(
+  new URL('../database/migrations/0007_otp_challenges.sql', import.meta.url),
+  'utf8',
+);
 
 for (const required of [
   'interface OtpProvider',
@@ -25,6 +33,26 @@ for (const required of [
 
 if (!environmentSource.includes('OTP_DEVELOPMENT_MODE=false')) {
   throw new Error('Development OTP mode must default to disabled.');
+}
+
+for (const required of [
+  'otpPolicy',
+  'createOtpCode',
+  'hashOtpCode',
+  'evaluateOtpVerification',
+  "status: 'used'",
+  "status: 'expired'",
+  "status: 'locked'",
+]) {
+  if (!otpChallengeSource.includes(required)) {
+    throw new Error(`OTP challenge core requirement missing: ${required}`);
+  }
+}
+
+for (const required of ['CREATE TABLE otp_challenges', 'phone_hash', 'code_hash', 'consumed_at']) {
+  if (!otpMigrationSource.includes(required)) {
+    throw new Error(`OTP challenge migration requirement missing: ${required}`);
+  }
 }
 
 if (authGateSource.includes('/api/auth/') || authGateSource.includes('/api/development-session')) {
