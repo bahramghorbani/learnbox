@@ -25,6 +25,7 @@ import { resolveSupportivePlusOffer } from './paywall';
 import { selectTodayStartSession, stagedStartSlice } from './start-slice';
 
 type Grade = 'forgot' | 'hard' | 'remembered' | 'mastered';
+type LearningGoal = 'life' | 'career' | 'travel';
 
 type QueuedReview = {
   cardId: string;
@@ -39,6 +40,7 @@ type QueuedPersonalVocabulary = PersonalVocabularyEntry & {
 const reviewSyncStorageKey = 'learnbox:review-sync:v1:local-prototype';
 const personalVocabularyStorageKey = 'learnbox:personal-vocabulary:v1:local-prototype';
 const personalVocabularySyncStorageKey = 'learnbox:personal-vocabulary-sync:v1:local-prototype';
+const onboardingGoalStorageKey = 'learnbox:onboarding-goal:v1:local-prototype';
 
 const initialSavedWords = stagedStartSlice.slice(0, 3).map((item, index) => ({
   german: item.article ? `${item.article} ${item.german}` : item.german,
@@ -57,7 +59,7 @@ export default function Home() {
   const studyItems = selectTodayStartSession();
   const [authenticated, setAuthenticated] = useState(false);
   const [onboarded, setOnboarded] = useState(false);
-  const [learningGoal, setLearningGoal] = useState<'life' | 'career' | 'travel'>('life');
+  const [learningGoal, setLearningGoal] = useState<LearningGoal>('life');
   const [wordQuery, setWordQuery] = useState('');
   const [personalWords, setPersonalWords] = useState<PersonalVocabularyEntry[]>([]);
   const [personalWordsLoaded, setPersonalWordsLoaded] = useState(false);
@@ -96,6 +98,13 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    const storedGoal = readStoredLearningGoal(window.localStorage);
+    if (!storedGoal) return;
+    setLearningGoal(storedGoal);
+    setOnboarded(true);
+  }, []);
+
+  useEffect(() => {
     if (!personalWordsLoaded) return;
     savePersonalVocabulary(window.localStorage, personalVocabularyStorageKey, personalWords);
   }, [personalWords, personalWordsLoaded]);
@@ -111,6 +120,14 @@ export default function Home() {
     setFlipped(false);
     setGrade(null);
     setSessionIndex(0);
+  };
+  const completeOnboarding = () => {
+    try {
+      window.localStorage.setItem(onboardingGoalStorageKey, learningGoal);
+    } catch {
+      // The prototype remains usable when device storage is unavailable.
+    }
+    setOnboarded(true);
   };
   const queuePersonalVocabularySync = (entry: PersonalVocabularyEntry) => {
     if (typeof window === 'undefined') return;
@@ -201,7 +218,7 @@ export default function Home() {
       <OnboardingGoal
         selectedGoal={learningGoal}
         onSelectGoal={setLearningGoal}
-        onContinue={() => setOnboarded(true)}
+        onContinue={completeOnboarding}
       />
     );
   }
@@ -465,4 +482,13 @@ export default function Home() {
       <LearnerNav current="today" onNavigate={(destination) => setScreen(destination)} />
     </main>
   );
+}
+
+function readStoredLearningGoal(storage: Pick<Storage, 'getItem'>): LearningGoal | null {
+  try {
+    const value = storage.getItem(onboardingGoalStorageKey);
+    return value === 'life' || value === 'career' || value === 'travel' ? value : null;
+  } catch {
+    return null;
+  }
 }
