@@ -17,6 +17,10 @@ const otpMigrationSource = await readFile(
   new URL('../database/migrations/0007_otp_challenges.sql', import.meta.url),
   'utf8',
 );
+const otpRequestMigrationSource = await readFile(
+  new URL('../database/migrations/0008_otp_request_events.sql', import.meta.url),
+  'utf8',
+);
 const otpStoreSource = await readFile(
   new URL('../apps/api/src/auth/postgres-otp-challenge.store.ts', import.meta.url),
   'utf8',
@@ -62,8 +66,16 @@ for (const required of ['CREATE TABLE otp_challenges', 'phone_hash', 'code_hash'
   }
 }
 
+for (const required of ['CREATE TABLE otp_request_events', 'ip_hash', 'requested_at']) {
+  if (!otpRequestMigrationSource.includes(required)) {
+    throw new Error(`OTP request migration requirement missing: ${required}`);
+  }
+}
+
 for (const required of [
   'FOR UPDATE',
+  'pg_advisory_xact_lock',
+  'otp_request_events',
   'SET consumed_at',
   'SET attempt_count',
   "client.query('COMMIT')",

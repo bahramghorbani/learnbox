@@ -4,10 +4,11 @@ Core entities: User, DeviceSession, OTPChallenge, Card, CardVersion, Pack, Revie
 
 `OTPChallenge` stores an opaque challenge ID, a keyed phone hash, a keyed code hash, purpose,
 expiry, resend cooldown, attempt count and one-time consumption timestamp. Raw phone numbers and
-OTP values do not enter the challenge table. The current server-core policy uses a five-digit code,
-five-minute expiry, one-minute resend cooldown and five verification attempts; its database
-migration, atomic PostgreSQL store and unit-tested transition contract are present, but no route
-or SMS delivery is active.
+OTP values do not enter the challenge table. `OTPRequestEvent` stores only the opaque phone/IP
+hashes, purpose and request time. The current server-core policy uses a five-digit code, five-minute
+expiry, one-minute resend cooldown, five verification attempts and a 15-minute request window;
+its database migrations, atomic PostgreSQL store and unit-tested transition contract are present,
+but no route or SMS delivery is active.
 
 `ReviewEvent` is append-only; `CardSchedule` is a mutable projection keyed by `(user_id, card_id)`. The server applies one idempotent event at a time and updates the projection in the same transaction. A due-card query uses the user-scoped `due_at` index and excludes suspended and archived states.
 

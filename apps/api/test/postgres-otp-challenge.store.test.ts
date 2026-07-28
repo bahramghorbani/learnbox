@@ -12,6 +12,7 @@ import { PostgresOtpChallengeStore } from '../src/auth/postgres-otp-challenge.st
 const secret = 'postgres-otp-challenge-test-secret-that-is-long-enough';
 const challengeId = '72c877d8-f87d-4d7d-a625-046776b57b32';
 const now = new Date('2026-07-28T12:00:00Z');
+const clientIpHash = hashOtpPhone(secret, '+989121234568');
 const record = createOtpChallenge({
   id: challengeId,
   phoneHash: hashOtpPhone(secret, '+989121234567'),
@@ -49,6 +50,66 @@ describe('PostgresOtpChallengeStore', () => {
     expect(calls[0].sql).toContain('INSERT INTO otp_challenges');
     expect(JSON.stringify(calls[0].params)).not.toContain('12345');
     expect(calls[0].params?.[1]).toBe(record.phoneHash);
+  });
+
+  it('atomically records an allowed request with opaque phone and IP values', async () => {
+    const calls: Array<{ sql: string; params?: unknown[] }> = [];
+    const client = {
+      query: async (sql: string, params?: unknown[]) => {
+        calls.push({ sql, params });
+        if (sql.includes('FROM otp_request_events')) return { rows: [] };
+        return { rows: [] };
+      },
+      release: () => undefined,
+    };
+    const pool = {
+      connect: async () => client,
+    } as unknown as Pool;
+
+    const result = await new PostgresOtpChallengeStore(pool).createIfRequestAllowed(
+      record,
+      clientIpHash,
+      now,
+    );
+
+    expect(result).toEqual({ status: 'allowed' });
+    expect(calls.some(({ sql }) => sql.includes('pg_advisory_xact_lock'))).toBe(true);
+    expect(calls.some(({ sql }) => sql.includes('INSERT INTO otp_request_events'))).toBe(true);
+    expect(JSON.stringify(calls)).not.toContain('+989121234567');
+  });
+
+  it('rolls back a request that exceeds the phone request window', async () => {
+    const calls: string[] = [];
+    const client = {
+      query: async (sql: string) => {
+        calls.push(sql);
+        if (sql.includes('phone_hash')) {
+          return {
+            rows: [
+              { requested_at: now },
+              { requested_at: new Date(now.getTime() - 1_000) },
+              { requested_at: new Date(now.getTime() - 2_000) },
+            ],
+          };
+        }
+        if (sql.includes('ip_hash')) return { rows: [] };
+        return { rows: [] };
+      },
+      release: () => undefined,
+    };
+    const pool = {
+      connect: async () => client,
+    } as unknown as Pool;
+
+    const result = await new PostgresOtpChallengeStore(pool).createIfRequestAllowed(
+      record,
+      clientIpHash,
+      now,
+    );
+
+    expect(result).toMatchObject({ status: 'rate_limited', scope: 'phone' });
+    expect(calls).toContain('ROLLBACK');
+    expect(calls.some((sql) => sql.includes('INSERT INTO otp_challenges'))).toBe(false);
   });
 
   it('locks a challenge row before consuming a verified code', async () => {
