@@ -1,7 +1,7 @@
 # LearnBox Landing Product Story and Legal Pages Design
 
 Date: 2026-07-29  
-Status: Approved design, pending owner review of this written specification  
+Status: Approved by owner for implementation
 Scope: `apps/learnbox-website`
 
 ## 1. Objective
