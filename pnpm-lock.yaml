@@ -106,6 +106,34 @@ importers:
         specifier: ^3.2.4
         version: 3.2.7(@types/node@24.13.3)
 
+  apps/learnbox-website:
+    dependencies:
+      gsap:
+        specifier: ^3.15.0
+        version: 3.15.0
+      next:
+        specifier: ^15.4.5
+        version: 15.5.22(@types/node@24.13.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      react:
+        specifier: ^19.1.1
+        version: 19.2.8
+      react-dom:
+        specifier: ^19.1.1
+        version: 19.2.8(react@19.2.8)
+    devDependencies:
+      '@types/node':
+        specifier: ^24.1.0
+        version: 24.13.3
+      '@types/react':
+        specifier: ^19.1.9
+        version: 19.2.17
+      '@types/react-dom':
+        specifier: ^19.1.9
+        version: 19.2.3(@types/react@19.2.17)
+      typescript:
+        specifier: ^5.9.2
+        version: 5.9.3
+
   apps/website:
     dependencies:
       '@learnbox/billing-core':
@@ -2512,6 +2540,12 @@ packages:
     resolution:
       {
         integrity: sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ==,
+      }
+
+  gsap@3.15.0:
+    resolution:
+      {
+        integrity: sha512-dMW4CWBTUK1AEEDeZc1g4xpPGIrSf9fJF960qbTZmN/QwZIWY5wgliS6JWl9/25fpTGJrMRtSjGtOmPnfjZB+A==,
       }
 
   has-flag@4.0.0:
@@ -5179,6 +5213,8 @@ snapshots:
   globals@16.5.0: {}
 
   graceful-fs@4.2.11: {}
+
+  gsap@3.15.0: {}
 
   has-flag@4.0.0: {}
 
