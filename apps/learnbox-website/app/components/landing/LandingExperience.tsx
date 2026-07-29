@@ -7,6 +7,7 @@ import { GermanyChapterBackdrop, SummerBackdrop } from '../../../src/themes/summ
 import { MotionOrchestrator } from '../MotionOrchestrator';
 import { LandingHeader } from './LandingHeader';
 import { LearningPaths } from './LearningPaths';
+import { ProductStory } from './ProductStory';
 
 const wordDetails = [
   ['تلفظ', '/diː ˈvoːnʊŋ/'],
@@ -270,40 +271,7 @@ export function LandingExperience() {
         </div>
       </section>
 
-      <section id="product" className="scene product-scene" data-motion="product" data-scene>
-        <GermanyChapterBackdrop chapter="harbor" />
-        <div className="wrap product-layout">
-          <div className="scene-heading scene-heading--light chapter-heading-veil">
-            <span>محیط واقعی یادگیری</span>
-            <h2>یادگیری ساده، منظم و همیشه در دسترس.</h2>
-            <p>
-              مرورهای امروز، میزان پیشرفت و واژه‌هایی که به تمرین بیشتری نیاز دارند، همه در یک محیط
-              روشن و قابل‌فهم در اختیار تو هستند.
-            </p>
-          </div>
-          <div className="device-stage" aria-label="نمونه نمایشی رابط LearnBox">
-            <div className="app-screen app-screen--back">
-              <small>واژه‌های دشوار</small>
-              <b lang="de">der Termin</b>
-              <span>امروز مرور کن</span>
-            </div>
-            <div className="app-screen app-screen--middle">
-              <small>مرورهای امروز</small>
-              <b>۱۲ واژه</b>
-              <span>۴ واژه باقی مانده</span>
-            </div>
-            <div className="app-screen app-screen--front">
-              <small>LearnBox</small>
-              <b lang="de">die Erfahrung</b>
-              <span>تجربه</span>
-              <div>
-                <span>دوباره</span>
-                <span>بلدم</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <ProductStory />
 
       <section id="download" className="scene download-scene" data-motion="download" data-scene>
         <SummerBackdrop scene="rhine" />

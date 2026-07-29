@@ -1,11 +1,13 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import Module, { createRequire } from 'node:module';
 import { extname, join, resolve } from 'node:path';
 import test from 'node:test';
 import { productStoryStages } from '../app/components/landing/product-story-data.ts';
 
 const appRoot = resolve(import.meta.dirname, '..');
+const require = createRequire(import.meta.url);
 const sourceExtensions = new Set(['.ts', '.tsx', '.css']);
 
 function collectSource(directory) {
@@ -26,6 +28,50 @@ const themeSource = collectSource(join(appRoot, 'src', 'themes', 'summer'));
 const allSource = `${landingSource}\n${themeSource}`;
 const normalizedSource = allSource.replace(/\s+/g, ' ');
 const productScreenRoot = join(appRoot, 'public', 'product', 'screens', 'v1');
+const fictionalMockupSources = [
+  join(appRoot, 'app', 'components', 'landing', 'LandingExperience.tsx'),
+  join(appRoot, 'app', 'globals.css'),
+]
+  .map((path) => readFileSync(path, 'utf8'))
+  .join('\n');
+const productStoryPath = join(appRoot, 'app', 'components', 'landing', 'ProductStory.tsx');
+
+function renderProductStory() {
+  const typescript = require('typescript');
+  const originalTsLoader = Module._extensions['.ts'];
+  const originalTsxLoader = Module._extensions['.tsx'];
+  const transpile = (module, filename) => {
+    const output = typescript.transpileModule(readFileSync(filename, 'utf8'), {
+      compilerOptions: {
+        esModuleInterop: true,
+        jsx: typescript.JsxEmit.ReactJSX,
+        module: typescript.ModuleKind.CommonJS,
+        target: typescript.ScriptTarget.ES2022,
+      },
+      fileName: filename,
+    }).outputText;
+
+    module._compile(output, filename);
+  };
+
+  Module._extensions['.ts'] = transpile;
+  Module._extensions['.tsx'] = transpile;
+
+  try {
+    const { ProductStory } = require(productStoryPath);
+    const { renderToStaticMarkup } = require('react-dom/server');
+    return renderToStaticMarkup(ProductStory());
+  } finally {
+    if (originalTsLoader) Module._extensions['.ts'] = originalTsLoader;
+    else delete Module._extensions['.ts'];
+    if (originalTsxLoader) Module._extensions['.tsx'] = originalTsxLoader;
+    else delete Module._extensions['.tsx'];
+  }
+}
+
+function openingTags(markup, tagName) {
+  return markup.match(new RegExp(`<${tagName}\\b[^>]*>`, 'g')) ?? [];
+}
 
 const canonicalBuBuHashes = {
   'cards-recovery-v3.png': 'fbe865ab977b9f1388c7713854cb11bb828fa5a51efb5666035502bc16ed1453',
@@ -76,6 +122,90 @@ test('locks the truthful product-story contract and versioned assets', () => {
       .digest('hex');
     assert.equal(actualHash, expectedHash, `Canonical BuBu asset changed: ${filename}`);
   }
+});
+
+test('renders four accessible product stages with truthful copy and passive screenshots', () => {
+  assert.ok(existsSync(productStoryPath), 'ProductStory component must exist');
+  const markup = renderProductStory();
+  const section = openingTags(markup, 'section').find((tag) => tag.includes('id="product"'));
+  const stageArticles = openingTags(markup, 'article').filter((tag) =>
+    tag.includes('data-product-stage='),
+  );
+  const screenFigures = openingTags(markup, 'figure').filter((tag) =>
+    tag.includes('data-product-screen='),
+  );
+  const device = openingTags(markup, 'div').find((tag) => tag.includes('data-product-device'));
+
+  assert.match(section ?? '', /data-motion="product-story"/);
+  assert.match(section ?? '', /aria-labelledby="product-story-title"/);
+  assert.deepEqual(
+    stageArticles.map((tag) => tag.match(/data-product-stage="([^"]+)"/)?.[1]),
+    ['start', 'today', 'return', 'progress'],
+  );
+  assert.match(stageArticles[0], /aria-current="true"/);
+  assert.ok(
+    stageArticles.slice(1).every((tag) => !tag.includes('aria-current=')),
+    'Only the first server-rendered stage may be current before deferred motion loads',
+  );
+  assert.deepEqual(
+    screenFigures.map((tag) => tag.match(/data-product-screen="([^"]+)"/)?.[1]),
+    ['start', 'today', 'return', 'progress'],
+  );
+  assert.match(device ?? '', /role="group"/);
+  assert.match(device ?? '', /aria-label="[^"]*LearnBox[^"]*"/);
+  assert.match(markup, /اعداد داخل تصویر، نمونه‌ای از وضعیت رابط کاربری‌اند/);
+  assert.doesNotMatch(markup, /app-screen--(?:back|middle|front)/);
+
+  for (const stage of productStoryStages) {
+    assert.equal(
+      markup.split(stage.title).length - 1,
+      1,
+      `Stage title must render once: ${stage.id}`,
+    );
+    assert.equal(
+      markup.split(stage.description).length - 1,
+      1,
+      `Stage description must render once: ${stage.id}`,
+    );
+  }
+});
+
+test('renders responsive screenshot dimensions with only the first image prioritized', () => {
+  const markup = renderProductStory();
+  const images = openingTags(markup, 'img');
+
+  assert.equal(images.length, 4);
+  for (const image of images) {
+    assert.match(image, /width="1080"/);
+    assert.match(image, /height="1920"/);
+    assert.match(image, /sizes="\(max-width: 720px\) 86vw, \(max-width: 1100px\) 44vw, 420px"/);
+  }
+  assert.doesNotMatch(images[0], /loading="lazy"/);
+  assert.ok(
+    images.slice(1).every((image) => image.includes('loading="lazy"')),
+    'Only the first product screenshot may load eagerly',
+  );
+});
+
+test('uses responsive CSS fallbacks and removes every fictional app-screen source', () => {
+  assert.doesNotMatch(fictionalMockupSources, /\.app-screen--(?:back|middle|front)/);
+  assert.match(allSource, /\[data-product-device\]\s*\{[^}]*position:\s*sticky/s);
+  assert.match(
+    allSource,
+    /@media\s*\(max-width:\s*720px\)[\s\S]*\[data-product-device\]\s*\{[^}]*display:\s*contents/s,
+  );
+  assert.match(
+    allSource,
+    /@media\s*\(max-width:\s*720px\)[\s\S]*\.product-story__layout\s*\{[^}]*display:\s*grid/s,
+  );
+  assert.match(
+    allSource,
+    /@media\s*\(max-width:\s*720px\)[\s\S]*\.product-story__copy\s*\{[^}]*display:\s*contents/s,
+  );
+  assert.match(
+    allSource,
+    /@media\s*\(max-width:\s*720px\)[\s\S]*\[data-product-screen\]\s*\{[^}]*position:\s*relative/s,
+  );
 });
 
 const exactCopy = [
