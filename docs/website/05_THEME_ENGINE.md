@@ -14,6 +14,33 @@ Codex should then independently update the theme, test it, preview it, commit it
 
 Separate theme data from scene code.
 
+The current verified implementation lives at:
+
+```text
+apps/learnbox-website/src/themes/summer/
+├── SummerBackdrop.tsx
+├── index.ts
+├── summer-theme.css
+└── tokens.ts
+```
+
+It exposes typed tokens and a layered scene component. The current backdrop
+contract is:
+
+```text
+sky
+clouds
+architecture
+light
+foliage
+particles
+content
+```
+
+Berlin is used for the learning opening and Cologne/Rhine for the calm download
+chapter. Both remain explicitly tied to German learning rather than generic
+tourism.
+
 A theme may control:
 
 - background colors,
@@ -73,7 +100,7 @@ export interface WebsiteTheme {
   decorations: {
     enabled: boolean;
     assets: string[];
-    intensity: "low" | "medium" | "high";
+    intensity: 'low' | 'medium' | 'high';
   };
   motion: {
     preset: string;
@@ -93,7 +120,7 @@ export interface WebsiteTheme {
 Provide a single central setting:
 
 ```ts
-activeTheme: "default"
+activeTheme: 'default';
 ```
 
 Manual activation is preferred for version 1.
@@ -102,8 +129,25 @@ Automatic schedule support may exist, but should not activate production themes 
 
 ## Required initial themes
 
-- `default`
-- one verified seasonal demo, preferably Nowruz
+- `summer` — verified default for Landing V3
+- future seasonal themes must keep the same module boundary
+
+## Motion contract
+
+- GSAP owns cinematic timelines and scroll-linked depth.
+- ScrollTrigger owns scene activation and stops ambient CSS loops offscreen.
+- Motion for React owns component state changes such as the mobile menu and path selector.
+- CSS owns lightweight cloud, foliage and vocabulary-card loops.
+- SVG paths explain review timing and movement.
+- `prefers-reduced-motion: reduce` removes parallax, long timelines and loops while preserving every content state.
+- All GSAP work is scoped to the landing root and reverted on unmount.
+
+## Asset contract
+
+- Existing files in `public/characters/BuBu/` are immutable identity sources.
+- Landing-specific character compositions are versioned under `public/themes/summer/bubu/`.
+- Environmental artwork is stored under `public/themes/summer/backgrounds/`.
+- Next Image provides responsive WebP/AVIF delivery from the compressed source images.
 
 ## Codex seasonal workflow
 

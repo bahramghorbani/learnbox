@@ -29,6 +29,13 @@ Replace honest placeholders only after verified production content is supplied.
 - Final production build verified at 1280×720 and 390×844 with no horizontal overflow or browser-console errors.
 - Reduced Motion verified with all scenes visible and all wallpaper transforms disabled.
 - Path-selector interaction verified in the production build.
+- CR-LANDING-003 completed with the corrected Variant C German summer direction.
+- Modular `src/themes/summer/` runtime added with responsive Berlin and Rhine scenes.
+- RTL header, accessible mobile navigation and first-viewport mobile CTA verified.
+- Five versioned BuBu scene compositions added without overwriting canonical character files.
+- GSAP/ScrollTrigger, Motion for React, CSS loops and explanatory SVG paths verified in production.
+- Focused Variant A/B/C comparison routes added with `noindex, nofollow`.
+- Final V3 browser QA passed at 1440×900, 1024×768 and 390×844 with no overflow or console errors.
 
 ## In Progress
 
@@ -42,7 +49,7 @@ Replace honest placeholders only after verified production content is supplied.
 
 ## Active Change Request
 
-CR-001 — German ambient wallpaper with slow layered motion.
+None.
 
 ## Resume Point
 

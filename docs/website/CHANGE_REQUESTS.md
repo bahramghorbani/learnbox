@@ -25,7 +25,7 @@ Resume point:
 
 ## CR-LANDING-003 — Mandatory summer landing revision
 
-Status: In progress
+Status: Completed
 
 Source of truth:
 
@@ -66,3 +66,18 @@ Protected boundary:
 Resume point after completion:
 
 - Return to the previous production-content handoff roadmap state.
+
+Completion evidence:
+
+- Safe baseline checkpoint: `01452d4`
+- Direction decision and comparison boards: `5097291`
+- Implementation plan: `8b839e1`
+- V3 contract test: `dbb6787`
+- Integrated landing, summer theme and noindex variants: `75b1ebb`
+- Selected direction: Variant C, corrected to a German product/story hybrid.
+- Contract tests: 5/5 passed.
+- Production build: passed with static `/`, A/B/C comparison routes and icon route.
+- Browser QA: desktop 1440×900, tablet 1024×768 and mobile 390×844 with no horizontal overflow.
+- Reduced motion: parallax and loops disabled; all content visible.
+- Canonical BuBu files remained untouched; V3 scene assets are versioned additions.
+- Protected `apps/website` and `apps/mobile` remained untouched.
