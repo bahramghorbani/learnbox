@@ -7,7 +7,7 @@ PREVIEW UPLOAD READY
 PRODUCTION UPLOAD BLOCKED BY VERIFIED CONTENT
 ```
 
-Checked commit: set at the next clean pre-upload checkpoint.
+Checked implementation commit: `4c13abe`.
 
 Target package:
 
@@ -48,6 +48,30 @@ apps/mobile
 - DOM audit: one H1, no duplicate IDs, no unnamed buttons, no images without alt,
   and no nested interactive controls.
 
+## Verified public preview
+
+The landing is deployed as an isolated Vercel Preview:
+
+```text
+Project: learnbox-landing-preview
+Project ID: prj_pPFcSkNaFvEWvKKAOxPNcbLmWEsd
+Deployment ID: dpl_EG4UUBJPGCVk9yLYrBg34hHhNypd
+URL: https://learnbox-landing-preview-cwf3x39du-learn-box.vercel.app
+Target: Preview
+```
+
+- The preview is public and does not require a Vercel login.
+- No production domain, DNS record or server-side secret has been attached.
+- Vercel Preview indexing is intentionally disabled with `X-Robots-Tag: noindex`.
+- `/`, `/robots.txt`, `/sitemap.xml`, `/manifest.webmanifest` and `/icon.svg`
+  return HTTP 200 over HTTPS.
+- CSP, HSTS, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff` and the
+  referrer/permissions policies are present.
+- The Vercel feedback toolbar is disabled for this project, so it does not
+  inject a script outside the landing CSP.
+- Live mobile browser audit at 390×844: Persian/RTL document, one H1, all ten
+  chapters, no horizontal overflow and no console errors.
+
 ## Lighthouse baseline
 
 Local production build, simulated mobile:
@@ -69,6 +93,13 @@ Key metrics:
 
 Lighthouse was pinned to `12.8.2` because the registry dependency graph for
 `13.4.1` was temporarily inconsistent during QA.
+
+The public Preview was also measured after deployment. Accessibility and Best
+Practices score 100, and CLS remains 0. Performance varied from 67 to 82 across
+cold/throttled Preview runs; the local production-build baseline above remains
+the reproducible release benchmark. Preview SEO scores 69 solely because Vercel
+correctly adds `noindex`; production indexing must be tested again after the
+approved domain is attached.
 
 ## Production blockers
 
@@ -94,7 +125,7 @@ No destination should be inferred from a username or an unverified search result
 The repository-root `vercel.json` deploys the learner web app. The landing must
 never be uploaded from that project.
 
-Create or connect a separate Vercel project with:
+The separate Vercel project now exists with:
 
 ```text
 Root Directory: apps/learnbox-website
@@ -103,5 +134,6 @@ Build Command: pnpm build
 Output Directory: .next
 ```
 
-Do not attach `learnboxapp.com` until the preview deployment has passed the smoke
-test in `DEPLOYMENT_RUNBOOK.md`.
+The Preview smoke test has passed. Do not attach `learnboxapp.com` until all
+production blockers above are supplied, `pnpm check:release` passes and the
+owner explicitly starts the production-domain step.

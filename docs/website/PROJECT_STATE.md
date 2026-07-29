@@ -2,16 +2,16 @@
 
 ## Current Release
 
-Version: 1.0 preview candidate
-Status: PREVIEW UPLOAD READY
+Version: 1.0 verified public preview
+Status: PREVIEW DEPLOYED — PRODUCTION CONTENT BLOCKED
 
 ## Current Phase
 
-Phase: Deployment preview gate
+Phase: Production-input gate
 
 ## Current Task
 
-Create a separate landing preview deployment without attaching the production domain.
+Collect and verify the official production destinations and assets.
 
 ## Completed
 
@@ -46,15 +46,22 @@ Create a separate landing preview deployment without attaching the production do
 - Lighthouse mobile baseline: Performance 91, Accessibility 100, Best Practices 100, SEO 100 and CLS 0.
 - Theme-engine summer implementation and documentation verified.
 - Deployment and rollback runbooks completed.
+- Dedicated Vercel project `learnbox-landing-preview` created without touching
+  the learner web app deployment.
+- Public Preview deployed and verified at
+  `https://learnbox-landing-preview-cwf3x39du-learn-box.vercel.app`.
+- Preview authentication removed, Preview indexing intentionally disabled and
+  Vercel feedback injection disabled.
+- Live HTTPS routes, security headers, mobile RTL layout and browser console
+  verified after the final redeployment.
 
 ## In Progress
 
-- Separate Vercel preview project connection.
+- Owner-approved production URLs, product captures, QR codes and social artwork.
 
 ## Remaining
 
 - Verified URLs, QR codes, official social destinations, approved product screenshots and production content.
-- Preview deployment verification.
 - Production domain, SSL, DNS verification and final handover.
 
 ## Active Change Request
@@ -63,14 +70,16 @@ CR-LANDING-006 — Upload readiness and deployment safeguards.
 
 ## Resume Point
 
-Connect `apps/learnbox-website` as a separate Vercel project, deploy a preview and run the documented smoke test.
+When all official inputs are available, run `pnpm check:release`, create a
+production deployment, then start the coordinated domain/DNS/SSL checklist.
 
 ## Blockers
 
-Preview deployment requires Vercel/GitHub project access. Production remains
-blocked by verified destinations, approved screenshots, QR codes, branded Open
-Graph art, domain approval and DNS access.
+Production remains blocked by verified destinations, approved screenshots, QR
+codes, branded Open Graph art, domain approval and DNS access. Preview has no
+remaining infrastructure blocker.
 
 ## Next Automatic Action
 
-Create and verify the isolated preview deployment; then collect verified production content and run `check:release`.
+Collect verified production content, run `check:release`, and notify the owner
+before beginning any production-domain or server work.
