@@ -18,6 +18,7 @@ const definitions = [
     label: 'Telegram',
     protocols: ['https:'],
     hosts: ['t.me', 'telegram.me'],
+    defaultValue: 'https://t.me/learnboxapp',
   },
   {
     id: 'instagram',
@@ -45,30 +46,43 @@ const definitions = [
     env: 'NEXT_PUBLIC_PRIVACY_URL',
     label: 'حریم خصوصی',
     protocols: ['https:'],
+    defaultValue: 'https://learnboxapp.com/privacy',
   },
   {
     id: 'terms',
     env: 'NEXT_PUBLIC_TERMS_URL',
     label: 'شرایط استفاده',
     protocols: ['https:'],
+    defaultValue: 'https://learnboxapp.com/terms',
   },
   {
     id: 'contact',
     env: 'NEXT_PUBLIC_CONTACT_URL',
     label: 'ارتباط با LearnBox',
     protocols: ['https:', 'mailto:'],
+    defaultValue: 'mailto:hi@learnboxapp.com',
   },
 ];
 
 export const destinationDefinitions = Object.freeze(definitions);
 
 export function resolveDestination(definition, value) {
-  const normalized = value?.trim();
-  if (!normalized) {
+  const suppliedValue = value === undefined ? definition.defaultValue : value;
+  const normalized = suppliedValue?.trim();
+  if (!normalized && value === undefined && definition.defaultValue === undefined) {
     return {
       id: definition.id,
       label: definition.label,
       status: 'unavailable',
+      url: null,
+    };
+  }
+
+  if (!normalized) {
+    return {
+      id: definition.id,
+      label: definition.label,
+      status: 'invalid',
       url: null,
     };
   }

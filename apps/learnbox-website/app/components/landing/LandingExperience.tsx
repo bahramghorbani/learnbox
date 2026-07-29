@@ -390,7 +390,13 @@ export function LandingExperience() {
               return (
                 <li key={id}>
                   {destinationHref(destination) ? (
-                    <a href={destinationHref(destination) ?? undefined}>{content}</a>
+                    <a
+                      href={destinationHref(destination) ?? undefined}
+                      target={id === 'telegram' ? '_blank' : undefined}
+                      rel={id === 'telegram' ? 'noopener noreferrer' : undefined}
+                    >
+                      {content}
+                    </a>
                   ) : (
                     <span aria-disabled="true">{content}</span>
                   )}
@@ -438,18 +444,11 @@ export function LandingExperience() {
         <span>LearnBox</span>
         <small>یادگیری واژگان آلمانی، روشن و ماندگار.</small>
         <nav aria-label="پیوندهای حقوقی و ارتباطی">
-          {['privacy', 'terms', 'contact'].map((id) => {
-            const destination = siteConfig.destinations[id];
-            return destinationHref(destination) ? (
-              <a key={id} href={destinationHref(destination) ?? undefined}>
-                {destination.label}
-              </a>
-            ) : (
-              <span key={id} aria-disabled="true">
-                {destination.label} · به‌زودی
-              </span>
-            );
-          })}
+          <a href="/privacy">حریم خصوصی</a>
+          <a href="/terms">شرایط استفاده</a>
+          <a href={destinationHref(siteConfig.destinations.contact) ?? undefined}>
+            ارتباط با LearnBox
+          </a>
         </nav>
       </footer>
     </main>
