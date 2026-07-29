@@ -1,6 +1,5 @@
 'use client';
 
-import { AnimatePresence, motion } from 'motion/react';
 import Image from 'next/image';
 import { useState } from 'react';
 import { GermanyChapterBackdrop } from '../../../src/themes/summer';
@@ -52,32 +51,11 @@ export function LearningPaths() {
                 <circle cx="485" cy="53" r="9" />
               </svg>
             </div>
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={selected}
-                className="path-copy"
-                initial={{
-                  opacity: 0,
-                  transform: 'translateX(24px)',
-                  filter: 'blur(8px)',
-                }}
-                animate={{
-                  opacity: 1,
-                  transform: 'translateX(0px)',
-                  filter: 'blur(0px)',
-                }}
-                exit={{
-                  opacity: 0,
-                  transform: 'translateX(-18px)',
-                  filter: 'blur(6px)',
-                }}
-                transition={{ duration: 0.34, ease: [0.16, 1, 0.3, 1] }}
-              >
-                <small lang="de">{current[2]}</small>
-                <h3>{current[0]}</h3>
-                <p>{current[1]}</p>
-              </motion.div>
-            </AnimatePresence>
+            <div key={selected} className="path-copy path-copy--enter">
+              <small lang="de">{current[2]}</small>
+              <h3>{current[0]}</h3>
+              <p>{current[1]}</p>
+            </div>
             <Image
               className="bubu bubu--path"
               src="/themes/summer/bubu/learning-focus-v3.png"

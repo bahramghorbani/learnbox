@@ -1,6 +1,5 @@
 'use client';
 
-import { AnimatePresence, motion } from 'motion/react';
 import { useEffect, useState } from 'react';
 
 type LandingHeaderProps = {
@@ -60,25 +59,15 @@ export function LandingHeader({ onStart, startHref }: LandingHeaderProps) {
           <span />
         </button>
       </div>
-      <AnimatePresence>
-        {open && (
-          <motion.nav
-            id="mobile-menu"
-            className="mobile-nav"
-            aria-label="ناوبری موبایل"
-            initial={{ opacity: 0, clipPath: 'inset(0 0 100% 0)' }}
-            animate={{ opacity: 1, clipPath: 'inset(0 0 0% 0)' }}
-            exit={{ opacity: 0, clipPath: 'inset(0 0 100% 0)' }}
-            transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-          >
-            {links.map(([label, href]) => (
-              <a key={href} href={href} onClick={() => setOpen(false)}>
-                {label}
-              </a>
-            ))}
-          </motion.nav>
-        )}
-      </AnimatePresence>
+      {open && (
+        <nav id="mobile-menu" className="mobile-nav mobile-nav--enter" aria-label="ناوبری موبایل">
+          {links.map(([label, href]) => (
+            <a key={href} href={href} onClick={() => setOpen(false)}>
+              {label}
+            </a>
+          ))}
+        </nav>
+      )}
     </header>
   );
 }

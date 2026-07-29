@@ -71,6 +71,9 @@ a:focus-visible {
   gap: 24px;
   border-bottom: 1px solid #17355b24;
 }
+.hero-shell > .landing-header {
+  z-index: 10;
+}
 .header-main,
 .header-actions,
 .desktop-nav,
@@ -161,6 +164,10 @@ a:focus-visible {
 }
 .mobile-nav {
   display: none;
+}
+.mobile-nav--enter {
+  animation: mobile-nav-enter 280ms var(--arrive) both;
+  transform-origin: top;
 }
 .hero-v3 {
   min-height: 710px;
@@ -590,6 +597,9 @@ a:focus-visible {
   right: 8%;
   max-width: 270px;
 }
+.path-copy--enter {
+  animation: path-copy-enter 340ms var(--arrive) both;
+}
 .path-copy small {
   color: var(--purple);
   font-weight: 700;
@@ -990,6 +1000,30 @@ a:focus-visible {
 @keyframes word-float {
   to {
     transform: translate3d(0, -10px, 0) rotate(2deg);
+  }
+}
+
+@keyframes mobile-nav-enter {
+  from {
+    clip-path: inset(0 0 100% 0);
+    opacity: 0;
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+    opacity: 1;
+  }
+}
+
+@keyframes path-copy-enter {
+  from {
+    filter: blur(8px);
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    filter: blur(0);
+    opacity: 1;
+    transform: translateX(0);
   }
 }
 

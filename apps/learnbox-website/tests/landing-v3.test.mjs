@@ -94,8 +94,7 @@ test('is explicitly a German-learning landing without an App Store claim', () =>
   assert.doesNotMatch(allSource, /App Store|اپ‌استور|اپ استور/);
 });
 
-test('uses the approved motion stack with reduced-motion fallbacks', () => {
-  assert.match(allSource, /from ['"]motion\/react['"]/);
+test('defers scroll motion and keeps compact CSS interaction motion with reduced-motion fallbacks', () => {
   assert.match(allSource, /import\(['"]gsap['"]\)/);
   assert.match(allSource, /import\(['"]gsap\/ScrollTrigger['"]\)/);
   assert.doesNotMatch(
@@ -103,6 +102,12 @@ test('uses the approved motion stack with reduced-motion fallbacks', () => {
     /import\s+\{\s*gsap\s*\}\s+from\s+['"]gsap['"]/,
     'GSAP must stay out of the initial client bundle',
   );
+  assert.doesNotMatch(allSource, /from ['"]motion\/react['"]/);
+  assert.match(allSource, /mobile-nav--enter/);
+  assert.match(allSource, /path-copy--enter/);
+  assert.match(allSource, /@keyframes mobile-nav-enter/);
+  assert.match(allSource, /@keyframes path-copy-enter/);
+  assert.match(allSource, /\.hero-shell > \.landing-header/);
   assert.match(allSource, /requestIdleCallback/);
   assert.match(allSource, /ScrollTrigger/);
   assert.match(allSource, /prefers-reduced-motion:\s*reduce/);
