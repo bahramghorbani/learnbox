@@ -25,6 +25,14 @@ const social = [
   ['pinterest', 'Pinterest', 'فلش‌کارت‌ها و ایده‌های یادگیری'],
 ];
 
+const themedBubu = {
+  hero: '/themes/summer/bubu-themed/v1/hero-traveler.png',
+  forgetting: '/themes/summer/bubu-themed/v1/card-organizer.png',
+  vocabulary: '/themes/summer/bubu-themed/v1/language-coach.png',
+  progress: '/themes/summer/bubu-themed/v1/progress-achiever.png',
+  finale: '/themes/summer/bubu-themed/v1/journey-companion.png',
+} as const;
+
 type Destination = (typeof siteConfig.destinations)[string];
 
 export function LandingExperience() {
@@ -93,10 +101,10 @@ export function LandingExperience() {
             </svg>
             <Image
               className="bubu bubu--hero"
-              src="/themes/summer/bubu/hero-wave-v3.png"
-              alt="BuBu، همراه یادگیری LearnBox، در برلین"
-              width={768}
-              height={1152}
+              src={themedBubu.hero}
+              alt="BuBu، همراه سفر تابستانی LearnBox، در برلین"
+              width={1024}
+              height={1536}
               priority
               fetchPriority="high"
               sizes="(max-width: 720px) 64vw, 510px"
@@ -135,10 +143,11 @@ export function LandingExperience() {
             </div>
             <Image
               className="bubu bubu--recovery"
-              src="/themes/summer/bubu/cards-recovery-v3.png"
-              alt="BuBu در حال جمع‌کردن کارت‌های فراموش‌شده"
-              width={640}
-              height={960}
+              src={themedBubu.forgetting}
+              alt="BuBu در حال مرتب‌کردن کارت‌های مرور فراموش‌شده"
+              width={1024}
+              height={1536}
+              loading="lazy"
               sizes="(max-width: 720px) 64vw, 410px"
             />
           </div>
@@ -211,10 +220,11 @@ export function LandingExperience() {
             <div className="bubu-closeup">
               <Image
                 className="bubu"
-                src="/themes/summer/bubu/learning-focus-v3.png"
-                alt="نمای نزدیک BuBu در حال معرفی تلفظ و مثال"
-                width={600}
-                height={900}
+                src={themedBubu.vocabulary}
+                alt="نمای نزدیک BuBu، مربی واژه و تلفظ آلمانی"
+                width={1024}
+                height={1536}
+                loading="lazy"
                 sizes="260px"
               />
             </div>
@@ -261,10 +271,11 @@ export function LandingExperience() {
             </div>
             <Image
               className="bubu bubu--celebrate"
-              src="/themes/summer/bubu/progress-celebrate-v3.png"
-              alt="BuBu در حال جشن‌گرفتن پیشرفت روزانه"
-              width={650}
-              height={975}
+              src={themedBubu.progress}
+              alt="BuBu در حال جشن‌گرفتن نشان پیشرفت روزانه"
+              width={1024}
+              height={1536}
+              loading="lazy"
               sizes="(max-width: 720px) 62vw, 360px"
             />
           </div>
@@ -380,10 +391,11 @@ export function LandingExperience() {
         <div className="wrap finale-layout">
           <Image
             className="bubu bubu--finale"
-            src="/themes/summer/bubu/finale-invite-v3.png"
-            alt="BuBu در حال دعوت به شروع یادگیری"
-            width={700}
-            height={1050}
+            src={themedBubu.finale}
+            alt="BuBu، همراه مسیر، در حال دعوت به شروع یادگیری"
+            width={1024}
+            height={1536}
+            loading="lazy"
             sizes="(max-width: 720px) 68vw, 420px"
           />
           <div className="scene-heading chapter-heading-veil">

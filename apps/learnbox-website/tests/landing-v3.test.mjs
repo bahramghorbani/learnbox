@@ -37,6 +37,14 @@ const fictionalMockupSources = [
   .map((path) => readFileSync(path, 'utf8'))
   .join('\n');
 const productStoryPath = join(appRoot, 'app', 'components', 'landing', 'ProductStory.tsx');
+const landingExperiencePath = join(
+  appRoot,
+  'app',
+  'components',
+  'landing',
+  'LandingExperience.tsx',
+);
+const landingExperienceSource = readFileSync(landingExperiencePath, 'utf8');
 const motionOrchestratorSource = readFileSync(
   join(appRoot, 'app', 'components', 'MotionOrchestrator.tsx'),
   'utf8',
@@ -180,6 +188,66 @@ const canonicalBuBuHashes = {
   'learning-focus-v3.png': 'ae65486a2341f3efac15f8b73809119ec3181b8a383586a48dba71f18cfe9085',
   'progress-celebrate-v3.png': '06b57dee703c6660c0a2f334e8531ae2240a278266d3c43e3e984a6b397b4a8c',
 };
+
+test('integrates five versioned themed BuBu assets without changing canonical files', () => {
+  const themedRoot = join(appRoot, 'public', 'themes', 'summer', 'bubu-themed', 'v1');
+  const themedAssets = {
+    hero: {
+      filename: 'hero-traveler.png',
+      alt: /BuBu[^"']*(سفر|تابستان|برلین)/,
+    },
+    forgetting: {
+      filename: 'card-organizer.png',
+      alt: /BuBu[^"']*(کارت|مرور|مرتب)/,
+    },
+    vocabulary: {
+      filename: 'language-coach.png',
+      alt: /BuBu[^"']*(واژه|تلفظ|زبان)/,
+    },
+    progress: {
+      filename: 'progress-achiever.png',
+      alt: /BuBu[^"']*(پیشرفت|نشان|هدف)/,
+    },
+    finale: {
+      filename: 'journey-companion.png',
+      alt: /BuBu[^"']*(مسیر|دعوت|شروع)/,
+    },
+  };
+
+  for (const [role, { filename, alt }] of Object.entries(themedAssets)) {
+    const publicPath = `/themes/summer/bubu-themed/v1/${filename}`;
+    assert.ok(existsSync(join(themedRoot, filename)), `Missing themed BuBu asset: ${filename}`);
+    assert.match(
+      landingExperienceSource,
+      new RegExp(`${role}:\\s*['"]${publicPath.replaceAll('/', '\\/')}['"]`),
+      `Missing themedBubu.${role} path`,
+    );
+    assert.match(landingExperienceSource, new RegExp(`src=\\{themedBubu\\.${role}\\}`));
+    assert.match(landingExperienceSource, alt, `Themed BuBu ${role} needs descriptive alt text`);
+  }
+
+  const themedImages = landingExperienceSource.match(
+    /<Image[\s\S]*?src=\{themedBubu\.(?:hero|forgetting|vocabulary|progress|finale)\}[\s\S]*?\/>/g,
+  );
+  assert.equal(themedImages?.length, 5);
+  for (const image of themedImages ?? []) {
+    assert.match(image, /width=\{\d+\}/);
+    assert.match(image, /height=\{\d+\}/);
+    assert.match(image, /sizes="[^"]+"/);
+  }
+  assert.ok(
+    themedImages?.slice(1).every((image) => image.includes('loading="lazy"')),
+    'Every non-hero themed BuBu image must stay lazy-loaded',
+  );
+
+  const bubuRoot = join(appRoot, 'public', 'themes', 'summer', 'bubu');
+  for (const [filename, expectedHash] of Object.entries(canonicalBuBuHashes)) {
+    const actualHash = createHash('sha256')
+      .update(readFileSync(join(bubuRoot, filename)))
+      .digest('hex');
+    assert.equal(actualHash, expectedHash, `Canonical BuBu asset changed: ${filename}`);
+  }
+});
 
 test('locks the truthful product-story contract and versioned assets', () => {
   assert.deepEqual(

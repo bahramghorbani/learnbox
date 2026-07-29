@@ -62,6 +62,7 @@ export function LearningPaths() {
               alt="BuBu در حال اشاره به مسیر یادگیری آلمانی"
               width={640}
               height={960}
+              loading="lazy"
               sizes="(max-width: 720px) 54vw, 330px"
             />
           </div>
