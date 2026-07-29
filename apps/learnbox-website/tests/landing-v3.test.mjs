@@ -22,6 +22,7 @@ function collectSource(directory) {
 const landingSource = collectSource(join(appRoot, 'app'));
 const themeSource = collectSource(join(appRoot, 'src', 'themes', 'summer'));
 const allSource = `${landingSource}\n${themeSource}`;
+const normalizedSource = allSource.replace(/\s+/g, ' ');
 
 const exactCopy = [
   'کلمه‌ها را فقط حفظ نکن؛ برای همیشه یاد بگیر.',
@@ -62,7 +63,10 @@ const exactCopy = [
 
 test('contains every approved V3 copy line', () => {
   for (const copy of exactCopy) {
-    assert.ok(allSource.includes(copy), `Missing approved copy: ${copy}`);
+    assert.ok(
+      normalizedSource.includes(copy.replace(/\s+/g, ' ')),
+      `Missing approved copy: ${copy}`,
+    );
   }
 });
 

@@ -1,140 +1,177 @@
 'use client';
 
-import { useEffect } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useEffect } from 'react';
 
 export function MotionOrchestrator() {
   useEffect(() => {
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const mobile = window.matchMedia('(max-width: 720px)').matches;
     const root = document.documentElement;
-    const scenes = Array.from(document.querySelectorAll<HTMLElement>('[data-motion]'));
-    const reducedMotion =
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches ||
-      new URLSearchParams(window.location.search).get('motion') === 'reduced';
-    const fullMotion = window.matchMedia('(min-width: 900px) and (pointer: fine)').matches;
+    const scenes = gsap.utils.toArray<HTMLElement>('[data-scene]');
 
     root.classList.add('motion-ready');
-    root.dataset.motionProfile = reducedMotion ? 'reduced' : fullMotion ? 'full' : 'standard';
+    root.dataset.motionProfile = reducedMotion ? 'reduced' : mobile ? 'mobile' : 'full';
 
-    if (reducedMotion || !('IntersectionObserver' in window)) {
-      scenes.forEach((scene) => scene.classList.add('is-visible'));
+    if (reducedMotion) {
+      scenes.forEach((scene) => scene.classList.add('is-scene-active'));
       return () => {
+        scenes.forEach((scene) => scene.classList.remove('is-scene-active'));
         root.classList.remove('motion-ready');
         delete root.dataset.motionProfile;
       };
     }
 
     gsap.registerPlugin(ScrollTrigger);
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (!entry.isIntersecting) return;
-          entry.target.classList.add('is-visible');
-          observer.unobserve(entry.target);
-        });
-      },
-      { rootMargin: '0px 0px -12% 0px', threshold: 0.18 },
-    );
-
-    scenes.forEach((scene) => observer.observe(scene));
-
-    const motionContext = gsap.context(
+    const context = gsap.context(
       () => {
-        gsap.to('[data-parallax="hero-sky"]', {
-          yPercent: fullMotion ? 8 : 3,
-          scale: fullMotion ? 1.035 : 1.015,
+        scenes.forEach((scene) => {
+          ScrollTrigger.create({
+            trigger: scene,
+            start: 'top 82%',
+            end: 'bottom 18%',
+            onEnter: () => scene.classList.add('is-scene-active'),
+            onEnterBack: () => scene.classList.add('is-scene-active'),
+            onLeave: () => scene.classList.remove('is-scene-active'),
+            onLeaveBack: () => scene.classList.remove('is-scene-active'),
+          });
+        });
+
+        const hero = gsap.timeline({ defaults: { ease: 'expo.out' } });
+        hero
+          .from('.hero-copy > *', {
+            y: mobile ? 18 : 32,
+            opacity: 0,
+            filter: 'blur(8px)',
+            duration: mobile ? 0.45 : 0.72,
+            stagger: 0.08,
+          })
+          .from(
+            '.bubu--hero',
+            { yPercent: 13, xPercent: -4, scale: 0.9, filter: 'blur(5px)', duration: 0.78 },
+            '-=.48',
+          )
+          .from(
+            '.floating-word',
+            { scale: 0.72, opacity: 0, duration: 0.4, stagger: 0.12 },
+            '-=.34',
+          )
+          .from(
+            '.review-route path',
+            { strokeDashoffset: 180, opacity: 0, duration: 0.62 },
+            '-=.36',
+          );
+
+        gsap.to('[data-summer-backdrop="berlin"] [data-summer-layer="sky"]', {
+          yPercent: mobile ? 2 : 7,
+          scale: mobile ? 1.02 : 1.07,
           ease: 'none',
           scrollTrigger: {
-            trigger: '[data-wallpaper="hero"]',
+            trigger: '.hero-shell',
             start: 'top top',
             end: 'bottom top',
-            scrub: fullMotion ? 1.1 : 0.7,
+            scrub: mobile ? 0.45 : 1,
+          },
+        });
+        gsap.to('[data-summer-backdrop="berlin"] [data-summer-layer="foliage"]', {
+          yPercent: mobile ? -3 : -14,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: '.hero-shell',
+            start: 'top top',
+            end: 'bottom top',
+            scrub: 0.8,
           },
         });
 
-        if (fullMotion) {
-          gsap.to('[data-parallax="hero-landmarks"]', {
-            yPercent: 14,
-            scale: 1.055,
-            ease: 'none',
-            scrollTrigger: {
-              trigger: '[data-wallpaper="hero"]',
-              start: 'top top',
-              end: 'bottom top',
-              scrub: 0.85,
-            },
-          });
-          gsap.to('[data-parallax="hero-route"]', {
-            xPercent: -18,
-            yPercent: 42,
-            rotate: 3,
-            ease: 'none',
-            scrollTrigger: {
-              trigger: '[data-wallpaper="hero"]',
-              start: 'top top',
-              end: 'bottom top',
-              scrub: 0.65,
-            },
-          });
-        }
-
-        gsap.fromTo(
-          '[data-parallax="journey-sky"]',
-          { yPercent: fullMotion ? -5 : -2, scale: fullMotion ? 1.06 : 1.025 },
+        const sceneTimelines = [
           {
-            yPercent: fullMotion ? 7 : 3,
-            scale: 1,
-            ease: 'none',
-            scrollTrigger: {
-              trigger: '[data-wallpaper="journey"]',
-              start: 'top bottom',
-              end: 'bottom top',
-              scrub: fullMotion ? 1.25 : 0.8,
-            },
+            trigger: '.forgetting-scene',
+            tween: () =>
+              gsap
+                .timeline()
+                .from('.lost-word', {
+                  x: () => gsap.utils.random(-80, 80),
+                  y: () => gsap.utils.random(-50, 50),
+                  rotate: () => gsap.utils.random(-18, 18),
+                  opacity: 0.18,
+                  stagger: 0.08,
+                })
+                .from('.ordered-stack i', { x: 70, opacity: 0, stagger: 0.08 }, '-=.18')
+                .from('.bubu--recovery', { yPercent: 12, filter: 'blur(6px)' }, '-=.34'),
           },
-        );
+          {
+            trigger: '.leitner-scene',
+            tween: () =>
+              gsap
+                .timeline()
+                .from('.leitner-path', { strokeDasharray: 760, strokeDashoffset: 760 })
+                .from(
+                  '.leitner-card',
+                  { x: mobile ? 45 : 100, opacity: 0, rotate: 4, stagger: 0.12 },
+                  '-=.55',
+                )
+                .from('.leitner-return', { strokeDasharray: 520, strokeDashoffset: 520 }, '-=.3'),
+          },
+          {
+            trigger: '.vocabulary-scene',
+            tween: () =>
+              gsap
+                .timeline()
+                .from('.word-card', { clipPath: 'inset(0 0 100% 0)', filter: 'blur(10px)' })
+                .from('[data-word-detail]', { x: 24, opacity: 0, stagger: 0.075 })
+                .from('.bubu-closeup', { xPercent: -18, opacity: 0 }, '-=.3'),
+          },
+          {
+            trigger: '.progress-scene',
+            tween: () =>
+              gsap
+                .timeline()
+                .from('.streak b', { textContent: 0, snap: { textContent: 1 } })
+                .from(
+                  '.progress-ring, .badge, .level',
+                  { scale: 0.78, opacity: 0, stagger: 0.12 },
+                  '-=.2',
+                )
+                .from('.bubu--celebrate', { yPercent: 16, opacity: 0 }, '-=.3'),
+          },
+          {
+            trigger: '.product-scene',
+            tween: () =>
+              gsap
+                .timeline()
+                .from('.app-screen--back', { x: -90, rotateY: 30, opacity: 0 })
+                .from('.app-screen--middle', { x: 90, rotateY: -30, opacity: 0 }, '-=.5')
+                .from('.app-screen--front', { y: 70, scale: 0.88, opacity: 0 }, '-=.42'),
+          },
+          {
+            trigger: '.download-scene',
+            tween: () =>
+              gsap
+                .timeline()
+                .from('.phone-preview', { y: 90, rotate: 7, opacity: 0 })
+                .from('.web-preview', { x: -90, rotate: -10, opacity: 0 }, '-=.45')
+                .from('.qr-preview', { scale: 0.72, opacity: 0 }, '-=.28'),
+          },
+        ];
 
-        if (fullMotion) {
-          gsap.fromTo(
-            '[data-parallax="journey-landmarks"]',
-            { yPercent: -9, xPercent: 2 },
-            {
-              yPercent: 13,
-              xPercent: -2,
-              ease: 'none',
-              scrollTrigger: {
-                trigger: '[data-wallpaper="journey"]',
-                start: 'top bottom',
-                end: 'bottom top',
-                scrub: 0.9,
-              },
-            },
-          );
-          gsap.fromTo(
-            '[data-parallax="journey-route"]',
-            { xPercent: 18, yPercent: -25, rotate: -6 },
-            {
-              xPercent: -24,
-              yPercent: 38,
-              rotate: 5,
-              ease: 'none',
-              scrollTrigger: {
-                trigger: '[data-wallpaper="journey"]',
-                start: 'top bottom',
-                end: 'bottom top',
-                scrub: 0.75,
-              },
-            },
-          );
-        }
+        sceneTimelines.forEach(({ trigger, tween }) => {
+          const timeline = tween();
+          timeline.pause();
+          ScrollTrigger.create({
+            trigger,
+            start: 'top 72%',
+            once: true,
+            onEnter: () => timeline.play(),
+          });
+        });
       },
-      document.querySelector('.site') ?? document.body,
+      document.querySelector('.site-v3') ?? document.body,
     );
 
     return () => {
-      observer.disconnect();
-      motionContext.revert();
+      context.revert();
       root.classList.remove('motion-ready');
       delete root.dataset.motionProfile;
     };

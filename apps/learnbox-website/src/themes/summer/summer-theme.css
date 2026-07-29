@@ -1,0 +1,220 @@
+:root {
+  --summer-sky: #61bff2;
+  --summer-cloud: #fffdf6;
+  --summer-sun: #ffd36a;
+  --summer-leaf: #23784a;
+  --summer-flower: #e54d94;
+  --summer-purple: #6c3ad6;
+  --summer-ink: #17233d;
+  --summer-surface: #fffdf8;
+  --summer-arrive: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.summer-backdrop,
+.summer-layer {
+  position: absolute;
+  inset: 0;
+}
+
+.summer-backdrop {
+  z-index: 0;
+  overflow: hidden;
+  background: var(--summer-sky);
+  pointer-events: none;
+}
+
+.summer-layer--sky {
+  inset: -3%;
+  transform: scale(1.04);
+}
+
+.summer-layer--sky::after {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, #fff9ed08 0 42%, #fffaf0cc 84%, #fffdf1f5 100%),
+    linear-gradient(180deg, transparent 57%, #e8f7dd75 100%);
+  content: '';
+}
+
+.summer-layer--clouds span {
+  position: absolute;
+  width: clamp(130px, 17vw, 260px);
+  height: clamp(38px, 5vw, 74px);
+  border-radius: 50%;
+  background: #fffdf5d1;
+  box-shadow:
+    42px -11px 0 4px #fffdf5b8,
+    86px 3px 0 -5px #fffdf59e;
+  filter: blur(1px);
+  opacity: 0.65;
+}
+
+.summer-layer--clouds span:nth-child(1) {
+  top: 15%;
+  left: 9%;
+}
+
+.summer-layer--clouds span:nth-child(2) {
+  top: 29%;
+  left: 47%;
+  scale: 0.63;
+}
+
+.summer-layer--clouds span:nth-child(3) {
+  top: 9%;
+  right: -3%;
+  scale: 0.76;
+}
+
+.summer-layer--architecture {
+  background: linear-gradient(90deg, transparent 0 55%, #fffdf8b8 86%, #fffdf8ed 100%);
+}
+
+.summer-layer--light {
+  inset: -18% -12% auto auto;
+  width: 45vw;
+  height: 45vw;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff7c9d9 0, #ffd96f73 31%, transparent 69%);
+  mix-blend-mode: screen;
+}
+
+.summer-layer--foliage {
+  inset: auto 0 0;
+  height: 29%;
+}
+
+.summer-layer--foliage i {
+  position: absolute;
+  bottom: -18%;
+  width: clamp(80px, 13vw, 190px);
+  aspect-ratio: 1;
+  border-radius: 60% 40% 70% 30%;
+  background:
+    radial-gradient(circle at 28% 24%, #ff96c7 0 5%, transparent 6%),
+    radial-gradient(circle at 59% 39%, #fff4a3 0 5%, transparent 6%),
+    radial-gradient(circle at 43% 67%, #c88cff 0 6%, transparent 7%),
+    linear-gradient(145deg, #7dcf65, #1f7448);
+  filter: drop-shadow(0 16px 20px #25572c33);
+  transform-origin: bottom center;
+}
+
+.summer-layer--foliage i:nth-child(1) {
+  left: -2%;
+  rotate: 14deg;
+}
+
+.summer-layer--foliage i:nth-child(2) {
+  left: 18%;
+  bottom: -25%;
+  scale: 0.7;
+  rotate: -9deg;
+}
+
+.summer-layer--foliage i:nth-child(3) {
+  right: 20%;
+  bottom: -23%;
+  scale: 0.82;
+  rotate: 7deg;
+}
+
+.summer-layer--foliage i:nth-child(4) {
+  right: -3%;
+  rotate: -12deg;
+}
+
+.summer-layer--particles b {
+  position: absolute;
+  width: 7px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #fff9bf;
+  box-shadow: 0 0 14px #fff7a8;
+  opacity: 0.64;
+}
+
+.summer-layer--particles b:nth-child(1) {
+  top: 18%;
+  left: 32%;
+}
+
+.summer-layer--particles b:nth-child(2) {
+  top: 48%;
+  left: 16%;
+  scale: 0.7;
+}
+
+.summer-layer--particles b:nth-child(3) {
+  top: 35%;
+  right: 23%;
+  scale: 0.55;
+}
+
+.summer-layer--particles b:nth-child(4) {
+  top: 61%;
+  right: 38%;
+  scale: 0.8;
+}
+
+.is-scene-active .summer-layer--clouds {
+  animation: summer-cloud-drift 19s linear infinite alternate;
+}
+
+.is-scene-active .summer-layer--foliage i {
+  animation: summer-foliage-sway 5.6s ease-in-out infinite alternate;
+}
+
+.is-scene-active .summer-layer--foliage i:nth-child(even) {
+  animation-delay: -2.4s;
+}
+
+.is-scene-active .summer-layer--particles b {
+  animation: summer-particle-rise 4.8s ease-in-out infinite alternate;
+}
+
+@keyframes summer-cloud-drift {
+  to {
+    transform: translate3d(2.5%, 0.6%, 0);
+  }
+}
+
+@keyframes summer-foliage-sway {
+  to {
+    transform: rotate(2.3deg) translateY(-1.5%);
+  }
+}
+
+@keyframes summer-particle-rise {
+  to {
+    transform: translate3d(5px, -16px, 0);
+    opacity: 0.28;
+  }
+}
+
+@media (max-width: 720px) {
+  .summer-layer--sky::after {
+    background: linear-gradient(180deg, #fffdf115 0 46%, #fffdf4e6 82%, #fffdf8 100%);
+  }
+
+  .summer-layer--architecture {
+    background: linear-gradient(180deg, transparent 0 62%, #fffdf5bf 89%, #fffdf8 100%);
+  }
+
+  .summer-layer--foliage {
+    height: 22%;
+  }
+
+  .summer-layer--foliage i:nth-child(2),
+  .summer-layer--foliage i:nth-child(3) {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .is-scene-active .summer-layer--clouds,
+  .is-scene-active .summer-layer--foliage i,
+  .is-scene-active .summer-layer--particles b {
+    animation: none;
+  }
+}
