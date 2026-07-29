@@ -128,3 +128,20 @@ test('gives every landing segment a layered German scroll chapter', () => {
     'Scroll-linked chapter motion must avoid paint-heavy brightness filters',
   );
 });
+
+test('uses recognizable German landmarks without sacrificing copy legibility', () => {
+  for (const landmark of [
+    'u-bahn',
+    'fernsehturm',
+    'deutschland-map',
+    'olympiapark',
+    'elbphilharmonie',
+    'brandenburg-gate',
+    'garden-sign',
+  ]) {
+    assert.match(allSource, new RegExp(`data-chapter-landmark=["']${landmark}["']`));
+  }
+
+  assert.match(allSource, /chapter-heading-veil/);
+  assert.match(allSource, /chapterLandmark/);
+});

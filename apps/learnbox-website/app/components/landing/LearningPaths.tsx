@@ -21,7 +21,7 @@ export function LearningPaths() {
     <section id="paths" className="scene paths-scene" data-motion="paths">
       <GermanyChapterBackdrop chapter="map" />
       <div className="wrap">
-        <div className="scene-heading">
+        <div className="scene-heading chapter-heading-veil">
           <span>مسیر شخصی تو</span>
           <h2>مسیر یادگیری را با هدف خودت هماهنگ کن.</h2>
           <p>

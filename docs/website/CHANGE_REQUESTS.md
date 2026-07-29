@@ -107,3 +107,30 @@ Validation:
 - Eight chapter backdrops found in production.
 - Desktop far-layer transform changes across scroll.
 - Zero horizontal overflow, console errors or failed HTTP responses.
+
+## CR-LANDING-005 — German landmark and legibility polish
+
+Status: Completed
+
+Request:
+
+- Continue strengthening the German identity of every scroll segment.
+- Keep motion attractive while protecting Persian copy legibility.
+
+Implemented:
+
+- Eight recognizable landmarks: U-Bahn, railway platform, Fernsehturm, Germany map, Olympiapark, Elbphilharmonie, Brandenburg Gate and a German learning signpost.
+- Chapter-colored SVG silhouettes integrated into the existing accent layer.
+- Gentle landmark parallax on desktop and a 1% motion cap on mobile.
+- Theme-aware heading veils that remain soft on both light and dark scenes.
+- Static landmark resolution under `prefers-reduced-motion`.
+
+Validation:
+
+- Source contract expanded to seven tests.
+- Production build and TypeScript validation passed.
+- Browser QA at 1440×900, 1024×768 and 390×844.
+- Eight landmarks and nine heading-safe regions found in production.
+- Navigation interaction to the learning-method chapter completed successfully.
+- Zero horizontal overflow or browser-console errors.
+- Existing BuBu assets and protected `apps/website` and `apps/mobile` remained untouched.

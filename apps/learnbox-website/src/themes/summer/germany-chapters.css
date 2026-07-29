@@ -219,6 +219,49 @@
   font-weight: 700;
 }
 
+.chapter-landmark {
+  position: absolute;
+  bottom: 8%;
+  left: 8%;
+  width: clamp(180px, 22vw, 340px);
+  height: auto;
+  color: var(--chapter-ink);
+  fill: color-mix(in srgb, var(--chapter-mid) 24%, transparent);
+  stroke: currentColor;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.18;
+}
+
+.chapter-landmark text {
+  fill: currentColor;
+  stroke: none;
+  font-family: LearnBox, sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.chapter-heading-veil {
+  position: relative;
+  isolation: isolate;
+}
+
+.chapter-heading-veil::before {
+  position: absolute;
+  z-index: -1;
+  inset: -38px -48px;
+  background: radial-gradient(
+    ellipse at center,
+    var(--chapter-heading-veil-color, #fffdf8c7) 0 44%,
+    color-mix(in srgb, var(--chapter-heading-veil-color, #fffdf8c7) 48%, transparent) 62%,
+    transparent 77%
+  );
+  content: '';
+  pointer-events: none;
+}
+
 .chapter-location {
   top: 8%;
   left: 5%;
@@ -279,6 +322,12 @@
   filter: saturate(0.7);
 }
 
+.germany-chapter--station .chapter-landmark {
+  bottom: 12%;
+  left: 9%;
+  width: clamp(170px, 19vw, 280px);
+}
+
 .germany-chapter--rail {
   --chapter-sky: #eaf7ff;
   --chapter-haze: #fffbea;
@@ -294,6 +343,11 @@
   border-bottom: 8px solid #d64c4c;
 }
 
+.germany-chapter--rail .chapter-landmark {
+  bottom: 9%;
+  left: 5%;
+}
+
 .germany-chapter--street {
   --chapter-sky: #cdeeff;
   --chapter-haze: #e8f6ff;
@@ -304,6 +358,13 @@
 
 .germany-chapter--street .chapter-architecture {
   opacity: 0.26;
+}
+
+.germany-chapter--street .chapter-landmark {
+  bottom: 4%;
+  left: 43%;
+  width: clamp(130px, 14vw, 210px);
+  opacity: 0.2;
 }
 
 .germany-chapter--street .chapter-architecture i {
@@ -332,6 +393,12 @@
   opacity: 0.16;
 }
 
+.germany-chapter--map .chapter-landmark {
+  bottom: 8%;
+  left: 10%;
+  width: clamp(160px, 17vw, 250px);
+}
+
 .germany-chapter--park {
   --chapter-sky: #e5ddff;
   --chapter-haze: #f5efff;
@@ -342,6 +409,12 @@
 
 .germany-chapter--park .chapter-sun {
   background: #ffcf5a;
+}
+
+.germany-chapter--park .chapter-landmark {
+  bottom: 6%;
+  left: 4%;
+  width: clamp(220px, 28vw, 410px);
 }
 
 .germany-chapter--harbor {
@@ -373,6 +446,18 @@
   color: #38206d;
 }
 
+.germany-chapter--harbor .chapter-landmark {
+  bottom: 3%;
+  left: 4%;
+  width: clamp(240px, 31vw, 460px);
+  color: #d7caf7;
+  opacity: 0.2;
+}
+
+.product-scene .chapter-heading-veil {
+  --chapter-heading-veil-color: #41208fc7;
+}
+
 .germany-chapter--square {
   --chapter-sky: #eef7ff;
   --chapter-haze: #fff;
@@ -383,6 +468,12 @@
 
 .germany-chapter--square .chapter-signal {
   opacity: 0.55;
+}
+
+.germany-chapter--square .chapter-landmark {
+  bottom: 4%;
+  left: 38%;
+  width: clamp(220px, 27vw, 400px);
 }
 
 .germany-chapter--garden {
@@ -402,6 +493,12 @@
   background: #f3d89d7a;
   transform: perspective(500px) rotateX(68deg);
   transform-origin: bottom;
+}
+
+.germany-chapter--garden .chapter-landmark {
+  bottom: 7%;
+  left: 7%;
+  width: clamp(165px, 18vw, 260px);
 }
 
 @media (max-width: 720px) {
@@ -439,10 +536,32 @@
   .chapter-plant {
     width: 145px;
   }
+
+  .chapter-landmark {
+    bottom: 5%;
+    left: 4%;
+    width: clamp(130px, 38vw, 190px);
+    opacity: 0.13;
+  }
+
+  .germany-chapter--street .chapter-landmark,
+  .germany-chapter--square .chapter-landmark {
+    left: 48%;
+  }
+
+  .germany-chapter--park .chapter-landmark,
+  .germany-chapter--harbor .chapter-landmark {
+    width: min(58vw, 250px);
+  }
+
+  .chapter-heading-veil::before {
+    inset: -24px -18px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .chapter-layer,
+  .chapter-landmark,
   .chapter-train,
   .chapter-sun,
   .chapter-signal {

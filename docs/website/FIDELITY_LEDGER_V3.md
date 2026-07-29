@@ -53,3 +53,26 @@ Every previously flat middle segment now has a distinct setting tied to its lear
 - A green German garden path for the final invitation.
 
 Each chapter has far, mid, route, near and accent layers. Desktop scroll motion is measured and active; mobile translation is capped at 4%; reduced motion resolves all layers without movement.
+
+## German landmark polish
+
+The chapter system now includes a recognizable, chapter-specific silhouette in its accent layer:
+
+- U-Bahn roundel and platform sign in Alexanderplatz.
+- Regional railway platform and clock on the review journey.
+- Fernsehturm in Prenzlauer Berg.
+- Germany outline and learning route in the path selector.
+- Olympiapark tent roof in the daily-progress scene.
+- Elbphilharmonie in HafenCity.
+- Brandenburg Gate in Stadtmitte.
+- German learning signpost on the final garden path.
+
+The silhouettes use low-contrast chapter colors so they reinforce location without competing with the product story. A soft, theme-aware heading veil keeps Persian copy readable where route lines and architecture pass behind it. Landmark parallax is capped at 1% on mobile and is included in the reduced-motion reset.
+
+Polish QA evidence:
+
+- Production build and TypeScript validation passed.
+- Source contract: 7/7 tests passed.
+- Desktop 1440×900: eight landmarks rendered, chapter navigation exercised, scroll transform observed, zero horizontal overflow.
+- Tablet 1024×768 and mobile 390×844: zero horizontal overflow.
+- Browser console: zero warnings or errors.

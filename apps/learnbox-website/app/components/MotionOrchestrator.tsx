@@ -94,6 +94,7 @@ export function MotionOrchestrator() {
           const mid = backdrop.querySelector<HTMLElement>('[data-chapter-layer="mid"]');
           const near = backdrop.querySelector<HTMLElement>('[data-chapter-layer="near"]');
           const route = backdrop.querySelector<SVGPathElement>('[data-chapter-route]');
+          const chapterLandmark = backdrop.querySelector<SVGSVGElement>('[data-chapter-landmark]');
           const chapter = backdrop.dataset.chapterBackdrop;
           const travel = mobile ? 4 : 12;
 
@@ -166,6 +167,27 @@ export function MotionOrchestrator() {
                 scrub: mobile ? 0.4 : 0.8,
               },
             });
+          }
+
+          if (chapterLandmark) {
+            gsap.fromTo(
+              chapterLandmark,
+              {
+                yPercent: mobile ? 1 : 6,
+                rotate: mobile ? 0 : -1.5,
+              },
+              {
+                yPercent: mobile ? -1 : -6,
+                rotate: mobile ? 0 : 1.5,
+                ease: 'none',
+                scrollTrigger: {
+                  trigger: scene,
+                  start: 'top bottom',
+                  end: 'bottom top',
+                  scrub: mobile ? 0.45 : 0.9,
+                },
+              },
+            );
           }
 
           if (chapter === 'station' || chapter === 'rail') {

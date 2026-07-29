@@ -60,6 +60,105 @@ const chapterMeta: Record<
   },
 };
 
+function ChapterLandmark({ chapter }: { chapter: GermanyChapter }) {
+  if (chapter === 'station') {
+    return (
+      <svg className="chapter-landmark" data-chapter-landmark="u-bahn" viewBox="0 0 240 220">
+        <circle cx="86" cy="84" r="55" />
+        <rect x="45" y="43" width="82" height="82" rx="12" />
+        <text x="86" y="102" textAnchor="middle">
+          U
+        </text>
+        <path d="M158 40v142M133 182h52M158 66l22 13-22 13-22-13Z" />
+      </svg>
+    );
+  }
+
+  if (chapter === 'rail') {
+    return (
+      <svg className="chapter-landmark" data-chapter-landmark="bahn-platform" viewBox="0 0 260 220">
+        <path d="M28 182h208M54 182V62h150v120M38 62h182" />
+        <rect x="82" y="82" width="96" height="48" rx="8" />
+        <circle cx="130" cy="106" r="16" />
+        <path d="M130 106V94M130 106l10 7M72 148h116" />
+      </svg>
+    );
+  }
+
+  if (chapter === 'street') {
+    return (
+      <svg className="chapter-landmark" data-chapter-landmark="fernsehturm" viewBox="0 0 220 260">
+        <path d="M108 238 97 94h22l-8 144M108 20v48" />
+        <circle cx="108" cy="86" r="31" />
+        <path d="M78 86h60M91 71h34M92 101h32M70 238h78" />
+      </svg>
+    );
+  }
+
+  if (chapter === 'map') {
+    return (
+      <svg
+        className="chapter-landmark"
+        data-chapter-landmark="deutschland-map"
+        viewBox="0 0 220 260"
+      >
+        <path d="m104 18 28 21 27-3 9 26-11 23 18 20-9 26 14 25-26 17-3 33-25 5-21 31-31-13-4-28-22-19 15-31-11-29 21-18-5-34 23-9Z" />
+        <circle cx="116" cy="74" r="7" />
+        <circle cx="91" cy="145" r="7" />
+        <circle cx="126" cy="202" r="7" />
+        <path d="M116 74C78 105 136 121 91 145s9 48 35 57" />
+      </svg>
+    );
+  }
+
+  if (chapter === 'park') {
+    return (
+      <svg className="chapter-landmark" data-chapter-landmark="olympiapark" viewBox="0 0 300 220">
+        <path d="M18 180h264M34 178 90 52l58 126L208 38l58 140M49 145c48-48 95-44 142-3 27 23 51 26 75 9M76 80l145 12M112 104l108-36" />
+      </svg>
+    );
+  }
+
+  if (chapter === 'harbor') {
+    return (
+      <svg
+        className="chapter-landmark"
+        data-chapter-landmark="elbphilharmonie"
+        viewBox="0 0 300 220"
+      >
+        <path d="M24 188h252V97c-34 24-64-34-96-4-28 27-53-33-79-7-26 27-52-8-77 17Z" />
+        <path d="M24 188v-50h252v50M58 142v42M96 142v42M134 142v42M172 142v42M210 142v42M248 142v42" />
+      </svg>
+    );
+  }
+
+  if (chapter === 'square') {
+    return (
+      <svg
+        className="chapter-landmark"
+        data-chapter-landmark="brandenburg-gate"
+        viewBox="0 0 300 220"
+      >
+        <path d="M24 188h252M48 176V82h204v94M36 82h228l-20-28H58ZM72 82v94M111 82v94M150 82v94M189 82v94M228 82v94" />
+        <path d="M128 54V36h44v18M139 36l11-17 11 17" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg className="chapter-landmark" data-chapter-landmark="garden-sign" viewBox="0 0 260 230">
+      <path d="M128 214V48M98 214h60" />
+      <path d="M48 64h126l32 24-32 24H48ZM214 124H88l-32 24 32 24h126Z" />
+      <text x="111" y="94" textAnchor="middle">
+        LERNEN
+      </text>
+      <text x="151" y="154" textAnchor="middle">
+        START
+      </text>
+    </svg>
+  );
+}
+
 export function GermanyChapterBackdrop({ chapter }: { chapter: GermanyChapter }) {
   const meta = chapterMeta[chapter];
 
@@ -112,6 +211,7 @@ export function GermanyChapterBackdrop({ chapter }: { chapter: GermanyChapter })
       </div>
 
       <div className="chapter-layer chapter-layer--accent" data-chapter-layer="accent">
+        <ChapterLandmark chapter={chapter} />
         <span className="chapter-location">{meta.city}</span>
         <span className="chapter-context" lang="de">
           {meta.context}

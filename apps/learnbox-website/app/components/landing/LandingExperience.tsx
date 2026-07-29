@@ -94,7 +94,7 @@ export function LandingExperience() {
       >
         <GermanyChapterBackdrop chapter="station" />
         <div className="wrap forgetting-layout">
-          <div className="scene-heading">
+          <div className="scene-heading chapter-heading-veil">
             <span>پیش از فراموشی</span>
             <h2>چرا کلمه‌هایی که یاد می‌گیریم، خیلی زود فراموش می‌شوند؟</h2>
             <p>
@@ -129,7 +129,7 @@ export function LandingExperience() {
       <section id="method" className="scene leitner-scene" data-motion="leitner" data-scene>
         <GermanyChapterBackdrop chapter="rail" />
         <div className="wrap">
-          <div className="scene-heading scene-heading--center">
+          <div className="scene-heading scene-heading--center chapter-heading-veil">
             <span>جعبه لایتنر LearnBox</span>
             <h2>هر کلمه، در زمان مناسب دوباره برمی‌گردد.</h2>
             <p>
@@ -200,7 +200,7 @@ export function LandingExperience() {
               />
             </div>
           </div>
-          <div className="scene-heading">
+          <div className="scene-heading chapter-heading-veil">
             <span>بیشتر از ترجمه</span>
             <h2>کلمه را در متن، تصویر و صدا یاد بگیر.</h2>
             <p>
@@ -216,7 +216,7 @@ export function LandingExperience() {
       <section className="scene progress-scene" data-motion="progress" data-scene>
         <GermanyChapterBackdrop chapter="park" />
         <div className="wrap progress-layout">
-          <div className="scene-heading">
+          <div className="scene-heading chapter-heading-veil">
             <span>پیشرفت قابل دیدن</span>
             <h2>هر روز کمی جلو برو، اما متوقف نشو.</h2>
             <p>
@@ -255,7 +255,7 @@ export function LandingExperience() {
       <section id="product" className="scene product-scene" data-motion="product" data-scene>
         <GermanyChapterBackdrop chapter="harbor" />
         <div className="wrap product-layout">
-          <div className="scene-heading scene-heading--light">
+          <div className="scene-heading scene-heading--light chapter-heading-veil">
             <span>محیط واقعی یادگیری</span>
             <h2>یادگیری ساده، منظم و همیشه در دسترس.</h2>
             <p>
@@ -290,7 +290,7 @@ export function LandingExperience() {
       <section id="download" className="scene download-scene" data-motion="download" data-scene>
         <SummerBackdrop scene="rhine" />
         <div className="wrap download-layout">
-          <div className="scene-heading">
+          <div className="scene-heading chapter-heading-veil">
             <span>کلن · کنار راین</span>
             <h2>از همین امروز یادگیری را شروع کن.</h2>
             <p>
@@ -328,7 +328,7 @@ export function LandingExperience() {
       <section className="scene social-scene" data-motion="social" data-scene>
         <GermanyChapterBackdrop chapter="square" />
         <div className="wrap social-layout">
-          <div className="scene-heading">
+          <div className="scene-heading chapter-heading-veil">
             <span>شبکه‌های رسمی</span>
             <h2>بیرون از اپ هم کنار LearnBox بمان.</h2>
             <p>
@@ -358,7 +358,7 @@ export function LandingExperience() {
             height={1050}
             sizes="(max-width: 720px) 68vw, 420px"
           />
-          <div className="scene-heading">
+          <div className="scene-heading chapter-heading-veil">
             <span>قدم اول</span>
             <h2>اولین کلمه، شروع یک مسیر تازه است.</h2>
             <p>
