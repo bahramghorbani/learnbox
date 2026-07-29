@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { extname, join, resolve } from 'node:path';
 import test from 'node:test';
+import { productStoryStages } from '../app/components/landing/product-story-data.ts';
 
 const appRoot = resolve(import.meta.dirname, '..');
 const sourceExtensions = new Set(['.ts', '.tsx', '.css']);
@@ -23,6 +25,58 @@ const landingSource = collectSource(join(appRoot, 'app'));
 const themeSource = collectSource(join(appRoot, 'src', 'themes', 'summer'));
 const allSource = `${landingSource}\n${themeSource}`;
 const normalizedSource = allSource.replace(/\s+/g, ' ');
+const productScreenRoot = join(appRoot, 'public', 'product', 'screens', 'v1');
+
+const canonicalBuBuHashes = {
+  'cards-recovery-v3.png': 'fbe865ab977b9f1388c7713854cb11bb828fa5a51efb5666035502bc16ed1453',
+  'finale-invite-v3.png': 'a95193a4fb843d41c5139366eabe9f9038e9ce3e995ae4730d9bead825b2c43a',
+  'hero-wave-v3.png': '6a2caa8ad1421398df407aa60549c67df7e528f033fa34851e7c1f89cbd1887c',
+  'learning-focus-v3.png': 'ae65486a2341f3efac15f8b73809119ec3181b8a383586a48dba71f18cfe9085',
+  'progress-celebrate-v3.png': '06b57dee703c6660c0a2f334e8531ae2240a278266d3c43e3e984a6b397b4a8c',
+};
+
+test('locks the truthful product-story contract and versioned assets', () => {
+  assert.deepEqual(
+    productStoryStages.map(({ id }) => id),
+    ['start', 'today', 'return', 'progress'],
+  );
+  assert.equal(new Set(productStoryStages.map(({ image }) => image.src)).size, 4);
+
+  for (const stage of productStoryStages) {
+    assert.equal(stage.image.width, 1080);
+    assert.equal(stage.image.height, 1920);
+    assert.match(stage.image.alt, /LearnBox/);
+    assert.ok(
+      existsSync(join(appRoot, 'public', stage.image.src)),
+      `Missing product screen: ${stage.image.src}`,
+    );
+    assert.doesNotMatch(
+      `${stage.eyebrow} ${stage.title} ${stage.description}`,
+      /منتشر شده|هم‌اکنون دانلود|بازار|مایکت|App Store|اپ[‌ ]?استور/,
+      `Unsupported marketplace or release claim in ${stage.id}`,
+    );
+  }
+
+  for (const filename of [
+    'start-journey.jpeg',
+    'today.jpeg',
+    'calm-return.jpeg',
+    'progress.jpeg',
+  ]) {
+    assert.ok(
+      existsSync(join(productScreenRoot, filename)),
+      `Missing versioned screen: ${filename}`,
+    );
+  }
+
+  const bubuRoot = join(appRoot, 'public', 'themes', 'summer', 'bubu');
+  for (const [filename, expectedHash] of Object.entries(canonicalBuBuHashes)) {
+    const actualHash = createHash('sha256')
+      .update(readFileSync(join(bubuRoot, filename)))
+      .digest('hex');
+    assert.equal(actualHash, expectedHash, `Canonical BuBu asset changed: ${filename}`);
+  }
+});
 
 const exactCopy = [
   'کلمه‌ها را فقط حفظ نکن؛ برای همیشه یاد بگیر.',
