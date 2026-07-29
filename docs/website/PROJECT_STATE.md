@@ -54,6 +54,10 @@ Collect and verify the official production destinations and assets.
   Vercel feedback injection disabled.
 - Live HTTPS routes, security headers, mobile RTL layout and browser console
   verified after the final redeployment.
+- GSAP and ScrollTrigger moved out of the initial client bundle and initialized
+  during browser idle time without removing the approved story motion.
+- Home-route First Load JS reduced from 204 kB to 160 kB; local optimized
+  Lighthouse runs scored Performance 90–93 with LCP 2.9–3.2 s and CLS 0.
 
 ## In Progress
 

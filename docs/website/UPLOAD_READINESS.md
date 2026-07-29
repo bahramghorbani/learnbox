@@ -87,12 +87,19 @@ Key metrics:
 
 - First Contentful Paint: 0.8 s
 - Speed Index: 1.3 s
-- Total Blocking Time: 60 ms
+- Total Blocking Time: 34–253 ms across two optimized cold runs
 - Cumulative Layout Shift: 0
-- Largest Contentful Paint: 3.4 s under Lighthouse throttling
+- Largest Contentful Paint: 2.9–3.2 s under Lighthouse throttling
+- Home-route First Load JS: reduced from 204 kB to 160 kB
+- Home-route code: reduced from 96.1 kB to 52.3 kB
 
 Lighthouse was pinned to `12.8.2` because the registry dependency graph for
 `13.4.1` was temporarily inconsistent during QA.
+
+After deferring GSAP and ScrollTrigger to browser idle time, two local production
+build runs scored Performance 90 and 93 while Accessibility, Best Practices and
+SEO remained 100. The approved scroll-motion stack and reduced-motion branch are
+still covered by the landing contract tests.
 
 The public Preview was also measured after deployment. Accessibility and Best
 Practices score 100, and CLS remains 0. Performance varied from 67 to 82 across
