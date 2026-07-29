@@ -7,7 +7,7 @@ PREVIEW UPLOAD READY
 PRODUCTION UPLOAD BLOCKED BY VERIFIED CONTENT
 ```
 
-Checked implementation commit: `4c13abe`.
+Checked implementation commit: `cae00b2`.
 
 Target package:
 
@@ -55,8 +55,8 @@ The landing is deployed as an isolated Vercel Preview:
 ```text
 Project: learnbox-landing-preview
 Project ID: prj_pPFcSkNaFvEWvKKAOxPNcbLmWEsd
-Deployment ID: dpl_EG4UUBJPGCVk9yLYrBg34hHhNypd
-URL: https://learnbox-landing-preview-cwf3x39du-learn-box.vercel.app
+Deployment ID: dpl_B3eeC2EfZ3uZy75jFT42kFuEgg5A
+URL: https://learnbox-landing-preview-m7e6nc7ud-learn-box.vercel.app
 Target: Preview
 ```
 
@@ -101,12 +101,10 @@ build runs scored Performance 90 and 93 while Accessibility, Best Practices and
 SEO remained 100. The approved scroll-motion stack and reduced-motion branch are
 still covered by the landing contract tests.
 
-The public Preview was also measured after deployment. Accessibility and Best
-Practices score 100, and CLS remains 0. Performance varied from 67 to 82 across
-cold/throttled Preview runs; the local production-build baseline above remains
-the reproducible release benchmark. Preview SEO scores 69 solely because Vercel
-correctly adds `noindex`; production indexing must be tested again after the
-approved domain is attached.
+The optimized public Preview was measured after deployment: Performance 90,
+Accessibility 100, Best Practices 100, LCP 2.7 s, TBT 210 ms and CLS 0. Preview
+SEO scores 69 solely because Vercel correctly adds `noindex`; production
+indexing must be tested again after the approved domain is attached.
 
 ## Production blockers
 

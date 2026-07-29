@@ -49,7 +49,7 @@ Collect and verify the official production destinations and assets.
 - Dedicated Vercel project `learnbox-landing-preview` created without touching
   the learner web app deployment.
 - Public Preview deployed and verified at
-  `https://learnbox-landing-preview-cwf3x39du-learn-box.vercel.app`.
+  `https://learnbox-landing-preview-m7e6nc7ud-learn-box.vercel.app`.
 - Preview authentication removed, Preview indexing intentionally disabled and
   Vercel feedback injection disabled.
 - Live HTTPS routes, security headers, mobile RTL layout and browser console
@@ -58,6 +58,8 @@ Collect and verify the official production destinations and assets.
   during browser idle time without removing the approved story motion.
 - Home-route First Load JS reduced from 204 kB to 160 kB; local optimized
   Lighthouse runs scored Performance 90–93 with LCP 2.9–3.2 s and CLS 0.
+- Optimized public Preview reverified at Performance 90, Accessibility 100,
+  Best Practices 100, LCP 2.7 s, TBT 210 ms and CLS 0.
 
 ## In Progress
 
