@@ -392,7 +392,7 @@ export function LandingExperience() {
           <Image
             className="bubu bubu--finale"
             src={themedBubu.finale}
-            alt="BuBu، همراه مسیر، در حال دعوت به شروع یادگیری"
+            alt="BuBu، همراه مسیر، با نقشهٔ تاشده در حال دعوت به شروع یادگیری"
             width={1024}
             height={1536}
             loading="lazy"

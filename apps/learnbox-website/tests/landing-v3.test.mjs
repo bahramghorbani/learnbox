@@ -37,14 +37,6 @@ const fictionalMockupSources = [
   .map((path) => readFileSync(path, 'utf8'))
   .join('\n');
 const productStoryPath = join(appRoot, 'app', 'components', 'landing', 'ProductStory.tsx');
-const landingExperiencePath = join(
-  appRoot,
-  'app',
-  'components',
-  'landing',
-  'LandingExperience.tsx',
-);
-const landingExperienceSource = readFileSync(landingExperiencePath, 'utf8');
 const motionOrchestratorSource = readFileSync(
   join(appRoot, 'app', 'components', 'MotionOrchestrator.tsx'),
   'utf8',
@@ -124,9 +116,18 @@ async function openChromePage(port, url, viewport, options = {}) {
 
   let nextId = 0;
   const pending = new Map();
+  const networkFailures = [];
   socket.addEventListener('message', (event) => {
     const message = JSON.parse(event.data);
-    if (!message.id) return;
+    if (!message.id) {
+      if (message.method === 'Network.loadingFailed' && !message.params.canceled) {
+        networkFailures.push({
+          errorText: message.params.errorText,
+          type: message.params.type,
+        });
+      }
+      return;
+    }
     const request = pending.get(message.id);
     pending.delete(message.id);
     if (message.error) request.reject(new Error(message.error.message));
@@ -151,6 +152,7 @@ async function openChromePage(port, url, viewport, options = {}) {
 
   await send('Page.enable');
   await send('Runtime.enable');
+  await send('Network.enable');
   await send('Emulation.setDeviceMetricsOverride', viewport);
   await send('Emulation.setEmulatedMedia', {
     features: [
@@ -178,7 +180,11 @@ async function openChromePage(port, url, viewport, options = {}) {
     'new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve(true))))',
   );
 
-  return { evaluate, close: () => socket.close() };
+  return {
+    evaluate,
+    getNetworkFailures: () => [...networkFailures],
+    close: () => socket.close(),
+  };
 }
 
 const canonicalBuBuHashes = {
@@ -189,56 +195,49 @@ const canonicalBuBuHashes = {
   'progress-celebrate-v3.png': '06b57dee703c6660c0a2f334e8531ae2240a278266d3c43e3e984a6b397b4a8c',
 };
 
-test('integrates five versioned themed BuBu assets without changing canonical files', () => {
+const themedBuBuAssets = [
+  {
+    filename: 'hero-traveler.png',
+    alt: 'BuBu، همراه سفر تابستانی LearnBox، در برلین',
+    sizes: '(max-width: 720px) 64vw, 510px',
+    loading: 'auto',
+    fetchPriority: 'high',
+  },
+  {
+    filename: 'card-organizer.png',
+    alt: 'BuBu در حال مرتب‌کردن کارت‌های مرور فراموش‌شده',
+    sizes: '(max-width: 720px) 64vw, 410px',
+    loading: 'lazy',
+    fetchPriority: 'auto',
+  },
+  {
+    filename: 'language-coach.png',
+    alt: 'نمای نزدیک BuBu، مربی واژه و تلفظ آلمانی',
+    sizes: '260px',
+    loading: 'lazy',
+    fetchPriority: 'auto',
+  },
+  {
+    filename: 'progress-achiever.png',
+    alt: 'BuBu در حال جشن‌گرفتن نشان پیشرفت روزانه',
+    sizes: '(max-width: 720px) 62vw, 360px',
+    loading: 'lazy',
+    fetchPriority: 'auto',
+  },
+  {
+    filename: 'journey-companion.png',
+    alt: 'BuBu، همراه مسیر، با نقشهٔ تاشده در حال دعوت به شروع یادگیری',
+    sizes: '(max-width: 720px) 68vw, 420px',
+    loading: 'lazy',
+    fetchPriority: 'auto',
+  },
+];
+
+test('keeps five versioned themed BuBu files without changing canonical assets', () => {
   const themedRoot = join(appRoot, 'public', 'themes', 'summer', 'bubu-themed', 'v1');
-  const themedAssets = {
-    hero: {
-      filename: 'hero-traveler.png',
-      alt: /BuBu[^"']*(سفر|تابستان|برلین)/,
-    },
-    forgetting: {
-      filename: 'card-organizer.png',
-      alt: /BuBu[^"']*(کارت|مرور|مرتب)/,
-    },
-    vocabulary: {
-      filename: 'language-coach.png',
-      alt: /BuBu[^"']*(واژه|تلفظ|زبان)/,
-    },
-    progress: {
-      filename: 'progress-achiever.png',
-      alt: /BuBu[^"']*(پیشرفت|نشان|هدف)/,
-    },
-    finale: {
-      filename: 'journey-companion.png',
-      alt: /BuBu[^"']*(مسیر|دعوت|شروع)/,
-    },
-  };
-
-  for (const [role, { filename, alt }] of Object.entries(themedAssets)) {
-    const publicPath = `/themes/summer/bubu-themed/v1/${filename}`;
+  for (const { filename } of themedBuBuAssets) {
     assert.ok(existsSync(join(themedRoot, filename)), `Missing themed BuBu asset: ${filename}`);
-    assert.match(
-      landingExperienceSource,
-      new RegExp(`${role}:\\s*['"]${publicPath.replaceAll('/', '\\/')}['"]`),
-      `Missing themedBubu.${role} path`,
-    );
-    assert.match(landingExperienceSource, new RegExp(`src=\\{themedBubu\\.${role}\\}`));
-    assert.match(landingExperienceSource, alt, `Themed BuBu ${role} needs descriptive alt text`);
   }
-
-  const themedImages = landingExperienceSource.match(
-    /<Image[\s\S]*?src=\{themedBubu\.(?:hero|forgetting|vocabulary|progress|finale)\}[\s\S]*?\/>/g,
-  );
-  assert.equal(themedImages?.length, 5);
-  for (const image of themedImages ?? []) {
-    assert.match(image, /width=\{\d+\}/);
-    assert.match(image, /height=\{\d+\}/);
-    assert.match(image, /sizes="[^"]+"/);
-  }
-  assert.ok(
-    themedImages?.slice(1).every((image) => image.includes('loading="lazy"')),
-    'Every non-hero themed BuBu image must stay lazy-loaded',
-  );
 
   const bubuRoot = join(appRoot, 'public', 'themes', 'summer', 'bubu');
   for (const [filename, expectedHash] of Object.entries(canonicalBuBuHashes)) {
@@ -402,6 +401,73 @@ test(
       mobile: false,
     });
     t.after(desktop.close);
+    const themedBubuBrowser = await desktop.evaluate(`(async () => {
+      const expected = ${JSON.stringify(themedBuBuAssets)};
+      const details = [];
+      document.documentElement.style.scrollBehavior = 'auto';
+      for (const asset of expected) {
+        const image = Array.from(document.images).find(
+          (candidate) =>
+            candidate.src.includes(asset.filename) ||
+            candidate.srcset.includes(asset.filename)
+        );
+        if (!image) {
+          details.push({ filename: asset.filename, missing: true });
+          continue;
+        }
+        image.scrollIntoView({ block: 'center', behavior: 'instant' });
+        await image.decode().catch(() => undefined);
+        await new Promise((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(resolve))
+        );
+        details.push({
+          filename: asset.filename,
+          missing: false,
+          src: decodeURIComponent(image.getAttribute('src') ?? ''),
+          srcset: decodeURIComponent(image.getAttribute('srcset') ?? ''),
+          currentSrc: decodeURIComponent(image.currentSrc),
+          alt: image.alt,
+          width: image.getAttribute('width'),
+          height: image.getAttribute('height'),
+          sizes: image.sizes,
+          loading: image.loading,
+          fetchPriority: image.fetchPriority,
+          complete: image.complete,
+          naturalWidth: image.naturalWidth,
+          naturalHeight: image.naturalHeight,
+          requested: performance
+            .getEntriesByType('resource')
+            .some((entry) => entry.name === image.currentSrc)
+        });
+      }
+      return details;
+    })()`);
+    assert.equal(themedBubuBrowser.length, 5);
+    for (const expected of themedBuBuAssets) {
+      const image = themedBubuBrowser.find(({ filename }) => filename === expected.filename);
+      assert.equal(image?.missing, false, `Rendered themed BuBu is missing: ${expected.filename}`);
+      const publicPath = `/themes/summer/bubu-themed/v1/${expected.filename}`;
+      assert.match(image.src, new RegExp(publicPath));
+      assert.match(image.srcset, new RegExp(publicPath));
+      assert.match(image.currentSrc, new RegExp(publicPath));
+      assert.equal(image.alt, expected.alt);
+      assert.equal(image.width, '1024');
+      assert.equal(image.height, '1536');
+      assert.equal(image.sizes, expected.sizes);
+      assert.equal(image.loading, expected.loading);
+      assert.equal(image.fetchPriority, expected.fetchPriority);
+      assert.equal(image.complete, true);
+      assert.ok(image.naturalWidth > 0 && image.naturalHeight > 0);
+      assert.equal(image.requested, true, `No successful image request: ${expected.filename}`);
+    }
+    assert.equal(
+      themedBubuBrowser.filter(({ loading }) => loading === 'lazy').length,
+      4,
+      'Exactly four secondary themed BuBu images must be lazy-loaded',
+    );
+    assert.deepEqual(desktop.getNetworkFailures(), []);
+    t.diagnostic(`themed BuBu browser contract: ${JSON.stringify(themedBubuBrowser)}`);
+
     const desktopLayout = await desktop.evaluate(`(async () => {
       const settle = () =>
         new Promise((resolve) =>
