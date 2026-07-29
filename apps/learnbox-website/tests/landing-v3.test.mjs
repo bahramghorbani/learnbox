@@ -37,6 +37,11 @@ const fictionalMockupSources = [
   .map((path) => readFileSync(path, 'utf8'))
   .join('\n');
 const productStoryPath = join(appRoot, 'app', 'components', 'landing', 'ProductStory.tsx');
+const motionOrchestratorSource = readFileSync(
+  join(appRoot, 'app', 'components', 'MotionOrchestrator.tsx'),
+  'utf8',
+);
+const globalCssSource = readFileSync(join(appRoot, 'app', 'globals.css'), 'utf8');
 
 function renderProductStory() {
   const typescript = require('typescript');
@@ -97,7 +102,7 @@ function waitForChromeEndpoint(chrome) {
   });
 }
 
-async function openChromePage(port, url, viewport) {
+async function openChromePage(port, url, viewport, options = {}) {
   const response = await fetch(`http://127.0.0.1:${port}/json/new?about%3Ablank`, {
     method: 'PUT',
   });
@@ -139,6 +144,14 @@ async function openChromePage(port, url, viewport) {
   await send('Page.enable');
   await send('Runtime.enable');
   await send('Emulation.setDeviceMetricsOverride', viewport);
+  await send('Emulation.setEmulatedMedia', {
+    features: [
+      {
+        name: 'prefers-reduced-motion',
+        value: options.reducedMotion ? 'reduce' : 'no-preference',
+      },
+    ],
+  });
   await send('Page.navigate', { url });
   let documentReady = false;
   for (let attempt = 0; attempt < 100; attempt += 1) {
@@ -301,8 +314,12 @@ test(
       ],
       { stdio: ['ignore', 'ignore', 'pipe'] },
     );
-    t.after(() => {
-      chrome.kill('SIGTERM');
+    t.after(async () => {
+      if (chrome.exitCode === null && chrome.signalCode === null) {
+        const exited = new Promise((resolveExit) => chrome.once('exit', resolveExit));
+        chrome.kill('SIGTERM');
+        await exited;
+      }
       rmSync(profile, { force: true, recursive: true });
     });
 
@@ -365,6 +382,74 @@ test(
     );
     t.diagnostic(`desktop 1440x1000: ${JSON.stringify(desktopLayout)}`);
 
+    const desktopStageSync = await desktop.evaluate(`(async () => {
+      const settle = (duration = 620) =>
+        new Promise((resolve) => setTimeout(resolve, duration));
+      const ids = ['start', 'today', 'return', 'progress'];
+      let motionReady = false;
+      for (let attempt = 0; attempt < 40; attempt += 1) {
+        if (document.querySelector('[data-product-screen].is-product-screen-active')) {
+          motionReady = true;
+          break;
+        }
+        await settle(100);
+      }
+
+      const visit = async (id) => {
+        const stage = document.querySelector('[data-product-stage="' + id + '"]');
+        const top = stage.getBoundingClientRect().top + scrollY - innerHeight * 0.32;
+        scrollTo({ top, behavior: 'instant' });
+        await settle();
+        const current = document.querySelector('[data-product-stage][aria-current="true"]');
+        const activeScreen = document.querySelector(
+          '[data-product-screen].is-product-screen-active'
+        );
+        const activeStyle = activeScreen ? getComputedStyle(activeScreen) : null;
+        const currentStyle = current ? getComputedStyle(current) : null;
+        const inactiveStage = Array.from(
+          document.querySelectorAll('[data-product-stage]')
+        ).find((candidate) => candidate !== current);
+        const inactiveStyle = inactiveStage ? getComputedStyle(inactiveStage) : null;
+        return {
+          requested: id,
+          current: current?.dataset.productStage ?? null,
+          activeScreen: activeScreen?.dataset.productScreen ?? null,
+          activeOpacity: activeStyle ? Number(activeStyle.opacity) : null,
+          activeTransform: activeStyle?.transform ?? null,
+          activeShadow: activeStyle?.boxShadow ?? null,
+          currentOpacity: currentStyle ? Number(currentStyle.opacity) : null,
+          currentShadow: currentStyle?.boxShadow ?? null,
+          inactiveStageOpacity: inactiveStyle ? Number(inactiveStyle.opacity) : null,
+          activeScreens: document.querySelectorAll(
+            '[data-product-screen].is-product-screen-active'
+          ).length,
+          currentStages: document.querySelectorAll(
+            '[data-product-stage][aria-current="true"]'
+          ).length
+        };
+      };
+
+      const down = [];
+      for (const id of ids) down.push(await visit(id));
+      const up = [];
+      for (const id of ids.slice(0, -1).reverse()) up.push(await visit(id));
+      return { motionReady, down, up };
+    })()`);
+    assert.equal(desktopStageSync.motionReady, true);
+    for (const state of [...desktopStageSync.down, ...desktopStageSync.up]) {
+      assert.equal(state.current, state.requested);
+      assert.equal(state.activeScreen, state.requested);
+      assert.equal(state.activeScreens, 1);
+      assert.equal(state.currentStages, 1);
+      assert.ok(state.activeOpacity >= 0.99);
+      assert.notEqual(state.activeTransform, 'none');
+      assert.notEqual(state.activeShadow, 'none');
+      assert.equal(state.currentOpacity, 1);
+      assert.ok(state.inactiveStageOpacity <= 0.69);
+      assert.notEqual(state.currentShadow, 'none');
+    }
+    t.diagnostic(`desktop stage sync: ${JSON.stringify(desktopStageSync)}`);
+
     const mobile = await openChromePage(port, browserLayoutUrl, {
       width: 390,
       height: 844,
@@ -402,6 +487,7 @@ test(
       const first = screens[0];
       const firstDocumentTop = first.getBoundingClientRect().top + scrollY;
       scrollTo({ top: firstDocumentTop - 120, behavior: 'instant' });
+      await new Promise((resolve) => setTimeout(resolve, 1500));
       await settle();
       const firstTop = first.getBoundingClientRect().top;
       scrollBy({ top: 120, behavior: 'instant' });
@@ -412,10 +498,18 @@ test(
         details,
         scrollDelta: 120,
         firstTop,
-        secondTop
+        secondTop,
+        motionProfile: document.documentElement.dataset.motionProfile,
+        activeScreens: document.querySelectorAll(
+          '[data-product-screen].is-product-screen-active'
+        ).length,
+        runtimeHiddenScreens: screens.filter((screen) => screen.hasAttribute('aria-hidden')).length
       };
     })()`);
 
+    assert.equal(mobileLayout.motionProfile, 'mobile');
+    assert.equal(mobileLayout.activeScreens, 0);
+    assert.equal(mobileLayout.runtimeHiddenScreens, 0);
     assert.equal(mobileLayout.deviceDisplay, 'contents');
     assert.equal(mobileLayout.details.length, 4);
     assert.deepEqual(
@@ -441,6 +535,60 @@ test(
       `Mobile screenshot is pinned instead of scrolling in flow: ${JSON.stringify(mobileLayout)}`,
     );
     t.diagnostic(`mobile 390x844: ${JSON.stringify(mobileLayout)}`);
+
+    const reduced = await openChromePage(
+      port,
+      browserLayoutUrl,
+      {
+        width: 1440,
+        height: 1000,
+        deviceScaleFactor: 1,
+        mobile: false,
+      },
+      { reducedMotion: true },
+    );
+    t.after(reduced.close);
+    const reducedLayout = await reduced.evaluate(`(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const stages = Array.from(document.querySelectorAll('[data-product-stage]'));
+      const screens = Array.from(document.querySelectorAll('[data-product-screen]'));
+      const device = document.querySelector('[data-product-device]');
+      const computed = (element) => {
+        const style = getComputedStyle(element);
+        const rect = element.getBoundingClientRect();
+        return {
+          position: style.position,
+          visibility: style.visibility,
+          opacity: Number(style.opacity),
+          transform: style.transform,
+          width: rect.width,
+          height: rect.height
+        };
+      };
+      return {
+        motionProfile: document.documentElement.dataset.motionProfile,
+        device: computed(device),
+        stages: stages.map(computed),
+        screens: screens.map(computed),
+        activeScreens: document.querySelectorAll(
+          '[data-product-screen].is-product-screen-active'
+        ).length,
+        runtimeHiddenScreens: screens.filter((screen) => screen.hasAttribute('aria-hidden')).length
+      };
+    })()`);
+    assert.equal(reducedLayout.motionProfile, 'reduced');
+    assert.equal(reducedLayout.device.position, 'static');
+    assert.equal(reducedLayout.device.transform, 'none');
+    assert.equal(reducedLayout.activeScreens, 0);
+    assert.equal(reducedLayout.runtimeHiddenScreens, 0);
+    for (const detail of [...reducedLayout.stages, ...reducedLayout.screens]) {
+      assert.equal(detail.position, 'static');
+      assert.equal(detail.visibility, 'visible');
+      assert.equal(detail.opacity, 1);
+      assert.equal(detail.transform, 'none');
+      assert.ok(detail.width > 0 && detail.height > 0);
+    }
+    t.diagnostic(`reduced motion 1440x1000: ${JSON.stringify(reducedLayout)}`);
   },
 );
 
@@ -532,6 +680,37 @@ test('defers scroll motion and keeps compact CSS interaction motion with reduced
   assert.match(allSource, /ScrollTrigger/);
   assert.match(allSource, /prefers-reduced-motion:\s*reduce/);
   assert.match(allSource, /reducedMotion/);
+});
+
+test('keeps product-story motion deferred and defines a complete reduced-motion fallback', () => {
+  assert.match(motionOrchestratorSource, /import\(['"]gsap['"]\)/);
+  assert.match(motionOrchestratorSource, /import\(['"]gsap\/ScrollTrigger['"]\)/);
+  assert.doesNotMatch(motionOrchestratorSource, /import\s+\{\s*gsap\s*\}\s+from\s+['"]gsap['"]/);
+  assert.doesNotMatch(motionOrchestratorSource, /from ['"]motion\/react['"]/);
+  assert.match(
+    motionOrchestratorSource,
+    /matchMedia\(['"]\(prefers-reduced-motion: reduce\)['"]\)/,
+  );
+  for (const selector of [
+    '[data-motion="product-story"]',
+    '[data-product-stage]',
+    '[data-product-screen]',
+    '[data-product-device]',
+  ]) {
+    assert.ok(
+      motionOrchestratorSource.includes(selector),
+      `Deferred orchestrator must consume ${selector}`,
+    );
+  }
+
+  const reducedMotionCss = globalCssSource.slice(
+    globalCssSource.indexOf('@media (prefers-reduced-motion: reduce)'),
+  );
+  assert.match(reducedMotionCss, /\.product-story__stage[\s\S]*?\[data-product-screen\]/);
+  assert.match(reducedMotionCss, /position:\s*static\s*!important/);
+  assert.match(reducedMotionCss, /opacity:\s*1\s*!important/);
+  assert.match(reducedMotionCss, /transform:\s*none\s*!important/);
+  assert.match(reducedMotionCss, /\[data-product-device\][\s\S]*?position:\s*static/);
 });
 
 test('gives every landing segment a layered German scroll chapter', () => {

@@ -11,6 +11,14 @@ export function MotionOrchestrator() {
     const chapterBackdrops = Array.from(
       document.querySelectorAll<HTMLElement>('[data-chapter-backdrop]'),
     );
+    const productStory = document.querySelector<HTMLElement>('[data-motion="product-story"]');
+    const productStages = productStory
+      ? Array.from(productStory.querySelectorAll<HTMLElement>('[data-product-stage]'))
+      : [];
+    const productScreens = productStory
+      ? Array.from(productStory.querySelectorAll<HTMLElement>('[data-product-screen]'))
+      : [];
+    const productDevice = productStory?.querySelector<HTMLElement>('[data-product-device]') ?? null;
 
     root.classList.add('motion-ready');
     root.dataset.motionProfile = reducedMotion ? 'reduced' : mobile ? 'mobile' : 'full';
@@ -26,6 +34,7 @@ export function MotionOrchestrator() {
 
     let cancelled = false;
     let context: { revert: () => void } | undefined;
+    let resetProductState: (() => void) | undefined;
 
     const initializeMotion = async () => {
       const [{ gsap }, { ScrollTrigger }] = await Promise.all([
@@ -105,6 +114,7 @@ export function MotionOrchestrator() {
           chapterBackdrops.forEach((backdrop) => {
             const scene = backdrop.closest<HTMLElement>('[data-scene]');
             if (!scene) return;
+            if (scene.matches('[data-motion="product-story"]')) return;
 
             const far = backdrop.querySelector<HTMLElement>('[data-chapter-layer="far"]');
             const mid = backdrop.querySelector<HTMLElement>('[data-chapter-layer="mid"]');
@@ -284,6 +294,95 @@ export function MotionOrchestrator() {
             }
           });
 
+          if (!mobile && productStory && productDevice && productStages.length > 0) {
+            const productLayers = Array.from(
+              productStory.querySelectorAll<HTMLElement>('[data-chapter-layer]'),
+            );
+
+            const activateProductStage = (activeId: string) => {
+              const activeIndex = productStages.findIndex(
+                (stage) => stage.dataset.productStage === activeId,
+              );
+              if (activeIndex < 0) return;
+
+              productStages.forEach((stage, index) => {
+                const isActive = index === activeIndex;
+                if (isActive) stage.setAttribute('aria-current', 'true');
+                else stage.removeAttribute('aria-current');
+
+                gsap.to(stage, {
+                  y: isActive ? 0 : 10,
+                  opacity: isActive ? 1 : 0.68,
+                  duration: 0.42,
+                  ease: 'power2.out',
+                  overwrite: 'auto',
+                });
+              });
+
+              productScreens.forEach((screen, index) => {
+                const isActive = index === activeIndex;
+                const distance = Math.abs(index - activeIndex);
+                screen.classList.toggle('is-product-screen-active', isActive);
+                screen.setAttribute('aria-hidden', isActive ? 'false' : 'true');
+
+                gsap.to(screen, {
+                  x: isActive ? 0 : Math.max(-10, Math.min(10, (index - activeIndex) * 8)),
+                  y: isActive ? 0 : Math.min(22, 8 + distance * 6),
+                  scale: isActive ? 1 : Math.max(0.955, 0.99 - distance * 0.012),
+                  opacity: isActive ? 1 : Math.max(0.1, 0.22 - distance * 0.035),
+                  duration: 0.48,
+                  ease: 'power2.out',
+                  overwrite: 'auto',
+                });
+              });
+            };
+
+            resetProductState = () => {
+              productStages.forEach((stage, index) => {
+                if (index === 0) stage.setAttribute('aria-current', 'true');
+                else stage.removeAttribute('aria-current');
+              });
+              productScreens.forEach((screen) => {
+                screen.classList.remove('is-product-screen-active');
+                screen.removeAttribute('aria-hidden');
+              });
+            };
+
+            const initialStage =
+              productStages.find((stage) => stage.getAttribute('aria-current') === 'true') ??
+              productStages[0];
+            activateProductStage(initialStage.dataset.productStage ?? '');
+
+            productStages.forEach((stage, index) => {
+              const stageId = stage.dataset.productStage;
+              if (!stageId) return;
+
+              const layer =
+                productLayers.length > 0 ? productLayers[index % productLayers.length] : undefined;
+              const timeline = gsap.timeline({
+                scrollTrigger: {
+                  trigger: stage,
+                  start: 'top 62%',
+                  end: 'bottom 38%',
+                  scrub: 0.55,
+                  onEnter: () => activateProductStage(stageId),
+                  onEnterBack: () => activateProductStage(stageId),
+                },
+              });
+
+              if (layer) {
+                timeline.fromTo(
+                  layer,
+                  { yPercent: -2 },
+                  {
+                    yPercent: 2,
+                    ease: 'none',
+                  },
+                );
+              }
+            });
+          }
+
           const sceneTimelines = [
             {
               trigger: '.forgetting-scene',
@@ -384,6 +483,7 @@ export function MotionOrchestrator() {
       if (idleId !== undefined) window.cancelIdleCallback(idleId);
       if (timeoutId !== undefined) window.clearTimeout(timeoutId);
       context?.revert();
+      resetProductState?.();
       root.classList.remove('motion-ready');
       delete root.dataset.motionProfile;
     };
