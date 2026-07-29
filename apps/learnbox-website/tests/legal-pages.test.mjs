@@ -7,35 +7,32 @@ import test from 'node:test';
 const appRoot = resolve(import.meta.dirname, '..');
 const nextBin = resolve(appRoot, 'node_modules/next/dist/bin/next');
 const buildRoot = resolve(appRoot, '.next');
-const landingPublicEnvironmentVariables = [
-  'NEXT_PUBLIC_SITE_URL',
-  'NEXT_PUBLIC_WEB_APP_URL',
-  'NEXT_PUBLIC_CAFE_BAZAAR_URL',
-  'NEXT_PUBLIC_TELEGRAM_URL',
-  'NEXT_PUBLIC_INSTAGRAM_URL',
-  'NEXT_PUBLIC_LINKEDIN_URL',
-  'NEXT_PUBLIC_PINTEREST_URL',
-  'NEXT_PUBLIC_PRIVACY_URL',
-  'NEXT_PUBLIC_TERMS_URL',
-  'NEXT_PUBLIC_CONTACT_URL',
-];
+const landingBuildEnvironment = {
+  NEXT_PUBLIC_SITE_URL: 'https://learnboxapp.com',
+  NEXT_PUBLIC_WEB_APP_URL: '',
+  NEXT_PUBLIC_CAFE_BAZAAR_URL: '',
+  NEXT_PUBLIC_TELEGRAM_URL: 'https://t.me/learnboxapp',
+  NEXT_PUBLIC_INSTAGRAM_URL: '',
+  NEXT_PUBLIC_LINKEDIN_URL: '',
+  NEXT_PUBLIC_PINTEREST_URL: '',
+  NEXT_PUBLIC_PRIVACY_URL: 'https://learnboxapp.com/privacy',
+  NEXT_PUBLIC_TERMS_URL: 'https://learnboxapp.com/terms',
+  NEXT_PUBLIC_CONTACT_URL: 'mailto:hi@learnboxapp.com',
+};
 let homeOutput;
 let privacyOutput;
 let termsOutput;
 let prerenderManifest;
 
 test.before(async () => {
-  const buildEnvironment = { ...process.env };
-  for (const variable of landingPublicEnvironmentVariables) {
-    delete buildEnvironment[variable];
-  }
-  buildEnvironment.NEXT_PUBLIC_SITE_URL = 'https://learnboxapp.com';
-  buildEnvironment.NEXT_TELEMETRY_DISABLED = '1';
-
   const build = spawnSync(process.execPath, [nextBin, 'build'], {
     cwd: appRoot,
     encoding: 'utf8',
-    env: buildEnvironment,
+    env: {
+      ...process.env,
+      ...landingBuildEnvironment,
+      NEXT_TELEMETRY_DISABLED: '1',
+    },
   });
 
   assert.equal(
