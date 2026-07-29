@@ -2,16 +2,16 @@
 
 ## Current Release
 
-Version: 1.0 demo
-Status: DEMO READY
+Version: 1.0 preview candidate
+Status: PREVIEW UPLOAD READY
 
 ## Current Phase
 
-Phase: Production-content handoff
+Phase: Deployment preview gate
 
 ## Current Task
 
-Replace honest placeholders only after verified production content is supplied.
+Create a separate landing preview deployment without attaching the production domain.
 
 ## Completed
 
@@ -36,29 +36,41 @@ Replace honest placeholders only after verified production content is supplied.
 - GSAP/ScrollTrigger, Motion for React, CSS loops and explanatory SVG paths verified in production.
 - Focused Variant A/B/C comparison routes added with `noindex, nofollow`.
 - Final V3 browser QA passed at 1440×900, 1024×768 and 390×844 with no overflow or console errors.
+- German scroll chapters and landmark polish completed.
+- Public destinations centralized with unavailable and invalid URL safeguards.
+- SEO metadata, canonical URL, robots, sitemap and web manifest completed.
+- Landing-specific Vercel config separated from the learner web app deployment.
+- Browser security headers and immutable versioned-asset caching added.
+- Preview and production upload gates implemented and tested.
+- Chrome-compatible browser, Safari and Firefox smoke tests passed.
+- Lighthouse mobile baseline: Performance 91, Accessibility 100, Best Practices 100, SEO 100 and CLS 0.
+- Theme-engine summer implementation and documentation verified.
+- Deployment and rollback runbooks completed.
 
 ## In Progress
 
-- Production-content collection.
+- Separate Vercel preview project connection.
 
 ## Remaining
 
-- Theme-engine docs and verified seasonal implementation.
 - Verified URLs, QR codes, official social destinations, approved product screenshots and production content.
-- Deployment preview, production verification and handover.
+- Preview deployment verification.
+- Production domain, SSL, DNS verification and final handover.
 
 ## Active Change Request
 
-None.
+CR-LANDING-006 — Upload readiness and deployment safeguards.
 
 ## Resume Point
 
-Keep the public landing separate from `apps/website` and replace placeholders only with verified production content.
+Connect `apps/learnbox-website` as a separate Vercel project, deploy a preview and run the documented smoke test.
 
 ## Blockers
 
-Production links, QR codes, official social URLs, legal/contact targets and deployment access have not been supplied or verified.
+Preview deployment requires Vercel/GitHub project access. Production remains
+blocked by verified destinations, approved screenshots, QR codes, branded Open
+Graph art, domain approval and DNS access.
 
 ## Next Automatic Action
 
-Replace verified production content, then prepare deployment preview and domain handover.
+Create and verify the isolated preview deployment; then collect verified production content and run `check:release`.

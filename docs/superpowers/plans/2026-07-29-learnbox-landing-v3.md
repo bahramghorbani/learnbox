@@ -203,4 +203,3 @@
 3. Restore the prior production-content handoff as the active roadmap resume point.
 4. Run `git diff --check`, confirm the protected apps are untouched, and review the final commit range from the checkpoint.
 5. Commit the documentation closeout.
-

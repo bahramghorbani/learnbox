@@ -237,7 +237,7 @@
 .chapter-landmark text {
   fill: currentColor;
   stroke: none;
-  font-family: LearnBox, sans-serif;
+  font-family: var(--font-learnbox), Tahoma, sans-serif;
   font-size: 28px;
   font-weight: 700;
   letter-spacing: 0.08em;

@@ -38,7 +38,7 @@ export function SummerBackdrop({
           fill
           priority={priority}
           sizes="100vw"
-          quality={86}
+          quality={76}
           style={{ objectFit: 'cover', objectPosition: image.position }}
         />
       </div>

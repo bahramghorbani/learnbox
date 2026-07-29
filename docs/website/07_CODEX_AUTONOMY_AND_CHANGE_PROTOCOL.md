@@ -72,15 +72,19 @@ Completing a change request is not the end of the assignment.
 ## Change categories
 
 ### Small
+
 Copy, links, colors, timing, minor layout.
 
 ### Medium
+
 Shared component behavior, scene interaction, new approved asset.
 
 ### Structural
+
 Scene order, theme architecture, major motion change.
 
 ### Foundational
+
 Brand direction, product purpose, repository strategy.
 
 Only foundational changes normally require user-level decision.

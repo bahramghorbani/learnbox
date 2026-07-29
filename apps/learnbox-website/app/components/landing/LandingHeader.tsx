@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 
 type LandingHeaderProps = {
   onStart: () => void;
+  startHref?: string | null;
 };
 
 const links = [
@@ -14,7 +15,7 @@ const links = [
   ['دانلود', '#download'],
 ];
 
-export function LandingHeader({ onStart }: LandingHeaderProps) {
+export function LandingHeader({ onStart, startHref }: LandingHeaderProps) {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -26,7 +27,7 @@ export function LandingHeader({ onStart }: LandingHeaderProps) {
   return (
     <header className="landing-header wrap" data-header>
       <div className="header-main">
-        <a className="brand" href="#top" aria-label="LearnBox، صفحهٔ اصلی">
+        <a className="brand" href="#top" title="صفحهٔ اصلی">
           <b aria-hidden="true">LB</b>
           <span>LearnBox</span>
         </a>
@@ -39,9 +40,15 @@ export function LandingHeader({ onStart }: LandingHeaderProps) {
         </nav>
       </div>
       <div className="header-actions">
-        <button className="button button--compact" onClick={onStart}>
-          یادگیری را شروع کن
-        </button>
+        {startHref ? (
+          <a className="button button--compact" href={startHref}>
+            یادگیری را شروع کن
+          </a>
+        ) : (
+          <button className="button button--compact" type="button" onClick={onStart}>
+            یادگیری را شروع کن
+          </button>
+        )}
         <button
           className="menu-toggle"
           aria-label={open ? 'بستن منو' : 'باز کردن منو'}

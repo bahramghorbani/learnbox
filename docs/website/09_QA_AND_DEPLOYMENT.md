@@ -30,12 +30,14 @@ Recommended categories:
 ## Manual checks
 
 ### Copy
+
 - Persian text is readable.
 - RTL punctuation and numbers are correct.
 - No unsupported product claims.
 - BuBu and DuDu names use exact capitalization.
 
 ### Links
+
 - Café Bazaar
 - Web app
 - Telegram
@@ -46,6 +48,7 @@ Recommended categories:
 - contact links
 
 ### Motion
+
 - no motion trap,
 - no broken pinned scene,
 - no content hidden after resize,
@@ -54,12 +57,14 @@ Recommended categories:
 - mobile scroll remains natural.
 
 ### Characters
+
 - BuBu matches the existing repository source of truth.
 - DuDu matches the supplied official reference.
 - no accidental character redesign.
 - no spelling changes.
 
 ### Performance
+
 - critical content loads first,
 - character assets are optimized,
 - large scene assets are lazy-loaded,

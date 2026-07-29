@@ -209,6 +209,12 @@
   .summer-layer--foliage i:nth-child(3) {
     display: none;
   }
+
+  .is-scene-active .summer-layer--clouds,
+  .is-scene-active .summer-layer--foliage i,
+  .is-scene-active .summer-layer--particles b {
+    animation: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

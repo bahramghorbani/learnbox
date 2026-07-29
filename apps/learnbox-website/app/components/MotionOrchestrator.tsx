@@ -40,19 +40,23 @@ export function MotionOrchestrator() {
         });
 
         const hero = gsap.timeline({ defaults: { ease: 'expo.out' } });
-        hero
-          .from('.hero-copy > *', {
-            y: mobile ? 18 : 32,
-            opacity: 0,
-            filter: 'blur(8px)',
-            duration: mobile ? 0.45 : 0.72,
-            stagger: 0.08,
-          })
-          .from(
+        hero.from('.hero-copy > *', {
+          y: mobile ? 18 : 32,
+          opacity: 0,
+          filter: 'blur(8px)',
+          duration: mobile ? 0.45 : 0.72,
+          stagger: 0.08,
+        });
+
+        if (!mobile) {
+          hero.from(
             '.bubu--hero',
             { yPercent: 13, xPercent: -4, scale: 0.9, filter: 'blur(5px)', duration: 0.78 },
             '-=.48',
-          )
+          );
+        }
+
+        hero
           .from(
             '.floating-word',
             { scale: 0.72, opacity: 0, duration: 0.4, stagger: 0.12 },
@@ -64,27 +68,29 @@ export function MotionOrchestrator() {
             '-=.36',
           );
 
-        gsap.to('[data-summer-backdrop="berlin"] [data-summer-layer="sky"]', {
-          yPercent: mobile ? 2 : 7,
-          scale: mobile ? 1.02 : 1.07,
-          ease: 'none',
-          scrollTrigger: {
-            trigger: '.hero-shell',
-            start: 'top top',
-            end: 'bottom top',
-            scrub: mobile ? 0.45 : 1,
-          },
-        });
-        gsap.to('[data-summer-backdrop="berlin"] [data-summer-layer="foliage"]', {
-          yPercent: mobile ? -3 : -14,
-          ease: 'none',
-          scrollTrigger: {
-            trigger: '.hero-shell',
-            start: 'top top',
-            end: 'bottom top',
-            scrub: 0.8,
-          },
-        });
+        if (!mobile) {
+          gsap.to('[data-summer-backdrop="berlin"] [data-summer-layer="sky"]', {
+            yPercent: 7,
+            scale: 1.07,
+            ease: 'none',
+            scrollTrigger: {
+              trigger: '.hero-shell',
+              start: 'top top',
+              end: 'bottom top',
+              scrub: 1,
+            },
+          });
+          gsap.to('[data-summer-backdrop="berlin"] [data-summer-layer="foliage"]', {
+            yPercent: -14,
+            ease: 'none',
+            scrollTrigger: {
+              trigger: '.hero-shell',
+              start: 'top top',
+              end: 'bottom top',
+              scrub: 0.8,
+            },
+          });
+        }
 
         chapterBackdrops.forEach((backdrop) => {
           const scene = backdrop.closest<HTMLElement>('[data-scene]');

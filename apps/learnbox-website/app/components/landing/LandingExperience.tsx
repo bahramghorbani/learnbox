@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { useState } from 'react';
+import { siteConfig } from '../../../src/config/site.mjs';
 import { GermanyChapterBackdrop, SummerBackdrop } from '../../../src/themes/summer';
 import { MotionOrchestrator } from '../MotionOrchestrator';
 import { LandingHeader } from './LandingHeader';
@@ -17,26 +18,40 @@ const wordDetails = [
 ];
 
 const social = [
-  ['Telegram', 'خبرهای محصول و یادآوری‌های مرور'],
-  ['Instagram', 'درس‌های تصویری کوتاه آلمانی'],
-  ['LinkedIn', 'داستان محصول و مسیر توسعه LearnBox'],
-  ['Pinterest', 'فلش‌کارت‌ها و ایده‌های یادگیری'],
+  ['telegram', 'Telegram', 'خبرهای محصول و یادآوری‌های مرور'],
+  ['instagram', 'Instagram', 'درس‌های تصویری کوتاه آلمانی'],
+  ['linkedin', 'LinkedIn', 'داستان محصول و مسیر توسعه LearnBox'],
+  ['pinterest', 'Pinterest', 'فلش‌کارت‌ها و ایده‌های یادگیری'],
 ];
+
+type Destination = (typeof siteConfig.destinations)[string];
 
 export function LandingExperience() {
   const [notice, setNotice] = useState('');
   const unavailable = (label: string) =>
     setNotice(`${label} به‌محض ثبت نشانی رسمی در دسترس قرار می‌گیرد.`);
+  const webApp = siteConfig.destinations.webApp;
+  const cafeBazaar = siteConfig.destinations.cafeBazaar;
+  const destinationHref = (destination: Destination) =>
+    destination.status === 'available' ? destination.url : null;
 
   return (
     <main className="site-v3">
       <MotionOrchestrator />
+      {notice ? (
+        <p className="status-notice status-notice--global" role="status">
+          {notice}
+        </p>
+      ) : null}
       <a className="skip" href="#main-story">
         پرش به محتوای اصلی
       </a>
       <div className="hero-shell" data-motion="hero" data-scene>
         <SummerBackdrop priority />
-        <LandingHeader onStart={() => unavailable('شروع یادگیری')} />
+        <LandingHeader
+          startHref={destinationHref(webApp)}
+          onStart={() => unavailable('شروع یادگیری')}
+        />
         <section id="top" className="hero-v3 wrap" aria-labelledby="hero-title">
           <div className="hero-copy">
             <p className="kicker">یادگیری آلمانی، در زمان درست</p>
@@ -46,21 +61,23 @@ export function LandingExperience() {
               آلمانی را بهتر یاد بگیری و درست در زمانی که لازم است، دوباره مرورشان کنی.
             </p>
             <div className="hero-actions">
-              <button
-                className="button button--primary"
-                onClick={() => unavailable('شروع یادگیری')}
-              >
-                یادگیری را شروع کن
-              </button>
+              {destinationHref(webApp) ? (
+                <a className="button button--primary" href={destinationHref(webApp) ?? undefined}>
+                  یادگیری را شروع کن
+                </a>
+              ) : (
+                <button
+                  className="button button--primary"
+                  type="button"
+                  onClick={() => unavailable('شروع یادگیری')}
+                >
+                  یادگیری را شروع کن
+                </button>
+              )}
               <a className="button button--ghost" href="#method">
                 ببین LearnBox چطور کار می‌کند
               </a>
             </div>
-            {notice && (
-              <p className="status-notice" role="status">
-                {notice}
-              </p>
-            )}
           </div>
           <div className="hero-world" aria-label="BuBu در یک روز تابستانی برلین">
             <div className="location-chip">برلین · Berlin</div>
@@ -80,7 +97,8 @@ export function LandingExperience() {
               width={768}
               height={1152}
               priority
-              sizes="(max-width: 720px) 76vw, 510px"
+              fetchPriority="high"
+              sizes="(max-width: 720px) 64vw, 510px"
             />
           </div>
         </section>
@@ -120,7 +138,7 @@ export function LandingExperience() {
               alt="BuBu در حال جمع‌کردن کارت‌های فراموش‌شده"
               width={640}
               height={960}
-              sizes="(max-width: 720px) 68vw, 410px"
+              sizes="(max-width: 720px) 64vw, 410px"
             />
           </div>
         </div>
@@ -279,8 +297,8 @@ export function LandingExperience() {
               <b lang="de">die Erfahrung</b>
               <span>تجربه</span>
               <div>
-                <button>دوباره</button>
-                <button>بلدم</button>
+                <span>دوباره</span>
+                <span>بلدم</span>
               </div>
             </div>
           </div>
@@ -298,12 +316,35 @@ export function LandingExperience() {
               مرورگرهای پشتیبانی‌شده، مسیر یادگیری‌ات را ادامه بده.
             </p>
             <div className="hero-actions">
-              <button className="button button--primary" onClick={() => unavailable('کافه‌بازار')}>
-                دانلود از کافه‌بازار
-              </button>
-              <button className="button button--ghost" onClick={() => unavailable('نسخه وب')}>
-                ورود به نسخه وب
-              </button>
+              {destinationHref(cafeBazaar) ? (
+                <a
+                  className="button button--primary"
+                  href={destinationHref(cafeBazaar) ?? undefined}
+                >
+                  دانلود از کافه‌بازار
+                </a>
+              ) : (
+                <button
+                  className="button button--primary"
+                  type="button"
+                  onClick={() => unavailable('کافه‌بازار')}
+                >
+                  دانلود از کافه‌بازار
+                </button>
+              )}
+              {destinationHref(webApp) ? (
+                <a className="button button--ghost" href={destinationHref(webApp) ?? undefined}>
+                  ورود به نسخه وب
+                </a>
+              ) : (
+                <button
+                  className="button button--ghost"
+                  type="button"
+                  onClick={() => unavailable('نسخه وب')}
+                >
+                  ورود به نسخه وب
+                </button>
+              )}
             </div>
           </div>
           <div className="download-stage">
@@ -337,12 +378,25 @@ export function LandingExperience() {
             </p>
           </div>
           <ul>
-            {social.map(([name, role]) => (
-              <li key={name}>
-                <b dir="ltr">{name}</b>
-                <span>{role}</span>
-              </li>
-            ))}
+            {social.map(([id, name, role]) => {
+              const destination = siteConfig.destinations[id];
+              const content = (
+                <>
+                  <b dir="ltr">{name}</b>
+                  <span>{role}</span>
+                </>
+              );
+
+              return (
+                <li key={id}>
+                  {destinationHref(destination) ? (
+                    <a href={destinationHref(destination) ?? undefined}>{content}</a>
+                  ) : (
+                    <span aria-disabled="true">{content}</span>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         </div>
       </section>
@@ -364,15 +418,39 @@ export function LandingExperience() {
             <p>
               BuBu آماده است تا در مرورهای روزانه همراهت باشد. تو فقط کافی است اولین قدم را برداری.
             </p>
-            <button className="button button--primary" onClick={() => unavailable('شروع با BuBu')}>
-              یادگیری را با BuBu شروع کن
-            </button>
+            {destinationHref(webApp) ? (
+              <a className="button button--primary" href={destinationHref(webApp) ?? undefined}>
+                یادگیری را با BuBu شروع کن
+              </a>
+            ) : (
+              <button
+                className="button button--primary"
+                type="button"
+                onClick={() => unavailable('شروع با BuBu')}
+              >
+                یادگیری را با BuBu شروع کن
+              </button>
+            )}
           </div>
         </div>
       </section>
       <footer className="footer wrap">
         <span>LearnBox</span>
         <small>یادگیری واژگان آلمانی، روشن و ماندگار.</small>
+        <nav aria-label="پیوندهای حقوقی و ارتباطی">
+          {['privacy', 'terms', 'contact'].map((id) => {
+            const destination = siteConfig.destinations[id];
+            return destinationHref(destination) ? (
+              <a key={id} href={destinationHref(destination) ?? undefined}>
+                {destination.label}
+              </a>
+            ) : (
+              <span key={id} aria-disabled="true">
+                {destination.label} · به‌زودی
+              </span>
+            );
+          })}
+        </nav>
       </footer>
     </main>
   );

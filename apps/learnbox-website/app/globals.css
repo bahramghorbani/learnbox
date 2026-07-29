@@ -1,14 +1,3 @@
-@font-face {
-  font-family: LearnBox;
-  src: url('/fonts/IRANSansX-Regular.woff2');
-  font-display: swap;
-}
-@font-face {
-  font-family: LearnBox;
-  src: url('/fonts/IRANSansX-Bold.woff2');
-  font-weight: 700;
-  font-display: swap;
-}
 :root {
   --ink: #17233d;
   --muted: #4d5e70;
@@ -29,7 +18,7 @@ body {
   margin: 0;
   background: var(--paper);
   color: var(--ink);
-  font-family: LearnBox, Tahoma, sans-serif;
+  font-family: var(--font-learnbox), Tahoma, sans-serif;
 }
 button,
 a {
@@ -217,6 +206,23 @@ a:focus-visible {
   color: #5326aa;
   font-weight: 700;
 }
+.status-notice--global {
+  position: fixed;
+  z-index: 30;
+  right: 50%;
+  bottom: 24px;
+  width: min(90vw, 560px);
+  margin: 0;
+  padding: 14px 18px;
+  border: 1px solid #6840d42e;
+  border-radius: 16px;
+  color: #fff;
+  background: #2f176be8;
+  box-shadow: 0 18px 45px #1c0e453d;
+  text-align: center;
+  transform: translateX(50%);
+  backdrop-filter: blur(12px);
+}
 .hero-world {
   position: relative;
   min-height: 610px;
@@ -234,6 +240,7 @@ a:focus-visible {
   left: 5%;
   width: min(76%, 510px);
   height: auto;
+  aspect-ratio: 2 / 3;
 }
 .location-chip {
   position: absolute;
@@ -731,10 +738,11 @@ a:focus-visible {
   gap: 8px;
   margin-top: 80px;
 }
-.app-screen--front button {
+.app-screen--front div > span {
   flex: 1;
+  display: grid;
+  place-items: center;
   min-height: 44px;
-  border: 0;
   border-radius: 12px;
   color: #fff;
   background: var(--purple);
@@ -834,11 +842,23 @@ a:focus-visible {
   list-style: none;
 }
 .social-layout li {
+  padding: 20px 0;
+  border-bottom: 1px solid var(--line);
+}
+.social-layout li > a,
+.social-layout li > span {
   display: grid;
   grid-template-columns: 120px 1fr;
   gap: 20px;
-  padding: 20px 0;
-  border-bottom: 1px solid var(--line);
+  color: inherit;
+  text-decoration: none;
+}
+.social-layout li > a {
+  border-radius: 12px;
+}
+.social-layout li > a:hover b,
+.social-layout li > a:focus-visible b {
+  color: var(--purple-deep);
 }
 .social-layout li b {
   color: var(--purple);
@@ -871,6 +891,20 @@ a:focus-visible {
 }
 .footer small {
   color: var(--muted);
+}
+.footer nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  font-size: 0.8rem;
+}
+.footer nav a {
+  color: var(--purple-deep);
+}
+.footer nav span {
+  color: var(--muted);
+  font-weight: 400;
+  direction: rtl;
 }
 .variant-preview {
   min-height: 100vh;
@@ -1181,7 +1215,8 @@ a:focus-visible {
   .qr-preview {
     left: 0;
   }
-  .social-layout li {
+  .social-layout li > a,
+  .social-layout li > span {
     grid-template-columns: 1fr;
     gap: 4px;
   }
@@ -1196,6 +1231,9 @@ a:focus-visible {
     justify-content: center;
     text-align: center;
     gap: 6px;
+  }
+  .footer nav {
+    justify-content: center;
   }
   .variant-hero__content {
     grid-template-columns: 1fr;

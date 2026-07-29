@@ -134,3 +134,35 @@ Validation:
 - Navigation interaction to the learning-method chapter completed successfully.
 - Zero horizontal overflow or browser-console errors.
 - Existing BuBu assets and protected `apps/website` and `apps/mobile` remained untouched.
+
+## CR-LANDING-006 — Upload readiness and deployment safeguards
+
+Status: Completed locally; preview deployment pending access
+
+Request:
+
+- Continue until the landing can confidently enter the upload process.
+
+Implemented:
+
+- Separate app-local Vercel target that cannot deploy `apps/website`.
+- Central public-destination configuration with unavailable and invalid states.
+- Preview and production upload gates with pressure-tested failure paths.
+- Canonical metadata, Open Graph metadata, robots, sitemap and manifest.
+- CSP, referrer, content-type, framing and permissions security headers.
+- Visible global unavailable notice and non-interactive product-preview controls.
+- Local font preloading and mobile motion/image delivery performance safeguards.
+- Upload-readiness report, deployment runbook and rollback procedure.
+
+Validation:
+
+- 13/13 automated tests.
+- Production build with 11 static routes.
+- `check:preview` passed; `check:release` blocks every missing production input.
+- Chrome-compatible browser, Safari and Firefox smoke tests.
+- Lighthouse mobile: 91 Performance, 100 Accessibility, 100 Best Practices, 100 SEO and CLS 0.
+- Protected `apps/website` and `apps/mobile` unchanged.
+
+Resume point:
+
+- Connect a separate Vercel project rooted at `apps/learnbox-website` and create the first preview deployment without attaching the production domain.

@@ -21,11 +21,11 @@ Approved for implementation by the mandatory V3 brief and the user's instruction
 
 ## Variant comparison
 
-| Direction | Strength | Risk | Decision |
-| --- | --- | --- | --- |
-| A — Cinematic Summer Journey | Strongest sense of travel, depth and card movement | The landscape can overpower the product and become tourism-led | Keep its layered parallax and card-path ideas |
-| B — LearnBox Character World | Strongest owned character world and close-up BuBu moments | The generated concept drifted into English learning and reduced product clarity | Reject as the primary direction |
-| C — Hybrid Product and Story | Clearest product mechanism, CTA hierarchy, mobile continuation and download stage | Generic summer geography needed correction | Select after revising the world to Germany |
+| Direction                    | Strength                                                                          | Risk                                                                            | Decision                                      |
+| ---------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | --------------------------------------------- |
+| A — Cinematic Summer Journey | Strongest sense of travel, depth and card movement                                | The landscape can overpower the product and become tourism-led                  | Keep its layered parallax and card-path ideas |
+| B — LearnBox Character World | Strongest owned character world and close-up BuBu moments                         | The generated concept drifted into English learning and reduced product clarity | Reject as the primary direction               |
+| C — Hybrid Product and Story | Clearest product mechanism, CTA hierarchy, mobile continuation and download stage | Generic summer geography needed correction                                      | Select after revising the world to Germany    |
 
 Selected concept:
 

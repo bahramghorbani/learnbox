@@ -9,16 +9,21 @@ Use one section per medium, structural, or foundational change.
 Status: Proposed
 
 Requested during:
+
 - Phase or scene
 
 Affected areas:
+
 - item
 
 Required actions:
+
 - item
 
 Validation:
+
 - item
 
 Resume point:
+
 - exact roadmap task
