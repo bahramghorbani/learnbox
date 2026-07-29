@@ -13,3 +13,4 @@ build/
 android/.gradle/
 ios/Pods/
 .vercel
+.worktrees/
