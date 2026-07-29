@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import '../src/themes/summer/germany-chapters.css';
 import '../src/themes/summer/summer-theme.css';
 
 export const metadata: Metadata = {

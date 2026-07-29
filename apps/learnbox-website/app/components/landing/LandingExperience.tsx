@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { useState } from 'react';
-import { SummerBackdrop } from '../../../src/themes/summer';
+import { GermanyChapterBackdrop, SummerBackdrop } from '../../../src/themes/summer';
 import { MotionOrchestrator } from '../MotionOrchestrator';
 import { LandingHeader } from './LandingHeader';
 import { LearningPaths } from './LearningPaths';
@@ -92,6 +92,7 @@ export function LandingExperience() {
         data-motion="forgetting"
         data-scene
       >
+        <GermanyChapterBackdrop chapter="station" />
         <div className="wrap forgetting-layout">
           <div className="scene-heading">
             <span>پیش از فراموشی</span>
@@ -126,6 +127,7 @@ export function LandingExperience() {
       </section>
 
       <section id="method" className="scene leitner-scene" data-motion="leitner" data-scene>
+        <GermanyChapterBackdrop chapter="rail" />
         <div className="wrap">
           <div className="scene-heading scene-heading--center">
             <span>جعبه لایتنر LearnBox</span>
@@ -167,6 +169,7 @@ export function LandingExperience() {
       </section>
 
       <section className="scene vocabulary-scene" data-motion="vocabulary" data-scene>
+        <GermanyChapterBackdrop chapter="street" />
         <div className="wrap vocabulary-layout">
           <div className="word-stage">
             <article className="word-card">
@@ -211,6 +214,7 @@ export function LandingExperience() {
       <LearningPaths />
 
       <section className="scene progress-scene" data-motion="progress" data-scene>
+        <GermanyChapterBackdrop chapter="park" />
         <div className="wrap progress-layout">
           <div className="scene-heading">
             <span>پیشرفت قابل دیدن</span>
@@ -249,6 +253,7 @@ export function LandingExperience() {
       </section>
 
       <section id="product" className="scene product-scene" data-motion="product" data-scene>
+        <GermanyChapterBackdrop chapter="harbor" />
         <div className="wrap product-layout">
           <div className="scene-heading scene-heading--light">
             <span>محیط واقعی یادگیری</span>
@@ -321,6 +326,7 @@ export function LandingExperience() {
       </section>
 
       <section className="scene social-scene" data-motion="social" data-scene>
+        <GermanyChapterBackdrop chapter="square" />
         <div className="wrap social-layout">
           <div className="scene-heading">
             <span>شبکه‌های رسمی</span>
@@ -342,6 +348,7 @@ export function LandingExperience() {
       </section>
 
       <section className="scene finale-scene" data-motion="finale" data-scene>
+        <GermanyChapterBackdrop chapter="garden" />
         <div className="wrap finale-layout">
           <Image
             className="bubu bubu--finale"

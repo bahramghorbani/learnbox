@@ -1,0 +1,452 @@
+.germany-chapter {
+  --chapter-sky: #dff4ff;
+  --chapter-haze: #f7fbeb;
+  --chapter-ink: #527b9d;
+  --chapter-mid: #8bb8ca;
+  --chapter-near: #2d7b58;
+  --chapter-accent: #6c3ad6;
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 78% 14%, #fff8c8 0 7%, transparent 24%),
+    linear-gradient(180deg, var(--chapter-sky), var(--chapter-haze));
+  pointer-events: none;
+}
+
+.scene > .wrap,
+.paths-scene > .wrap {
+  position: relative;
+  z-index: 2;
+}
+
+.chapter-layer {
+  position: absolute;
+  inset: 0;
+}
+
+.chapter-layer svg {
+  position: absolute;
+  right: -2%;
+  bottom: -1%;
+  width: 104%;
+  height: 52%;
+  overflow: visible;
+}
+
+.chapter-layer--far svg path {
+  fill: color-mix(in srgb, var(--chapter-ink) 24%, transparent);
+}
+
+.chapter-sun {
+  position: absolute;
+  top: 8%;
+  left: 13%;
+  width: clamp(90px, 11vw, 168px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #ffe48b;
+  box-shadow: 0 22px 50px #ddaa3b33;
+}
+
+.chapter-cloud {
+  position: absolute;
+  top: 13%;
+  width: clamp(120px, 16vw, 230px);
+  height: clamp(30px, 4vw, 60px);
+  border-radius: 50%;
+  background: #fffdf2a6;
+  box-shadow:
+    44px -12px 0 #fffdf28c,
+    88px 3px 0 -8px #fffdf26e;
+  filter: blur(1px);
+}
+
+.chapter-cloud--one {
+  right: 8%;
+}
+
+.chapter-cloud--two {
+  top: 28%;
+  left: 38%;
+  scale: 0.68;
+  opacity: 0.72;
+}
+
+.chapter-layer--mid {
+  inset: 20% -4% 0;
+}
+
+.chapter-architecture {
+  position: absolute;
+  right: 5%;
+  bottom: 10%;
+  left: 5%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  opacity: 0.42;
+}
+
+.chapter-architecture i {
+  width: 13%;
+  height: clamp(110px, 15vw, 230px);
+  border-radius: 10px 10px 0 0;
+  background:
+    linear-gradient(
+      90deg,
+      transparent 18%,
+      #fff9c877 19% 30%,
+      transparent 31% 55%,
+      #fff9c877 56% 68%,
+      transparent 69%
+    ),
+    color-mix(in srgb, var(--chapter-mid) 70%, white);
+  box-shadow: inset 0 10px 0 #ffffff5c;
+}
+
+.chapter-architecture i:nth-child(2) {
+  height: clamp(150px, 19vw, 280px);
+}
+
+.chapter-architecture i:nth-child(3) {
+  height: clamp(90px, 12vw, 190px);
+}
+
+.chapter-architecture i:nth-child(4) {
+  height: clamp(180px, 22vw, 320px);
+}
+
+.chapter-train {
+  position: absolute;
+  right: 6%;
+  bottom: 19%;
+  display: none;
+  width: min(720px, 82%);
+  height: 88px;
+  border-radius: 18px 46px 12px 12px;
+  background: #f8fbfc;
+  box-shadow: 0 16px 32px #24435928;
+}
+
+.chapter-train b {
+  position: relative;
+  display: inline-block;
+  width: 19%;
+  height: 34px;
+  margin: 16px 2% 0;
+  border-radius: 5px;
+  background: #7eb7d2;
+}
+
+.chapter-train span {
+  position: relative;
+  display: inline-block;
+  width: 18px;
+  aspect-ratio: 1;
+  margin: 26px 13% 0 8%;
+  border-radius: 50%;
+  background: #273d52;
+}
+
+.chapter-layer--route svg {
+  top: 19%;
+  bottom: auto;
+  height: 48%;
+  fill: #fff;
+  stroke: var(--chapter-accent);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.chapter-route-path {
+  fill: none;
+  stroke-dasharray: 12 12;
+  opacity: 0.46;
+}
+
+.chapter-layer--route circle {
+  filter: drop-shadow(0 6px 10px #40208b33);
+  opacity: 0.58;
+}
+
+.chapter-layer--near {
+  inset: auto 0 0;
+  height: 30%;
+}
+
+.chapter-plant {
+  position: absolute;
+  bottom: -42%;
+  width: clamp(150px, 20vw, 310px);
+  aspect-ratio: 1;
+  border-radius: 72% 40% 62% 38%;
+  background:
+    radial-gradient(circle at 31% 24%, #f379ad 0 3%, transparent 4%),
+    radial-gradient(circle at 62% 44%, #ffe078 0 3%, transparent 4%),
+    linear-gradient(140deg, #86cf67, var(--chapter-near));
+  filter: drop-shadow(0 20px 30px #1c4b3033);
+  transform-origin: bottom;
+}
+
+.chapter-plant--one {
+  right: -5%;
+  rotate: -8deg;
+}
+
+.chapter-plant--two {
+  left: -5%;
+  rotate: 9deg;
+}
+
+.chapter-platform {
+  position: absolute;
+  right: -8%;
+  bottom: -42px;
+  left: -8%;
+  height: 90px;
+  border-radius: 50% 50% 0 0;
+  background: color-mix(in srgb, var(--chapter-near) 26%, transparent);
+}
+
+.chapter-location,
+.chapter-context {
+  position: absolute;
+  padding: 9px 13px;
+  border-radius: 999px;
+  box-shadow: 0 12px 28px #17344e20;
+  font-weight: 700;
+}
+
+.chapter-location {
+  top: 8%;
+  left: 5%;
+  color: var(--chapter-ink);
+  background: #fffdf4d9;
+  direction: ltr;
+}
+
+.chapter-context {
+  right: 5%;
+  bottom: 8%;
+  color: #fff;
+  background: var(--chapter-accent);
+  direction: ltr;
+}
+
+.chapter-signal {
+  position: absolute;
+  top: 32%;
+  left: 20%;
+  width: 28px;
+  aspect-ratio: 1;
+  border: 2px solid var(--chapter-accent);
+  border-radius: 50%;
+  opacity: 0;
+}
+
+.chapter-signal--two {
+  left: 50%;
+}
+
+.chapter-signal--three {
+  left: 78%;
+}
+
+.germany-chapter--station {
+  --chapter-sky: #dcd8f6;
+  --chapter-haze: #f5f2ff;
+  --chapter-ink: #443574;
+  --chapter-mid: #8176a8;
+  --chapter-near: #3e315f;
+}
+
+.germany-chapter--station .chapter-train,
+.germany-chapter--rail .chapter-train {
+  display: block;
+}
+
+.germany-chapter--station .chapter-train {
+  background: #f6c800;
+}
+
+.germany-chapter--station .chapter-train b {
+  background: #39485c;
+}
+
+.germany-chapter--station .chapter-layer--far {
+  filter: saturate(0.7);
+}
+
+.germany-chapter--rail {
+  --chapter-sky: #eaf7ff;
+  --chapter-haze: #fffbea;
+  --chapter-ink: #46728f;
+  --chapter-mid: #82a9b4;
+  --chapter-near: #377557;
+}
+
+.germany-chapter--rail .chapter-train {
+  bottom: 9%;
+  scale: 0.76;
+  opacity: 0.4;
+  border-bottom: 8px solid #d64c4c;
+}
+
+.germany-chapter--street {
+  --chapter-sky: #cdeeff;
+  --chapter-haze: #e8f6ff;
+  --chapter-ink: #557c92;
+  --chapter-mid: #d48b72;
+  --chapter-near: #43805d;
+}
+
+.germany-chapter--street .chapter-architecture {
+  opacity: 0.26;
+}
+
+.germany-chapter--street .chapter-architecture i {
+  border-radius: 10px 10px 0 0;
+  background:
+    linear-gradient(
+      90deg,
+      transparent 13%,
+      #ffe89d 14% 30%,
+      transparent 31% 55%,
+      #ffe89d 56% 72%,
+      transparent 73%
+    ),
+    #d99179;
+}
+
+.germany-chapter--map {
+  --chapter-sky: #fff3dc;
+  --chapter-haze: #fffaf0;
+  --chapter-ink: #9a7051;
+  --chapter-mid: #9bb79a;
+  --chapter-near: #4b815c;
+}
+
+.germany-chapter--map .chapter-architecture {
+  opacity: 0.16;
+}
+
+.germany-chapter--park {
+  --chapter-sky: #e5ddff;
+  --chapter-haze: #f5efff;
+  --chapter-ink: #695194;
+  --chapter-mid: #7db3a6;
+  --chapter-near: #397d59;
+}
+
+.germany-chapter--park .chapter-sun {
+  background: #ffcf5a;
+}
+
+.germany-chapter--harbor {
+  --chapter-sky: #5f45a5;
+  --chapter-haze: #41208f;
+  --chapter-ink: #c6b9ef;
+  --chapter-mid: #7d70af;
+  --chapter-near: #263d63;
+  --chapter-accent: #ffd36a;
+  background:
+    radial-gradient(circle at 16% 12%, #ffeba0a1 0 5%, transparent 20%),
+    linear-gradient(180deg, var(--chapter-sky), var(--chapter-haze));
+}
+
+.germany-chapter--harbor .chapter-sun {
+  display: none;
+}
+
+.germany-chapter--harbor .chapter-cloud {
+  opacity: 0.22;
+}
+
+.germany-chapter--harbor .chapter-location {
+  color: #fff;
+  background: #29125dcc;
+}
+
+.germany-chapter--harbor .chapter-context {
+  color: #38206d;
+}
+
+.germany-chapter--square {
+  --chapter-sky: #eef7ff;
+  --chapter-haze: #fff;
+  --chapter-ink: #63809a;
+  --chapter-mid: #a4b7c3;
+  --chapter-near: #5a8969;
+}
+
+.germany-chapter--square .chapter-signal {
+  opacity: 0.55;
+}
+
+.germany-chapter--garden {
+  --chapter-sky: #eaf6d6;
+  --chapter-haze: #fff9e9;
+  --chapter-ink: #698457;
+  --chapter-mid: #9ab47e;
+  --chapter-near: #35764d;
+}
+
+.germany-chapter--garden .chapter-platform {
+  right: 34%;
+  bottom: -46%;
+  left: 34%;
+  height: 130%;
+  border-radius: 50% 50% 0 0;
+  background: #f3d89d7a;
+  transform: perspective(500px) rotateX(68deg);
+  transform-origin: bottom;
+}
+
+@media (max-width: 720px) {
+  .chapter-location {
+    top: 4%;
+    left: 4%;
+    font-size: 0.7rem;
+  }
+
+  .chapter-context {
+    right: 4%;
+    bottom: 4%;
+    font-size: 0.68rem;
+  }
+
+  .chapter-layer--far svg {
+    height: 38%;
+    opacity: 0.56;
+  }
+
+  .chapter-architecture i:nth-child(even),
+  .chapter-cloud--two {
+    display: none;
+  }
+
+  .chapter-train {
+    width: 118%;
+    opacity: 0.34;
+  }
+
+  .chapter-layer--near {
+    height: 18%;
+  }
+
+  .chapter-plant {
+    width: 145px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chapter-layer,
+  .chapter-train,
+  .chapter-sun,
+  .chapter-signal {
+    transform: none !important;
+    animation: none !important;
+  }
+}

@@ -1,6 +1,6 @@
 # 001 — Add German scroll chapters to every landing segment
 
-- **Status**: SELECTED
+- **Status**: DONE
 - **Commit**: 2f41ed6
 - **Severity**: MEDIUM
 - **Category**: Missed opportunities / cohesion

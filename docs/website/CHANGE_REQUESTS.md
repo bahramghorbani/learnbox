@@ -81,3 +81,29 @@ Completion evidence:
 - Reduced motion: parallax and loops disabled; all content visible.
 - Canonical BuBu files remained untouched; V3 scene assets are versioned additions.
 - Protected `apps/website` and `apps/mobile` remained untouched.
+
+## CR-LANDING-004 — German scroll chapters
+
+Status: Completed
+
+Request:
+
+- Give every landing segment an attractive German-themed background.
+- Add more movement that happens with scroll.
+
+Implemented:
+
+- Eight typed Germany chapter backdrops: station, rail, street, map, park, harbor, square and garden.
+- Five depth layers per chapter: far, mid, route, near and accent.
+- Scrubbed GSAP parallax, SVG route drawing, U-Bahn/regional-train travel, apartment-window reveal, Olympiapark sun travel and city signal expansion.
+- Existing Berlin hero and Cologne/Rhine download chapters retained.
+- Mobile movement capped at 4%; no pinning or scroll hijacking.
+- Reduced-motion profile renders resolved, static layers.
+
+Validation:
+
+- Source contract expanded to six tests.
+- Browser QA at 1440×900, 1024×768 and 390×844.
+- Eight chapter backdrops found in production.
+- Desktop far-layer transform changes across scroll.
+- Zero horizontal overflow, console errors or failed HTTP responses.

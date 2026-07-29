@@ -101,3 +101,30 @@ test('uses the approved motion stack with reduced-motion fallbacks', () => {
   assert.match(allSource, /prefers-reduced-motion:\s*reduce/);
   assert.match(allSource, /reducedMotion/);
 });
+
+test('gives every landing segment a layered German scroll chapter', () => {
+  for (const chapter of [
+    'station',
+    'rail',
+    'street',
+    'map',
+    'park',
+    'harbor',
+    'square',
+    'garden',
+  ]) {
+    assert.match(allSource, new RegExp(`chapter=["']${chapter}["']`));
+  }
+
+  for (const layer of ['far', 'mid', 'route', 'near', 'accent']) {
+    assert.match(allSource, new RegExp(`data-chapter-layer=["']${layer}["']`));
+  }
+
+  assert.match(allSource, /data-chapter-backdrop/);
+  assert.match(allSource, /chapterBackdrops/);
+  assert.doesNotMatch(
+    allSource,
+    /filter:\s*['"]brightness/,
+    'Scroll-linked chapter motion must avoid paint-heavy brightness filters',
+  );
+});

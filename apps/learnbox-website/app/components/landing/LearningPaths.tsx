@@ -3,6 +3,7 @@
 import { AnimatePresence, motion } from 'motion/react';
 import Image from 'next/image';
 import { useState } from 'react';
+import { GermanyChapterBackdrop } from '../../../src/themes/summer';
 
 const paths = [
   ['مهاجرت کاری', 'واژه‌های محیط کار، قرارداد، جلسه و شروع حرفه‌ای در آلمان.', 'Berlin'],
@@ -18,6 +19,7 @@ export function LearningPaths() {
 
   return (
     <section id="paths" className="scene paths-scene" data-motion="paths">
+      <GermanyChapterBackdrop chapter="map" />
       <div className="wrap">
         <div className="scene-heading">
           <span>مسیر شخصی تو</span>

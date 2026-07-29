@@ -38,3 +38,18 @@ Implemented surface:
 - Reduced motion: profile `reduced`, no floating-card animation, no transform, and all vocabulary details visible.
 - Variant routes A/B/C emit `noindex, nofollow`.
 - Production console: no error; failed HTTP responses: none.
+
+## German scroll-chapter enhancement
+
+Every previously flat middle segment now has a distinct setting tied to its learning role:
+
+- Berlin Alexanderplatz U-Bahn for words that pass out of memory.
+- Berlin–Leipzig–Munich regional rail for spaced-review intervals.
+- Prenzlauer Berg residential street for `die Wohnung` in context.
+- Germany route map for goal-based learning paths.
+- Munich Olympiapark for daily progress.
+- Hamburg HafenCity for the layered product stage.
+- Berlin Stadtmitte for connected social channels.
+- A green German garden path for the final invitation.
+
+Each chapter has far, mid, route, near and accent layers. Desktop scroll motion is measured and active; mobile translation is capped at 4%; reduced motion resolves all layers without movement.

@@ -10,6 +10,7 @@ export function MotionOrchestrator() {
     const mobile = window.matchMedia('(max-width: 720px)').matches;
     const root = document.documentElement;
     const scenes = gsap.utils.toArray<HTMLElement>('[data-scene]');
+    const chapterBackdrops = gsap.utils.toArray<HTMLElement>('[data-chapter-backdrop]');
 
     root.classList.add('motion-ready');
     root.dataset.motionProfile = reducedMotion ? 'reduced' : mobile ? 'mobile' : 'full';
@@ -83,6 +84,165 @@ export function MotionOrchestrator() {
             end: 'bottom top',
             scrub: 0.8,
           },
+        });
+
+        chapterBackdrops.forEach((backdrop) => {
+          const scene = backdrop.closest<HTMLElement>('[data-scene]');
+          if (!scene) return;
+
+          const far = backdrop.querySelector<HTMLElement>('[data-chapter-layer="far"]');
+          const mid = backdrop.querySelector<HTMLElement>('[data-chapter-layer="mid"]');
+          const near = backdrop.querySelector<HTMLElement>('[data-chapter-layer="near"]');
+          const route = backdrop.querySelector<SVGPathElement>('[data-chapter-route]');
+          const chapter = backdrop.dataset.chapterBackdrop;
+          const travel = mobile ? 4 : 12;
+
+          if (far) {
+            gsap.fromTo(
+              far,
+              { yPercent: -2, scale: 1.02 },
+              {
+                yPercent: mobile ? 2 : 3,
+                scale: mobile ? 1.025 : 1.055,
+                ease: 'none',
+                scrollTrigger: {
+                  trigger: scene,
+                  start: 'top bottom',
+                  end: 'bottom top',
+                  scrub: mobile ? 0.45 : 1.1,
+                },
+              },
+            );
+          }
+
+          if (mid) {
+            gsap.fromTo(
+              mid,
+              { xPercent: mobile ? 1 : 2, yPercent: -3 },
+              {
+                xPercent: mobile ? -1 : -2,
+                yPercent: mobile ? 3 : 5,
+                ease: 'none',
+                scrollTrigger: {
+                  trigger: scene,
+                  start: 'top bottom',
+                  end: 'bottom top',
+                  scrub: mobile ? 0.5 : 0.9,
+                },
+              },
+            );
+          }
+
+          if (near) {
+            gsap.fromTo(
+              near,
+              { yPercent: mobile ? 2 : 4 },
+              {
+                yPercent: mobile ? -4 : -8,
+                ease: 'none',
+                scrollTrigger: {
+                  trigger: scene,
+                  start: 'top bottom',
+                  end: 'bottom top',
+                  scrub: mobile ? 0.45 : 0.75,
+                },
+              },
+            );
+          }
+
+          if (route) {
+            const routeLength = route.getTotalLength();
+            gsap.set(route, {
+              strokeDasharray: routeLength,
+              strokeDashoffset: routeLength,
+            });
+            gsap.to(route, {
+              strokeDashoffset: 0,
+              ease: 'none',
+              scrollTrigger: {
+                trigger: scene,
+                start: 'top 78%',
+                end: 'bottom 42%',
+                scrub: mobile ? 0.4 : 0.8,
+              },
+            });
+          }
+
+          if (chapter === 'station' || chapter === 'rail') {
+            const train = backdrop.querySelector<HTMLElement>('.chapter-train');
+            if (train) {
+              gsap.fromTo(
+                train,
+                { xPercent: mobile ? travel : travel * 2.8 },
+                {
+                  xPercent: mobile ? -travel : -travel * 2,
+                  ease: 'none',
+                  scrollTrigger: {
+                    trigger: scene,
+                    start: 'top bottom',
+                    end: 'bottom top',
+                    scrub: mobile ? 0.45 : 0.7,
+                  },
+                },
+              );
+            }
+          }
+
+          if (chapter === 'street') {
+            gsap.fromTo(
+              backdrop.querySelectorAll('.chapter-architecture i'),
+              { opacity: 0.5 },
+              {
+                opacity: 1,
+                stagger: 0.06,
+                scrollTrigger: {
+                  trigger: scene,
+                  start: 'top 70%',
+                  end: 'center 44%',
+                  scrub: 0.55,
+                },
+              },
+            );
+          }
+
+          if (chapter === 'park') {
+            const sun = backdrop.querySelector<HTMLElement>('.chapter-sun');
+            if (sun) {
+              gsap.fromTo(
+                sun,
+                { xPercent: mobile ? -3 : -12, yPercent: mobile ? 3 : 18 },
+                {
+                  xPercent: mobile ? 3 : 18,
+                  yPercent: mobile ? -3 : -14,
+                  ease: 'none',
+                  scrollTrigger: {
+                    trigger: scene,
+                    start: 'top bottom',
+                    end: 'bottom top',
+                    scrub: 0.8,
+                  },
+                },
+              );
+            }
+          }
+
+          if (chapter === 'square') {
+            gsap.fromTo(
+              backdrop.querySelectorAll('.chapter-signal'),
+              { scale: 0.72, opacity: 0 },
+              {
+                scale: 2.8,
+                opacity: 0,
+                stagger: 0.12,
+                scrollTrigger: {
+                  trigger: scene,
+                  start: 'top 72%',
+                  end: 'bottom 44%',
+                  scrub: 0.6,
+                },
+              },
+            );
+          }
         });
 
         const sceneTimelines = [
