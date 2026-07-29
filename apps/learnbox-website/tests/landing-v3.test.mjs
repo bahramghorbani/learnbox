@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';
+import { spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import Module, { createRequire } from 'node:module';
+import { tmpdir } from 'node:os';
 import { extname, join, resolve } from 'node:path';
 import test from 'node:test';
 import { productStoryStages } from '../app/components/landing/product-story-data.ts';
@@ -71,6 +73,91 @@ function renderProductStory() {
 
 function openingTags(markup, tagName) {
   return markup.match(new RegExp(`<${tagName}\\b[^>]*>`, 'g')) ?? [];
+}
+
+function waitForChromeEndpoint(chrome) {
+  return new Promise((resolveEndpoint, rejectEndpoint) => {
+    let stderr = '';
+    const timeout = setTimeout(
+      () => rejectEndpoint(new Error(`Chrome DevTools endpoint timed out:\n${stderr}`)),
+      10_000,
+    );
+
+    chrome.stderr.on('data', (chunk) => {
+      stderr += chunk.toString();
+      const match = stderr.match(/DevTools listening on (ws:\/\/127\.0\.0\.1:(\d+)\/[^\s]+)/);
+      if (!match) return;
+      clearTimeout(timeout);
+      resolveEndpoint({ browserWebSocketUrl: match[1], port: Number(match[2]) });
+    });
+    chrome.once('exit', (code) => {
+      clearTimeout(timeout);
+      rejectEndpoint(new Error(`Chrome exited before DevTools was ready (${code}):\n${stderr}`));
+    });
+  });
+}
+
+async function openChromePage(port, url, viewport) {
+  const response = await fetch(`http://127.0.0.1:${port}/json/new?about%3Ablank`, {
+    method: 'PUT',
+  });
+  assert.equal(response.status, 200);
+  const target = await response.json();
+  const socket = new WebSocket(target.webSocketDebuggerUrl);
+  await new Promise((resolveOpen, rejectOpen) => {
+    socket.addEventListener('open', resolveOpen, { once: true });
+    socket.addEventListener('error', rejectOpen, { once: true });
+  });
+
+  let nextId = 0;
+  const pending = new Map();
+  socket.addEventListener('message', (event) => {
+    const message = JSON.parse(event.data);
+    if (!message.id) return;
+    const request = pending.get(message.id);
+    pending.delete(message.id);
+    if (message.error) request.reject(new Error(message.error.message));
+    else request.resolve(message.result);
+  });
+
+  const send = (method, params = {}) =>
+    new Promise((resolveRequest, rejectRequest) => {
+      const id = ++nextId;
+      pending.set(id, { resolve: resolveRequest, reject: rejectRequest });
+      socket.send(JSON.stringify({ id, method, params }));
+    });
+  const evaluate = async (expression) => {
+    const result = await send('Runtime.evaluate', {
+      expression,
+      awaitPromise: true,
+      returnByValue: true,
+    });
+    assert.equal(result.exceptionDetails, undefined);
+    return result.result.value;
+  };
+
+  await send('Page.enable');
+  await send('Runtime.enable');
+  await send('Emulation.setDeviceMetricsOverride', viewport);
+  await send('Page.navigate', { url });
+  let documentReady = false;
+  for (let attempt = 0; attempt < 100; attempt += 1) {
+    const ready = await send('Runtime.evaluate', {
+      expression: `location.href === ${JSON.stringify(url)} && document.readyState === 'complete'`,
+      returnByValue: true,
+    }).catch(() => null);
+    if (ready?.result?.value) {
+      documentReady = true;
+      break;
+    }
+    await new Promise((resolveDelay) => setTimeout(resolveDelay, 50));
+  }
+  assert.ok(documentReady, `Chrome did not finish navigating to ${url}`);
+  await evaluate(
+    'new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve(true))))',
+  );
+
+  return { evaluate, close: () => socket.close() };
 }
 
 const canonicalBuBuHashes = {
@@ -187,26 +274,175 @@ test('renders responsive screenshot dimensions with only the first image priorit
   );
 });
 
-test('uses responsive CSS fallbacks and removes every fictional app-screen source', () => {
+test('removes every fictional app-screen source', () => {
   assert.doesNotMatch(fictionalMockupSources, /\.app-screen--(?:back|middle|front)/);
-  assert.match(allSource, /\[data-product-device\]\s*\{[^}]*position:\s*sticky/s);
-  assert.match(
-    allSource,
-    /@media\s*\(max-width:\s*720px\)[\s\S]*\[data-product-device\]\s*\{[^}]*display:\s*contents/s,
-  );
-  assert.match(
-    allSource,
-    /@media\s*\(max-width:\s*720px\)[\s\S]*\.product-story__layout\s*\{[^}]*display:\s*grid/s,
-  );
-  assert.match(
-    allSource,
-    /@media\s*\(max-width:\s*720px\)[\s\S]*\.product-story__copy\s*\{[^}]*display:\s*contents/s,
-  );
-  assert.match(
-    allSource,
-    /@media\s*\(max-width:\s*720px\)[\s\S]*\[data-product-screen\]\s*\{[^}]*position:\s*relative/s,
-  );
 });
+
+const browserLayoutUrl = process.env.LEARNBOX_BROWSER_LAYOUT_URL;
+test(
+  'keeps the phone viewport-sticky on desktop and renders four unpinned mobile cards',
+  { skip: browserLayoutUrl ? false : 'set LEARNBOX_BROWSER_LAYOUT_URL to a built local preview' },
+  async (t) => {
+    const chromePath =
+      process.env.LEARNBOX_CHROME_PATH ??
+      '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+    assert.ok(existsSync(chromePath), `Chrome binary is missing: ${chromePath}`);
+    const profile = mkdtempSync(join(tmpdir(), 'learnbox-layout-chrome-'));
+    const chrome = spawn(
+      chromePath,
+      [
+        '--headless=new',
+        '--disable-gpu',
+        '--no-first-run',
+        '--no-default-browser-check',
+        `--user-data-dir=${profile}`,
+        '--remote-debugging-port=0',
+        'about:blank',
+      ],
+      { stdio: ['ignore', 'ignore', 'pipe'] },
+    );
+    t.after(() => {
+      chrome.kill('SIGTERM');
+      rmSync(profile, { force: true, recursive: true });
+    });
+
+    const { port } = await waitForChromeEndpoint(chrome);
+    const preview = await fetch(browserLayoutUrl);
+    assert.equal(preview.status, 200, `Preview URL is not ready: ${browserLayoutUrl}`);
+
+    const desktop = await openChromePage(port, browserLayoutUrl, {
+      width: 1440,
+      height: 1000,
+      deviceScaleFactor: 1,
+      mobile: false,
+    });
+    t.after(desktop.close);
+    const desktopLayout = await desktop.evaluate(`(async () => {
+      const settle = () =>
+        new Promise((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(resolve))
+        );
+      const story = document.querySelector('#product');
+      const device = story.querySelector('[data-product-device]');
+      const wrapper = document.querySelector('.site-v3');
+      document.documentElement.style.scrollBehavior = 'auto';
+      const storyTop = story.getBoundingClientRect().top + scrollY;
+      const lastScroll = storyTop + story.offsetHeight - innerHeight - 100;
+      const firstScroll = Math.min(storyTop + 260, lastScroll - 900);
+      const secondScroll = Math.min(firstScroll + 800, lastScroll);
+      scrollTo({ top: firstScroll, behavior: 'instant' });
+      await settle();
+      const actualFirstScroll = scrollY;
+      const firstTop = device.getBoundingClientRect().top;
+      scrollTo({ top: secondScroll, behavior: 'instant' });
+      await settle();
+      const actualSecondScroll = scrollY;
+      const secondTop = device.getBoundingClientRect().top;
+      const wrapperStyle = getComputedStyle(wrapper);
+      return {
+        firstScroll,
+        secondScroll,
+        actualFirstScroll,
+        actualSecondScroll,
+        firstTop,
+        secondTop,
+        position: getComputedStyle(device).position,
+        wrapperOverflowX: wrapperStyle.overflowX,
+        wrapperOverflowY: wrapperStyle.overflowY
+      };
+    })()`);
+    assert.equal(desktopLayout.position, 'sticky');
+    assert.ok(desktopLayout.secondScroll - desktopLayout.firstScroll >= 700);
+    assert.ok(
+      desktopLayout.firstTop >= 23 && desktopLayout.firstTop <= 89,
+      `Desktop phone did not reach its viewport sticky inset: ${JSON.stringify(desktopLayout)}`,
+    );
+    assert.ok(
+      Math.abs(desktopLayout.secondTop - desktopLayout.firstTop) <= 2,
+      `Desktop phone moved ${desktopLayout.secondTop - desktopLayout.firstTop}px over an ${
+        desktopLayout.secondScroll - desktopLayout.firstScroll
+      }px page scroll: ${JSON.stringify(desktopLayout)}`,
+    );
+    t.diagnostic(`desktop 1440x1000: ${JSON.stringify(desktopLayout)}`);
+
+    const mobile = await openChromePage(port, browserLayoutUrl, {
+      width: 390,
+      height: 844,
+      deviceScaleFactor: 1,
+      mobile: true,
+    });
+    t.after(mobile.close);
+    const mobileLayout = await mobile.evaluate(`(async () => {
+      const settle = () =>
+        new Promise((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(resolve))
+        );
+      const device = document.querySelector('[data-product-device]');
+      const screens = Array.from(document.querySelectorAll('[data-product-screen]'));
+      document.documentElement.style.scrollBehavior = 'auto';
+      const details = screens.map((screen) => {
+        const id = screen.dataset.productScreen;
+        const article = document.querySelector('[data-product-stage="' + id + '"]');
+        const screenRect = screen.getBoundingClientRect();
+        const articleRect = article.getBoundingClientRect();
+        const style = getComputedStyle(screen);
+        return {
+          id,
+          documentTop: screenRect.top + scrollY,
+          documentBottom: screenRect.bottom + scrollY,
+          articleTop: articleRect.top + scrollY,
+          articleBottom: articleRect.bottom + scrollY,
+          position: style.position,
+          visibility: style.visibility,
+          opacity: Number(style.opacity),
+          width: screenRect.width,
+          height: screenRect.height
+        };
+      });
+      const first = screens[0];
+      const firstDocumentTop = first.getBoundingClientRect().top + scrollY;
+      scrollTo({ top: firstDocumentTop - 120, behavior: 'instant' });
+      await settle();
+      const firstTop = first.getBoundingClientRect().top;
+      scrollBy({ top: 120, behavior: 'instant' });
+      await settle();
+      const secondTop = first.getBoundingClientRect().top;
+      return {
+        deviceDisplay: getComputedStyle(device).display,
+        details,
+        scrollDelta: 120,
+        firstTop,
+        secondTop
+      };
+    })()`);
+
+    assert.equal(mobileLayout.deviceDisplay, 'contents');
+    assert.equal(mobileLayout.details.length, 4);
+    assert.deepEqual(
+      mobileLayout.details.map(({ id }) => id),
+      ['start', 'today', 'return', 'progress'],
+    );
+    for (const detail of mobileLayout.details) {
+      assert.equal(detail.position, 'relative');
+      assert.equal(detail.visibility, 'visible');
+      assert.equal(detail.opacity, 1);
+      assert.ok(detail.width > 0 && detail.height > 0);
+      assert.ok(detail.documentTop >= detail.articleTop - 1);
+      assert.ok(detail.documentBottom <= detail.articleBottom + 1);
+    }
+    for (let index = 1; index < mobileLayout.details.length; index += 1) {
+      assert.ok(
+        mobileLayout.details[index - 1].documentBottom <= mobileLayout.details[index].documentTop,
+        `Mobile screenshots overlap or render out of order: ${JSON.stringify(mobileLayout.details)}`,
+      );
+    }
+    assert.ok(
+      Math.abs(mobileLayout.secondTop - mobileLayout.firstTop + mobileLayout.scrollDelta) <= 2,
+      `Mobile screenshot is pinned instead of scrolling in flow: ${JSON.stringify(mobileLayout)}`,
+    );
+    t.diagnostic(`mobile 390x844: ${JSON.stringify(mobileLayout)}`);
+  },
+);
 
 const exactCopy = [
   'کلمه‌ها را فقط حفظ نکن؛ برای همیشه یاد بگیر.',

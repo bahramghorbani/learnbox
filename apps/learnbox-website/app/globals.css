@@ -33,7 +33,8 @@ a:focus-visible {
   outline-offset: 3px;
 }
 .site-v3 {
-  overflow: hidden;
+  overflow-x: clip;
+  overflow-y: visible;
   min-height: 100vh;
   background: var(--paper);
 }
