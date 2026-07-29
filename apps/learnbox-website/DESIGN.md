@@ -7,27 +7,29 @@ It is not the learner web application in `apps/website` and must not absorb prod
 
 ## Visual thesis
 
-LearnBox turns scattered German words into a calm, visible path that returns each word at the right time.
-The page should feel cinematic, premium, warm and dimensional without becoming childish or game-like.
+LearnBox turns a scattered German word into a visible path that brings it back at the right time.
+The public landing is a bright German summer journey guided by BuBu, with product clarity and conversion kept ahead of scenery.
 
 ## Ownable world
 
-- Deep midnight navy and indigo base.
-- Amber light represents progress and the right moment to review.
-- Violet light represents memory connections and the LearnBox brand.
-- BuBu is the guide, not decoration.
-- German architecture, rail, river, city and landscape motifs form a coherent wallpaper world.
-- Wallpaper art stays dark and quiet behind Persian copy; it is never a tourist collage or flag motif.
+- Berlin-blue sky, cloud white, leaf green, sun yellow and LearnBox purple.
+- Purple paths represent memory connections and the Leitner return route.
+- Warm yellow marks progress and the right review moment.
+- German city, rail, Rhine and Cologne cues form coherent chapter settings.
+- BuBu is a large scene guide, not a repeated decorative sticker.
+- The world is layered and bright, but never a tourist collage or flag motif.
 
 ## Motion language
 
-- GSAP drives slow, scroll-linked cinematic depth.
-- CSS handles short entrance and state transitions.
+- GSAP and ScrollTrigger drive cinematic scene phases and depth.
+- Motion for React handles component state and disclosure transitions.
+- CSS handles low-cost idle movement.
+- SVG explains card routes and progress.
 - The dominant movement is the learning path resolving from scattered to organized.
-- Capable desktop receives separated sky, landmark and route-light layers.
+- Capable desktop receives separated sky, cloud, city, foliage and route layers.
 - Mobile receives one simplified atmospheric layer.
 - Reduced Motion and static fallback preserve the complete story and every CTA.
-- No scroll hijacking, long mobile pinning, decorative particle noise or perpetual card floating.
+- No scroll hijacking, long mobile pinning, decorative particle noise or unnecessary 3D.
 
 ## Type and layout
 
@@ -39,3 +41,4 @@ The page should feel cinematic, premium, warm and dimensional without becoming c
 ## Protected assets
 
 Use the existing approved BuBu assets from the LearnBox repository. Do not regenerate or replace the character without explicit approval.
+New V3 scene assets may be added with versioned filenames, but existing source files must never be overwritten.
