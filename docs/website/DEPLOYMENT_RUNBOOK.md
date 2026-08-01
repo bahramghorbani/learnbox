@@ -91,7 +91,12 @@ After approved screenshots, QR codes and final Open Graph art are versioned, set
 LEARNBOX_PRODUCT_SCREEN_STATUS=approved
 LEARNBOX_QR_STATUS=approved
 LEARNBOX_OG_STATUS=approved
+LEARNBOX_LEGAL_REVIEW_STATUS=approved
 ```
+
+`LEARNBOX_LEGAL_REVIEW_STATUS=approved` may be set only after owner/counsel
+review of the operational privacy and terms drafts. Preview validation does not
+require this value; Production validation fails closed without it.
 
 Then run:
 

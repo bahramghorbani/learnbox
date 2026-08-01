@@ -4,9 +4,11 @@ import { useEffect } from 'react';
 
 export function MotionOrchestrator() {
   useEffect(() => {
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const mobile = window.matchMedia('(max-width: 720px)').matches;
     const root = document.documentElement;
+    const fullMotionMedia = window.matchMedia(
+      '(min-width: 721px) and (prefers-reduced-motion: no-preference)',
+    );
+    const mobile = false;
     const scenes = Array.from(document.querySelectorAll<HTMLElement>('[data-scene]'));
     const chapterBackdrops = Array.from(
       document.querySelectorAll<HTMLElement>('[data-chapter-backdrop]'),
@@ -20,31 +22,49 @@ export function MotionOrchestrator() {
       : [];
     const productDevice = productStory?.querySelector<HTMLElement>('[data-product-device]') ?? null;
 
-    root.classList.add('motion-ready');
-    root.dataset.motionProfile = reducedMotion ? 'reduced' : mobile ? 'mobile' : 'full';
-
-    if (reducedMotion) {
-      scenes.forEach((scene) => scene.classList.add('is-scene-active'));
-      return () => {
-        scenes.forEach((scene) => scene.classList.remove('is-scene-active'));
-        root.classList.remove('motion-ready');
-        delete root.dataset.motionProfile;
-      };
-    }
-
-    let cancelled = false;
+    let disposed = false;
+    let generation = 0;
     let context: { revert: () => void } | undefined;
-    let resetProductState: (() => void) | undefined;
+    let idleId: number | undefined;
+    let timeoutId: ReturnType<typeof globalThis.setTimeout> | undefined;
 
-    const initializeMotion = async () => {
+    const resetSemanticState = () => {
+      scenes.forEach((scene) => scene.classList.remove('is-scene-active'));
+      productStages.forEach((stage, index) => {
+        if (index === 0) stage.setAttribute('aria-current', 'true');
+        else stage.removeAttribute('aria-current');
+      });
+      productScreens.forEach((screen) => {
+        screen.classList.remove('is-product-screen-active');
+        screen.removeAttribute('aria-hidden');
+      });
+    };
+
+    const cancelScheduledInitialization = () => {
+      if (idleId !== undefined) window.cancelIdleCallback(idleId);
+      if (timeoutId !== undefined) window.clearTimeout(timeoutId);
+      idleId = undefined;
+      timeoutId = undefined;
+    };
+
+    const stopMotion = () => {
+      generation += 1;
+      cancelScheduledInitialization();
+      context?.revert();
+      context = undefined;
+      resetSemanticState();
+      root.classList.remove('motion-ready');
+    };
+
+    const initializeMotion = async (runGeneration: number) => {
       const [{ gsap }, { ScrollTrigger }] = await Promise.all([
         import('gsap'),
         import('gsap/ScrollTrigger'),
       ]);
-      if (cancelled) return;
+      if (disposed || runGeneration !== generation || !fullMotionMedia.matches) return;
 
       gsap.registerPlugin(ScrollTrigger);
-      context = gsap.context(
+      const nextContext = gsap.context(
         () => {
           scenes.forEach((scene) => {
             ScrollTrigger.create({
@@ -337,17 +357,6 @@ export function MotionOrchestrator() {
               });
             };
 
-            resetProductState = () => {
-              productStages.forEach((stage, index) => {
-                if (index === 0) stage.setAttribute('aria-current', 'true');
-                else stage.removeAttribute('aria-current');
-              });
-              productScreens.forEach((screen) => {
-                screen.classList.remove('is-product-screen-active');
-                screen.removeAttribute('aria-hidden');
-              });
-            };
-
             const initialStage =
               productStages.find((stage) => stage.getAttribute('aria-current') === 'true') ??
               productStages[0];
@@ -435,15 +444,6 @@ export function MotionOrchestrator() {
                   .from('.bubu--celebrate', { yPercent: 16, opacity: 0 }, '-=.3'),
             },
             {
-              trigger: '.product-scene',
-              tween: () =>
-                gsap
-                  .timeline()
-                  .from('.app-screen--back', { x: -90, rotateY: 30, opacity: 0 })
-                  .from('.app-screen--middle', { x: 90, rotateY: -30, opacity: 0 }, '-=.5')
-                  .from('.app-screen--front', { y: 70, scale: 0.88, opacity: 0 }, '-=.42'),
-            },
-            {
               trigger: '.download-scene',
               tween: () =>
                 gsap
@@ -468,24 +468,55 @@ export function MotionOrchestrator() {
         },
         document.querySelector('.site-v3') ?? document.body,
       );
+
+      if (disposed || runGeneration !== generation || !fullMotionMedia.matches) {
+        nextContext.revert();
+        resetSemanticState();
+        return;
+      }
+
+      context = nextContext;
+      ScrollTrigger.refresh();
     };
 
-    let idleId: number | undefined;
-    let timeoutId: ReturnType<typeof globalThis.setTimeout> | undefined;
+    const scheduleMotion = () => {
+      const runGeneration = generation;
+      const start = () => {
+        idleId = undefined;
+        timeoutId = undefined;
+        void initializeMotion(runGeneration);
+      };
 
-    if ('requestIdleCallback' in window) {
-      idleId = window.requestIdleCallback(() => void initializeMotion(), { timeout: 1400 });
-    } else {
-      timeoutId = globalThis.setTimeout(() => void initializeMotion(), 700);
-    }
+      if ('requestIdleCallback' in window) {
+        idleId = window.requestIdleCallback(start, { timeout: 1400 });
+      } else {
+        timeoutId = globalThis.setTimeout(start, 700);
+      }
+    };
+
+    const updateMotionProfile = () => {
+      stopMotion();
+      if (disposed) return;
+
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      root.dataset.motionProfile = reducedMotion
+        ? 'reduced'
+        : fullMotionMedia.matches
+          ? 'full'
+          : 'mobile';
+
+      if (!fullMotionMedia.matches) return;
+      root.classList.add('motion-ready');
+      scheduleMotion();
+    };
+
+    fullMotionMedia.addEventListener('change', updateMotionProfile);
+    updateMotionProfile();
 
     return () => {
-      cancelled = true;
-      if (idleId !== undefined) window.cancelIdleCallback(idleId);
-      if (timeoutId !== undefined) window.clearTimeout(timeoutId);
-      context?.revert();
-      resetProductState?.();
-      root.classList.remove('motion-ready');
+      disposed = true;
+      fullMotionMedia.removeEventListener('change', updateMotionProfile);
+      stopMotion();
       delete root.dataset.motionProfile;
     };
   }, []);

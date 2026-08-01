@@ -66,7 +66,7 @@ const definitions = [
 
 export const destinationDefinitions = Object.freeze(definitions);
 
-export function resolveDestination(definition, value) {
+export function resolveDestination(definition, value, siteUrl = 'https://learnboxapp.com') {
   const suppliedValue = value === undefined ? definition.defaultValue : value;
   const normalized = suppliedValue?.trim();
   if (!normalized && value === undefined && definition.defaultValue === undefined) {
@@ -96,11 +96,18 @@ export function resolveDestination(definition, value) {
 
     if (!allowedProtocol || !allowedHost) throw new Error('Destination is not approved.');
 
+    const isLegalDestination = definition.id === 'privacy' || definition.id === 'terms';
+    const configuredSite = new URL(siteUrl);
+    const resolvedUrl =
+      isLegalDestination && url.origin === configuredSite.origin
+        ? `${url.pathname}${url.search}${url.hash}`
+        : url.toString();
+
     return {
       id: definition.id,
       label: definition.label,
       status: 'available',
-      url: url.toString(),
+      url: resolvedUrl,
     };
   } catch {
     return {
@@ -113,12 +120,14 @@ export function resolveDestination(definition, value) {
 }
 
 export function buildSiteConfig(environment) {
+  const siteUrl = environment.NEXT_PUBLIC_SITE_URL?.trim() || 'https://learnboxapp.com';
+
   return {
-    siteUrl: environment.NEXT_PUBLIC_SITE_URL?.trim() || 'https://learnboxapp.com',
+    siteUrl,
     destinations: Object.fromEntries(
       destinationDefinitions.map((definition) => [
         definition.id,
-        resolveDestination(definition, environment[definition.env]),
+        resolveDestination(definition, environment[definition.env], siteUrl),
       ]),
     ),
   };

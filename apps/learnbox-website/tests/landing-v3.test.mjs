@@ -6,7 +6,10 @@ import Module, { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import { extname, join, resolve } from 'node:path';
 import test from 'node:test';
-import { productStoryStages } from '../app/components/landing/product-story-data.ts';
+import {
+  productStoryInterfaceNote,
+  productStoryStages,
+} from '../app/components/landing/product-story-data.ts';
 
 const appRoot = resolve(import.meta.dirname, '..');
 const require = createRequire(import.meta.url);
@@ -117,6 +120,7 @@ async function openChromePage(port, url, viewport, options = {}) {
   let nextId = 0;
   const pending = new Map();
   const networkFailures = [];
+  const networkErrorResponses = [];
   const consoleIssues = [];
   socket.addEventListener('message', (event) => {
     const message = JSON.parse(event.data);
@@ -125,6 +129,13 @@ async function openChromePage(port, url, viewport, options = {}) {
         networkFailures.push({
           errorText: message.params.errorText,
           type: message.params.type,
+        });
+      }
+      if (message.method === 'Network.responseReceived' && message.params.response.status >= 400) {
+        networkErrorResponses.push({
+          status: message.params.response.status,
+          type: message.params.type,
+          url: message.params.response.url,
         });
       }
       if (
@@ -215,7 +226,21 @@ async function openChromePage(port, url, viewport, options = {}) {
       return outerHTML;
     },
     getConsoleIssues: () => [...consoleIssues],
+    getNetworkErrorResponses: () => [...networkErrorResponses],
     getNetworkFailures: () => [...networkFailures],
+    setReducedMotion: async (reducedMotion) => {
+      await send('Emulation.setEmulatedMedia', {
+        features: [
+          {
+            name: 'prefers-reduced-motion',
+            value: reducedMotion ? 'reduce' : 'no-preference',
+          },
+        ],
+      });
+    },
+    setViewport: async (viewport) => {
+      await send('Emulation.setDeviceMetricsOverride', viewport);
+    },
     captureScreenshot: async (path) => {
       const { data } = await send('Page.captureScreenshot', {
         captureBeyondViewport: false,
@@ -371,7 +396,7 @@ test('renders four accessible product stages with truthful copy and passive scre
   );
   assert.match(device ?? '', /role="group"/);
   assert.match(device ?? '', /aria-label="[^"]*LearnBox[^"]*"/);
-  assert.match(markup, /اعداد داخل تصویر، نمونه‌ای از وضعیت رابط کاربری‌اند/);
+  assert.match(markup, new RegExp(productStoryInterfaceNote));
   assert.doesNotMatch(markup, /app-screen--(?:back|middle|front)/);
 
   for (const stage of productStoryStages) {
@@ -406,7 +431,10 @@ test('renders responsive screenshot dimensions with only the first image priorit
 });
 
 test('removes every fictional app-screen source', () => {
-  assert.doesNotMatch(fictionalMockupSources, /\.app-screen--(?:back|middle|front)/);
+  assert.doesNotMatch(
+    `${fictionalMockupSources}\n${motionOrchestratorSource}`,
+    /(?:\.product-scene|\.app-screen--(?:back|middle|front))/,
+  );
 });
 
 const browserLayoutUrl = process.env.LEARNBOX_BROWSER_LAYOUT_URL;
@@ -644,6 +672,111 @@ test(
     }
     t.diagnostic(`desktop stage sync: ${JSON.stringify(desktopStageSync)}`);
 
+    const readResponsiveMotionState = async () =>
+      desktop.evaluate(`(() => {
+        const device = document.querySelector('[data-product-device]');
+        const stages = Array.from(document.querySelectorAll('[data-product-stage]'));
+        const screens = Array.from(document.querySelectorAll('[data-product-screen]'));
+        const styleOf = (element) => {
+          const style = getComputedStyle(element);
+          return {
+            opacity: Number(style.opacity),
+            position: style.position,
+            transform: style.transform,
+            visibility: style.visibility
+          };
+        };
+        return {
+          profile: document.documentElement.dataset.motionProfile,
+          deviceDisplay: getComputedStyle(device).display,
+          devicePosition: getComputedStyle(device).position,
+          activeScreens: screens.filter((screen) =>
+            screen.classList.contains('is-product-screen-active')
+          ).length,
+          hiddenScreens: screens.filter((screen) => screen.hasAttribute('aria-hidden')).length,
+          screenStyles: screens.map(styleOf),
+          stageStyles: stages.map(styleOf)
+        };
+      })()`);
+
+    await desktop.setViewport({
+      width: 390,
+      height: 844,
+      deviceScaleFactor: 1,
+      mobile: true,
+    });
+    await new Promise((resolve) => setTimeout(resolve, 900));
+    const resizedMobileState = await readResponsiveMotionState();
+    assert.equal(resizedMobileState.profile, 'mobile');
+    assert.equal(resizedMobileState.deviceDisplay, 'contents');
+    assert.equal(resizedMobileState.activeScreens, 0);
+    assert.equal(resizedMobileState.hiddenScreens, 0);
+    for (const state of resizedMobileState.screenStyles) {
+      assert.equal(state.position, 'relative');
+      assert.equal(state.opacity, 1);
+      assert.equal(state.transform, 'none');
+      assert.equal(state.visibility, 'visible');
+    }
+    t.diagnostic(`same-page desktop to mobile: ${JSON.stringify(resizedMobileState)}`);
+
+    await desktop.setViewport({
+      width: 1440,
+      height: 1000,
+      deviceScaleFactor: 1,
+      mobile: false,
+    });
+    await new Promise((resolve) => setTimeout(resolve, 1700));
+    const restoredDesktopState = await desktop.evaluate(`(async () => {
+      const stage = document.querySelector('[data-product-stage="today"]');
+      const top = stage.getBoundingClientRect().top + scrollY - innerHeight * 0.32;
+      scrollTo({ top, behavior: 'instant' });
+      await new Promise((resolve) => setTimeout(resolve, 700));
+      return {
+        profile: document.documentElement.dataset.motionProfile,
+        activeScreen: document.querySelector(
+          '[data-product-screen].is-product-screen-active'
+        )?.dataset.productScreen ?? null,
+        currentStage: document.querySelector(
+          '[data-product-stage][aria-current="true"]'
+        )?.dataset.productStage ?? null,
+        hiddenScreens: document.querySelectorAll('[data-product-screen][aria-hidden]').length
+      };
+    })()`);
+    assert.equal(restoredDesktopState.profile, 'full');
+    assert.equal(restoredDesktopState.activeScreen, 'today');
+    assert.equal(restoredDesktopState.currentStage, 'today');
+    assert.equal(restoredDesktopState.hiddenScreens, 4);
+    t.diagnostic(`same-page mobile to desktop: ${JSON.stringify(restoredDesktopState)}`);
+
+    await desktop.setReducedMotion(true);
+    await new Promise((resolve) => setTimeout(resolve, 900));
+    const toggledReducedState = await readResponsiveMotionState();
+    assert.equal(toggledReducedState.profile, 'reduced');
+    assert.equal(toggledReducedState.devicePosition, 'static');
+    assert.equal(toggledReducedState.activeScreens, 0);
+    assert.equal(toggledReducedState.hiddenScreens, 0);
+    for (const state of [...toggledReducedState.stageStyles, ...toggledReducedState.screenStyles]) {
+      assert.equal(state.position, 'static');
+      assert.equal(state.opacity, 1);
+      assert.equal(state.transform, 'none');
+      assert.equal(state.visibility, 'visible');
+    }
+    t.diagnostic(`same-page reduced motion enabled: ${JSON.stringify(toggledReducedState)}`);
+
+    await desktop.setReducedMotion(false);
+    await new Promise((resolve) => setTimeout(resolve, 1700));
+    const restoredFullMotionState = await desktop.evaluate(`(() => ({
+      profile: document.documentElement.dataset.motionProfile,
+      activeScreens: document.querySelectorAll(
+        '[data-product-screen].is-product-screen-active'
+      ).length,
+      hiddenScreens: document.querySelectorAll('[data-product-screen][aria-hidden]').length
+    }))()`);
+    assert.equal(restoredFullMotionState.profile, 'full');
+    assert.equal(restoredFullMotionState.activeScreens, 1);
+    assert.equal(restoredFullMotionState.hiddenScreens, 4);
+    t.diagnostic(`same-page full motion restored: ${JSON.stringify(restoredFullMotionState)}`);
+
     await desktop.evaluate(`scrollTo({ top: 0, behavior: 'instant' })`);
     const keyboardTrail = [];
     for (let index = 0; index < 22; index += 1) {
@@ -825,6 +958,36 @@ test(
     }
     t.diagnostic(`mobile 390x844: ${JSON.stringify(mobileLayout)}`);
 
+    const leitnerContrast = await mobile.evaluate(`(() => {
+      const luminance = (rgb) => {
+        const channels = rgb.match(/[\\d.]+/g).slice(0, 3).map((value) => Number(value) / 255);
+        const linear = channels.map((value) =>
+          value <= 0.03928 ? value / 12.92 : Math.pow((value + 0.055) / 1.055, 2.4)
+        );
+        return linear[0] * 0.2126 + linear[1] * 0.7152 + linear[2] * 0.0722;
+      };
+      return Array.from(document.querySelectorAll('.leitner-card')).flatMap((card) => {
+        const background = getComputedStyle(card).backgroundColor;
+        return Array.from(card.querySelectorAll('small, strong')).map((text) => {
+          const foreground = getComputedStyle(text).color;
+          const light = Math.max(luminance(background), luminance(foreground));
+          const dark = Math.min(luminance(background), luminance(foreground));
+          return {
+            card: card.className,
+            element: text.tagName,
+            ratio: (light + 0.05) / (dark + 0.05)
+          };
+        });
+      });
+    })()`);
+    for (const result of leitnerContrast) {
+      assert.ok(
+        result.ratio >= 4.5,
+        `Leitner text contrast is below 4.5:1: ${JSON.stringify(result)}`,
+      );
+    }
+    t.diagnostic(`mobile Leitner contrast: ${JSON.stringify(leitnerContrast)}`);
+
     const reduced = await openChromePage(
       port,
       browserLayoutUrl,
@@ -932,6 +1095,13 @@ test(
           unexpectedNetworkFailures,
         )}`,
       );
+      assert.deepEqual(
+        page.getNetworkErrorResponses(),
+        [],
+        `${label} received HTTP responses with status >= 400: ${JSON.stringify(
+          page.getNetworkErrorResponses(),
+        )}`,
+      );
     }
   },
 );
@@ -963,7 +1133,7 @@ const exactCopy = [
   'یادگیری ساده، منظم و همیشه در دسترس.',
   'مرورهای امروز، میزان پیشرفت و واژه‌هایی که به تمرین بیشتری نیاز دارند، همه در یک محیط روشن و قابل‌فهم در اختیار تو هستند.',
   'از همین امروز یادگیری را شروع کن.',
-  'نسخه اندروید LearnBox را از کافه‌بازار دریافت کن یا با نسخه وب روی iPhone، iPad و مرورگرهای پشتیبانی‌شده، مسیر یادگیری‌ات را ادامه بده.',
+  'پیوندهای رسمی انتشار LearnBox هنوز اعلام نشده‌اند.',
   'دانلود از کافه‌بازار',
   'ورود به نسخه وب',
   'بیرون از اپ هم کنار LearnBox بمان.',

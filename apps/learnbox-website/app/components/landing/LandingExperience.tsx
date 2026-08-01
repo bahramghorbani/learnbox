@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { siteConfig } from '../../../src/config/site.mjs';
 import { GermanyChapterBackdrop, SummerBackdrop } from '../../../src/themes/summer';
@@ -35,6 +36,28 @@ const themedBubu = {
 
 type Destination = (typeof siteConfig.destinations)[string];
 
+function DestinationLink({
+  children,
+  destination,
+}: {
+  children: ReactNode;
+  destination: Destination;
+}) {
+  const href = destination.status === 'available' ? destination.url : null;
+  if (!href) return <span aria-disabled="true">{children}</span>;
+
+  const opensExternally = href.startsWith('https://');
+  return (
+    <a
+      href={href}
+      target={opensExternally ? '_blank' : undefined}
+      rel={opensExternally ? 'noopener noreferrer' : undefined}
+    >
+      {children}
+    </a>
+  );
+}
+
 export function LandingExperience() {
   const [notice, setNotice] = useState('');
   const unavailable = (label: string) =>
@@ -43,6 +66,16 @@ export function LandingExperience() {
   const cafeBazaar = siteConfig.destinations.cafeBazaar;
   const destinationHref = (destination: Destination) =>
     destination.status === 'available' ? destination.url : null;
+  const hasWebApp = Boolean(destinationHref(webApp));
+  const hasCafeBazaar = Boolean(destinationHref(cafeBazaar));
+  const downloadAvailabilityCopy =
+    hasWebApp && hasCafeBazaar
+      ? 'نسخهٔ اندروید LearnBox از کافه‌بازار در دسترس است و می‌توانی نسخهٔ وب رسمی را در مرورگر باز کنی.'
+      : hasCafeBazaar
+        ? 'نسخهٔ اندروید LearnBox از پیوند رسمی کافه‌بازار در دسترس است؛ پیوند نسخهٔ وب هنوز اعلام نشده است.'
+        : hasWebApp
+          ? 'نسخهٔ وب رسمی LearnBox در مرورگر در دسترس است؛ پیوند انتشار کافه‌بازار هنوز اعلام نشده است.'
+          : 'پیوندهای رسمی انتشار LearnBox هنوز اعلام نشده‌اند. پس از تأیید مقصدهای رسمی، همین‌جا در دسترس قرار می‌گیرند.';
 
   return (
     <main className="site-v3">
@@ -289,11 +322,12 @@ export function LandingExperience() {
         <div className="wrap download-layout">
           <div className="scene-heading chapter-heading-veil">
             <span>کلن · کنار راین</span>
-            <h2>از همین امروز یادگیری را شروع کن.</h2>
-            <p>
-              نسخه اندروید LearnBox را از کافه‌بازار دریافت کن یا با نسخه وب روی iPhone، iPad و
-              مرورگرهای پشتیبانی‌شده، مسیر یادگیری‌ات را ادامه بده.
-            </p>
+            <h2>
+              {hasWebApp || hasCafeBazaar
+                ? 'از همین امروز یادگیری را شروع کن.'
+                : 'انتشار رسمی LearnBox هنوز آغاز نشده است.'}
+            </h2>
+            <p>{downloadAvailabilityCopy}</p>
             <div className="hero-actions">
               {destinationHref(cafeBazaar) ? (
                 <a
@@ -424,11 +458,15 @@ export function LandingExperience() {
         <span>LearnBox</span>
         <small>یادگیری واژگان آلمانی، روشن و ماندگار.</small>
         <nav aria-label="پیوندهای حقوقی و ارتباطی">
-          <a href="/privacy">حریم خصوصی</a>
-          <a href="/terms">شرایط استفاده</a>
-          <a href={destinationHref(siteConfig.destinations.contact) ?? undefined}>
+          <DestinationLink destination={siteConfig.destinations.privacy}>
+            حریم خصوصی
+          </DestinationLink>
+          <DestinationLink destination={siteConfig.destinations.terms}>
+            شرایط استفاده
+          </DestinationLink>
+          <DestinationLink destination={siteConfig.destinations.contact}>
             ارتباط با LearnBox
-          </a>
+          </DestinationLink>
         </nav>
       </footer>
     </main>

@@ -19,10 +19,33 @@ test('empty environment activates only the four owner-verified destinations', ()
       instagram: { status: 'unavailable', url: null },
       linkedin: { status: 'unavailable', url: null },
       pinterest: { status: 'unavailable', url: null },
-      privacy: { status: 'available', url: 'https://learnboxapp.com/privacy' },
-      terms: { status: 'available', url: 'https://learnboxapp.com/terms' },
+      privacy: { status: 'available', url: '/privacy' },
+      terms: { status: 'available', url: '/terms' },
       contact: { status: 'available', url: 'mailto:hi@learnboxapp.com' },
     },
+  );
+});
+
+test('same-origin legal overrides normalize to internal pathname navigation', () => {
+  const destinations = buildSiteConfig({
+    NEXT_PUBLIC_SITE_URL: 'https://learnboxapp.com',
+    NEXT_PUBLIC_PRIVACY_URL: 'https://learnboxapp.com/privacy?lang=fa#rights',
+    NEXT_PUBLIC_TERMS_URL: 'https://learnboxapp.com/terms',
+  }).destinations;
+
+  assert.equal(destinations.privacy.url, '/privacy?lang=fa#rights');
+  assert.equal(destinations.terms.url, '/terms');
+});
+
+test('valid external legal override remains an approved HTTPS destination', () => {
+  const destination = buildSiteConfig({
+    NEXT_PUBLIC_SITE_URL: 'https://learnboxapp.com',
+    NEXT_PUBLIC_TERMS_URL: 'https://legal.example/terms',
+  }).destinations.terms;
+
+  assert.deepEqual(
+    { status: destination.status, url: destination.url },
+    { status: 'available', url: 'https://legal.example/terms' },
   );
 });
 

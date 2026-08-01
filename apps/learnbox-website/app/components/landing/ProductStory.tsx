@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import { GermanyChapterBackdrop } from '../../../src/themes/summer';
 import {
+  productStoryInterfaceNote,
   productStoryStages,
   type ProductStoryStage as ProductStoryStageData,
 } from './product-story-data';
@@ -56,9 +57,7 @@ export function ProductStory(): React.JSX.Element {
             <ProductStoryStage key={stage.id} stage={stage} index={index} />
           ))}
 
-          <p className="product-story__disclosure">
-            اعداد داخل تصویر، نمونه‌ای از وضعیت رابط کاربری‌اند
-          </p>
+          <p className="product-story__disclosure">{productStoryInterfaceNote}</p>
         </div>
 
         <div data-product-device role="group" aria-label="چهار نمای واقعی از مسیر یادگیری LearnBox">

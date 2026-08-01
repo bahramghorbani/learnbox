@@ -36,6 +36,10 @@ if (!['preview', 'production'].includes(mode)) {
     if (process.env.LEARNBOX_OG_STATUS !== 'approved') {
       issues.push('LEARNBOX_OG_STATUS must be approved.');
     }
+
+    if (process.env.LEARNBOX_LEGAL_REVIEW_STATUS !== 'approved') {
+      issues.push('LEARNBOX_LEGAL_REVIEW_STATUS must be approved.');
+    }
   }
 
   if (issues.length > 0) {

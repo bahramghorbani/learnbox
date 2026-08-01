@@ -436,7 +436,7 @@ a:focus-visible {
   display: block;
 }
 .leitner-card small {
-  color: #e8dcff;
+  color: #fff;
 }
 .leitner-card strong {
   margin-top: 18px;
@@ -452,7 +452,7 @@ a:focus-visible {
 }
 .leitner-card--3 {
   right: 52%;
-  background: #5588bd;
+  background: #35658f;
 }
 .leitner-card--4 {
   right: 78%;

@@ -20,6 +20,7 @@ const validReleaseEnvironment = {
   LEARNBOX_PRODUCT_SCREEN_STATUS: 'approved',
   LEARNBOX_QR_STATUS: 'approved',
   LEARNBOX_OG_STATUS: 'approved',
+  LEARNBOX_LEGAL_REVIEW_STATUS: 'approved',
 };
 
 function runReadiness(mode, environment = {}) {
@@ -56,6 +57,7 @@ test('production gate rejects missing destinations and unapproved product conten
   assert.match(result.stderr, /LEARNBOX_PRODUCT_SCREEN_STATUS/);
   assert.match(result.stderr, /LEARNBOX_QR_STATUS/);
   assert.match(result.stderr, /LEARNBOX_OG_STATUS/);
+  assert.match(result.stderr, /LEARNBOX_LEGAL_REVIEW_STATUS/);
   assert.doesNotMatch(result.stderr, /NEXT_PUBLIC_TELEGRAM_URL/);
   assert.doesNotMatch(result.stderr, /NEXT_PUBLIC_PRIVACY_URL/);
   assert.doesNotMatch(result.stderr, /NEXT_PUBLIC_TERMS_URL/);
@@ -67,6 +69,15 @@ test('production gate accepts a complete valid release configuration', () => {
 
   assert.equal(result.status, 0, result.stderr);
   assert.match(result.stdout, /PRODUCTION UPLOAD READY/);
+});
+
+test('production gate rejects a complete configuration without approved legal review', () => {
+  const withoutLegalApproval = { ...validReleaseEnvironment };
+  delete withoutLegalApproval.LEARNBOX_LEGAL_REVIEW_STATUS;
+  const result = runReadiness('production', withoutLegalApproval);
+
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /LEARNBOX_LEGAL_REVIEW_STATUS must be approved/);
 });
 
 test('production gate rejects insecure or mismatched official destinations', () => {
