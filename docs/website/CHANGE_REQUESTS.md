@@ -171,6 +171,16 @@ Resume point:
 
 Status: Completed — exact-source Preview deployed and verified
 
+Fix Round 1:
+
+- Corrected the 390 px product-story regression where flattened grid children
+  formed implicit columns and clipped screenshots off-screen.
+- Added browser assertions for viewport/container containment, one-column
+  stage/screen order, page width and complete per-surface console/network
+  cleanliness.
+- Replaced the mobile product-story evidence and preserved desktop sticky,
+  reduced-motion and JavaScript-disabled legal behavior.
+
 Request:
 
 - Replace fictional app mockups with the four owner-supplied screenshots.
@@ -184,14 +194,18 @@ Request:
 Local validation:
 
 - Browser contract: 14/14 passed, including bidirectional product-stage sync,
-  390×844 mobile flow, reduced motion, keyboard focus and JavaScript-disabled
-  legal HTML.
+  exact 390×844 mobile containment/flow, reduced motion, keyboard focus,
+  JavaScript-disabled legal HTML and final console/network sweeps.
 - In-app Browser evidence: 1440×900, 1024×768 and 390×844; no horizontal
   overflow, failed images, overlay or console errors.
 - Lighthouse 12.8.2 clean mobile profile: Performance 97, Accessibility 100,
   Best Practices 100, SEO 100 and CLS 0.
 - Build output: home First Load JS 120 kB; shared 102 kB.
 - Canonical BuBu hashes remained unchanged.
+- Fix Round 1 source `831fdc8d234b3c40429bea90557715d146355419`
+  is deployed to the Ready/Preview deployment
+  `dpl_8zMFz3YvMPyMdndav4FzTbEmgYMw` at
+  `https://learnbox-landing-preview-ix8lgp6h2-learn-box.vercel.app`.
 - `https://t.me/learnboxapp`, `mailto:hi@learnboxapp.com`, `/privacy` and
   `/terms` are active. Web app, Café Bazaar, Instagram, LinkedIn and Pinterest
   remain unavailable.
@@ -205,9 +219,9 @@ Legal and release boundary:
 
 Preview delivery:
 
-- source: `40f855451a42a66763a23f833c8aba51263197a1`;
-- deployment: `dpl_CzCZyeGGLBXkuyKAxjKDkYY3Suv4`;
-- URL: `https://learnbox-landing-preview-c480inhui-learn-box.vercel.app`;
+- source: `831fdc8d234b3c40429bea90557715d146355419`;
+- deployment: `dpl_8zMFz3YvMPyMdndav4FzTbEmgYMw`;
+- URL: `https://learnbox-landing-preview-ix8lgp6h2-learn-box.vercel.app`;
 - Vercel target/status: Preview/Ready, with no production or custom-domain alias;
 - `/`, `/privacy` and `/terms`: HTTP 200 with canonical and security headers;
 - deployed browser contract: 14/14 passed, including desktop/mobile product flow,

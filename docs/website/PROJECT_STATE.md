@@ -74,10 +74,13 @@ production destinations, artwork and legal review.
 - Task 6 Lighthouse mobile: Performance 97, Accessibility 100, Best Practices
   100, SEO 100, LCP 2.6 s, TBT 40 ms and CLS 0.
 - Home First Load JS is 120 kB, with 102 kB shared.
-- Exact source `40f855451a42a66763a23f833c8aba51263197a1` deployed only to
+- Fix Round 1 removed implicit mobile grid columns that clipped screenshots;
+  the browser contract now locks stage/screen containment, alternating vertical
+  order, 390 px page width and full console/network cleanliness.
+- Exact source `831fdc8d234b3c40429bea90557715d146355419` deployed only to
   `learnbox-landing-preview` at
-  `https://learnbox-landing-preview-c480inhui-learn-box.vercel.app`.
-- Deployment `dpl_CzCZyeGGLBXkuyKAxjKDkYY3Suv4` is Ready/Preview; `/`,
+  `https://learnbox-landing-preview-ix8lgp6h2-learn-box.vercel.app`.
+- Deployment `dpl_8zMFz3YvMPyMdndav4FzTbEmgYMw` is Ready/Preview; `/`,
   `/privacy` and `/terms` return 200 with canonical and security headers.
 - The complete browser contract passed 14/14 against the deployed Preview; the
   in-app Browser desktop/mobile/legal path had no overflow, failed image,
