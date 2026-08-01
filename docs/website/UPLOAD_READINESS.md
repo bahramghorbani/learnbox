@@ -7,7 +7,8 @@ PREVIEW UPLOAD READY
 PRODUCTION UPLOAD BLOCKED BY VERIFIED CONTENT
 ```
 
-Checked implementation commit: `cae00b2`.
+Task 6 source commit and immutable Preview URL are recorded after the clean
+verification commit is deployed.
 
 Target package:
 
@@ -24,33 +25,42 @@ apps/mobile
 
 ## Automated evidence
 
-- `pnpm test`: 13/13 passed.
-- `pnpm typecheck`: passed.
-- `pnpm build`: passed; 11 static routes generated.
+- Website tests: 26 passed and 1 browser-environment test skipped in the normal
+  suite; the browser-environment contract passed 14/14 against the built site.
+- Website typecheck: passed.
+- Website build: passed; 13 static routes generated. Home First Load JS is
+  120 kB, with 102 kB shared.
 - Repository-wide `pnpm check`: passed, including format, lint, all workspace
   tests and every security/content/release verifier.
 - `pnpm check:preview`: passed.
 - `pnpm check:release`: blocked as designed while production inputs are absent.
-- Security headers verified on the production server.
-- `/`, `/robots.txt`, `/sitemap.xml`, `/manifest.webmanifest`, `/icon.svg` and the
-  summer social image return HTTP 200.
+- Repository-wide `pnpm check`: passed, including format, lint, all workspace
+  typechecks/tests and every repository verification script.
+- The new immutable Preview checks are recorded below after the verification
+  commit is deployed.
 
 ## Browser evidence
 
-- Chrome-compatible in-app browser: 1440×900, 1024×768 and 390×844; zero
-  horizontal overflow and zero console warnings/errors.
-- Safari: full RTL document and all ten story chapters exposed; page scroll smoke
-  test passed.
-- Firefox: full RTL document and all ten story chapters exposed.
-- Mobile menu: opens with the correct expanded state and closes with Escape.
-- Internal anchors: all targets exist.
-- Placeholder CTA: fixed live status remains visible in the current viewport.
-- DOM audit: one H1, no duplicate IDs, no unnamed buttons, no images without alt,
-  and no nested interactive controls.
+- In-app browser at 1440×900, 1024×768 and 390×844: Persian RTL identity,
+  exact product order `start → today → return → progress`, no horizontal
+  overflow, failed images, framework overlay or console errors.
+- Desktop/laptop: the device remains CSS-sticky while the page scrolls normally;
+  copy and owner-supplied screenshot stay synchronized down and back up.
+- Mobile: four ordinary vertical cards, no swiper and no sticky device.
+- Reduced motion: all four stages are static, visible and require no transform or
+  opacity transition.
+- Keyboard traversal reaches header anchors, the product/download flow, footer,
+  Telegram, privacy, terms and email. Every interactive target has a meaningful
+  name and a visible 3 px focus outline.
+- `/privacy` and `/terms` render readable Persian RTL HTML with JavaScript
+  disabled, canonical metadata and `mailto:hi@learnboxapp.com`; neither route
+  depends on the landing client runtime.
+- Product-story screenshots and legal mobile evidence are versioned under
+  `docs/website/evidence/`.
 
 ## Verified public preview
 
-The landing is deployed as an isolated Vercel Preview:
+The previous landing baseline was deployed as an isolated Vercel Preview:
 
 ```text
 Project: learnbox-landing-preview
@@ -60,17 +70,10 @@ URL: https://learnbox-landing-preview-m7e6nc7ud-learn-box.vercel.app
 Target: Preview
 ```
 
-- The preview is public and does not require a Vercel login.
-- No production domain, DNS record or server-side secret has been attached.
-- Vercel Preview indexing is intentionally disabled with `X-Robots-Tag: noindex`.
-- `/`, `/robots.txt`, `/sitemap.xml`, `/manifest.webmanifest` and `/icon.svg`
-  return HTTP 200 over HTTPS.
-- CSP, HSTS, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff` and the
-  referrer/permissions policies are present.
-- The Vercel feedback toolbar is disabled for this project, so it does not
-  inject a script outside the landing CSP.
-- Live mobile browser audit at 390×844: Persian/RTL document, one H1, all ten
-  chapters, no horizontal overflow and no console errors.
+Task 6 will replace this paragraph with its immutable source SHA, deployment ID
+and Preview URL after deploying only to the same `learnbox-landing-preview`
+project. Production, `learnboxapp.com`, DNS, SSL and server state remain outside
+this task.
 
 ## Lighthouse baseline
 
@@ -78,7 +81,7 @@ Local production build, simulated mobile:
 
 | Category       | Score |
 | -------------- | ----: |
-| Performance    |    91 |
+| Performance    |    97 |
 | Accessibility  |   100 |
 | Best Practices |   100 |
 | SEO            |   100 |
@@ -86,25 +89,15 @@ Local production build, simulated mobile:
 Key metrics:
 
 - First Contentful Paint: 0.8 s
-- Speed Index: 1.3 s
-- Total Blocking Time: 34–253 ms across two optimized cold runs
+- Speed Index: 1.1 s
+- Total Blocking Time: 40 ms
 - Cumulative Layout Shift: 0
-- Largest Contentful Paint: 2.9–3.2 s under Lighthouse throttling
-- Home-route First Load JS: reduced from 204 kB to 160 kB
-- Home-route code: reduced from 96.1 kB to 52.3 kB
+- Largest Contentful Paint: 2.6 s under Lighthouse throttling
+- Home-route First Load JS: 120 kB; shared First Load JS: 102 kB
 
-Lighthouse was pinned to `12.8.2` because the registry dependency graph for
-`13.4.1` was temporarily inconsistent during QA.
-
-After deferring GSAP and ScrollTrigger to browser idle time, two local production
-build runs scored Performance 90 and 93 while Accessibility, Best Practices and
-SEO remained 100. The approved scroll-motion stack and reduced-motion branch are
-still covered by the landing contract tests.
-
-The optimized public Preview was measured after deployment: Performance 90,
-Accessibility 100, Best Practices 100, LCP 2.7 s, TBT 210 ms and CLS 0. Preview
-SEO scores 69 solely because Vercel correctly adds `noindex`; production
-indexing must be tested again after the approved domain is attached.
+The Task 6 run used Lighthouse `12.8.2`, simulated mobile 390×844, a new clean
+Chrome profile and the built local site. GSAP and ScrollTrigger remain deferred
+outside the initial home bundle.
 
 ## Production blockers
 
@@ -112,16 +105,18 @@ indexing must be tested again after the approved domain is attached.
 
 1. Web app URL.
 2. Café Bazaar URL.
-3. Telegram URL.
-4. Instagram URL.
-5. LinkedIn URL.
-6. Pinterest URL.
-7. Privacy URL.
-8. Terms URL.
-9. Contact URL.
-10. Owner-approved real product screenshots.
-11. Owner-approved QR codes generated from the final destinations.
-12. Owner-approved branded Open Graph artwork.
+3. Instagram URL.
+4. LinkedIn URL.
+5. Pinterest URL.
+6. Owner-approved QR codes generated from the final destinations.
+7. Owner-approved branded Open Graph artwork.
+8. Owner/counsel review of the pre-release privacy and terms drafts.
+
+Telegram (`https://t.me/learnboxapp`), contact
+(`mailto:hi@learnboxapp.com`), `/privacy`, `/terms` and the four owner-supplied
+product screenshots are now present and verified. The legal pages are honest
+pre-release product drafts for owner/counsel review; they are not legal advice
+or a claim of legal approval.
 
 No destination should be inferred from a username or an unverified search result.
 

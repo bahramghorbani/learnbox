@@ -117,6 +117,7 @@ async function openChromePage(port, url, viewport, options = {}) {
   let nextId = 0;
   const pending = new Map();
   const networkFailures = [];
+  const consoleIssues = [];
   socket.addEventListener('message', (event) => {
     const message = JSON.parse(event.data);
     if (!message.id) {
@@ -124,6 +125,25 @@ async function openChromePage(port, url, viewport, options = {}) {
         networkFailures.push({
           errorText: message.params.errorText,
           type: message.params.type,
+        });
+      }
+      if (
+        message.method === 'Runtime.consoleAPICalled' &&
+        ['error', 'warning'].includes(message.params.type)
+      ) {
+        consoleIssues.push({
+          type: message.params.type,
+          text: message.params.args
+            .map((argument) => argument.value ?? argument.description)
+            .join(' '),
+        });
+      }
+      if (message.method === 'Runtime.exceptionThrown') {
+        consoleIssues.push({
+          type: 'exception',
+          text:
+            message.params.exceptionDetails.exception?.description ??
+            message.params.exceptionDetails.text,
         });
       }
       return;
@@ -151,9 +171,14 @@ async function openChromePage(port, url, viewport, options = {}) {
   };
 
   await send('Page.enable');
+  await send('DOM.enable');
+  await send('Page.bringToFront');
   await send('Runtime.enable');
   await send('Network.enable');
   await send('Emulation.setDeviceMetricsOverride', viewport);
+  if (options.javaScriptDisabled) {
+    await send('Emulation.setScriptExecutionDisabled', { value: true });
+  }
   await send('Emulation.setEmulatedMedia', {
     features: [
       {
@@ -176,13 +201,31 @@ async function openChromePage(port, url, viewport, options = {}) {
     await new Promise((resolveDelay) => setTimeout(resolveDelay, 50));
   }
   assert.ok(documentReady, `Chrome did not finish navigating to ${url}`);
-  await evaluate(
-    'new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve(true))))',
-  );
+  if (!options.javaScriptDisabled) {
+    await evaluate(
+      'new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve(true))))',
+    );
+  }
 
   return {
     evaluate,
+    getMarkup: async () => {
+      const { root } = await send('DOM.getDocument', { depth: 0 });
+      const { outerHTML } = await send('DOM.getOuterHTML', { nodeId: root.nodeId });
+      return outerHTML;
+    },
+    getConsoleIssues: () => [...consoleIssues],
     getNetworkFailures: () => [...networkFailures],
+    pressTab: async () => {
+      const event = {
+        code: 'Tab',
+        key: 'Tab',
+        nativeVirtualKeyCode: 9,
+        windowsVirtualKeyCode: 9,
+      };
+      await send('Input.dispatchKeyEvent', { ...event, type: 'keyDown' });
+      await send('Input.dispatchKeyEvent', { ...event, type: 'keyUp' });
+    },
     close: () => socket.close(),
   };
 }
@@ -590,7 +633,69 @@ test(
       assert.ok(state.inactiveStageOpacity <= 0.69);
       assert.notEqual(state.currentShadow, 'none');
     }
+    const invalidGsapTargets = desktop
+      .getConsoleIssues()
+      .filter(({ text }) => /GSAP target|Element not found/i.test(text));
+    assert.deepEqual(
+      invalidGsapTargets,
+      [],
+      `Deferred motion addressed missing DOM targets: ${JSON.stringify(invalidGsapTargets)}`,
+    );
     t.diagnostic(`desktop stage sync: ${JSON.stringify(desktopStageSync)}`);
+
+    await desktop.evaluate(`scrollTo({ top: 0, behavior: 'instant' })`);
+    const keyboardTrail = [];
+    for (let index = 0; index < 22; index += 1) {
+      await desktop.pressTab();
+      keyboardTrail.push(
+        await desktop.evaluate(`(() => {
+          const element = document.activeElement;
+          const style = getComputedStyle(element);
+          return {
+            focusVisible: element.matches(':focus-visible'),
+            href: element.getAttribute('href'),
+            label: (element.getAttribute('aria-label') || element.textContent || '')
+              .trim()
+              .replace(/\\s+/g, ' '),
+            outlineStyle: style.outlineStyle,
+            outlineWidth: style.outlineWidth,
+            scrollY,
+            tagName: element.tagName
+        };
+        })()`),
+      );
+    }
+    t.diagnostic(`keyboard trail: ${JSON.stringify(keyboardTrail)}`);
+    const keyboardTargets = keyboardTrail.filter((focus) =>
+      ['A', 'BUTTON'].includes(focus.tagName),
+    );
+    for (const focus of keyboardTargets) {
+      assert.ok(focus.label.length > 0, `Keyboard target lacks an accessible name: ${focus.href}`);
+      assert.equal(
+        focus.focusVisible,
+        true,
+        `Keyboard target is not focus-visible: ${focus.label}`,
+      );
+      assert.notEqual(focus.outlineStyle, 'none');
+      assert.notEqual(focus.outlineWidth, '0px');
+    }
+    for (const href of [
+      '#main-story',
+      '#method',
+      '#paths',
+      '#product',
+      '#download',
+      'https://t.me/learnboxapp',
+      '/privacy',
+      '/terms',
+      'mailto:hi@learnboxapp.com',
+    ]) {
+      assert.ok(
+        keyboardTrail.some((focus) => focus.href === href),
+        `Keyboard navigation never reached ${href}`,
+      );
+    }
+    assert.ok(keyboardTrail.at(-1).scrollY > 0, 'Keyboard traversal never reached the footer');
 
     const mobile = await openChromePage(port, browserLayoutUrl, {
       width: 390,
@@ -731,6 +836,33 @@ test(
       assert.ok(detail.width > 0 && detail.height > 0);
     }
     t.diagnostic(`reduced motion 1440x1000: ${JSON.stringify(reducedLayout)}`);
+
+    for (const route of ['/privacy', '/terms']) {
+      const legalUrl = new URL(route, browserLayoutUrl).href;
+      const legal = await openChromePage(
+        port,
+        legalUrl,
+        {
+          width: 390,
+          height: 844,
+          deviceScaleFactor: 1,
+          mobile: true,
+        },
+        { javaScriptDisabled: true },
+      );
+      t.after(legal.close);
+      const legalMarkup = await legal.getMarkup();
+      assert.match(legalMarkup, /<html[^>]*lang="fa"[^>]*dir="rtl"/);
+      assert.match(
+        legalMarkup,
+        new RegExp(`<link rel="canonical" href="https://learnboxapp\\.com${route}">`),
+      );
+      assert.match(legalMarkup, /href="mailto:hi@learnboxapp\.com"/);
+      assert.match(legalMarkup, /<main\b[^>]*>[\s\S]{500,}<\/main>/);
+      assert.match(legalMarkup, /<h1\b[^>]*>[^<]+<\/h1>/);
+      assert.deepEqual(legal.getConsoleIssues(), []);
+      t.diagnostic(`JavaScript-disabled ${route}: ${legalMarkup.length} bytes of static HTML`);
+    }
   },
 );
 

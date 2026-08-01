@@ -2,16 +2,17 @@
 
 ## Current Release
 
-Version: 1.0 verified public preview
-Status: PREVIEW DEPLOYED — PRODUCTION CONTENT BLOCKED
+Version: 1.1 product-story Preview candidate
+Status: LOCAL QA PASSED — CLEAN PREVIEW DEPLOYMENT PENDING
 
 ## Current Phase
 
-Phase: Production-input gate
+Phase: Product-story and legal Preview verification
 
 ## Current Task
 
-Collect and verify the official production destinations and assets.
+Commit the verified candidate, deploy the exact source to the isolated Preview
+project and repeat the deployed smoke path.
 
 ## Completed
 
@@ -60,19 +61,34 @@ Collect and verify the official production destinations and assets.
   Lighthouse runs scored Performance 90–93 with LCP 2.9–3.2 s and CLS 0.
 - Optimized public Preview reverified at Performance 90, Accessibility 100,
   Best Practices 100, LCP 2.7 s, TBT 210 ms and CLS 0.
+- Four owner-supplied product screenshots replace fictional interface mockups in
+  the exact narrative order: start, today, return and progress.
+- Desktop sticky storytelling, mobile document flow and reduced-motion static
+  fallback passed browser/CDP verification.
+- A stale removed-scene motion target was caught by a new console regression and
+  fixed; the final browser contract reports no GSAP missing-target warnings.
+- Keyboard traversal, exact Telegram/email targets and honest unavailable
+  destinations passed.
+- Persian RTL `/privacy` and `/terms` routes passed JavaScript-disabled static
+  HTML verification with canonical metadata and email links.
+- Task 6 Lighthouse mobile: Performance 97, Accessibility 100, Best Practices
+  100, SEO 100, LCP 2.6 s, TBT 40 ms and CLS 0.
+- Home First Load JS is 120 kB, with 102 kB shared.
 
 ## In Progress
 
-- Owner-approved production URLs, product captures, QR codes and social artwork.
+- Clean exact-source deployment and deployed smoke verification.
 
 ## Remaining
 
-- Verified URLs, QR codes, official social destinations, approved product screenshots and production content.
+- Web app and Café Bazaar URLs; Instagram, LinkedIn and Pinterest destinations;
+  approved QR codes and branded Open Graph artwork.
+- Owner/counsel review of the pre-release privacy and terms drafts.
 - Production domain, SSL, DNS verification and final handover.
 
 ## Active Change Request
 
-CR-LANDING-006 — Upload readiness and deployment safeguards.
+CR-LANDING-007 — Product story, legal routes and Preview verification.
 
 ## Resume Point
 
@@ -81,11 +97,13 @@ production deployment, then start the coordinated domain/DNS/SSL checklist.
 
 ## Blockers
 
-Production remains blocked by verified destinations, approved screenshots, QR
-codes, branded Open Graph art, domain approval and DNS access. Preview has no
-remaining infrastructure blocker.
+Production remains blocked by verified distribution/social destinations, QR
+codes, branded Open Graph art, legal review, domain approval and DNS access. The
+four product screenshots, Telegram, contact, privacy and terms inputs are no
+longer missing.
 
 ## Next Automatic Action
 
-Collect verified production content, run `check:release`, and notify the owner
-before beginning any production-domain or server work.
+Deploy the exact Task 6 commit only to `learnbox-landing-preview`, verify it and
+hand the immutable Preview URL to the owner. Do not begin production-domain,
+DNS, SSL or server work.

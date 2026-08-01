@@ -455,6 +455,7 @@ export function MotionOrchestrator() {
           ];
 
           sceneTimelines.forEach(({ trigger, tween }) => {
+            if (!document.querySelector(trigger)) return;
             const timeline = tween();
             timeline.pause();
             ScrollTrigger.create({

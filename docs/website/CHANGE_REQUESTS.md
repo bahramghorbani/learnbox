@@ -166,3 +166,39 @@ Validation:
 Resume point:
 
 - Connect a separate Vercel project rooted at `apps/learnbox-website` and create the first preview deployment without attaching the production domain.
+
+## CR-LANDING-007 — Product story, legal routes and Preview verification
+
+Status: Local verification passed; exact-source Preview deployment pending
+
+Request:
+
+- Replace fictional app mockups with the four owner-supplied screenshots.
+- Deliver desktop sticky storytelling, mobile document flow and a static
+  reduced-motion fallback in the approved order.
+- Add honest Persian RTL privacy and terms drafts, activate Telegram/contact and
+  keep unknown release destinations unavailable.
+- Complete accessibility, browser, performance and isolated Preview QA without
+  touching Production.
+
+Local validation:
+
+- Browser contract: 14/14 passed, including bidirectional product-stage sync,
+  390×844 mobile flow, reduced motion, keyboard focus and JavaScript-disabled
+  legal HTML.
+- In-app Browser evidence: 1440×900, 1024×768 and 390×844; no horizontal
+  overflow, failed images, overlay or console errors.
+- Lighthouse 12.8.2 clean mobile profile: Performance 97, Accessibility 100,
+  Best Practices 100, SEO 100 and CLS 0.
+- Build output: home First Load JS 120 kB; shared 102 kB.
+- Canonical BuBu hashes remained unchanged.
+- `https://t.me/learnboxapp`, `mailto:hi@learnboxapp.com`, `/privacy` and
+  `/terms` are active. Web app, Café Bazaar, Instagram, LinkedIn and Pinterest
+  remain unavailable.
+
+Legal and release boundary:
+
+- Privacy and terms are pre-release owner-facing drafts pending owner/counsel
+  review, not legal advice or an assertion of approval.
+- Production, `learnboxapp.com`, DNS, SSL, auth, payments, analytics, the learner
+  app and server state are untouched.
