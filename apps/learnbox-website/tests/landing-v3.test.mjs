@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import Module, { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import { extname, join, resolve } from 'node:path';
@@ -216,6 +216,14 @@ async function openChromePage(port, url, viewport, options = {}) {
     },
     getConsoleIssues: () => [...consoleIssues],
     getNetworkFailures: () => [...networkFailures],
+    captureScreenshot: async (path) => {
+      const { data } = await send('Page.captureScreenshot', {
+        captureBeyondViewport: false,
+        format: 'png',
+        fromSurface: true,
+      });
+      writeFileSync(path, Buffer.from(data, 'base64'));
+    },
     pressTab: async () => {
       const event = {
         code: 'Tab',
@@ -436,6 +444,7 @@ test(
     const { port } = await waitForChromeEndpoint(chrome);
     const preview = await fetch(browserLayoutUrl);
     assert.equal(preview.status, 200, `Preview URL is not ready: ${browserLayoutUrl}`);
+    const browserSurfaces = [];
 
     const desktop = await openChromePage(port, browserLayoutUrl, {
       width: 1440,
@@ -444,6 +453,7 @@ test(
       mobile: false,
     });
     t.after(desktop.close);
+    browserSurfaces.push({ label: 'desktop 1440x1000', page: desktop });
     const themedBubuBrowser = await desktop.evaluate(`(async () => {
       const expected = ${JSON.stringify(themedBuBuAssets)};
       const details = [];
@@ -516,7 +526,6 @@ test(
       4,
       'Exactly four secondary themed BuBu images must be lazy-loaded',
     );
-    assert.deepEqual(desktop.getNetworkFailures(), []);
     t.diagnostic(`themed BuBu browser contract: ${JSON.stringify(themedBubuBrowser)}`);
 
     const desktopLayout = await desktop.evaluate(`(async () => {
@@ -633,14 +642,6 @@ test(
       assert.ok(state.inactiveStageOpacity <= 0.69);
       assert.notEqual(state.currentShadow, 'none');
     }
-    const invalidGsapTargets = desktop
-      .getConsoleIssues()
-      .filter(({ text }) => /GSAP target|Element not found/i.test(text));
-    assert.deepEqual(
-      invalidGsapTargets,
-      [],
-      `Deferred motion addressed missing DOM targets: ${JSON.stringify(invalidGsapTargets)}`,
-    );
     t.diagnostic(`desktop stage sync: ${JSON.stringify(desktopStageSync)}`);
 
     await desktop.evaluate(`scrollTo({ top: 0, behavior: 'instant' })`);
@@ -704,6 +705,7 @@ test(
       mobile: true,
     });
     t.after(mobile.close);
+    browserSurfaces.push({ label: 'mobile 390x844', page: mobile });
     const mobileLayout = await mobile.evaluate(`(async () => {
       const settle = () =>
         new Promise((resolve) =>
@@ -711,6 +713,7 @@ test(
         );
       const device = document.querySelector('[data-product-device]');
       const screens = Array.from(document.querySelectorAll('[data-product-screen]'));
+      const container = document.querySelector('.product-story__layout');
       document.documentElement.style.scrollBehavior = 'auto';
       const details = screens.map((screen) => {
         const id = screen.dataset.productScreen;
@@ -724,6 +727,10 @@ test(
           documentBottom: screenRect.bottom + scrollY,
           articleTop: articleRect.top + scrollY,
           articleBottom: articleRect.bottom + scrollY,
+          articleLeft: articleRect.left,
+          articleRight: articleRect.right,
+          screenLeft: screenRect.left,
+          screenRight: screenRect.right,
           position: style.position,
           visibility: style.visibility,
           opacity: Number(style.opacity),
@@ -740,7 +747,12 @@ test(
       scrollBy({ top: 120, behavior: 'instant' });
       await settle();
       const secondTop = first.getBoundingClientRect().top;
+      const containerRect = container.getBoundingClientRect();
       return {
+        viewportWidth: document.documentElement.clientWidth,
+        pageScrollWidth: document.documentElement.scrollWidth,
+        containerLeft: containerRect.left,
+        containerRight: containerRect.right,
         deviceDisplay: getComputedStyle(device).display,
         details,
         scrollDelta: 120,
@@ -758,6 +770,10 @@ test(
     assert.equal(mobileLayout.activeScreens, 0);
     assert.equal(mobileLayout.runtimeHiddenScreens, 0);
     assert.equal(mobileLayout.deviceDisplay, 'contents');
+    assert.ok(
+      mobileLayout.pageScrollWidth <= mobileLayout.viewportWidth + 1,
+      `Mobile page overflows horizontally: ${JSON.stringify(mobileLayout)}`,
+    );
     assert.equal(mobileLayout.details.length, 4);
     assert.deepEqual(
       mobileLayout.details.map(({ id }) => id),
@@ -768,19 +784,45 @@ test(
       assert.equal(detail.visibility, 'visible');
       assert.equal(detail.opacity, 1);
       assert.ok(detail.width > 0 && detail.height > 0);
-      assert.ok(detail.documentTop >= detail.articleTop - 1);
-      assert.ok(detail.documentBottom <= detail.articleBottom + 1);
+      assert.ok(
+        detail.articleLeft >= Math.max(0, mobileLayout.containerLeft) - 1 &&
+          detail.articleRight <=
+            Math.min(mobileLayout.viewportWidth, mobileLayout.containerRight) + 1,
+        `Mobile stage ${detail.id} escapes its container or viewport: ${JSON.stringify(detail)}`,
+      );
+      assert.ok(
+        detail.screenLeft >= Math.max(0, mobileLayout.containerLeft) - 1 &&
+          detail.screenRight <=
+            Math.min(mobileLayout.viewportWidth, mobileLayout.containerRight) + 1,
+        `Mobile screen ${detail.id} escapes its container or viewport: ${JSON.stringify(detail)}`,
+      );
+      assert.ok(
+        detail.documentTop >= detail.articleBottom - 1,
+        `Mobile screen ${detail.id} must follow its matching stage: ${JSON.stringify(detail)}`,
+      );
     }
     for (let index = 1; index < mobileLayout.details.length; index += 1) {
       assert.ok(
-        mobileLayout.details[index - 1].documentBottom <= mobileLayout.details[index].documentTop,
-        `Mobile screenshots overlap or render out of order: ${JSON.stringify(mobileLayout.details)}`,
+        mobileLayout.details[index - 1].documentBottom <=
+          mobileLayout.details[index].articleTop + 1,
+        `Mobile stage/screen pairs overlap or render out of order: ${JSON.stringify(
+          mobileLayout.details,
+        )}`,
       );
     }
     assert.ok(
       Math.abs(mobileLayout.secondTop - mobileLayout.firstTop + mobileLayout.scrollDelta) <= 2,
       `Mobile screenshot is pinned instead of scrolling in flow: ${JSON.stringify(mobileLayout)}`,
     );
+    if (process.env.LEARNBOX_CAPTURE_MOBILE_EVIDENCE) {
+      await mobile.evaluate(`(async () => {
+        document.querySelector('[data-product-stage="start"]').scrollIntoView({ block: 'start' });
+        await new Promise((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve(true))),
+        );
+      })()`);
+      await mobile.captureScreenshot(process.env.LEARNBOX_CAPTURE_MOBILE_EVIDENCE);
+    }
     t.diagnostic(`mobile 390x844: ${JSON.stringify(mobileLayout)}`);
 
     const reduced = await openChromePage(
@@ -795,6 +837,7 @@ test(
       { reducedMotion: true },
     );
     t.after(reduced.close);
+    browserSurfaces.push({ label: 'reduced motion 1440x1000', page: reduced });
     const reducedLayout = await reduced.evaluate(`(async () => {
       await new Promise((resolve) => setTimeout(resolve, 1500));
       const stages = Array.from(document.querySelectorAll('[data-product-stage]'));
@@ -851,6 +894,11 @@ test(
         { javaScriptDisabled: true },
       );
       t.after(legal.close);
+      browserSurfaces.push({
+        allowDisabledScriptAbort: true,
+        label: `JavaScript-disabled ${route}`,
+        page: legal,
+      });
       const legalMarkup = await legal.getMarkup();
       assert.match(legalMarkup, /<html[^>]*lang="fa"[^>]*dir="rtl"/);
       assert.match(
@@ -860,8 +908,30 @@ test(
       assert.match(legalMarkup, /href="mailto:hi@learnboxapp\.com"/);
       assert.match(legalMarkup, /<main\b[^>]*>[\s\S]{500,}<\/main>/);
       assert.match(legalMarkup, /<h1\b[^>]*>[^<]+<\/h1>/);
-      assert.deepEqual(legal.getConsoleIssues(), []);
       t.diagnostic(`JavaScript-disabled ${route}: ${legalMarkup.length} bytes of static HTML`);
+    }
+
+    for (const { allowDisabledScriptAbort = false, label, page } of browserSurfaces) {
+      assert.deepEqual(
+        page.getConsoleIssues(),
+        [],
+        `${label} emitted unexpected console warnings/errors/exceptions: ${JSON.stringify(
+          page.getConsoleIssues(),
+        )}`,
+      );
+      const unexpectedNetworkFailures = page
+        .getNetworkFailures()
+        .filter(
+          ({ errorText, type }) =>
+            !(allowDisabledScriptAbort && type === 'Script' && errorText === ''),
+        );
+      assert.deepEqual(
+        unexpectedNetworkFailures,
+        [],
+        `${label} accumulated failed network requests: ${JSON.stringify(
+          unexpectedNetworkFailures,
+        )}`,
+      );
     }
   },
 );
