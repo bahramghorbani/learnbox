@@ -2,7 +2,7 @@
 
 ## Current Release
 
-Version: 1.1 verified product-story Preview
+Version: 1.2 final-review verified Preview
 Status: PREVIEW VERIFIED — PRODUCTION INPUTS/LEGAL REVIEW BLOCKED
 
 ## Current Phase
@@ -11,8 +11,8 @@ Phase: Owner Preview review and production-input gate
 
 ## Current Task
 
-Hand the verified immutable Preview to the owner and collect the remaining
-production destinations, artwork and legal review.
+Hand the final-review immutable Preview to the owner and collect the remaining
+production destinations, approvals, artwork and legal review.
 
 ## Completed
 
@@ -85,6 +85,19 @@ production destinations, artwork and legal review.
 - The complete browser contract passed 14/14 against the deployed Preview; the
   in-app Browser desktop/mobile/legal path had no overflow, failed image,
   overlay, console error or unavailable-destination leak.
+- Final review closed the download-availability, complete privacy/terms,
+  destination-aware footer, production legal-gate and live media-query lifecycle
+  findings under source `40e79e42bc8ad88d3af55de65f10178847e36ba5`.
+- Dead product-story motion selectors were removed, explanatory copy now uses the
+  shared content source, and the browser audit rejects HTTP status 400 or higher.
+- The final computed mobile Leitner contrast is at least 4.6428:1; local
+  Lighthouse is Performance 97, Accessibility 100, Best Practices 100 and SEO 100.
+- Exact final-review source deployed only to `learnbox-landing-preview` at
+  `https://learnbox-landing-preview-hzk38cm9m-learn-box.vercel.app`.
+- Deployment `dpl_AQQNTjQrJj3A2LPsBxYRDibmbmBJ` is Ready/Preview. `/`,
+  `/privacy` and `/terms` return 200 with canonical and security headers, while
+  the deployed browser contract reports zero unexpected console issues, network
+  failures or HTTP responses with status 400 or higher.
 - Production, `learnboxapp.com`, DNS, SSL and server state remained untouched.
 
 ## In Progress
@@ -94,7 +107,7 @@ production destinations, artwork and legal review.
 ## Remaining
 
 - Web app and Café Bazaar URLs; Instagram, LinkedIn and Pinterest destinations;
-  approved QR codes and branded Open Graph artwork.
+  product-screen approval, approved QR codes and branded Open Graph artwork.
 - Owner/counsel review of the pre-release privacy and terms drafts.
 - Production domain, SSL, DNS verification and final handover.
 
@@ -110,9 +123,10 @@ production deployment, then start the coordinated domain/DNS/SSL checklist.
 ## Blockers
 
 Production remains blocked by verified distribution/social destinations, QR
-codes, branded Open Graph art, legal review, domain approval and DNS access. The
-four product screenshots, Telegram, contact, privacy and terms inputs are no
-longer missing.
+codes, branded Open Graph art, explicit product-screen approval, legal review,
+domain approval and DNS access. The four product screenshots, Telegram, contact,
+privacy and terms content are no longer missing; their production approval gates
+remain deliberate.
 
 ## Next Automatic Action
 

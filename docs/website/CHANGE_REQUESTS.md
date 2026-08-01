@@ -171,6 +171,32 @@ Resume point:
 
 Status: Completed — exact-source Preview deployed and verified
 
+Final review closure (2026-08-01):
+
+- Replaced unconditional download language with configuration-aware copy for
+  both, one or zero verified release destinations.
+- Completed the Persian RTL privacy and terms contracts while preserving their
+  explicit pre-release owner/counsel-review boundary.
+- Routed footer items through the destination configuration, normalized
+  same-origin legal URLs, protected external links and made invalid destinations
+  non-navigable.
+- Added the mandatory production gate
+  `LEARNBOX_LEGAL_REVIEW_STATUS=approved` and documented it in the environment
+  example and deployment runbook.
+- Rebuilt the motion lifecycle around a live desktop/reduced-motion query; the
+  same page now transitions cleanly among desktop, mobile and reduced profiles.
+- Removed dead motion selectors, shared the product-story note, added HTTP 400+
+  response auditing and fixed the real mobile Leitner contrast regression.
+- Source `40e79e42bc8ad88d3af55de65f10178847e36ba5` is deployed only to
+  Ready/Preview deployment `dpl_AQQNTjQrJj3A2LPsBxYRDibmbmBJ` at
+  `https://learnbox-landing-preview-hzk38cm9m-learn-box.vercel.app`.
+- Deployed verification passed for all three HTTP routes, canonical/security
+  headers, same-page breakpoint/reduced-motion transitions, keyboard and
+  JavaScript-disabled legal behavior, image decoding, console/network failures
+  and HTTP response statuses.
+- Production, the custom domain, DNS, SSL, learner web app and mobile app remain
+  untouched.
+
 Fix Round 1:
 
 - Corrected the 390 px product-story regression where flattened grid children
