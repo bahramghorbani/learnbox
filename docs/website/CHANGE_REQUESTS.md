@@ -169,7 +169,7 @@ Resume point:
 
 ## CR-LANDING-007 — Product story, legal routes and Preview verification
 
-Status: Local verification passed; exact-source Preview deployment pending
+Status: Completed — exact-source Preview deployed and verified
 
 Request:
 
@@ -202,3 +202,14 @@ Legal and release boundary:
   review, not legal advice or an assertion of approval.
 - Production, `learnboxapp.com`, DNS, SSL, auth, payments, analytics, the learner
   app and server state are untouched.
+
+Preview delivery:
+
+- source: `40f855451a42a66763a23f833c8aba51263197a1`;
+- deployment: `dpl_CzCZyeGGLBXkuyKAxjKDkYY3Suv4`;
+- URL: `https://learnbox-landing-preview-c480inhui-learn-box.vercel.app`;
+- Vercel target/status: Preview/Ready, with no production or custom-domain alias;
+- `/`, `/privacy` and `/terms`: HTTP 200 with canonical and security headers;
+- deployed browser contract: 14/14 passed, including desktop/mobile product flow,
+  reduced motion, keyboard focus, JavaScript-disabled legal HTML, image/network
+  requests and invalid-GSAP-target console regression.

@@ -7,8 +7,7 @@ PREVIEW UPLOAD READY
 PRODUCTION UPLOAD BLOCKED BY VERIFIED CONTENT
 ```
 
-Task 6 source commit and immutable Preview URL are recorded after the clean
-verification commit is deployed.
+Task 6 source commit: `40f855451a42a66763a23f833c8aba51263197a1`.
 
 Target package:
 
@@ -30,14 +29,11 @@ apps/mobile
 - Website typecheck: passed.
 - Website build: passed; 13 static routes generated. Home First Load JS is
   120 kB, with 102 kB shared.
-- Repository-wide `pnpm check`: passed, including format, lint, all workspace
-  tests and every security/content/release verifier.
 - `pnpm check:preview`: passed.
 - `pnpm check:release`: blocked as designed while production inputs are absent.
 - Repository-wide `pnpm check`: passed, including format, lint, all workspace
   typechecks/tests and every repository verification script.
-- The new immutable Preview checks are recorded below after the verification
-  commit is deployed.
+- The immutable Preview passed the same 14/14 browser contract after deployment.
 
 ## Browser evidence
 
@@ -60,20 +56,29 @@ apps/mobile
 
 ## Verified public preview
 
-The previous landing baseline was deployed as an isolated Vercel Preview:
+The exact Task 6 source commit is deployed as an isolated Vercel Preview:
 
 ```text
 Project: learnbox-landing-preview
 Project ID: prj_pPFcSkNaFvEWvKKAOxPNcbLmWEsd
-Deployment ID: dpl_B3eeC2EfZ3uZy75jFT42kFuEgg5A
-URL: https://learnbox-landing-preview-m7e6nc7ud-learn-box.vercel.app
+Source: 40f855451a42a66763a23f833c8aba51263197a1
+Deployment ID: dpl_CzCZyeGGLBXkuyKAxjKDkYY3Suv4
+URL: https://learnbox-landing-preview-c480inhui-learn-box.vercel.app
 Target: Preview
 ```
 
-Task 6 will replace this paragraph with its immutable source SHA, deployment ID
-and Preview URL after deploying only to the same `learnbox-landing-preview`
-project. Production, `learnboxapp.com`, DNS, SSL and server state remain outside
-this task.
+- Vercel reports status Ready and target Preview; only a Vercel Preview alias is
+  present, with no production/custom domain.
+- `/`, `/privacy` and `/terms` return HTTP 200 over HTTPS with correct canonical
+  links.
+- All three routes include `X-Robots-Tag: noindex`, CSP, HSTS,
+  `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, referrer and
+  permissions policies.
+- Deployed in-app Browser and Chrome/CDP smoke: desktop sticky/bidirectional
+  stage sync, 390×844 mobile document flow, reduced motion, keyboard focus,
+  JavaScript-disabled legal HTML, Telegram/email targets, zero invalid GSAP
+  warnings, zero failed themed-image requests and zero console errors.
+- Production, `learnboxapp.com`, DNS, SSL and server state were untouched.
 
 ## Lighthouse baseline
 

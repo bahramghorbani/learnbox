@@ -2,17 +2,17 @@
 
 ## Current Release
 
-Version: 1.1 product-story Preview candidate
-Status: LOCAL QA PASSED — CLEAN PREVIEW DEPLOYMENT PENDING
+Version: 1.1 verified product-story Preview
+Status: PREVIEW VERIFIED — PRODUCTION INPUTS/LEGAL REVIEW BLOCKED
 
 ## Current Phase
 
-Phase: Product-story and legal Preview verification
+Phase: Owner Preview review and production-input gate
 
 ## Current Task
 
-Commit the verified candidate, deploy the exact source to the isolated Preview
-project and repeat the deployed smoke path.
+Hand the verified immutable Preview to the owner and collect the remaining
+production destinations, artwork and legal review.
 
 ## Completed
 
@@ -74,10 +74,19 @@ project and repeat the deployed smoke path.
 - Task 6 Lighthouse mobile: Performance 97, Accessibility 100, Best Practices
   100, SEO 100, LCP 2.6 s, TBT 40 ms and CLS 0.
 - Home First Load JS is 120 kB, with 102 kB shared.
+- Exact source `40f855451a42a66763a23f833c8aba51263197a1` deployed only to
+  `learnbox-landing-preview` at
+  `https://learnbox-landing-preview-c480inhui-learn-box.vercel.app`.
+- Deployment `dpl_CzCZyeGGLBXkuyKAxjKDkYY3Suv4` is Ready/Preview; `/`,
+  `/privacy` and `/terms` return 200 with canonical and security headers.
+- The complete browser contract passed 14/14 against the deployed Preview; the
+  in-app Browser desktop/mobile/legal path had no overflow, failed image,
+  overlay, console error or unavailable-destination leak.
+- Production, `learnboxapp.com`, DNS, SSL and server state remained untouched.
 
 ## In Progress
 
-- Clean exact-source deployment and deployed smoke verification.
+- Owner review of the verified Preview.
 
 ## Remaining
 
@@ -104,6 +113,5 @@ longer missing.
 
 ## Next Automatic Action
 
-Deploy the exact Task 6 commit only to `learnbox-landing-preview`, verify it and
-hand the immutable Preview URL to the owner. Do not begin production-domain,
-DNS, SSL or server work.
+Hand the immutable Preview URL to the owner and collect the remaining production
+inputs. Do not begin production-domain, DNS, SSL or server work.
