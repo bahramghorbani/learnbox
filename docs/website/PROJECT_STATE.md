@@ -99,10 +99,19 @@ production destinations, approvals, artwork and legal review.
   the deployed browser contract reports zero unexpected console issues, network
   failures or HTTP responses with status 400 or higher.
 - Production, `learnboxapp.com`, DNS, SSL and server state remained untouched.
+- Final post-review remediation source
+  `fc3cfc1b04ae90fd3f856cf145f7bed468d79d44` rejects protocol-relative legal
+  destinations and makes the built-route environment fixtures dotenv-hermetic.
+- Independent review found no remaining issue in the remediation diff. The
+  exact source is deployed only to Ready/Preview deployment
+  `dpl_5DYHEcyzXEk8jYoHhu6F23fotaYg` at
+  `https://learnbox-landing-preview-hq08o16vn-learn-box.vercel.app`; the deployed
+  browser contract passed 14/14 and all six smoke-test routes return HTTP 200.
 
 ## In Progress
 
-- Owner review of the verified Preview.
+- Owner review of the post-review verified Preview and collection of the nine
+  production inputs.
 
 ## Remaining
 

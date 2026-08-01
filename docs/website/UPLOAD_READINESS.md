@@ -66,15 +66,15 @@ apps/mobile
 
 ## Verified public preview
 
-The exact final-review source commit is deployed as an isolated Vercel Preview,
-superseding the Fix Round 1 Preview:
+The exact post-review remediation source commit is deployed as an isolated
+Vercel Preview, superseding the earlier final-review Preview:
 
 ```text
 Project: learnbox-landing-preview
 Project ID: prj_pPFcSkNaFvEWvKKAOxPNcbLmWEsd
-Source: 40e79e42bc8ad88d3af55de65f10178847e36ba5
-Deployment ID: dpl_AQQNTjQrJj3A2LPsBxYRDibmbmBJ
-URL: https://learnbox-landing-preview-hzk38cm9m-learn-box.vercel.app
+Source: fc3cfc1b04ae90fd3f856cf145f7bed468d79d44
+Deployment ID: dpl_5DYHEcyzXEk8jYoHhu6F23fotaYg
+URL: https://learnbox-landing-preview-hq08o16vn-learn-box.vercel.app
 Target: Preview
 ```
 
@@ -91,6 +91,13 @@ Target: Preview
   targets, zero unexpected console/runtime issues, zero unexpected network
   failures and zero HTTP responses with status 400 or higher.
 - Production, `learnboxapp.com`, DNS, SSL and server state were untouched.
+- The final remediation rejects protocol-relative same-origin legal overrides
+  after WHATWG URL normalization and pins all ten destination variables in the
+  built-route fixtures so local Next dotenv files cannot change test outcomes.
+- Independent review found no Critical, Important or Minor issue in the
+  remediation commit. The deployed browser contract passed 14/14 after using
+  the canonical trailing-slash Preview URL; `/`, `/privacy`, `/terms`,
+  `/robots.txt`, `/sitemap.xml` and `/manifest.webmanifest` all return HTTP 200.
 
 ## Lighthouse baseline
 

@@ -173,6 +173,16 @@ Status: Completed — exact-source Preview deployed and verified
 
 Final review closure (2026-08-01):
 
+- Post-review remediation source `fc3cfc1b04ae90fd3f856cf145f7bed468d79d44`
+  closes the protocol-relative legal-link escape and dotenv-dependent build
+  fixture findings. Independent review reports no remaining issue in that diff.
+- The exact remediation source is deployed only to Ready/Preview deployment
+  `dpl_5DYHEcyzXEk8jYoHhu6F23fotaYg` at
+  `https://learnbox-landing-preview-hq08o16vn-learn-box.vercel.app`.
+- The deployed browser contract passed 14/14; all six public smoke-test routes
+  return HTTP 200. Production, custom-domain, DNS and learner-app boundaries
+  remain untouched.
+
 - Replaced unconditional download language with configuration-aware copy for
   both, one or zero verified release destinations.
 - Completed the Persian RTL privacy and terms contracts while preserving their
