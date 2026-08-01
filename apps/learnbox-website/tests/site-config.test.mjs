@@ -37,6 +37,24 @@ test('same-origin legal overrides normalize to internal pathname navigation', ()
   assert.equal(destinations.terms.url, '/terms');
 });
 
+test('same-origin legal overrides that normalize to protocol-relative paths fail closed', () => {
+  for (const value of [
+    'https://learnboxapp.com//evil.example/privacy',
+    'https://learnboxapp.com/\\evil.example/privacy',
+  ]) {
+    const destination = buildSiteConfig({
+      NEXT_PUBLIC_SITE_URL: 'https://learnboxapp.com',
+      NEXT_PUBLIC_PRIVACY_URL: value,
+    }).destinations.privacy;
+
+    assert.deepEqual(
+      { status: destination.status, url: destination.url },
+      { status: 'invalid', url: null },
+      `Unsafe legal override did not fail closed: ${value}`,
+    );
+  }
+});
+
 test('valid external legal override remains an approved HTTPS destination', () => {
   const destination = buildSiteConfig({
     NEXT_PUBLIC_SITE_URL: 'https://learnboxapp.com',

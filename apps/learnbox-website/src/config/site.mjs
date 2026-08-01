@@ -98,10 +98,13 @@ export function resolveDestination(definition, value, siteUrl = 'https://learnbo
 
     const isLegalDestination = definition.id === 'privacy' || definition.id === 'terms';
     const configuredSite = new URL(siteUrl);
-    const resolvedUrl =
-      isLegalDestination && url.origin === configuredSite.origin
-        ? `${url.pathname}${url.search}${url.hash}`
-        : url.toString();
+    const isSameOriginLegalDestination = isLegalDestination && url.origin === configuredSite.origin;
+    if (isSameOriginLegalDestination && url.pathname.startsWith('//')) {
+      throw new Error('Legal destination path must not be protocol-relative.');
+    }
+    const resolvedUrl = isSameOriginLegalDestination
+      ? `${url.pathname}${url.search}${url.hash}`
+      : url.toString();
 
     return {
       id: definition.id,

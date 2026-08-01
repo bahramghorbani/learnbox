@@ -7,18 +7,18 @@ import test from 'node:test';
 const appRoot = resolve(import.meta.dirname, '..');
 const nextBin = resolve(appRoot, 'node_modules/next/dist/bin/next');
 const buildRoot = resolve(appRoot, '.next');
-const destinationEnvironmentKeys = [
-  'NEXT_PUBLIC_SITE_URL',
-  'NEXT_PUBLIC_WEB_APP_URL',
-  'NEXT_PUBLIC_CAFE_BAZAAR_URL',
-  'NEXT_PUBLIC_TELEGRAM_URL',
-  'NEXT_PUBLIC_INSTAGRAM_URL',
-  'NEXT_PUBLIC_LINKEDIN_URL',
-  'NEXT_PUBLIC_PINTEREST_URL',
-  'NEXT_PUBLIC_PRIVACY_URL',
-  'NEXT_PUBLIC_TERMS_URL',
-  'NEXT_PUBLIC_CONTACT_URL',
-];
+const destinationEnvironmentDefaults = {
+  NEXT_PUBLIC_SITE_URL: 'https://learnboxapp.com',
+  NEXT_PUBLIC_WEB_APP_URL: '',
+  NEXT_PUBLIC_CAFE_BAZAAR_URL: '',
+  NEXT_PUBLIC_TELEGRAM_URL: 'https://t.me/learnboxapp',
+  NEXT_PUBLIC_INSTAGRAM_URL: '',
+  NEXT_PUBLIC_LINKEDIN_URL: '',
+  NEXT_PUBLIC_PINTEREST_URL: '',
+  NEXT_PUBLIC_PRIVACY_URL: 'https://learnboxapp.com/privacy',
+  NEXT_PUBLIC_TERMS_URL: 'https://learnboxapp.com/terms',
+  NEXT_PUBLIC_CONTACT_URL: 'mailto:hi@learnboxapp.com',
+};
 
 let unavailableHomeOutput;
 let availableHomeOutput;
@@ -28,9 +28,12 @@ let termsOutput;
 let prerenderManifest;
 
 function buildEnvironment(overrides = {}) {
-  const environment = { ...process.env, NEXT_TELEMETRY_DISABLED: '1' };
-  for (const key of destinationEnvironmentKeys) delete environment[key];
-  return { ...environment, NEXT_PUBLIC_SITE_URL: 'https://learnboxapp.com', ...overrides };
+  return {
+    ...process.env,
+    NEXT_TELEMETRY_DISABLED: '1',
+    ...destinationEnvironmentDefaults,
+    ...overrides,
+  };
 }
 
 function buildSite(overrides, label) {
@@ -75,6 +78,20 @@ test.before(async () => {
     'invalid-legal-destination',
   );
   invalidLegalHomeOutput = await readFile(resolve(buildRoot, 'server/app/index.html'), 'utf8');
+});
+
+test('build fixtures pin every destination variable before applying overrides', () => {
+  const environment = buildEnvironment({
+    NEXT_PUBLIC_PRIVACY_URL: 'https://legal.example/privacy-notice',
+  });
+
+  for (const [key, value] of Object.entries(destinationEnvironmentDefaults)) {
+    assert.equal(
+      environment[key],
+      key === 'NEXT_PUBLIC_PRIVACY_URL' ? 'https://legal.example/privacy-notice' : value,
+      `Build fixture left ${key} open to dotenv replacement`,
+    );
+  }
 });
 
 test('privacy route prerenders every approved current, conditional, and user-control disclosure', () => {
