@@ -416,7 +416,7 @@ test(
           continue;
         }
         image.scrollIntoView({ block: 'center', behavior: 'instant' });
-        await image.decode().catch(() => undefined);
+        await image.decode();
         await new Promise((resolve) =>
           requestAnimationFrame(() => requestAnimationFrame(resolve))
         );
@@ -432,6 +432,8 @@ test(
           sizes: image.sizes,
           loading: image.loading,
           fetchPriority: image.fetchPriority,
+          decoding: image.decoding,
+          decodeSucceeded: true,
           complete: image.complete,
           naturalWidth: image.naturalWidth,
           naturalHeight: image.naturalHeight,
@@ -456,6 +458,12 @@ test(
       assert.equal(image.sizes, expected.sizes);
       assert.equal(image.loading, expected.loading);
       assert.equal(image.fetchPriority, expected.fetchPriority);
+      assert.equal(image.decoding, 'async');
+      assert.equal(
+        image.decodeSucceeded,
+        true,
+        `Themed BuBu failed to decode: ${expected.filename}`,
+      );
       assert.equal(image.complete, true);
       assert.ok(image.naturalWidth > 0 && image.naturalHeight > 0);
       assert.equal(image.requested, true, `No successful image request: ${expected.filename}`);
