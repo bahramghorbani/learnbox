@@ -8,8 +8,8 @@ import {
 
 const config = {
   apiKey: 'test-api-key',
-  codeParameterName: 'code',
-  templateId: 123_456,
+  codeParameterName: 'OTP',
+  templateId: 495_140,
 };
 
 describe('SmsIrVerificationClient', () => {
@@ -29,7 +29,7 @@ describe('SmsIrVerificationClient', () => {
       body: JSON.stringify({
         mobile: '989121234567',
         templateId: config.templateId,
-        parameters: [{ name: 'code', value: '12345' }],
+        parameters: [{ name: 'OTP', value: '12345' }],
       }),
     });
   });
@@ -64,7 +64,7 @@ describe('SmsIrVerificationClient', () => {
     expect(() =>
       smsIrVerificationClientFromEnvironment({
         SMS_IR_ENABLED: 'true',
-        SMS_IR_TEMPLATE_ID: '123456',
+        SMS_IR_TEMPLATE_ID: '495140',
       }),
     ).toThrow('SMS.ir API key is required.');
   });

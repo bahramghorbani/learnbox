@@ -3,8 +3,8 @@
 ## Current state
 
 The owner selected SMS.ir for the future Iranian OTP delivery adapter, and SMS.ir approved template
-`495140`. A tested server-only delivery client is prepared but remains disabled: no API key,
-confirmed code-placeholder name, deployment secret, route, real
+`495140` with code-placeholder `OTP`. A tested server-only delivery client is prepared but remains
+disabled: no API key, deployment secret, route, real
 delivery, or learner session has been enabled. The phone entry screen is therefore still a local
 closed-alpha prototype; it does not prove an identity, issue a production session, or enable
 private media for a learner.
@@ -13,8 +13,7 @@ The default provider is intentionally disabled. It fails closed and cannot deliv
 
 ## Required owner action before activation
 
-Before activation, the owner must confirm the exact case-sensitive code-placeholder name used by
-approved template `495140` and place the private API key only in the deployment secret store.
+Before activation, the owner must place the private API key only in the deployment secret store.
 SMS.ir's verification endpoint delivers a parameterized template but does not verify a code for
 LearnBox, so LearnBox must keep the opaque challenge, hashed code, expiry, resend cooldown,
 attempts, and final identity binding on its own server. These actions are external, potentially
@@ -65,8 +64,7 @@ Only a verified identity may call `createLearnerSession`. The application must m
 
 When the implementation reaches activation, ask the owner only for these account actions:
 
-1. Confirm the exact code-placeholder name for approved LearnBox template `495140`.
-2. Create a restricted private API key in SMS.ir and place it directly in the deployment secret store; never paste it into chat, source control, or a browser field.
-3. Confirm the service/template is approved for verification delivery and allow one owner-controlled test number.
+1. Create a restricted private API key in SMS.ir and place it directly in the deployment secret store; never paste it into chat, source control, or a browser field.
+2. Confirm the service/template is approved for verification delivery and allow one owner-controlled test number.
 
 Codex will then complete the server adapter, challenge store, rate limits, routes, automated tests, and an owner-visible test run before any production release.

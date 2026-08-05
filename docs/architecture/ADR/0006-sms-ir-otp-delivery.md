@@ -13,9 +13,9 @@ SMS.ir's verification API sends a parameterized, approved template through a ser
 does not act as LearnBox's identity verifier, so a code sent successfully is not itself a verified
 learner identity.
 
-On 2026-08-05, the owner confirmed that SMS.ir approved LearnBox verification template `495140`.
-The exact case-sensitive code-placeholder name and private API key still belong to deployment
-configuration and must be confirmed before delivery is enabled.
+On 2026-08-05, the owner confirmed that SMS.ir approved LearnBox verification template `495140`
+with the case-sensitive code-placeholder name `OTP`. The private API key still belongs only to
+deployment configuration and must be installed before delivery is enabled.
 
 ## Decision
 
