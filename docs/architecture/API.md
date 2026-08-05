@@ -2,6 +2,10 @@
 
 REST/OpenAPI boundary, versioned endpoints, short-lived access tokens, rotated refresh tokens, idempotency keys for writes, structured errors, and rate limits. No production endpoint is exposed by this foundation.
 
+The server-side OTP request coordinator creates the short-lived code and opaque challenge, persists
+the phone/IP rate-limit event, and only then calls the delivery client. It returns only the opaque
+challenge metadata. SMS.ir remains disabled and no HTTP route exposes this coordinator yet.
+
 The review-write boundary accepts one authenticated learner's grade, occurrence time and `client_event_id`. Its PostgreSQL adapter claims that idempotency key before updating `card_schedules` in the same database transaction. The HTTP controller remains disabled until real authentication is connected; clients must not send a user identifier as a substitute for authentication.
 
 The server-side admin review core derives authorization from `admin_role_assignments`, never from a

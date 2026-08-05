@@ -1,6 +1,6 @@
 # ADR 0006 — SMS.ir OTP delivery seam
 
-- **Status:** accepted for preparation; delivery remains disabled
+- **Status:** accepted; template approved, delivery remains disabled
 - **Date:** 2026-07-28
 
 ## Context
@@ -12,6 +12,10 @@ provider credential, template, server route, session issuance, or real SMS deliv
 SMS.ir's verification API sends a parameterized, approved template through a service route. It
 does not act as LearnBox's identity verifier, so a code sent successfully is not itself a verified
 learner identity.
+
+On 2026-08-05, the owner confirmed that SMS.ir approved LearnBox verification template `495140`.
+The exact case-sensitive code-placeholder name and private API key still belong to deployment
+configuration and must be confirmed before delivery is enabled.
 
 ## Decision
 
