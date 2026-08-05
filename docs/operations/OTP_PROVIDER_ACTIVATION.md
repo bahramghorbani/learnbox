@@ -29,10 +29,13 @@ expiry, one-minute resend cooldown, five attempts, keyed hashes, one-time consum
 persistence-backed 15-minute request-rate limits (three requests per phone hash and ten per IP
 hash); routes and activation remain inactive.
 
-The provider-neutral request coordinator is also implemented and tested. It generates the code in
-LearnBox, stores only keyed hashes after the persisted phone/IP limit permits the request, and calls
-the delivery client only after that transaction succeeds. A provider outage leaves the request
-counted for abuse protection, but never exposes the code or phone through logs or persistence.
+The provider-neutral request and verification coordinators are also implemented and tested. The
+request coordinator generates the code in LearnBox, stores only keyed hashes after the persisted
+phone/IP limit permits the request, and calls the delivery client only after that transaction
+succeeds. A provider outage leaves the request counted for abuse protection, but never exposes the
+code or phone through logs or persistence. The verification coordinator returns one generic
+rejection for unknown, incorrect, locked, expired and already-used challenges, and exposes the
+opaque phone hash only after the atomic store consumes a valid challenge.
 
 ## Adapter contract
 
