@@ -33,8 +33,6 @@ services:
     depends_on:
       landing:
         condition: service_healthy
-    environment:
-      SITE_ADDRESS: ${SITE_ADDRESS:-:80}
     ports:
       - "80:80"
       - "443:443"
