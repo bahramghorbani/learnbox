@@ -4,6 +4,7 @@
 node_modules
 **/.next
 **/node_modules
+**/.env*
 apps/api
 apps/mobile
 apps/website
