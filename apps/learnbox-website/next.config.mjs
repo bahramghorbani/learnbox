@@ -26,6 +26,7 @@ const securityHeaders = [
 export default {
   reactStrictMode: true,
   poweredByHeader: false,
+  output: 'standalone',
   outputFileTracingRoot: path.join(import.meta.dirname, '../..'),
   images: {
     deviceSizes: [384, 512, 640, 750, 828, 1080, 1200, 1920, 2048, 3840],
