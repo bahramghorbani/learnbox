@@ -4,22 +4,26 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "pnpm --filter @learnbox/api build && next build",
     "start": "next start",
-    "typecheck": "pnpm --filter @learnbox/learning-engine build && pnpm --filter @learnbox/billing-core build && tsc --noEmit"
+    "test": "pnpm --filter @learnbox/api build && vitest run",
+    "typecheck": "pnpm --filter @learnbox/learning-engine build && pnpm --filter @learnbox/billing-core build && pnpm --filter @learnbox/api build && tsc --noEmit"
   },
   "dependencies": {
     "@learnbox/billing-core": "workspace:*",
     "@learnbox/learning-engine": "workspace:*",
     "@vercel/blob": "^2.6.1",
     "next": "^15.4.5",
+    "pg": "^8.22.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
   },
   "devDependencies": {
     "@types/node": "^24.1.0",
+    "@types/pg": "^8.20.0",
     "@types/react": "^19.1.9",
     "@types/react-dom": "^19.1.7",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
   }
 }

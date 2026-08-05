@@ -3,9 +3,10 @@
 ## Current state
 
 The owner selected SMS.ir for the future Iranian OTP delivery adapter, and SMS.ir approved template
-`495140` with code-placeholder `OTP`. A tested server-only delivery client is prepared but remains
-disabled: no API key, deployment secret, route, real
-delivery, or learner session has been enabled. The phone entry screen is therefore still a local
+`495140` with code-placeholder `OTP`. The restricted API key, alpha database and internal OTP/session
+secrets are installed in Vercel Preview. Tested same-origin request and verification routes are
+prepared but delivery remains disabled; no real message or learner session has been enabled. The
+phone entry screen is therefore still a local
 closed-alpha prototype; it does not prove an identity, issue a production session, or enable
 private media for a learner.
 
@@ -52,9 +53,9 @@ Only a verified identity may call `createLearnerSession`. The application must m
 
 ## Required implementation sequence
 
-1. Configure the prepared SMS.ir delivery client with the approved template and server-only deployment secrets; do not add a browser SDK.
-2. Connect the tested request coordinator, add the verify-code core, and then expose both through CSRF-aware routes with structured security events and generic errors.
-3. Replace the local phone prototype only after the routes are tested against the provider sandbox or approved test account.
+1. Configure the prepared SMS.ir delivery client with the approved template and server-only deployment secrets; do not add a browser SDK. **Complete for Preview.**
+2. Connect the tested request and verification coordinators through CSRF-aware routes with generic errors. **Complete, disabled pending deployment test.**
+3. Replace the local phone prototype only after the routes are tested against the approved owner-controlled test number.
 4. Run abuse, expiry, resend, incorrect-code, outage, logout, and real-device tests.
 5. Obtain owner approval before enabling production OTP or attaching private media to learner cards.
 

@@ -11,6 +11,13 @@ calling the atomic store. Unknown, incorrect, locked, expired and already-used c
 collapse to one generic rejection; only a consumed valid challenge returns its opaque phone hash
 to the future internal learner-identity mapper.
 
+The learner web app exposes same-origin JSON-only `POST /api/auth/otp/request` and
+`POST /api/auth/otp/verify` routes. They reject cross-origin requests before touching persistence,
+normalize Persian/Arabic digits on the server, derive opaque IP and phone hashes, return generic
+provider/verification errors, disable caching, and issue the signed HttpOnly learner cookie only
+after the atomic store consumes a valid challenge. The runtime remains fail-closed while
+`SMS_IR_ENABLED` is false or any required server secret is absent.
+
 The review-write boundary accepts one authenticated learner's grade, occurrence time and `client_event_id`. Its PostgreSQL adapter claims that idempotency key before updating `card_schedules` in the same database transaction. The HTTP controller remains disabled until real authentication is connected; clients must not send a user identifier as a substitute for authentication.
 
 The server-side admin review core derives authorization from `admin_role_assignments`, never from a

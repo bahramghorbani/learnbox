@@ -151,6 +151,9 @@ importers:
       next:
         specifier: ^15.4.5
         version: 15.5.22(@types/node@24.13.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      pg:
+        specifier: ^8.22.0
+        version: 8.22.0
       react:
         specifier: ^19.1.1
         version: 19.2.8
@@ -161,6 +164,9 @@ importers:
       '@types/node':
         specifier: ^24.1.0
         version: 24.13.3
+      '@types/pg':
+        specifier: ^8.20.0
+        version: 8.20.0
       '@types/react':
         specifier: ^19.1.9
         version: 19.2.17
@@ -170,6 +176,9 @@ importers:
       typescript:
         specifier: ^5.9.2
         version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@24.13.3)
 
   packages/analytics-core:
     devDependencies:
