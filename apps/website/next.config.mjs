@@ -26,6 +26,7 @@ const securityHeaders = [
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'standalone',
   outputFileTracingRoot: path.join(appDirectory, '../..'),
   async headers() {
     return [

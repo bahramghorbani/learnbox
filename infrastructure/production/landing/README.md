@@ -10,3 +10,10 @@ Both hostnames must have DNS records pointing at the production server before
 starting the stack so Caddy can obtain and renew origin TLS certificates.
 
 Use a commit SHA for `LANDING_VERSION`; do not use `latest` for releases.
+
+The same Caddy instance also reserves `app.learnboxapp.com` for the isolated
+`learner-app` service on the external `learnbox-edge` network. That service is
+owned by `../app/compose.yaml`; the landing compose file does not receive its
+database, OTP, session or private-media environment values. Reload Caddy for the
+app host only after the app container is healthy and the owner has approved the
+public DNS/domain action.

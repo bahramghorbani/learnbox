@@ -6,6 +6,7 @@ coverage/
 .env
 .env.*
 !.env.example
+**/app.env
 *.log
 *.tsbuildinfo
 .dart_tool/

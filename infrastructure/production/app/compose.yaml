@@ -1,0 +1,42 @@
+name: learnbox-app-production
+
+services:
+  learner-app:
+    build:
+      context: ../../..
+      dockerfile: infrastructure/production/app/Dockerfile
+    image: learnbox-learner-app:${APP_VERSION:-local}
+    restart: unless-stopped
+    init: true
+    environment:
+      NODE_ENV: production
+      HOSTNAME: 0.0.0.0
+      PORT: 3000
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL must be configured in the restricted app environment}
+      LEARNBOX_OTP_SECRET: ${LEARNBOX_OTP_SECRET:?LEARNBOX_OTP_SECRET must be configured}
+      LEARNBOX_SESSION_SECRET: ${LEARNBOX_SESSION_SECRET:?LEARNBOX_SESSION_SECRET must be configured}
+      SMS_IR_ENABLED: ${SMS_IR_ENABLED:-false}
+      SMS_IR_API_KEY: ${SMS_IR_API_KEY:-}
+      SMS_IR_TEMPLATE_ID: ${SMS_IR_TEMPLATE_ID:-495140}
+      SMS_IR_CODE_PARAMETER_NAME: ${SMS_IR_CODE_PARAMETER_NAME:-OTP}
+      BLOB_READ_WRITE_TOKEN: ${BLOB_READ_WRITE_TOKEN:-}
+      LEARNBOX_PRIVATE_MEDIA_ATTACHMENT_ENABLED: ${LEARNBOX_PRIVATE_MEDIA_ATTACHMENT_ENABLED:-false}
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3000/').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    networks:
+      - edge
+
+networks:
+  edge:
+    name: learnbox-edge
+    external: true
