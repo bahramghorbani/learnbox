@@ -26,6 +26,8 @@ COPY apps/website apps/website
 COPY apps/api apps/api
 COPY packages/billing-core packages/billing-core
 COPY packages/learning-engine packages/learning-engine
+COPY config config
+COPY content content
 COPY database/migrations database/migrations
 
 ENV NEXT_TELEMETRY_DISABLED=1

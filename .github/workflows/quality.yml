@@ -34,3 +34,18 @@ jobs:
         with: { channel: stable }
       - working-directory: apps/mobile
         run: flutter pub get && flutter analyze && flutter test
+  production-stack:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Validate isolated app Compose contract
+        working-directory: infrastructure/production/app
+        run: docker compose --env-file app.env.example --file compose.yaml config --quiet
+      - name: Build learner app production image
+        run: docker build --file infrastructure/production/app/Dockerfile --tag learnbox-learner-app:ci .
+      - name: Validate Caddy routing configuration
+        run: >-
+          docker run --rm
+          --volume "$PWD/infrastructure/production/landing/Caddyfile:/etc/caddy/Caddyfile:ro"
+          caddy:2-alpine@sha256:5f5c8640aae01df9654968d946d8f1a56c497f1dd5c5cda4cf95ab7c14d58648
+          validate --config /etc/caddy/Caddyfile --adapter caddyfile
