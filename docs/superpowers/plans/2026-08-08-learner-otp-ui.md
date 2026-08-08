@@ -55,13 +55,13 @@
 - Consumes: shared OTP helpers and existing `POST /api/auth/otp/request` / `POST /api/auth/otp/verify` contracts.
 - `AuthGate` receives `mode` and calls `onAuthenticated` only after local prototype validation or exact server `204`.
 
-- [ ] Add failing tests for exact flag selection, default false in `.env.example`, same-origin route use, no browser persistence/logging and no server-to-local fallback text or branch.
-- [ ] Run `pnpm --filter @learnbox/website test -- learner-auth-gate.test.ts` and confirm the missing behavior fails.
-- [ ] Implement the exact mode resolver and pass its result from the learner page.
-- [ ] Implement pending/error/resend state, in-memory challenge history and sequential verification in `AuthGate` while retaining explicitly labelled local prototype behavior.
-- [ ] Extend the provider-boundary validator to require the exact public default and reject unsafe fallback markers.
-- [ ] Run focused tests, type checking and `pnpm verify:otp-provider-boundary`.
-- [ ] Commit with `feat: connect learner OTP UI seam`.
+- [x] Add failing tests for exact flag selection, default false in `.env.example`, same-origin route use, no browser persistence/logging and no server-to-local fallback text or branch.
+- [x] Run `pnpm --filter @learnbox/website test -- learner-auth-gate.test.ts` and confirm the missing behavior fails.
+- [x] Implement the exact mode resolver and pass its result from the learner page.
+- [x] Implement pending/error/resend state, in-memory challenge history and sequential verification in `AuthGate` while retaining explicitly labelled local prototype behavior.
+- [x] Extend the provider-boundary validator to require the exact public default and reject unsafe fallback markers.
+- [x] Run focused tests, type checking and `pnpm verify:otp-provider-boundary`.
+- [x] Commit with `feat: connect learner OTP UI seam`.
 
 ### Task 3: Status, Verification and Review
 
@@ -71,12 +71,14 @@
 - Modify: `docs/operations/OTP_PROVIDER_ACTIVATION.md`
 - Modify: `docs/storyboard/STATUS.md`
 - Modify: this plan checklist.
+- Modify: `.prettierignore`
 
 **Interfaces:**
 
 - Produces: truthful disabled-by-default activation status and review evidence.
 
 - [ ] Record that the owner delivery test passed and the learner UI seam is implemented but inactive.
+- [ ] Exclude the git-ignored `.superpowers/` execution ledger from repository formatting checks.
 - [ ] Run `pnpm check`, website build, migration validation and `pnpm audit --prod --audit-level=high`.
 - [ ] Request independent security and regression review; address all important findings.
 - [ ] Merge and push only after green verification; do not deploy or enable the feature.
