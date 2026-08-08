@@ -43,6 +43,10 @@ if (!environmentSource.includes('OTP_DEVELOPMENT_MODE=false')) {
   throw new Error('Development OTP mode must default to disabled.');
 }
 
+if (!environmentSource.includes('NEXT_PUBLIC_LEARNBOX_OTP_UI_ENABLED=false')) {
+  throw new Error('Learner OTP UI mode must default to disabled.');
+}
+
 for (const required of [
   'otpPolicy',
   'otpRequestPolicy',
@@ -85,8 +89,24 @@ for (const required of [
   }
 }
 
-if (authGateSource.includes('/api/auth/') || authGateSource.includes('/api/development-session')) {
-  throw new Error('The local alpha phone UI must not call an unaudited server OTP/session route.');
+for (const required of [
+  "fetch('/api/auth/otp/request'",
+  "fetch('/api/auth/otp/verify'",
+  'verifyOtpChallenges(challenges',
+  "mode === 'local-prototype'",
+  "mode === 'server-otp'",
+]) {
+  if (!authGateSource.includes(required)) {
+    throw new Error(`Learner OTP UI requirement missing: ${required}`);
+  }
+}
+
+if (authGateSource.match(/localStorage|sessionStorage|console\./)) {
+  throw new Error('Learner OTP values must not be persisted or logged in the browser.');
+}
+
+if (/fallback.{0,40}local|local.{0,40}fallback/i.test(authGateSource)) {
+  throw new Error('Learner OTP UI must not fall back from server OTP to local prototype sign-in.');
 }
 
 for (const required of ['در این نسخهٔ آزمایشی، پیامکی ارسال نمی‌شود', 'ورود آزمایشی به LearnBox']) {

@@ -26,6 +26,7 @@ import {
 
 import { LearnerNav } from './components/LearnerNav';
 import { AuthGate } from './components/AuthGate';
+import { resolveLearnerAuthMode } from './learner-auth-mode';
 import { PronunciationButton } from './components/PronunciationButton';
 import { Bobo } from './components/Bobo';
 import { OnboardingGoal } from './components/OnboardingGoal';
@@ -293,7 +294,12 @@ export default function Home() {
   const savedWords = [...personalWords, ...initialSavedWords];
 
   if (!authenticated) {
-    return <AuthGate onAuthenticated={() => setAuthenticated(true)} />;
+    return (
+      <AuthGate
+        mode={resolveLearnerAuthMode(process.env.NEXT_PUBLIC_LEARNBOX_OTP_UI_ENABLED)}
+        onAuthenticated={() => setAuthenticated(true)}
+      />
+    );
   }
 
   if (!onboarded) {
