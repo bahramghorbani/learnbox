@@ -18,14 +18,22 @@ session). Successful responses are `private, no-store`, same-origin and `nosniff
 ## Session issuer boundary
 
 The development-only session route exists solely for local route verification. It is unavailable
-outside development and requires an explicit local flag. It is not connected to the phone/code UI.
+outside development and requires an explicit local flag.
 
-A real SMS or identity provider must issue the same signed server session only after the provider
-has verified the learner. Connecting that provider remains a separate owner-account and terms
-acceptance action. Until then, the card UI continues to use the existing local-only candidate
-preview and the private-media feature flag stays disabled.
+The fail-closed OTP verification coordinator can issue the same signed server session only after a
+valid code is verified. Its learner UI is still gated by
+`NEXT_PUBLIC_LEARNBOX_OTP_UI_ENABLED=false`, and SMS.ir delivery remains independently gated by
+`SMS_IR_ENABLED=false`.
+
+The Start card client now has an authenticated same-origin media seam. It selects private routes
+only when the learner auth mode is `server-otp` and
+`NEXT_PUBLIC_LEARNBOX_PRIVATE_MEDIA_ENABLED=true`; otherwise production displays the neutral
+placeholder, while localhost retains its explicit QA preview. The public selection flag and the
+server delivery flag are deliberately independent and both remain `false` by default. Media errors
+fall back to generic unavailable copy and never block grading.
 
 ## Rollback
 
-Set `LEARNBOX_PRIVATE_MEDIA_ATTACHMENT_ENABLED=false`. The route immediately returns `404` and no
-private Blob object is exposed to the app.
+Set either `NEXT_PUBLIC_LEARNBOX_PRIVATE_MEDIA_ENABLED=false` to stop client selection or
+`LEARNBOX_PRIVATE_MEDIA_ATTACHMENT_ENABLED=false` to stop server delivery. With the server flag
+off, the route immediately returns `404` and no private Blob object is exposed to the app.

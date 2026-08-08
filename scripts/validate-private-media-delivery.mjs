@@ -12,6 +12,19 @@ const mediaRoute = await readFile(
   new URL('../apps/website/app/api/private-media/[contentId]/[kind]/route.ts', import.meta.url),
   'utf8',
 );
+const environmentExample = await readFile(new URL('../.env.example', import.meta.url), 'utf8');
+const startMediaSource = await readFile(
+  new URL('../apps/website/app/start-media.ts', import.meta.url),
+  'utf8',
+);
+const learnerPageSource = await readFile(
+  new URL('../apps/website/app/page.tsx', import.meta.url),
+  'utf8',
+);
+const learnerVisualSource = await readFile(
+  new URL('../apps/website/app/components/StartMediaVisual.tsx', import.meta.url),
+  'utf8',
+);
 
 for (const required of [
   'timingSafeEqual',
@@ -47,4 +60,50 @@ if (mediaRoute.includes('.private.blob.vercel-storage.com')) {
   throw new Error('Private media delivery must not hard-code a Blob URL.');
 }
 
-console.info('Private media delivery remains session-guarded and release-flagged.');
+for (const disabledDefault of [
+  'NEXT_PUBLIC_LEARNBOX_PRIVATE_MEDIA_ENABLED=false',
+  'LEARNBOX_PRIVATE_MEDIA_ATTACHMENT_ENABLED=false',
+]) {
+  if (!environmentExample.includes(disabledDefault)) {
+    throw new Error(`Private media disabled default missing: ${disabledDefault}`);
+  }
+}
+
+for (const required of [
+  "privateMediaFlag === 'true' && authMode === 'server-otp'",
+  "mode === 'private-session' ? 'private-media' : 'local-preview-media'",
+  '`/api/${route}/${contentId}`',
+  'image: `${basePath}/image`',
+  'wordAudio: `${basePath}/word-audio`',
+  'sentenceAudio: `${basePath}/sentence-audio`',
+]) {
+  if (!startMediaSource.includes(required)) {
+    throw new Error(`Private media client safeguard missing: ${required}`);
+  }
+}
+
+for (const required of [
+  'process.env.NEXT_PUBLIC_LEARNBOX_PRIVATE_MEDIA_ENABLED',
+  'authMode',
+  'buildStartMediaSources(currentItem.id, startMediaMode)',
+]) {
+  if (!learnerPageSource.includes(required)) {
+    throw new Error(`Learner private media attachment missing: ${required}`);
+  }
+}
+
+const learnerSources = `${startMediaSource}\n${learnerPageSource}\n${learnerVisualSource}`;
+if (/https?:\/\/|blob\.vercel-storage\.com/.test(learnerSources)) {
+  throw new Error('Learner media code must use same-origin relative routes only.');
+}
+
+if (
+  mediaRoute.includes('NEXT_PUBLIC_LEARNBOX_PRIVATE_MEDIA_ENABLED') ||
+  startMediaSource.includes('LEARNBOX_PRIVATE_MEDIA_ATTACHMENT_ENABLED')
+) {
+  throw new Error('Client selection and server delivery flags must remain independent.');
+}
+
+console.info(
+  'Private media delivery remains session-guarded, same-origin and independently release-flagged.',
+);

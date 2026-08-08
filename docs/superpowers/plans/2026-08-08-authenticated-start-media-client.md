@@ -80,10 +80,10 @@
 - Produces: an exact disabled public default and automated rejection of direct Blob URLs or unsafe mode combinations.
 - Produces: truthful status stating the client seam is implemented but inactive.
 
-- [ ] Add failing validator assertions for `NEXT_PUBLIC_LEARNBOX_PRIVATE_MEDIA_ENABLED=false`, same-origin route construction, no direct Blob URL in learner code and the server flag remaining independent.
-- [ ] Run `node scripts/validate-private-media-delivery.mjs` and confirm failure for the missing public default.
-- [ ] Add the exact false default and extend the validator without weakening existing server-session checks.
-- [ ] Update architecture, backlog and storyboard status; do not claim activation, deployment or a completed invitation journey.
-- [ ] Run `pnpm check`, `pnpm --filter @learnbox/website build`, `node scripts/validate-migrations.mjs` and `pnpm audit --prod --audit-level=high`.
+- [x] Add failing validator assertions for `NEXT_PUBLIC_LEARNBOX_PRIVATE_MEDIA_ENABLED=false`, same-origin route construction, no direct Blob URL in learner code and the server flag remaining independent.
+- [x] Run `node scripts/validate-private-media-delivery.mjs` and confirm failure for the missing public default.
+- [x] Add the exact false default and extend the validator without weakening existing server-session checks.
+- [x] Update architecture, backlog and storyboard status; do not claim activation, deployment or a completed invitation journey.
+- [x] Run `pnpm check`, `pnpm --filter @learnbox/website build`, `node scripts/validate-migrations.mjs` and `pnpm audit --prod --audit-level=high`.
 - [ ] Request independent security/regression review and address all important findings.
 - [ ] Merge and push only after green verification; do not deploy or enable any flag.

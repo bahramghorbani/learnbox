@@ -10,11 +10,15 @@ const approvalFile = new URL(
 );
 const stagingModule = new URL('../apps/website/app/start-slice.ts', import.meta.url);
 const websitePage = new URL('../apps/website/app/page.tsx', import.meta.url);
+const mediaModule = new URL('../apps/website/app/start-media.ts', import.meta.url);
+const mediaVisual = new URL('../apps/website/app/components/StartMediaVisual.tsx', import.meta.url);
 
 const drafts = JSON.parse(await readFile(draftFile, 'utf8'));
 const approval = JSON.parse(await readFile(approvalFile, 'utf8'));
 const stagingSource = await readFile(stagingModule, 'utf8');
 const websiteSource = await readFile(websitePage, 'utf8');
+const mediaSource = await readFile(mediaModule, 'utf8');
+const mediaVisualSource = await readFile(mediaVisual, 'utf8');
 
 if (drafts.items.length !== 20) {
   throw new Error('The web staging slice must contain the approved 20 draft items.');
@@ -52,16 +56,26 @@ if (!websiteSource.includes('cardId: studyItems[sessionIndex].id')) {
   throw new Error('Offline review events must record the stable Start card identifier.');
 }
 
-if (!websiteSource.includes('تصویر و صدای ضبط‌شدهٔ این کارت در حال آماده‌سازی است.')) {
+if (!mediaVisualSource.includes('تصویر و صدای ضبط‌شدهٔ این کارت در حال آماده‌سازی است.')) {
   throw new Error('Staged cards must clearly disclose pending production media.');
 }
 
-if (!websiteSource.includes('isLocalMediaPreview')) {
+if (
+  !websiteSource.includes('resolveStartMediaMode({') ||
+  !mediaSource.includes("hostname === 'localhost' || hostname === '127.0.0.1'")
+) {
   throw new Error('Candidate media may only appear in the local preview.');
 }
 
-if (!stagingSource.includes('/api/local-preview-media/${item.id}/image')) {
+if (
+  !mediaSource.includes("mode === 'private-session' ? 'private-media' : 'local-preview-media'") ||
+  !mediaSource.includes('const basePath = `/api/${route}/${contentId}`')
+) {
   throw new Error('The staged Start slice must map image candidates through the local-only route.');
+}
+
+if (stagingSource.includes('/api/') || stagingSource.includes('candidateMedia')) {
+  throw new Error('The Start content slice must remain independent from delivery routes.');
 }
 
 console.info('Website Start slice staging is valid and remains publication-blocked.');
