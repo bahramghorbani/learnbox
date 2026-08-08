@@ -65,6 +65,12 @@ code or phone through logs or persistence. The verification coordinator returns 
 rejection for unknown, incorrect, locked, expired and already-used challenges, and exposes the
 opaque phone hash only after the atomic store consumes a valid challenge.
 
+The learner UI seam is also implemented behind the public
+`NEXT_PUBLIC_LEARNBOX_OTP_UI_ENABLED` flag. Its documented default is `false`, so the local
+closed-alpha phone prototype remains in use until a later, explicitly approved learner-flow
+activation. This UI seam does not alter the Preview provider/test-route flags: both
+`LEARNBOX_OTP_TEST_UI_ENABLED` and `SMS_IR_ENABLED` remain `false` after the owner test.
+
 ## Adapter contract
 
 The chosen adapter implements `apps/website/lib/otp-provider.ts` and must:
@@ -83,7 +89,7 @@ Only a verified identity may call `createLearnerSession`. The application must m
 
 1. Configure the prepared SMS.ir delivery client with the approved template and server-only deployment secrets; do not add a browser SDK. **Complete for Preview.**
 2. Connect the tested request and verification coordinators through CSRF-aware routes with generic errors. **Complete and protected in Preview; both temporary activation flags are back to `false`.**
-3. Replace the local phone prototype only after the routes are tested against the approved owner-controlled test number. **The protected owner delivery, verification and secure-session test passed; learner-flow replacement remains a later closed-alpha task.**
+3. Replace the local phone prototype only after the routes are tested against the approved owner-controlled test number. **The protected owner delivery, verification and secure-session test passed; the disabled learner UI seam is implemented, while learner-flow activation remains a later closed-alpha task.**
 4. Run abuse, expiry, resend, incorrect-code, outage, logout, and real-device tests.
 5. Obtain owner approval before enabling production OTP or attaching private media to learner cards.
 
