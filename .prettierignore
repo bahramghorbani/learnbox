@@ -1,2 +1,2 @@
-# Local Superpowers execution ledgers are git-ignored and are not source artifacts.
-.superpowers/
+# Git-ignored local execution workspace for the learner OTP plan.
+.superpowers/sdd/2026-08-08-learner-otp-ui/
