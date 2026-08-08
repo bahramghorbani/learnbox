@@ -8,7 +8,8 @@ secrets are installed in Vercel Preview. Tested same-origin request and verifica
 deployed behind Vercel authentication. The owner-controlled Preview test delivered real messages
 and created the secure session successfully on 2026-08-08. Both Preview-only activation flags were
 then returned to `false`, the test route was redeployed and an authenticated request verified its
-`404` fail-closed state. Production delivery and learner access remain disabled. A separate same-server app stack is prepared for the final deployment
+`404` fail-closed state. The two earlier Preview deployments that contained the temporary enabled
+flags were removed by exact deployment ID and verified absent. Production delivery and learner access remain disabled. A separate same-server app stack is prepared for the final deployment
 target, but it has not received server secrets or public routing. The
 phone entry screen is therefore still a local
 closed-alpha prototype; it does not prove an identity, issue a production session, or enable

@@ -55,3 +55,4 @@
 - [x] Merge and push only after green verification.
 - [x] Redeploy protected Preview with the existing Preview-only flags.
 - [x] Have the owner request one fresh code and verify it without resending unless delivery does not arrive.
+- [x] Return both Preview flags to `false`, verify the test route returns `404`, and remove the two temporary enabled deployments.

@@ -7,7 +7,7 @@
 - **Blockers:** explicit owner approval is still required before any alpha invitation. Candidate
   provenance, visual, audio and app-flow QA is complete for the 20-card Start slice and its 60
   media objects are private-storage-attested and the server-side authorization seam is verified,
-  and SMS.ir's server-only delivery client, migrated alpha database and protected Preview request/verify routes are prepared. Real owner-only Preview delivery, verification and secure-session creation succeeded, and both temporary Preview flags are back to `false`. Production delivery remains disabled. The isolated same-server app image is healthy behind the private Docker network with no published port; its live Caddy host and DNS remain absent. The local machine has
+  and SMS.ir's server-only delivery client, migrated alpha database and protected Preview request/verify routes are prepared. Real owner-only Preview delivery, verification and secure-session creation succeeded, both temporary Preview flags are back to `false`, and the two enabled test deployments were removed. Production delivery remains disabled. The isolated same-server app image is healthy behind the private Docker network with no published port; its live Caddy host and DNS remain absent. The local machine has
   no Flutter SDK, but the latest GitHub CI mobile job passed.
 - **Owner action:** no action is required for the current technical work. Before any real alpha invitation, the owner must approve the participant list, invitation channel and consent wording.
-- **Last updated:** 2026-08-08 — protected SMS.ir delivery, verification and secure-session test passed; temporary Preview activation rolled back
+- **Last updated:** 2026-08-08 — protected SMS.ir test passed; flags disabled and temporary enabled deployments removed
