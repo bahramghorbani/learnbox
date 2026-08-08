@@ -52,6 +52,6 @@
 - [x] Document the observed failure mode and in-memory safeguard.
 - [x] Run `pnpm check`, website build, migration validation and production dependency audit.
 - [x] Request independent review of privacy, attempt semantics and error handling.
-- [ ] Merge and push only after green verification.
-- [ ] Redeploy protected Preview with the existing Preview-only flags.
+- [x] Merge and push only after green verification.
+- [x] Redeploy protected Preview with the existing Preview-only flags.
 - [ ] Have the owner request one fresh code and verify it without resending unless delivery does not arrive.
