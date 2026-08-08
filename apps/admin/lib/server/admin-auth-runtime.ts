@@ -1,8 +1,12 @@
 import { readAdminAuthConfig } from './admin-auth-policy';
 import {
+  createBootstrapOptionsRoute,
+  createBootstrapVerifyRoute,
   createLoginOptionsRoute,
   createLoginVerifyRoute,
   createLogoutRoute,
+  createReauthOptionsRoute,
+  createReauthVerifyRoute,
   createSessionRoute,
 } from './admin-auth-routes';
 import { createAdminWebAuthnService } from './admin-webauthn';
@@ -59,8 +63,31 @@ export function createAdminAuthRuntime(dependencies: {
   });
   return {
     enabled: true as const,
+    bootstrapOptions: createBootstrapOptionsRoute({
+      config,
+      environment: dependencies.environment,
+      service,
+    }),
+    bootstrapVerify: createBootstrapVerifyRoute({
+      config,
+      environment: dependencies.environment,
+      service,
+    }),
     loginOptions: createLoginOptionsRoute({ config, service }),
     loginVerify: createLoginVerifyRoute({
+      config,
+      now: dependencies.now,
+      service,
+      sessionStore: store,
+    }),
+    reauthOptions: createReauthOptionsRoute({
+      config,
+      environment: dependencies.environment,
+      now: dependencies.now,
+      sessionStore: store,
+      service,
+    }),
+    reauthVerify: createReauthVerifyRoute({
       config,
       now: dependencies.now,
       service,

@@ -2,6 +2,7 @@ import { randomBytes } from 'node:crypto';
 
 import {
   assertTrustedAdminMutation,
+  readAdminBootstrapConfig,
   type AdminAuthConfig,
   type EnabledAdminAuthConfig,
 } from './admin-auth-policy';
@@ -33,6 +34,23 @@ type SessionStore = {
 type ActiveSessionStore = {
   findActiveSession: Parameters<typeof loadAdminSession>[2]['findActiveSession'];
   touchSession: Parameters<typeof loadAdminSession>[2]['touchSession'];
+};
+
+type BootstrapService = {
+  createBootstrapOptions(browserNonce: string): Promise<Record<string, unknown>>;
+  verifyBootstrap(input: {
+    browserNonce: string;
+    secret: string;
+    response: { id: string; [key: string]: unknown };
+  }): Promise<{ status: 'bootstrapped' | 'invalid' }>;
+};
+
+type ReauthService = {
+  createReauthOptions(browserNonce: string): Promise<Record<string, unknown>>;
+  verifyReauth(input: {
+    browserNonce: string;
+    response: { id: string; [key: string]: unknown };
+  }): Promise<{ status: 'reauthenticated' | 'invalid' }>;
 };
 
 function createOpaqueNonce() {
@@ -183,6 +201,181 @@ export function createSessionRoute(dependencies: {
     );
   };
 }
+
+export function createBootstrapOptionsRoute(dependencies: {
+  config: AdminAuthConfig;
+  environment: EnvironmentLike;
+  randomNonce?: () => string;
+  service?: Pick<BootstrapService, 'createBootstrapOptions'>;
+}) {
+  return async function GET(_request: Request) {
+    void _request;
+    const bootstrapConfig = readAdminBootstrapConfig(dependencies.environment);
+    if (!dependencies.config.enabled || !bootstrapConfig.enabled || !dependencies.service) {
+      return notFound();
+    }
+    const nonce = (dependencies.randomNonce ?? createOpaqueNonce)();
+    if (!/^[A-Za-z0-9_-]{40,}$/.test(nonce)) return notFound();
+
+    try {
+      const options = await dependencies.service.createBootstrapOptions(nonce);
+      return Response.json(options, {
+        headers: {
+          'Cache-Control': 'no-store',
+          'Set-Cookie': ceremonyCookie(nonce),
+        },
+      });
+    } catch {
+      return new Response('Authentication unavailable', {
+        status: 503,
+        headers: { 'Cache-Control': 'no-store' },
+      });
+    }
+  };
+}
+
+export function createBootstrapVerifyRoute(dependencies: {
+  config: AdminAuthConfig;
+  environment: EnvironmentLike;
+  service?: Pick<BootstrapService, 'verifyBootstrap'>;
+}) {
+  return async function POST(request: Request) {
+    const bootstrapConfig = readAdminBootstrapConfig(dependencies.environment);
+    if (!dependencies.config.enabled || !bootstrapConfig.enabled || !dependencies.service) {
+      return notFound();
+    }
+    const config: EnabledAdminAuthConfig = dependencies.config;
+    try {
+      assertTrustedAdminMutation(request, config, ['application/json']);
+    } catch {
+      return genericInvalid();
+    }
+
+    const nonce = readCookie(request, ceremonyCookieName);
+    if (!nonce || !/^[A-Za-z0-9_-]{40,}$/.test(nonce)) return genericInvalid();
+
+    let payload: {
+      secret?: unknown;
+      response?: { id?: unknown; [key: string]: unknown };
+    };
+    try {
+      payload = (await request.json()) as {
+        secret?: unknown;
+        response?: { id?: unknown; [key: string]: unknown };
+      };
+    } catch {
+      return genericInvalid();
+    }
+    if (
+      typeof payload.secret !== 'string' ||
+      !payload.response ||
+      typeof payload.response.id !== 'string'
+    ) {
+      return genericInvalid();
+    }
+
+    const result = await dependencies.service.verifyBootstrap({
+      browserNonce: nonce,
+      secret: payload.secret,
+      response: payload.response as { id: string; [key: string]: unknown },
+    });
+    if (result.status !== 'bootstrapped') return genericInvalid();
+
+    const response = new Response(null, { status: 204, headers: { 'Cache-Control': 'no-store' } });
+    response.headers.append('Set-Cookie', clearCeremonyCookie());
+    return response;
+  };
+}
+
+export function createReauthOptionsRoute(dependencies: {
+  config: AdminAuthConfig;
+  environment: EnvironmentLike;
+  now?: () => Date;
+  sessionStore?: ActiveSessionStore;
+  randomNonce?: () => string;
+  service?: Pick<ReauthService, 'createReauthOptions'>;
+}) {
+  return async function GET(request: Request) {
+    if (!dependencies.config.enabled || !dependencies.service || !dependencies.sessionStore) {
+      return notFound();
+    }
+    const config: EnabledAdminAuthConfig = dependencies.config;
+    const currentTime = (dependencies.now ?? (() => new Date()))();
+    const session = await loadAdminSession(request, config, dependencies.sessionStore, currentTime);
+    if (!session) return notFound();
+    const nonce = (dependencies.randomNonce ?? createOpaqueNonce)();
+    if (!/^[A-Za-z0-9_-]{40,}$/.test(nonce)) return notFound();
+
+    try {
+      const options = await dependencies.service.createReauthOptions(nonce);
+      return Response.json(options, {
+        headers: {
+          'Cache-Control': 'no-store',
+          'Set-Cookie': ceremonyCookie(nonce),
+        },
+      });
+    } catch {
+      return new Response('Authentication unavailable', {
+        status: 503,
+        headers: { 'Cache-Control': 'no-store' },
+      });
+    }
+  };
+}
+
+export function createReauthVerifyRoute(dependencies: {
+  config: AdminAuthConfig;
+  now?: () => Date;
+  service?: Pick<ReauthService, 'verifyReauth'>;
+  sessionStore?: ActiveSessionStore & {
+    touchRecentAuthentication(tokenHash: string, now: Date): Promise<boolean>;
+  };
+}) {
+  return async function POST(request: Request) {
+    if (!dependencies.config.enabled || !dependencies.service || !dependencies.sessionStore) {
+      return notFound();
+    }
+    const config: EnabledAdminAuthConfig = dependencies.config;
+    try {
+      assertTrustedAdminMutation(request, config, ['application/json']);
+    } catch {
+      return genericInvalid();
+    }
+
+    const nonce = readCookie(request, ceremonyCookieName);
+    if (!nonce || !/^[A-Za-z0-9_-]{40,}$/.test(nonce)) return genericInvalid();
+
+    let payload: { response?: { id?: unknown; [key: string]: unknown } };
+    try {
+      payload = (await request.json()) as { response?: { id?: unknown; [key: string]: unknown } };
+    } catch {
+      return genericInvalid();
+    }
+    if (!payload.response || typeof payload.response.id !== 'string') return genericInvalid();
+
+    const currentTime = (dependencies.now ?? (() => new Date()))();
+    const session = await loadAdminSession(request, config, dependencies.sessionStore, currentTime);
+    if (!session) return genericInvalid();
+    try {
+      verifyAdminCsrf(request, session.csrfHash, config);
+    } catch {
+      return genericInvalid();
+    }
+
+    const result = await dependencies.service.verifyReauth({
+      browserNonce: nonce,
+      response: payload.response as { id: string; [key: string]: unknown },
+    });
+    if (result.status !== 'reauthenticated') return genericInvalid();
+    await dependencies.sessionStore.touchRecentAuthentication(session.tokenHash, currentTime);
+
+    const response = new Response(null, { status: 204, headers: { 'Cache-Control': 'no-store' } });
+    response.headers.append('Set-Cookie', clearCeremonyCookie());
+    return response;
+  };
+}
+
+type EnvironmentLike = Record<string, string | undefined>;
 
 export function createLogoutRoute(dependencies: {
   config: AdminAuthConfig;

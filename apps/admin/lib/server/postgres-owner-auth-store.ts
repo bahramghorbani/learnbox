@@ -252,6 +252,19 @@ export class PostgresOwnerAuthStore {
     return result.rows.length === 1;
   }
 
+  async touchRecentAuthentication(tokenHash: string, now: Date) {
+    const result = await this.pool.query(
+      `UPDATE admin_sessions
+          SET recent_authenticated_at = $2, last_seen_at = $2
+        WHERE token_hash = $1
+          AND revoked_at IS NULL
+          AND absolute_expires_at > $2
+        RETURNING token_hash`,
+      [tokenHash, now],
+    );
+    return result.rows.length === 1;
+  }
+
   async findActiveSession(
     tokenHash: string,
     now: Date,
