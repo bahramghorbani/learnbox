@@ -47,6 +47,9 @@ importers:
 
   apps/admin:
     dependencies:
+      '@simplewebauthn/browser':
+        specifier: 13.3.0
+        version: 13.3.0
       '@simplewebauthn/server':
         specifier: ^13.3.2
         version: 13.3.2
@@ -75,6 +78,9 @@ importers:
       '@types/react-dom':
         specifier: ^19.1.7
         version: 19.2.3(@types/react@19.2.17)
+      jsdom:
+        specifier: 26.1.0
+        version: 26.1.0
       typescript:
         specifier: ^5.9.2
         version: 5.9.3
@@ -1724,6 +1730,12 @@ packages:
       }
     cpu: [x64]
     os: [win32]
+
+  '@simplewebauthn/browser@13.3.0':
+    resolution:
+      {
+        integrity: sha512-BE/UWv6FOToAdVk0EokzkqQQDOWtNydYlY6+OrmiZ5SCNmb41VehttboTetUM3T/fr6EAFYVXjz4My2wg230rQ==,
+      }
 
   '@simplewebauthn/server@13.3.2':
     resolution:
@@ -5098,6 +5110,8 @@ snapshots:
 
   '@rollup/rollup-win32-x64-msvc@4.62.2':
     optional: true
+
+  '@simplewebauthn/browser@13.3.0': {}
 
   '@simplewebauthn/server@13.3.2':
     dependencies:
