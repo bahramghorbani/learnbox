@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
 import { OwnerOtpTest } from './OwnerOtpTest';
+import { isOwnerOtpTestEnabled } from './owner-otp-test';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,6 +12,6 @@ export const metadata: Metadata = {
 };
 
 export default function OwnerOtpTestPage() {
-  if (process.env.LEARNBOX_OTP_TEST_UI_ENABLED !== 'true') notFound();
+  if (!isOwnerOtpTestEnabled(process.env)) notFound();
   return <OwnerOtpTest />;
 }

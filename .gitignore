@@ -15,3 +15,4 @@ android/.gradle/
 ios/Pods/
 .vercel
 .worktrees/
+.env.local

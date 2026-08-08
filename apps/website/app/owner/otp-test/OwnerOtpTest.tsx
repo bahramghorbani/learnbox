@@ -3,6 +3,7 @@
 import { type FormEvent, useEffect, useState } from 'react';
 
 import {
+  isOtpVerificationSuccess,
   normalizeOtpDigits,
   otpErrorMessage,
   readChallengeResponse,
@@ -83,7 +84,7 @@ export function OwnerOtpTest() {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ challengeId: challenge.challengeId, code: normalizedCode }),
       });
-      if (!response.ok) {
+      if (!isOtpVerificationSuccess(response.status)) {
         const body = await readJson(response);
         setError(otpErrorMessage(response.status, readErrorCode(body)));
         return;

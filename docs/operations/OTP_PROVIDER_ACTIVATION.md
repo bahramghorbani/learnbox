@@ -17,9 +17,10 @@ The default provider is intentionally disabled. It fails closed and cannot deliv
 ## Controlled owner Preview test
 
 The hidden route `/owner/otp-test` is the only UI authorized for the first real delivery check. It
-returns 404 unless `LEARNBOX_OTP_TEST_UI_ENABLED=true`, is excluded from indexing, and must remain
-behind Vercel Authentication. The owner enters the test number and code in that page; neither value
-is placed in chat, URLs, browser storage or application logs.
+returns 404 unless `LEARNBOX_OTP_TEST_UI_ENABLED=true` **and** Vercel reports the `preview`
+environment (with one explicit local-development exception), is excluded from indexing, and must
+remain behind Vercel Authentication. The owner enters the test number and code in that page;
+neither value is placed in chat, URLs, browser storage or application logs.
 
 For the controlled test only, set both `LEARNBOX_OTP_TEST_UI_ENABLED=true` and
 `SMS_IR_ENABLED=true` in the **Preview** environment and redeploy. Production and the internal

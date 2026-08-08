@@ -4,6 +4,22 @@ export type ChallengeResponse = {
   resendAvailableAt: string;
 };
 
+type OwnerOtpEnvironment = {
+  LEARNBOX_OTP_TEST_UI_ENABLED?: string;
+  VERCEL_ENV?: string;
+  NODE_ENV?: string;
+};
+
+export function isOwnerOtpTestEnabled(environment: OwnerOtpEnvironment): boolean {
+  if (environment.LEARNBOX_OTP_TEST_UI_ENABLED !== 'true') return false;
+  if (environment.VERCEL_ENV === 'preview') return true;
+  return environment.VERCEL_ENV === undefined && environment.NODE_ENV === 'development';
+}
+
+export function isOtpVerificationSuccess(status: number): boolean {
+  return status === 204;
+}
+
 export function normalizeOtpDigits(value: string): string {
   return value
     .replace(/[۰-۹]/g, (digit) => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(digit)))

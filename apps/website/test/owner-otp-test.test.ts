@@ -3,6 +3,8 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import {
+  isOtpVerificationSuccess,
+  isOwnerOtpTestEnabled,
   normalizeOtpDigits,
   otpErrorMessage,
   readChallengeResponse,
@@ -10,6 +12,36 @@ import {
 } from '../app/owner/otp-test/owner-otp-test';
 
 describe('owner OTP test helpers', () => {
+  it('enables the owner UI only in Preview or explicit local development', () => {
+    expect(
+      isOwnerOtpTestEnabled({
+        LEARNBOX_OTP_TEST_UI_ENABLED: 'true',
+        VERCEL_ENV: 'preview',
+        NODE_ENV: 'production',
+      }),
+    ).toBe(true);
+    expect(
+      isOwnerOtpTestEnabled({
+        LEARNBOX_OTP_TEST_UI_ENABLED: 'true',
+        VERCEL_ENV: 'production',
+        NODE_ENV: 'production',
+      }),
+    ).toBe(false);
+    expect(
+      isOwnerOtpTestEnabled({
+        LEARNBOX_OTP_TEST_UI_ENABLED: 'true',
+        NODE_ENV: 'development',
+      }),
+    ).toBe(true);
+    expect(isOwnerOtpTestEnabled({ LEARNBOX_OTP_TEST_UI_ENABLED: 'false' })).toBe(false);
+  });
+
+  it('accepts only the exact no-content verification response', () => {
+    expect(isOtpVerificationSuccess(204)).toBe(true);
+    expect(isOtpVerificationSuccess(200)).toBe(false);
+    expect(isOtpVerificationSuccess(201)).toBe(false);
+  });
+
   it('normalizes Persian and Arabic digits without keeping separators', () => {
     expect(normalizeOtpDigits('۰۹۱۲ ٣٤۵-۶۷۸۹')).toBe('09123456789');
   });
@@ -53,7 +85,7 @@ describe('owner OTP test helpers', () => {
 describe('owner OTP test route boundary', () => {
   it('fails closed unless the exact server flag is enabled', () => {
     const source = readSource('../app/owner/otp-test/page.tsx');
-    expect(source).toContain("process.env.LEARNBOX_OTP_TEST_UI_ENABLED !== 'true'");
+    expect(source).toContain('isOwnerOtpTestEnabled(process.env)');
     expect(source).toContain('notFound()');
   });
 
@@ -61,6 +93,7 @@ describe('owner OTP test route boundary', () => {
     const source = readSource('../app/owner/otp-test/OwnerOtpTest.tsx');
     expect(source).toContain("fetch('/api/auth/otp/request'");
     expect(source).toContain("fetch('/api/auth/otp/verify'");
+    expect(source).toContain('isOtpVerificationSuccess(response.status)');
     expect(source).not.toMatch(/localStorage|sessionStorage|console\./);
   });
 });
