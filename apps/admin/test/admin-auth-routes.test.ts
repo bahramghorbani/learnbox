@@ -205,6 +205,38 @@ describe('admin bootstrap routes', () => {
     expect(verified).toBe(false);
   });
 
+  it('rejects a wrong one-time secret without calling the WebAuthn service', async () => {
+    let verified = false;
+    const handler = createBootstrapVerifyRoute({
+      config,
+      environment: enabledEnvironment,
+      service: {
+        verifyBootstrap: async () => {
+          verified = true;
+          return { status: 'bootstrapped' as const };
+        },
+      },
+    });
+
+    const response = await handler(
+      new Request('https://admin.learnbox.app/api/auth/bootstrap/verify', {
+        method: 'POST',
+        headers: {
+          origin: config.origin,
+          'content-type': 'application/json',
+          cookie: `__Host-learnbox_admin_ceremony=${'n'.repeat(43)}`,
+        },
+        body: JSON.stringify({
+          secret: 'x'.repeat(32),
+          response: { id: 'credential' },
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(400);
+    expect(verified).toBe(false);
+  });
+
   it('bootstraps the first credential and clears the ceremony cookie after a valid secret', async () => {
     const handler = createBootstrapVerifyRoute({
       config,

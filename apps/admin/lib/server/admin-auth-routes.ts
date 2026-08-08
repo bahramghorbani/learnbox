@@ -1,4 +1,4 @@
-import { randomBytes } from 'node:crypto';
+import { randomBytes, timingSafeEqual } from 'node:crypto';
 
 import {
   assertTrustedAdminMutation,
@@ -6,7 +6,7 @@ import {
   type AdminAuthConfig,
   type EnabledAdminAuthConfig,
 } from './admin-auth-policy';
-import { adminSessionCookie, createAdminSessionSecrets } from './admin-session';
+import { adminSessionCookie, createAdminSessionSecrets, hashAdminSecret } from './admin-session';
 import { clearAdminSessionCookie, loadAdminSession, verifyAdminCsrf } from './admin-route-security';
 
 const ceremonyCookieName = '__Host-learnbox_admin_ceremony';
@@ -52,6 +52,12 @@ type ReauthService = {
     response: { id: string; [key: string]: unknown };
   }): Promise<{ status: 'reauthenticated' | 'invalid' }>;
 };
+
+function safeEqual(left: string, right: string) {
+  const leftBytes = Buffer.from(left);
+  const rightBytes = Buffer.from(right);
+  return leftBytes.length === rightBytes.length && timingSafeEqual(leftBytes, rightBytes);
+}
 
 function createOpaqueNonce() {
   return randomBytes(32).toString('base64url');
@@ -273,6 +279,10 @@ export function createBootstrapVerifyRoute(dependencies: {
     ) {
       return genericInvalid();
     }
+
+    const secretHash = hashAdminSecret(payload.secret, config.tokenHashKey);
+    const expectedSecretHash = hashAdminSecret(bootstrapConfig.secret, config.tokenHashKey);
+    if (!safeEqual(secretHash, expectedSecretHash)) return genericInvalid();
 
     const result = await dependencies.service.verifyBootstrap({
       browserNonce: nonce,
