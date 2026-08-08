@@ -81,4 +81,4 @@
 - [x] Exclude the git-ignored `.superpowers/` execution ledger from repository formatting checks.
 - [x] Run `pnpm check`, website build, migration validation and `pnpm audit --prod --audit-level=high`.
 - [x] Request independent security and regression review; address all important findings.
-- [ ] Merge and push only after green verification; do not deploy or enable the feature.
+- [x] Merge and push only after green verification; do not deploy or enable the feature.
