@@ -1,6 +1,6 @@
 'use client';
 
-import { type FormEvent, useState } from 'react';
+import { type FormEvent, useEffect, useState } from 'react';
 import Link from 'next/link';
 
 import type { LearnerAuthMode } from '../learner-auth-mode';
@@ -28,9 +28,20 @@ export function AuthGate({ mode, onAuthenticated }: AuthGateProps) {
   const [challenges, setChallenges] = useState<ChallengeResponse[]>([]);
   const [error, setError] = useState('');
   const [pending, setPending] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
 
   const isLocalPrototype = mode === 'local-prototype';
   const isServerOtp = mode === 'server-otp';
+  const latestChallenge = challenges[0] ?? null;
+  const resendSeconds = latestChallenge
+    ? Math.max(0, Math.ceil((Date.parse(latestChallenge.resendAvailableAt) - now) / 1_000))
+    : 0;
+
+  useEffect(() => {
+    if (!isServerOtp || stage !== 'code') return;
+    const timer = window.setInterval(() => setNow(Date.now()), 1_000);
+    return () => window.clearInterval(timer);
+  }, [isServerOtp, stage]);
 
   const requestCode = async (event?: FormEvent<HTMLFormElement>) => {
     event?.preventDefault();
@@ -70,6 +81,7 @@ export function AuthGate({ mode, onAuthenticated }: AuthGateProps) {
       }
       setChallenges((history) => rememberOtpChallenge(history, nextChallenge));
       setCode('');
+      setNow(Date.now());
       setStage('code');
     } catch {
       setError('ارتباط با سرویس انجام نشد؛ دوباره تلاش کنید.');
@@ -202,9 +214,13 @@ export function AuthGate({ mode, onAuthenticated }: AuthGateProps) {
             {isLocalPrototype ? 'کد آزمایشی را وارد کن' : 'کد پیامک‌شده را وارد کن'}
           </h1>
           <p>
-            {isLocalPrototype
-              ? `برای ادامه، هر کد ۵ رقمی را برای شمارهٔ ${phone} وارد کن.`
-              : `کد ۵ رقمی ارسال‌شده به شمارهٔ ${phone} را وارد کن.`}
+            {isLocalPrototype ? (
+              `برای ادامه، هر کد ۵ رقمی را برای شمارهٔ ${phone} وارد کن.`
+            ) : (
+              <>
+                کد ۵ رقمی ارسال‌شده به شمارهٔ <bdi dir="ltr">{maskPhone(phone)}</bdi> را وارد کن.
+              </>
+            )}
           </p>
           <form className="auth-form" onSubmit={submitCode} noValidate>
             <label htmlFor="login-code">کد ورود</label>
@@ -240,9 +256,13 @@ export function AuthGate({ mode, onAuthenticated }: AuthGateProps) {
               className="text-button auth-back"
               type="button"
               onClick={() => void requestCode()}
-              disabled={pending}
+              disabled={pending || resendSeconds > 0}
             >
-              {pending ? 'در حال ارسال…' : 'ارسال دوبارهٔ کد'}
+              {pending
+                ? 'در حال ارسال…'
+                : resendSeconds > 0
+                  ? `ارسال دوباره تا ${toPersianDigits(resendSeconds)} ثانیهٔ دیگر`
+                  : 'ارسال دوبارهٔ کد'}
             </button>
           ) : null}
         </section>
@@ -263,4 +283,14 @@ function readErrorCode(value: unknown): string | undefined {
   if (value === null || typeof value !== 'object' || Array.isArray(value)) return undefined;
   const error = (value as Record<string, unknown>).error;
   return typeof error === 'string' ? error : undefined;
+}
+
+function maskPhone(value: string): string {
+  const digits = normalizeOtpDigits(value);
+  if (digits.length < 7) return '•••••••••••';
+  return `${digits.slice(0, 4)}•••${digits.slice(-4)}`;
+}
+
+function toPersianDigits(value: number): string {
+  return String(value).replace(/\d/g, (digit) => '۰۱۲۳۴۵۶۷۸۹'[Number(digit)] ?? digit);
 }

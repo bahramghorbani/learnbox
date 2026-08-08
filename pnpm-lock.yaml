@@ -105,7 +105,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.7(@types/node@24.13.3)
+        version: 3.2.7(@types/node@24.13.3)(happy-dom@20.11.2)
 
   apps/learnbox-website:
     dependencies:
@@ -174,24 +174,27 @@ importers:
       '@types/react-dom':
         specifier: ^19.1.7
         version: 19.2.3(@types/react@19.2.17)
+      happy-dom:
+        specifier: ^20.11.2
+        version: 20.11.2
       typescript:
         specifier: ^5.9.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.7(@types/node@24.13.3)
+        version: 3.2.7(@types/node@24.13.3)(happy-dom@20.11.2)
 
   packages/analytics-core:
     devDependencies:
       vitest:
         specifier: ^3.2.4
-        version: 3.2.7(@types/node@24.13.3)
+        version: 3.2.7(@types/node@24.13.3)(happy-dom@20.11.2)
 
   packages/billing-core:
     devDependencies:
       vitest:
         specifier: ^3.2.4
-        version: 3.2.7(@types/node@24.13.3)
+        version: 3.2.7(@types/node@24.13.3)(happy-dom@20.11.2)
 
   packages/bobo-design-system:
     devDependencies:
@@ -200,19 +203,19 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.7(@types/node@24.13.3)
+        version: 3.2.7(@types/node@24.13.3)(happy-dom@20.11.2)
 
   packages/content-models:
     devDependencies:
       vitest:
         specifier: ^3.2.4
-        version: 3.2.7(@types/node@24.13.3)
+        version: 3.2.7(@types/node@24.13.3)(happy-dom@20.11.2)
 
   packages/learning-engine:
     devDependencies:
       vitest:
         specifier: ^3.2.4
-        version: 3.2.7(@types/node@24.13.3)
+        version: 3.2.7(@types/node@24.13.3)(happy-dom@20.11.2)
 
   packages/shared: {}
 
@@ -224,7 +227,7 @@ importers:
     devDependencies:
       vitest:
         specifier: ^3.2.4
-        version: 3.2.7(@types/node@24.13.3)
+        version: 3.2.7(@types/node@24.13.3)(happy-dom@20.11.2)
 
   services/content-pipeline:
     dependencies:
@@ -234,19 +237,19 @@ importers:
     devDependencies:
       vitest:
         specifier: ^3.2.4
-        version: 3.2.7(@types/node@24.13.3)
+        version: 3.2.7(@types/node@24.13.3)(happy-dom@20.11.2)
 
   services/media-worker:
     devDependencies:
       vitest:
         specifier: ^3.2.4
-        version: 3.2.7(@types/node@24.13.3)
+        version: 3.2.7(@types/node@24.13.3)(happy-dom@20.11.2)
 
   services/notification-worker:
     devDependencies:
       vitest:
         specifier: ^3.2.4
-        version: 3.2.7(@types/node@24.13.3)
+        version: 3.2.7(@types/node@24.13.3)(happy-dom@20.11.2)
 
 packages:
   '@borewit/text-codec@0.2.2':
@@ -1697,6 +1700,18 @@ packages:
         integrity: sha512-8mam4H1NHLtu7nmtalF7eyBH14QyOASmcxHhSfEoRyr0nP/YdoesEtU+uSRvMe96TW/HPTtkoKqQLl53N7UXMQ==,
       }
 
+  '@types/whatwg-mimetype@3.0.2':
+    resolution:
+      {
+        integrity: sha512-c2AKvDT8ToxLIOUlN51gTiHXflsfIFisS4pO7pDPoKouJCESkhZnEy623gwP9laCy5lnLDAw1vAzu2vM2YLOrA==,
+      }
+
+  '@types/ws@8.18.1':
+    resolution:
+      {
+        integrity: sha512-ThVF6DCVhA8kUGy+aazFQ4kXQ7E1Ty7A3ypFOe0IcJV8O/M511G99AW24irKrW56Wt44yG9+ij8FaqoBGkuBXg==,
+      }
+
   '@typescript-eslint/eslint-plugin@8.65.0':
     resolution:
       {
@@ -2061,6 +2076,13 @@ packages:
         integrity: sha512-VO9Ht/+p3SN7SKWqcrgEzjGbRSJYTx+Q1pTQC0wrWqHx0vpJraQ6GtHx8tvcg1rlK1byhU5gccxgOgj7B0TDkQ==,
       }
 
+  buffer-image-size@0.6.4:
+    resolution:
+      {
+        integrity: sha512-nEh+kZOPY1w+gcCMobZ6ETUp9WfibndnosbpwB1iJk/8Gt5ZF2bhS6+B6bPYz424KtwsR6Rflc3tCz1/ghX2dQ==,
+      }
+    engines: { node: '>=4.0' }
+
   bytes@3.1.0:
     resolution:
       {
@@ -2237,6 +2259,13 @@ packages:
       {
         integrity: sha512-EoulkdKF/1xa92q25PbjuDcgJ9RDHYU2Rs3SCIvs2/dSQ3BpmxneNHmA/M7fe60M3PrV7nNGTTNbkK62l6vXiQ==,
       }
+
+  entities@7.0.1:
+    resolution:
+      {
+        integrity: sha512-TWrgLOFUQTH994YUyl1yT4uyavY5nNB5muff+RtWaqNVCAK408b5ZnnbNAUEWLTCpum9w6arT70i1XdQ4UeOPA==,
+      }
+    engines: { node: '>=0.12' }
 
   es-module-lexer@1.5.0:
     resolution:
@@ -2577,6 +2606,13 @@ packages:
       {
         integrity: sha512-dMW4CWBTUK1AEEDeZc1g4xpPGIrSf9fJF960qbTZmN/QwZIWY5wgliS6JWl9/25fpTGJrMRtSjGtOmPnfjZB+A==,
       }
+
+  happy-dom@20.11.2:
+    resolution:
+      {
+        integrity: sha512-7MB+bJLkxu3SowAfBJbjW+c55kNz5tkR45gu2qzrxznezhLeN5YIlJbwUgSzlGc+qWoZ8Ykg71H5ezz69xixrw==,
+      }
+    engines: { node: '>=20.0.0' }
 
   has-flag@4.0.0:
     resolution:
@@ -3902,6 +3938,13 @@ packages:
         integrity: sha512-2JAn3z8AR6rjK8Sm8orRC0h/bcl/DqL7tRPdGZ4I1CjdF+EaMLmYxBHyXuKL849eucPFhvBoxMsflfOb8kxaeQ==,
       }
 
+  whatwg-mimetype@3.0.0:
+    resolution:
+      {
+        integrity: sha512-nt+N2dzIutVRxARx1nghPKGv1xHikU7HKdfafKkLNLindmPU/ch3U31NOCGGA/dmPcmb1VlofO0vnKAcsm0o/Q==,
+      }
+    engines: { node: '>=12' }
+
   whatwg-url@5.0.0:
     resolution:
       {
@@ -4657,6 +4700,12 @@ snapshots:
       '@types/http-errors': 2.0.5
       '@types/node': 24.13.3
 
+  '@types/whatwg-mimetype@3.0.2': {}
+
+  '@types/ws@8.18.1':
+    dependencies:
+      '@types/node': 24.13.3
+
   '@typescript-eslint/eslint-plugin@8.65.0(@typescript-eslint/parser@8.65.0(eslint@9.39.5)(typescript@5.9.3))(eslint@9.39.5)(typescript@5.9.3)':
     dependencies:
       '@eslint-community/regexpp': 4.12.2
@@ -4951,6 +5000,10 @@ snapshots:
 
   buffer-crc32@0.2.13: {}
 
+  buffer-image-size@0.6.4:
+    dependencies:
+      '@types/node': 24.13.3
+
   bytes@3.1.0: {}
 
   cac@6.7.14: {}
@@ -5024,6 +5077,8 @@ snapshots:
   end-of-stream@1.1.0:
     dependencies:
       once: 1.3.3
+
+  entities@7.0.1: {}
 
   es-module-lexer@1.5.0: {}
 
@@ -5283,6 +5338,19 @@ snapshots:
   graceful-fs@4.2.11: {}
 
   gsap@3.15.0: {}
+
+  happy-dom@20.11.2:
+    dependencies:
+      '@types/node': 24.13.3
+      '@types/whatwg-mimetype': 3.0.2
+      '@types/ws': 8.18.1
+      buffer-image-size: 0.6.4
+      entities: 7.0.1
+      whatwg-mimetype: 3.0.0
+      ws: 8.21.1
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
 
   has-flag@4.0.0: {}
 
@@ -5960,7 +6028,7 @@ snapshots:
       '@types/node': 24.13.3
       fsevents: 2.3.3
 
-  vitest@3.2.7(@types/node@24.13.3):
+  vitest@3.2.7(@types/node@24.13.3)(happy-dom@20.11.2):
     dependencies:
       '@types/chai': 5.2.3
       '@vitest/expect': 3.2.7
@@ -5987,6 +6055,7 @@ snapshots:
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 24.13.3
+      happy-dom: 20.11.2
     transitivePeerDependencies:
       - jiti
       - less
@@ -6002,6 +6071,8 @@ snapshots:
       - yaml
 
   webidl-conversions@3.0.1: {}
+
+  whatwg-mimetype@3.0.0: {}
 
   whatwg-url@5.0.0:
     dependencies:
