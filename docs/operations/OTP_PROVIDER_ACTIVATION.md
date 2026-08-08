@@ -14,13 +14,26 @@ private media for a learner.
 
 The default provider is intentionally disabled. It fails closed and cannot deliver a code by accident.
 
+## Controlled owner Preview test
+
+The hidden route `/owner/otp-test` is the only UI authorized for the first real delivery check. It
+returns 404 unless `LEARNBOX_OTP_TEST_UI_ENABLED=true`, is excluded from indexing, and must remain
+behind Vercel Authentication. The owner enters the test number and code in that page; neither value
+is placed in chat, URLs, browser storage or application logs.
+
+For the controlled test only, set both `LEARNBOX_OTP_TEST_UI_ENABLED=true` and
+`SMS_IR_ENABLED=true` in the **Preview** environment and redeploy. Production and the internal
+same-server stack remain false. Rollback is immediate: set both Preview flags back to `false` and
+redeploy; the route then returns 404 and the provider fails closed.
+
 ## Required owner action before activation
 
 Before activation, the owner must place the private API key only in the deployment secret store.
 SMS.ir's verification endpoint delivers a parameterized template but does not verify a code for
 LearnBox, so LearnBox must keep the opaque challenge, hashed code, expiry, resend cooldown,
-attempts, and final identity binding on its own server. These actions are external, potentially
-paid, and must not be automated by Codex.
+attempts, and final identity binding on its own server. The owner explicitly approved one
+controlled real-message test on 2026-08-08. Codex may prepare and activate the protected Preview
+flags, while the owner remains the only person who enters the phone number and received code.
 
 The prepared SMS.ir delivery client is server-only and uses its `POST /v1/send/verify` endpoint
 with the `X-API-KEY` header, the owner-approved template ID, and a single code parameter. It is
