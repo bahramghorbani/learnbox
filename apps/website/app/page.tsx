@@ -32,8 +32,10 @@ import { Bobo } from './components/Bobo';
 import { OnboardingGoal } from './components/OnboardingGoal';
 import { ProgressScreen } from './components/ProgressScreen';
 import { SupportivePlusOffer } from './components/SupportivePlusOffer';
+import { StartMediaVisual } from './components/StartMediaVisual';
 import { defaultSuggestedNewWords, personalWordLimit } from './product-experience';
 import { resolveSupportivePlusOffer } from './paywall';
+import { buildStartMediaSources, resolveStartMediaMode, type StartMediaMode } from './start-media';
 import { selectTodayStartSession, stagedStartSlice } from './start-slice';
 
 type Grade = 'forgot' | 'hard' | 'remembered' | 'mastered';
@@ -82,6 +84,7 @@ const grades: Array<{ id: Grade; label: string; detail: string }> = [
 
 export default function Home() {
   const studyItems = selectTodayStartSession();
+  const authMode = resolveLearnerAuthMode(process.env.NEXT_PUBLIC_LEARNBOX_OTP_UI_ENABLED);
   const [authenticated, setAuthenticated] = useState(false);
   const [onboarded, setOnboarded] = useState(false);
   const [learningGoal, setLearningGoal] = useState<LearningGoal>('life');
@@ -105,7 +108,7 @@ export default function Home() {
   const [resumableSessionIndex, setResumableSessionIndex] = useState<number | null>(null);
   const [completedSessions, setCompletedSessions] = useState(0);
   const [plusOfferDismissed, setPlusOfferDismissed] = useState(false);
-  const [isLocalMediaPreview, setIsLocalMediaPreview] = useState(false);
+  const [startMediaMode, setStartMediaMode] = useState<StartMediaMode>('placeholder');
   const [isRecordingGrade, setIsRecordingGrade] = useState(false);
   const gradeSubmissionRef = useRef(false);
   const remainingTodayReviews = Math.max(0, studyItems.length - reviewedToday);
@@ -165,10 +168,14 @@ export default function Home() {
   }, [personalWords, personalWordsLoaded]);
 
   useEffect(() => {
-    setIsLocalMediaPreview(
-      window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1',
+    setStartMediaMode(
+      resolveStartMediaMode({
+        privateMediaFlag: process.env.NEXT_PUBLIC_LEARNBOX_PRIVATE_MEDIA_ENABLED,
+        authMode,
+        hostname: window.location.hostname,
+      }),
     );
-  }, []);
+  }, [authMode]);
 
   useEffect(() => {
     gradeSubmissionRef.current = false;
@@ -294,12 +301,7 @@ export default function Home() {
   const savedWords = [...personalWords, ...initialSavedWords];
 
   if (!authenticated) {
-    return (
-      <AuthGate
-        mode={resolveLearnerAuthMode(process.env.NEXT_PUBLIC_LEARNBOX_OTP_UI_ENABLED)}
-        onAuthenticated={() => setAuthenticated(true)}
-      />
-    );
+    return <AuthGate mode={authMode} onAuthenticated={() => setAuthenticated(true)} />;
   }
 
   if (!onboarded) {
@@ -443,6 +445,7 @@ export default function Home() {
 
   if (screen === 'card') {
     const currentItem = studyItems[sessionIndex];
+    const mediaSources = buildStartMediaSources(currentItem.id, startMediaMode);
     const completedCount = sessionIndex;
     const remainingCount = studyItems.length - completedCount;
     return (
@@ -466,24 +469,10 @@ export default function Home() {
               <h1 lang="de" dir="ltr">
                 {currentItem.german}
               </h1>
-              <PronunciationButton
-                text={currentItem.german}
-                src={isLocalMediaPreview ? currentItem.candidateMedia.wordAudio : undefined}
-              />
-              <div className="word-visual word-visual-staged" aria-hidden="true">
-                {isLocalMediaPreview ? (
-                  <img src={currentItem.candidateMedia.image} alt="" />
-                ) : (
-                  <span>◌</span>
-                )}
-              </div>
+              <PronunciationButton text={currentItem.german} src={mediaSources.wordAudio} />
+              <StartMediaVisual contentId={currentItem.id} mode={startMediaMode} />
               <p className="hint" lang="de" dir="ltr">
                 {currentItem.germanDefinition}
-              </p>
-              <p className="media-pending">
-                {isLocalMediaPreview
-                  ? 'تصویر و صدای نامزد فقط برای بررسی محلی نمایش داده می‌شوند.'
-                  : 'تصویر و صدای ضبط‌شدهٔ این کارت در حال آماده‌سازی است.'}
               </p>
               <button className="flip-hint" onClick={() => setFlipped(true)}>
                 برای دیدن معنی، کارت را برگردان
@@ -501,7 +490,7 @@ export default function Home() {
               </div>
               <PronunciationButton
                 text={currentItem.exampleGerman}
-                src={isLocalMediaPreview ? currentItem.candidateMedia.sentenceAudio : undefined}
+                src={mediaSources.sentenceAudio}
               />
               <p className="instruction">چقدر یادت آمد؟</p>
               <div

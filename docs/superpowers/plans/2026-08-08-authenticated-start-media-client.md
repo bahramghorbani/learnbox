@@ -56,13 +56,13 @@
 - Produces: a small `StartMediaVisual` component that swaps a failed image for the neutral placeholder and reports only generic availability copy.
 - Preserves: browser speech fallback in `placeholder`; route audio in both media modes.
 
-- [ ] Add rendered tests proving that private relative sources appear only for exact public enablement with `server-otp`, localhost retains local preview, placeholder mode contains no media route, and an image error restores the neutral placeholder without changing card controls.
-- [ ] Run `pnpm --filter @learnbox/website test -- start-media-card.test.tsx` and confirm the private-session behavior is absent.
-- [ ] Resolve the media mode from `process.env.NEXT_PUBLIC_LEARNBOX_PRIVATE_MEDIA_ENABLED`, the existing auth mode and browser hostname; pass resolved sources to the card.
-- [ ] Implement the failure-safe visual component and three truthful copy variants: pending, local QA, protected alpha media.
-- [ ] Keep `PronunciationButton` generic and ensure a failed route only changes its accessible status to unavailable.
-- [ ] Re-run the rendered suite, all website tests and website type checking.
-- [ ] Commit with `feat: attach authenticated Start media`.
+- [x] Add rendered tests proving that private relative sources appear only for exact public enablement with `server-otp`, localhost retains local preview, placeholder mode contains no media route, and an image error restores the neutral placeholder without changing card controls.
+- [x] Run `pnpm --filter @learnbox/website test -- start-media-card.test.tsx` and confirm the private-session behavior is absent.
+- [x] Resolve the media mode from `process.env.NEXT_PUBLIC_LEARNBOX_PRIVATE_MEDIA_ENABLED`, the existing auth mode and browser hostname; pass resolved sources to the card.
+- [x] Implement the failure-safe visual component and three truthful copy variants: pending, local QA, protected alpha media.
+- [x] Keep `PronunciationButton` generic and ensure a failed route only changes its accessible status to unavailable.
+- [x] Re-run the rendered suite, all website tests and website type checking.
+- [x] Commit with `feat: attach authenticated Start media`.
 
 ### Task 3: Default Gates, Documentation and Final Verification
 
