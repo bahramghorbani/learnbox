@@ -68,8 +68,8 @@
 - Produces: documented test route and rollback instructions.
 
 - [x] Document Preview-only activation and immediate rollback flags.
-- [ ] Run `pnpm check`, `pnpm --filter @learnbox/website build`, migration validation, and production audit.
-- [ ] Render-test locally with the UI flag true and SMS delivery false; verify phone validation and the safe unavailable state in a mobile viewport.
+- [x] Run `pnpm check`, `pnpm --filter @learnbox/website build`, migration validation, and production audit.
+- [x] Render-test locally with the UI flag true and SMS delivery false; verify phone validation and the safe unavailable state in a mobile viewport.
 - [ ] Commit and publish the reviewed change without altering the landing site subtree.
 - [ ] Set `LEARNBOX_OTP_TEST_UI_ENABLED=true` and `SMS_IR_ENABLED=true` in Vercel Preview only, redeploy, and confirm authentication still protects the URL.
 - [ ] Open the protected route so the owner can enter their number and trigger exactly one controlled SMS.
