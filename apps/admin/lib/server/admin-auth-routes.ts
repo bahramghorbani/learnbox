@@ -72,6 +72,7 @@ export function createLoginOptionsRoute(dependencies: {
   service?: Pick<LoginService, 'createLoginOptions'>;
 }) {
   return async function GET(_request: Request) {
+    void _request;
     if (!dependencies.config.enabled || !dependencies.service) return notFound();
     const nonce = (dependencies.randomNonce ?? createOpaqueNonce)();
     if (!/^[A-Za-z0-9_-]{40,}$/.test(nonce)) return notFound();
