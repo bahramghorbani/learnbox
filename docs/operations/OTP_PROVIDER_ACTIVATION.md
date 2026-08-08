@@ -6,7 +6,9 @@ The owner selected SMS.ir for the future Iranian OTP delivery adapter, and SMS.i
 `495140` with code-placeholder `OTP`. The restricted API key, alpha database and internal OTP/session
 secrets are installed in Vercel Preview. Tested same-origin request and verification routes are
 deployed behind Vercel authentication. The owner-controlled Preview test delivered real messages
-successfully; production delivery and learner access remain disabled. A separate same-server app stack is prepared for the final deployment
+and created the secure session successfully on 2026-08-08. Both Preview-only activation flags were
+then returned to `false`, the test route was redeployed and an authenticated request verified its
+`404` fail-closed state. Production delivery and learner access remain disabled. A separate same-server app stack is prepared for the final deployment
 target, but it has not received server secrets or public routing. The
 phone entry screen is therefore still a local
 closed-alpha prototype; it does not prove an identity, issue a production session, or enable
@@ -79,8 +81,8 @@ Only a verified identity may call `createLearnerSession`. The application must m
 ## Required implementation sequence
 
 1. Configure the prepared SMS.ir delivery client with the approved template and server-only deployment secrets; do not add a browser SDK. **Complete for Preview.**
-2. Connect the tested request and verification coordinators through CSRF-aware routes with generic errors. **Complete and protected in Preview; real delivery is enabled only for the controlled owner test.**
-3. Replace the local phone prototype only after the routes are tested against the approved owner-controlled test number.
+2. Connect the tested request and verification coordinators through CSRF-aware routes with generic errors. **Complete and protected in Preview; both temporary activation flags are back to `false`.**
+3. Replace the local phone prototype only after the routes are tested against the approved owner-controlled test number. **The protected owner delivery, verification and secure-session test passed; learner-flow replacement remains a later closed-alpha task.**
 4. Run abuse, expiry, resend, incorrect-code, outage, logout, and real-device tests.
 5. Obtain owner approval before enabling production OTP or attaching private media to learner cards.
 
@@ -93,4 +95,6 @@ When the implementation reaches activation, ask the owner only for these account
 1. Create a restricted private API key in SMS.ir and place it directly in the deployment secret store; never paste it into chat, source control, or a browser field.
 2. Confirm the service/template is approved for verification delivery and allow one owner-controlled test number.
 
-Codex will then complete the server adapter, challenge store, rate limits, routes, automated tests, and an owner-visible test run before any production release.
+The Preview handoff is complete: the server adapter, challenge store, rate limits, routes, automated
+tests and owner-visible real-message verification passed. Any future production activation still
+requires the closed-alpha invitation and release approvals described above.

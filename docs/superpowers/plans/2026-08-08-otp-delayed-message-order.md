@@ -54,4 +54,4 @@
 - [x] Request independent review of privacy, attempt semantics and error handling.
 - [x] Merge and push only after green verification.
 - [x] Redeploy protected Preview with the existing Preview-only flags.
-- [ ] Have the owner request one fresh code and verify it without resending unless delivery does not arrive.
+- [x] Have the owner request one fresh code and verify it without resending unless delivery does not arrive.
