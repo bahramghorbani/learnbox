@@ -3,11 +3,12 @@
 import { type FormEvent, useEffect, useState } from 'react';
 
 import {
-  isOtpVerificationSuccess,
   normalizeOtpDigits,
   otpErrorMessage,
   readChallengeResponse,
+  rememberOtpChallenge,
   validateIranianMobile,
+  verifyOtpChallenges,
   type ChallengeResponse,
 } from './owner-otp-test';
 
@@ -17,7 +18,7 @@ export function OwnerOtpTest() {
   const [stage, setStage] = useState<Stage>('phone');
   const [phone, setPhone] = useState('');
   const [code, setCode] = useState('');
-  const [challenge, setChallenge] = useState<ChallengeResponse | null>(null);
+  const [challenges, setChallenges] = useState<ChallengeResponse[]>([]);
   const [error, setError] = useState('');
   const [pending, setPending] = useState(false);
   const [now, setNow] = useState(() => Date.now());
@@ -28,8 +29,9 @@ export function OwnerOtpTest() {
     return () => window.clearInterval(timer);
   }, [stage]);
 
-  const resendSeconds = challenge
-    ? Math.max(0, Math.ceil((Date.parse(challenge.resendAvailableAt) - now) / 1_000))
+  const latestChallenge = challenges[0] ?? null;
+  const resendSeconds = latestChallenge
+    ? Math.max(0, Math.ceil((Date.parse(latestChallenge.resendAvailableAt) - now) / 1_000))
     : 0;
 
   async function requestCode(event?: FormEvent<HTMLFormElement>) {
@@ -57,7 +59,7 @@ export function OwnerOtpTest() {
         setError('پاسخ سرویس کامل نبود؛ دوباره تلاش کنید.');
         return;
       }
-      setChallenge(nextChallenge);
+      setChallenges((history) => rememberOtpChallenge(history, nextChallenge));
       setCode('');
       setNow(Date.now());
       setStage('code');
@@ -71,7 +73,7 @@ export function OwnerOtpTest() {
   async function verifyCode(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const normalizedCode = normalizeOtpDigits(code);
-    if (!challenge || normalizedCode.length !== 5) {
+    if (challenges.length === 0 || normalizedCode.length !== 5) {
       setError('کد ۵ رقمی را کامل وارد کنید.');
       return;
     }
@@ -79,20 +81,26 @@ export function OwnerOtpTest() {
     setPending(true);
     setError('');
     try {
-      const response = await fetch('/api/auth/otp/verify', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ challengeId: challenge.challengeId, code: normalizedCode }),
-      });
-      if (!isOtpVerificationSuccess(response.status)) {
-        const body = await readJson(response);
-        setError(otpErrorMessage(response.status, readErrorCode(body)));
+      const verification = await verifyOtpChallenges(challenges, (challengeId) =>
+        fetch('/api/auth/otp/verify', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ challengeId, code: normalizedCode }),
+        }),
+      );
+      if (verification.outcome === 'success') {
+        setPhone('');
+        setCode('');
+        setChallenges([]);
+        setStage('success');
         return;
       }
-      setPhone('');
-      setCode('');
-      setChallenge(null);
-      setStage('success');
+      if (verification.outcome === 'rejected') {
+        setError(otpErrorMessage(400, 'verification_failed'));
+        return;
+      }
+      const body = await readJson(verification.response);
+      setError(otpErrorMessage(verification.response.status, readErrorCode(body)));
     } catch {
       setError('ارتباط با سرویس انجام نشد؛ دوباره تلاش کنید.');
     } finally {
@@ -145,7 +153,7 @@ export function OwnerOtpTest() {
               type="button"
               onClick={() => {
                 setStage('phone');
-                setChallenge(null);
+                setChallenges([]);
                 setCode('');
                 setError('');
               }}
@@ -156,6 +164,7 @@ export function OwnerOtpTest() {
             <h1 id="owner-otp-title">کد پیامک‌شده را وارد کنید</h1>
             <p className="owner-otp-description">
               کد پنج‌رقمی ارسال‌شده به شمارهٔ <bdi dir="ltr">{maskPhone(phone)}</bdi> را وارد کنید.
+              اگر چند پیامک دریافت کرده‌اید، کدی را وارد کنید که تازه‌تر به دستتان رسیده است.
             </p>
             <form className="owner-otp-form" onSubmit={verifyCode} noValidate>
               <label htmlFor="owner-code">کد تأیید</label>

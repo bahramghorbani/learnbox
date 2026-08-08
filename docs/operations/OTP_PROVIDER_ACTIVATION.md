@@ -5,8 +5,8 @@
 The owner selected SMS.ir for the future Iranian OTP delivery adapter, and SMS.ir approved template
 `495140` with code-placeholder `OTP`. The restricted API key, alpha database and internal OTP/session
 secrets are installed in Vercel Preview. Tested same-origin request and verification routes are
-deployed behind Vercel authentication, but delivery remains disabled; no real message or learner
-session has been enabled. A separate same-server app stack is prepared for the final deployment
+deployed behind Vercel authentication. The owner-controlled Preview test delivered real messages
+successfully; production delivery and learner access remain disabled. A separate same-server app stack is prepared for the final deployment
 target, but it has not received server secrets or public routing. The
 phone entry screen is therefore still a local
 closed-alpha prototype; it does not prove an identity, issue a production session, or enable
@@ -26,6 +26,15 @@ For the controlled test only, set both `LEARNBOX_OTP_TEST_UI_ENABLED=true` and
 `SMS_IR_ENABLED=true` in the **Preview** environment and redeploy. Production and the internal
 same-server stack remain false. Rollback is immediate: set both Preview flags back to `false` and
 redeploy; the route then returns 404 and the provider fails closed.
+
+The first owner run confirmed delivery and exposed an operator-order edge case: after multiple
+requests, an older message could arrive after the newest request and its still-valid code was then
+checked only against the newest challenge. The protected page now retains at most the three
+challenge IDs created in that tab, in memory only. A submitted code is checked newest-first; only
+an exact `400` advances to another remembered challenge, while `204` succeeds and every other
+response stops immediately. The list is cleared on phone change or success and is never written to
+browser storage, URLs or logs. The browser never filters by its own clock; the server remains the
+only authority for challenge expiry.
 
 ## Required owner action before activation
 
@@ -70,7 +79,7 @@ Only a verified identity may call `createLearnerSession`. The application must m
 ## Required implementation sequence
 
 1. Configure the prepared SMS.ir delivery client with the approved template and server-only deployment secrets; do not add a browser SDK. **Complete for Preview.**
-2. Connect the tested request and verification coordinators through CSRF-aware routes with generic errors. **Complete and protected in Preview; delivery remains disabled.**
+2. Connect the tested request and verification coordinators through CSRF-aware routes with generic errors. **Complete and protected in Preview; real delivery is enabled only for the controlled owner test.**
 3. Replace the local phone prototype only after the routes are tested against the approved owner-controlled test number.
 4. Run abuse, expiry, resend, incorrect-code, outage, logout, and real-device tests.
 5. Obtain owner approval before enabling production OTP or attaching private media to learner cards.

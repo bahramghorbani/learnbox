@@ -8,10 +8,73 @@ import {
   normalizeOtpDigits,
   otpErrorMessage,
   readChallengeResponse,
+  rememberOtpChallenge,
   validateIranianMobile,
+  verifyOtpChallenges,
 } from '../app/owner/otp-test/owner-otp-test';
 
 describe('owner OTP test helpers', () => {
+  it('keeps the three newest distinct challenges in memory', () => {
+    const first = challenge('first-challenge-id-0001', '2026-08-08T10:05:00.000Z');
+    const second = challenge('second-challenge-id-002', '2026-08-08T10:06:00.000Z');
+    const third = challenge('third-challenge-id-0003', '2026-08-08T10:07:00.000Z');
+    const fourth = challenge('fourth-challenge-id-004', '2026-08-08T10:08:00.000Z');
+
+    const history = [first, second, third, fourth].reduce(rememberOtpChallenge, []);
+    expect(history.map((item) => item.challengeId)).toEqual([
+      fourth.challengeId,
+      third.challengeId,
+      second.challengeId,
+    ]);
+    expect(rememberOtpChallenge(history, third)).toEqual([third, fourth, second]);
+  });
+
+  it('lets the server decide expiry and accepts an older remembered challenge after a 400', async () => {
+    const newest = challenge('newest-challenge-id-001', '2026-08-08T09:59:59.000Z');
+    const older = challenge('older-challenge-id-0002', '2026-08-08T09:58:59.000Z');
+    const calls: string[] = [];
+
+    const result = await verifyOtpChallenges([newest, older], async (challengeId) => {
+      calls.push(challengeId);
+      return { status: calls.length === 1 ? 400 : 204 };
+    });
+
+    expect(calls).toEqual([newest.challengeId, older.challengeId]);
+    expect(result).toEqual({ outcome: 'success' });
+  });
+
+  it('stops immediately after 204 and never checks an older challenge', async () => {
+    const newest = challenge('newest-challenge-id-001', '2026-08-08T10:05:00.000Z');
+    const older = challenge('older-challenge-id-0002', '2026-08-08T10:04:00.000Z');
+    const calls: string[] = [];
+
+    const result = await verifyOtpChallenges([newest, older], async (challengeId) => {
+      calls.push(challengeId);
+      return { status: 204 };
+    });
+
+    expect(calls).toEqual([newest.challengeId]);
+    expect(result).toEqual({ outcome: 'success' });
+  });
+
+  it.each([403, 503])(
+    'treats HTTP %s as terminal without checking older challenges',
+    async (status) => {
+      const newest = challenge('newest-challenge-id-001', '2026-08-08T10:05:00.000Z');
+      const older = challenge('older-challenge-id-0002', '2026-08-08T10:04:00.000Z');
+      const calls: string[] = [];
+      const terminalResponse = { status };
+
+      const result = await verifyOtpChallenges([newest, older], async (challengeId) => {
+        calls.push(challengeId);
+        return terminalResponse;
+      });
+
+      expect(calls).toEqual([newest.challengeId]);
+      expect(result).toEqual({ outcome: 'terminal', response: terminalResponse });
+    },
+  );
+
   it('enables the owner UI only in Preview or explicit local development', () => {
     expect(
       isOwnerOtpTestEnabled({
@@ -93,11 +156,19 @@ describe('owner OTP test route boundary', () => {
     const source = readSource('../app/owner/otp-test/OwnerOtpTest.tsx');
     expect(source).toContain("fetch('/api/auth/otp/request'");
     expect(source).toContain("fetch('/api/auth/otp/verify'");
-    expect(source).toContain('isOtpVerificationSuccess(response.status)');
+    expect(source).toContain('verifyOtpChallenges(challenges');
     expect(source).not.toMatch(/localStorage|sessionStorage|console\./);
   });
 });
 
 function readSource(relativePath: string): string {
   return readFileSync(resolve(process.cwd(), 'test', relativePath), 'utf8');
+}
+
+function challenge(challengeId: string, expiresAt: string) {
+  return {
+    challengeId,
+    expiresAt,
+    resendAvailableAt: '2026-08-08T10:01:00.000Z',
+  };
 }
