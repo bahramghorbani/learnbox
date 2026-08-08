@@ -36,12 +36,12 @@
 - `admin_sessions`: keyed token hash, owner foreign key, CSRF hash, created/last-seen/absolute-expiry/revoked/recent-auth timestamps.
 - Foreign keys, uniqueness and indexes make a second owner and challenge reuse impossible.
 
-- [ ] Add a failing migration source test for singleton constraints, credential uniqueness, expiry/revocation columns and the absence of plaintext token/challenge columns.
-- [ ] Run `pnpm --filter @learnbox/api test -- owner-passkey-migration.test.ts` and confirm the missing migration fails.
-- [ ] Add migration `0009` without modifying earlier checksum-attested migrations.
-- [ ] Extend migration validation only if needed to reject duplicate filenames or non-contiguous numbering without changing runtime migration semantics.
-- [ ] Run the focused test and `pnpm verify:migrations` if added, otherwise `node scripts/validate-migrations.mjs`.
-- [ ] Commit with `feat: add owner passkey persistence`.
+- [x] Add a failing migration source test for singleton constraints, credential uniqueness, expiry/revocation columns and the absence of plaintext token/challenge columns.
+- [x] Run `pnpm --filter @learnbox/api test -- owner-passkey-migration.test.ts` and confirm the missing migration fails.
+- [x] Add migration `0009` without modifying earlier checksum-attested migrations.
+- [x] Extend migration validation only if needed to reject duplicate filenames or non-contiguous numbering without changing runtime migration semantics.
+- [x] Run the focused test and `pnpm verify:migrations` if added, otherwise `node scripts/validate-migrations.mjs`.
+- [x] Commit with `feat: add owner passkey persistence`.
 
 ### Task 2: Implement Pure Authentication Policy and Session Primitives
 
@@ -61,12 +61,12 @@
 - Challenge/session helpers create random values, persist only keyed SHA-256 hashes, compare safely, and evaluate expiry/recent-auth rules using an injected clock.
 - Cookie helper emits `HttpOnly; Secure; SameSite=Strict; Path=/` with bounded lifetime.
 
-- [ ] Add failing tests for disabled defaults, incomplete enabled configuration, exact origin matching, keyed hashes, token non-recoverability, idle/absolute expiry, revocation, recent-auth and strict cookie attributes.
-- [ ] Run `pnpm --filter @learnbox/admin test -- admin-auth-policy.test.ts admin-session.test.ts` and confirm failure.
-- [ ] Add Vitest scripts/dev dependencies and implement the smallest pure helpers that satisfy the tests.
-- [ ] Add `.env.example` keys with false defaults and no secret values.
-- [ ] Re-run focused tests and `pnpm --filter @learnbox/admin typecheck`.
-- [ ] Commit with `feat: add admin auth security primitives`.
+- [x] Add failing tests for disabled defaults, incomplete enabled configuration, exact origin matching, keyed hashes, token non-recoverability, idle/absolute expiry, revocation, recent-auth and strict cookie attributes.
+- [x] Run `pnpm --filter @learnbox/admin test -- admin-auth-policy.test.ts admin-session.test.ts` and confirm failure.
+- [x] Add Vitest scripts/dev dependencies and implement the smallest pure helpers that satisfy the tests.
+- [x] Add `.env.example` keys with false defaults and no secret values.
+- [x] Re-run focused tests and `pnpm --filter @learnbox/admin typecheck`.
+- [x] Commit with `feat: add admin auth security primitives`.
 
 ### Task 3: Add Transactional PostgreSQL Stores
 
