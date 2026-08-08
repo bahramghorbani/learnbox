@@ -85,11 +85,11 @@
 - Authentication updates the credential counter and consumes the challenge in the same transaction.
 - Session reads never accept expired/revoked rows and touches cannot extend absolute expiry.
 
-- [ ] Add failing query-recording tests for `FOR UPDATE`, one-use consumption, bootstrap closure, same-owner second credentials, counter updates and bounded session touches.
-- [ ] Run the focused store test and confirm failure.
-- [ ] Add `pg` and its types to the admin package and implement the store with injected clients for tests.
-- [ ] Re-run the focused test and admin typecheck.
-- [ ] Commit with `feat: add owner passkey store`.
+- [x] Add failing query-recording tests for `FOR UPDATE`, one-use consumption, bootstrap closure, same-owner second credentials, counter updates and bounded session touches.
+- [x] Run the focused store test and confirm failure.
+- [x] Add `pg` and its types to the admin package and implement the store with injected clients for tests.
+- [x] Re-run the focused test and admin typecheck.
+- [x] Commit with `feat: add owner passkey store`.
 
 ### Task 4: Implement WebAuthn Route Handlers
 
