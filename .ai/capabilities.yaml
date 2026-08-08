@@ -1,0 +1,18 @@
+schema_version: 1
+capabilities:
+  repository_orientation:
+    purpose: Inspect Git state and canonical repository documentation before work.
+  implementation:
+    purpose: Make scoped, reversible changes on a non-main branch.
+  planning:
+    purpose: Translate canonical requirements into an incremental, testable change.
+  testing:
+    purpose: Run focused and feature-boundary validation with recorded evidence.
+  security_review:
+    purpose: Protect secrets, owner gates, privacy and fail-closed service boundaries.
+  visual_qa:
+    purpose: Inspect RTL, accessibility, responsive and canonical visual behavior.
+  github_pr:
+    purpose: Create, review and merge pull requests only after required quality gates pass.
+  handoff:
+    purpose: Keep state, documentation and unfinished work resumable by another capable agent.

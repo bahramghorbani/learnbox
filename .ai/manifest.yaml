@@ -1,0 +1,21 @@
+schema_version: 1
+repository: LearnBox
+source_of_truth: repository
+bootstrap: AI_BOOTSTRAP.md
+handoff: AI_HANDOFF.md
+stable_state: PROJECT_STATE.md
+active_work: CURRENT_WORK.md
+product_authority: docs/product/MASTER_SPEC.md
+storyboard: docs/storyboard/STATUS.md
+agent_rules: AGENTS.md
+quality:
+  feature_boundary:
+    - pnpm check
+    - pnpm build
+    - node scripts/validate-migrations.mjs
+  focused: Run direct package, integration, and Flutter checks when their scope changes.
+invariants:
+  - Preserve Persian RTL-first behavior.
+  - Keep apps/website and apps/learnbox-website separate.
+  - Never commit secrets or activate production services without owner approval.
+  - Preserve canonical approved Bobo identity.
