@@ -77,8 +77,8 @@
 
 - Produces: truthful disabled-by-default activation status and review evidence.
 
-- [ ] Record that the owner delivery test passed and the learner UI seam is implemented but inactive.
-- [ ] Exclude the git-ignored `.superpowers/` execution ledger from repository formatting checks.
-- [ ] Run `pnpm check`, website build, migration validation and `pnpm audit --prod --audit-level=high`.
-- [ ] Request independent security and regression review; address all important findings.
+- [x] Record that the owner delivery test passed and the learner UI seam is implemented but inactive.
+- [x] Exclude the git-ignored `.superpowers/` execution ledger from repository formatting checks.
+- [x] Run `pnpm check`, website build, migration validation and `pnpm audit --prod --audit-level=high`.
+- [x] Request independent security and regression review; address all important findings.
 - [ ] Merge and push only after green verification; do not deploy or enable the feature.
