@@ -45,7 +45,11 @@ describe('admin route session security', () => {
       now,
     );
 
-    expect(session).toEqual({ tokenHash, recent: true, csrfHash: hashAdminSecret('csrf-token', hashKey) });
+    expect(session).toEqual({
+      tokenHash,
+      recent: true,
+      csrfHash: hashAdminSecret('csrf-token', hashKey),
+    });
     expect(calls).toEqual([tokenHash, tokenHash]);
   });
 
@@ -55,7 +59,12 @@ describe('admin route session security', () => {
       touchSession: async () => true,
     };
     await expect(
-      loadAdminSession(new Request('https://admin.learnbox.app/api/auth/session'), config, store, now),
+      loadAdminSession(
+        new Request('https://admin.learnbox.app/api/auth/session'),
+        config,
+        store,
+        now,
+      ),
     ).resolves.toBeUndefined();
   });
 
@@ -64,7 +73,9 @@ describe('admin route session security', () => {
       method: 'POST',
       headers: { 'x-learnbox-csrf-token': 'csrf-token' },
     });
-    expect(() => verifyAdminCsrf(request, hashAdminSecret('csrf-token', hashKey), config)).not.toThrow();
+    expect(() =>
+      verifyAdminCsrf(request, hashAdminSecret('csrf-token', hashKey), config),
+    ).not.toThrow();
     expect(() => verifyAdminCsrf(request, hashAdminSecret('different', hashKey), config)).toThrow(
       'CSRF',
     );
