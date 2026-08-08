@@ -1,0 +1,30 @@
+schema_version: 1
+policy: >-
+  Providers are interchangeable. Map required abstract capabilities to the available native tool,
+  workflow, or careful manual process; do not make this repository depend on a provider-specific
+  skill name.
+providers:
+  codex:
+    repository_orientation: Git inspection and repository-document reading.
+    implementation: Scoped repository editing on a dedicated branch.
+    testing: Shell-based focused and feature-boundary commands.
+    security_review: Repository security checks plus direct boundary review.
+    github_pr: GitHub CLI or provider-approved GitHub integration.
+    visual_qa: Browser or local rendered inspection.
+    handoff: Update canonical continuity documents and PR evidence.
+  claude_code:
+    repository_orientation: Git inspection and repository-document reading.
+    implementation: Scoped repository editing on a dedicated branch.
+    testing: Shell-based focused and feature-boundary commands.
+    security_review: Repository security checks plus direct boundary review.
+    github_pr: GitHub CLI or provider-approved GitHub integration.
+    visual_qa: Browser or local rendered inspection.
+    handoff: Update canonical continuity documents and PR evidence.
+  generic_capable_agent:
+    repository_orientation: Read the bootstrap sequence and inspect Git before edits.
+    implementation: Use a dedicated branch and preserve repository invariants.
+    testing: Execute documented commands and retain exact results.
+    security_review: Avoid secrets and preserve owner-gated service boundaries.
+    github_pr: Use an authenticated repository workflow or leave the branch ready for review.
+    visual_qa: Perform rendered RTL and responsive inspection when UI changes.
+    handoff: Keep PROJECT_STATE.md and CURRENT_WORK.md accurate.

@@ -5,10 +5,11 @@ the authoritative product and security documents.
 
 ## Read order
 
-1. This file.
-2. [`AGENTS.md`](../../AGENTS.md).
-3. [`docs/storyboard/STATUS.md`](../storyboard/STATUS.md).
-4. Only the files named by the current task, their direct tests, and their direct architecture or
+1. [`AGENTS.md`](../../AGENTS.md).
+2. [`AI_BOOTSTRAP.md`](../../AI_BOOTSTRAP.md), then [`PROJECT_STATE.md`](../../PROJECT_STATE.md).
+3. [`docs/storyboard/STATUS.md`](../storyboard/STATUS.md) and, when resuming unmerged work,
+   [`CURRENT_WORK.md`](../../CURRENT_WORK.md).
+4. This file, then only the files named by the current task, their direct tests, and their direct architecture or
    operations references.
 
 ## Current working boundary
