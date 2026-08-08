@@ -158,4 +158,78 @@ describe('PostgresOwnerAuthStore', () => {
     expect(database.calls.filter(({ sql }) => sql.includes('SET revoked_at'))).toHaveLength(2);
     expect(JSON.stringify(database.calls)).not.toContain('raw-session-token');
   });
+
+  it('reads only a usable credential and a still-pending nonce-bound challenge', async () => {
+    const database = recordingPool((sql) => {
+      if (sql.includes('FROM admin_passkey_credentials')) {
+        return [
+          {
+            credential_id: credential.credentialId,
+            public_key: credential.publicKey,
+            sign_count: 7,
+            transports: ['internal'],
+          },
+        ];
+      }
+      if (sql.includes('FROM admin_webauthn_challenges')) {
+        return [{ id: 'challenge-id', challenge_hash: 'challenge-hash' }];
+      }
+      return [];
+    });
+    const store = new PostgresOwnerAuthStore(database.pool);
+
+    await expect(store.findActiveCredential(credential.credentialId)).resolves.toMatchObject({
+      counter: 7,
+      transports: ['internal'],
+    });
+    await expect(
+      store.findPendingChallenge({
+        browserNonceHash: 'nonce-hash',
+        ceremony: 'authentication',
+        now,
+      }),
+    ).resolves.toEqual({ id: 'challenge-id', challengeHash: 'challenge-hash' });
+
+    expect(
+      database.calls.some(({ sql }) => sql.includes('active') && sql.includes('credential_id')),
+    ).toBe(true);
+    expect(
+      database.calls.some(
+        ({ sql }) =>
+          sql.includes('consumed_at IS NULL') &&
+          sql.includes('expires_at >') &&
+          sql.includes('browser_nonce_hash'),
+      ),
+    ).toBe(true);
+  });
+
+  it('reads only active sessions and leaves the token hash out of returned state', async () => {
+    const database = recordingPool((sql) =>
+      sql.includes('FROM admin_sessions')
+        ? [
+            {
+              csrf_hash: 'csrf-hash',
+              last_seen_at: now,
+              absolute_expires_at: new Date(now.getTime() + 1_000),
+              revoked_at: null,
+              recent_authenticated_at: now,
+            },
+          ]
+        : [],
+    );
+    const store = new PostgresOwnerAuthStore(database.pool);
+
+    await expect(store.findActiveSession('token-hash', now)).resolves.toEqual({
+      csrfHash: 'csrf-hash',
+      lastSeenAt: now,
+      absoluteExpiresAt: new Date(now.getTime() + 1_000),
+      revokedAt: null,
+      recentAuthenticatedAt: now,
+    });
+
+    const select = database.calls.find(({ sql }) => sql.includes('FROM admin_sessions'));
+    expect(select?.sql).toContain('revoked_at IS NULL');
+    expect(select?.sql).toContain('absolute_expires_at > $2');
+    expect(select?.sql).toContain("last_seen_at >= $2 - INTERVAL '15 minutes'");
+  });
 });

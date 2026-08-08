@@ -9,6 +9,8 @@ export type EnabledAdminAuthConfig = {
 
 export type AdminAuthConfig = DisabledAdminAuthConfig | EnabledAdminAuthConfig;
 
+export type AdminBootstrapConfig = { enabled: false } | { enabled: true; secret: string };
+
 type Environment = Record<string, string | undefined>;
 
 export class AdminSecurityError extends Error {
@@ -52,6 +54,20 @@ export function readAdminAuthConfig(environment: Environment): AdminAuthConfig {
   }
 
   return { enabled: true, origin: parsedOrigin.origin, rpId, tokenHashKey };
+}
+
+export function readAdminBootstrapConfig(environment: Environment): AdminBootstrapConfig {
+  const auth = readAdminAuthConfig(environment);
+  const secret = environment.LEARNBOX_ADMIN_BOOTSTRAP_SECRET;
+  if (
+    !auth.enabled ||
+    environment.LEARNBOX_ADMIN_BOOTSTRAP_ENABLED !== 'true' ||
+    !secret ||
+    Buffer.byteLength(secret, 'utf8') < 32
+  ) {
+    return { enabled: false };
+  }
+  return { enabled: true, secret };
 }
 
 export function assertTrustedAdminMutation(

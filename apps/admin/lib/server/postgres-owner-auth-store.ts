@@ -38,6 +38,12 @@ type AuthenticationCompletion = {
   now: Date;
 };
 
+type PendingChallengeLookup = {
+  browserNonceHash: string;
+  ceremony: AdminCeremony;
+  now: Date;
+};
+
 const bootstrapLockId = 1_913_268_079;
 
 function credentialParameters(credential: PasskeyCredentialRecord, now: Date) {
@@ -71,6 +77,49 @@ export class PostgresOwnerAuthStore {
       ],
     );
     return String(result.rows[0]?.id);
+  }
+
+  async findActiveCredential(credentialId: Uint8Array): Promise<
+    | {
+        credentialId: Uint8Array;
+        publicKey: Uint8Array;
+        counter: number;
+        transports: string[];
+      }
+    | undefined
+  > {
+    const result = await this.pool.query(
+      `SELECT credential_id, public_key, sign_count, transports
+         FROM admin_passkey_credentials
+        WHERE credential_id = $1 AND active
+        LIMIT 1`,
+      [Buffer.from(credentialId)],
+    );
+    const row = result.rows[0];
+    if (!row) return undefined;
+    return {
+      credentialId: new Uint8Array(row.credential_id as Uint8Array),
+      publicKey: new Uint8Array(row.public_key as Uint8Array),
+      counter: Number(row.sign_count),
+      transports: Array.isArray(row.transports) ? row.transports.map(String) : [],
+    };
+  }
+
+  async findPendingChallenge(
+    input: PendingChallengeLookup,
+  ): Promise<{ id: string; challengeHash: string } | undefined> {
+    const result = await this.pool.query(
+      `SELECT id, challenge_hash
+         FROM admin_webauthn_challenges
+        WHERE browser_nonce_hash = $1
+          AND ceremony = $2
+          AND consumed_at IS NULL
+          AND expires_at > $3
+        LIMIT 1`,
+      [input.browserNonceHash, input.ceremony, input.now],
+    );
+    const row = result.rows[0];
+    return row ? { id: String(row.id), challengeHash: String(row.challenge_hash) } : undefined;
   }
 
   async bootstrapFirstCredential(
@@ -201,6 +250,40 @@ export class PostgresOwnerAuthStore {
       [tokenHash, now],
     );
     return result.rows.length === 1;
+  }
+
+  async findActiveSession(
+    tokenHash: string,
+    now: Date,
+  ): Promise<
+    | {
+        csrfHash: string;
+        lastSeenAt: Date;
+        absoluteExpiresAt: Date;
+        revokedAt: Date | null;
+        recentAuthenticatedAt: Date;
+      }
+    | undefined
+  > {
+    const result = await this.pool.query(
+      `SELECT csrf_hash, last_seen_at, absolute_expires_at, revoked_at, recent_authenticated_at
+         FROM admin_sessions
+        WHERE token_hash = $1
+          AND revoked_at IS NULL
+          AND absolute_expires_at > $2
+          AND last_seen_at >= $2 - INTERVAL '15 minutes'
+        LIMIT 1`,
+      [tokenHash, now],
+    );
+    const row = result.rows[0];
+    if (!row) return undefined;
+    return {
+      csrfHash: String(row.csrf_hash),
+      lastSeenAt: new Date(row.last_seen_at as string | Date),
+      absoluteExpiresAt: new Date(row.absolute_expires_at as string | Date),
+      revokedAt: row.revoked_at ? new Date(row.revoked_at as string | Date) : null,
+      recentAuthenticatedAt: new Date(row.recent_authenticated_at as string | Date),
+    };
   }
 
   async createSession(input: {

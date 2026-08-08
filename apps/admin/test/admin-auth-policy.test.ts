@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   AdminSecurityError,
   assertTrustedAdminMutation,
+  readAdminBootstrapConfig,
   readAdminAuthConfig,
 } from '../lib/server/admin-auth-policy';
 
@@ -78,5 +79,25 @@ describe('assertTrustedAdminMutation', () => {
     expect(() => assertTrustedAdminMutation(request, config, ['application/json'])).toThrow(
       'content type',
     );
+  });
+});
+
+describe('readAdminBootstrapConfig', () => {
+  it('remains closed until both server flags and a high-entropy secret are present', () => {
+    expect(readAdminBootstrapConfig(enabledEnvironment)).toEqual({ enabled: false });
+    expect(
+      readAdminBootstrapConfig({
+        ...enabledEnvironment,
+        LEARNBOX_ADMIN_BOOTSTRAP_ENABLED: 'true',
+        LEARNBOX_ADMIN_BOOTSTRAP_SECRET: 'short',
+      }),
+    ).toEqual({ enabled: false });
+    expect(
+      readAdminBootstrapConfig({
+        ...enabledEnvironment,
+        LEARNBOX_ADMIN_BOOTSTRAP_ENABLED: 'true',
+        LEARNBOX_ADMIN_BOOTSTRAP_SECRET: 'b'.repeat(32),
+      }),
+    ).toEqual({ enabled: true, secret: 'b'.repeat(32) });
   });
 });
