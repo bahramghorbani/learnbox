@@ -33,12 +33,12 @@
 - Produces: `buildStartMediaSources(contentId, mode): { image?: string; wordAudio?: string; sentenceAudio?: string }`.
 - Consumes: `LearnerAuthMode` and validated Start IDs.
 
-- [ ] Add tests that expect exact `true` plus `server-otp` to select `private-session`, localhost to select `local-preview`, all other combinations to select `placeholder`, and private paths to remain relative `/api/private-media/...` URLs.
-- [ ] Run `pnpm --filter @learnbox/website test -- start-media.test.ts` and confirm failure because `start-media.ts` is missing.
-- [ ] Implement the resolver and source builder. Validate IDs with `/^[a-z0-9-]+$/`; invalid IDs return an empty source object.
-- [ ] Remove route construction from `start-slice.ts`; retain content identity and learning copy only.
-- [ ] Re-run the focused test and `pnpm --filter @learnbox/website typecheck`.
-- [ ] Commit with `feat: add authenticated Start media contract`.
+- [x] Add tests that expect exact `true` plus `server-otp` to select `private-session`, localhost to select `local-preview`, all other combinations to select `placeholder`, and private paths to remain relative `/api/private-media/...` URLs.
+- [x] Run `pnpm --filter @learnbox/website test -- start-media.test.ts` and confirm failure because `start-media.ts` is missing.
+- [x] Implement the resolver and source builder. Validate IDs with `/^[a-z0-9-]+$/`; invalid IDs return an empty source object.
+- [x] Remove route construction from `start-slice.ts`; retain content identity and learning copy only.
+- [x] Re-run the focused test and `pnpm --filter @learnbox/website typecheck`.
+- [x] Commit with `feat: add authenticated Start media contract`.
 
 ### Task 2: Learner Card Attachment and Failure State
 
