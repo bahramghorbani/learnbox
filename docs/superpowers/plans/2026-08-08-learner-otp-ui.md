@@ -32,11 +32,11 @@
 - Produces: `ChallengeResponse`, `normalizeOtpDigits`, `validateIranianMobile`, `readChallengeResponse`, `rememberOtpChallenge`, `verifyOtpChallenges`, `otpErrorMessage` from `apps/website/lib/otp-client.ts`.
 - Preserves: `isOwnerOtpTestEnabled(environment)` in the owner-only module.
 
-- [ ] Add a failing source-boundary test proving the owner UI imports its client contract from `lib/otp-client` and the owner-only module contains only the environment gate.
-- [ ] Run `pnpm --filter @learnbox/website test -- owner-otp-test.test.ts` and confirm the new test fails before the move.
-- [ ] Move the pure helpers and types without changing signatures or behavior; re-export only where compatibility requires it.
-- [ ] Re-run the focused suite and `pnpm --filter @learnbox/website typecheck`.
-- [ ] Commit with `refactor: share OTP client contract`.
+- [x] Add a failing source-boundary test proving the owner UI imports its client contract from `lib/otp-client` and the owner-only module contains only the environment gate.
+- [x] Run `pnpm --filter @learnbox/website test -- owner-otp-test.test.ts` and confirm the new test fails before the move.
+- [x] Move the pure helpers and types without changing signatures or behavior; re-export only where compatibility requires it.
+- [x] Re-run the focused suite and `pnpm --filter @learnbox/website typecheck`.
+- [x] Commit with `refactor: share OTP client contract`.
 
 ### Task 2: Fail-Closed Learner OTP Mode
 
