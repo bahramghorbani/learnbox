@@ -87,4 +87,4 @@
 - [x] Update architecture, backlog and storyboard status; do not claim activation, deployment or a completed invitation journey.
 - [x] Run `pnpm check`, `pnpm --filter @learnbox/website build`, `node scripts/validate-migrations.mjs` and `pnpm audit --prod --audit-level=high`.
 - [x] Request independent security/regression review and address all important findings.
-- [ ] Merge and push only after green verification; do not deploy or enable any flag.
+- [x] Merge and push only after green verification; do not deploy or enable any flag.
