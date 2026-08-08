@@ -6,6 +6,7 @@ import {
   type EnabledAdminAuthConfig,
 } from './admin-auth-policy';
 import { adminSessionCookie, createAdminSessionSecrets } from './admin-session';
+import { clearAdminSessionCookie, loadAdminSession, verifyAdminCsrf } from './admin-route-security';
 
 const ceremonyCookieName = '__Host-learnbox_admin_ceremony';
 const csrfCookieName = '__Host-learnbox_admin_csrf';
@@ -27,6 +28,11 @@ type SessionStore = {
     now: Date;
     absoluteExpiresAt: Date;
   }): Promise<void>;
+};
+
+type ActiveSessionStore = {
+  findActiveSession: Parameters<typeof loadAdminSession>[2]['findActiveSession'];
+  touchSession: Parameters<typeof loadAdminSession>[2]['touchSession'];
 };
 
 function createOpaqueNonce() {
@@ -53,6 +59,10 @@ function csrfCookie(token: string) {
 
 function clearCeremonyCookie() {
   return `${ceremonyCookieName}=; Max-Age=0; Path=/; HttpOnly; Secure; SameSite=Strict`;
+}
+
+function clearCsrfCookie() {
+  return `${csrfCookieName}=; Max-Age=0; Path=/; Secure; SameSite=Strict`;
 }
 
 function notFound() {
@@ -144,6 +154,63 @@ export function createLoginVerifyRoute(dependencies: {
     response.headers.append('Set-Cookie', adminSessionCookie(secrets.token));
     response.headers.append('Set-Cookie', csrfCookie(secrets.csrfToken));
     response.headers.append('Set-Cookie', clearCeremonyCookie());
+    return response;
+  };
+}
+
+export function createSessionRoute(dependencies: {
+  config: AdminAuthConfig;
+  sessionStore?: ActiveSessionStore;
+  now?: () => Date;
+}) {
+  return async function GET(request: Request) {
+    if (!dependencies.config.enabled || !dependencies.sessionStore) return notFound();
+    const session = await loadAdminSession(
+      request,
+      dependencies.config,
+      dependencies.sessionStore,
+      (dependencies.now ?? (() => new Date()))(),
+    );
+    if (!session) {
+      return new Response('Unauthorized', {
+        status: 401,
+        headers: { 'Cache-Control': 'no-store' },
+      });
+    }
+    return Response.json(
+      { authenticated: true, recent: session.recent },
+      { headers: { 'Cache-Control': 'no-store' } },
+    );
+  };
+}
+
+export function createLogoutRoute(dependencies: {
+  config: AdminAuthConfig;
+  sessionStore?: ActiveSessionStore & {
+    revokeSession(tokenHash: string, now: Date): Promise<boolean>;
+  };
+  now?: () => Date;
+}) {
+  return async function POST(request: Request) {
+    if (!dependencies.config.enabled || !dependencies.sessionStore) return notFound();
+    const config: EnabledAdminAuthConfig = dependencies.config;
+    try {
+      assertTrustedAdminMutation(request, config, ['application/json']);
+    } catch {
+      return genericInvalid();
+    }
+    const currentTime = (dependencies.now ?? (() => new Date()))();
+    const session = await loadAdminSession(request, config, dependencies.sessionStore, currentTime);
+    if (!session) return genericInvalid();
+    try {
+      verifyAdminCsrf(request, session.csrfHash, config);
+    } catch {
+      return genericInvalid();
+    }
+    await dependencies.sessionStore.revokeSession(session.tokenHash, currentTime);
+    const response = new Response(null, { status: 204, headers: { 'Cache-Control': 'no-store' } });
+    response.headers.append('Set-Cookie', clearAdminSessionCookie());
+    response.headers.append('Set-Cookie', clearCsrfCookie());
     return response;
   };
 }

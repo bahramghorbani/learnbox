@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { createLoginOptionsRoute, createLoginVerifyRoute } from '../lib/server/admin-auth-routes';
+import {
+  createLoginOptionsRoute,
+  createLoginVerifyRoute,
+  createLogoutRoute,
+  createSessionRoute,
+} from '../lib/server/admin-auth-routes';
 
 const config = {
   enabled: true as const,
@@ -105,5 +110,65 @@ describe('admin passkey login routes', () => {
     ]);
     expect(response.headers.get('set-cookie')).toContain('__Host-learnbox_admin_session=');
     expect(response.headers.get('set-cookie')).not.toContain('token-hash');
+  });
+});
+
+describe('admin session routes', () => {
+  const sessionRecord = {
+    csrfHash: 'csrf-hash',
+    lastSeenAt: new Date('2026-08-08T12:00:00.000Z'),
+    absoluteExpiresAt: new Date('2026-08-08T13:00:00.000Z'),
+    revokedAt: null,
+    recentAuthenticatedAt: new Date('2026-08-08T12:00:00.000Z'),
+  };
+
+  it('returns only minimal session state', async () => {
+    const handler = createSessionRoute({
+      config,
+      sessionStore: {
+        findActiveSession: async () => sessionRecord,
+        touchSession: async () => true,
+      },
+      now: () => new Date('2026-08-08T12:04:00.000Z'),
+    });
+    const response = await handler(
+      new Request('https://admin.learnbox.app/api/auth/session', {
+        headers: { cookie: `__Host-learnbox_admin_session=${'t'.repeat(43)}` },
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({ authenticated: true, recent: true });
+  });
+
+  it('requires origin and CSRF proof before revoking the current session', async () => {
+    let revoked = false;
+    const handler = createLogoutRoute({
+      config,
+      sessionStore: {
+        findActiveSession: async () => sessionRecord,
+        touchSession: async () => true,
+        revokeSession: async () => {
+          revoked = true;
+          return true;
+        },
+      },
+    });
+
+    const response = await handler(
+      new Request('https://admin.learnbox.app/api/auth/logout', {
+        method: 'POST',
+        headers: {
+          origin: config.origin,
+          'content-type': 'application/json',
+          cookie: `__Host-learnbox_admin_session=${'t'.repeat(43)}`,
+          'x-learnbox-csrf-token': 'csrf-token',
+        },
+        body: '{}',
+      }),
+    );
+
+    expect(response.status).toBe(400);
+    expect(revoked).toBe(false);
   });
 });

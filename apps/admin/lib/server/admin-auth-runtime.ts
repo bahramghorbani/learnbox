@@ -1,5 +1,10 @@
 import { readAdminAuthConfig } from './admin-auth-policy';
-import { createLoginOptionsRoute, createLoginVerifyRoute } from './admin-auth-routes';
+import {
+  createLoginOptionsRoute,
+  createLoginVerifyRoute,
+  createLogoutRoute,
+  createSessionRoute,
+} from './admin-auth-routes';
 import { createAdminWebAuthnService } from './admin-webauthn';
 import { PostgresOwnerAuthStore } from './postgres-owner-auth-store';
 
@@ -61,5 +66,7 @@ export function createAdminAuthRuntime(dependencies: {
       service,
       sessionStore: store,
     }),
+    session: createSessionRoute({ config, sessionStore: store }),
+    logout: createLogoutRoute({ config, sessionStore: store }),
   };
 }
