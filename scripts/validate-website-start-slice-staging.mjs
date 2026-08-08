@@ -9,7 +9,7 @@ const approvalFile = new URL(
   import.meta.url,
 );
 const stagingModule = new URL('../apps/website/app/start-slice.ts', import.meta.url);
-const websitePage = new URL('../apps/website/app/page.tsx', import.meta.url);
+const websitePage = new URL('../apps/website/app/LearnerHome.tsx', import.meta.url);
 const mediaModule = new URL('../apps/website/app/start-media.ts', import.meta.url);
 const mediaVisual = new URL('../apps/website/app/components/StartMediaVisual.tsx', import.meta.url);
 

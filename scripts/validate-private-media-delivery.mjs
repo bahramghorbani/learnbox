@@ -18,7 +18,7 @@ const startMediaSource = await readFile(
   'utf8',
 );
 const learnerPageSource = await readFile(
-  new URL('../apps/website/app/page.tsx', import.meta.url),
+  new URL('../apps/website/app/LearnerHome.tsx', import.meta.url),
   'utf8',
 );
 const learnerVisualSource = await readFile(
