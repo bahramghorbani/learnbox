@@ -4,14 +4,14 @@ import { resolve } from 'node:path';
 
 import {
   isOtpVerificationSuccess,
-  isOwnerOtpTestEnabled,
   normalizeOtpDigits,
   otpErrorMessage,
   readChallengeResponse,
   rememberOtpChallenge,
   validateIranianMobile,
   verifyOtpChallenges,
-} from '../app/owner/otp-test/owner-otp-test';
+} from '../lib/otp-client';
+import { isOwnerOtpTestEnabled } from '../app/owner/otp-test/owner-otp-test';
 
 describe('owner OTP test helpers', () => {
   it('keeps the three newest distinct challenges in memory', () => {
@@ -158,6 +158,17 @@ describe('owner OTP test route boundary', () => {
     expect(source).toContain("fetch('/api/auth/otp/verify'");
     expect(source).toContain('verifyOtpChallenges(challenges');
     expect(source).not.toMatch(/localStorage|sessionStorage|console\./);
+  });
+
+  it('imports the client contract from lib and leaves the owner module as an environment gate', () => {
+    const ownerUiSource = readSource('../app/owner/otp-test/OwnerOtpTest.tsx');
+    const ownerModuleSource = readSource('../app/owner/otp-test/owner-otp-test.ts');
+
+    expect(ownerUiSource).toContain("from '../../../lib/otp-client'");
+    expect(ownerModuleSource).toContain('export function isOwnerOtpTestEnabled');
+    expect(ownerModuleSource).not.toMatch(
+      /ChallengeResponse|normalizeOtpDigits|validateIranianMobile|readChallengeResponse|rememberOtpChallenge|verifyOtpChallenges|otpErrorMessage/,
+    );
   });
 });
 

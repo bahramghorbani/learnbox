@@ -10,7 +10,7 @@ import {
   validateIranianMobile,
   verifyOtpChallenges,
   type ChallengeResponse,
-} from './owner-otp-test';
+} from '../../../lib/otp-client';
 
 type Stage = 'phone' | 'code' | 'success';
 
