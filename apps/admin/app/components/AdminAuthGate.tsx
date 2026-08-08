@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import type { AdminAuthMode } from '../admin-auth-mode';
 import { PasskeySignIn } from './PasskeySignIn';
 
 type AdminAuthGateProps = {
   mode: AdminAuthMode;
-  children: React.ReactNode;
+  children?: React.ReactNode;
 };
 
 export function AdminAuthGate({ mode, children }: AdminAuthGateProps) {

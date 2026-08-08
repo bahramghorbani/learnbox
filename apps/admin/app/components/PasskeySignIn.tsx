@@ -1,7 +1,7 @@
 'use client';
 
+import React, { useState } from 'react';
 import { startAuthentication } from '@simplewebauthn/browser';
-import { useState } from 'react';
 
 type PasskeySignInProps = {
   onAuthenticated: () => void;
