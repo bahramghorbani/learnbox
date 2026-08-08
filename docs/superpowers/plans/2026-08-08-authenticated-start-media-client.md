@@ -45,6 +45,7 @@
 **Files:**
 
 - Modify: `apps/website/app/page.tsx`
+- Create: `apps/website/app/LearnerHome.tsx`
 - Modify: `apps/website/app/components/PronunciationButton.tsx`
 - Modify: `apps/website/app/globals.css`
 - Modify: `apps/website/test/learner-auth-gate.test.ts`
@@ -85,5 +86,5 @@
 - [x] Add the exact false default and extend the validator without weakening existing server-session checks.
 - [x] Update architecture, backlog and storyboard status; do not claim activation, deployment or a completed invitation journey.
 - [x] Run `pnpm check`, `pnpm --filter @learnbox/website build`, `node scripts/validate-migrations.mjs` and `pnpm audit --prod --audit-level=high`.
-- [ ] Request independent security/regression review and address all important findings.
+- [x] Request independent security/regression review and address all important findings.
 - [ ] Merge and push only after green verification; do not deploy or enable any flag.
