@@ -16,3 +16,4 @@ ios/Pods/
 .vercel
 .worktrees/
 .env.local
+.claude/settings.json
