@@ -162,6 +162,6 @@
 
 - [x] Add a source validator that requires false defaults, strict cookie/origin markers and rejects secret/client-storage/logging patterns.
 - [x] Add it to `pnpm check` and document the separate owner-approved enrollment procedure without including secrets.
-- [ ] Run focused tests, `pnpm check`, `pnpm build`, `node scripts/validate-migrations.mjs` and `pnpm audit --prod --audit-level=high`.
-- [ ] Perform an independent security review before merge; fix every high/medium finding or document a truthful blocker.
-- [ ] Keep all flags false, do not deploy, and commit with `docs: record owner passkey boundary`.
+- [x] Run focused tests, `pnpm check`, `pnpm build`, `node scripts/validate-migrations.mjs` and `pnpm audit --prod --audit-level=high`.
+- [x] Perform an independent security review before merge; no high or medium finding remains.
+- [x] Keep all flags false, do not deploy, and commit with `docs: record owner passkey boundary`.
