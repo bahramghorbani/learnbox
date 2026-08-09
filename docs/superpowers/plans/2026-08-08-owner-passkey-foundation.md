@@ -36,7 +36,7 @@
 - `admin_sessions`: keyed token hash, owner foreign key, CSRF hash, created/last-seen/absolute-expiry/revoked/recent-auth timestamps.
 - Foreign keys, uniqueness and indexes make a second owner and challenge reuse impossible.
 
-- [x] Add a failing migration source test for singleton constraints, credential uniqueness, expiry/revocation columns and the absence of plaintext token/challenge columns.
+- [x] Add a failing migration source test for singleton constraints, unique-passkey-identity, expiry/revocation columns and the absence of plaintext token/challenge columns.
 - [x] Run `pnpm --filter @learnbox/api test -- owner-passkey-migration.test.ts` and confirm the missing migration fails.
 - [x] Add migration `0009` without modifying earlier checksum-attested migrations.
 - [x] Extend migration validation only if needed to reject duplicate filenames or non-contiguous numbering without changing runtime migration semantics.
