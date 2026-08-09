@@ -4,17 +4,27 @@ import { act, createElement, Fragment, type FunctionComponent } from 'react';
 import { createRoot } from 'react-dom/client';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { StartMediaVisual } from '../app/components/StartMediaVisual';
 
+// The Start daily session rotates with the calendar date. Pin the clock so the
+// three-card session is deterministic and the asserted card ids stay stable.
+const pinnedNow = new Date('2026-08-08T12:00:00.000Z');
+
 describe('Start card media visual', () => {
   let rendered: RenderedMedia | undefined;
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(pinnedNow);
+  });
 
   afterEach(async () => {
     await rendered?.unmount();
     rendered = undefined;
     vi.unstubAllGlobals();
+    vi.useRealTimers();
   });
 
   it('renders only the same-origin private image in private-session mode', async () => {
@@ -53,6 +63,11 @@ describe('Start card media visual', () => {
 describe('learner page media attachment boundary', () => {
   let renderedPage: RenderedLearnerPage | undefined;
 
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(pinnedNow);
+  });
+
   afterEach(async () => {
     await renderedPage?.unmount();
     renderedPage = undefined;
@@ -60,6 +75,7 @@ describe('learner page media attachment boundary', () => {
       Storage | undefined;
     storage?.clear();
     vi.unstubAllGlobals();
+    vi.useRealTimers();
   });
 
   it('exposes the real learner page for runtime-boundary rendering', async () => {
