@@ -5,8 +5,10 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-No canonical active work item is recorded on `main` after the owner-passkey boundary is merged.
-Inspect live branches and pull requests before starting a new feature.
+- **Closed-alpha invite + consent boundary** — `feature/closed-alpha-invite-consent`: allowlist
+  invite gate, keyed-hash persistence (migration 0010) and consent versioning, all disabled by
+  default. Plan: `docs/superpowers/plans/2026-08-09-closed-alpha-invite-consent.md`. Ready for PR
+  once GitHub auth is restored; no flag enabled, no invitation sent.
 
 ## Continuity update
 
