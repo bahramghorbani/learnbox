@@ -138,6 +138,21 @@ describe('PostgresOwnerAuthStore', () => {
     expect(update?.sql).not.toContain('SET absolute_expires_at');
   });
 
+  it('refreshes recent authentication only for an active, non-idle session', async () => {
+    const database = recordingPool((sql) =>
+      sql.includes('UPDATE admin_sessions') ? [{ token_hash: 'token-hash' }] : [],
+    );
+    const store = new PostgresOwnerAuthStore(database.pool);
+
+    await expect(store.touchRecentAuthentication('token-hash', now)).resolves.toBe(true);
+
+    const update = database.calls.find(({ sql }) => sql.includes('UPDATE admin_sessions'));
+    expect(update?.sql).toContain('recent_authenticated_at = $2');
+    expect(update?.sql).toContain('absolute_expires_at > $2');
+    expect(update?.sql).toContain("last_seen_at >= $2 - INTERVAL '15 minutes'");
+    expect(update?.sql).not.toContain('SET absolute_expires_at');
+  });
+
   it('creates and revokes sessions by opaque hashes', async () => {
     const database = recordingPool((sql) =>
       sql.includes('RETURNING token_hash') ? [{ token_hash: 'token-hash' }] : [],

@@ -259,6 +259,7 @@ export class PostgresOwnerAuthStore {
         WHERE token_hash = $1
           AND revoked_at IS NULL
           AND absolute_expires_at > $2
+          AND last_seen_at >= $2 - INTERVAL '15 minutes'
         RETURNING token_hash`,
       [tokenHash, now],
     );
