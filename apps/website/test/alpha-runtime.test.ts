@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { hashInviteIp, inviteHttpDependenciesFromEnvironment, readInviteRuntimeConfig } from '../lib/alpha-runtime';
+import {
+  hashInviteIp,
+  inviteHttpDependenciesFromEnvironment,
+  readInviteRuntimeConfig,
+} from '../lib/alpha-runtime';
 
 const validEnvironment = {
   LEARNBOX_ALPHA_INVITE_ENABLED: 'true',
@@ -25,7 +29,10 @@ describe('invite runtime dependencies', () => {
       inviteHttpDependenciesFromEnvironment({ ...validEnvironment, DATABASE_URL: '' }),
     ).toBeNull();
     expect(
-      inviteHttpDependenciesFromEnvironment({ ...validEnvironment, LEARNBOX_ALPHA_INVITE_SECRET: '' }),
+      inviteHttpDependenciesFromEnvironment({
+        ...validEnvironment,
+        LEARNBOX_ALPHA_INVITE_SECRET: '',
+      }),
     ).toBeNull();
     expect(
       inviteHttpDependenciesFromEnvironment({

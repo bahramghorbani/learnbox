@@ -45,7 +45,12 @@ export class InviteAccessService {
     this.maxRequestsPerIp = dependencies.maxRequestsPerIp ?? 20;
   }
 
-  async check({ code, consentVersion, ipHash, now = new Date() }: InviteCheckInput): Promise<InviteCheckOutcome> {
+  async check({
+    code,
+    consentVersion,
+    ipHash,
+    now = new Date(),
+  }: InviteCheckInput): Promise<InviteCheckOutcome> {
     const normalized = normalizeInviteCode(code);
     if (!normalized) return { status: 'invalid' };
     if (!consentVersion.trim()) return { status: 'invalid' };

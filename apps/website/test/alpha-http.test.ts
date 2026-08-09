@@ -16,7 +16,10 @@ afterEach(() => {
   restoreEnv('DATABASE_URL', originalDatabaseUrl);
 });
 
-function restoreEnv(key: 'LEARNBOX_ALPHA_INVITE_ENABLED' | 'LEARNBOX_ALPHA_INVITE_SECRET' | 'DATABASE_URL', value: string | undefined) {
+function restoreEnv(
+  key: 'LEARNBOX_ALPHA_INVITE_ENABLED' | 'LEARNBOX_ALPHA_INVITE_SECRET' | 'DATABASE_URL',
+  value: string | undefined,
+) {
   if (value === undefined) delete process.env[key];
   else process.env[key] = value;
 }
@@ -136,14 +139,22 @@ describe('invite check handler', () => {
   it('maps service outcomes to invite_invalid, invite_limited and retry-after responses', async () => {
     const invalid = dependenciesWith({ status: 'invalid' });
     expect(
-      (await handleInviteCheck(post('/api/auth/invite/check', { code: 'ALPHA-2026' }), invalid.dependencies))
-        .status,
+      (
+        await handleInviteCheck(
+          post('/api/auth/invite/check', { code: 'ALPHA-2026' }),
+          invalid.dependencies,
+        )
+      ).status,
     ).toBe(400);
 
     const limited = dependenciesWith({ status: 'limited' });
     expect(
-      (await handleInviteCheck(post('/api/auth/invite/check', { code: 'ALPHA-2026' }), limited.dependencies))
-        .status,
+      (
+        await handleInviteCheck(
+          post('/api/auth/invite/check', { code: 'ALPHA-2026' }),
+          limited.dependencies,
+        )
+      ).status,
     ).toBe(403);
 
     const rateLimited = dependenciesWith({ status: 'rate_limited', retryAfterMs: 42_000 });

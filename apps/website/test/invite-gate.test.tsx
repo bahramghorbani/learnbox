@@ -18,7 +18,7 @@ describe('invite gate boundary', () => {
     expect(source).toContain("fetch('/api/auth/invite/check'");
     expect(source).toContain('JSON.stringify({ code: code.trim() })');
     expect(source).toContain('onInviteAccepted');
-    expect(source).toContain('mode === \'local-prototype\'');
+    expect(source).toContain("mode === 'local-prototype'");
   });
 
   it('keeps the invite code and state only in component memory', () => {
@@ -71,8 +71,16 @@ describe('invite gate behavior', () => {
 
   it.each([
     [400, { error: 'invite_invalid' }, 'دعوت‌نامهٔ این کد معتبر نیست.'],
-    [403, { error: 'invite_limited' }, 'این کد دعوت دیگر قابل استفاده نیست یا درخواست‌ها زیاد شده است؛ کمی صبر کنید.'],
-    [503, { error: 'invite_unavailable' }, 'ورود با دعوت‌نامه اکنون در دسترس نیست؛ دوباره تلاش کنید.'],
+    [
+      403,
+      { error: 'invite_limited' },
+      'این کد دعوت دیگر قابل استفاده نیست یا درخواست‌ها زیاد شده است؛ کمی صبر کنید.',
+    ],
+    [
+      503,
+      { error: 'invite_unavailable' },
+      'ورود با دعوت‌نامه اکنون در دسترس نیست؛ دوباره تلاش کنید.',
+    ],
   ] as const)('keeps the gate closed on HTTP %s', async (status, body, expectedMessage) => {
     const onInviteAccepted = vi.fn();
     mockFetch(response(status, body));

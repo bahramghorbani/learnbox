@@ -317,9 +317,7 @@ export function LearnerHome({
   const savedWords = [...personalWords, ...initialSavedWords];
 
   if (!inviteAccepted) {
-    return (
-      <InviteGate mode={inviteGateMode} onInviteAccepted={() => setInviteAccepted(true)} />
-    );
+    return <InviteGate mode={inviteGateMode} onInviteAccepted={() => setInviteAccepted(true)} />;
   }
 
   if (!authenticated) {

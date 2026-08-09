@@ -59,7 +59,12 @@ if (!routeSource.includes('404')) {
   errors.push('Invite route must respond 404 when the boundary is disabled.');
 }
 
-for (const required of ['isTrustedJsonPost', 'invite_invalid', 'invite_limited', 'invite_unavailable']) {
+for (const required of [
+  'isTrustedJsonPost',
+  'invite_invalid',
+  'invite_limited',
+  'invite_unavailable',
+]) {
   if (!handlerSource.includes(required)) {
     errors.push(`Invite handler requirement missing: ${required}`);
   }
@@ -102,7 +107,10 @@ if (!learnerHomeSource.includes('resolveInviteGateMode')) {
 if (closedAlphaConfig.enabled !== false) {
   errors.push('Closed alpha must remain disabled by default.');
 }
-if (typeof closedAlphaConfig.consent?.version !== 'string' || closedAlphaConfig.consent.version.trim() === '') {
+if (
+  typeof closedAlphaConfig.consent?.version !== 'string' ||
+  closedAlphaConfig.consent.version.trim() === ''
+) {
   errors.push('Closed alpha must carry a versioned consent wording.');
 }
 if (
@@ -112,7 +120,10 @@ if (
 ) {
   errors.push('inviteCodeMaxUses must be an integer between 1 and 20.');
 }
-if (Array.isArray(closedAlphaConfig.invitationCodes) || Array.isArray(closedAlphaConfig.inviteCodes)) {
+if (
+  Array.isArray(closedAlphaConfig.invitationCodes) ||
+  Array.isArray(closedAlphaConfig.inviteCodes)
+) {
   errors.push('Plaintext invite codes must never be committed to configuration.');
 }
 

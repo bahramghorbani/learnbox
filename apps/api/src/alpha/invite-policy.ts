@@ -8,8 +8,7 @@ export const invitePolicy = {
 } as const;
 
 export type InviteRequestRateLimitOutcome =
-  | { status: 'allowed' }
-  | { status: 'rate_limited'; retryAfterMs: number };
+  { status: 'allowed' } | { status: 'rate_limited'; retryAfterMs: number };
 
 /**
  * Invite codes are entered as-is; only the strict ASCII allowlist format is accepted so the

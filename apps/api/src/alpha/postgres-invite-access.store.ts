@@ -56,10 +56,9 @@ export class PostgresInviteAccessStore implements InviteAccessStore {
     const client = await this.pool.connect();
     try {
       await client.query('BEGIN');
-      await client.query(
-        'SELECT pg_advisory_xact_lock(hashtextextended($1, 0))',
-        [`invite:${codeHash}`],
-      );
+      await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1, 0))', [
+        `invite:${codeHash}`,
+      ]);
 
       const code = await client.query<InviteCodeRow>(selectCode, [codeHash]);
       const row = code.rows[0];

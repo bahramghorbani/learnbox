@@ -51,13 +51,17 @@ describe('invite request rate limiting', () => {
   const now = new Date('2026-08-09T12:00:00Z');
 
   it('allows requests within the per-IP window', () => {
-    const recent = Array.from({ length: 4 }, (_, index) => new Date(now.getTime() - index * 60_000));
+    const recent = Array.from(
+      { length: 4 },
+      (_, index) => new Date(now.getTime() - index * 60_000),
+    );
     expect(evaluateInviteRequestRateLimit(recent, now)).toEqual({ status: 'allowed' });
   });
 
   it('rejects when the per-IP window is saturated and reports the retry delay', () => {
-    const saturated = Array.from({ length: 5 }, (_, index) =>
-      new Date(now.getTime() - (index + 1) * 60_000),
+    const saturated = Array.from(
+      { length: 5 },
+      (_, index) => new Date(now.getTime() - (index + 1) * 60_000),
     );
     const outcome = evaluateInviteRequestRateLimit(saturated, now);
 

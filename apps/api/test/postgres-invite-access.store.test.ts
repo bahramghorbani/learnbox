@@ -58,9 +58,9 @@ describe('PostgresInviteAccessStore', () => {
     expect(ordered.indexOf('BEGIN')).toBeLessThan(ordered.indexOf('COMMIT'));
     expect(calls.some(({ sql }) => sql.includes('pg_advisory_xact_lock'))).toBe(true);
     expect(calls.some(({ sql }) => sql.includes('INSERT INTO invite_consents'))).toBe(true);
-    expect(calls.some(({ sql }) => sql.includes('ON CONFLICT (code_hash, consent_version) DO NOTHING'))).toBe(
-      true,
-    );
+    expect(
+      calls.some(({ sql }) => sql.includes('ON CONFLICT (code_hash, consent_version) DO NOTHING')),
+    ).toBe(true);
     expect(calls.some(({ sql }) => sql.includes('UPDATE invite_codes'))).toBe(true);
     expect(calls.some(({ sql }) => sql.includes('INSERT INTO invite_request_events'))).toBe(true);
     expect(JSON.stringify(calls)).not.toContain(code);
