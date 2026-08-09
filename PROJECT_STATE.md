@@ -17,6 +17,10 @@ product specification or storyboard.
 - **Admin passkeys:** a single-owner WebAuthn boundary, passkey UI gate, session store and
   activation runbook are implemented. The server and UI flags remain disabled by default; no
   enrollment, deployment or production activation has occurred.
+- **Closed-alpha invite + consent boundary:** an allowlist invite-code gate with consent
+  acknowledgment, keyed-hash persistence (migration 0010) and consent versioning is implemented
+  (merged PR #4). The invite UI and server flags remain disabled by default; no invitation has
+  been sent.
 
 ## Release and safety posture
 
