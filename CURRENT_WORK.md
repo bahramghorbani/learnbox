@@ -5,8 +5,17 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-No canonical active work item is recorded on `main` after the owner-passkey boundary is merged.
-Inspect live branches and pull requests before starting a new feature.
+- **Closed-alpha invite + consent boundary** — `feature/closed-alpha-invite-consent`: allowlist
+  invite gate, keyed-hash persistence (migration 0010) and consent versioning, all disabled by
+  default. Plan: `docs/superpowers/plans/2026-08-09-closed-alpha-invite-consent.md`. Ready for PR
+  once GitHub auth is restored; no flag enabled, no invitation sent.
+- **Local verification limitation (2026-08-09):** the full `pnpm check` cannot complete on this
+  machine because the registry is network-blocked. `pnpm install` cannot fetch the admin
+  `@simplewebauthn/*` deps (merged in PR #3) or `iconv-lite@0.6.3`; an interrupted reinstall also
+  left local links restored by hand. All api + website tests, typecheck, lint, format and every
+  `verify:*` boundary script pass locally; admin typecheck, the final `next build` worker step and
+  `pnpm audit` require network/CI. CI runs `pnpm install --frozen-lockfile` with network and is
+  expected green. PR creation pending the owner's `gh auth refresh`.
 
 ## Continuity update
 

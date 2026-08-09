@@ -21,6 +21,9 @@ the authoritative product and security documents.
   inactive by default.
 - The admin passkey boundary is implemented (routes, store, UI gate, source validator) and remains
   disabled by default; enrollment and deployment are owner-approved steps only.
+- The closed-alpha invite/consent boundary is implemented (allowlist invite gate, keyed-hash
+  persistence, consent versioning) and remains disabled by default; real code issuance and
+  activation are owner-approved steps only.
 - Learner OTP, SMS.ir delivery and both private-media release flags remain disabled by default.
 - Do not deploy, enable a flag, send invitations, publish content, or use a provider credential
   without the owner's explicit approval.

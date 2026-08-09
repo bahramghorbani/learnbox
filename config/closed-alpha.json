@@ -8,5 +8,9 @@
     "notifications": false,
     "realSms": false
   },
-  "requiredApprovals": ["participant-list", "invitation-channel", "consent-wording"]
+  "requiredApprovals": ["participant-list", "invitation-channel", "consent-wording"],
+  "consent": {
+    "version": "v1"
+  },
+  "inviteCodeMaxUses": 5
 }

@@ -26,6 +26,8 @@ import {
 
 import { LearnerNav } from './components/LearnerNav';
 import { AuthGate } from './components/AuthGate';
+import { InviteGate } from './components/InviteGate';
+import { resolveInviteGateMode } from './alpha-invite-mode';
 import { resolveLearnerAuthMode } from './learner-auth-mode';
 import { PronunciationButton } from './components/PronunciationButton';
 import { Bobo } from './components/Bobo';
@@ -86,15 +88,19 @@ type LearnerHomeProps = {
   hostname?: string;
   otpUiFlag?: string;
   privateMediaFlag?: string;
+  inviteFlag?: string;
 };
 
 export function LearnerHome({
   hostname,
   otpUiFlag = process.env.NEXT_PUBLIC_LEARNBOX_OTP_UI_ENABLED,
   privateMediaFlag = process.env.NEXT_PUBLIC_LEARNBOX_PRIVATE_MEDIA_ENABLED,
+  inviteFlag = process.env.NEXT_PUBLIC_LEARNBOX_ALPHA_INVITE_UI_ENABLED,
 }: LearnerHomeProps = {}) {
   const studyItems = selectTodayStartSession();
   const authMode = resolveLearnerAuthMode(otpUiFlag);
+  const inviteGateMode = resolveInviteGateMode(inviteFlag);
+  const [inviteAccepted, setInviteAccepted] = useState(inviteGateMode === 'local-prototype');
   const [authenticated, setAuthenticated] = useState(false);
   const [onboarded, setOnboarded] = useState(false);
   const [learningGoal, setLearningGoal] = useState<LearningGoal>('life');
@@ -309,6 +315,10 @@ export function LearnerHome({
   };
 
   const savedWords = [...personalWords, ...initialSavedWords];
+
+  if (!inviteAccepted) {
+    return <InviteGate mode={inviteGateMode} onInviteAccepted={() => setInviteAccepted(true)} />;
+  }
 
   if (!authenticated) {
     return <AuthGate mode={authMode} onAuthenticated={() => setAuthenticated(true)} />;
