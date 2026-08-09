@@ -31,6 +31,19 @@ for (const approval of requiredApprovals) {
     errors.push(`Missing required owner approval: ${approval}.`);
   }
 }
+if (typeof config.consent?.version !== 'string' || config.consent.version.trim() === '') {
+  errors.push('Consent wording must be versioned.');
+}
+if (
+  !Number.isInteger(config.inviteCodeMaxUses) ||
+  config.inviteCodeMaxUses < 1 ||
+  config.inviteCodeMaxUses > 20
+) {
+  errors.push('inviteCodeMaxUses must be an integer between 1 and 20.');
+}
+if (Array.isArray(config.invitationCodes) || Array.isArray(config.inviteCodes)) {
+  errors.push('Plaintext invite codes must never be committed to configuration.');
+}
 if (!adminPreview.includes('تأیید در پیش‌نمایش')) {
   errors.push('Admin preview must not label a local review action as real publication.');
 }
