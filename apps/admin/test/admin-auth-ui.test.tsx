@@ -220,27 +220,30 @@ describe('admin passkey UI', () => {
 
   it('keeps the sign-in button disabled while the ceremony is pending and focusable when idle', async () => {
     stubSessionFetch(401);
-    mockedStartAuthentication.mockImplementation(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 10));
-      return { id: 'credential' } as never;
+    let resolveAssertion: (value: { id: string }) => void;
+    const pendingAssertion = new Promise<{ id: string }>((resolve) => {
+      resolveAssertion = resolve;
     });
-    const rendered = await render(
-      createElement(PasskeySignIn, { onAuthenticated: () => undefined }),
-    );
+    mockedStartAuthentication.mockImplementation(async () => pendingAssertion as never);
+    const onAuthenticated = vi.fn();
+    const rendered = await render(createElement(PasskeySignIn, { onAuthenticated }));
     const button = rendered.button('ورود با Passkey')!;
     expect(button.disabled).toBe(false);
     button.focus();
     expect(document.activeElement).toBe(button);
 
-    let clickPromise: Promise<void> | undefined;
     await act(async () => {
-      clickPromise = (async () => {
-        button.click();
-        await new Promise((resolve) => setTimeout(resolve, 5));
-      })();
+      button.click();
+      await Promise.resolve();
     });
     expect(button.disabled).toBe(true);
-    await clickPromise;
+    await act(async () => {
+      resolveAssertion!({ id: 'credential' });
+      await pendingAssertion;
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    expect(onAuthenticated).toHaveBeenCalledOnce();
     await rendered.unmount();
   });
 
