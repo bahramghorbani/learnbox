@@ -1,4 +1,4 @@
-import { randomBytes, timingSafeEqual } from 'node:crypto';
+import { timingSafeEqual } from 'node:crypto';
 
 import type { EnabledAdminAuthConfig } from './admin-auth-policy';
 import { hashAdminSecret } from './admin-session';
@@ -137,6 +137,10 @@ function decodeCredentialId(value: string): Uint8Array | undefined {
   }
 }
 
+function deriveBootstrapOwnerHandle(browserNonce: string, tokenHashKey: string) {
+  return new Uint8Array(Buffer.from(hashAdminSecret(browserNonce, tokenHashKey), 'base64url'));
+}
+
 export function createAdminWebAuthnService(dependencies: {
   config: EnabledAdminAuthConfig;
   now: () => Date;
@@ -150,7 +154,7 @@ export function createAdminWebAuthnService(dependencies: {
       if (!webauthn.generateRegistrationOptions || !store.issueChallenge) {
         throw new Error('Admin WebAuthn bootstrap dependencies are unavailable.');
       }
-      const ownerHandle = randomBytes(32);
+      const ownerHandle = deriveBootstrapOwnerHandle(browserNonce, config.tokenHashKey);
       const options = await webauthn.generateRegistrationOptions({
         rpID: config.rpId,
         rpName: 'LearnBox',
@@ -211,7 +215,7 @@ export function createAdminWebAuthnService(dependencies: {
         }
         const credential = verification.registrationInfo.credential;
         const result = await store.bootstrapFirstCredential(
-          new Uint8Array(Buffer.from(input.response.user?.id ?? '', 'base64url')),
+          deriveBootstrapOwnerHandle(input.browserNonce, config.tokenHashKey),
           {
             credentialId: new Uint8Array(Buffer.from(credential.id, 'base64url')),
             publicKey: credential.publicKey,

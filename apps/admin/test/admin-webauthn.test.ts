@@ -13,6 +13,65 @@ const config = {
 };
 
 describe('admin WebAuthn login service', () => {
+  it('derives the bootstrap owner handle from the server-held browser nonce', async () => {
+    const browserNonce = 'browser-nonce';
+    let registrationUserId: Uint8Array | undefined;
+    let storedOwnerHandle: Uint8Array | undefined;
+    const service = createAdminWebAuthnService({
+      config,
+      now: () => now,
+      webauthn: {
+        generateRegistrationOptions: async (input) => {
+          registrationUserId = input.userID;
+          return { challenge: 'bootstrap-challenge', user: { id: 'browser-visible-id' } };
+        },
+        verifyRegistrationResponse: async (input) => {
+          expect(await input.expectedChallenge('bootstrap-challenge')).toBe(true);
+          return {
+            verified: true,
+            registrationInfo: {
+              credential: {
+                id: Buffer.from('credential-id').toString('base64url'),
+                publicKey: Buffer.from('public-key'),
+                counter: 0,
+                transports: ['internal'],
+              },
+              credentialDeviceType: 'singleDevice',
+              credentialBackedUp: false,
+            },
+          };
+        },
+      },
+      store: {
+        issueChallenge: async () => 'challenge-id',
+        findPendingChallenge: async () => ({
+          id: 'challenge-id',
+          challengeHash: hashAdminSecret('bootstrap-challenge', hashKey),
+        }),
+        bootstrapFirstCredential: async (ownerHandle) => {
+          storedOwnerHandle = ownerHandle;
+          return { status: 'bootstrapped' };
+        },
+      },
+    });
+
+    await service.createBootstrapOptions(browserNonce);
+    await expect(
+      service.verifyBootstrap({
+        browserNonce,
+        secret: 'not-retained-by-the-service',
+        response: {
+          id: Buffer.from('credential-id').toString('base64url'),
+          response: { clientDataJSON: 'client-data', attestationObject: 'attestation' },
+        },
+      }),
+    ).resolves.toEqual({ status: 'bootstrapped' });
+
+    const expectedHandle = Buffer.from(hashAdminSecret(browserNonce, hashKey), 'base64url');
+    expect(registrationUserId).toEqual(new Uint8Array(expectedHandle));
+    expect(storedOwnerHandle).toEqual(new Uint8Array(expectedHandle));
+  });
+
   it('creates discoverable, user-verified login options bound to an opaque browser nonce', async () => {
     const issued: unknown[] = [];
     const service = createAdminWebAuthnService({
