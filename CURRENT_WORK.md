@@ -5,8 +5,14 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-No canonical active work item is recorded on `main` after the closed-alpha invite and consent
-boundary is merged. Inspect live branches and pull requests before starting a new feature.
+### chore/repo-hygiene — repo cleanup and stability
+
+- Branch: `chore/repo-hygiene` (base `main`).
+- Updates `CHANGELOG.md` with the Stage 23 closed-alpha hardening work that landed on `main` but
+  was not recorded.
+- Removes merged local branches that carried no unique work; remote-branch cleanup remains
+  pending owner confirmation.
+- No code, provider, release flag or production surface is changed.
 
 ## Continuity note
 
