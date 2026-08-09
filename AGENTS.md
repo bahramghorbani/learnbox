@@ -7,11 +7,19 @@
 - Every feature needs acceptance criteria, tests proportionate to risk, analytics intent, documentation, and a rollback/feature-flag assessment.
 - Keep Bobo canonical assets versioned and do not alter their canonical appearance without owner approval.
 - Run `pnpm check`, migration validation, and relevant Flutter checks before committing. Keep `main` runnable.
+- The repository is the source of truth across providers. Before meaningful work, follow
+  [`AI_BOOTSTRAP.md`](./AI_BOOTSTRAP.md); keep stable-main facts in
+  [`PROJECT_STATE.md`](./PROJECT_STATE.md) and unmerged work in
+  [`CURRENT_WORK.md`](./CURRENT_WORK.md).
+- Never implement meaningful work directly on `main`. Use `feature/`, `fix/`, `refactor/`,
+  `content/`, `docs/` or `chore/` branches, validate the change, and prefer pull request plus CI
+  before merge.
 
 ## Efficient agent workflow
 
-- Start with [`docs/operations/AGENT_ACTIVE_BRIEF.md`](./docs/operations/AGENT_ACTIVE_BRIEF.md), then
-  read only task-relevant files and direct references.
+- Start with [`AI_BOOTSTRAP.md`](./AI_BOOTSTRAP.md), then use
+  [`docs/operations/AGENT_ACTIVE_BRIEF.md`](./docs/operations/AGENT_ACTIVE_BRIEF.md) for compact
+  task navigation and read only task-relevant files and direct references.
 - Prefer `git status`, `git diff --name-only`, `rg` and focused tests over broad repository reads
   and repeated full checks.
 - Use the brief's model-routing and minimal-delegation policy. Never trade away security, release
