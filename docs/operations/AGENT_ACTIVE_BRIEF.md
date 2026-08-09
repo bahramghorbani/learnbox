@@ -19,6 +19,8 @@ the authoritative product and security documents.
   or merge their responsibilities.
 - The Start A1 private-media client seam is implemented, same-origin and failure-safe. It remains
   inactive by default.
+- The admin passkey boundary is implemented (routes, store, UI gate, source validator) and remains
+  disabled by default; enrollment and deployment are owner-approved steps only.
 - Learner OTP, SMS.ir delivery and both private-media release flags remain disabled by default.
 - Do not deploy, enable a flag, send invitations, publish content, or use a provider credential
   without the owner's explicit approval.

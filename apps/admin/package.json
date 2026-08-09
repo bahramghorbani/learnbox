@@ -4,17 +4,24 @@
   "private": true,
   "scripts": {
     "build": "next build",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@simplewebauthn/browser": "13.3.0",
+    "@simplewebauthn/server": "^13.3.2",
     "next": "^15.4.5",
+    "pg": "^8.22.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
   },
   "devDependencies": {
     "@types/node": "^24.1.0",
+    "@types/pg": "^8.20.0",
     "@types/react": "^19.1.9",
     "@types/react-dom": "^19.1.7",
-    "typescript": "^5.9.2"
+    "jsdom": "26.1.0",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
   }
 }

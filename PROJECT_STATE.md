@@ -14,6 +14,9 @@ product specification or storyboard.
 - **Bobo:** canonical approved identity and versioned assets are governed by
   [`PDR-003`](./docs/product-decisions/PDR-003-BOBO-VISUAL-VOCABULARY.md). Do not alter the
   appearance without explicit owner approval.
+- **Admin passkeys:** a single-owner WebAuthn boundary, passkey UI gate, session store and
+  activation runbook are implemented. The server and UI flags remain disabled by default; no
+  enrollment, deployment or production activation has occurred.
 
 ## Release and safety posture
 
