@@ -5,9 +5,8 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-| Work item                                            | Branch                         | State                                       | Resume rule                                                                                                               |
-| ---------------------------------------------------- | ------------------------------ | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| Owner-only passkey sign-in and direct splash control | `feature/owner-passkey-splash` | Unmerged, default-disabled where applicable | Read its branch plan, direct tests and diff before editing. Do not duplicate its UI or activation work on another branch. |
+No canonical active work item is recorded on `main` after the owner-passkey boundary is merged.
+Inspect live branches and pull requests before starting a new feature.
 
 ## Continuity update
 
@@ -18,5 +17,5 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Owner action
 
-No technical action is required for the recorded work. Any credential, production activation,
-paid provider, legal or irreversible action remains owner-gated under `AGENTS.md`.
+No technical action is required for the current repository state. Any credential, production
+activation, paid provider, legal or irreversible action remains owner-gated under `AGENTS.md`.
