@@ -5,12 +5,10 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-_No unfinished branch is currently registered._
-
-## Active work registry
-
-- `test/analytics-core-hardening` (PR #23): privacy-safe analytics negative
+- `test/billing-core-hardening` (PR #25): billing and content-model edge
   coverage. Open, CI green, awaiting owner review before merge.
+- `docs/fix-stale-claims` (PR #26): release/status doc corrections. Open, CI
+  green, awaiting owner review before merge.
 
 ## Continuity note
 
@@ -25,6 +23,10 @@ _No unfinished branch is currently registered._
 - On 2026-08-10 PR #21 permanently added the four Start Pack V2 validators to `pnpm check` and
   closed the implementation plan against merged PR #17/#18 evidence. No media object, provider,
   release flag or production environment was changed.
+- On 2026-08-10 PR #23 (analytics negative coverage) and PR #24 (registry note) merged to `main`;
+  the analytics-core contract now has 9 tests. On 2026-08-11 billing-core and content-models edge
+  coverage (PR #25) and release/status doc corrections (PR #26) are open, CI green, awaiting owner
+  review. No provider, release flag or production surface was changed.
 
 ## Continuity update
 
