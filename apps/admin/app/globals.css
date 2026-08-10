@@ -552,3 +552,88 @@ button {
     padding: 18px 20px;
   }
 }
+
+/* Pack release panel — display-only readiness for the closed alpha admin UI. */
+.pack-release-panel {
+  margin: 22px 0 0;
+  padding: 20px 22px;
+  border: 1px solid rgba(120, 130, 150, 0.18);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.5);
+}
+.pack-release-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #2b3a55;
+}
+.pack-release-heading span {
+  color: #4d6bfe;
+}
+.pack-release-heading h2 {
+  margin: 0;
+  font-size: 17px;
+}
+.pack-release-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px 16px;
+  margin: 16px 0 14px;
+}
+.pack-release-summary div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.pack-release-summary dt {
+  font-size: 12px;
+  color: #6b7a95;
+}
+.pack-release-summary dd {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #2b3a55;
+}
+.release-ready {
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(52, 168, 83, 0.12);
+  color: #1e7a3a;
+  font-weight: 600;
+}
+.release-blockers {
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(214, 61, 57, 0.1);
+  color: #9a2f2b;
+}
+.release-blockers p {
+  margin: 0 0 6px;
+  font-weight: 600;
+}
+.release-blockers ul {
+  margin: 0;
+  padding-right: 18px;
+}
+.release-blockers li {
+  margin: 3px 0;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.release-button {
+  margin-top: 16px;
+  padding: 11px 18px;
+  border: 0;
+  border-radius: 10px;
+  background: #c7ced9;
+  color: #5a6778;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: not-allowed;
+}
+.release-disabled-note {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: #8a96a8;
+}

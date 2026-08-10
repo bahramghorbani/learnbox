@@ -47,6 +47,9 @@ importers:
 
   apps/admin:
     dependencies:
+      '@learnbox/content-models':
+        specifier: workspace:*
+        version: link:../../packages/content-models
       '@simplewebauthn/browser':
         specifier: 13.3.0
         version: 13.3.0
