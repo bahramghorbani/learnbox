@@ -5,9 +5,12 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-No canonical active work item is recorded on `main` after the repo-hygiene changelog update and
-the learner core-flow tests merged. Inspect live branches and pull requests before starting a new
-feature.
+- **Branch:** `docs/card-media-visual-pilot-design`.
+  **Purpose:** owner-approved AvalAI visual pilot for `Haus`, `Wasser`, and `Brot`.
+  **State:** three isolated local review candidates passed initial visual QA; they are not attached,
+  published, or eligible for release. Owner visual approval is pending before any bulk media work.
+  **Boundary:** `kaufen` was deliberately excluded from this pilot after owner feedback; its action
+  illustration must be designed separately and must not reuse the `Brot` image.
 
 ## Continuity note
 

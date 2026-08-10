@@ -8,14 +8,14 @@ generation or attachment decision.
 
 ## Confirmed direction
 
-- Produce three 1024×1024 PNG review candidates for `Haus`, `Wasser`, and `kaufen`.
+- Produce three 1024×1024 PNG review candidates for `Haus`, `Wasser`, and `Brot`.
 - Use `flux.2-pro` through the existing local-only AvalAI seam.
 - Keep a warm off-white studio ground with a restrained LearnBox-purple/lilac accent.
 - Make one teaching concept dominant, recognizable at mobile card size, and prohibit text,
   watermarks, logos, visual clutter, and ambiguous secondary concepts.
 - Concrete nouns use an object or place only. `Haus` and `Wasser` must not use Bobo.
-- The action card `kaufen` uses a simple, legible purchase action. It must not create, alter, or
-  imply a new canonical Bobo identity.
+- `Brot` uses one loaf as its only teaching concept. The future action card `kaufen` is a separate
+  card and must not be inferred from the bread image.
 - Existing canonical Bobo assets remain untouched. No generated character is canonical, and an
   opaque Bobo image must not be composited into a card.
 
@@ -50,12 +50,10 @@ A clear drinking glass with visible water is centered against the same studio gr
 water level, and reflection must read immediately; do not add food, hands, bottles, labels, or
 text.
 
-### kaufen
+### Brot
 
-A compact checkout scene makes purchasing unmistakable: one shopper seen only as a generic,
-non-branded figure exchanges a loaf of bread for a simple card or coins at a counter. No readable
-currency, labels, brand marks, receipts, or text. The action—not an AI-generated mascot—is the
-lesson.
+One clear, appetizing loaf of bread fills the visual focus. No hands, people, payment card,
+counter, label, packaging, currency, receipt, brand mark, or text appears in the frame.
 
 ## Quality gate
 
