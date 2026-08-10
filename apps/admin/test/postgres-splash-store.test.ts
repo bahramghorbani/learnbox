@@ -15,6 +15,36 @@ const candidate = {
 type QueryCall = { sql: string; parameters?: readonly unknown[] };
 
 describe('PostgresSplashStore', () => {
+  it('loads the current private revision and metadata for server-only delivery', async () => {
+    const client = {
+      async query() {
+        return {
+          rows: [
+            {
+              version_id: 'version-1',
+              object_key: 'admin/splash/version-1.webp',
+              width: 864,
+              height: 1821,
+              byte_size: 120_000,
+              updated_at: now,
+            },
+          ],
+        };
+      },
+      release() {},
+    };
+    const store = new PostgresSplashStore({ connect: async () => client });
+
+    await expect(store.getCurrentSplash()).resolves.toEqual({
+      versionId: 'version-1',
+      objectKey: 'admin/splash/version-1.webp',
+      width: 864,
+      height: 1821,
+      byteSize: 120_000,
+      updatedAt: now,
+    });
+  });
+
   it('reserves a unique idempotency hash before any private upload', async () => {
     const calls: QueryCall[] = [];
     const client = {

@@ -20,6 +20,43 @@ type PromotionInput = {
 export class PostgresSplashStore {
   constructor(private readonly pool: DatabasePool) {}
 
+  async getCurrentSplash(): Promise<
+    | {
+        versionId: string;
+        objectKey: string;
+        width: number;
+        height: number;
+        byteSize: number;
+        updatedAt: Date;
+      }
+    | undefined
+  > {
+    const client = await this.pool.connect();
+    try {
+      const result = await client.query(
+        `SELECT current_splash.version_id, splash_versions.object_key,
+                splash_versions.width, splash_versions.height, splash_versions.byte_size,
+                current_splash.updated_at
+           FROM current_splash
+           JOIN splash_versions ON splash_versions.id = current_splash.version_id
+          WHERE current_splash.singleton_id = 1
+          LIMIT 1`,
+      );
+      const row = result.rows[0];
+      if (!row) return undefined;
+      return {
+        versionId: String(row.version_id),
+        objectKey: String(row.object_key),
+        width: Number(row.width),
+        height: Number(row.height),
+        byteSize: Number(row.byte_size),
+        updatedAt: new Date(row.updated_at as string | Date),
+      };
+    } finally {
+      client.release();
+    }
+  }
+
   async claimCleanupJobs(input: {
     now: Date;
     limit: number;

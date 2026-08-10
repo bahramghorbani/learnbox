@@ -7,7 +7,7 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 | Branch | Scope | Current checkpoint | Next bounded work |
 | --- | --- | --- | --- |
-| `feat/owner-splash-replacement` | Owner-only splash replacement boundary | Additive `0011` persistence and local image normalization are committed; all release flags remain disabled. | Implement injected private-storage and PostgreSQL transaction adapters, then protected routes and UI. |
+| `feat/owner-splash-replacement` | Owner-only splash replacement boundary | Persistence, normalization, atomic private-Blob replacement and protected current/preview/replace routes are implemented; all release flags remain disabled. | Add the single-owner upload UI, operational validation and final documentation. |
 
 ## Continuity note
 

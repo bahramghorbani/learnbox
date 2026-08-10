@@ -1,4 +1,4 @@
-import { del as vercelDel, put as vercelPut } from '@vercel/blob';
+import { del as vercelDel, get as vercelGet, put as vercelPut } from '@vercel/blob';
 
 type PutOptions = {
   access: 'private';
@@ -8,11 +8,16 @@ type PutOptions = {
 };
 
 type DeleteOptions = { token: string };
+type GetOptions = { access: 'private'; token: string };
 
 type PrivateBlobDependencies = {
   token: string;
   put?: (key: string, bytes: Buffer, options: PutOptions) => Promise<unknown>;
   del?: (key: string, options: DeleteOptions) => Promise<unknown>;
+  get?: (
+    key: string,
+    options: GetOptions,
+  ) => Promise<{ stream: ReadableStream<Uint8Array> } | null>;
 };
 
 function assertSplashObjectKey(objectKey: string) {
@@ -24,7 +29,13 @@ function assertSplashObjectKey(objectKey: string) {
 export function createPrivateSplashStorage(dependencies: PrivateBlobDependencies) {
   const put = dependencies.put ?? vercelPut;
   const del = dependencies.del ?? vercelDel;
+  const get = dependencies.get ?? vercelGet;
   return {
+    async read(objectKey: string): Promise<ReadableStream<Uint8Array> | undefined> {
+      assertSplashObjectKey(objectKey);
+      const result = await get(objectKey, { access: 'private', token: dependencies.token });
+      return result?.stream ?? undefined;
+    },
     async upload(objectKey: string, bytes: Buffer, contentType: 'image/webp'): Promise<void> {
       assertSplashObjectKey(objectKey);
       await put(objectKey, bytes, {

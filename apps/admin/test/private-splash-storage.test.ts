@@ -39,4 +39,16 @@ describe('createPrivateSplashStorage', () => {
       },
     ]);
   });
+
+  it('reads the exact private key as a stream without exposing the provider result', async () => {
+    const stream = new ReadableStream<Uint8Array>();
+    const storage = createPrivateSplashStorage({
+      token: 'test-token',
+      get: async () => ({ stream, url: 'private-provider-url' }),
+      put: async () => ({}),
+      del: async () => undefined,
+    });
+
+    await expect(storage.read('admin/splash/version-1.webp')).resolves.toBe(stream);
+  });
 });
