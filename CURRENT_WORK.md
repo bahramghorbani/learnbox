@@ -5,8 +5,9 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-No unfinished merged work is registered. Check live GitHub and open pull requests before creating
-the next task entry.
+| Branch                          | Scope                                  | Current checkpoint                                                                                                                   | Next bounded work                                                                  |
+| ------------------------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
+| `feat/owner-splash-replacement` | Owner-only splash replacement boundary | End-to-end admin replacement and learner fallback delivery are implemented and locally validated; all release flags remain disabled. | Open the PR, require green CI, then merge to `main` and clear this registry entry. |
 
 ## Continuity note
 

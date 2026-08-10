@@ -9,6 +9,7 @@ type LaunchState = 'visible' | 'exiting' | 'hidden';
 
 export function LaunchScreen() {
   const [state, setState] = useState<LaunchState>('visible');
+  const [imageSource, setImageSource] = useState('/api/launch/splash');
   const [imageReady, setImageReady] = useState(false);
   const [imageFailed, setImageFailed] = useState(false);
 
@@ -45,17 +46,22 @@ export function LaunchScreen() {
         </div>
       ) : (
         <Image
+          key={imageSource}
           alt=""
           className="launch-screen-image"
-          src={activeLaunchExperience.imagePath}
+          src={imageSource}
           fill
           priority
           unoptimized
           sizes="100vw"
           onLoad={() => setImageReady(true)}
           onError={() => {
-            setImageFailed(true);
-            setImageReady(true);
+            if (imageSource !== activeLaunchExperience.imagePath) {
+              setImageSource(activeLaunchExperience.imagePath);
+            } else {
+              setImageFailed(true);
+              setImageReady(true);
+            }
           }}
         />
       )}

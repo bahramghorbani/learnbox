@@ -23,7 +23,7 @@
 
 **Files:**
 
-- Create: `database/migrations/0010_owner_splash_replacement.sql`
+- Create: `database/migrations/0011_owner_splash_replacement.sql`
 - Create: `apps/api/test/owner-splash-migration.test.ts`
 
 **Schema contract:**
@@ -34,11 +34,11 @@
 - `private_media_cleanup_jobs`: opaque object key, reason code, bounded attempts, next attempt, completion and safe last-error code.
 - Existing `audit_logs` stores safe replacement/cleanup metadata only.
 
-- [ ] Add a failing migration test for singleton pointer, immutable version metadata, unique idempotency, cleanup bounds and foreign keys.
-- [ ] Run the focused test and confirm failure.
-- [ ] Add migration `0010` without touching prior migrations.
-- [ ] Run focused test and migration validation.
-- [ ] Commit with `feat: add splash replacement persistence`.
+- [x] Add a failing migration test for singleton pointer, immutable version metadata, unique idempotency, cleanup bounds and foreign keys.
+- [x] Run the focused test and confirm failure.
+- [x] Add migration `0011` without touching prior migrations.
+- [x] Run focused test and migration validation.
+- [x] Commit with `feat: add splash replacement persistence`.
 
 ### Task 2: Validate and Normalize Real Image Bytes
 
@@ -55,11 +55,11 @@
 - `normalizeSplashImage(bytes)` returns normalized WebP bytes, checksum, width, height and byte size or a stable safe rejection code.
 - It trusts decoder output rather than filename/MIME, rejects animation and metadata-bearing passthrough, and never logs file content/name.
 
-- [ ] Add failing tests with real tiny fixtures for valid PNG/JPEG/WebP, disguised bytes, corrupt input, animation, size, dimensions and aspect ratio.
-- [ ] Run the focused test and confirm failure.
-- [ ] Add Sharp and implement decode, validation, auto-orientation, metadata stripping, bounded normalization and SHA-256.
-- [ ] Re-run focused tests and admin typecheck.
-- [ ] Commit with `feat: validate splash media`.
+- [x] Add failing tests with real image bytes for accepted JPEG normalization and all rejected decoder, animation, size, dimension and aspect-ratio cases.
+- [x] Run the focused test and confirm failure.
+- [x] Add Sharp and implement decode, validation, auto-orientation, metadata stripping, bounded normalization and SHA-256.
+- [x] Re-run focused tests and admin typecheck.
+- [x] Commit with `feat: validate splash media`.
 
 ### Task 3: Implement Atomic Replacement and Cleanup Services
 
@@ -81,17 +81,18 @@
 - After commit, delete only the formerly current object. Queue deletion failure with bounded retry metadata.
 - On transaction failure, delete the unreferenced candidate; queue it if deletion also fails.
 
-- [ ] Add failing adapter/service tests covering concurrency, duplicate idempotency, storage failure, transaction rollback, exact old-object deletion, candidate cleanup and orphan queuing.
-- [ ] Run focused tests and confirm failure.
-- [ ] Implement injected storage/store adapters and the orchestration service.
-- [ ] Re-run focused tests and typecheck.
-- [ ] Commit with `feat: replace splash atomically`.
+- [x] Add failing adapter/service tests covering concurrency, duplicate idempotency, storage failure, transaction rollback, exact old-object deletion, candidate cleanup and orphan queuing.
+- [x] Run focused tests and confirm failure.
+- [x] Implement injected storage/store adapters and the orchestration service.
+- [x] Re-run focused tests and typecheck.
+- [x] Commit with `feat: replace splash atomically`.
 
 ### Task 4: Expose Protected Current/Replace Admin Routes
 
 **Files:**
 
 - Create: `apps/admin/app/api/splash/current/route.ts`
+- Create: `apps/admin/app/api/splash/preview/route.ts`
 - Create: `apps/admin/app/api/splash/replace/route.ts`
 - Create: `apps/admin/test/admin-splash-routes.test.ts`
 - Modify: `.env.example`
@@ -102,11 +103,11 @@
 - `POST replace` requires multipart form data, a bounded body, a valid idempotency header, CSRF/origin checks and recent passkey authentication.
 - Disabled or misconfigured mutation returns `404`; authentication failures are generic; no response reveals object keys or URLs.
 
-- [ ] Add failing tests for flags, auth, recent-auth, CSRF/origin, body/idempotency limits, invalid media and successful replacement.
-- [ ] Run focused route tests and confirm failure.
-- [ ] Implement routes with Node runtime and injected test seams.
-- [ ] Re-run focused tests, typecheck and build.
-- [ ] Commit with `feat: add protected splash routes`.
+- [x] Add failing tests for flags, auth, recent-auth, CSRF/origin, body/idempotency limits, invalid media and successful replacement.
+- [x] Run focused route tests and confirm failure.
+- [x] Implement routes with Node runtime and injected test seams.
+- [x] Re-run focused tests, typecheck and build.
+- [x] Commit with `feat: add protected splash routes`.
 
 ### Task 5: Build the Owner Replacement Interface
 
@@ -124,11 +125,38 @@
 - Generate a fresh idempotency key per confirmed attempt and request recent reauthentication when required.
 - Never expose scheduling, icon management, a history gallery, delete-current or object-storage details.
 
-- [ ] Add failing tests for accepted/rejected local files, confirmation, progress, reauth response, success refresh, keyboard/focus and exact absence of excluded controls.
-- [ ] Run focused UI tests and confirm failure.
-- [ ] Implement RTL UI using existing IRANSansX regular/bold and accessible status regions.
-- [ ] Re-run focused tests, typecheck and build.
-- [ ] Commit with `feat: add owner splash replacement UI`.
+- [x] Add failing tests for accepted/rejected local files, confirmation, progress, reauth response, success refresh, keyboard/focus and exact absence of excluded controls.
+- [x] Run focused UI tests and confirm failure.
+- [x] Implement RTL UI using existing IRANSansX regular/bold and accessible status regions.
+- [x] Re-run focused tests, typecheck and build.
+- [x] Commit with `feat: add owner splash replacement UI`.
+
+### Task 5.5: Deliver the Current Splash to the Learner App
+
+**Files:**
+
+- Create: `apps/website/lib/launch-splash.ts`
+- Create: `apps/website/app/api/launch/splash/route.ts`
+- Create: `apps/website/test/launch-splash.test.ts`
+- Modify: `apps/website/app/components/LaunchScreen.tsx`
+- Modify: `apps/website/test/screens.test.tsx`
+- Modify: `.env.example`
+- Modify: `infrastructure/production/app/app.env.example`
+- Modify: `infrastructure/production/app/compose.yaml`
+
+**Delivery contract:**
+
+- The pre-login learner launch screen requests only a same-origin route; private object keys, Blob
+  URLs and credentials never reach the browser.
+- Delivery remains unavailable unless `LEARNBOX_DYNAMIC_SPLASH_ENABLED=true`, the database and
+  private Blob token are valid, and a constrained current object exists.
+- Any disabled, offline, missing or failed dynamic response falls back to the bundled approved
+  launch image and then to the brand mark.
+
+- [x] Add failing route and LaunchScreen fallback tests.
+- [x] Implement fail-closed private current-object delivery and the same-origin learner route.
+- [x] Preserve the bundled offline fallback and production service isolation.
+- [x] Run focused learner tests, typecheck and production-boundary validation.
 
 ### Task 6: Verify Without Activation
 
@@ -142,8 +170,8 @@
 - Modify: `docs/storyboard/STATUS.md`
 - Modify: this plan checklist.
 
-- [ ] Validate false defaults, no icon/schedule controls, no public Blob URLs and required auth/recent-auth boundaries.
-- [ ] Add the validator to `pnpm check` and document configuration without secret values.
-- [ ] Run focused tests, `pnpm check`, `pnpm build`, migration validation and production dependency audit.
-- [ ] Perform an independent security/regression review and resolve findings.
-- [ ] Leave all flags false and storage untouched; commit with `docs: record splash replacement boundary`.
+- [x] Validate false defaults, no icon/schedule controls, no public Blob URLs and required auth/recent-auth boundaries.
+- [x] Add the validator to `pnpm check` and document configuration without secret values.
+- [x] Run focused tests, `pnpm check`, `pnpm build`, migration validation and production dependency audit.
+- [x] Perform an independent security/regression review and resolve findings.
+- [x] Leave all flags false and storage untouched; commit with `docs: record splash replacement boundary`.

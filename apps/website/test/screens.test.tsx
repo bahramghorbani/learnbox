@@ -68,15 +68,21 @@ describe('LaunchScreen', () => {
     vi.useRealTimers();
   });
 
-  it('renders the approved launch image and hides after the configured duration', async () => {
+  it('prefers the current dynamic splash, falls back offline and then hides', async () => {
     rendered = await renderLaunch();
 
-    // The screen is visible with the approved image path.
+    // The screen first requests the current same-origin image.
     expect(rendered.container.querySelector('.launch-screen')).not.toBeNull();
-    const image = rendered.container.querySelector('img');
-    expect(image?.getAttribute('src')).toContain(activeLaunchExperience.imagePath);
+    expect(rendered.container.querySelector('img')?.getAttribute('src')).toContain(
+      '/api/launch/splash',
+    );
 
-    // Once the image loads, the exit timers advance the state.
+    // A disabled/offline route falls back to the bundled approved image.
+    await rendered.failImage();
+    expect(rendered.container.querySelector('img')?.getAttribute('src')).toContain(
+      activeLaunchExperience.imagePath,
+    );
+
     await rendered.loadImage();
     await act(async () => {
       vi.advanceTimersByTime(activeLaunchExperience.durationMs);
@@ -91,6 +97,7 @@ describe('LaunchScreen', () => {
 
   it('falls back to the brand mark when the image fails', async () => {
     rendered = await renderLaunch();
+    await rendered.failImage();
     await rendered.failImage();
 
     expect(rendered.text()).toContain('LearnBox');

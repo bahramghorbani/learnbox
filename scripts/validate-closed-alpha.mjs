@@ -56,8 +56,11 @@ if (!adminPreview.includes('پیش‌نمایش محلی')) {
 if (!adminPreview.includes('بدون ورود یا دسترسی انتشار')) {
   errors.push('Admin preview must not imply authenticated publishing access.');
 }
-if (!adminPreview.includes('این صفحه فقط نمونهٔ رابط مدیریت است')) {
-  errors.push('Admin preview must disclose that it does not operate on real data.');
+if (!adminPreview.includes('بازبینی محتوا در این نسخه پیش‌نمایش است')) {
+  errors.push('Admin content review must disclose that it remains a preview.');
+}
+if (!adminPreview.includes('قابلیت‌های حساس فقط پس از ورود امن و فعال‌سازی')) {
+  errors.push('Admin sensitive capabilities must disclose their independent secure activation.');
 }
 if (adminPreview.includes('مریم رضایی')) {
   errors.push('Admin preview must not show a fictional authenticated editor identity.');

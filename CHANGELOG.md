@@ -36,6 +36,9 @@ production seams remain disabled by default and owner-gated.
 - Guarded private media delivery and uploader with receipt validation.
 - Owner passkey boundary for the admin app: bootstrap/reauth routes, keyed-hash store, UI gate and
   source validator (disabled by default).
+- Single-owner splash replacement boundary: private image normalization, atomic version promotion,
+  authenticated preview/upload routes, learner same-origin delivery with bundled fallback and an
+  explicit-confirmation UI (disabled by default).
 - Closed-alpha invite + consent boundary: allowlist invite-code gate, HMAC-keyed persistence and
   consent versioning (disabled by default; no invitation sent).
 - Authenticated Start media client seam with neutral failure fallback.
@@ -44,5 +47,5 @@ production seams remain disabled by default and owner-gated.
 
 - Same-server learner app isolated as one service on the shared edge network.
 - Baseline web and API security headers, dependency audit and Flutter checks in CI.
-- Ten checksum-attested PostgreSQL migrations covering content review, entitlement tiers, OTP
-  challenges, owner passkey auth and invite access.
+- Eleven checksum-attested PostgreSQL migrations covering content review, entitlement tiers, OTP
+  challenges, owner passkey auth, invite access and immutable splash replacement state.

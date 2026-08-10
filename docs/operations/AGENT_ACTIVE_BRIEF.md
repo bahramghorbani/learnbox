@@ -21,6 +21,10 @@ the authoritative product and security documents.
   inactive by default.
 - The admin passkey boundary is implemented (routes, store, UI gate, source validator) and remains
   disabled by default; enrollment and deployment are owner-approved steps only.
+- The single-owner splash replacement boundary is implemented (migration `0011`, private Blob
+  normalization, atomic pointer swap, protected preview/upload routes, UI and learner same-origin
+  delivery with bundled fallback) and remains disabled by default behind two server flags. Do not
+  add scheduling, a history gallery, delete-current or app-icon controls.
 - The closed-alpha invite/consent boundary is implemented (allowlist invite gate, keyed-hash
   persistence, consent versioning) and remains disabled by default; real code issuance and
   activation are owner-approved steps only.
@@ -38,6 +42,9 @@ the authoritative product and security documents.
   `apps/website/test/start-media-card.test.tsx` and `apps/website/test/start-media.test.ts`.
 - Use focused tests while changing code. Run `pnpm check`, the relevant production build and
   migration validation only at a feature boundary, before integration, or after a sensitive change.
+- For splash work, start with `apps/admin/test/admin-splash-routes.test.ts`,
+  `apps/admin/test/splash-replacement-ui.test.tsx` and
+  `apps/website/test/launch-splash.test.ts`, then `scripts/validate-owner-splash-boundary.mjs`.
 
 ## Quality and model routing
 
