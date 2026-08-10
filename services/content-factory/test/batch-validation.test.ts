@@ -176,4 +176,84 @@ describe('content factory batch validation', () => {
       ).map((issue) => issue.field),
     ).toEqual(expect.arrayContaining(['start-haus-001.media', 'media']));
   });
+
+  it('rejects a batch whose manifest is no longer a draft or staging release', () => {
+    const result = validateContentBatch({
+      batchId: 'start-a1-slice-v1',
+      manifest: { ...manifest, releaseStatus: 'published' as const },
+      expectedItemCount: 1,
+      items: [item('start-haus-001', 'Haus')],
+    });
+    expect(result.readyForHumanReview).toBe(false);
+    expect(result.issues.map((issue) => issue.field)).toContain('manifest.releaseStatus');
+  });
+
+  it('refuses to prepare an invalid batch for review', () => {
+    expect(() =>
+      prepareContentBatchForReview({
+        batchId: 'start-a1-slice-v1',
+        manifest,
+        expectedItemCount: 2,
+        items: [item('start-haus-001', 'Haus')],
+      }),
+    ).toThrow('Only a valid content batch can enter the human review queue.');
+  });
+
+  it('refuses to queue an item that is not in needs_review status', () => {
+    const publishedItem = { ...item('start-haus-001', 'Haus'), status: 'reviewed' as const };
+    expect(() =>
+      prepareContentBatchForReview({
+        batchId: 'start-a1-slice-v1',
+        manifest,
+        expectedItemCount: 1,
+        items: [publishedItem],
+      }),
+    ).toThrow('Every queued item must remain in needs_review status.');
+  });
+
+  it('rejects candidate intake with duplicate ids or missing lemmas', () => {
+    const base = {
+      category: 'household_noun' as const,
+      selectionRationale: 'home',
+      sourceUrl: 'https://example.test/a1',
+      sourceEntryVerification: 'pending_linguistic_review' as const,
+    };
+    const result = validateStartSliceCandidates(
+      [
+        { candidateId: 'dup', lemmaHint: 'Haus', ...base },
+        { candidateId: 'dup', lemmaHint: 'Haus', ...base },
+        { candidateId: 'no-lemma', lemmaHint: '  ', ...base },
+      ],
+      3,
+    );
+    expect(result.readyForLinguisticReview).toBe(false);
+    expect(result.issues.map((issue) => issue.field)).toEqual(
+      expect.arrayContaining(['candidateId', 'lemmaHint']),
+    );
+  });
+
+  it('rejects a candidate with a non-HTTPS source reference', () => {
+    const result = validateStartSliceCandidates(
+      [
+        {
+          candidateId: 'candidate-1',
+          lemmaHint: 'Haus',
+          category: 'household_noun' as const,
+          selectionRationale: 'home',
+          sourceUrl: 'http://insecure.example.test/a1',
+          sourceEntryVerification: 'pending_linguistic_review' as const,
+        },
+      ],
+      1,
+    );
+    expect(result.readyForLinguisticReview).toBe(false);
+    expect(result.issues.map((issue) => issue.field)).toContain('source');
+  });
+
+  it('refuses to plan media for an item that left the review queue', () => {
+    const publishedItem = { ...item('start-haus-001', 'Haus'), status: 'reviewed' as const };
+    expect(() => createPendingMediaPlan([publishedItem])).toThrow(
+      'Media can only be planned for review-queued vocabulary items.',
+    );
+  });
 });

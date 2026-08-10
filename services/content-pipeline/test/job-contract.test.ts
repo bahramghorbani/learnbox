@@ -69,4 +69,56 @@ describe('content draft job contract', () => {
       requiresHumanReview: true,
     });
   });
+
+  it('keeps a matching CEFR proposal on the auto-validated path', () => {
+    expect(
+      evaluateContentDraftProposal(request, {
+        jobId: request.jobId,
+        card: aiCard,
+        confidence: 0.93,
+      }),
+    ).toMatchObject({ nextStatus: 'auto_validated' });
+  });
+
+  it('rejects a content job without an id or prompt template', () => {
+    expect(() => createContentDraftJob({ ...request, jobId: '   ' })).toThrow(
+      'Content job ID is required.',
+    );
+    expect(() => createContentDraftJob({ ...request, promptTemplateVersion: '' })).toThrow(
+      'Prompt template version is required.',
+    );
+  });
+
+  it('rejects a content job with an invalid requested timestamp', () => {
+    expect(() => createContentDraftJob({ ...request, requestedAt: 'not-a-date' })).toThrow(
+      'Requested timestamp must be an ISO date.',
+    );
+  });
+
+  it('only starts queued jobs and only completes processing jobs', () => {
+    const job = createContentDraftJob(request);
+    const started = startContentDraftJob(job);
+
+    // Already-processing jobs cannot start again.
+    expect(() => startContentDraftJob(started)).toThrow('Only queued content jobs can start.');
+    // A queued job cannot complete directly.
+    expect(() =>
+      completeContentDraftJob(
+        job,
+        { jobId: request.jobId, card: aiCard, confidence: 0.93 },
+        '2026-07-26T12:01:00.000Z',
+      ),
+    ).toThrow('Only processing content jobs can complete.');
+  });
+
+  it('rejects a completion with an invalid completion timestamp', () => {
+    const started = startContentDraftJob(createContentDraftJob(request));
+    expect(() =>
+      completeContentDraftJob(
+        started,
+        { jobId: request.jobId, card: aiCard, confidence: 0.93 },
+        'not-a-date',
+      ),
+    ).toThrow('Completion timestamp must be an ISO date.');
+  });
 });
