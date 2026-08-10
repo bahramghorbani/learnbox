@@ -7,6 +7,11 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 _No unfinished branch is currently registered._
 
+## Active work registry
+
+- `test/analytics-core-hardening` (PR #23): privacy-safe analytics negative
+  coverage. Open, CI green, awaiting owner review before merge.
+
 ## Continuity note
 
 - The closed-alpha invite + consent boundary (`feature/closed-alpha-invite-consent`) was merged to
