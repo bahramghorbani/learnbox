@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "next build",
+    "build": "pnpm --filter @learnbox/content-models build && next build",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "pnpm --filter @learnbox/content-models build && tsc --noEmit"
   },
   "dependencies": {
     "@learnbox/content-models": "workspace:*",
