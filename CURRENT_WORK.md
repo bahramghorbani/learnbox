@@ -5,12 +5,16 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-- **Branch:** `docs/card-media-visual-pilot-design`.
-  **Purpose:** owner-approved AvalAI visual pilot for `Haus`, `Wasser`, and `Brot`.
-  **State:** three isolated local review candidates passed initial visual QA; they are not attached,
-  published, or eligible for release. Owner visual approval is pending before any bulk media work.
-  **Boundary:** `kaufen` was deliberately excluded from this pilot after owner feedback; its action
-  illustration must be designed separately and must not reuse the `Brot` image.
+- **Branch:** `feat/start-pack-media-v2`.
+  **Purpose:** produce the 20-card Start V2 media set from the owner-approved `Haus`, `Wasser`, and
+  `Brot` visual standard.
+  **State:** the visual contract and local AvalAI generator are committed; the three pilot images
+  passed owner review and remain local candidates. Batch generation has not created a new file.
+  **Current external blocker:** on 2026-08-10, HTTPS and DNS requests from this machine to
+  `api.avalai.ir` timed out in three consecutive checks. Retry only after network reachability is
+  restored; do not change credentials, fabricate media, or replace current assets meanwhile.
+  **Boundary:** generated V2 media stays candidate-only until complete visual/audio QA, private
+  storage receipt validation, and a dedicated attachment decision; no release flag changes.
 
 ## Continuity note
 
