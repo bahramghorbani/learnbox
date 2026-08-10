@@ -5,9 +5,7 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-| Branch                          | Scope                                  | Current checkpoint                                                                                                                   | Next bounded work                                                                  |
-| ------------------------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
-| `feat/owner-splash-replacement` | Owner-only splash replacement boundary | End-to-end admin replacement and learner fallback delivery are implemented and locally validated; all release flags remain disabled. | Open the PR, require green CI, then merge to `main` and clear this registry entry. |
+_No unfinished branch is currently registered._
 
 ## Continuity note
 
@@ -16,6 +14,9 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 - On 2026-08-10 the Stage 23 hardening work was recorded in `CHANGELOG.md` (PR #6) and the learner
   core-flow tests landed (PR #7). Merged remote branches carrying no unique work were removed from
   `origin` after owner approval; local `main` stays in sync with `origin/main`.
+- On 2026-08-10 the disabled-by-default owner splash replacement and learner fallback-delivery
+  boundary passed all local and GitHub quality gates and merged through PR #19. No migration was
+  applied, no flag was enabled and no production splash was uploaded.
 
 ## Continuity update
 
