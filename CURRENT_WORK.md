@@ -5,8 +5,9 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-No unfinished merged work is registered. Check live GitHub and open pull requests before creating
-the next task entry.
+| Branch | Scope | Current checkpoint | Next bounded work |
+| --- | --- | --- | --- |
+| `feat/owner-splash-replacement` | Owner-only splash replacement boundary | Additive `0011` persistence and local image normalization are committed; all release flags remain disabled. | Implement injected private-storage and PostgreSQL transaction adapters, then protected routes and UI. |
 
 ## Continuity note
 
