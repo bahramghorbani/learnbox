@@ -21,6 +21,9 @@ product specification or storyboard.
   acknowledgment, keyed-hash persistence (migration 0010) and consent versioning is implemented
   (merged PR #4). The invite UI and server flags remain disabled by default; no invitation has
   been sent.
+- **Start pack V2 media:** the 20 approved 1024px card images are versioned, stored privately in
+  `learnbox-media-private`, and receipt-attested. Session-guarded media delivery prefers V2 images
+  while retaining the verified V1 German audio. No public or participant release flag is enabled.
 
 ## Release and safety posture
 
