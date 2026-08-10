@@ -24,7 +24,11 @@ CREATE TABLE splash_replacement_actions (
   status TEXT NOT NULL CHECK (status IN ('pending', 'completed')),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   completed_at TIMESTAMPTZ,
-  CHECK ((status = 'pending' AND completed_at IS NULL) OR (status = 'completed' AND completed_at IS NOT NULL))
+  CHECK (
+    (status = 'pending' AND version_id IS NULL AND completed_at IS NULL)
+    OR
+    (status = 'completed' AND version_id IS NOT NULL AND completed_at IS NOT NULL)
+  )
 );
 
 CREATE TABLE private_media_cleanup_jobs (

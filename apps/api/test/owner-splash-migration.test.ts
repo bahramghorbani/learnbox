@@ -33,6 +33,10 @@ describe('owner splash replacement migration', () => {
     expect(sql).toMatch(/CREATE TABLE splash_replacement_actions/i);
     expect(sql).toMatch(/idempotency_key_hash TEXT NOT NULL UNIQUE/i);
     expect(sql).toMatch(/status TEXT NOT NULL CHECK \(status IN \('pending', 'completed'\)\)/i);
+    expect(sql).toMatch(/status = 'pending' AND version_id IS NULL AND completed_at IS NULL/i);
+    expect(sql).toMatch(
+      /status = 'completed' AND version_id IS NOT NULL AND completed_at IS NOT NULL/i,
+    );
     expect(sql).toMatch(/CREATE TABLE private_media_cleanup_jobs/i);
     expect(sql).toMatch(
       /attempt_count SMALLINT NOT NULL DEFAULT 0 CHECK \(attempt_count >= 0 AND attempt_count <= 5\)/i,

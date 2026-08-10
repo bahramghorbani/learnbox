@@ -56,6 +56,9 @@ importers:
       '@simplewebauthn/server':
         specifier: ^13.3.2
         version: 13.3.2
+      '@vercel/blob':
+        specifier: ^2.6.1
+        version: 2.6.1
       next:
         specifier: ^15.4.5
         version: 15.5.22(@types/node@24.13.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
