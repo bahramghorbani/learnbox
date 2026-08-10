@@ -7,7 +7,7 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 | Branch | Scope | Current checkpoint | Next bounded work |
 | --- | --- | --- | --- |
-| `feat/owner-splash-replacement` | Owner-only splash replacement boundary | Persistence, normalization, atomic private-Blob replacement and protected current/preview/replace routes are implemented; all release flags remain disabled. | Add the single-owner upload UI, operational validation and final documentation. |
+| `feat/owner-splash-replacement` | Owner-only splash replacement boundary | Persistence, atomic private-Blob replacement, protected routes and the single-owner upload UI are implemented; all release flags remain disabled. | Add operational validation, activation guidance and complete the branch quality gates. |
 
 ## Continuity note
 

@@ -8,6 +8,7 @@ import type { ContentPackManifest, LearningVocabularyItem } from '@learnbox/cont
 
 import { AdminSidebar } from './AdminSidebar';
 import { PackReleasePanel } from './PackReleasePanel';
+import { SplashReplacementPanel } from './SplashReplacementPanel';
 
 type LocalReviewStatus = 'needs_review' | 'approved' | 'returned';
 
@@ -39,8 +40,8 @@ export function ContentReviewWorkspace() {
         </header>
 
         <p className="admin-preview-notice" role="status">
-          این صفحه فقط نمونهٔ رابط مدیریت است؛ هیچ تغییر، انتشار، زمان‌بندی یا دسترسی به دادهٔ واقعی
-          انجام نمی‌شود.
+          بازبینی محتوا در این نسخه پیش‌نمایش است. قابلیت‌های حساس فقط پس از ورود امن و فعال‌سازی
+          مستقل همان قابلیت در سرور در دسترس قرار می‌گیرند.
         </p>
 
         <div className="review-layout">
@@ -145,6 +146,7 @@ export function ContentReviewWorkspace() {
           items={drafts.items as LearningVocabularyItem[]}
           actorRole="content_reviewer"
         />
+        <SplashReplacementPanel />
       </section>
     </main>
   );

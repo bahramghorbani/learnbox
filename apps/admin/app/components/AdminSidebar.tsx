@@ -1,8 +1,9 @@
 const navItems = [
-  ['صف بررسی', '▣'],
-  ['محتوا', '▤'],
-  ['گزارش‌ها', '▥'],
-  ['تنظیمات', '⚙'],
+  ['صف بررسی', '▣', '#review'],
+  ['اسپلش', '◉', '#splash-management'],
+  ['محتوا', '▤', '#review'],
+  ['گزارش‌ها', '▥', '#review'],
+  ['تنظیمات', '⚙', '#review'],
 ] as const;
 
 export function AdminSidebar() {
@@ -13,10 +14,10 @@ export function AdminSidebar() {
         LearnBox
       </a>
       <nav>
-        {navItems.map(([label, icon], index) => (
+        {navItems.map(([label, icon, href], index) => (
           <a
             className={index === 0 ? 'admin-nav-item is-current' : 'admin-nav-item'}
-            href="#review"
+            href={href}
             key={label}
           >
             <span aria-hidden="true">{icon}</span>
