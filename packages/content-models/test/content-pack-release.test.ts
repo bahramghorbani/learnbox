@@ -119,4 +119,53 @@ describe('content pack release readiness', () => {
       ]),
     );
   });
+
+  it('allows a super admin to release as well', () => {
+    expect(evaluateContentPackReleaseReadiness(manifest, [readyItem], 'super_admin')).toEqual({
+      canRelease: true,
+      blockers: [],
+    });
+  });
+
+  it('blocks a pack whose item is not fully reviewed even when approved', () => {
+    const readiness = evaluateContentPackReleaseReadiness(
+      manifest,
+      [{ ...readyItem, status: 'returned' }],
+      'content_publisher',
+    );
+    expect(readiness.canRelease).toBe(false);
+    expect(readiness.blockers).toContain('کارت release-fixture-001 هنوز تأیید سردبیری نشده است.');
+  });
+
+  it('blocks an approved item that still fails the publication gates', () => {
+    // An approved card whose translated meaning is missing fails the publish validation.
+    const readiness = evaluateContentPackReleaseReadiness(
+      manifest,
+      [{ ...readyItem, persianMeanings: [] }],
+      'content_publisher',
+    );
+    expect(readiness.canRelease).toBe(false);
+    expect(readiness.blockers).toEqual(
+      expect.arrayContaining([
+        'کارت release-fixture-001 هنوز همهٔ دروازه‌های انتشار را رد نکرده است.',
+      ]),
+    );
+  });
+
+  it('accumulates every blocker across all items', () => {
+    const readiness = evaluateContentPackReleaseReadiness(
+      { ...manifest, releaseStatus: 'draft', targetItemCount: 2 },
+      [{ ...readyItem, status: 'needs_review' }],
+      'content_reviewer',
+    );
+    expect(readiness.canRelease).toBe(false);
+    expect(readiness.blockers).toEqual(
+      expect.arrayContaining([
+        'فقط ناشر محتوا می‌تواند انتشار بسته را درخواست کند.',
+        'بسته باید پیش از انتشار در وضعیت آماده‌سازی باشد.',
+        'تعداد آیتم‌های بسته با نسخهٔ مورد انتظار هم‌خوان نیست.',
+        'کارت release-fixture-001 هنوز تأیید سردبیری نشده است.',
+      ]),
+    );
+  });
 });

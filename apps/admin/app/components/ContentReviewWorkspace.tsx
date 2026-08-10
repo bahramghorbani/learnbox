@@ -2,7 +2,12 @@
 
 import { useState } from 'react';
 
+import manifest from '../../../../content/packs/learnbox-start/manifest.json';
+import drafts from '../../../../content/packs/learnbox-start/vocabulary/start-a1-vertical-slice-drafts.json';
+import type { ContentPackManifest, LearningVocabularyItem } from '@learnbox/content-models';
+
 import { AdminSidebar } from './AdminSidebar';
+import { PackReleasePanel } from './PackReleasePanel';
 
 type LocalReviewStatus = 'needs_review' | 'approved' | 'returned';
 
@@ -134,6 +139,12 @@ export function ContentReviewWorkspace() {
             </div>
           </aside>
         </div>
+
+        <PackReleasePanel
+          manifest={manifest as ContentPackManifest}
+          items={drafts.items as LearningVocabularyItem[]}
+          actorRole="content_reviewer"
+        />
       </section>
     </main>
   );

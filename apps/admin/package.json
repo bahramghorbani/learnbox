@@ -8,6 +8,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@learnbox/content-models": "workspace:*",
     "@simplewebauthn/browser": "13.3.0",
     "@simplewebauthn/server": "^13.3.2",
     "next": "^15.4.5",
