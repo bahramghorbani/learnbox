@@ -8,10 +8,22 @@ const websiteRequire = createRequire(resolve('apps/website/package.json'));
 const { head, list, put } = await import(websiteRequire.resolve('@vercel/blob'));
 
 const contentRoot = new URL('../content/packs/learnbox-start/', import.meta.url);
-const draftFile = new URL('validation/start-a1-media-attachment-draft.json', contentRoot);
-const localEnvPaths = [resolve('apps/website/.env.vercel.local'), resolve('.env.vercel.local')];
+const v2Images = process.argv.includes('--v2-images');
+const draftFile = new URL(
+  v2Images
+    ? 'validation/start-a1-v2-image-attachment-draft.json'
+    : 'validation/start-a1-media-attachment-draft.json',
+  contentRoot,
+);
+const localEnvPaths = [
+  resolve('apps/website/.env.vercel.local'),
+  resolve('.env.vercel.local'),
+  resolve('.env.local'),
+];
 const receiptDirectory = '/Users/test/.codex/tmp/learnbox-vercel';
-const receiptPath = `${receiptDirectory}/start-a1-private-upload-receipt.json`;
+const receiptPath = `${receiptDirectory}/${
+  v2Images ? 'start-a1-v2-images-private-upload-receipt' : 'start-a1-private-upload-receipt'
+}.json`;
 const execute = process.argv.includes('--execute');
 const ownerApproved = process.argv.includes('--owner-approved');
 

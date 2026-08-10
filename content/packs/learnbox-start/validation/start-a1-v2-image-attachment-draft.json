@@ -1,0 +1,294 @@
+{
+  "batchId": "learnbox-start-a1-images-v2",
+  "state": "ready_for_private_storage_not_attached",
+  "publicationBlocked": true,
+  "purpose": "V2 image-only integrity manifest. Existing V1 audio remains unchanged and unpublished.",
+  "requiredBeforeAttachment": [
+    "private_storage_url",
+    "upload_checksum_match",
+    "media_receipt_validation",
+    "owner_release_approval"
+  ],
+  "assets": [
+    {
+      "assetId": "start-a1-haus-image-v2",
+      "contentId": "start-a1-haus",
+      "kind": "image",
+      "storageKey": "start-a1-haus/image/v2",
+      "localCandidate": {
+        "relativePath": "images/start-a1-haus-image-v2.png",
+        "mimeType": "image/png",
+        "bytes": 365359,
+        "sha256": "0b5b2cfb59dc05698bdfeaac2f71f1da52fbe345ba6bf72f30431761d2c4fec7"
+      },
+      "qaStatus": "candidate_qa_passed",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-tisch-image-v2",
+      "contentId": "start-a1-tisch",
+      "kind": "image",
+      "storageKey": "start-a1-tisch/image/v2",
+      "localCandidate": {
+        "relativePath": "images/start-a1-tisch-image-v2.png",
+        "mimeType": "image/png",
+        "bytes": 235402,
+        "sha256": "1a5bd6dfd0467b7f45439aeb47214fa5c00af3948afc9fa0d2ddadd3a2c3cb02"
+      },
+      "qaStatus": "candidate_qa_passed",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-tuer-image-v2",
+      "contentId": "start-a1-tuer",
+      "kind": "image",
+      "storageKey": "start-a1-tuer/image/v2",
+      "localCandidate": {
+        "relativePath": "images/start-a1-tuer-image-v2.png",
+        "mimeType": "image/png",
+        "bytes": 272875,
+        "sha256": "38304ad9ac4c29bd28898d504b712cde523ebd059f1a1cd3af91fca704b94998"
+      },
+      "qaStatus": "candidate_qa_passed",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-bett-image-v2",
+      "contentId": "start-a1-bett",
+      "kind": "image",
+      "storageKey": "start-a1-bett/image/v2",
+      "localCandidate": {
+        "relativePath": "images/start-a1-bett-image-v2.png",
+        "mimeType": "image/png",
+        "bytes": 262709,
+        "sha256": "ce99943f3c683c819b7ecedc0b962690138b27cfa75d9ae16db0f5689a5311ce"
+      },
+      "qaStatus": "candidate_qa_passed",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-apfel-image-v2",
+      "contentId": "start-a1-apfel",
+      "kind": "image",
+      "storageKey": "start-a1-apfel/image/v2",
+      "localCandidate": {
+        "relativePath": "images/start-a1-apfel-image-v2.png",
+        "mimeType": "image/png",
+        "bytes": 289080,
+        "sha256": "56f1000596354f0dda8ba91ddcb4428ec8a6ced45e9de1e0381ff7186f30e1e9"
+      },
+      "qaStatus": "candidate_qa_passed",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-brot-image-v2",
+      "contentId": "start-a1-brot",
+      "kind": "image",
+      "storageKey": "start-a1-brot/image/v2",
+      "localCandidate": {
+        "relativePath": "images/start-a1-brot-image-v2.png",
+        "mimeType": "image/png",
+        "bytes": 487265,
+        "sha256": "3a8106686988393425350ea15a5c6ecfa97e987db8122c147d11c80d0b953803"
+      },
+      "qaStatus": "candidate_qa_passed",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-wasser-image-v2",
+      "contentId": "start-a1-wasser",
+      "kind": "image",
+      "storageKey": "start-a1-wasser/image/v2",
+      "localCandidate": {
+        "relativePath": "images/start-a1-wasser-image-v2.png",
+        "mimeType": "image/png",
+        "bytes": 289486,
+        "sha256": "f043acd8381476b7a23fb67e9dc9af1c482c734d02d2075dca2f21d1cf896822"
+      },
+      "qaStatus": "candidate_qa_passed",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-bahnhof-image-v2",
+      "contentId": "start-a1-bahnhof",
+      "kind": "image",
+      "storageKey": "start-a1-bahnhof/image/v2",
+      "localCandidate": {
+        "relativePath": "images/start-a1-bahnhof-image-v2.png",
+        "mimeType": "image/png",
+        "bytes": 383992,
+        "sha256": "fbee1ecb43b411ff4d69a1907f4b15d3a45923bc9d190e218259786489432789"
+      },
+      "qaStatus": "candidate_qa_passed",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-schule-image-v2",
+      "contentId": "start-a1-schule",
+      "kind": "image",
+      "storageKey": "start-a1-schule/image/v2",
+      "localCandidate": {
+        "relativePath": "images/start-a1-schule-image-v2.png",
+        "mimeType": "image/png",
+        "bytes": 271106,
+        "sha256": "4225854f07d0f04f073a2e57bc6b34fc1383c9e056e1f54d45329a54a453de41"
+      },
+      "qaStatus": "candidate_qa_passed",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-lernen-image-v2",
+      "contentId": "start-a1-lernen",
+      "kind": "image",
+      "storageKey": "start-a1-lernen/image/v2",
+      "localCandidate": {
+        "relativePath": "images/start-a1-lernen-image-v2.png",
+        "mimeType": "image/png",
+        "bytes": 327781,
+        "sha256": "595e8d062824869c042b4f20b19fdae197a5802ccc25d160eb7763edba84f00f"
+      },
+      "qaStatus": "candidate_qa_passed",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-wohnen-image-v2",
+      "contentId": "start-a1-wohnen",
+      "kind": "image",
+      "storageKey": "start-a1-wohnen/image/v2",
+      "localCandidate": {
+        "relativePath": "images/start-a1-wohnen-image-v2.png",
+        "mimeType": "image/png",
+        "bytes": 365067,
+        "sha256": "9ef3f9edc7eea68e6c1b3e7ca0e7bd96f75a917c690fbe526639487c1e3429c7"
+      },
+      "qaStatus": "candidate_qa_passed",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-kaufen-image-v2",
+      "contentId": "start-a1-kaufen",
+      "kind": "image",
+      "storageKey": "start-a1-kaufen/image/v2",
+      "localCandidate": {
+        "relativePath": "images/start-a1-kaufen-image-v2.png",
+        "mimeType": "image/png",
+        "bytes": 391203,
+        "sha256": "cab56213dbe92abe50da5a60e54cbb9a17f825f6d515feac71ac0f087b4c396b"
+      },
+      "qaStatus": "candidate_qa_passed",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-warten-image-v2",
+      "contentId": "start-a1-warten",
+      "kind": "image",
+      "storageKey": "start-a1-warten/image/v2",
+      "localCandidate": {
+        "relativePath": "images/start-a1-warten-image-v2.png",
+        "mimeType": "image/png",
+        "bytes": 334953,
+        "sha256": "1210c92d6642b91a55c4ea86e951faf0b0cccc60ee0dcbefe7af8a01e6067257"
+      },
+      "qaStatus": "candidate_qa_passed",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-gluecklich-image-v2",
+      "contentId": "start-a1-gluecklich",
+      "kind": "image",
+      "storageKey": "start-a1-gluecklich/image/v2",
+      "localCandidate": {
+        "relativePath": "images/start-a1-gluecklich-image-v2.png",
+        "mimeType": "image/png",
+        "bytes": 279301,
+        "sha256": "1b2dd2efd130408428eb4d317b0594987a035e879049288297e2e2c9dbc8ec12"
+      },
+      "qaStatus": "candidate_qa_passed",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-muede-image-v2",
+      "contentId": "start-a1-muede",
+      "kind": "image",
+      "storageKey": "start-a1-muede/image/v2",
+      "localCandidate": {
+        "relativePath": "images/start-a1-muede-image-v2.png",
+        "mimeType": "image/png",
+        "bytes": 281946,
+        "sha256": "de075ed7ec5b70b5c4fa2b660a00e007c76b41145c7cf523d30a35c9ea0acc07"
+      },
+      "qaStatus": "candidate_qa_passed",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-klein-image-v2",
+      "contentId": "start-a1-klein",
+      "kind": "image",
+      "storageKey": "start-a1-klein/image/v2",
+      "localCandidate": {
+        "relativePath": "images/start-a1-klein-image-v2.png",
+        "mimeType": "image/png",
+        "bytes": 290022,
+        "sha256": "23dc1f550783ec14968d62c0a34af8596c3b79bd1de439ff8dc1b0e958022ff3"
+      },
+      "qaStatus": "candidate_qa_passed",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-guten-tag-image-v2",
+      "contentId": "start-a1-guten-tag",
+      "kind": "image",
+      "storageKey": "start-a1-guten-tag/image/v2",
+      "localCandidate": {
+        "relativePath": "images/start-a1-guten-tag-image-v2.png",
+        "mimeType": "image/png",
+        "bytes": 294108,
+        "sha256": "166eb56aa278968da91a4c8be093edfac06a7c6801a374b6f7add93f02ca57be"
+      },
+      "qaStatus": "candidate_qa_passed",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-wie-geht-es-ihnen-image-v2",
+      "contentId": "start-a1-wie-geht-es-ihnen",
+      "kind": "image",
+      "storageKey": "start-a1-wie-geht-es-ihnen/image/v2",
+      "localCandidate": {
+        "relativePath": "images/start-a1-wie-geht-es-ihnen-image-v2.png",
+        "mimeType": "image/png",
+        "bytes": 382373,
+        "sha256": "1bd6480f18faa743f70fc428e6519c463aa0499cbed9b5317c91d9d2f58e7013"
+      },
+      "qaStatus": "candidate_qa_passed",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-danke-image-v2",
+      "contentId": "start-a1-danke",
+      "kind": "image",
+      "storageKey": "start-a1-danke/image/v2",
+      "localCandidate": {
+        "relativePath": "images/start-a1-danke-image-v2.png",
+        "mimeType": "image/png",
+        "bytes": 348870,
+        "sha256": "09b3c256d07e18a791017aaa812d053d119273d06058f3e369fe1432899ff977"
+      },
+      "qaStatus": "candidate_qa_passed",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-entschuldigung-image-v2",
+      "contentId": "start-a1-entschuldigung",
+      "kind": "image",
+      "storageKey": "start-a1-entschuldigung/image/v2",
+      "localCandidate": {
+        "relativePath": "images/start-a1-entschuldigung-image-v2.png",
+        "mimeType": "image/png",
+        "bytes": 309262,
+        "sha256": "badd804e3795f910d9a45d69392b90073c77b9119fa68d432d3a751f54ef158e"
+      },
+      "qaStatus": "candidate_qa_passed",
+      "attachmentStatus": "awaiting_private_storage_url"
+    }
+  ]
+}

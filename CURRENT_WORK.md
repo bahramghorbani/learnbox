@@ -13,8 +13,11 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
   content pack. `Haus`, `Wasser`, and `Brot` are the owner-approved pilot files; the other 17
   passed the first visual QA sweep. The existing 40 German audio candidates were re-validated.
   V2 media is not yet runtime-attached or uploaded to private storage.
-  **Current external blocker:** none for generation. Attachment remains intentionally gated on
-  audio re-validation, complete media receipts, and the existing private-storage validator.
+  **Current external blocker:** the 20-image V2 private-upload dry run passes, but the connected
+  Vercel project currently has no `BLOB_READ_WRITE_TOKEN`; its locally refreshed OIDC token was
+  rejected by the Blob store. No media was uploaded. Add the store write token only to the local
+  ignored environment, then rerun the receipt and attestation gates; do not enable any release
+  flag while resolving this.
   **Boundary:** generated V2 media stays candidate-only until complete visual/audio QA, private
   storage receipt validation, and a dedicated attachment decision; no release flag changes.
 

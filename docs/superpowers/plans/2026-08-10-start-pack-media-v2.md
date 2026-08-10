@@ -74,7 +74,7 @@
 
 - [x] Copy only passing image candidates into versioned pack paths and record V2 candidate QA; existing audio remains unchanged after 40/40 transcription re-validation.
 - [ ] Run all Start media, private-attestation, and full quality gates.
-- [ ] Upload only if the existing private-storage credential and receipt gate are available; otherwise leave the exact owner-free blocker in `CURRENT_WORK.md` and do not simulate success.
+- [x] Add a versioned V2 image-only attachment draft and private-upload dry run; the exact Blob credential blocker is recorded in `CURRENT_WORK.md` and no success is simulated.
 - [ ] Verify no direct Blob URL, provider credential, or public asset endpoint enters the learner client.
 - [ ] Commit only after every local verifier passes.
 
