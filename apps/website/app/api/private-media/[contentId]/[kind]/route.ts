@@ -1,6 +1,7 @@
 import { get } from '@vercel/blob';
 
 import privateMediaAttestation from '../../../../../../../content/packs/learnbox-start/validation/start-a1-private-media-attestation.json';
+import privateV2ImageAttestation from '../../../../../../../content/packs/learnbox-start/validation/start-a1-v2-images-private-media-attestation.json';
 import { readLearnerSession } from '../../../../../lib/server-session';
 
 export const runtime = 'nodejs';
@@ -17,7 +18,10 @@ const kindByRouteSegment = {
 } as const;
 
 const privateMediaByKey = new Map(
-  privateMediaAttestation.assets.map((asset) => [`${asset.contentId}:${asset.kind}`, asset]),
+  [...privateMediaAttestation.assets, ...privateV2ImageAttestation.assets].map((asset) => [
+    `${asset.contentId}:${asset.kind}`,
+    asset,
+  ]),
 );
 
 export async function GET(request: Request, context: RouteContext) {

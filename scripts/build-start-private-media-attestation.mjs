@@ -1,8 +1,19 @@
 import { readFile, writeFile } from 'node:fs/promises';
 
 const contentRoot = new URL('../content/packs/learnbox-start/', import.meta.url);
-const draftFile = new URL('validation/start-a1-media-attachment-draft.json', contentRoot);
-const outputFile = new URL('validation/start-a1-private-media-attestation.json', contentRoot);
+const v2Images = process.argv.includes('--v2-images');
+const draftFile = new URL(
+  v2Images
+    ? 'validation/start-a1-v2-image-attachment-draft.json'
+    : 'validation/start-a1-media-attachment-draft.json',
+  contentRoot,
+);
+const outputFile = new URL(
+  v2Images
+    ? 'validation/start-a1-v2-images-private-media-attestation.json'
+    : 'validation/start-a1-private-media-attestation.json',
+  contentRoot,
+);
 const draft = JSON.parse(await readFile(draftFile, 'utf8'));
 const shouldWrite = process.argv.includes('--write');
 
@@ -63,7 +74,7 @@ if (shouldWrite) {
     receiptById.size !== expected.assets.length ||
     receipt.assets.length !== expected.assets.length
   ) {
-    throw new Error('رسید بارگذاری خصوصی باید دقیقاً ۶۰ رسانه را پوشش دهد.');
+    throw new Error(`رسید بارگذاری خصوصی باید دقیقاً ${expected.assets.length} رسانه را پوشش دهد.`);
   }
 
   for (const asset of expected.assets) {

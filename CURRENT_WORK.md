@@ -5,12 +5,22 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-- **Branch:** `docs/card-media-visual-pilot-design`.
-  **Purpose:** owner-approved AvalAI visual pilot for `Haus`, `Wasser`, and `Brot`.
-  **State:** three isolated local review candidates passed initial visual QA; they are not attached,
-  published, or eligible for release. Owner visual approval is pending before any bulk media work.
-  **Boundary:** `kaufen` was deliberately excluded from this pilot after owner feedback; its action
-  illustration must be designed separately and must not reuse the `Brot` image.
+- **Branch:** `feat/start-pack-media-v2`.
+  **Purpose:** produce the 20-card Start V2 media set from the owner-approved `Haus`, `Wasser`, and
+  `Brot` visual standard.
+  **State:** the visual contract and local AvalAI generator are committed. Network access was
+  restored on 2026-08-10; all 20 local 1024px candidates now exist and are versioned in the
+  content pack. `Haus`, `Wasser`, and `Brot` are the owner-approved pilot files; the other 17
+  passed the first visual QA sweep. The existing 40 German audio candidates were re-validated.
+  V2 media is not yet runtime-attached or uploaded to private storage.
+  **State:** `learnbox-media-private` is connected to the `learnbox-preview` learner project.
+  All 20 V2 images were uploaded privately through its refreshed local OIDC environment; the
+  receipt and private attestation pass. The session-guarded delivery route now prefers V2 images
+  while retaining V1 audio. Release flags remain disabled.
+  **Current external blocker:** none for the private V2 image path. Public release, participant
+  invitations, and runtime attachment flags remain deliberately owner-gated.
+  **Boundary:** generated V2 media stays candidate-only until complete visual/audio QA, private
+  storage receipt validation, and a dedicated attachment decision; no release flag changes.
 
 ## Continuity note
 

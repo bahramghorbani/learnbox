@@ -1,0 +1,27 @@
+{
+  "batchId": "learnbox-start-a1-media-v2",
+  "status": "candidate_qa_complete_not_released",
+  "checkedAt": "2026-08-10",
+  "visualContract": "prompts/start-a1-v2-visual-contract.json",
+  "checks": {
+    "visual": {
+      "outcome": "passed_for_candidate_stage",
+      "evidence": "20/20 versioned 1024px PNG candidates were inspected for one clear teaching concept, no generated typography, no watermark, no brand, and no generated Bobo. Haus, Wasser, and Brot use the owner-approved pilot files; Brot contains only the bread object."
+    },
+    "audio": {
+      "outcome": "passed_for_candidate_stage",
+      "evidence": "The existing 40/40 German word and sentence MP3 candidates passed transcription QA again on 2026-08-10; audio is reused unchanged for V2 visual staging."
+    },
+    "versioning": {
+      "outcome": "passed_for_candidate_stage",
+      "evidence": "All image candidates are stored under distinct -image-v2.png paths. No V1 image, runtime attachment, private receipt, or release flag was overwritten."
+    }
+  },
+  "publicationBlocked": true,
+  "remainingReleaseGates": [
+    "private_storage_receipt_validation",
+    "server_session_authorization_for_private_media",
+    "owner_release_approval",
+    "participant_invitation_approval"
+  ]
+}
