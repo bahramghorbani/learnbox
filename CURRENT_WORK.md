@@ -5,21 +5,17 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-### chore/repo-hygiene — repo cleanup and stability
-
-- Branch: `chore/repo-hygiene` (base `main`).
-- Updates `CHANGELOG.md` with the Stage 23 closed-alpha hardening work that landed on `main` but
-  was not recorded.
-- Removes merged local branches that carried no unique work; remote-branch cleanup remains
-  pending owner confirmation.
-- No code, provider, release flag or production surface is changed.
+No canonical active work item is recorded on `main` after the repo-hygiene changelog update and
+the learner core-flow tests merged. Inspect live branches and pull requests before starting a new
+feature.
 
 ## Continuity note
 
 - The closed-alpha invite + consent boundary (`feature/closed-alpha-invite-consent`) was merged to
   `main` by the owner on 2026-08-09. No flag is enabled and no invitation has been sent.
-- The local `main` doc commits (`c3f529b` project-state record and this registry clear) were
-  pushed by the owner after the merge; keep local `main` in sync with `origin/main` going forward.
+- On 2026-08-10 the Stage 23 hardening work was recorded in `CHANGELOG.md` (PR #6) and the learner
+  core-flow tests landed (PR #7). Merged remote branches carrying no unique work were removed from
+  `origin` after owner approval; local `main` stays in sync with `origin/main`.
 
 ## Continuity update
 
