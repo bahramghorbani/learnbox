@@ -22,12 +22,14 @@
 ### Task 1: Generate isolated visual review candidates
 
 **Files:**
+
 - Create: `/Users/test/.codex/tmp/learnbox-avalai/card-visual-pilot/start-a1-haus-image-v2-candidate.png`
 - Create: `/Users/test/.codex/tmp/learnbox-avalai/card-visual-pilot/start-a1-wasser-image-v2-candidate.png`
 - Create: `/Users/test/.codex/tmp/learnbox-avalai/card-visual-pilot/start-a1-brot-image-v2-candidate.png`
 - Create: `/Users/test/.codex/tmp/learnbox-avalai/card-visual-pilot/manifest.json`
 
 **Interfaces:**
+
 - Consumes: `.env.avalai.local` with `AVALAI_API_KEY`; `POST https://api.avalai.ir/v1/images/generations`.
 - Produces: three 1024×1024 PNG candidates and a non-secret manifest containing ID, model, output path, SHA-256, dimensions, and `pending_owner_visual_approval` state.
 
