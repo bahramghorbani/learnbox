@@ -12,7 +12,7 @@
 files after transcription re-validation, so duplicate V2 speech generation was deliberately
 removed from scope. The 20 V2 images, private receipt attestation, session-guarded delivery and
 disabled release posture merged through PRs #17 and #18. The permanent V2 quality-gate wiring was
-closed in the follow-up handoff PR recorded by Git history.
+closed through PR #21.
 
 ## Global Constraints
 

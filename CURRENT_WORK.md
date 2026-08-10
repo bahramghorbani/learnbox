@@ -5,13 +5,7 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-- **Branch:** `chore/close-start-pack-v2`.
-  **Purpose:** close the already-merged Start Pack V2 plan and make its four dedicated validators
-  permanent members of the root quality gate.
-  **State:** implementation is limited to quality-gate wiring and continuity documentation; no
-  media object, release flag, provider credential, upload or production environment is changed.
-  **Ready when:** `pnpm check`, `pnpm build`, migration validation, production audit and GitHub CI
-  are green, then the branch merges through a focused PR and this registry is cleared.
+_No unfinished branch is currently registered._
 
 ## Continuity note
 
@@ -23,6 +17,9 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 - On 2026-08-10 the disabled-by-default owner splash replacement and learner fallback-delivery
   boundary passed all local and GitHub quality gates and merged through PR #19. No migration was
   applied, no flag was enabled and no production splash was uploaded.
+- On 2026-08-10 PR #21 permanently added the four Start Pack V2 validators to `pnpm check` and
+  closed the implementation plan against merged PR #17/#18 evidence. No media object, provider,
+  release flag or production environment was changed.
 
 ## Continuity update
 
