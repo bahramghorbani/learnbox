@@ -72,7 +72,7 @@
 - Consumes 60 approved V2 candidates and the existing attachment schema.
 - Produces versioned V2 local media plus candidate-only checksums; it does not produce a release flag or public URL.
 
-- [ ] Copy only passing candidate files into versioned pack paths and update each checksum/byte/MIME record.
+- [x] Copy only passing image candidates into versioned pack paths and record V2 candidate QA; existing audio remains unchanged after 40/40 transcription re-validation.
 - [ ] Run all Start media, private-attestation, and full quality gates.
 - [ ] Upload only if the existing private-storage credential and receipt gate are available; otherwise leave the exact owner-free blocker in `CURRENT_WORK.md` and do not simulate success.
 - [ ] Verify no direct Blob URL, provider credential, or public asset endpoint enters the learner client.

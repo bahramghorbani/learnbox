@@ -9,9 +9,10 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
   **Purpose:** produce the 20-card Start V2 media set from the owner-approved `Haus`, `Wasser`, and
   `Brot` visual standard.
   **State:** the visual contract and local AvalAI generator are committed. Network access was
-  restored on 2026-08-10; all 20 local 1024px candidates now exist. `Haus`, `Wasser`, and `Brot`
-  are the owner-approved pilot files; the other 17 passed the first visual QA sweep. Candidate
-  media is not yet attached to the pack or uploaded to private storage.
+  restored on 2026-08-10; all 20 local 1024px candidates now exist and are versioned in the
+  content pack. `Haus`, `Wasser`, and `Brot` are the owner-approved pilot files; the other 17
+  passed the first visual QA sweep. The existing 40 German audio candidates were re-validated.
+  V2 media is not yet runtime-attached or uploaded to private storage.
   **Current external blocker:** none for generation. Attachment remains intentionally gated on
   audio re-validation, complete media receipts, and the existing private-storage validator.
   **Boundary:** generated V2 media stays candidate-only until complete visual/audio QA, private
