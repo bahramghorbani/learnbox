@@ -41,7 +41,8 @@ describe('admin splash server', () => {
   });
 
   it('fails closed when a required private storage setting is absent', () => {
-    const { BLOB_READ_WRITE_TOKEN: _token, ...environment } = enabledEnvironment;
+    const environment: Record<string, string | undefined> = { ...enabledEnvironment };
+    delete environment.BLOB_READ_WRITE_TOKEN;
     const server = createAdminSplashServer({
       environment,
       createPool: () => {

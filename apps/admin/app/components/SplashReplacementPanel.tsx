@@ -50,7 +50,7 @@ export function SplashReplacementPanel() {
   const [pendingKey, setPendingKey] = useState<string>();
   const confirmButton = useRef<HTMLButtonElement>(null);
 
-  const loadCurrent = useCallback(async () => {
+  const loadCurrent = useCallback(async (reportFailure = true) => {
     try {
       const response = await fetch('/api/splash/current', {
         credentials: 'same-origin',
@@ -65,7 +65,7 @@ export function SplashReplacementPanel() {
       setCurrent(payload.current ?? undefined);
       setAvailable(true);
     } catch {
-      setState('error');
+      if (reportFailure) setState('error');
     }
   }, []);
 
@@ -128,7 +128,9 @@ export function SplashReplacementPanel() {
       if (!response.ok) throw new Error('replacement unavailable');
       setState('success');
       setPendingKey(undefined);
-      await loadCurrent();
+      setFile(undefined);
+      setPreview(undefined);
+      await loadCurrent(false);
     } catch {
       setState('error');
     }
@@ -194,11 +196,17 @@ export function SplashReplacementPanel() {
               </div>
               <div>
                 <dt>ابعاد</dt>
-                <dd dir="ltr">{current.width} × {current.height}</dd>
+                <dd dir="ltr">
+                  {current.width} × {current.height}
+                </dd>
               </div>
               <div>
                 <dt>آخرین تغییر</dt>
-                <dd>{new Intl.DateTimeFormat('fa-IR', { dateStyle: 'medium' }).format(new Date(current.updatedAt))}</dd>
+                <dd>
+                  {new Intl.DateTimeFormat('fa-IR', { dateStyle: 'medium' }).format(
+                    new Date(current.updatedAt),
+                  )}
+                </dd>
               </div>
             </dl>
           ) : null}
@@ -217,7 +225,11 @@ export function SplashReplacementPanel() {
               onChange={(event) => chooseFile(event.target.files?.[0])}
             />
           </label>
-          {fileError ? <p className="splash-error" role="alert">{fileError}</p> : null}
+          {fileError ? (
+            <p className="splash-error" role="alert">
+              {fileError}
+            </p>
+          ) : null}
           {preview ? (
             <div className="splash-local-preview">
               <img src={preview} alt="پیش‌نمایش محلی اسپلش انتخاب‌شده" />
@@ -225,8 +237,15 @@ export function SplashReplacementPanel() {
             </div>
           ) : null}
 
-          {file && state !== 'confirming' && state !== 'uploading' && state !== 'reauthenticating' ? (
-            <button className="splash-primary-action" type="button" onClick={() => setState('confirming')}>
+          {file &&
+          state !== 'confirming' &&
+          state !== 'uploading' &&
+          state !== 'reauthenticating' ? (
+            <button
+              className="splash-primary-action"
+              type="button"
+              onClick={() => setState('confirming')}
+            >
               آماده‌سازی جایگزینی
             </button>
           ) : null}
@@ -235,7 +254,11 @@ export function SplashReplacementPanel() {
             <div className="splash-confirmation" role="group" aria-label="تأیید جایگزینی اسپلش">
               <p>پس از موفقیت، تصویر فعلی با همین تصویر جایگزین می‌شود.</p>
               <div>
-                <button type="button" className="splash-secondary-action" onClick={() => setState('idle')}>
+                <button
+                  type="button"
+                  className="splash-secondary-action"
+                  onClick={() => setState('idle')}
+                >
                   انصراف
                 </button>
                 <button
@@ -251,21 +274,31 @@ export function SplashReplacementPanel() {
           ) : null}
 
           {state === 'uploading' || state === 'reauthenticating' ? (
-            <p className="splash-status" role="status" aria-live="polite">در حال انجام امن جایگزینی…</p>
+            <p className="splash-status" role="status" aria-live="polite">
+              در حال انجام امن جایگزینی…
+            </p>
           ) : null}
           {state === 'reauth-required' ? (
             <div className="splash-reauth" role="status">
               <p>برای این تغییر حساس، هویت مدیر باید دوباره تأیید شود.</p>
-              <button type="button" className="splash-primary-action" onClick={() => void reauthenticate()}>
+              <button
+                type="button"
+                className="splash-primary-action"
+                onClick={() => void reauthenticate()}
+              >
                 تأیید دوباره با Passkey
               </button>
             </div>
           ) : null}
           {state === 'success' ? (
-            <p className="splash-success" role="status" tabIndex={-1}>اسپلش با موفقیت جایگزین شد.</p>
+            <p className="splash-success" role="status" tabIndex={-1}>
+              اسپلش با موفقیت جایگزین شد.
+            </p>
           ) : null}
           {state === 'error' ? (
-            <p className="splash-error" role="alert">جایگزینی انجام نشد. دوباره تلاش کنید.</p>
+            <p className="splash-error" role="alert">
+              جایگزینی انجام نشد. دوباره تلاش کنید.
+            </p>
           ) : null}
         </div>
       </div>

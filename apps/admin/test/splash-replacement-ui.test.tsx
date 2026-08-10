@@ -19,8 +19,9 @@ type Rendered = {
   unmount(): Promise<void>;
 };
 
-(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean })
-  .IS_REACT_ACT_ENVIRONMENT = true;
+(
+  globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }
+).IS_REACT_ACT_ENVIRONMENT = true;
 
 async function render(node: ReactNode): Promise<Rendered> {
   const container = document.createElement('div');
@@ -72,7 +73,10 @@ afterEach(() => {
 
 describe('owner splash replacement UI', () => {
   it('shows exact upload guidance and no excluded management controls', async () => {
-    vi.stubGlobal('fetch', vi.fn(async () => new Response('Not found', { status: 404 })));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response('Not found', { status: 404 })),
+    );
     const rendered = await render(createElement(SplashReplacementPanel));
 
     expect(rendered.text()).toContain('PNG، JPEG یا WebP');
@@ -85,7 +89,10 @@ describe('owner splash replacement UI', () => {
   });
 
   it('rejects an unsupported local file before enabling confirmation', async () => {
-    vi.stubGlobal('fetch', vi.fn(async () => new Response('Not found', { status: 404 })));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response('Not found', { status: 404 })),
+    );
     const rendered = await render(createElement(SplashReplacementPanel));
     await selectFile(rendered, new File(['not-an-image'], 'splash.gif', { type: 'image/gif' }));
 
@@ -96,10 +103,7 @@ describe('owner splash replacement UI', () => {
 
   it('requires explicit confirmation and sends a fresh idempotent protected request', async () => {
     const requests: Array<{ url: string; init?: RequestInit }> = [];
-    vi.stubGlobal(
-      'crypto',
-      { randomUUID: vi.fn(() => '550e8400-e29b-41d4-a716-446655440000') },
-    );
+    vi.stubGlobal('crypto', { randomUUID: vi.fn(() => '550e8400-e29b-41d4-a716-446655440000') });
     vi.stubGlobal(
       'fetch',
       vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -140,10 +144,7 @@ describe('owner splash replacement UI', () => {
 
   it('asks for a recent passkey ceremony and retries the same confirmed attempt', async () => {
     let replacementAttempts = 0;
-    vi.stubGlobal(
-      'crypto',
-      { randomUUID: vi.fn(() => '550e8400-e29b-41d4-a716-446655440000') },
-    );
+    vi.stubGlobal('crypto', { randomUUID: vi.fn(() => '550e8400-e29b-41d4-a716-446655440000') });
     vi.stubGlobal(
       'fetch',
       vi.fn(async (input: RequestInfo | URL) => {
@@ -175,6 +176,38 @@ describe('owner splash replacement UI', () => {
     expect(startAuthentication).toHaveBeenCalledOnce();
     expect(replacementAttempts).toBe(2);
     expect(rendered.text()).toContain('اسپلش با موفقیت جایگزین شد');
+    await rendered.unmount();
+  });
+
+  it('keeps a confirmed success when only the metadata refresh becomes unavailable', async () => {
+    let currentReads = 0;
+    vi.stubGlobal('crypto', {
+      randomUUID: vi.fn(() => '550e8400-e29b-41d4-a716-446655440000'),
+    });
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.endsWith('/api/splash/current')) {
+          currentReads += 1;
+          return currentReads === 1
+            ? Response.json({ current: null })
+            : new Response('Unavailable', { status: 503 });
+        }
+        if (url.endsWith('/api/splash/replace')) {
+          return Response.json({ status: 'replaced', revision: 'version-2' });
+        }
+        return new Response(null, { status: 404 });
+      }),
+    );
+    const rendered = await render(createElement(SplashReplacementPanel));
+    await selectFile(rendered, new File(['image'], 'splash.png', { type: 'image/png' }));
+    await act(async () => rendered.button('آماده‌سازی جایگزینی')!.click());
+    await act(async () => rendered.button('تأیید و جایگزینی')!.click());
+    await act(async () => Promise.resolve());
+
+    expect(rendered.text()).toContain('اسپلش با موفقیت جایگزین شد');
+    expect(rendered.text()).not.toContain('جایگزینی انجام نشد');
     await rendered.unmount();
   });
 });

@@ -18,8 +18,7 @@ type ReplaceDependencies = {
   normalize?: (
     bytes: Buffer,
   ) => Promise<
-    | ({ kind: 'normalized' } & NormalizedSplashCandidate)
-    | { kind: 'rejected'; code: string }
+    ({ kind: 'normalized' } & NormalizedSplashCandidate) | { kind: 'rejected'; code: string }
   >;
   replace?: (input: {
     candidate: NormalizedSplashCandidate;

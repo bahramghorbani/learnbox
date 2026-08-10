@@ -32,8 +32,7 @@ type PrivateStorage = {
 type Normalizer = (
   bytes: Buffer,
 ) => Promise<
-  | ({ kind: 'normalized' } & NormalizedSplashCandidate)
-  | { kind: 'rejected'; code: string }
+  ({ kind: 'normalized' } & NormalizedSplashCandidate) | { kind: 'rejected'; code: string }
 >;
 
 export function createAdminSplashServer(dependencies: {

@@ -18,7 +18,9 @@ describe('owner splash replacement migration', () => {
 
     expect(sql).toMatch(/CREATE TABLE splash_versions/i);
     expect(sql).toMatch(/object_key TEXT NOT NULL UNIQUE/i);
+    expect(sql).toMatch(/object_key ~ '\^admin\/splash\//i);
     expect(sql).toMatch(/checksum TEXT NOT NULL/i);
+    expect(sql).toMatch(/checksum ~ '\^\[a-f0-9\]\{64\}\$'/i);
     expect(sql).toMatch(/width INTEGER NOT NULL CHECK \(width >= 864\)/i);
     expect(sql).toMatch(/height INTEGER NOT NULL CHECK \(height >= 1600\)/i);
     expect(sql).toMatch(/media_type TEXT NOT NULL CHECK \(media_type = 'image\/webp'\)/i);
@@ -39,9 +41,14 @@ describe('owner splash replacement migration', () => {
     );
     expect(sql).toMatch(/CREATE TABLE private_media_cleanup_jobs/i);
     expect(sql).toMatch(
+      /reason_code TEXT NOT NULL CHECK \(reason_code IN \('candidate_after_transaction_failure', 'superseded_after_promotion'\)\)/i,
+    );
+    expect(sql).toMatch(
       /attempt_count SMALLINT NOT NULL DEFAULT 0 CHECK \(attempt_count >= 0 AND attempt_count <= 5\)/i,
     );
-    expect(sql).toMatch(/last_error_code TEXT/i);
+    expect(sql).toMatch(
+      /last_error_code TEXT CHECK \(last_error_code IS NULL OR last_error_code IN \('delete_failed', 'delete_failed_exhausted'\)\)/i,
+    );
     expect(sql).not.toMatch(/https?:\/\//i);
   });
 });
