@@ -8,11 +8,12 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 - **Branch:** `feat/start-pack-media-v2`.
   **Purpose:** produce the 20-card Start V2 media set from the owner-approved `Haus`, `Wasser`, and
   `Brot` visual standard.
-  **State:** the visual contract and local AvalAI generator are committed; the three pilot images
-  passed owner review and remain local candidates. Batch generation has not created a new file.
-  **Current external blocker:** on 2026-08-10, HTTPS and DNS requests from this machine to
-  `api.avalai.ir` timed out in three consecutive checks. Retry only after network reachability is
-  restored; do not change credentials, fabricate media, or replace current assets meanwhile.
+  **State:** the visual contract and local AvalAI generator are committed. Network access was
+  restored on 2026-08-10; all 20 local 1024px candidates now exist. `Haus`, `Wasser`, and `Brot`
+  are the owner-approved pilot files; the other 17 passed the first visual QA sweep. Candidate
+  media is not yet attached to the pack or uploaded to private storage.
+  **Current external blocker:** none for generation. Attachment remains intentionally gated on
+  audio re-validation, complete media receipts, and the existing private-storage validator.
   **Boundary:** generated V2 media stays candidate-only until complete visual/audio QA, private
   storage receipt validation, and a dedicated attachment decision; no release flag changes.
 

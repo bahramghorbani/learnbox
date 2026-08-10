@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 
 const outputDirectory = '/Users/test/.codex/tmp/learnbox-avalai/start-pack-v2/images';
+const manifestPath = `${outputDirectory}/manifest.json`;
 const ids = process.argv.slice(2);
 const keyLine = existsSync('.env.avalai.local')
   ? readFileSync('.env.avalai.local', 'utf8')
@@ -64,8 +65,16 @@ await Promise.all(
   }),
 );
 results.sort((a, b) => a.contentId.localeCompare(b.contentId));
+const priorResults = existsSync(manifestPath)
+  ? (JSON.parse(readFileSync(manifestPath, 'utf8')).results ?? [])
+  : [];
+const generatedIds = new Set(results.map((result) => result.contentId));
+const mergedResults = [
+  ...priorResults.filter((result) => !generatedIds.has(result.contentId)),
+  ...results,
+].sort((left, right) => left.contentId.localeCompare(right.contentId));
 writeFileSync(
-  `${outputDirectory}/manifest.json`,
-  `${JSON.stringify({ version: 'v2', model: contract.model, status: 'candidate_qa_pending', publicationBlocked: true, results }, null, 2)}\n`,
+  manifestPath,
+  `${JSON.stringify({ version: 'v2', model: contract.model, status: 'candidate_qa_pending', publicationBlocked: true, results: mergedResults }, null, 2)}\n`,
 );
 console.log(`تولید محلی V2 برای ${results.length} کارت تمام شد.`);

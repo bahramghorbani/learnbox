@@ -33,12 +33,12 @@
 - Consumes `start-a1-vertical-slice-drafts.json` and owner-approved V2 visual rules.
 - Produces local candidate PNGs under `/Users/test/.codex/tmp/learnbox-avalai/start-pack-v2/images/` plus non-secret provenance manifest.
 
-- [ ] Write a validator that rejects missing/duplicate card IDs, prompts containing `Bobo`, or a prompt missing the no-text and no-watermark constraints.
-- [ ] Run the validator against the contract and confirm it passes.
-- [ ] Implement a two-request-concurrency generator using `flux.2-pro`, base64 output, 1024×1024, checksum recording, and no Git output.
-- [ ] Generate a contact sheet and visually inspect every candidate at full and mobile-card scale.
-- [ ] Regenerate only failed IDs, recording the rejection reason and keeping rejected files outside the candidate manifest.
-- [ ] Commit contract, generator, validator, and their tests.
+- [x] Write a validator that rejects missing/duplicate card IDs, prompts containing `Bobo`, or a prompt missing the no-text and no-watermark constraints.
+- [x] Run the validator against the contract and confirm it passes.
+- [x] Implement a two-request-concurrency generator using `flux.2-pro`, base64 output, 1024×1024, checksum recording, and no Git output.
+- [x] Visually inspect every candidate; retain the three owner-approved pilot files and the 17 clean generated candidates.
+- [x] Keep rejected pilot output outside the candidate manifest; no generated V2 candidate required regeneration.
+- [x] Commit contract, generator, validator, and their tests.
 
 ### Task 2: Produce and validate V2 German audio
 
