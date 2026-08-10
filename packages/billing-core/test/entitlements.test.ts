@@ -95,4 +95,79 @@ describe('billing entitlements', () => {
     expect(evaluatePersonalWordLimit(29, 30)).toEqual({ canAdd: true, remaining: 1 });
     expect(evaluatePersonalWordLimit(30, 30)).toEqual({ canAdd: false, remaining: 0 });
   });
+
+  it('rejects a purchase with an unknown billing environment', () => {
+    expect(
+      validatePurchaseForEnvironment({
+        provider: 'direct_web',
+        environment: 'staging',
+        providerPurchaseId: 'test-1',
+        productId: 'premium',
+        status: 'verified',
+      } as never),
+    ).toBe(false);
+  });
+
+  it('accepts a sandbox and a production purchase with a provider id', () => {
+    for (const environment of ['sandbox', 'production'] as const) {
+      expect(
+        validatePurchaseForEnvironment({
+          provider: 'cafe_bazaar',
+          environment,
+          providerPurchaseId: 'live-1',
+          productId: 'premium',
+          status: 'verified',
+        }),
+      ).toBe(true);
+    }
+  });
+
+  it('rejects a personal-word count or limit that is not a non-negative integer', () => {
+    expect(() => evaluatePersonalWordLimit(-1, 30)).toThrow(
+      'Current personal word count must be a non-negative integer.',
+    );
+    expect(() => evaluatePersonalWordLimit(1.5, 30)).toThrow(
+      'Current personal word count must be a non-negative integer.',
+    );
+    expect(() => evaluatePersonalWordLimit(1, -2)).toThrow(
+      'Personal word limit must be a non-negative integer.',
+    );
+  });
+
+  it('ignores purchases for products that are not in the catalog', () => {
+    expect(
+      resolveEntitlements(
+        products,
+        [
+          {
+            provider: 'direct_web',
+            environment: 'sandbox',
+            providerPurchaseId: 'test-3',
+            productId: 'unknown-product',
+            status: 'verified',
+          },
+        ],
+        new Date('2026-07-26'),
+      ),
+    ).toEqual(new Set());
+  });
+
+  it('does not grant an expired subscription even when the product is active', () => {
+    expect(
+      resolveEntitlements(
+        products,
+        [
+          {
+            provider: 'cafe_bazaar',
+            environment: 'production',
+            providerPurchaseId: 'live-2',
+            productId: 'premium',
+            status: 'verified',
+            expiresAt: new Date('2026-07-01'),
+          },
+        ],
+        new Date('2026-07-26'),
+      ),
+    ).toEqual(new Set());
+  });
 });
