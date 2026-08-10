@@ -8,6 +8,12 @@
 
 **Tech Stack:** Node.js, AvalAI Images API with `flux.2-pro`, AvalAI speech with `eleven_flash_v2_5`, Whisper transcription QA, PNG, MP3, existing Start receipt validators.
 
+**Completion note (2026-08-10):** The owner approved reuse of the existing 40/40 German V1 audio
+files after transcription re-validation, so duplicate V2 speech generation was deliberately
+removed from scope. The 20 V2 images, private receipt attestation, session-guarded delivery and
+disabled release posture merged through PRs #17 and #18. The permanent V2 quality-gate wiring was
+closed in the follow-up handoff PR recorded by Git history.
+
 ## Global Constraints
 
 - Read the live GitHub `main` and active PR list before every branch, generation, attachment, or merge decision.
@@ -40,22 +46,22 @@
 - [x] Keep rejected pilot output outside the candidate manifest; no generated V2 candidate required regeneration.
 - [x] Commit contract, generator, validator, and their tests.
 
-### Task 2: Produce and validate V2 German audio
+### Task 2: Reuse and re-validate approved German audio
 
 **Files:**
 
-- Create: `scripts/generate-avalai-start-pack-v2-audio.mjs`
-- Create: `content/packs/learnbox-start/validation/start-a1-v2-audio-candidate-qa.json`
+- Reuse: `content/packs/learnbox-start/audio/`
+- Verify: `content/packs/learnbox-start/validation/start-a1-avalai-audio-transcription-qa.json`
 
 **Interfaces:**
 
 - Consumes the 20 approved draft lemmas and first German examples.
-- Produces 40 local MP3 candidate files and a transcription QA report.
+- Reuses the 40 already approved MP3 files after checksum and transcription re-validation.
 
-- [ ] Generate one word and one example sentence per card using `eleven_flash_v2_5` and the existing voice choice.
-- [ ] Validate MP3 MIME, non-zero size, duration range, and one-to-one asset coverage.
-- [ ] Transcribe every clip with the existing German Whisper QA seam; regenerate only failed clips.
-- [ ] Commit scripts and QA metadata, never generated audio or provider secrets.
+- [x] Preserve one approved word and one approved example-sentence clip per card without duplicate provider generation.
+- [x] Re-validate MP3 integrity and one-to-one coverage for all 40 files.
+- [x] Re-check all 40 expected German strings through the existing transcription QA evidence.
+- [x] Keep provider secrets and external upload receipts outside the repository.
 
 ### Task 3: Stage V2 media without release
 
@@ -73,10 +79,10 @@
 - Produces versioned V2 local media plus candidate-only checksums; it does not produce a release flag or public URL.
 
 - [x] Copy only passing image candidates into versioned pack paths and record V2 candidate QA; existing audio remains unchanged after 40/40 transcription re-validation.
-- [ ] Run all Start media, private-attestation, and full quality gates.
+- [x] Run all Start media, V2 contract/draft/private-attestation/upload-dry-run and full quality gates.
 - [x] Upload the 20 V2 images to the existing private `learnbox-media-private` store, verify the receipt and attestation, and keep public release flags disabled.
-- [ ] Verify no direct Blob URL, provider credential, or public asset endpoint enters the learner client.
-- [ ] Commit only after every local verifier passes.
+- [x] Verify no direct Blob URL, provider credential, or public asset endpoint enters the learner client.
+- [x] Commit only after every local verifier passes.
 
 ### Task 4: PR, review, and controlled integration
 
@@ -85,9 +91,9 @@
 - Modify: `CURRENT_WORK.md`
 - Modify: `PROJECT_STATE.md` only after merge.
 
-- [ ] Push a focused PR from `feat/start-pack-media-v2` after the pilot-reference PR is merged and rebase onto current `origin/main`.
-- [ ] Require all Quality, secrets, mobile, production-stack, and Vercel checks to pass.
-- [ ] Merge only the passing PR, update stable state, and verify the candidate/private-media path without enabling public release flags.
+- [x] Push focused PR #17 from `feat/start-pack-media-v2` after the pilot-reference PR merged.
+- [x] Require Quality, secrets, mobile, production-stack, and Vercel checks to pass.
+- [x] Merge only the passing PR, then synchronize stable state through PR #18 without enabling public release flags.
 
 ## Plan self-review
 

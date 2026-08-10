@@ -5,7 +5,13 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-_No unfinished branch is currently registered._
+- **Branch:** `chore/close-start-pack-v2`.
+  **Purpose:** close the already-merged Start Pack V2 plan and make its four dedicated validators
+  permanent members of the root quality gate.
+  **State:** implementation is limited to quality-gate wiring and continuity documentation; no
+  media object, release flag, provider credential, upload or production environment is changed.
+  **Ready when:** `pnpm check`, `pnpm build`, migration validation, production audit and GitHub CI
+  are green, then the branch merges through a focused PR and this registry is cleared.
 
 ## Continuity note
 
