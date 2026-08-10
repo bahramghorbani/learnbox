@@ -74,7 +74,7 @@
 
 - [x] Copy only passing image candidates into versioned pack paths and record V2 candidate QA; existing audio remains unchanged after 40/40 transcription re-validation.
 - [ ] Run all Start media, private-attestation, and full quality gates.
-- [x] Add a versioned V2 image-only attachment draft and private-upload dry run; the exact Blob credential blocker is recorded in `CURRENT_WORK.md` and no success is simulated.
+- [x] Upload the 20 V2 images to the existing private `learnbox-media-private` store, verify the receipt and attestation, and keep public release flags disabled.
 - [ ] Verify no direct Blob URL, provider credential, or public asset endpoint enters the learner client.
 - [ ] Commit only after every local verifier passes.
 

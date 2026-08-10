@@ -13,12 +13,12 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
   content pack. `Haus`, `Wasser`, and `Brot` are the owner-approved pilot files; the other 17
   passed the first visual QA sweep. The existing 40 German audio candidates were re-validated.
   V2 media is not yet runtime-attached or uploaded to private storage.
-  **Current external blocker:** the 20-image V2 private-upload dry run passes, but the active
-  private store (`learnbox-media-private`) is not connected to the Vercel `learnbox` project.
-  Vercel therefore exposes no `BLOB_READ_WRITE_TOKEN`; a fresh OIDC token was rejected by the
-  store. No media was uploaded. Connect that existing store to the project in the Vercel dashboard
-  for the intended environments, then refresh the ignored local environment and rerun the receipt
-  and attestation gates; do not enable any release flag while resolving this.
+  **State:** `learnbox-media-private` is connected to the `learnbox-preview` learner project.
+  All 20 V2 images were uploaded privately through its refreshed local OIDC environment; the
+  receipt and private attestation pass. The session-guarded delivery route now prefers V2 images
+  while retaining V1 audio. Release flags remain disabled.
+  **Current external blocker:** none for the private V2 image path. Public release, participant
+  invitations, and runtime attachment flags remain deliberately owner-gated.
   **Boundary:** generated V2 media stays candidate-only until complete visual/audio QA, private
   storage receipt validation, and a dedicated attachment decision; no release flag changes.
 
