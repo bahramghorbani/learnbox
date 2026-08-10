@@ -64,4 +64,88 @@ describe('notification policy', () => {
       }),
     ).toEqual({ shouldSend: true });
   });
+
+  it('never sends a category the learner did not enable', () => {
+    expect(
+      decideNotification(preferences, {
+        category: 'achievement',
+        localHour: 10,
+        sentToday: 0,
+        consecutiveUnopened: 0,
+      }),
+    ).toEqual({ shouldSend: false, reason: 'category' });
+  });
+
+  it('treats quiet hours that cross midnight correctly on both sides', () => {
+    // After midnight (02:00) is still inside the 22:00–08:00 window.
+    expect(
+      decideNotification(preferences, {
+        category: 'daily_review',
+        localHour: 2,
+        sentToday: 0,
+        consecutiveUnopened: 0,
+      }),
+    ).toEqual({ shouldSend: false, reason: 'quiet_hours' });
+
+    // Boundary: exactly 08:00 is outside the window.
+    expect(
+      decideNotification(preferences, {
+        category: 'daily_review',
+        localHour: 8,
+        sentToday: 0,
+        consecutiveUnopened: 0,
+      }),
+    ).toEqual({ shouldSend: true });
+  });
+
+  it('does not treat equal start/end quiet hours as a window', () => {
+    expect(
+      decideNotification(
+        { ...preferences, quietHours: { startsAtHour: 8, endsAtHour: 8 } },
+        { category: 'daily_review', localHour: 8, sentToday: 0, consecutiveUnopened: 0 },
+      ),
+    ).toEqual({ shouldSend: true });
+  });
+
+  it('applies no quiet-hour gate when quiet hours are unset', () => {
+    expect(
+      decideNotification(
+        { ...preferences, quietHours: undefined },
+        { category: 'daily_review', localHour: 23, sentToday: 0, consecutiveUnopened: 0 },
+      ),
+    ).toEqual({ shouldSend: true });
+  });
+
+  it('blocks at the exact fatigue threshold but not below it', () => {
+    expect(
+      decideNotification(preferences, {
+        category: 'daily_review',
+        localHour: 10,
+        sentToday: 0,
+        consecutiveUnopened: 2,
+      }),
+    ).toEqual({ shouldSend: true });
+    expect(
+      decideNotification(preferences, {
+        category: 'daily_review',
+        localHour: 10,
+        sentToday: 0,
+        consecutiveUnopened: 3,
+      }),
+    ).toEqual({ shouldSend: false, reason: 'fatigue' });
+  });
+
+  it('exempts subscription events from fatigue reduction', () => {
+    expect(
+      decideNotification(
+        { ...preferences, enabledCategories: ['subscription_event'] },
+        {
+          category: 'subscription_event',
+          localHour: 10,
+          sentToday: 0,
+          consecutiveUnopened: 5,
+        },
+      ),
+    ).toEqual({ shouldSend: true });
+  });
 });
