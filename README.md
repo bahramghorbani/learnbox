@@ -4,7 +4,7 @@
 
 <p align="center">
   <a href="https://github.com/bahramghorbani/learnbox/actions/workflows/quality.yml"><img src="https://github.com/bahramghorbani/learnbox/actions/workflows/quality.yml/badge.svg" alt="وضعیت کنترل کیفیت"></a>
-  <img src="https://img.shields.io/badge/status-foundation-4d6bfe" alt="وضعیت: فونداسیون">
+  <img src="https://img.shields.io/badge/status-closed%20alpha-4d6bfe" alt="وضعیت: آلفای بسته (مرحله ۲۳ از ۳۰)">
   <img src="https://img.shields.io/badge/language-Persian%20%2B%20German-ffb36b" alt="زبان: فارسی و آلمانی">
 </p>
 
