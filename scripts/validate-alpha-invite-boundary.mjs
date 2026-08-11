@@ -25,6 +25,14 @@ const learnerHomeSource = await readFile(
   new URL('../apps/website/app/LearnerHome.tsx', import.meta.url),
   'utf8',
 );
+const ownerIssuerSource = await readFile(
+  new URL('../apps/api/src/alpha/owner-invite-issuer.ts', import.meta.url),
+  'utf8',
+);
+const ownerIssuerRouteSource = await readFile(
+  new URL('../apps/website/app/api/owner/alpha-invite/route.ts', import.meta.url),
+  'utf8',
+);
 const closedAlphaSource = await readFile(
   new URL('../config/closed-alpha.json', import.meta.url),
   'utf8',
@@ -36,6 +44,7 @@ const errors = [];
 for (const required of [
   'NEXT_PUBLIC_LEARNBOX_ALPHA_INVITE_UI_ENABLED=false',
   'LEARNBOX_ALPHA_INVITE_ENABLED=false',
+  'LEARNBOX_OWNER_ALPHA_INVITE_ISSUER_ENABLED=false',
 ]) {
   if (!environmentSource.includes(required)) {
     errors.push(`Invite boundary default flag missing: ${required}`);
@@ -75,6 +84,22 @@ if (!handlerSource.includes('status: 204')) {
 
 if (!policySource.includes('createHmac') || !policySource.includes('secret.length < 32')) {
   errors.push('Invite code hashing must use a keyed HMAC with a server secret.');
+}
+if (!ownerIssuerSource.includes("LEARNBOX_OWNER_ALPHA_INVITE_ISSUER_ENABLED !== 'true'")) {
+  errors.push('Owner invite issuer must fail closed unless its exact server flag is true.');
+}
+if (!ownerIssuerSource.includes("environment.VERCEL_ENV === 'preview'")) {
+  errors.push('Owner invite issuer must be restricted to Preview.');
+}
+if (!ownerIssuerSource.includes('hashInviteCode') || !ownerIssuerSource.includes('max_uses')) {
+  errors.push('Owner invite issuer must persist only a keyed hash and a bounded use count.');
+}
+if (
+  !ownerIssuerRouteSource.includes('isOwnerInviteIssuerEnabled(process.env)') ||
+  !ownerIssuerRouteSource.includes('handleOwnerInviteIssue') ||
+  !ownerIssuerRouteSource.includes('404')
+) {
+  errors.push('Owner invite issue route must be gated, same-origin handled and fail closed.');
 }
 
 const consentWording =

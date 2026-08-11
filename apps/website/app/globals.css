@@ -139,6 +139,31 @@ button {
   font-size: 16px;
   font-weight: 700;
 }
+.owner-otp-issue {
+  width: 100%;
+  border: 0;
+  border-radius: 14px;
+  padding: 14px 16px;
+  background: var(--primary);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.owner-otp-issue:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+.owner-invite-code {
+  display: block;
+  margin: 18px auto 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #f3efff;
+  color: #44339f;
+  font-size: 15px;
+  user-select: all;
+}
 .owner-otp-form button:focus-visible,
 .owner-otp-back:focus-visible,
 .owner-otp-resend:focus-visible {
