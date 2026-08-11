@@ -51,4 +51,31 @@ describe('owner invite HTTP boundary', () => {
     expect(response.status).toBe(403);
     expect(called).toBe(false);
   });
+
+  test('reports only sanitized failure metadata when issuance fails', async () => {
+    const diagnostics: unknown[] = [];
+    const failure = Object.assign(new Error('relation details must stay private'), {
+      code: '42P01',
+    });
+    const response = await handleOwnerInviteIssue(
+      new Request('https://preview.example.com/api/owner/alpha-invite', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          origin: 'https://preview.example.com',
+        },
+        body: '{}',
+      }),
+      {
+        issue: async () => {
+          throw failure;
+        },
+        reportIssue: (diagnostic: unknown) => diagnostics.push(diagnostic),
+      },
+    );
+
+    expect(response.status).toBe(503);
+    await expect(response.json()).resolves.toEqual({ error: 'issue_unavailable' });
+    expect(diagnostics).toEqual([{ code: '42P01', name: 'Error' }]);
+  });
 });
