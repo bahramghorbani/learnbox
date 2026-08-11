@@ -5,12 +5,7 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-- `fix/alpha-preview-invite-observability` / PR #32: the Neon project connection was corrected from
-  an empty environment prefix to managed `DATABASE_URL` credentials. A sanitized diagnostic now
-  records only error name/code. The owner-controlled Preview journey then passed invite consent,
-  SMS.ir OTP, secure-session creation, three daily cards and authenticated private-image delivery.
-  Every temporary Preview flag is back to `false`; production was unchanged. Next: finish quality
-  gates, merge PR #32, clear this registry on `main`, and begin Stage 24 synthetic load-test design.
+_No unfinished branch is currently registered._
 
 ## Continuity note
 
@@ -33,6 +28,9 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 - On 2026-08-11 PR #29 reconciled the Stage 23 readiness documents: consent version `v1` is
   approved, while the actual participant list, invitation channel and approved-environment
   end-to-end run remain owner-gated.
+- On 2026-08-12 PR #32 completed the owner-controlled invitation, SMS.ir OTP, secure-session and
+  three-card private-media journey, returned every temporary Preview flag to `false`, and advanced
+  the canonical storyboard to Stage 24. Production remained unchanged.
 
 ## Continuity update
 
