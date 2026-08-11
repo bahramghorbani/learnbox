@@ -14,7 +14,8 @@ the authoritative product and security documents.
 
 ## Current working boundary
 
-- Storyboard: **23 of 30 — Closed alpha**.
+- Storyboard: **24 of 30 — Beta and load testing**. The owner-controlled Stage 23 Preview journey
+  passed on 2026-08-12; no real beta cohort or production activation is authorized.
 - Learner application: `apps/website`; marketing website: `apps/learnbox-website`. Do not rebuild
   or merge their responsibilities.
 - The Start A1 private-media client seam is implemented, same-origin and failure-safe. It remains
@@ -26,9 +27,11 @@ the authoritative product and security documents.
   delivery with bundled fallback) and remains disabled by default behind two server flags. Do not
   add scheduling, a history gallery, delete-current or app-icon controls.
 - The closed-alpha invite/consent boundary is implemented (allowlist invite gate, keyed-hash
-  persistence, consent versioning) and remains disabled by default; real code issuance and
-  activation are owner-approved steps only.
+  persistence, consent versioning). Its approved Preview journey passed and all temporary flags are
+  disabled again; any future real invitation remains owner-approved.
 - Learner OTP, SMS.ir delivery and both private-media release flags remain disabled by default.
+- Stage 24 starts with synthetic, non-personal load scenarios, explicit concurrency/latency/stop
+  thresholds and rollback-safe Preview execution. Do not generate load against Production.
 - Do not deploy, enable a flag, send invitations, publish content, or use a provider credential
   without the owner's explicit approval.
 - Bobo canonical assets stay unchanged until a replacement is explicitly approved.

@@ -5,7 +5,12 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-_No unfinished branch is currently registered._
+- `fix/alpha-preview-invite-observability` / PR #32: the Neon project connection was corrected from
+  an empty environment prefix to managed `DATABASE_URL` credentials. A sanitized diagnostic now
+  records only error name/code. The owner-controlled Preview journey then passed invite consent,
+  SMS.ir OTP, secure-session creation, three daily cards and authenticated private-image delivery.
+  Every temporary Preview flag is back to `false`; production was unchanged. Next: finish quality
+  gates, merge PR #32, clear this registry on `main`, and begin Stage 24 synthetic load-test design.
 
 ## Continuity note
 
