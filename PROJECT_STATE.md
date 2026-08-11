@@ -5,8 +5,9 @@ product specification or storyboard.
 
 ## Stable position
 
-- **Storyboard:** [23 of 30 — Closed alpha](./docs/storyboard/STATUS.md). This stage is active by
-  design and must not be reset.
+- **Storyboard:** [24 of 30 — Beta and load testing](./docs/storyboard/STATUS.md). Stage 23 exited
+  after the owner-controlled Preview invitation, OTP/session and private-media journey passed; the
+  storyboard must not be reset.
 - **Product authority:** [`docs/product/MASTER_SPEC.md`](./docs/product/MASTER_SPEC.md), approved
   product decisions, architecture ADRs and the current storyboard.
 - **Application boundary:** learner product is `apps/website`; public marketing is
@@ -25,17 +26,20 @@ product specification or storyboard.
 - **Closed-alpha invite + consent boundary:** an allowlist invite-code gate with consent
   acknowledgment, keyed-hash persistence (migration 0010) and consent versioning is implemented
   (merged PR #4). The owner approved consent version `v1` and a maximum group size of five on
-  2026-08-11. The invite UI and server flags remain disabled by default; no invitation has been
-  sent. The actual participant list, invitation channel and approved-environment end-to-end test
-  remain outstanding before Stage 23 can exit.
+  2026-08-11, then approved private-message delivery and a two-person first cohort. On 2026-08-12
+  the owner-controlled Preview journey completed invite consent, SMS.ir OTP, secure-session
+  creation, three daily cards and authenticated private-image delivery. No code, phone or OTP is
+  recorded; every temporary Preview flag was returned to `false` and no participant invitation was
+  sent by the repository workflow.
 - **Start pack V2 media:** the 20 approved 1024px card images are versioned, stored privately in
   `learnbox-media-private`, and receipt-attested. Session-guarded media delivery prefers V2 images
   while retaining the verified V1 German audio. No public or participant release flag is enabled.
 
 ## Release and safety posture
 
-- Closed alpha is still private. Provider and learner-release seams remain disabled by default
-  unless a committed, owner-approved activation record says otherwise.
+- Beta/load-test preparation is private. Provider and learner-release seams remain disabled by
+  default unless a committed, owner-approved activation record says otherwise; Stage 24 does not
+  authorize a real beta cohort or production traffic.
 - Do not infer production readiness from a prototype, screenshot, healthy endpoint or successful
   local test. Validate code publication, deployment, infrastructure state and the relevant user
   flow separately.

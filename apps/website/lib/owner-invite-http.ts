@@ -38,9 +38,10 @@ function sanitizeIssueError(error: unknown): OwnerInviteIssueDiagnostic {
     error !== null && typeof error === 'object' && 'code' in error ? error.code : undefined;
   const code =
     typeof rawCode === 'string' && /^[A-Z0-9_]{1,32}$/.test(rawCode) ? rawCode : 'unknown';
-  const name = error instanceof Error && /^[A-Za-z][A-Za-z0-9]*$/.test(error.name)
-    ? error.name
-    : 'UnknownError';
+  const name =
+    error instanceof Error && /^[A-Za-z][A-Za-z0-9]*$/.test(error.name)
+      ? error.name
+      : 'UnknownError';
   return { code, name };
 }
 

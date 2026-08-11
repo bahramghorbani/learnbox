@@ -5,14 +5,12 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-- `fix/alpha-preview-invite-observability`: the owner-approved Stage 23 Preview run reproduced a
-  `503 issue_unavailable` response after the Neon project connection was corrected to generate a
-  managed `DATABASE_URL`. A sanitized database error-code diagnostic is under test so the failing
-  boundary can be identified without logging query text, credentials, invite codes or personal
-  data. Preview-only invite, OTP, SMS.ir and private-media flags are temporarily enabled for this
-  controlled run; production remains unchanged. Next: deploy the diagnostic branch, reproduce
-  once, identify and fix the root cause with a regression test, complete the approved journey,
-  then return every temporary Preview flag to `false` before merge.
+- `fix/alpha-preview-invite-observability` / PR #32: the Neon project connection was corrected from
+  an empty environment prefix to managed `DATABASE_URL` credentials. A sanitized diagnostic now
+  records only error name/code. The owner-controlled Preview journey then passed invite consent,
+  SMS.ir OTP, secure-session creation, three daily cards and authenticated private-image delivery.
+  Every temporary Preview flag is back to `false`; production was unchanged. Next: finish quality
+  gates, merge PR #32, clear this registry on `main`, and begin Stage 24 synthetic load-test design.
 
 ## Continuity note
 

@@ -49,3 +49,12 @@ production seams remain disabled by default and owner-gated.
 - Baseline web and API security headers, dependency audit and Flutter checks in CI.
 - Eleven checksum-attested PostgreSQL migrations covering content review, entitlement tiers, OTP
   challenges, owner passkey auth, invite access and immutable splash replacement state.
+- The approved closed-alpha Preview journey completed invite consent, real SMS.ir OTP,
+  secure-session creation, three daily cards and authenticated private-image delivery. The Neon
+  project connection now supplies a managed `DATABASE_URL`, diagnostic logs remain secret-free and
+  every temporary Preview flag was returned to `false` after verification.
+
+## Stage 24 — Beta and load testing
+
+Stage 24 begins with synthetic, non-personal load scenarios and explicit stop/rollback thresholds.
+No real beta cohort, production service or public release is activated by this transition.
