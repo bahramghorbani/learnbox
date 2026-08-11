@@ -1,6 +1,6 @@
 {
   "enabled": false,
-  "maximumParticipants": 20,
+  "maximumParticipants": 5,
   "invitationMode": "allowlist",
   "telemetry": "minimal",
   "services": {
