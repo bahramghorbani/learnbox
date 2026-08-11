@@ -5,13 +5,7 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-- **Branch:** `docs/sync-alpha-readiness`.
-  **Purpose:** reconcile the stable alpha state after merged PRs #25–#28 and record the exact
-  remaining Stage 23 exit inputs.
-  **State:** documentation only. No release flag, invite code, provider credential, participant
-  data, upload, database migration or production environment is changed.
-  **Ready when:** documentation checks and GitHub CI are green; the branch then merges and this
-  registry is cleared in a follow-up state record.
+_No unfinished branch is currently registered._
 
 ## Continuity note
 
@@ -31,6 +25,9 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
   (registry synchronization) merged to `main` with green CI. On 2026-08-11 PR #28 recorded the
   owner-approved closed-alpha consent wording (`v1`) and the maximum group size of five. No
   provider, release flag, invitation or production surface was changed.
+- On 2026-08-11 PR #29 reconciled the Stage 23 readiness documents: consent version `v1` is
+  approved, while the actual participant list, invitation channel and approved-environment
+  end-to-end run remain owner-gated.
 
 ## Continuity update
 
