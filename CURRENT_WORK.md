@@ -5,10 +5,13 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-- `test/billing-core-hardening` (PR #25): billing and content-model edge
-  coverage. Open, CI green, awaiting owner review before merge.
-- `docs/fix-stale-claims` (PR #26): release/status doc corrections. Open, CI
-  green, awaiting owner review before merge.
+- **Branch:** `docs/sync-alpha-readiness`.
+  **Purpose:** reconcile the stable alpha state after merged PRs #25–#28 and record the exact
+  remaining Stage 23 exit inputs.
+  **State:** documentation only. No release flag, invite code, provider credential, participant
+  data, upload, database migration or production environment is changed.
+  **Ready when:** documentation checks and GitHub CI are green; the branch then merges and this
+  registry is cleared in a follow-up state record.
 
 ## Continuity note
 
@@ -23,10 +26,11 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 - On 2026-08-10 PR #21 permanently added the four Start Pack V2 validators to `pnpm check` and
   closed the implementation plan against merged PR #17/#18 evidence. No media object, provider,
   release flag or production environment was changed.
-- On 2026-08-10 PR #23 (analytics negative coverage) and PR #24 (registry note) merged to `main`;
-  the analytics-core contract now has 9 tests. On 2026-08-11 billing-core and content-models edge
-  coverage (PR #25) and release/status doc corrections (PR #26) are open, CI green, awaiting owner
-  review. No provider, release flag or production surface was changed.
+- On 2026-08-10 PR #23 (analytics negative coverage), PR #24 (registry note), PR #25
+  (billing/content-model edge coverage), PR #26 (release/status corrections) and PR #27
+  (registry synchronization) merged to `main` with green CI. On 2026-08-11 PR #28 recorded the
+  owner-approved closed-alpha consent wording (`v1`) and the maximum group size of five. No
+  provider, release flag, invitation or production surface was changed.
 
 ## Continuity update
 

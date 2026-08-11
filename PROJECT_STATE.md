@@ -24,8 +24,10 @@ product specification or storyboard.
   app-icon management is included.
 - **Closed-alpha invite + consent boundary:** an allowlist invite-code gate with consent
   acknowledgment, keyed-hash persistence (migration 0010) and consent versioning is implemented
-  (merged PR #4). The invite UI and server flags remain disabled by default; no invitation has
-  been sent.
+  (merged PR #4). The owner approved consent version `v1` and a maximum group size of five on
+  2026-08-11. The invite UI and server flags remain disabled by default; no invitation has been
+  sent. The actual participant list, invitation channel and approved-environment end-to-end test
+  remain outstanding before Stage 23 can exit.
 - **Start pack V2 media:** the 20 approved 1024px card images are versioned, stored privately in
   `learnbox-media-private`, and receipt-attested. Session-guarded media delivery prefers V2 images
   while retaining the verified V1 German audio. No public or participant release flag is enabled.
