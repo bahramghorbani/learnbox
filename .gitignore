@@ -17,3 +17,4 @@ ios/Pods/
 .worktrees/
 .env.local
 .claude/settings.json
+.artifacts/load/
