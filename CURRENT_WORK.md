@@ -5,7 +5,11 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-_No unfinished branch is currently registered._
+- `chore/flutter-dev-environment`: prepares portable Flutter/VS Code workspace support and records
+  the macOS toolchain boundary. VS Code and official Dart/Flutter extensions are installed locally;
+  the Flutter Dart SDK download, Android Studio and full Xcode remain externally blocked and must
+  not be reported as ready until their binaries pass diagnostics. No application code or secrets
+  are changed.
 
 ## Continuity note
 

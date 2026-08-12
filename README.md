@@ -98,6 +98,7 @@ flowchart LR
 - [امنیت و حریم خصوصی](./SECURITY.md)
 - [نقشهٔ راه](./ROADMAP.md)
 - [راهنمای مشارکت](./CONTRIBUTING.md)
+- [راه‌اندازی Flutter و VS Code](./docs/operations/FLUTTER_DEVELOPMENT_SETUP.md)
 
 ## محدودهٔ فعلی
 

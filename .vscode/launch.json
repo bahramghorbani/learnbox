@@ -1,0 +1,12 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "LearnBox Flutter",
+      "request": "launch",
+      "type": "dart",
+      "cwd": "${workspaceFolder}/apps/mobile",
+      "program": "lib/main.dart"
+    }
+  ]
+}
