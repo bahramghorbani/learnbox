@@ -39,6 +39,9 @@ product specification or storyboard.
   stopped-server recovery checks use aggregate-only evidence; Preview, Production, provider and
   real-user traffic remain excluded. See
   [`STAGE_24_LOAD_TESTING.md`](./docs/operations/STAGE_24_LOAD_TESTING.md).
+- **Stage 24 learning-engine guardrail:** `pnpm test:engine-load` exercises 100,000 deterministic
+  review transitions and 10,000 retry-queue events. It is CPU-only and therefore is not evidence of
+  Flutter, Preview or Production capacity.
 
 ## Release and safety posture
 

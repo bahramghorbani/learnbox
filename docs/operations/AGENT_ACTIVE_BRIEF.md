@@ -35,6 +35,8 @@ the authoritative product and security documents.
   `pnpm load:local:baseline`; the runner rejects Preview, Production and non-loopback targets.
   See `docs/operations/STAGE_24_LOAD_TESTING.md`. Low-end Android and real-environment capacity
   baselines remain separate work. Do not generate load against Production.
+- Use `pnpm test:engine-load` for the separate CPU-only learning-engine guardrail; it has no network
+  target and is not a substitute for Android, Preview or Production measurement.
 - Do not deploy, enable a flag, send invitations, publish content, or use a provider credential
   without the owner's explicit approval.
 - Bobo canonical assets stay unchanged until a replacement is explicitly approved.
