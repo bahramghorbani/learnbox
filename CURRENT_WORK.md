@@ -5,13 +5,7 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-- `feat/stage-24-synthetic-load-foundation`: defines and implements a local-loopback-only,
-  synthetic load and recovery runner for the learner app. It must reject Preview, Production and
-  non-local targets; it must not enable flags, use credentials, send invitations or retain response
-  bodies. Local smoke, baseline and stopped-server recovery checks passed using aggregate-only
-  evidence. Next: complete feature-boundary validation, create the PR and merge only after CI is
-  green; then retain low-end Android and real-environment capacity baselines as separate Stage 24
-  work.
+_No unfinished branch is currently registered._
 
 ## Continuity note
 
@@ -37,6 +31,9 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 - On 2026-08-12 PR #32 completed the owner-controlled invitation, SMS.ir OTP, secure-session and
   three-card private-media journey, returned every temporary Preview flag to `false`, and advanced
   the canonical storyboard to Stage 24. Production remained unchanged.
+- On 2026-08-12 PR #34 added the Stage 24 local synthetic load foundation: a loopback-only runner,
+  bounded smoke/baseline profiles, aggregate-only evidence and stopped-server recovery protocol.
+  It passed local checks and green CI without Preview, Production, provider or real-user traffic.
 
 ## Continuity update
 
