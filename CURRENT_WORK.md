@@ -5,7 +5,11 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-_No unfinished branch is currently registered._
+- `feat/stage-24-learning-engine-load`: adds a CPU-only, deterministic synthetic load profile for
+  learning scheduling and retry-queue ordering. It uses only fixed synthetic IDs/timestamps and
+  makes no network, database or provider call. Local profile result: 100,000 review transitions and
+  10,000 queue events with zero invariant failures. Next: run full quality gates, merge with green
+  CI, then leave Android-device and real-environment measurements as separate owner-gated work.
 
 ## Continuity note
 
