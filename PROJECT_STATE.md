@@ -34,6 +34,11 @@ product specification or storyboard.
 - **Start pack V2 media:** the 20 approved 1024px card images are versioned, stored privately in
   `learnbox-media-private`, and receipt-attested. Session-guarded media delivery prefers V2 images
   while retaining the verified V1 German audio. No public or participant release flag is enabled.
+- **Stage 24 local load foundation:** the learner app has a bounded concurrent synthetic runner,
+  restricted to loopback HTTP on port `3010` and public read-only routes. Smoke, baseline and
+  stopped-server recovery checks use aggregate-only evidence; Preview, Production, provider and
+  real-user traffic remain excluded. See
+  [`STAGE_24_LOAD_TESTING.md`](./docs/operations/STAGE_24_LOAD_TESTING.md).
 
 ## Release and safety posture
 

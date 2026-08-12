@@ -30,8 +30,11 @@ the authoritative product and security documents.
   persistence, consent versioning). Its approved Preview journey passed and all temporary flags are
   disabled again; any future real invitation remains owner-approved.
 - Learner OTP, SMS.ir delivery and both private-media release flags remain disabled by default.
-- Stage 24 starts with synthetic, non-personal load scenarios, explicit concurrency/latency/stop
-  thresholds and rollback-safe Preview execution. Do not generate load against Production.
+- Stage 24 has a local-only synthetic load foundation. Use `pnpm test:load`, then serve the built
+  learner app on `127.0.0.1:3010` and run `pnpm load:local:smoke` or
+  `pnpm load:local:baseline`; the runner rejects Preview, Production and non-loopback targets.
+  See `docs/operations/STAGE_24_LOAD_TESTING.md`. Low-end Android and real-environment capacity
+  baselines remain separate work. Do not generate load against Production.
 - Do not deploy, enable a flag, send invitations, publish content, or use a provider credential
   without the owner's explicit approval.
 - Bobo canonical assets stay unchanged until a replacement is explicitly approved.

@@ -58,3 +58,8 @@ production seams remain disabled by default and owner-gated.
 
 Stage 24 begins with synthetic, non-personal load scenarios and explicit stop/rollback thresholds.
 No real beta cohort, production service or public release is activated by this transition.
+
+- Local-only concurrent learner load profiles now reject non-loopback targets, use public read-only
+  routes, emit aggregate-only results and have a stopped-server recovery check. The local smoke and
+  baseline runs passed with zero failures; no Preview, Production, provider or real-user traffic was
+  used.
