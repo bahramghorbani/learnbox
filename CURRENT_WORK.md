@@ -5,7 +5,13 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-_No unfinished branch is currently registered._
+- `feat/stage-24-synthetic-load-foundation`: defines and implements a local-loopback-only,
+  synthetic load and recovery runner for the learner app. It must reject Preview, Production and
+  non-local targets; it must not enable flags, use credentials, send invitations or retain response
+  bodies. Local smoke, baseline and stopped-server recovery checks passed using aggregate-only
+  evidence. Next: complete feature-boundary validation, create the PR and merge only after CI is
+  green; then retain low-end Android and real-environment capacity baselines as separate Stage 24
+  work.
 
 ## Continuity note
 
