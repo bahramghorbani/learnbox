@@ -26,6 +26,15 @@ and `/icon.svg`. Redirects are failures.
 These are local baseline gates, not a Production capacity claim. The low-end Android measurements
 in [`PERFORMANCE_BUDGETS.md`](./PERFORMANCE_BUDGETS.md) remain required before beta release.
 
+The shared learning engine has a separate CPU-only synthetic profile:
+
+```bash
+pnpm test:engine-load
+```
+
+It has no network target and exercises deterministic review scheduling plus retry-queue ordering.
+Its result is not evidence of Flutter, Preview or Production capacity.
+
 ## Controlled run
 
 In one terminal, build and serve the learner app only on loopback:
