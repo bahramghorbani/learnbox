@@ -5,11 +5,7 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-- `chore/flutter-dev-environment`: prepares portable Flutter/VS Code workspace support and records
-  the macOS toolchain boundary. VS Code and official Dart/Flutter extensions are installed locally;
-  the Flutter Dart SDK download, Android Studio and full Xcode remain externally blocked and must
-  not be reported as ready until their binaries pass diagnostics. No application code or secrets
-  are changed.
+_No unfinished branch is currently registered._
 
 ## Continuity note
 
@@ -41,6 +37,10 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 - On 2026-08-12 PR #36 added the CPU-only learning-engine guardrail: 100,000 deterministic review
   transitions and 10,000 retry-queue events with invariant checks. It passed local checks and green
   CI without network, database, provider, Preview, Production or real-user traffic.
+- On 2026-08-12 PR #39 added portable Flutter/VS Code setup documentation and workspace-relative
+  Flutter tasks. The local VS Code CLI plus official Dart/Flutter extensions are available; Flutter
+  SDK bootstrap, Android Studio and full Xcode remain blocked by external download or Apple tooling
+  requirements and are not represented as ready.
 
 ## Continuity update
 
