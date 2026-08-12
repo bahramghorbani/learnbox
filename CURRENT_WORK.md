@@ -5,11 +5,7 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-- `feat/stage-24-learning-engine-load`: adds a CPU-only, deterministic synthetic load profile for
-  learning scheduling and retry-queue ordering. It uses only fixed synthetic IDs/timestamps and
-  makes no network, database or provider call. Local profile result: 100,000 review transitions and
-  10,000 queue events with zero invariant failures. Next: run full quality gates, merge with green
-  CI, then leave Android-device and real-environment measurements as separate owner-gated work.
+_No unfinished branch is currently registered._
 
 ## Continuity note
 
@@ -38,6 +34,9 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 - On 2026-08-12 PR #34 added the Stage 24 local synthetic load foundation: a loopback-only runner,
   bounded smoke/baseline profiles, aggregate-only evidence and stopped-server recovery protocol.
   It passed local checks and green CI without Preview, Production, provider or real-user traffic.
+- On 2026-08-12 PR #36 added the CPU-only learning-engine guardrail: 100,000 deterministic review
+  transitions and 10,000 retry-queue events with invariant checks. It passed local checks and green
+  CI without network, database, provider, Preview, Production or real-user traffic.
 
 ## Continuity update
 

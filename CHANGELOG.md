@@ -63,3 +63,6 @@ No real beta cohort, production service or public release is activated by this t
   routes, emit aggregate-only results and have a stopped-server recovery check. The local smoke and
   baseline runs passed with zero failures; no Preview, Production, provider or real-user traffic was
   used.
+- A CPU-only learning-engine profile now verifies 100,000 deterministic review transitions and
+  10,000 retry-queue events, failing on scheduling or ordering invariants. It has no network target
+  and is not evidence of Android, Preview or Production capacity.
