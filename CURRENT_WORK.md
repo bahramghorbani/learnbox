@@ -42,8 +42,11 @@ _No unfinished branch is currently registered._
   wrapper files, a CI debug-APK gate, approved static icon/launch assets and the packaged Flutter
   launch experience. The local Flutter toolchain and Android emulator completed a debug APK
   install/visual smoke. A Xiaomi M2006C3LG running Android 11 then completed the same debug APK
-  install and visual smoke; its shell-only cold-start and memory evidence is recorded in
-  `docs/operations/STAGE_24_ANDROID_BASELINE.md`. This is not product-flow evidence.
+  install and visual smoke. On 2026-08-13 the branch `feature/mobile-learning-loop-foundation`
+  added the canonical three-card Start bundle, secure offline review queue and Persian active-recall
+  flow. The full flow passed on that physical device with three pending events retained locally;
+  evidence is in `docs/operations/STAGE_24_ANDROID_BASELINE.md`. Sync transport and native identity
+  remain separate future boundaries.
 
 ## Continuity update
 

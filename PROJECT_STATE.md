@@ -46,8 +46,10 @@ product specification or storyboard.
   wrapper, CI builds a non-release debug APK, and the local Android emulator completed an install
   and visual smoke. The approved icon and a static three-second Flutter launch image are packaged
   in the native host. A first physical low-end Android baseline was recorded on a Xiaomi M2006C3LG;
-  see [`STAGE_24_ANDROID_BASELINE.md`](./docs/operations/STAGE_24_ANDROID_BASELINE.md). This
-  remains a small shell, not a released mobile product.
+  see [`STAGE_24_ANDROID_BASELINE.md`](./docs/operations/STAGE_24_ANDROID_BASELINE.md). The native
+  app now includes the first approved offline learning-loop slice: exactly three canonical Start
+  cards, active recall, four grades and a secure device-local pending-event queue. It performs no
+  upload, authentication or server acknowledgement and is not a released mobile product.
 
 ## Release and safety posture
 
