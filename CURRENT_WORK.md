@@ -41,7 +41,9 @@ _No unfinished branch is currently registered._
   Flutter tasks. On 2026-08-13 PRs #42–#46 added generated native hosts, tracked Android Gradle
   wrapper files, a CI debug-APK gate, approved static icon/launch assets and the packaged Flutter
   launch experience. The local Flutter toolchain and Android emulator completed a debug APK
-  install/visual smoke. This is not evidence for a representative physical-device baseline.
+  install/visual smoke. A Xiaomi M2006C3LG running Android 11 then completed the same debug APK
+  install and visual smoke; its shell-only cold-start and memory evidence is recorded in
+  `docs/operations/STAGE_24_ANDROID_BASELINE.md`. This is not product-flow evidence.
 
 ## Continuity update
 

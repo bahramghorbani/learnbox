@@ -14,8 +14,13 @@ or below 1500ms and p99 at or below 2500ms. Evidence is aggregate-only; no reque
 body, cookie, credential or personal data is retained.
 
 These gates intentionally exclude Preview and Production traffic. They provide a reproducible
-local regression signal while low-end Android and real-environment capacity baselines remain
+local regression signal while real-environment capacity and product-level Android baselines remain
 unmeasured.
+
+The first physical shell baseline is recorded in
+[`STAGE_24_ANDROID_BASELINE.md`](./STAGE_24_ANDROID_BASELINE.md). It intentionally does not
+replace product-level measurements because the approved mobile contract and learner flows are
+not implemented yet.
 
 ## Stage 24 learning-engine synthetic guardrail
 
