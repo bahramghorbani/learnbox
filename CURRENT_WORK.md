@@ -5,12 +5,16 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-- `docs/ai-worker-queue` — adds the owner-approved bounded DeepSeek routine-worker queue, Draft PR
-  handoff protocol and CI validator. No routine task is authorized yet: `LB-DS-001` remains blocked
-  until the approved mobile-sync design and implementation plan are on `main`. No product,
-  provider, secret, mobile runtime or production behavior changes in this branch.
+- `docs/mobile-sync-coordinator-design` — records the owner-approved provider-neutral native review
+  synchronization coordinator design. No implementation, network, identity, provider, secret,
+  migration, mobile runtime or production behavior changes in this branch. `LB-DS-001` remains
+  blocked until the implementation plan is reviewed and merged.
 
 ## Continuity note
+
+- On 2026-08-13 PR #51 added the bounded DeepSeek routine-worker queue, Draft PR handoff protocol
+  and CI validator. DeepSeek cannot merge its own work or claim unavailable Flutter, Android Studio,
+  emulator, Xcode, APK-install or physical-device evidence. No routine task is authorized yet.
 
 - The closed-alpha invite + consent boundary (`feature/closed-alpha-invite-consent`) was merged to
   `main` by the owner on 2026-08-09. No flag is enabled and no invitation has been sent.
