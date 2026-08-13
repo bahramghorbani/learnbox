@@ -1,17 +1,25 @@
-# learnbox
+# LearnBox mobile
 
-A new Flutter project.
+The native Android and iOS hosts for LearnBox live here. The learner product remains in
+`apps/website`; this client is intentionally a small Flutter shell until the approved mobile
+contract is implemented.
 
-## Getting Started
+## Local checks
 
-This project is a starting point for a Flutter application.
+```bash
+flutter pub get
+flutter analyze
+flutter test
+flutter build apk --debug
+```
 
-A few resources to get you started if this is your first Flutter project:
+The debug build is an internal developer artifact only. It does not configure release signing,
+Cafe Bazaar publication, production services, payment or owner-controlled feature flags.
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+## Native hosts
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- Android application ID: `com.learnbox.learnbox`
+- iOS bundle ID: `com.learnbox.learnbox`
+- Required local setup: [`docs/operations/FLUTTER_DEVELOPMENT_SETUP.md`](../../docs/operations/FLUTTER_DEVELOPMENT_SETUP.md)
+
+The Android Gradle Wrapper is versioned so a clean clone can run the same debug-build check as CI.
