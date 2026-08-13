@@ -10,8 +10,49 @@ import 'package:learnbox/features/review/review_queue_store.dart';
 import 'package:learnbox/features/review/secure_review_queue_store.dart';
 import 'package:learnbox/features/review/start_card.dart';
 import 'package:learnbox/features/review/start_pack_repository.dart';
+import 'package:learnbox/features/review/pronunciation_player.dart';
 
 void main() {
+  testWidgets(
+      'keeps offline word and revealed sentence pronunciation available',
+      (tester) async {
+    final player = _RecordingPronunciationPlayer();
+    await _pumpApp(tester, pronunciationPlayer: player);
+    await tester.tap(find.text('شروع مرور'));
+    await tester.pumpAndSettle();
+
+    expect(find.byTooltip('شنیدن تلفظ واژه'), findsOneWidget);
+    expect(find.byTooltip('شنیدن تلفظ جمله'), findsNothing);
+
+    await tester.tap(find.byTooltip('شنیدن تلفظ واژه'));
+    await tester.pump();
+    expect(player.playedAssets, ['audio/start-a1-haus-word-audio-v1.mp3']);
+
+    await tester.tap(find.text('نمایش پاسخ'));
+    await tester.pump();
+    expect(find.byTooltip('شنیدن تلفظ جمله'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('شنیدن تلفظ جمله'));
+    await tester.pump();
+    expect(player.playedAssets, [
+      'audio/start-a1-haus-word-audio-v1.mp3',
+      'audio/start-a1-haus-sentence-audio-v1.mp3',
+    ]);
+  });
+
+  testWidgets('audio playback failure keeps review usable with calm feedback',
+      (tester) async {
+    await _pumpApp(tester, pronunciationPlayer: _FailingPronunciationPlayer());
+    await tester.tap(find.text('شروع مرور'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('شنیدن تلفظ واژه'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('پخش صدا فعلاً ممکن نشد.'), findsOneWidget);
+    expect(find.text('das Haus'), findsOneWidget);
+    expect(find.text('نمایش پاسخ'), findsOneWidget);
+  });
   testWidgets(
     'Today starts active recall and waits for durable grading before advancing',
     (tester) async {
@@ -322,7 +363,8 @@ void main() {
 
 Future<void> _pumpApp(
   WidgetTester tester, {
-  required ReviewQueue queue,
+  ReviewQueue? queue,
+  PronunciationPlayer? pronunciationPlayer,
   Size size = const Size(390, 844),
   double textScaleFactor = 1,
 }) async {
@@ -338,7 +380,8 @@ Future<void> _pumpApp(
     LearnBoxApp(
       key: UniqueKey(),
       startPackRepository: InMemoryStartPackRepository(),
-      reviewQueue: queue,
+      reviewQueue: queue ?? ReviewQueue(store: ControlledReviewQueueStore()),
+      pronunciationPlayer: pronunciationPlayer,
       splashDuration: Duration.zero,
     ),
   );
@@ -364,6 +407,8 @@ class InMemoryStartPackRepository implements StartPackRepository {
           exampleGerman: 'Das Haus ist klein.',
           examplePersian: 'خانه کوچک است.',
           imageAsset: 'assets/cards/start-a1-haus.png',
+          wordAudioAsset: 'audio/start-a1-haus-word-audio-v1.mp3',
+          sentenceAudioAsset: 'audio/start-a1-haus-sentence-audio-v1.mp3',
         ),
         StartCard(
           id: 'start-a1-tisch',
@@ -373,6 +418,8 @@ class InMemoryStartPackRepository implements StartPackRepository {
           exampleGerman: 'Der Tisch ist groß.',
           examplePersian: 'میز بزرگ است.',
           imageAsset: 'assets/cards/start-a1-tisch.png',
+          wordAudioAsset: 'audio/start-a1-tisch-word-audio-v1.mp3',
+          sentenceAudioAsset: 'audio/start-a1-tisch-sentence-audio-v1.mp3',
         ),
         StartCard(
           id: 'start-a1-tuer',
@@ -382,8 +429,31 @@ class InMemoryStartPackRepository implements StartPackRepository {
           exampleGerman: 'Die Tür ist offen.',
           examplePersian: 'در باز است.',
           imageAsset: 'assets/cards/start-a1-tuer.png',
+          wordAudioAsset: 'audio/start-a1-tuer-word-audio-v1.mp3',
+          sentenceAudioAsset: 'audio/start-a1-tuer-sentence-audio-v1.mp3',
         ),
       ];
+}
+
+class _RecordingPronunciationPlayer implements PronunciationPlayer {
+  final playedAssets = <String>[];
+
+  @override
+  Future<void> playAsset(String assetPath) async {
+    playedAssets.add(assetPath);
+  }
+
+  @override
+  Future<void> dispose() async {}
+}
+
+class _FailingPronunciationPlayer implements PronunciationPlayer {
+  @override
+  Future<void> playAsset(String assetPath) =>
+      Future<void>.error(StateError('Synthetic audio failure.'));
+
+  @override
+  Future<void> dispose() async {}
 }
 
 class ControlledReviewQueueStore implements ReviewQueueStore {

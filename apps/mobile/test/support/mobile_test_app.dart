@@ -28,6 +28,8 @@ class _TestStartPackRepository implements StartPackRepository {
           exampleGerman: 'Das Haus ist klein.',
           examplePersian: 'خانه کوچک است.',
           imageAsset: 'assets/cards/start-a1-haus.png',
+          wordAudioAsset: 'audio/start-a1-haus-word-audio-v1.mp3',
+          sentenceAudioAsset: 'audio/start-a1-haus-sentence-audio-v1.mp3',
         ),
         StartCard(
           id: 'start-a1-tisch',
@@ -37,6 +39,8 @@ class _TestStartPackRepository implements StartPackRepository {
           exampleGerman: 'Der Tisch ist groß.',
           examplePersian: 'میز بزرگ است.',
           imageAsset: 'assets/cards/start-a1-tisch.png',
+          wordAudioAsset: 'audio/start-a1-tisch-word-audio-v1.mp3',
+          sentenceAudioAsset: 'audio/start-a1-tisch-sentence-audio-v1.mp3',
         ),
         StartCard(
           id: 'start-a1-tuer',
@@ -46,6 +50,8 @@ class _TestStartPackRepository implements StartPackRepository {
           exampleGerman: 'Die Tür ist offen.',
           examplePersian: 'در باز است.',
           imageAsset: 'assets/cards/start-a1-tuer.png',
+          wordAudioAsset: 'audio/start-a1-tuer-word-audio-v1.mp3',
+          sentenceAudioAsset: 'audio/start-a1-tuer-sentence-audio-v1.mp3',
         ),
       ];
 }

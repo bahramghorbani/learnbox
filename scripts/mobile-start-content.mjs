@@ -39,6 +39,8 @@ function projectCard(item, id) {
     definition: simpleGermanDefinition,
     example: { german: example.german, persian: example.persian },
     imageAsset: `assets/cards/${id}.png`,
+    wordAudioAsset: `audio/${id}-word-audio-v1.mp3`,
+    sentenceAudioAsset: `audio/${id}-sentence-audio-v1.mp3`,
   };
 }
 

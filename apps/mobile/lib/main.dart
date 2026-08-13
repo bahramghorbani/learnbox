@@ -5,6 +5,7 @@ import 'app.dart';
 import 'features/review/bundled_start_pack_repository.dart';
 import 'features/review/review_queue.dart';
 import 'features/review/secure_review_queue_store.dart';
+import 'features/review/pronunciation_player.dart';
 import 'features/sync/disabled_review_sync_transport.dart';
 import 'features/sync/mobile_identity_state.dart';
 import 'features/sync/review_sync_coordinator.dart';
@@ -19,6 +20,7 @@ Future<void> main() async {
   final startPackRepository =
       BundledStartPackRepository.fromJsonString(startPackJson);
   final reviewQueue = ReviewQueue(store: SecureReviewQueueStore());
+  const pronunciationPlayer = MethodChannelPronunciationPlayer();
   final reviewSyncCoordinator = ReviewSyncCoordinator(
     queue: reviewQueue,
     identityState: () => MobileIdentityState.signedOut,
@@ -29,6 +31,7 @@ Future<void> main() async {
     LearnBoxApp(
       startPackRepository: startPackRepository,
       reviewQueue: reviewQueue,
+      pronunciationPlayer: pronunciationPlayer,
       reviewSyncCoordinator: reviewSyncCoordinator,
     ),
   );

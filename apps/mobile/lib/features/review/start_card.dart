@@ -7,6 +7,8 @@ class StartCard {
     required this.exampleGerman,
     required this.examplePersian,
     required this.imageAsset,
+    required this.wordAudioAsset,
+    required this.sentenceAudioAsset,
   });
 
   final String id;
@@ -16,4 +18,6 @@ class StartCard {
   final String exampleGerman;
   final String examplePersian;
   final String imageAsset;
+  final String wordAudioAsset;
+  final String sentenceAudioAsset;
 }

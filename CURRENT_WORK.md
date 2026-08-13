@@ -5,8 +5,11 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-No active implementation branch is registered. Verify live Git and open pull requests before
-starting the next task.
+- `feature/mobile-offline-pronunciation` — Codex-owned local-only pronunciation for the existing
+  three-card Flutter Start flow. It adds the approved bundled word/sentence MP3s, fixed
+  Dart/Android/iOS allowlists and automated source, content and build checks. It authorizes no
+  network, provider, identity, release flag or production action. Awaiting final physical-device
+  listening evidence and review before pull request.
 
 ## Continuity note
 

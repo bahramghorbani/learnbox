@@ -27,6 +27,8 @@ test('projects the canonical daily session as the three approved mobile cards', 
         definition: 'Ein Gebäude, in dem Menschen wohnen.',
         example: { german: 'Das Haus ist klein.', persian: 'خانه کوچک است.' },
         imageAsset: 'assets/cards/start-a1-haus.png',
+        wordAudioAsset: 'audio/start-a1-haus-word-audio-v1.mp3',
+        sentenceAudioAsset: 'audio/start-a1-haus-sentence-audio-v1.mp3',
       },
       {
         id: 'start-a1-tisch',
@@ -35,6 +37,8 @@ test('projects the canonical daily session as the three approved mobile cards', 
         definition: 'Ein Möbelstück mit einer flachen Fläche.',
         example: { german: 'Der Tisch ist groß.', persian: 'میز بزرگ است.' },
         imageAsset: 'assets/cards/start-a1-tisch.png',
+        wordAudioAsset: 'audio/start-a1-tisch-word-audio-v1.mp3',
+        sentenceAudioAsset: 'audio/start-a1-tisch-sentence-audio-v1.mp3',
       },
       {
         id: 'start-a1-tuer',
@@ -43,6 +47,8 @@ test('projects the canonical daily session as the three approved mobile cards', 
         definition: 'Man öffnet und schließt sie, um in einen Raum zu gehen.',
         example: { german: 'Die Tür ist offen.', persian: 'در باز است.' },
         imageAsset: 'assets/cards/start-a1-tuer.png',
+        wordAudioAsset: 'audio/start-a1-tuer-word-audio-v1.mp3',
+        sentenceAudioAsset: 'audio/start-a1-tuer-sentence-audio-v1.mp3',
       },
     ],
   });
@@ -77,6 +83,33 @@ test('byte-for-byte verifier rejects a mismatched packaged card PNG', () => {
         packagedImages,
       }),
     /start-a1-tisch.*SHA-256/,
+  );
+});
+
+test('byte-for-byte verifier rejects a mismatched packaged pronunciation MP3', () => {
+  const canonicalImages = Object.fromEntries(
+    ['start-a1-haus', 'start-a1-tisch', 'start-a1-tuer'].map((id) => [id, Buffer.from(id)]),
+  );
+  const canonicalAudio = {
+    'start-a1-haus-word-audio-v1.mp3': Buffer.from([1, 2]),
+    'start-a1-haus-sentence-audio-v1.mp3': Buffer.from([3, 4]),
+    'start-a1-tisch-word-audio-v1.mp3': Buffer.from([5, 6]),
+    'start-a1-tisch-sentence-audio-v1.mp3': Buffer.from([7, 8]),
+    'start-a1-tuer-word-audio-v1.mp3': Buffer.from([9, 10]),
+    'start-a1-tuer-sentence-audio-v1.mp3': Buffer.from([11, 12]),
+  };
+
+  assert.throws(
+    () =>
+      verifyMobileStartContentArtifacts({
+        generatedJson: '{"cards":[]}\n',
+        committedJson: '{"cards":[]}\n',
+        canonicalImages,
+        packagedImages: canonicalImages,
+        canonicalAudio,
+        packagedAudio: { ...canonicalAudio, 'start-a1-tuer-word-audio-v1.mp3': Buffer.from([0]) },
+      }),
+    /start-a1-tuer-word-audio-v1\.mp3.*SHA-256/,
   );
 });
 

@@ -19,6 +19,10 @@ the bundled three-card Start session and a device-local review-event queue.
   through Today and the complete three-card flow. Widget builds never create another queue.
 - Completion reports the current number of responses waiting on the device. This boundary does not
   upload or acknowledge them.
+- The three canonical Start cards include bundled word and revealed-sentence pronunciation. Playback
+  is strictly local on Android and iOS, accepts only the six checked-in approved MP3s and leaves the
+  review flow usable if a device cannot play audio. See
+  [`MOBILE_PRONUNCIATION.md`](../../docs/architecture/MOBILE_PRONUNCIATION.md).
 - The approved foreground-sync coordinator is present behind typed identity and transport ports. In
   the current production composition identity is always `signedOut` and its transport throws before
   any delivery; there is no sync UI action, HTTP client, credential, timer, connectivity listener or

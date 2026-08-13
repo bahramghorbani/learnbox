@@ -57,6 +57,8 @@ class BundledStartPackRepository implements StartPackRepository {
       exampleGerman: _requiredString(example, 'german'),
       examplePersian: _requiredString(example, 'persian'),
       imageAsset: _requiredString(value, 'imageAsset'),
+      wordAudioAsset: _requiredString(value, 'wordAudioAsset'),
+      sentenceAudioAsset: _requiredString(value, 'sentenceAudioAsset'),
     );
   }
 

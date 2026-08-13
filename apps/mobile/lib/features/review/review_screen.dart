@@ -2,17 +2,20 @@ import 'package:flutter/material.dart';
 
 import 'review_grade.dart';
 import 'review_queue.dart';
+import 'pronunciation_player.dart';
 import 'start_card.dart';
 
 class ReviewScreen extends StatefulWidget {
   const ReviewScreen({
     required this.cards,
     required this.reviewQueue,
+    this.pronunciationPlayer,
     super.key,
   });
 
   final List<StartCard> cards;
   final ReviewQueue reviewQueue;
+  final PronunciationPlayer? pronunciationPlayer;
 
   @override
   State<ReviewScreen> createState() => _ReviewScreenState();
@@ -25,8 +28,28 @@ class _ReviewScreenState extends State<ReviewScreen> {
   var _isComplete = false;
   int? _pendingCount;
   String? _storageError;
+  String? _audioError;
 
   StartCard get _card => widget.cards[_cardIndex];
+
+  Future<void> _play(String assetPath) async {
+    final player = widget.pronunciationPlayer;
+    if (player == null) {
+      setState(() => _audioError = 'پخش صدا فعلاً ممکن نشد.');
+      return;
+    }
+
+    try {
+      await player.playAsset(assetPath);
+      if (mounted) {
+        setState(() => _audioError = null);
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _audioError = 'پخش صدا فعلاً ممکن نشد.');
+      }
+    }
+  }
 
   Future<void> _grade(ReviewGrade grade) async {
     if (_isSaving) {
@@ -157,16 +180,32 @@ class _ReviewScreenState extends State<ReviewScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-              Directionality(
-                textDirection: TextDirection.ltr,
-                child: Text(
-                  card.german,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
+              Row(
+                children: [
+                  Expanded(
+                    child: Directionality(
+                      textDirection: TextDirection.ltr,
+                      child: Text(
+                        card.german,
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context)
+                            .textTheme
+                            .headlineMedium
+                            ?.copyWith(
+                              fontWeight: FontWeight.w800,
+                            ),
                       ),
-                ),
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: 'شنیدن تلفظ واژه',
+                    onPressed: () => _play(card.wordAudioAsset),
+                    icon: const Icon(Icons.volume_up_outlined),
+                  ),
+                ],
               ),
+              if (_audioError != null)
+                Semantics(liveRegion: true, child: Text(_audioError!)),
               const SizedBox(height: 18),
               if (!_answerVisible)
                 FilledButton.tonal(
@@ -202,6 +241,13 @@ class _ReviewScreenState extends State<ReviewScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(card.examplePersian, textAlign: TextAlign.center),
+                Center(
+                  child: IconButton(
+                    tooltip: 'شنیدن تلفظ جمله',
+                    onPressed: () => _play(card.sentenceAudioAsset),
+                    icon: const Icon(Icons.record_voice_over_outlined),
+                  ),
+                ),
                 const SizedBox(height: 18),
                 if (_storageError != null) ...[
                   Semantics(

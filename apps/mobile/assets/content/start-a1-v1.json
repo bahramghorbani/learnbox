@@ -9,7 +9,9 @@
         "german": "Das Haus ist klein.",
         "persian": "خانه کوچک است."
       },
-      "imageAsset": "assets/cards/start-a1-haus.png"
+      "imageAsset": "assets/cards/start-a1-haus.png",
+      "wordAudioAsset": "audio/start-a1-haus-word-audio-v1.mp3",
+      "sentenceAudioAsset": "audio/start-a1-haus-sentence-audio-v1.mp3"
     },
     {
       "id": "start-a1-tisch",
@@ -20,7 +22,9 @@
         "german": "Der Tisch ist groß.",
         "persian": "میز بزرگ است."
       },
-      "imageAsset": "assets/cards/start-a1-tisch.png"
+      "imageAsset": "assets/cards/start-a1-tisch.png",
+      "wordAudioAsset": "audio/start-a1-tisch-word-audio-v1.mp3",
+      "sentenceAudioAsset": "audio/start-a1-tisch-sentence-audio-v1.mp3"
     },
     {
       "id": "start-a1-tuer",
@@ -31,7 +35,9 @@
         "german": "Die Tür ist offen.",
         "persian": "در باز است."
       },
-      "imageAsset": "assets/cards/start-a1-tuer.png"
+      "imageAsset": "assets/cards/start-a1-tuer.png",
+      "wordAudioAsset": "audio/start-a1-tuer-word-audio-v1.mp3",
+      "sentenceAudioAsset": "audio/start-a1-tuer-sentence-audio-v1.mp3"
     }
   ]
 }
