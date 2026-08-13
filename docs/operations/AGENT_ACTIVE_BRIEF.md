@@ -37,6 +37,9 @@ the authoritative product and security documents.
   baselines remain separate work. Do not generate load against Production.
 - Use `pnpm test:engine-load` for the separate CPU-only learning-engine guardrail; it has no network
   target and is not a substitute for Android, Preview or Production measurement.
+- Native hosts live in `apps/mobile`. Run `flutter analyze`, `flutter test` and `flutter build apk
+--debug` for mobile changes. A local Android emulator smoke is complete, but never treat it as
+  the representative physical-device baseline required by Stage 24.
 - Do not deploy, enable a flag, send invitations, publish content, or use a provider credential
   without the owner's explicit approval.
 - Bobo canonical assets stay unchanged until a replacement is explicitly approved.

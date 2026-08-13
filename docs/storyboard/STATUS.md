@@ -2,18 +2,20 @@
 
 - **Current stage:** 24 of 30 — Beta and load testing
 - **Completed:** product foundation; market/user hypotheses; tested recovery and daily-session model; content validation; key UI concepts and learner information architecture; approved Bobo canonical assets and governance; accessible web onboarding, Today, personal vocabulary, Progress, recovery and review-completion flows; local phone and code-entry authentication prototype; persistent web review queue; AI content review-gate and draft-job contract with CEFR mismatch protection and non-executable media-plan completeness checks; media-receipt validation with version, checksum and QA protection; visual admin review prototype; notification policy foundation; provider-neutral billing foundation and a client adapter for the versioned Start/Plus configuration; privacy-safe consent-gated analytics delivery seam; a supportive Plus-offer component protected by a disabled closed-alpha flag; release-readiness gate with publisher separation and complete pack QA; installable web foundation with safe offline fallback; baseline web and API security headers; controlled web staging of three daily cards from the linguistically approved 20-card Start slice; staged-card mobile web flow verified through login, review and response; resilient browser-storage fallback and malformed-data recovery; persisted daily progress and calm streak behavior; protected duplicate review grading and interrupted-review resume; automated unit, integration, security-contract and browser-flow checks; 60 checksum-attested Start media objects in private Vercel Blob storage plus 20 versioned V2 card images with private receipt attestation; signed server-session and private-media delivery seams with independently disabled release flags; an authenticated same-origin Start media client seam with neutral image/audio failure fallback; a fail-closed provider-neutral OTP contract, persisted request-rate limits, tested request and verification coordinators, approved SMS.ir template `495140`/`OTP`, owner activation runbook, successful owner-controlled real delivery, verification and secure-session test, and an implemented but default-disabled learner OTP UI seam; a disabled-by-default owner passkey boundary for the admin app (bootstrap and reauth routes, keyed-hash store, UI gate, source validator and activation runbook); a non-production Neon PostgreSQL database with eleven checksum-attested migrations; approved Bobo/Germany in-app launch screen and derived installable PWA icon assets; a disabled-by-default single-owner splash replacement boundary with private normalization, atomic promotion, protected preview/upload routes, explicit-confirmation UI and learner same-origin delivery with bundled fallback; owner-approved private invitation channel and two-person first cohort; successful approved-Preview invitation, consent, SMS.ir OTP, secure-session and three-card private-image journey with every temporary flag returned to `false`
-- **Next:** retain the completed loopback learner-web and CPU-only learning-engine guardrails as
-  regression checks; prepare a low-end Android baseline only when the local Flutter toolchain and a
-  representative physical device are available. Do not invite a public cohort or enable production
-  services.
+- **Next:** retain the completed loopback learner-web, CPU-only learning-engine and debug-APK
+  checks as regression guardrails; prepare a low-end Android baseline only with a representative
+  physical device. The local Flutter toolchain and emulator smoke are complete, but do not replace
+  that physical-device evidence. Do not invite a public cohort or enable production services.
 - **Stage 24 entry evidence:** Stage 23 exited on 2026-08-12 after all three gates passed: SMS.ir was connected through the fail-closed server boundary; the owner approved private-message invitations and a two-person first cohort with consent version `v1`; and an owner-controlled Preview run completed invitation check (`204`), OTP request (`201`), OTP verification/session creation (`204`) and private image delivery (`200`) for all three daily cards. No phone, OTP or invitation code is recorded. All temporary Preview flags were returned to `false` after the run.
 - **Blockers:** the local synthetic learner-web profiles and learning-engine dataset are defined and
-  passing, but low-end Android measurements still require a local Flutter toolchain and a
-  representative physical Android device. Real-environment capacity remains owner-gated.
+  passing; the local Flutter toolchain, debug APK and emulator smoke are also complete. Low-end
+  Android measurements still require a representative physical Android device. Real-environment
+  capacity remains owner-gated.
   Production delivery remains disabled. The isolated same-server app image is healthy behind the
   private Docker network with no published port; its live Caddy host and DNS remain absent. The
   latest GitHub CI mobile job passed.
 - **Owner action:** no action is required for the next technical load-test preparation. Any real beta cohort, production activation, public release or paid capacity change remains owner-gated.
-- **Last updated:** 2026-08-12 — Stage 24 local learner-web load/recovery and learning-engine
-  synthetic guardrails passed; all learner, SMS.ir, admin-passkey, splash-replacement and
-  private-media release flags remain disabled.
+- **Last updated:** 2026-08-13 — Stage 24 local learner-web load/recovery and learning-engine
+  synthetic guardrails remain green; native hosts, debug-APK CI and emulator smoke are complete.
+  All learner, SMS.ir, admin-passkey, splash-replacement and private-media release flags remain
+  disabled.

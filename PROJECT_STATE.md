@@ -42,6 +42,11 @@ product specification or storyboard.
 - **Stage 24 learning-engine guardrail:** `pnpm test:engine-load` exercises 100,000 deterministic
   review transitions and 10,000 retry-queue events. It is CPU-only and therefore is not evidence of
   Flutter, Preview or Production capacity.
+- **Native mobile host:** generated Android and iOS hosts are versioned with the Android Gradle
+  wrapper, CI builds a non-release debug APK, and the local Android emulator completed an install
+  and visual smoke. The approved icon and a static three-second Flutter launch image are packaged
+  in the native host. This remains a small shell, not a released mobile product or a low-end-device
+  performance baseline.
 
 ## Release and safety posture
 

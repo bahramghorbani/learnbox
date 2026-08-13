@@ -38,9 +38,10 @@ _No unfinished branch is currently registered._
   transitions and 10,000 retry-queue events with invariant checks. It passed local checks and green
   CI without network, database, provider, Preview, Production or real-user traffic.
 - On 2026-08-12 PR #39 added portable Flutter/VS Code setup documentation and workspace-relative
-  Flutter tasks. The local VS Code CLI plus official Dart/Flutter extensions are available; Flutter
-  SDK bootstrap, Android Studio and full Xcode remain blocked by external download or Apple tooling
-  requirements and are not represented as ready.
+  Flutter tasks. On 2026-08-13 PRs #42–#46 added generated native hosts, tracked Android Gradle
+  wrapper files, a CI debug-APK gate, approved static icon/launch assets and the packaged Flutter
+  launch experience. The local Flutter toolchain and Android emulator completed a debug APK
+  install/visual smoke. This is not evidence for a representative physical-device baseline.
 
 ## Continuity update
 

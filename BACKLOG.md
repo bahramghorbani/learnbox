@@ -1,6 +1,6 @@
 # Product backlog
 
-Current storyboard position is **23 of 30 — Closed alpha**. Completed stages are not reopened; the entries below are compatibility and hardening work in dependency order.
+Current storyboard position is **24 of 30 — Beta and load testing**. Completed stages are not reopened; the entries below are compatibility and hardening work in dependency order.
 
 | Priority | Work                                                                                   | Dependency                                         | Status                                                                                                                                                                | Classification              |
 | -------- | -------------------------------------------------------------------------------------- | -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- |

@@ -10,7 +10,7 @@
 | 0.6 Beta           | A1, selected A2, load/security review                      | 21–24             |
 | 1.0 Public release | stable Cafe Bazaar release                                 | 25–27             |
 
-## Current compatibility work — Stage 23 of 30
+## Current compatibility work — Stage 24 of 30
 
 Approved product decisions are being integrated without resetting completed storyboard work:
 
@@ -20,5 +20,6 @@ Approved product decisions are being integrated without resetting completed stor
 - Bobo vocabulary-image policy and visual-QA criteria;
 - paywall and analytics specifications, before a real payment provider or public offer.
 
-These are Stage 23 compatibility and hardening tasks. A real paid provider, production pricing,
-public paywall activation and bulk media generation remain later, owner-gated work.
+These are Stage 24 compatibility and hardening tasks. A real paid provider, production pricing,
+public paywall activation, bulk media generation and a physical-device Android baseline remain
+later, owner-gated work.
