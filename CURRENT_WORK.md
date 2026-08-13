@@ -5,6 +5,11 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
+- `feature/mobile-sync-coordinator` — Codex-owned Tasks 2–4 of the approved mobile-sync Plan. Task 2
+  now exposes immutable, serialized pending-event snapshots through the one queue mutation lane;
+  focused tests and Flutter analysis pass. Tasks 3–4 remain dependent on Codex review and
+  integration of the separate DeepSeek Task 1 Draft PR. No network, identity, provider, secret,
+  migration or Production path is enabled.
 - `worker/lb-ds-001-mobile-sync-contract-tests` — authorized routine DeepSeek task for only the pure
   Dart identity/transport/result types and acknowledgement validator defined in Task 1 of the
   approved mobile-sync Plan. It must stop at a Draft PR and standard worker report. Codex owns
