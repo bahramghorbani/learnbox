@@ -20,6 +20,14 @@ providers:
     github_pr: GitHub CLI or provider-approved GitHub integration.
     visual_qa: Browser or local rendered inspection.
     handoff: Update canonical continuity documents and PR evidence.
+  deepseek_flash:
+    repository_orientation: Follow bootstrap, inspect live Git and read the authorized worker queue.
+    implementation: Execute only one bounded ready task on its exact worker branch and allowed paths.
+    testing: Run recorded text, Node, package or Dart checks; report unavailable mobile toolchain checks.
+    security_review: Stop at security, identity, secrets, migrations, providers and production boundaries.
+    github_pr: Push the worker branch and open a Draft PR only; never approve or merge it.
+    visual_qa: Unavailable for emulator, Android Studio, Xcode, APK install and physical devices.
+    handoff: Write the standard task report and stop at review_requested for Codex review.
   generic_capable_agent:
     repository_orientation: Read the bootstrap sequence and inspect Git before edits.
     implementation: Use a dedicated branch and preserve repository invariants.

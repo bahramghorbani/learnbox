@@ -14,6 +14,9 @@
 - Never implement meaningful work directly on `main`. Use `feature/`, `fix/`, `refactor/`,
   `content/`, `docs/` or `chore/` branches, validate the change, and prefer pull request plus CI
   before merge.
+- Before new implementation, inspect `.ai/WORK_QUEUE.md` and open Draft PRs. Review and close any
+  `review_requested` routine-worker task before creating overlapping work; only Codex may approve
+  its integration after required checks and CI pass.
 
 ## Efficient agent workflow
 
