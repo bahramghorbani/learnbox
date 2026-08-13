@@ -8,6 +8,15 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 No active implementation branch is registered. Verify live Git and open pull requests before
 starting the next task.
 
+## Known continuation gate
+
+- Native offline pronunciation is intentionally absent from `main`. During physical Android QA on
+  2026-08-14, the unmerged candidate played English-like `house` and omitted the displayed German
+  article. Its Draft PR #58 was closed without merge and its branch/assets were deleted. Continue
+  only from GitHub issue #59: regenerate or license source audio for the exact displayed German
+  phrase (for example `das Haus`), require `de-DE` listening QA plus provenance/version/checksum,
+  then make a new isolated PR. Never restore the closed branch or candidate media.
+
 ## Continuity note
 
 - On 2026-08-13 PR #52 merged the owner-approved mobile review synchronization coordinator design.

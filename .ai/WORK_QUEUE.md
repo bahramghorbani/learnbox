@@ -5,7 +5,7 @@ are context, not authorization to start.
 
 ## LB-DS-001
 
-- Status: review_requested
+- Status: accepted
 - Executor: deepseek-flash
 - Base: main-after-plan-merge
 - Branch: worker/lb-ds-001-mobile-sync-contract-tests
@@ -17,6 +17,5 @@ are context, not authorization to start.
 - Draft PR required: yes
 - Merge allowed: no
 
-Authorization becomes effective only after this Plan and queue revision merge into `main`. DeepSeek
-implements only Task 1 of the linked Plan. It must not infer or implement queue persistence,
-coordinator behavior, identity/session, HTTP transport, security or production composition.
+Completed and merged through PR #56 after Codex review. It is retained as historical context only;
+do not reopen or duplicate it. No routine worker task is currently authorized.
