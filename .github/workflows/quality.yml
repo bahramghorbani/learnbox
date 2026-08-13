@@ -36,7 +36,7 @@ jobs:
       - uses: subosito/flutter-action@v2
         with: { channel: stable }
       - working-directory: apps/mobile
-        run: flutter pub get && flutter analyze && flutter test
+        run: flutter pub get && flutter analyze && flutter test && flutter build apk --debug
   production-stack:
     runs-on: ubuntu-latest
     steps:
