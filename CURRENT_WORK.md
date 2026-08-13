@@ -5,11 +5,7 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-- `feature/mobile-learning-loop-foundation` — implementation and final local review fixes are
-  complete in the isolated worktree. The canonical three-card mobile bundle, secure offline review
-  queue and responsive Persian active-recall flow remain unmerged. PR creation, required CI and
-  merge are pending; the controller must clear this entry only after merge. No auth, API, provider,
-  production or release activation is included.
+_No unfinished implementation branch is currently registered._
 
 ## Continuity note
 
@@ -46,11 +42,11 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
   wrapper files, a CI debug-APK gate, approved static icon/launch assets and the packaged Flutter
   launch experience. The local Flutter toolchain and Android emulator completed a debug APK
   install/visual smoke. A Xiaomi M2006C3LG running Android 11 then completed the same debug APK
-  install and visual smoke. On 2026-08-13 the branch `feature/mobile-learning-loop-foundation`
-  added the canonical three-card Start bundle, secure offline review queue and Persian active-recall
-  flow. The full flow passed on that physical device with three pending events retained locally;
-  evidence is in `docs/operations/STAGE_24_ANDROID_BASELINE.md`. Sync transport and native identity
-  remain separate future boundaries.
+  install and visual smoke. On 2026-08-13 PR #49 merged the canonical three-card Start bundle,
+  secure offline review queue and responsive Persian active-recall flow after every required CI
+  gate passed. The full flow passed on that physical device with three pending events retained
+  locally; evidence is in `docs/operations/STAGE_24_ANDROID_BASELINE.md`. Sync transport and native
+  identity remain separate future boundaries.
 
 ## Continuity update
 
@@ -61,6 +57,6 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Owner action
 
-No credential or production action is required. The remaining repository action is PR review,
-required CI and merge for `feature/mobile-learning-loop-foundation`; any production activation,
-paid provider, legal or irreversible action remains owner-gated under `AGENTS.md`.
+No credential or production action is required. PR #49 is merged with all required CI gates green;
+any production activation, paid provider, legal or irreversible action remains owner-gated under
+`AGENTS.md`.
