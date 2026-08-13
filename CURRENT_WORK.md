@@ -5,12 +5,15 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-- `docs/mobile-sync-coordinator-design` — records the owner-approved provider-neutral native review
-  synchronization coordinator design. No implementation, network, identity, provider, secret,
-  migration, mobile runtime or production behavior changes in this branch. `LB-DS-001` remains
-  blocked until the implementation plan is reviewed and merged.
+- `docs/mobile-sync-plan` — splits the approved native review synchronization foundation into one
+  bounded DeepSeek pure-contract task and three Codex-owned security/integration tasks. `LB-DS-001`
+  becomes ready only after this branch merges. No implementation, network, identity, provider,
+  secret, migration, mobile runtime or production behavior changes in this branch.
 
 ## Continuity note
+
+- On 2026-08-13 PR #52 merged the owner-approved mobile review synchronization coordinator design.
+  It keeps identity, transport and Production disabled and authorizes no network call.
 
 - On 2026-08-13 PR #51 added the bounded DeepSeek routine-worker queue, Draft PR handoff protocol
   and CI validator. DeepSeek cannot merge its own work or claim unavailable Flutter, Android Studio,
