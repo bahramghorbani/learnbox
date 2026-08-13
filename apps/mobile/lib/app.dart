@@ -6,17 +6,22 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'features/review/review_queue.dart';
 import 'features/review/start_pack_repository.dart';
 import 'features/review/today_screen.dart';
+import 'features/sync/review_sync_coordinator.dart';
 
 class LearnBoxApp extends StatelessWidget {
   const LearnBoxApp({
     required this.startPackRepository,
     required this.reviewQueue,
+    this.reviewSyncCoordinator,
     super.key,
     this.splashDuration = const Duration(seconds: 3),
   });
 
   final StartPackRepository startPackRepository;
   final ReviewQueue reviewQueue;
+
+  /// Reserved, disabled foreground sync boundary; no UI invokes it yet.
+  final ReviewSyncCoordinator? reviewSyncCoordinator;
   final Duration splashDuration;
 
   @override

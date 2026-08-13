@@ -23,3 +23,20 @@ The learner UI also guards a grade action until the next card or completion stat
 The calm streak uses a separate device-local record containing only the last active local date and count. One or more grades on the same day count once; an adjacent day extends it; a later return starts gently at one rather than surfacing a loss message. It never sends analytics or notifications and can be rolled back by clearing the learning-streak key. Planned rest days and streak protection remain future, explicit product work rather than silent assumptions in this prototype.
 
 Acceptance criteria: a queued review survives an app restart; an acknowledgement is persisted before the next retry; malformed local data does not crash the learner flow or create a server request. This is a local reliability improvement with no learner analytics emitted. It can be rolled back by disabling the client-side queue integration while the server-side idempotency boundary remains intact.
+
+## Native coordinator boundary
+
+The native Flutter client has a foreground-only, provider-neutral coordinator around its encrypted
+`ReviewQueue`. It refuses signed-out calls before reading storage, snapshots events through the
+queue's serialized lane, uploads at most twenty events in persisted order and removes only the exact
+client event IDs from a complete, validated server acknowledgement. Empty, duplicate or unknown
+acknowledgements, transport errors and local acknowledgement-write errors retain all applicable
+events and return a retryable outcome. Concurrent callers share one in-flight attempt.
+
+This is a dormant boundary, not an enabled synchronization feature: production composition supplies
+only `signedOut` and a `DisabledReviewSyncTransport`, and exposes no UI action or automatic trigger.
+There is no native HTTP client, endpoint, token, provider, background work, connectivity listener or
+analytics in this slice. A future implementation must separately establish authenticated learner
+identity, a typed server protocol, timeout/retry policy, Preview verification and owner-approved
+activation. Rollback removes the coordinator composition while preserving the encrypted queue and all
+pending events.
