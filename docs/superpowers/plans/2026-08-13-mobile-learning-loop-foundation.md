@@ -24,6 +24,7 @@
 ### Task 1: Canonical mobile Start bundle and repository
 
 **Files:**
+
 - Create: `scripts/mobile-start-content.mjs`
 - Create: `scripts/mobile-start-content.test.mjs`
 - Create: `scripts/sync-mobile-start-content.mjs`
@@ -36,6 +37,7 @@
 - Modify: `package.json`
 
 **Interfaces:**
+
 - Produces: `StartCard`, `StartPackRepository.loadDailySession()`, and `BundledStartPackRepository`.
 - Consumes: canonical `start-a1-vertical-slice-drafts.json` and approved V2 image files.
 
@@ -64,6 +66,7 @@ Run the two focused tests, `flutter analyze`, and `pnpm verify:mobile-start-cont
 ### Task 2: Secure offline review queue
 
 **Files:**
+
 - Create: `apps/mobile/lib/features/review/review_grade.dart`
 - Create: `apps/mobile/lib/features/review/pending_review_event.dart`
 - Create: `apps/mobile/lib/features/review/review_queue_store.dart`
@@ -73,6 +76,7 @@ Run the two focused tests, `flutter analyze`, and `pnpm verify:mobile-start-cont
 - Modify: `apps/mobile/pubspec.yaml`
 
 **Interfaces:**
+
 - Produces: `ReviewQueue.record(cardId, grade, occurredAt)`, `pendingCount()`, and `acknowledge(ids)`.
 - Consumes: `ReviewQueueStore.read()` and `ReviewQueueStore.write(serializedEvents)`.
 
@@ -101,6 +105,7 @@ Run `flutter test test/review_queue_test.dart`, `flutter analyze`, and `flutter 
 ### Task 3: Persian Today and active-recall flow
 
 **Files:**
+
 - Create: `apps/mobile/lib/app.dart`
 - Create: `apps/mobile/lib/features/review/today_screen.dart`
 - Create: `apps/mobile/lib/features/review/review_screen.dart`
@@ -111,6 +116,7 @@ Run `flutter test test/review_queue_test.dart`, `flutter analyze`, and `flutter 
 - Modify: `apps/mobile/README.md`
 
 **Interfaces:**
+
 - Consumes: `StartPackRepository` and `ReviewQueue` from Tasks 1–2.
 - Produces: launch → Today → three-card review → completion flow.
 
