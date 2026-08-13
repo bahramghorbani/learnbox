@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
@@ -7,6 +8,11 @@ import 'review_queue_store.dart';
 
 typedef ReviewEventIdFactory = String Function();
 
+/// Own one instance per stored queue within an app process.
+///
+/// Store mutations are serialized within this instance. Separate instances may
+/// restore the same store across app lifecycles, but must not mutate that store
+/// concurrently.
 class ReviewQueue {
   ReviewQueue({
     required ReviewQueueStore store,
@@ -18,6 +24,7 @@ class ReviewQueue {
 
   final ReviewQueueStore _store;
   final ReviewEventIdFactory _idFactory;
+  Future<void> _mutationTail = Future<void>.value();
 
   Future<void> record(
     String cardId,
@@ -28,31 +35,49 @@ class ReviewQueue {
       throw ArgumentError.value(cardId, 'cardId', 'Must not be empty.');
     }
 
-    final events = await _load();
-    final id = _idFactory();
-    if (id.trim().isEmpty || events.any((event) => event.id == id)) {
-      throw StateError('Review event ID must be non-empty and unique.');
-    }
+    await _serializeMutation(() async {
+      final events = await _load();
+      final id = _idFactory();
+      if (id.trim().isEmpty || events.any((event) => event.id == id)) {
+        throw StateError('Review event ID must be non-empty and unique.');
+      }
 
-    await _write([
-      ...events,
-      PendingReviewEvent(
-        id: id,
-        cardId: cardId,
-        grade: grade,
-        occurredAt: occurredAt.toUtc(),
-      ),
-    ]);
+      await _write([
+        ...events,
+        PendingReviewEvent(
+          id: id,
+          cardId: cardId,
+          grade: grade,
+          occurredAt: occurredAt.toUtc(),
+        ),
+      ]);
+    });
   }
 
-  Future<int> pendingCount() async => (await _load()).length;
+  Future<int> pendingCount() =>
+      _serializeMutation(() async => (await _load()).length);
 
   Future<void> acknowledge(Iterable<String> ids) async {
     final acknowledged = ids.toSet();
-    final events = await _load();
-    await _write(
-      events.where((event) => !acknowledged.contains(event.id)).toList(),
-    );
+    await _serializeMutation(() async {
+      final events = await _load();
+      await _write(
+        events.where((event) => !acknowledged.contains(event.id)).toList(),
+      );
+    });
+  }
+
+  Future<T> _serializeMutation<T>(Future<T> Function() mutation) async {
+    final predecessor = _mutationTail;
+    final release = Completer<void>();
+    _mutationTail = release.future;
+
+    await predecessor;
+    try {
+      return await mutation();
+    } finally {
+      release.complete();
+    }
   }
 
   Future<List<PendingReviewEvent>> _load() async {

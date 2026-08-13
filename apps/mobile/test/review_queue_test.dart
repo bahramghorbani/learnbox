@@ -62,7 +62,37 @@ void main() {
       DateTime.utc(2026, 8, 13, 10),
     );
 
-    expect(_persistedIds(store), ['event-a', 'event-b']);
+    expect(_persistedIds(store.value), ['event-a', 'event-b']);
+  });
+
+  test('concurrent records preserve both accepted grades', () async {
+    final store = InterleavingReadReviewQueueStore();
+    final ids = ['event-a', 'event-b'].iterator;
+    final queue = ReviewQueue(
+      store: store,
+      idFactory: () {
+        ids.moveNext();
+        return ids.current;
+      },
+    );
+
+    final firstRecord = queue.record(
+      'start-a1-haus',
+      ReviewGrade.hard,
+      DateTime.utc(2026, 8, 13, 9),
+    );
+    final secondRecord = queue.record(
+      'start-a1-tisch',
+      ReviewGrade.mastered,
+      DateTime.utc(2026, 8, 13, 10),
+    );
+    await store.firstReadStarted.future;
+    await Future<void>.delayed(Duration.zero);
+    store.releaseReads();
+
+    await Future.wait([firstRecord, secondRecord]);
+
+    expect(_persistedIds(store.value), ['event-a', 'event-b']);
   });
 
   test('a new queue instance restores pending events', () async {
@@ -124,8 +154,30 @@ void main() {
 
     await queue.acknowledge(['event-b', 'event-not-present']);
 
-    expect(_persistedIds(store), ['event-a', 'event-c']);
+    expect(_persistedIds(store.value), ['event-a', 'event-c']);
     expect(await ReviewQueue(store: store).pendingCount(), 2);
+  });
+
+  test('concurrent acknowledgement cannot erase a newly accepted grade',
+      () async {
+    final store = InterleavingReadReviewQueueStore(
+      initialValue: _serializedEventA,
+    );
+    final queue = ReviewQueue(store: store, idFactory: () => 'event-b');
+
+    final record = queue.record(
+      'start-a1-tisch',
+      ReviewGrade.remembered,
+      DateTime.utc(2026, 8, 13, 10),
+    );
+    final acknowledge = queue.acknowledge(['event-a']);
+    await store.firstReadStarted.future;
+    await Future<void>.delayed(Duration.zero);
+    store.releaseReads();
+
+    await Future.wait([record, acknowledge]);
+
+    expect(_persistedIds(store.value), ['event-b']);
   });
 
   test('secure adapter reads and writes only the review queue key', () async {
@@ -146,12 +198,43 @@ void main() {
   });
 }
 
-List<String> _persistedIds(InMemoryReviewQueueStore store) {
-  final root = jsonDecode(store.value!) as Map<String, dynamic>;
+const _serializedEventA = '{"schemaVersion":1,"events":['
+    '{"id":"event-a","cardId":"start-a1-haus","grade":"hard",'
+    '"occurredAt":"2026-08-13T09:00:00.000Z"}'
+    ']}';
+
+List<String> _persistedIds(String? serializedQueue) {
+  final root = jsonDecode(serializedQueue!) as Map<String, dynamic>;
   final events = root['events'] as List<dynamic>;
   return events
       .map((event) => (event as Map<String, dynamic>)['id'] as String)
       .toList();
+}
+
+class InterleavingReadReviewQueueStore implements ReviewQueueStore {
+  InterleavingReadReviewQueueStore({String? initialValue})
+      : value = initialValue;
+
+  String? value;
+  final Completer<void> firstReadStarted = Completer<void>();
+  final Completer<void> _readGate = Completer<void>();
+
+  void releaseReads() => _readGate.complete();
+
+  @override
+  Future<String?> read() async {
+    final snapshot = value;
+    if (!firstReadStarted.isCompleted) {
+      firstReadStarted.complete();
+    }
+    await _readGate.future;
+    return snapshot;
+  }
+
+  @override
+  Future<void> write(String serializedEvents) async {
+    value = serializedEvents;
+  }
 }
 
 class InMemoryReviewQueueStore implements ReviewQueueStore {
