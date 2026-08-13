@@ -1,8 +1,25 @@
 # LearnBox mobile
 
 The native Android and iOS hosts for LearnBox live here. The learner product remains in
-`apps/website`; this client is intentionally a small Flutter shell until the approved mobile
-contract is implemented.
+`apps/website`; this client now implements the first approved offline mobile learning-loop slice:
+the bundled three-card Start session and a device-local review-event queue.
+
+## Implemented mobile boundary
+
+- The approved Germany welcome image remains visible in Flutter for three seconds before Today.
+- Today loads exactly the validated bundled Start cards and has one primary `شروع مرور` action.
+- Each card uses active recall: the Persian answer and example stay hidden until `نمایش پاسخ`.
+- The four Persian grade labels persist `forgot`, `hard`, `remembered` and `mastered` events to the
+  secure local queue. The UI cannot advance until that write succeeds, disables every grade while
+  the write is pending and keeps the revealed card available with a calm retry message on failure.
+- Production creates one process-long `ReviewQueue` in `main.dart` and injects that same instance
+  through Today and the complete three-card flow. Widget builds never create another queue.
+- Completion reports the current number of responses waiting on the device. This boundary does not
+  upload or acknowledge them.
+
+The flow is Persian RTL-first, isolates German text as LTR and uses 52–56 logical-pixel primary and
+grading controls. Widget coverage includes persistence-before-advance, all four exact mappings,
+the three-card completion count and storage-error retry behavior at a 390×844 mobile viewport.
 
 ## Local checks
 
@@ -14,7 +31,8 @@ flutter build apk --debug
 ```
 
 The debug build is an internal developer artifact only. It does not configure release signing,
-Cafe Bazaar publication, production services, payment or owner-controlled feature flags.
+Cafe Bazaar publication, authentication, API/upload/sync, providers, analytics, production
+services, payment or owner-controlled feature flags.
 
 ## Native hosts
 
