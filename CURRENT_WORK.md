@@ -5,10 +5,8 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-- `feature/mobile-sync-coordinator` — Codex-owned completion of Tasks 2–4 of the approved mobile-sync
-  Plan. The reviewed Task 1 contracts are already merged to `main`; this branch adds the serialized
-  snapshot, bounded foreground coordinator, disabled production composition and tests. No network,
-  identity, provider, secret, migration or Production path is enabled.
+No active implementation branch is registered. Verify live Git and open pull requests before
+starting the next task.
 
 ## Continuity note
 
@@ -19,8 +17,13 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
   planning PR.
 - On 2026-08-13 the reviewed `LB-DS-001` contract task merged through PR #56 after Codex corrected
   validation to require the full typed transport response. Flutter analysis, focused/full mobile
-  tests and required CI passed. The routine worker task is closed; only the Codex-owned coordinator
-  branch remains active.
+  tests and required CI passed. The routine worker task is closed.
+- On 2026-08-14 PR #55 merged the remaining approved coordinator boundary: serialized queue
+  snapshots, a maximum-20 foreground attempt, full acknowledgement validation, no-data-loss failure
+  handling and one shared in-flight attempt. Production composition remains permanently dormant in
+  this slice (`signedOut` identity plus disabled transport), so no upload, HTTP, credential, timer,
+  background worker, Preview or Production path is active. Local full validation and required CI
+  passed before merge.
 
 - On 2026-08-13 PR #51 added the bounded DeepSeek routine-worker queue, Draft PR handoff protocol
   and CI validator. DeepSeek cannot merge its own work or claim unavailable Flutter, Android Studio,
@@ -74,6 +77,6 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Owner action
 
-No credential or production action is required. PR #49 is merged with all required CI gates green;
-any production activation, paid provider, legal or irreversible action remains owner-gated under
-`AGENTS.md`.
+No credential or production action is required. The mobile sync foundation is merged with all
+required CI gates green; any authenticated transport, real beta, paid provider, legal or
+irreversible action remains owner-gated under `AGENTS.md`.
