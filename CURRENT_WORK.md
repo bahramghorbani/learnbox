@@ -5,7 +5,10 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-_No unfinished implementation branch is currently registered._
+- `docs/ai-worker-queue` — adds the owner-approved bounded DeepSeek routine-worker queue, Draft PR
+  handoff protocol and CI validator. No routine task is authorized yet: `LB-DS-001` remains blocked
+  until the approved mobile-sync design and implementation plan are on `main`. No product,
+  provider, secret, mobile runtime or production behavior changes in this branch.
 
 ## Continuity note
 

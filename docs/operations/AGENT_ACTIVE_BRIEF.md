@@ -68,6 +68,9 @@ the authoritative product and security documents.
 - Do not create a subagent or load a Skill by default. Use either only when the task is truly
   independent, a review materially reduces risk, or the selected Skill is directly relevant or
   mandatory.
+- Before starting new implementation, inspect `.ai/WORK_QUEUE.md` and open Draft PRs. Review any
+  `review_requested` routine-worker task before creating overlapping work. DeepSeek cannot claim
+  Flutter, Android Studio, emulator, Xcode, APK-install or physical-device evidence.
 - Keep owner updates to blockers, decisions that need approval, and completed milestones. Do not
   repeat routine technical reports.
 
