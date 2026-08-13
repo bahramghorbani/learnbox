@@ -10,6 +10,9 @@ const requiredFiles = [
   '.ai/capabilities.yaml',
   '.ai/skills.lock.yaml',
   '.ai/provider-mappings.yaml',
+  '.ai/WORKER_PROTOCOL.md',
+  '.ai/WORK_QUEUE.md',
+  '.ai/worker-reports/README.md',
 ];
 
 const requiredReferences = {
@@ -18,6 +21,8 @@ const requiredReferences = {
     'PROJECT_STATE.md',
     'docs/storyboard/STATUS.md',
     'CURRENT_WORK.md',
+    '.ai/WORKER_PROTOCOL.md',
+    '.ai/WORK_QUEUE.md',
   ],
   'PROJECT_STATE.md': ['docs/product/MASTER_SPEC.md', 'PDR-003'],
   'AGENTS.md': ['AI_BOOTSTRAP.md', 'PROJECT_STATE.md', 'CURRENT_WORK.md'],

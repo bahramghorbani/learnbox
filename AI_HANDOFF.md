@@ -35,3 +35,10 @@ A PR is ready to merge only when its scope is clear, relevant checks are green, 
 state are synchronized, the rollback or flag posture is recorded, and its change does not weaken
 privacy, canonical Bobo governance, or the closed-alpha boundary. If CI is unavailable, leave the
 PR unmerged and record the exact limitation in `CURRENT_WORK.md`.
+
+## Routine worker handoff
+
+DeepSeek Flash and equivalent routine workers follow [`.ai/WORKER_PROTOCOL.md`](./.ai/WORKER_PROTOCOL.md),
+take work only from [`.ai/WORK_QUEUE.md`](./.ai/WORK_QUEUE.md), leave the standard report under
+`.ai/worker-reports/`, and stop at a Draft PR. They cannot approve or merge their own work. Codex
+owns final review, unavailable mobile/toolchain checks, CI closure and integration.
