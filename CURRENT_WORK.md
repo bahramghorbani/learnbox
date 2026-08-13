@@ -5,15 +5,18 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-- `docs/mobile-sync-plan` — splits the approved native review synchronization foundation into one
-  bounded DeepSeek pure-contract task and three Codex-owned security/integration tasks. `LB-DS-001`
-  becomes ready only after this branch merges. No implementation, network, identity, provider,
-  secret, migration, mobile runtime or production behavior changes in this branch.
+- `worker/lb-ds-001-mobile-sync-contract-tests` — authorized routine DeepSeek task for only the pure
+  Dart identity/transport/result types and acknowledgement validator defined in Task 1 of the
+  approved mobile-sync Plan. It must stop at a Draft PR and standard worker report. Codex owns
+  review, all unavailable Flutter/mobile checks, security tasks, PR readiness and merge.
 
 ## Continuity note
 
 - On 2026-08-13 PR #52 merged the owner-approved mobile review synchronization coordinator design.
   It keeps identity, transport and Production disabled and authorizes no network call.
+- On 2026-08-13 PR #53 merged the test-driven implementation Plan and activated only `LB-DS-001`
+  for DeepSeek. Tasks 2–4 remain Codex-owned; no implementation or network path was merged by that
+  planning PR.
 
 - On 2026-08-13 PR #51 added the bounded DeepSeek routine-worker queue, Draft PR handoff protocol
   and CI validator. DeepSeek cannot merge its own work or claim unavailable Flutter, Android Studio,
