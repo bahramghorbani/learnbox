@@ -59,6 +59,7 @@
     "generate:avalai:card-pilot": "node scripts/generate-avalai-card-pilot.mjs",
     "generate:avalai:card-candidates": "node scripts/generate-avalai-card-candidates.mjs",
     "verify:start-pack-v2-contract": "node scripts/validate-start-pack-v2-contract.mjs",
+    "verify:mobile-start-content": "node scripts/sync-mobile-start-content.mjs --check",
     "generate:avalai:start-pack-v2": "node scripts/generate-avalai-start-pack-v2.mjs",
     "generate:avalai:audio-pilot": "node scripts/generate-avalai-audio-pilot.mjs",
     "generate:avalai:audio-candidates": "node scripts/generate-avalai-audio-candidates.mjs",
