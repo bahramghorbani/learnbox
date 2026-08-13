@@ -2,10 +2,12 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:learnbox/app.dart';
 import 'package:learnbox/features/review/review_queue.dart';
 import 'package:learnbox/features/review/review_queue_store.dart';
+import 'package:learnbox/features/review/secure_review_queue_store.dart';
 import 'package:learnbox/features/review/start_card.dart';
 import 'package:learnbox/features/review/start_pack_repository.dart';
 
@@ -130,16 +132,208 @@ void main() {
     expect(find.text('der Tisch'), findsOneWidget);
     expect(_persistedGrades(store.value), ['hard']);
   });
+
+  testWidgets(
+    'secure-storage failures propagate without reset and keep retry UI visible',
+    (tester) async {
+      const channel = MethodChannel(
+        'plugins.it_nomads.com/flutter_secure_storage',
+      );
+      final calls = <MethodCall>[];
+      var writeAttempts = 0;
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        channel,
+        (call) async {
+          calls.add(call);
+          if (call.method == 'read') {
+            return null;
+          }
+          if (call.method == 'write') {
+            writeAttempts += 1;
+            if (writeAttempts == 1) {
+              throw PlatformException(
+                code: 'synthetic_storage_failure',
+                message: 'The encrypted value could not be written.',
+              );
+            }
+            return null;
+          }
+          throw StateError('Unexpected secure-storage call: ${call.method}');
+        },
+      );
+      addTearDown(
+        () => tester.binding.defaultBinaryMessenger
+            .setMockMethodCallHandler(channel, null),
+      );
+
+      final queue = ReviewQueue(store: SecureReviewQueueStore());
+      await _pumpApp(tester, queue: queue);
+      await tester.tap(find.text('شروع مرور'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('نمایش پاسخ'));
+      await tester.pump();
+
+      await tester.tap(find.text('سخت بود'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('ذخیره انجام نشد؛ دوباره تلاش کن.'), findsOneWidget);
+      expect(find.text('das Haus'), findsOneWidget);
+      expect(calls.map((call) => call.method), ['read', 'write']);
+      final writeArguments = calls.last.arguments as Map<Object?, Object?>;
+      expect(writeArguments['key'], 'learnbox.reviewQueue.v1');
+      expect(writeArguments['options'], containsPair('resetOnError', 'false'));
+      expect(
+        writeArguments['options'],
+        containsPair('migrateOnAlgorithmChange', 'true'),
+      );
+      expect(
+        writeArguments['options'],
+        containsPair('migrateWithBackup', 'true'),
+      );
+      expect(
+        writeArguments['options'],
+        containsPair('storageNamespace', 'learnbox.reviewQueue.v1'),
+      );
+      expect(calls.where((call) => call.method.startsWith('delete')), isEmpty);
+
+      await tester.tap(find.text('سخت بود'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('ذخیره انجام نشد؛ دوباره تلاش کن.'), findsNothing);
+      expect(find.text('der Tisch'), findsOneWidget);
+      expect(calls.where((call) => call.method.startsWith('delete')), isEmpty);
+    },
+  );
+
+  testWidgets('Today remains scrollable at large text on a short viewport',
+      (tester) async {
+    final queue = ReviewQueue(store: ControlledReviewQueueStore());
+    await _pumpApp(
+      tester,
+      queue: queue,
+      size: const Size(320, 360),
+      textScaleFactor: 2,
+    );
+
+    expect(tester.takeException(), isNull);
+    await tester.ensureVisible(find.text('شروع مرور'));
+    await tester.pump();
+    expect(find.text('شروع مرور'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Today reflows without overflow in landscape', (tester) async {
+    final queue = ReviewQueue(store: ControlledReviewQueueStore());
+    await _pumpApp(
+      tester,
+      queue: queue,
+      size: const Size(844, 390),
+    );
+
+    expect(find.text('۳ کارت برای مرور امروز آماده است.'), findsOneWidget);
+    expect(find.text('شروع مرور'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('review keeps every Persian grade label readable at large text',
+      (tester) async {
+    final queue = ReviewQueue(store: ControlledReviewQueueStore());
+    await _pumpApp(
+      tester,
+      queue: queue,
+      size: const Size(320, 480),
+      textScaleFactor: 2,
+    );
+    await tester.ensureVisible(find.text('شروع مرور'));
+    await tester.pump();
+    await tester.tap(find.text('شروع مرور'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('نمایش پاسخ'));
+    await tester.pump();
+
+    for (final label in [
+      'دوباره می‌خوانم',
+      'سخت بود',
+      'بلد بودم',
+      'خیلی آسان بود',
+    ]) {
+      await tester.ensureVisible(find.text(label));
+      await tester.pump();
+      expect(find.text(label), findsOneWidget);
+      expect(tester.getSize(find.text(label)).height, greaterThan(30));
+      final button = find.ancestor(
+        of: find.text(label),
+        matching: find.byType(FilledButton),
+      );
+      final buttonRect = tester.getRect(button);
+      final labelRect = tester.getRect(find.text(label));
+      expect(
+        buttonRect.contains(labelRect.topLeft),
+        isTrue,
+        reason: '$label: button=$buttonRect label=$labelRect',
+      );
+      expect(
+        buttonRect.contains(labelRect.bottomRight),
+        isTrue,
+        reason: '$label: button=$buttonRect label=$labelRect',
+      );
+    }
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('review completion scrolls on a short large-text viewport',
+      (tester) async {
+    final ids = ['event-a', 'event-b', 'event-c'].iterator;
+    final queue = ReviewQueue(
+      store: ControlledReviewQueueStore(),
+      idFactory: () {
+        ids.moveNext();
+        return ids.current;
+      },
+    );
+    await _pumpApp(
+      tester,
+      queue: queue,
+      size: const Size(320, 300),
+      textScaleFactor: 2,
+    );
+    await tester.ensureVisible(find.text('شروع مرور'));
+    await tester.pump();
+    await tester.tap(find.text('شروع مرور'));
+    await tester.pumpAndSettle();
+
+    for (var index = 0; index < 3; index += 1) {
+      await tester.ensureVisible(find.text('نمایش پاسخ'));
+      await tester.pump();
+      await tester.tap(find.text('نمایش پاسخ'));
+      await tester.pump();
+      await tester.ensureVisible(find.text('بلد بودم'));
+      await tester.pump();
+      await tester.tap(find.text('بلد بودم'));
+      await tester.pumpAndSettle();
+    }
+
+    await tester.ensureVisible(find.text('آفرین، مرور امروز تمام شد.'));
+    await tester.pump();
+    expect(find.text('۳ پاسخ در این دستگاه آماده است.'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 }
 
 Future<void> _pumpApp(
   WidgetTester tester, {
   required ReviewQueue queue,
+  Size size = const Size(390, 844),
+  double textScaleFactor = 1,
 }) async {
   tester.view.devicePixelRatio = 1;
-  tester.view.physicalSize = const Size(390, 844);
+  tester.view.physicalSize = size;
+  tester.platformDispatcher.textScaleFactorTestValue = textScaleFactor;
   addTearDown(tester.view.resetDevicePixelRatio);
   addTearDown(tester.view.resetPhysicalSize);
+  addTearDown(
+    tester.platformDispatcher.clearTextScaleFactorTestValue,
+  );
   await tester.pumpWidget(
     LearnBoxApp(
       key: UniqueKey(),

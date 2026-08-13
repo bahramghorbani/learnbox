@@ -5,7 +5,11 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-_No unfinished branch is currently registered._
+- `feature/mobile-learning-loop-foundation` — implementation and final local review fixes are
+  complete in the isolated worktree. The canonical three-card mobile bundle, secure offline review
+  queue and responsive Persian active-recall flow remain unmerged. PR creation, required CI and
+  merge are pending; the controller must clear this entry only after merge. No auth, API, provider,
+  production or release activation is included.
 
 ## Continuity note
 
@@ -57,5 +61,6 @@ _No unfinished branch is currently registered._
 
 ## Owner action
 
-No technical action is required for the current repository state. Any credential, production
-activation, paid provider, legal or irreversible action remains owner-gated under `AGENTS.md`.
+No credential or production action is required. The remaining repository action is PR review,
+required CI and merge for `feature/mobile-learning-loop-foundation`; any production activation,
+paid provider, legal or irreversible action remains owner-gated under `AGENTS.md`.

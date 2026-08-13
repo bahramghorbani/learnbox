@@ -32,7 +32,7 @@ void main() {
     expect(persisted['schemaVersion'], 1);
     expect(persisted['events'], [
       {
-        'id': 'event-a',
+        'clientEventId': 'event-a',
         'cardId': 'start-a1-haus',
         'grade': 'remembered',
         'occurredAt': '2026-08-13T09:04:56.000Z',
@@ -114,10 +114,14 @@ void main() {
       '{not-json',
       '{"schemaVersion":2,"events":[]}',
       '{"schemaVersion":1,"events":['
-          '{"id":"valid","cardId":"start-a1-haus","grade":"hard",'
+          '{"clientEventId":"valid","cardId":"start-a1-haus","grade":"hard",'
           '"occurredAt":"2026-08-13T09:00:00.000Z"},'
-          '{"id":"broken","cardId":"start-a1-tisch","grade":"unknown",'
+          '{"clientEventId":"broken","cardId":"start-a1-tisch","grade":"unknown",'
           '"occurredAt":"2026-08-13T10:00:00.000Z"}'
+          ']}',
+      '{"schemaVersion":1,"events":['
+          '{"id":"legacy-event","cardId":"start-a1-haus","grade":"hard",'
+          '"occurredAt":"2026-08-13T09:00:00.000Z"}'
           ']}',
     ];
 
@@ -199,7 +203,7 @@ void main() {
 }
 
 const _serializedEventA = '{"schemaVersion":1,"events":['
-    '{"id":"event-a","cardId":"start-a1-haus","grade":"hard",'
+    '{"clientEventId":"event-a","cardId":"start-a1-haus","grade":"hard",'
     '"occurredAt":"2026-08-13T09:00:00.000Z"}'
     ']}';
 
@@ -207,7 +211,8 @@ List<String> _persistedIds(String? serializedQueue) {
   final root = jsonDecode(serializedQueue!) as Map<String, dynamic>;
   final events = root['events'] as List<dynamic>;
   return events
-      .map((event) => (event as Map<String, dynamic>)['id'] as String)
+      .map(
+          (event) => (event as Map<String, dynamic>)['clientEventId'] as String)
       .toList();
 }
 

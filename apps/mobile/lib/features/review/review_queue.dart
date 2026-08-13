@@ -38,14 +38,15 @@ class ReviewQueue {
     await _serializeMutation(() async {
       final events = await _load();
       final id = _idFactory();
-      if (id.trim().isEmpty || events.any((event) => event.id == id)) {
+      if (id.trim().isEmpty ||
+          events.any((event) => event.clientEventId == id)) {
         throw StateError('Review event ID must be non-empty and unique.');
       }
 
       await _write([
         ...events,
         PendingReviewEvent(
-          id: id,
+          clientEventId: id,
           cardId: cardId,
           grade: grade,
           occurredAt: occurredAt.toUtc(),
@@ -62,7 +63,11 @@ class ReviewQueue {
     await _serializeMutation(() async {
       final events = await _load();
       await _write(
-        events.where((event) => !acknowledged.contains(event.id)).toList(),
+        events
+            .where(
+              (event) => !acknowledged.contains(event.clientEventId),
+            )
+            .toList(),
       );
     });
   }
@@ -99,7 +104,7 @@ class ReviewQueue {
       final ids = <String>{};
       for (final value in decoded['events'] as List<dynamic>) {
         final event = PendingReviewEvent.fromJson(value);
-        if (event == null || !ids.add(event.id)) {
+        if (event == null || !ids.add(event.clientEventId)) {
           return _discardCorruptQueue();
         }
         events.add(event);

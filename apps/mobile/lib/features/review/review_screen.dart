@@ -84,34 +84,41 @@ class _ReviewScreenState extends State<ReviewScreen> {
       return Scaffold(
         appBar: AppBar(title: const Text('مرور امروز')),
         body: SafeArea(
-          child: Center(
-            child: Padding(
+          child: LayoutBuilder(
+            builder: (context, constraints) => SingleChildScrollView(
               padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Semantics(
-                    header: true,
-                    child: Text(
-                      'آفرین، مرور امروز تمام شد.',
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: constraints.maxHeight - 48,
+                ),
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Semantics(
+                        header: true,
+                        child: Text(
+                          'آفرین، مرور امروز تمام شد.',
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.headlineSmall,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      if (_pendingCount case final pendingCount?)
+                        Text(
+                          '${_persianDigits(pendingCount)} پاسخ در این دستگاه آماده است.',
+                          textAlign: TextAlign.center,
+                        )
+                      else if (_storageError != null)
+                        Text(_storageError!, textAlign: TextAlign.center)
+                      else
+                        Semantics(
+                          label: 'در حال شمارش پاسخ‌های ذخیره‌شده',
+                          child: const CircularProgressIndicator(),
+                        ),
+                    ],
                   ),
-                  const SizedBox(height: 12),
-                  if (_pendingCount case final pendingCount?)
-                    Text(
-                      '${_persianDigits(pendingCount)} پاسخ در این دستگاه آماده است.',
-                      textAlign: TextAlign.center,
-                    )
-                  else if (_storageError != null)
-                    Text(_storageError!, textAlign: TextAlign.center)
-                  else
-                    Semantics(
-                      label: 'در حال شمارش پاسخ‌های ذخیره‌شده',
-                      child: const CircularProgressIndicator(),
-                    ),
-                ],
+                ),
               ),
             ),
           ),
@@ -232,19 +239,29 @@ class _GradeButtons extends StatelessWidget {
   Widget build(BuildContext context) => LayoutBuilder(
         builder: (context, constraints) {
           final width = (constraints.maxWidth - 12) / 2;
+          final useSingleColumn = constraints.maxWidth < 360 ||
+              MediaQuery.textScalerOf(context).scale(16) > 20;
           return Wrap(
             spacing: 12,
             runSpacing: 12,
             children: [
               for (final entry in _gradeLabels.entries)
                 SizedBox(
-                  width: width,
-                  height: 56,
-                  child: FilledButton(
-                    onPressed: enabled ? () => onGrade(entry.value) : null,
-                    child: Text(
-                      entry.key,
-                      textAlign: TextAlign.center,
+                  width: useSingleColumn ? constraints.maxWidth : width,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(minHeight: 56),
+                    child: FilledButton(
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                      ),
+                      onPressed: enabled ? () => onGrade(entry.value) : null,
+                      child: Text(
+                        entry.key,
+                        textAlign: TextAlign.center,
+                      ),
                     ),
                   ),
                 ),

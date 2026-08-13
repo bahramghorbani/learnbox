@@ -4,9 +4,18 @@ import 'review_queue_store.dart';
 
 class SecureReviewQueueStore implements ReviewQueueStore {
   SecureReviewQueueStore({FlutterSecureStorage? storage})
-      : _storage = storage ?? const FlutterSecureStorage();
+      : _storage = storage ??
+            const FlutterSecureStorage(
+              aOptions: AndroidOptions(
+                resetOnError: false,
+                migrateOnAlgorithmChange: true,
+                migrateWithBackup: true,
+                storageNamespace: storageNamespace,
+              ),
+            );
 
   static const storageKey = 'learnbox.reviewQueue.v1';
+  static const storageNamespace = 'learnbox.reviewQueue.v1';
 
   final FlutterSecureStorage _storage;
 
