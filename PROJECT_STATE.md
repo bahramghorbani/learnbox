@@ -45,8 +45,9 @@ product specification or storyboard.
 - **Native mobile host:** generated Android and iOS hosts are versioned with the Android Gradle
   wrapper, CI builds a non-release debug APK, and the local Android emulator completed an install
   and visual smoke. The approved icon and a static three-second Flutter launch image are packaged
-  in the native host. This remains a small shell, not a released mobile product or a low-end-device
-  performance baseline.
+  in the native host. A first physical low-end Android baseline was recorded on a Xiaomi M2006C3LG;
+  see [`STAGE_24_ANDROID_BASELINE.md`](./docs/operations/STAGE_24_ANDROID_BASELINE.md). This
+  remains a small shell, not a released mobile product.
 
 ## Release and safety posture
 
