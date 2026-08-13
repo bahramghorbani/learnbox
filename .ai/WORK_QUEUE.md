@@ -5,7 +5,7 @@ are context, not authorization to start.
 
 ## LB-DS-001
 
-- Status: ready
+- Status: review_requested
 - Executor: deepseek-flash
 - Base: main-after-plan-merge
 - Branch: worker/lb-ds-001-mobile-sync-contract-tests
