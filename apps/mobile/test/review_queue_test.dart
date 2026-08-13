@@ -109,6 +109,80 @@ void main() {
     expect(await restoredQueue.pendingCount(), 1);
   });
 
+  test('pendingEvents returns persisted order as an immutable snapshot',
+      () async {
+    final store = InMemoryReviewQueueStore();
+    final ids = ['event-a', 'event-b'].iterator;
+    final queue = ReviewQueue(
+      store: store,
+      idFactory: () {
+        ids.moveNext();
+        return ids.current;
+      },
+    );
+    await queue.record(
+      'start-a1-haus',
+      ReviewGrade.hard,
+      DateTime.utc(2026, 8, 13, 9),
+    );
+
+    final snapshot = await queue.pendingEvents();
+    await queue.record(
+      'start-a1-tisch',
+      ReviewGrade.mastered,
+      DateTime.utc(2026, 8, 13, 10),
+    );
+
+    expect(snapshot.map((event) => event.clientEventId), ['event-a']);
+    expect(
+      () => snapshot.add(snapshot.single),
+      throwsUnsupportedError,
+    );
+    expect(
+      (await queue.pendingEvents()).map((event) => event.clientEventId),
+      ['event-a', 'event-b'],
+    );
+  });
+
+  test('pendingEvents waits behind a durable record on the mutation lane',
+      () async {
+    final store = InMemoryReviewQueueStore.blockingWrites();
+    final queue = ReviewQueue(store: store, idFactory: () => 'event-a');
+
+    final record = queue.record(
+      'start-a1-haus',
+      ReviewGrade.remembered,
+      DateTime.utc(2026, 8, 13, 9),
+    );
+    await store.writeStarted.future;
+    final snapshot = queue.pendingEvents();
+    var snapshotReturned = false;
+    snapshot.then((_) => snapshotReturned = true);
+    await Future<void>.delayed(Duration.zero);
+
+    expect(snapshotReturned, isFalse);
+    store.allowWrite();
+    await record;
+    expect((await snapshot).map((event) => event.clientEventId), ['event-a']);
+  });
+
+  test('pendingEvents completes before a later acknowledgement mutates storage',
+      () async {
+    final store = InterleavingReadReviewQueueStore(
+      initialValue: _serializedEventA,
+    );
+    final queue = ReviewQueue(store: store);
+
+    final snapshot = queue.pendingEvents();
+    final acknowledgement = queue.acknowledge(['event-a']);
+    await store.firstReadStarted.future;
+    store.releaseReads();
+
+    expect((await snapshot).map((event) => event.clientEventId), ['event-a']);
+    await acknowledgement;
+    expect(await queue.pendingCount(), 0);
+  });
+
   test('malformed stored structures fail closed and are overwritten', () async {
     const malformedValues = [
       '{not-json',

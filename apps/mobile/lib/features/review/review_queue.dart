@@ -58,6 +58,10 @@ class ReviewQueue {
   Future<int> pendingCount() =>
       _serializeMutation(() async => (await _load()).length);
 
+  Future<List<PendingReviewEvent>> pendingEvents() => _serializeMutation(
+        () async => List<PendingReviewEvent>.unmodifiable(await _load()),
+      );
+
   Future<void> acknowledge(Iterable<String> ids) async {
     final acknowledged = ids.toSet();
     await _serializeMutation(() async {
