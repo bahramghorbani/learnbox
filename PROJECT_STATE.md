@@ -48,8 +48,12 @@ product specification or storyboard.
   in the native host. A first physical low-end Android baseline was recorded on a Xiaomi M2006C3LG;
   see [`STAGE_24_ANDROID_BASELINE.md`](./docs/operations/STAGE_24_ANDROID_BASELINE.md). The native
   app now includes the first approved offline learning-loop slice: exactly three canonical Start
-  cards, active recall, four grades and a secure device-local pending-event queue. It performs no
-  upload, authentication or server acknowledgement and is not a released mobile product.
+  cards, active recall, four grades and a secure device-local pending-event queue. A reviewed
+  provider-neutral foreground sync coordinator is present with a maximum batch of twenty, exact
+  acknowledgement validation and no-data-loss failure behavior; production supplies only a
+  `signedOut` identity state and disabled transport, with no UI trigger or network client. It
+  performs no upload, authentication or server acknowledgement and is not a released mobile
+  product.
 
 ## Release and safety posture
 
