@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.learnbox.learnbox"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 37
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

@@ -1,0 +1,37 @@
+{
+  "cards": [
+    {
+      "id": "start-a1-haus",
+      "german": "das Haus",
+      "persian": "خانه",
+      "definition": "Ein Gebäude, in dem Menschen wohnen.",
+      "example": {
+        "german": "Das Haus ist klein.",
+        "persian": "خانه کوچک است."
+      },
+      "imageAsset": "assets/cards/start-a1-haus.png"
+    },
+    {
+      "id": "start-a1-tisch",
+      "german": "der Tisch",
+      "persian": "میز",
+      "definition": "Ein Möbelstück mit einer flachen Fläche.",
+      "example": {
+        "german": "Der Tisch ist groß.",
+        "persian": "میز بزرگ است."
+      },
+      "imageAsset": "assets/cards/start-a1-tisch.png"
+    },
+    {
+      "id": "start-a1-tuer",
+      "german": "die Tür",
+      "persian": "در",
+      "definition": "Man öffnet und schließt sie, um in einen Raum zu gehen.",
+      "example": {
+        "german": "Die Tür ist offen.",
+        "persian": "در باز است."
+      },
+      "imageAsset": "assets/cards/start-a1-tuer.png"
+    }
+  ]
+}
