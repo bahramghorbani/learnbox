@@ -19,6 +19,11 @@ the bundled three-card Start session and a device-local review-event queue.
   through Today and the complete three-card flow. Widget builds never create another queue.
 - Completion reports the current number of responses waiting on the device. This boundary does not
   upload or acknowledge them.
+- The approved foreground-sync coordinator is present behind typed identity and transport ports. In
+  the current production composition identity is always `signedOut` and its transport throws before
+  any delivery; there is no sync UI action, HTTP client, credential, timer, connectivity listener or
+  background worker. A future separately reviewed authenticated adapter may invoke it only after a
+  real learner identity and server protocol exist.
 
 The flow is Persian RTL-first, isolates German text as LTR and uses at least 52–56 logical-pixel
 primary and grading controls. Today, review controls and completion scroll or reflow on short and
