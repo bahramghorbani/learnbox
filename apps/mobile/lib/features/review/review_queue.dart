@@ -97,7 +97,7 @@ class ReviewQueue {
           decoded.length != 2 ||
           decoded['schemaVersion'] != _schemaVersion ||
           decoded['events'] is! List<dynamic>) {
-        return _discardCorruptQueue();
+        return await _discardCorruptQueue();
       }
 
       final events = <PendingReviewEvent>[];
@@ -105,7 +105,7 @@ class ReviewQueue {
       for (final value in decoded['events'] as List<dynamic>) {
         final event = PendingReviewEvent.fromJson(value);
         if (event == null || !ids.add(event.clientEventId)) {
-          return _discardCorruptQueue();
+          return await _discardCorruptQueue();
         }
         events.add(event);
       }
