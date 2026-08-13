@@ -1,4 +1,5 @@
 import 'package:learnbox/features/review/pending_review_event.dart';
+import 'package:learnbox/features/sync/review_sync_transport.dart';
 
 /// Validates a transport acknowledgement against the batch that was uploaded.
 ///
@@ -7,8 +8,9 @@ import 'package:learnbox/features/review/pending_review_event.dart';
 /// valid, in which case nothing may be acknowledged.
 List<String> validateAcknowledgements(
   List<PendingReviewEvent> batch,
-  List<String> responseIds,
+  ReviewUploadResponse response,
 ) {
+  final responseIds = response.acknowledgedClientEventIds;
   final batchIds = batch.map((event) => event.clientEventId).toSet();
 
   final seen = <String>{};

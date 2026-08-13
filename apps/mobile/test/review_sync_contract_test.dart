@@ -55,35 +55,50 @@ void main() {
 
     test('accepts an empty acknowledgement', () {
       expect(
-        validateAcknowledgements(batch, const []),
+        validateAcknowledgements(
+          batch,
+          ReviewUploadResponse(acknowledgedClientEventIds: const []),
+        ),
         isEmpty,
       );
     });
 
     test('accepts a full acknowledgement of the batch', () {
       expect(
-        validateAcknowledgements(batch, batchIds),
+        validateAcknowledgements(
+          batch,
+          ReviewUploadResponse(acknowledgedClientEventIds: batchIds),
+        ),
         batchIds,
       );
     });
 
     test('accepts a valid partial subset', () {
       expect(
-        validateAcknowledgements(batch, ['b']),
+        validateAcknowledgements(
+          batch,
+          ReviewUploadResponse(acknowledgedClientEventIds: ['b']),
+        ),
         ['b'],
       );
     });
 
     test('rejects an ID outside the batch', () {
       expect(
-        () => validateAcknowledgements(batch, ['a', 'unknown']),
+        () => validateAcknowledgements(
+          batch,
+          ReviewUploadResponse(acknowledgedClientEventIds: ['a', 'unknown']),
+        ),
         throwsA(isA<InvalidReviewAcknowledgement>()),
       );
     });
 
     test('rejects duplicate acknowledgements', () {
       expect(
-        () => validateAcknowledgements(batch, ['a', 'a']),
+        () => validateAcknowledgements(
+          batch,
+          ReviewUploadResponse(acknowledgedClientEventIds: ['a', 'a']),
+        ),
         throwsA(isA<InvalidReviewAcknowledgement>()),
       );
     });

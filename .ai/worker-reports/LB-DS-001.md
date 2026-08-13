@@ -27,5 +27,8 @@
 - Risks: none raised. The validator is fail-closed; `ReviewUploadResponse` and the validator result
   are both unmodifiable; no secret, credential, migration, provider call or production flag is
   touched.
+- Codex review amendment: `validateAcknowledgements` now accepts the complete
+  `ReviewUploadResponse`, matching the approved contract and preventing later callers from
+  bypassing the typed transport boundary.
 - Secrets or production changes: none.
 - Bobo canonical status: unchanged.
