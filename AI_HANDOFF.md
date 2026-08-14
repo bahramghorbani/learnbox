@@ -38,7 +38,8 @@ PR unmerged and record the exact limitation in `CURRENT_WORK.md`.
 
 ## Routine worker handoff
 
-DeepSeek Flash and equivalent routine workers follow [`.ai/WORKER_PROTOCOL.md`](./.ai/WORKER_PROTOCOL.md),
-take work only from [`.ai/WORK_QUEUE.md`](./.ai/WORK_QUEUE.md), leave the standard report under
-`.ai/worker-reports/`, and stop at a Draft PR. They cannot approve or merge their own work. Codex
-owns final review, unavailable mobile/toolchain checks, CI closure and integration.
+Any capable AI follows [`.ai/WORKER_PROTOCOL.md`](./.ai/WORKER_PROTOCOL.md), uses
+[`.ai/WORK_QUEUE.md`](./.ai/WORK_QUEUE.md) when a task is queued, and leaves a standard report under
+`.ai/worker-reports/` when appropriate. It may review and merge its own in-scope PR only after the
+documented local checks and every required GitHub check are green; unavailable mobile or device
+checks remain explicit merge blockers.

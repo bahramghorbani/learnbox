@@ -1,11 +1,11 @@
-# LearnBox DeepSeek routine work queue
+# LearnBox AI work queue
 
-Read `.ai/WORKER_PROTOCOL.md` before this file. Process only the first `ready` task. `blocked` tasks
-are context, not authorization to start.
+Read `.ai/WORKER_PROTOCOL.md` before this file. `blocked` tasks are context, not authorization to
+start. Historical tasks remain for traceability and must not be duplicated.
 
 ## LB-DS-001
 
-- Status: review_requested
+- Status: accepted
 - Executor: deepseek-flash
 - Base: main-after-plan-merge
 - Branch: worker/lb-ds-001-mobile-sync-contract-tests
@@ -15,8 +15,7 @@ are context, not authorization to start.
 - Required checks: dart format --output=none --set-exit-if-changed apps/mobile/lib/features/sync apps/mobile/test/review_sync_contract_test.dart; cd apps/mobile && flutter analyze; cd apps/mobile && flutter test test/review_sync_contract_test.dart
 - Simulator required: no
 - Draft PR required: yes
-- Merge allowed: no
+- Merge allowed: yes
 
-Authorization becomes effective only after this Plan and queue revision merge into `main`. DeepSeek
-implements only Task 1 of the linked Plan. It must not infer or implement queue persistence,
-coordinator behavior, identity/session, HTTP transport, security or production composition.
+Completed and merged through PR #56 after required checks passed. It is retained as historical
+context only; do not reopen or duplicate it. No queued task is currently authorized.

@@ -69,8 +69,9 @@ the authoritative product and security documents.
   independent, a review materially reduces risk, or the selected Skill is directly relevant or
   mandatory.
 - Before starting new implementation, inspect `.ai/WORK_QUEUE.md` and open Draft PRs. Review any
-  `review_requested` routine-worker task before creating overlapping work. DeepSeek cannot claim
-  Flutter, Android Studio, emulator, Xcode, APK-install or physical-device evidence.
+  `review_requested` routine-worker task before creating overlapping work. Any agent must record
+  unavailable Flutter, Android Studio, emulator, Xcode, APK-install or physical-device evidence
+  honestly; a required unavailable check blocks merge.
 - Keep owner updates to blockers, decisions that need approval, and completed milestones. Do not
   repeat routine technical reports.
 
