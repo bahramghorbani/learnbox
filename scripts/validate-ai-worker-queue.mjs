@@ -10,6 +10,7 @@ const allowedStatuses = new Set([
   'review_requested',
   'accepted',
 ]);
+const yesNo = new Set(['yes', 'no']);
 const requiredTaskFields = [
   'Status',
   'Executor',
@@ -62,13 +63,13 @@ export async function validateAiWorkerQueue(root = process.cwd()) {
     if (missing.length > 0) throw new Error(`${taskId} is missing fields: ${missing.join(', ')}`);
     if (!allowedStatuses.has(task.get('Status')))
       throw new Error(`${taskId} has an invalid status.`);
-    if (task.get('Executor') !== 'deepseek-flash')
-      throw new Error(`${taskId} executor must be deepseek-flash.`);
-    if (task.get('Simulator required') !== 'no')
-      throw new Error(`${taskId} simulator required must be no.`);
-    if (task.get('Draft PR required') !== 'yes')
-      throw new Error(`${taskId} Draft PR required must be yes.`);
-    if (task.get('Merge allowed') !== 'no') throw new Error(`${taskId} merge allowed must be no.`);
+    if (!task.get('Executor')) throw new Error(`${taskId} executor must be recorded.`);
+    if (!yesNo.has(task.get('Simulator required')))
+      throw new Error(`${taskId} simulator required must be yes or no.`);
+    if (!yesNo.has(task.get('Draft PR required')))
+      throw new Error(`${taskId} Draft PR required must be yes or no.`);
+    if (!yesNo.has(task.get('Merge allowed')))
+      throw new Error(`${taskId} merge allowed must be yes or no.`);
 
     if (task.get('Status') === 'review_requested') {
       const reportName = `${taskId}.md`;

@@ -11,12 +11,14 @@
   [`AI_BOOTSTRAP.md`](./AI_BOOTSTRAP.md); keep stable-main facts in
   [`PROJECT_STATE.md`](./PROJECT_STATE.md) and unmerged work in
   [`CURRENT_WORK.md`](./CURRENT_WORK.md).
-- Never implement meaningful work directly on `main`. Use `feature/`, `fix/`, `refactor/`,
-  `content/`, `docs/` or `chore/` branches, validate the change, and prefer pull request plus CI
-  before merge.
+- Any capable AI may implement work on a `feature/`, `fix/`, `refactor/`, `content/`, `docs/` or
+  `chore/` branch and may update `main` by merging a reviewed pull request. Never edit or commit
+  directly on `main`, regardless of validation, and never force-push or destructively rewrite it:
+  the recorded local checks and required GitHub checks must be green, `main` must be current, and
+  the merge result must stay buildable, tested and resumable.
 - Before new implementation, inspect `.ai/WORK_QUEUE.md` and open Draft PRs. Review and close any
-  `review_requested` routine-worker task before creating overlapping work; only Codex may approve
-  its integration after required checks and CI pass.
+  `review_requested` routine-worker task before creating overlapping work. Any capable AI may
+  approve and merge an in-scope change after the required checks and CI pass.
 
 ## Efficient agent workflow
 

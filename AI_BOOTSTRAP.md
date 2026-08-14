@@ -17,15 +17,16 @@ Before changing code, documentation, infrastructure or content, every capable co
    branch's directly linked plan or ADR.
 6. Read [`.ai/manifest.yaml`](./.ai/manifest.yaml), then resolve the needed abstract
    capabilities through [`.ai/provider-mappings.yaml`](./.ai/provider-mappings.yaml).
-   A routine worker must also read [`.ai/WORKER_PROTOCOL.md`](./.ai/WORKER_PROTOCOL.md) and may act
-   only on the first authorized `ready` item in [`.ai/WORK_QUEUE.md`](./.ai/WORK_QUEUE.md).
+   An agent continuing a queued task must also read [`.ai/WORKER_PROTOCOL.md`](./.ai/WORKER_PROTOCOL.md)
+   and its task record in [`.ai/WORK_QUEUE.md`](./.ai/WORK_QUEUE.md).
 7. Inspect the live repository with `git status --short --branch`, `git diff --name-only` and
    `git log -1 --oneline`.
 8. Run proportionate validation before implementation. At a feature boundary, run
    `pnpm install --frozen-lockfile`, `pnpm check`, `pnpm build`, and
    `node scripts/validate-migrations.mjs`; add relevant package and Flutter checks when their
    scope is changed.
-9. Begin implementation only on an appropriate non-`main` branch.
+9. Begin implementation on an appropriate non-`main` branch. Update `main` only through a merge
+   after the required local and GitHub checks are green.
 
 ## Working rules
 

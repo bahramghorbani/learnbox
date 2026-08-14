@@ -3,7 +3,7 @@ capabilities:
   repository_orientation:
     purpose: Inspect Git state and canonical repository documentation before work.
   implementation:
-    purpose: Make scoped, reversible changes on a non-main branch.
+    purpose: Make scoped, reversible changes on a dedicated branch and merge only through the green-check rule.
   planning:
     purpose: Translate canonical requirements into an incremental, testable change.
   testing:

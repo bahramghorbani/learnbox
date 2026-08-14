@@ -36,13 +36,19 @@ test('accepts a bounded ready task with no simulator requirement', async () => {
   await assert.doesNotReject(validateAiWorkerQueue(root));
 });
 
-test('rejects a DeepSeek task that requires simulator access or permits merge', async () => {
+test('accepts an agent task with explicit device and merge requirements', async () => {
   const root = await fixture(
     validTask
       .replace('Simulator required: no', 'Simulator required: yes')
+      .replace('Draft PR required: yes', 'Draft PR required: no')
       .replace('Merge allowed: no', 'Merge allowed: yes'),
   );
-  await assert.rejects(validateAiWorkerQueue(root), /simulator|required.*no|merge/i);
+  await assert.doesNotReject(validateAiWorkerQueue(root));
+});
+
+test('rejects an ambiguous yes-or-no task field', async () => {
+  const root = await fixture(validTask.replace('Merge allowed: no', 'Merge allowed: maybe'));
+  await assert.rejects(validateAiWorkerQueue(root), /merge allowed must be yes or no/i);
 });
 
 test('requires a standard report for a task marked review_requested', async () => {

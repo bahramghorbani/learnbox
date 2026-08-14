@@ -17,6 +17,7 @@ ios/Pods/
 .worktrees/
 .env.local
 .claude/settings.json
+.claude/CLAUDE.md
 .artifacts/load/
 
 # repowise local codebase index and agent MCP wiring
