@@ -8,6 +8,21 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 No active implementation branch is registered. Verify live Git and open pull requests before
 starting the next task.
 
+## Known continuation gate
+
+- Native offline pronunciation is intentionally absent from `main`. During physical Android QA on
+  2026-08-14, the unmerged candidate played English-like `house` and omitted the displayed German
+  article. Its Draft PR #58 was closed without merge and its branch/assets were deleted. Continue
+  only from GitHub issue #59: regenerate or license source audio for the exact displayed German
+  phrase (for example `das Haus`), require `de-DE` listening QA plus provenance/version/checksum,
+  then make a new isolated PR. Never restore the closed branch or candidate media.
+- PR #60 (this documentation continuity change) is ready to merge but CI is currently unavailable:
+  every GitHub Actions job on `docs/native-audio-qa-continuity` fails before runner allocation with
+  "recent account payments have failed or your spending limit needs to be increased". Local
+  `pnpm check` and `node scripts/validate-migrations.mjs` pass. The required CI gate will not run
+  until the GitHub account billing/spending-limit issue is resolved. Do not merge PR #60 until that
+  CI gate is green.
+
 ## Continuity note
 
 - On 2026-08-13 PR #52 merged the owner-approved mobile review synchronization coordinator design.
@@ -77,6 +92,7 @@ starting the next task.
 
 ## Owner action
 
-No credential or production action is required. The mobile sync foundation is merged with all
-required CI gates green; any authenticated transport, real beta, paid provider, legal or
-irreversible action remains owner-gated under `AGENTS.md`.
+No production or credential action is required for the audio gate itself (Issue #59 remains the
+single continuation point and nothing was enabled). **One billing action is required for PR #60:**
+resolve the GitHub Actions billing/spending-limit failure (see the Known continuation gate above)
+so the required CI gate can run; PR #60 must not merge until that gate is green.
