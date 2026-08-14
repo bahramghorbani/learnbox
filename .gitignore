@@ -18,3 +18,10 @@ ios/Pods/
 .env.local
 .claude/settings.json
 .artifacts/load/
+
+# repowise local codebase index and agent MCP wiring
+.repowise/
+.repowise-workspace/
+.mcp.json
+.codex/
+.vscode/mcp.json
