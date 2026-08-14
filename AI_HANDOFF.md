@@ -36,6 +36,19 @@ state are synchronized, the rollback or flag posture is recorded, and its change
 privacy, canonical Bobo governance, or the closed-alpha boundary. If CI is unavailable, leave the
 PR unmerged and record the exact limitation in `CURRENT_WORK.md`.
 
+## Current native-audio continuity gate
+
+- The native offline-pronunciation attempt was rejected during physical Android QA: the candidate
+  word media played English-like `house` and omitted the displayed German article. The candidate
+  PR #58 was closed without merge and its branch/assets were removed.
+- Continue only from GitHub issue #59. Produce or license the exact displayed German phrase
+  (for example `das Haus`), require `de-DE` listening QA in addition to transcription, and record
+  provenance, reviewer, version and checksum before any packaging PR.
+- Documentation PR #60 records this gate and the accepted historical DeepSeek task. It remains a
+  Draft only because GitHub Actions failed before runner allocation on two attempts; its local
+  `pnpm check` and migration validation passed. Re-run CI and merge it only after every required
+  check is green. Do not bypass the quality gate.
+
 ## Routine worker handoff
 
 DeepSeek Flash and equivalent routine workers follow [`.ai/WORKER_PROTOCOL.md`](./.ai/WORKER_PROTOCOL.md),
