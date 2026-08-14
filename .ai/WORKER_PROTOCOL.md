@@ -21,8 +21,9 @@ When the owner says «پروژه را بخوان، به‌روز شو و وظا�
 
 ## Absolute boundaries
 
-- Never force-push, destructively rewrite `main`, deploy, enable a flag, call a paid provider or
-  touch a secret. Do not make direct unvalidated edits on `main`; use the green-check merge rule.
+- Never edit or commit directly on `main`, regardless of validation; update it only by merging a
+  current PR after the green-check rule. Never force-push or destructively rewrite `main`, deploy,
+  enable a flag, call a paid provider or touch a secret.
 - Never perform identity/session/OTP, cryptography, authorization, database migration, payment,
   production infrastructure, release-signing, public-release, legal, or Bobo visual decisions.
 - Never claim a check or device validation that was not actually run. Record unavailable tooling
