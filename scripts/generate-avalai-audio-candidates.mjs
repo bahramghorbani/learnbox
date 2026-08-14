@@ -1,5 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { wordPhrase } from './avalai-audio-phrase.mjs';
 
 const localEnvPath = resolve('.env.avalai.local');
 const draftsPath = resolve(
@@ -22,7 +23,7 @@ if (!apiKey) throw new Error('کلید AvalAI وارد نشده است.');
 
 const drafts = JSON.parse(readFileSync(draftsPath, 'utf8'));
 const clips = drafts.items.flatMap((item) => [
-  { id: `${item.id}-word`, text: item.lemma },
+  { id: `${item.id}-word`, text: wordPhrase(item) },
   { id: `${item.id}-sentence`, text: item.examples[0].german },
 ]);
 mkdirSync(outputDirectory, { recursive: true });

@@ -1,0 +1,112 @@
+{
+  "batchId": "learnbox-start-a1-vertical-slice-drafts-v1",
+  "checkedAt": "2026-08-14T13:20:25.020Z",
+  "gate": "issue59-full-phrase-de-de",
+  "purpose": "Acceptance QA for Issue #59. Verifies article-bearing phrases, checksums and reviewer provenance. No publication or attachment.",
+  "total": 40,
+  "passed": 22,
+  "needsRegeneration": 18,
+  "failures": [
+    {
+      "id": "start-a1-apfel-word",
+      "reason": "QA report expected text does not match the canonical phrase.",
+      "report": "apfel",
+      "canonical": "der apfel"
+    },
+    {
+      "id": "start-a1-bahnhof-word",
+      "reason": "QA report expected text does not match the canonical phrase.",
+      "report": "bahnhof",
+      "canonical": "der bahnhof"
+    },
+    {
+      "id": "start-a1-bett-word",
+      "reason": "QA report expected text does not match the canonical phrase.",
+      "report": "bett",
+      "canonical": "das bett"
+    },
+    {
+      "id": "start-a1-brot-word",
+      "reason": "QA report expected text does not match the canonical phrase.",
+      "report": "brot",
+      "canonical": "das brot"
+    },
+    {
+      "id": "start-a1-danke-word",
+      "reason": "Word audio must include the displayed German article.",
+      "canonical": "danke"
+    },
+    {
+      "id": "start-a1-entschuldigung-word",
+      "reason": "Word audio must include the displayed German article.",
+      "canonical": "Entschuldigung"
+    },
+    {
+      "id": "start-a1-gluecklich-word",
+      "reason": "Word audio must include the displayed German article.",
+      "canonical": "glücklich"
+    },
+    {
+      "id": "start-a1-haus-word",
+      "reason": "QA report expected text does not match the canonical phrase.",
+      "report": "haus",
+      "canonical": "das haus"
+    },
+    {
+      "id": "start-a1-kaufen-word",
+      "reason": "Word audio must include the displayed German article.",
+      "canonical": "kaufen"
+    },
+    {
+      "id": "start-a1-klein-word",
+      "reason": "Word audio must include the displayed German article.",
+      "canonical": "klein"
+    },
+    {
+      "id": "start-a1-lernen-word",
+      "reason": "Word audio must include the displayed German article.",
+      "canonical": "lernen"
+    },
+    {
+      "id": "start-a1-muede-word",
+      "reason": "Word audio must include the displayed German article.",
+      "canonical": "müde"
+    },
+    {
+      "id": "start-a1-schule-word",
+      "reason": "QA report expected text does not match the canonical phrase.",
+      "report": "schule",
+      "canonical": "die schule"
+    },
+    {
+      "id": "start-a1-tisch-word",
+      "reason": "QA report expected text does not match the canonical phrase.",
+      "report": "tisch",
+      "canonical": "der tisch"
+    },
+    {
+      "id": "start-a1-tuer-word",
+      "reason": "QA report expected text does not match the canonical phrase.",
+      "report": "tür",
+      "canonical": "die tür"
+    },
+    {
+      "id": "start-a1-warten-word",
+      "reason": "Word audio must include the displayed German article.",
+      "canonical": "warten"
+    },
+    {
+      "id": "start-a1-wasser-word",
+      "reason": "QA report expected text does not match the canonical phrase.",
+      "report": "wasser",
+      "canonical": "das wasser"
+    },
+    {
+      "id": "start-a1-wohnen-word",
+      "reason": "Word audio must include the displayed German article.",
+      "canonical": "wohnen"
+    }
+  ],
+  "listeningQaReviewRequired": false,
+  "listeningQa": []
+}
