@@ -45,7 +45,7 @@ PR unmerged and record the exact limitation in `CURRENT_WORK.md`.
   (for example `das Haus`), require `de-DE` listening QA in addition to transcription, and record
   provenance, reviewer, version and checksum before any packaging PR.
 - Documentation PR #60 records this gate and the accepted historical DeepSeek task. It remains a
-  Draft only because GitHub Actions failed before runner allocation on two attempts; its local
+  Draft only because GitHub Actions failed before runner allocation on three attempts; its local
   `pnpm check` and migration validation passed. Re-run CI and merge it only after every required
   check is green. Do not bypass the quality gate.
 

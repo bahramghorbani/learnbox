@@ -16,7 +16,10 @@
   Production delivery remains disabled. The isolated same-server app image is healthy behind the
   private Docker network with no published port; its live Caddy host and DNS remain absent. The
   latest GitHub CI mobile job passed.
-- **Owner action:** no action is required for the next technical load-test preparation. Any real beta cohort, production activation, public release or paid capacity change remains owner-gated.
+- **Owner action:** no product action is required for the next technical load-test preparation. The
+  separate GitHub account billing/spending-limit issue must be resolved before PR #60's required CI
+  jobs can run; it does not authorize any product activation. Any real beta cohort, production
+  activation, public release or paid capacity change remains owner-gated.
 - **Last updated:** 2026-08-14 — Stage 24 local learner-web load/recovery and learning-engine
   synthetic guardrails remain green; the first native three-card offline review flow and dormant
   sync foundation passed local/full CI checks and a debug APK build, while all release paths remain
