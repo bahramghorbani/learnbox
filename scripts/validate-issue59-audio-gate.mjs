@@ -22,7 +22,8 @@ const draftsPath = resolve(
   'content/packs/learnbox-start/vocabulary/start-a1-vertical-slice-drafts.json',
 );
 const transcriptionQaPath = resolve(
-  'content/packs/learnbox-start/validation/start-a1-avalai-audio-transcription-qa.json',
+  process.env.ISSUE59_QA_PATH ??
+    'content/packs/learnbox-start/validation/start-a1-avalai-audio-transcription-qa.json',
 );
 const outputReportPath = resolve(
   'content/packs/learnbox-start/validation/start-a1-issue59-audio-gate.json',
@@ -35,6 +36,16 @@ const expectedPhrases = new Map(
   drafts.items.flatMap((item) => [
     [`${item.id}-word`, wordPhrase(item)],
     [`${item.id}-sentence`, item.examples[0].german],
+  ]),
+);
+
+// Only nouns carry a displayed article (das/der/die). Verbs, adjectives and
+// phrases are correctly spoken without one, so the article check applies to
+// word clips whose canonical item declares an article.
+const itemByClipId = new Map(
+  drafts.items.flatMap((item) => [
+    [`${item.id}-word`, item],
+    [`${item.id}-sentence`, item],
   ]),
 );
 
@@ -56,12 +67,13 @@ for (const result of transcription.results ?? []) {
     });
     continue;
   }
-  // The current V1 audio was approved for the bare lemma; the article-bearing
-  // phrase is the acceptance contract for regenerated word audio. A word clip
-  // that was verified against the bare lemma fails the Issue #59 gate.
-  const isWord = result.id.endsWith('-word');
-  const phraseHasArticle = isWord && expected.trim().split(/\s+/).length > 1;
-  if (isWord && !phraseHasArticle) {
+  // Issue #59 contract: word audio for nouns must carry the displayed German
+  // article (`das Haus`), not the bare lemma. Non-nouns are correctly spoken
+  // without one. Only items that declare an article are checked.
+  const item = itemByClipId.get(result.id);
+  const expectsArticle = Boolean(item?.article?.trim());
+  const phraseHasArticle = expected.trim().split(/\s+/).length > 1;
+  if (expectsArticle && !phraseHasArticle) {
     failures.push({
       id: result.id,
       reason: 'Word audio must include the displayed German article.',
