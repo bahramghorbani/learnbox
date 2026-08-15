@@ -1,15 +1,29 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
 import { GET as localPreviewMedia } from '../app/api/local-preview-media/[contentId]/[kind]/route';
 
 // Issue #59: word audio must be the exact displayed German phrase, including
 // the article (e.g. `das Haus`). The local-preview route must serve the V2
 // clips (regenerated with the article), not the rejected V1 bare-lemma clips.
+// The route is development-only (fail-closed elsewhere), so these tests set
+// NODE_ENV explicitly and restore it afterward.
+const originalNodeEnv = process.env.NODE_ENV;
+
+afterEach(() => {
+  if (originalNodeEnv === undefined) delete process.env.NODE_ENV;
+  else process.env.NODE_ENV = originalNodeEnv;
+});
+
+async function fetchClip(kind: string) {
+  return localPreviewMedia(new Request('http://localhost/'), {
+    params: Promise.resolve({ contentId: 'start-a1-haus', kind }),
+  });
+}
+
 describe('local-preview-media audio (Issue #59)', () => {
   it('serves the v2 word-audio clip for a bundled Start card', async () => {
-    const response = await localPreviewMedia(new Request('http://localhost/'), {
-      params: Promise.resolve({ contentId: 'start-a1-haus', kind: 'word-audio' }),
-    });
+    process.env.NODE_ENV = 'development';
+    const response = await fetchClip('word-audio');
 
     expect(response.status).toBe(200);
     expect(response.headers.get('content-type')).toBe('audio/mpeg');
@@ -23,18 +37,25 @@ describe('local-preview-media audio (Issue #59)', () => {
   });
 
   it('serves the v2 sentence-audio clip for a bundled Start card', async () => {
-    const response = await localPreviewMedia(new Request('http://localhost/'), {
-      params: Promise.resolve({ contentId: 'start-a1-haus', kind: 'sentence-audio' }),
-    });
+    process.env.NODE_ENV = 'development';
+    const response = await fetchClip('sentence-audio');
 
     expect(response.status).toBe(200);
     expect(response.headers.get('content-type')).toBe('audio/mpeg');
   });
 
-  it('returns 404 for unknown kinds', async () => {
-    const response = await localPreviewMedia(new Request('http://localhost/'), {
-      params: Promise.resolve({ contentId: 'start-a1-haus', kind: 'image' }),
-    });
-    expect(response.status).toBe(200); // image v1 still exists
+  it('still serves the image v1 for a bundled Start card', async () => {
+    process.env.NODE_ENV = 'development';
+    const response = await fetchClip('image');
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toBe('image/png');
+  });
+
+  it('fails closed outside development', async () => {
+    process.env.NODE_ENV = 'production';
+    const response = await fetchClip('word-audio');
+
+    expect(response.status).toBe(404);
   });
 });
