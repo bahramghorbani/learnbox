@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { GET as localPreviewMedia } from '../app/api/local-preview-media/[contentId]/[kind]/route';
 
@@ -6,12 +6,9 @@ import { GET as localPreviewMedia } from '../app/api/local-preview-media/[conten
 // the article (e.g. `das Haus`). The local-preview route must serve the V2
 // clips (regenerated with the article), not the rejected V1 bare-lemma clips.
 // The route is development-only (fail-closed elsewhere), so these tests set
-// NODE_ENV explicitly and restore it afterward.
-const originalNodeEnv = process.env.NODE_ENV;
-
+// NODE_ENV via vi.stubEnv and restore it with vi.unstubAllEnvs.
 afterEach(() => {
-  if (originalNodeEnv === undefined) delete process.env.NODE_ENV;
-  else process.env.NODE_ENV = originalNodeEnv;
+  vi.unstubAllEnvs();
 });
 
 async function fetchClip(kind: string) {
@@ -22,7 +19,7 @@ async function fetchClip(kind: string) {
 
 describe('local-preview-media audio (Issue #59)', () => {
   it('serves the v2 word-audio clip for a bundled Start card', async () => {
-    process.env.NODE_ENV = 'development';
+    vi.stubEnv('NODE_ENV', 'development');
     const response = await fetchClip('word-audio');
 
     expect(response.status).toBe(200);
@@ -37,7 +34,7 @@ describe('local-preview-media audio (Issue #59)', () => {
   });
 
   it('serves the v2 sentence-audio clip for a bundled Start card', async () => {
-    process.env.NODE_ENV = 'development';
+    vi.stubEnv('NODE_ENV', 'development');
     const response = await fetchClip('sentence-audio');
 
     expect(response.status).toBe(200);
@@ -45,7 +42,7 @@ describe('local-preview-media audio (Issue #59)', () => {
   });
 
   it('still serves the image v1 for a bundled Start card', async () => {
-    process.env.NODE_ENV = 'development';
+    vi.stubEnv('NODE_ENV', 'development');
     const response = await fetchClip('image');
 
     expect(response.status).toBe(200);
@@ -53,7 +50,7 @@ describe('local-preview-media audio (Issue #59)', () => {
   });
 
   it('fails closed outside development', async () => {
-    process.env.NODE_ENV = 'production';
+    vi.stubEnv('NODE_ENV', 'production');
     const response = await fetchClip('word-audio');
 
     expect(response.status).toBe(404);
