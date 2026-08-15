@@ -7,11 +7,14 @@ type RouteContext = {
   params: Promise<{ contentId: string; kind: string }>;
 };
 
+// Issue #59: word audio must be the exact displayed German phrase, including
+// the article (e.g. `das Haus`). The V1 clips spoke the bare lemma; the V2
+// clips (regenerated with the article) are the linguistically approved source.
 const mediaKinds = {
   image: { suffix: '-image-v1.png', directory: 'images', contentType: 'image/png' },
-  'word-audio': { suffix: '-word-audio-v1.mp3', directory: 'audio', contentType: 'audio/mpeg' },
+  'word-audio': { suffix: '-word-audio-v2.mp3', directory: 'audio', contentType: 'audio/mpeg' },
   'sentence-audio': {
-    suffix: '-sentence-audio-v1.mp3',
+    suffix: '-sentence-audio-v2.mp3',
     directory: 'audio',
     contentType: 'audio/mpeg',
   },
