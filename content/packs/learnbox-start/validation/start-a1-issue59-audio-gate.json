@@ -1,0 +1,12 @@
+{
+  "batchId": "learnbox-start-a1-vertical-slice-drafts-v1",
+  "checkedAt": "2026-08-15T14:25:01.416Z",
+  "gate": "issue59-full-phrase-de-de",
+  "purpose": "Acceptance QA for Issue #59. Verifies article-bearing phrases, checksums and reviewer provenance. No publication or attachment.",
+  "total": 40,
+  "passed": 40,
+  "needsRegeneration": 0,
+  "failures": [],
+  "listeningQaReviewRequired": false,
+  "listeningQa": []
+}

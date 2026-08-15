@@ -1,11 +1,17 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { wordPhrase } from './avalai-audio-phrase.mjs';
 
 const localEnvPath = resolve('.env.avalai.local');
 const draftsPath = resolve(
   'content/packs/learnbox-start/vocabulary/start-a1-vertical-slice-drafts.json',
 );
 const outputDirectory = '/Users/test/.codex/tmp/learnbox-avalai/audio-candidates';
+
+// Issue #59: regenerated word audio must carry the displayed article
+// (`das Haus`), which the V1 candidates did not. New clips are written as
+// `-v2.mp3` so the approved V1 files are never overwritten.
+const clipVersion = process.env.AUDIO_CLIP_VERSION ?? 'v2';
 
 function getAvalaiKey() {
   if (process.env.AVALAI_API_KEY?.trim()) return process.env.AVALAI_API_KEY.trim();
@@ -22,7 +28,7 @@ if (!apiKey) throw new Error('کلید AvalAI وارد نشده است.');
 
 const drafts = JSON.parse(readFileSync(draftsPath, 'utf8'));
 const clips = drafts.items.flatMap((item) => [
-  { id: `${item.id}-word`, text: item.lemma },
+  { id: `${item.id}-word`, text: wordPhrase(item) },
   { id: `${item.id}-sentence`, text: item.examples[0].german },
 ]);
 mkdirSync(outputDirectory, { recursive: true });
@@ -43,7 +49,7 @@ async function generate(clip) {
   });
   if (!response.ok) throw new Error(`${clip.id}: HTTP ${response.status}`);
 
-  const outputPath = `${outputDirectory}/${clip.id}-v1.mp3`;
+  const outputPath = `${outputDirectory}/${clip.id}-${clipVersion}.mp3`;
   writeFileSync(outputPath, Buffer.from(await response.arrayBuffer()));
   console.log(`${clip.id}: ${outputPath}`);
 }
