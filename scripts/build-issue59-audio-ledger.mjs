@@ -11,9 +11,7 @@ import { resolve } from 'node:path';
  * pronunciation by ear; nothing here attaches media or publishes it.
  */
 
-const candidatesDir = resolve(
-  '/Users/test/.codex/tmp/learnbox-avalai/audio-candidates',
-);
+const candidatesDir = resolve('/Users/test/.codex/tmp/learnbox-avalai/audio-candidates');
 const draftsPath = resolve(
   'content/packs/learnbox-start/vocabulary/start-a1-vertical-slice-drafts.json',
 );
@@ -38,7 +36,9 @@ function phrase(item) {
 
 const qaById = new Map((qa.results ?? []).map((r) => [r.id, r]));
 
-const files = readdirSync(candidatesDir).filter((f) => f.endsWith('-v2.mp3')).sort();
+const files = readdirSync(candidatesDir)
+  .filter((f) => f.endsWith('-v2.mp3'))
+  .sort();
 const entries = files.map((file) => {
   const id = file.replace(/-v2\.mp3$/, '');
   const buffer = readFileSync(resolve(candidatesDir, file));
