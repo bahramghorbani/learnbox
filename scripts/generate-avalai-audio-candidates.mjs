@@ -8,6 +8,11 @@ const draftsPath = resolve(
 );
 const outputDirectory = '/Users/test/.codex/tmp/learnbox-avalai/audio-candidates';
 
+// Issue #59: regenerated word audio must carry the displayed article
+// (`das Haus`), which the V1 candidates did not. New clips are written as
+// `-v2.mp3` so the approved V1 files are never overwritten.
+const clipVersion = process.env.AUDIO_CLIP_VERSION ?? 'v2';
+
 function getAvalaiKey() {
   if (process.env.AVALAI_API_KEY?.trim()) return process.env.AVALAI_API_KEY.trim();
   if (!existsSync(localEnvPath)) return undefined;
@@ -44,7 +49,7 @@ async function generate(clip) {
   });
   if (!response.ok) throw new Error(`${clip.id}: HTTP ${response.status}`);
 
-  const outputPath = `${outputDirectory}/${clip.id}-v1.mp3`;
+  const outputPath = `${outputDirectory}/${clip.id}-${clipVersion}.mp3`;
   writeFileSync(outputPath, Buffer.from(await response.arrayBuffer()));
   console.log(`${clip.id}: ${outputPath}`);
 }
