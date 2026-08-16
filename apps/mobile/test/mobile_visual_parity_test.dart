@@ -4,7 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'support/mobile_test_app.dart';
 
 void main() {
-  testWidgets('Today shows title, count and primary action in a readable layout',
+  testWidgets(
+      'Today shows title, count and primary action in a readable layout',
       (tester) async {
     await _pumpApp(tester);
 

@@ -15,7 +15,8 @@ void main() {
     await tester.pump(const Duration(milliseconds: 1));
     await tester.pump();
     expect(find.bySemanticsLabel('صفحه آغاز LearnBox'), findsNothing);
-    expect(find.text('امروز'), findsOneWidget);
+    // "امروز" appears as the heading and as the active bottom-navigation label.
+    expect(find.text('امروز'), findsNWidgets(2));
   });
 
   testWidgets('moves from the launch screen to the Today shell',
@@ -28,6 +29,7 @@ void main() {
     await tester.pump();
 
     expect(find.bySemanticsLabel('صفحه آغاز LearnBox'), findsNothing);
-    expect(find.text('امروز'), findsOneWidget);
+    // "امروز" appears as the heading and as the active bottom-navigation label.
+    expect(find.text('امروز'), findsNWidgets(2));
   });
 }
