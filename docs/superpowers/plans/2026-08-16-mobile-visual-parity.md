@@ -407,6 +407,8 @@ flag, release an APK, change the icon or deploy.
 - Type consistency: only `LearnerDestination`, `buildLearnBoxTheme`, `learnBoxGermanStyle`,
   `LearnerBottomNavigation` and `CompletionScreen` are introduced; every later task uses their
   declared signatures.
-- Delegation boundary: Task 1 asset selection, Task 2 theme design, Task 4 behavior review and
-  Task 5 device QA are reviewer-owned. Task 3 layout/test execution is the only candidate for a
-  routine worker after the parent branch has completed Task 2 and its tests are green.
+- Delegation boundary: Task 1 asset selection, Task 2 theme design, active review-card composition,
+  Task 4 behavior review and Task 5 device QA are reviewer-owned. After the visual contract and
+  `CompletionScreen` interface are approved, the bounded Task 4 completion extraction and its
+  widget tests may be delegated through `.ai/WORK_QUEUE.md`; final review and merge remain
+  reviewer-owned.
