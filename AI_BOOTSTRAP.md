@@ -28,6 +28,16 @@ Before changing code, documentation, infrastructure or content, every capable co
 9. Begin implementation on an appropriate non-`main` branch. Update `main` only through a merge
    after the required local and GitHub checks are green.
 
+## Parallel-agent refresh
+
+When more than one agent may be working, treat GitHub as the live coordination channel. Before
+choosing work, fetch `origin/main`, inspect open pull requests and `.ai/WORK_QUEUE.md`, then choose
+only a task whose allowed paths do not overlap an active branch. Record a newly opened or materially
+redirected PR in `CURRENT_WORK.md`; update the task handoff report before requesting review. Before
+merging any branch, refresh from the current `origin/main`, resolve only intentional conflicts and
+rerun the relevant checks. A branch, local conversation or provider memory is never fresher than
+the current repository state.
+
 ## Working rules
 
 - Use the capabilities required by the task, not any particular provider's tool or skill name.
