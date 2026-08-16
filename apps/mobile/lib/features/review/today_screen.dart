@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../ui/learner_bottom_navigation.dart';
+import '../../ui/learnbox_theme.dart';
 import 'review_queue.dart';
 import 'review_screen.dart';
 import 'start_card.dart';
@@ -32,11 +34,21 @@ class _TodayScreenState extends State<TodayScreen> {
     _session = widget.startPackRepository.loadDailySession();
   }
 
+  void _showUnavailableDestination(LearnerDestination destination) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        const SnackBar(
+          content: Text('این بخش به‌زودی در اپ موبایل آماده می‌شود.'),
+        ),
+      );
+  }
+
   @override
   Widget build(BuildContext context) => Scaffold(
         body: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.symmetric(horizontal: 24),
             child: FutureBuilder<List<StartCard>>(
               future: _session,
               builder: (context, snapshot) {
@@ -69,6 +81,7 @@ class _TodayScreenState extends State<TodayScreen> {
                       ),
                     ),
                   ),
+                  onDestinationSelected: _showUnavailableDestination,
                 );
               },
             ),
@@ -78,10 +91,15 @@ class _TodayScreenState extends State<TodayScreen> {
 }
 
 class _TodayContent extends StatelessWidget {
-  const _TodayContent({required this.cards, required this.onStart});
+  const _TodayContent({
+    required this.cards,
+    required this.onStart,
+    required this.onDestinationSelected,
+  });
 
   final List<StartCard> cards;
   final VoidCallback onStart;
+  final ValueChanged<LearnerDestination> onDestinationSelected;
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(
@@ -92,6 +110,15 @@ class _TodayContent extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  const SizedBox(height: 24),
+                  Text(
+                    'بیایید امروز هم چند واژهٔ آلمانی را مرور کنیم',
+                    style: Theme.of(context)
+                        .textTheme
+                        .labelLarge
+                        ?.copyWith(color: learnBoxPrimary),
+                  ),
+                  const SizedBox(height: 8),
                   Semantics(
                     header: true,
                     child: Text(
@@ -103,16 +130,37 @@ class _TodayContent extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  Text(
-                    '${_persianDigits(cards.length)} کارت برای مرور امروز آماده است.',
-                    style: Theme.of(context).textTheme.titleLarge,
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${_persianDigits(cards.length)} کارت برای مرور امروز آماده است.',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'یک مرور کوتاه و آرام؛ پاسخ هر کارت روی همین دستگاه ذخیره می‌شود.',
+                            style: Theme.of(context).textTheme.bodyLarge,
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'یک مرور کوتاه و آرام؛ پاسخ هر کارت روی همین دستگاه ذخیره می‌شود.',
-                    style: Theme.of(context).textTheme.bodyLarge,
-                  ),
-                  const Spacer(),
+                  if (constraints.maxHeight >= 620) ...[
+                    const Spacer(),
+                    ExcludeSemantics(
+                      child: Image.asset(
+                        'assets/bobo/encourage-v2.png',
+                        width: 120,
+                        height: 120,
+                        excludeFromSemantics: true,
+                      ),
+                    ),
+                  ] else
+                    const Spacer(),
                   const SizedBox(height: 24),
                   FilledButton(
                     style: FilledButton.styleFrom(
@@ -120,6 +168,11 @@ class _TodayContent extends StatelessWidget {
                     ),
                     onPressed: onStart,
                     child: const Text('شروع مرور'),
+                  ),
+                  const SizedBox(height: 16),
+                  LearnerBottomNavigation(
+                    current: LearnerDestination.today,
+                    onDestinationSelected: onDestinationSelected,
                   ),
                 ],
               ),

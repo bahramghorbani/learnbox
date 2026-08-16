@@ -10,6 +10,7 @@ void main() {
     );
     await tester.pump(const Duration(milliseconds: 1));
     await tester.pump();
-    expect(find.text('امروز'), findsOneWidget);
+    // "امروز" appears as the heading and as the active bottom-navigation label.
+    expect(find.text('امروز'), findsNWidgets(2));
   });
 }
