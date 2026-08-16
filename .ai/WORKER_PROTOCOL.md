@@ -32,6 +32,22 @@ When the owner says «پروژه را بخوان، به‌روز شو و وظا�
   corresponding checks.
 - A failing or unavailable required check is never rewritten as passing.
 
+## Parallel coordination
+
+- Multiple capable agents may work at the same time, including routine workers and reviewers. Each
+  agent must fetch `origin/main`, inspect live pull requests and `.ai/WORK_QUEUE.md` before
+  selecting a task; choose only a documented scope with no overlap in allowed paths with active
+  work.
+- On starting a branch, opening a Draft PR, changing scope, rebasing, requesting review or merging,
+  update the matching task/report and `CURRENT_WORK.md` when it records genuinely unmerged work.
+  These updates are part of the work, not optional commentary.
+- If another agent merges while work is in progress, merge or rebase the latest `origin/main` into
+  the branch without force-pushing, resolve only intentional conflicts, rerun every relevant check
+  and refresh the handoff report before the branch may merge.
+- Do not duplicate an open task, edit another agent's branch, assume an unpushed local change
+  exists remotely, or treat a Draft PR as accepted. When scope overlaps or ownership is unclear,
+  stop that item and select a non-overlapping task instead.
+
 ## Review and merge contract
 
 The reviewing agent verifies scope, commits, tests, security boundaries and the handoff report;
