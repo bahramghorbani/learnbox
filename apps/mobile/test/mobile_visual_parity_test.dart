@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:learnbox/features/review/completion_screen.dart';
 
 import 'support/mobile_test_app.dart';
 
@@ -68,6 +69,56 @@ void main() {
     await tester.pump();
     expect(find.text('شروع مرور'), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets(
+      'completion shows canonical celebrate Bobo, truthful pending count and a return action',
+      (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: CompletionScreen(
+          pendingCount: 3,
+          storageError: null,
+          onReturnToToday: () {},
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // The canonical celebration Bobo exposes a semantic label (LB-DS-003).
+    expect(
+      find.bySemanticsLabel('بوبو موفقیت تو را جشن می‌گیرد'),
+      findsOneWidget,
+    );
+    // The truthful local pending count is still visible.
+    expect(find.text('۳ پاسخ در این دستگاه آماده است.'), findsOneWidget);
+    // A single return-to-Today action is present, at least 56px tall.
+    expect(find.text('بازگشت به امروز'), findsOneWidget);
+    expect(
+      tester.getSize(find.byType(FilledButton)).height,
+      greaterThanOrEqualTo(56),
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('completion return action pops back to the first route',
+      (tester) async {
+    var returned = false;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: CompletionScreen(
+          pendingCount: 3,
+          storageError: null,
+          onReturnToToday: () => returned = true,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('بازگشت به امروز'));
+    await tester.pumpAndSettle();
+
+    expect(returned, isTrue);
   });
 }
 
