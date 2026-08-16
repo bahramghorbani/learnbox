@@ -17,7 +17,7 @@
   - `apps/mobile/test/launch_experience_test.dart` (updated `امروز` to `findsNWidgets(2)`)
   - `.ai/WORK_QUEUE.md` (LB-DS-002 `ready` → `review_requested`; allowed paths extended
     with the three full-suite test files per review comment)
-- Checks run (after review fixes):
+- Checks run:
   - `dart format --output=none --set-exit-if-changed` (6 files) → pass
   - `cd apps/mobile && flutter analyze` → "No issues found!"
   - `cd apps/mobile && flutter test` (full suite) → **62/62 passed** (was failing on
