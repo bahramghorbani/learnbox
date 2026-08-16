@@ -5,8 +5,12 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-No active implementation branch is registered. Verify live Git and open pull requests before
-starting the next task.
+- **PR #65 — `chore/mobile-audio-assets` (Draft):** bundles the six linguistically approved V2
+  German phrase clips for the three canonical Start cards in the Flutter asset package, including
+  a bundle-presence test. It does not add a player or activate a release path. The branch is clean
+  and all required GitHub checks are green as of 2026-08-16. Before marking it ready or merging,
+  review its provenance and listening-QA evidence against issue #59, then preserve the normal
+  current-base and green-check merge rule.
 
 ## Known continuation gate
 
@@ -16,12 +20,11 @@ starting the next task.
   only from GitHub issue #59: regenerate or license source audio for the exact displayed German
   phrase (for example `das Haus`), require `de-DE` listening QA plus provenance/version/checksum,
   then make a new isolated PR. Never restore the closed branch or candidate media.
-- PR #60 (this documentation continuity change) is ready to merge but CI is currently unavailable:
-  every GitHub Actions job on `docs/native-audio-qa-continuity` fails before runner allocation with
-  "recent account payments have failed or your spending limit needs to be increased". Local
-  `pnpm check` and `node scripts/validate-migrations.mjs` pass. The required CI gate will not run
-  until the GitHub account billing/spending-limit issue is resolved. Do not merge PR #60 until that
-  CI gate is green.
+- The Issue #59 web delivery correction is merged through PRs #63 and #64: the local preview now
+  serves only approved V2 full German phrase audio. This does not make native pronunciation
+  complete; PR #65 remains the isolated native-asset continuation.
+- PRs #60 and #61 merged after their required CI gates became available and green. Do not treat
+  their historical billing note as an active blocker; always inspect live GitHub checks instead.
 
 ## Continuity note
 
@@ -92,7 +95,5 @@ starting the next task.
 
 ## Owner action
 
-No production or credential action is required for the audio gate itself (Issue #59 remains the
-single continuation point and nothing was enabled). **One billing action is required for PR #60:**
-resolve the GitHub Actions billing/spending-limit failure (see the Known continuation gate above)
-so the required CI gate can run; PR #60 must not merge until that gate is green.
+No owner action is required. Issue #59 and its Draft PR #65 remain the single controlled native
+audio continuation path; no provider, release flag or production service was enabled.
