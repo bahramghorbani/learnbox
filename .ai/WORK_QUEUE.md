@@ -22,7 +22,7 @@ context only; do not reopen or duplicate it.
 
 ## LB-DS-002
 
-- Status: ready
+- Status: review_requested
 - Executor: deepseek-flash
 - Base: main at `22ccc73` (PR #68 merged)
 - Branch: worker/lb-ds-002-today-layout

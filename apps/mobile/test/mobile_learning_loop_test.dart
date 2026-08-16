@@ -21,7 +21,9 @@ void main() {
       await _pumpApp(tester, queue: queue);
 
       expect(find.text('۳ کارت برای مرور امروز آماده است.'), findsOneWidget);
-      expect(Directionality.of(tester.element(find.text('امروز'))),
+      // "امروز" appears both as the heading and as the active bottom-navigation
+      // label; the heading keeps the RTL directionality.
+      expect(Directionality.of(tester.element(find.text('امروز').first)),
           TextDirection.rtl);
 
       await tester.tap(find.text('شروع مرور'));
@@ -316,6 +318,24 @@ void main() {
     await tester.ensureVisible(find.text('آفرین، مرور امروز تمام شد.'));
     await tester.pump();
     expect(find.text('۳ پاسخ در این دستگاه آماده است.'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets(
+      'redesigned Today still starts active recall and reveals the German card',
+      (tester) async {
+    final queue = ReviewQueue(store: ControlledReviewQueueStore());
+    await _pumpApp(tester, queue: queue);
+
+    // The visual Today composition keeps the offline session contract.
+    expect(find.text('امروز'), findsNWidgets(2));
+    expect(find.text('شروع مرور'), findsOneWidget);
+
+    await tester.tap(find.text('شروع مرور'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('das Haus'), findsOneWidget);
+    expect(find.text('خانه'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 }
