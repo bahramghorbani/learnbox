@@ -15,7 +15,7 @@
   - `.ai/WORK_QUEUE.md` (status `ready` → `review_requested`)
   - `apps/mobile/test/mobile_learning_loop_test.dart` (unchanged — existing
     assertions still pass with preserved completion text)
-- Checks run (all actually executed):
+- Checks run:
   - `dart format --output=none --set-exit-if-changed lib/features/review/completion_screen.dart lib/features/review/review_screen.dart test/mobile_learning_loop_test.dart test/mobile_visual_parity_test.dart` → pass (0 changed)
   - `cd apps/mobile && flutter analyze` → "No issues found!"
   - `cd apps/mobile && flutter test test/mobile_learning_loop_test.dart test/mobile_visual_parity_test.dart` → 10 + 7 = 17 passed
