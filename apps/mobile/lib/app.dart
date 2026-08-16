@@ -7,6 +7,7 @@ import 'features/review/review_queue.dart';
 import 'features/review/start_pack_repository.dart';
 import 'features/review/today_screen.dart';
 import 'features/sync/review_sync_coordinator.dart';
+import 'ui/learnbox_theme.dart';
 
 class LearnBoxApp extends StatelessWidget {
   const LearnBoxApp({
@@ -31,14 +32,7 @@ class LearnBoxApp extends StatelessWidget {
         locale: const Locale('fa'),
         supportedLocales: const [Locale('fa')],
         localizationsDelegates: GlobalMaterialLocalizations.delegates,
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xff315d80),
-            surface: const Color(0xfffffbf5),
-          ),
-          scaffoldBackgroundColor: const Color(0xfffffbf5),
-          useMaterial3: true,
-        ),
+        theme: buildLearnBoxTheme(),
         home: Directionality(
           textDirection: TextDirection.rtl,
           child: LearnBoxLaunchScreen(

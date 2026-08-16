@@ -16,7 +16,16 @@ dev_dependencies:
   flutter_lints: ^5.0.0
 flutter:
   uses-material-design: true
+  fonts:
+    - family: IRANSansX LearnBox
+      fonts:
+        - asset: assets/fonts/IRANSansX-Regular.woff2
+          weight: 400
+        - asset: assets/fonts/IRANSansX-Bold.woff2
+          weight: 700
   assets:
+    - assets/bobo/
     - assets/launch/germany-welcome-v1.jpg
     - assets/content/
     - assets/cards/
+    - assets/fonts/
