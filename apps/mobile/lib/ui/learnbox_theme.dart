@@ -49,7 +49,10 @@ ThemeData buildLearnBoxTheme() {
           ),
         ),
         textStyle: WidgetStatePropertyAll(
-          textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700),
+          textTheme.labelLarge?.copyWith(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
     ),
