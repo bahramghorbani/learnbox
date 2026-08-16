@@ -30,6 +30,21 @@ Cafe Bazaar publication.
 - **Resident memory sample:** 263,061 KB total reported by `dumpsys meminfo` after the flow was
   installed and launched
 
+## Today visual follow-up
+
+- **Date:** 2026-08-16
+- **Source:** `main` at `04d6205` (PR #70, mobile Today visual parity)
+- **Device:** Xiaomi M2006C3LG (Android 11), installed with
+  `flutter run --debug --no-resident -d 5PPBXCP7LBCMHQDE`
+- **Observed:** the warm canvas, IRANSansX Persian typography, indigo eyebrow, card-count summary,
+  canonical `encourage-v2` Bobo, 56px `شروع مرور` action and labelled three-item bottom navigation
+  rendered on the physical device.
+- **Cleanup:** the debug process was stopped with
+  `adb -s 5PPBXCP7LBCMHQDE shell am force-stop com.learnbox.learnbox` after observation.
+- **Limit:** this is a Today-only visual follow-up. It does not replace the final Task 5 full-loop
+  verification after the reviewed completion presentation is merged; no release, provider,
+  authentication, audio or production claim follows from it.
+
 ## Interpretation
 
 The native host and first offline review slice are installable and usable on this device. These
