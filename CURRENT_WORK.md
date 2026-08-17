@@ -12,6 +12,14 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
   review its provenance and listening-QA evidence against issue #59, then preserve the normal
   current-base and green-check merge rule.
 
+- **PR #77 — `feature/mobile-review-visuals` (Draft):** refines only the active Flutter review
+  presentation with approved LearnBox tokens, separate media/answer surfaces and LTR German text.
+  Grading, offline persistence and the disabled sync boundary are unchanged. Local Flutter tests
+  (65) and debug APK build passed; the Android emulator was able to install but its system UI hit
+  a memory-pressure ANR, and no physical device is connected. Keep this PR Draft until a healthy
+  emulator smoke and the required physical-device observation are recorded, then refresh its base
+  and require current green GitHub checks before merge.
+
 ## Known continuation gate
 
 - Native offline pronunciation is intentionally absent from `main`. During physical Android QA on
