@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'completion_screen.dart';
 import 'review_grade.dart';
 import 'review_queue.dart';
 import 'start_card.dart';
@@ -81,48 +82,11 @@ class _ReviewScreenState extends State<ReviewScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isComplete) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('مرور امروز')),
-        body: SafeArea(
-          child: LayoutBuilder(
-            builder: (context, constraints) => SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  minHeight: constraints.maxHeight - 48,
-                ),
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Semantics(
-                        header: true,
-                        child: Text(
-                          'آفرین، مرور امروز تمام شد.',
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.headlineSmall,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      if (_pendingCount case final pendingCount?)
-                        Text(
-                          '${_persianDigits(pendingCount)} پاسخ در این دستگاه آماده است.',
-                          textAlign: TextAlign.center,
-                        )
-                      else if (_storageError != null)
-                        Text(_storageError!, textAlign: TextAlign.center)
-                      else
-                        Semantics(
-                          label: 'در حال شمارش پاسخ‌های ذخیره‌شده',
-                          child: const CircularProgressIndicator(),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
+      return CompletionScreen(
+        pendingCount: _pendingCount,
+        storageError: _storageError,
+        onReturnToToday: () =>
+            Navigator.of(context).popUntil((route) => route.isFirst),
       );
     }
 

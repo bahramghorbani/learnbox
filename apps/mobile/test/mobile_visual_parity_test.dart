@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:learnbox/app.dart';
+import 'package:learnbox/features/review/completion_screen.dart';
+import 'package:learnbox/features/review/review_queue.dart';
 
-import 'support/mobile_test_app.dart';
+import 'mobile_learning_loop_test.dart'
+    show ControlledReviewQueueStore, InMemoryStartPackRepository;
 
 void main() {
   testWidgets(
@@ -69,6 +73,75 @@ void main() {
     expect(find.text('شروع مرور'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets(
+      'completion shows canonical celebrate Bobo, truthful pending count and a return action',
+      (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: CompletionScreen(
+          pendingCount: 3,
+          storageError: null,
+          onReturnToToday: () {},
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // The canonical celebration Bobo exposes a semantic label (LB-DS-003).
+    expect(
+      find.bySemanticsLabel('بوبو موفقیت تو را جشن می‌گیرد'),
+      findsOneWidget,
+    );
+    // The truthful local pending count is still visible.
+    expect(find.text('۳ پاسخ در این دستگاه آماده است.'), findsOneWidget);
+    // A single return-to-Today action is present, at least 56px tall.
+    expect(find.text('بازگشت به امروز'), findsOneWidget);
+    expect(
+      tester.getSize(find.byType(FilledButton)).height,
+      greaterThanOrEqualTo(56),
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets(
+      'reviewing all three cards and returning lands back on the Today screen',
+      (tester) async {
+    // Full-path test (PR #73 review): grade all three cards from Today, tap
+    // the return action, and verify the Today shell is shown again. This
+    // proves ReviewScreen actually pops back to the first route.
+    await _pumpApp(tester);
+
+    await _completeDailyReview(tester);
+
+    expect(find.text('آفرین، مرور امروز تمام شد.'), findsOneWidget);
+
+    await tester.tap(find.text('بازگشت به امروز'));
+    await tester.pumpAndSettle();
+
+    // Back on the Today shell.
+    expect(find.text('شروع مرور'), findsOneWidget);
+    expect(find.text('آفرین، مرور امروز تمام شد.'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+}
+
+/// Grades all three cards to reach the daily-completion surface.
+Future<void> _completeDailyReview(WidgetTester tester) async {
+  await tester.tap(find.text('شروع مرور'));
+  await tester.pumpAndSettle();
+  await tester.pump(const Duration(milliseconds: 400));
+  expect(find.text('das Haus'), findsOneWidget, reason: 'card 1 shown');
+
+  for (var index = 0; index < 3; index += 1) {
+    await tester.tap(find.text('نمایش پاسخ'), warnIfMissed: false);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('بلد بودم'), warnIfMissed: false);
+    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 100));
+  }
+
+  expect(find.text('آفرین، مرور امروز تمام شد.'), findsOneWidget);
 }
 
 Future<void> _pumpApp(
@@ -83,8 +156,21 @@ Future<void> _pumpApp(
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
 
+  final ids = ['vp-event-a', 'vp-event-b', 'vp-event-c'].iterator;
+  final queue = ReviewQueue(
+    store: ControlledReviewQueueStore(),
+    idFactory: () {
+      ids.moveNext();
+      return ids.current;
+    },
+  );
   await tester.pumpWidget(
-    buildMobileTestApp(splashDuration: Duration.zero),
+    LearnBoxApp(
+      key: UniqueKey(),
+      startPackRepository: InMemoryStartPackRepository(),
+      reviewQueue: queue,
+      splashDuration: Duration.zero,
+    ),
   );
   await tester.pumpAndSettle();
 }

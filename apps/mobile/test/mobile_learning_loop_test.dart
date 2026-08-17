@@ -108,6 +108,12 @@ void main() {
     expect(find.text('آفرین، مرور امروز تمام شد.'), findsOneWidget);
     expect(find.text('۳ پاسخ در این دستگاه آماده است.'), findsOneWidget);
     expect(await queue.pendingCount(), 3);
+
+    await tester.tap(find.text('بازگشت به امروز'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('امروز'), findsNWidgets(2));
+    expect(find.text('آفرین، مرور امروز تمام شد.'), findsNothing);
   });
 
   testWidgets('a storage error keeps the card open and offers a calm retry',

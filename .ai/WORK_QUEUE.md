@@ -48,7 +48,7 @@ for traceability; do not reopen or duplicate it.
 
 ## LB-DS-003
 
-- Status: ready
+- Status: review_requested
 - Executor: deepseek-flash
 - Base: main at `04d6205` (PR #70 merged)
 - Branch: worker/lb-ds-003-completion-screen
