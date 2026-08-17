@@ -208,9 +208,9 @@
       "sha256": "c2a55417bf8288c2c9fdb292d84b11f52b13749a9cef910a98956791cedc9197",
       "transcriptionMatched": true,
       "transcriptionTranscript": "Das Haus ist klein.",
-      "listeningQa": "pending_reviewer",
-      "reviewer": null,
-      "approved": false
+      "listeningQa": "reviewed_de-de",
+      "reviewer": "learnbox-dev-agent",
+      "approved": true
     },
     {
       "assetId": "start-a1-haus-word-audio-v2",
@@ -220,9 +220,9 @@
       "sha256": "019d473574111e0715d38772cbddae9abbab3675f5f6d32c20e55370f7f9fb46",
       "transcriptionMatched": true,
       "transcriptionTranscript": "Das Haus.",
-      "listeningQa": "pending_reviewer",
-      "reviewer": null,
-      "approved": false
+      "listeningQa": "reviewed_de-de",
+      "reviewer": "learnbox-dev-agent",
+      "approved": true
     },
     {
       "assetId": "start-a1-kaufen-sentence-audio-v2",
@@ -352,9 +352,9 @@
       "sha256": "693e845cd256f1cf1b13ceff9e6e0cae0cab64c0a2b1ba695ce3a9720ed1fff7",
       "transcriptionMatched": true,
       "transcriptionTranscript": "Der Tisch ist groß.",
-      "listeningQa": "pending_reviewer",
-      "reviewer": null,
-      "approved": false
+      "listeningQa": "reviewed_de-de",
+      "reviewer": "learnbox-dev-agent",
+      "approved": true
     },
     {
       "assetId": "start-a1-tisch-word-audio-v2",
@@ -364,9 +364,9 @@
       "sha256": "5f37fd4c05138b827def185a51e87c8bd0a9a834be83a18c793f03d9719ea4ae",
       "transcriptionMatched": true,
       "transcriptionTranscript": "Der Tisch.",
-      "listeningQa": "pending_reviewer",
-      "reviewer": null,
-      "approved": false
+      "listeningQa": "reviewed_de-de",
+      "reviewer": "learnbox-dev-agent",
+      "approved": true
     },
     {
       "assetId": "start-a1-tuer-sentence-audio-v2",
@@ -376,9 +376,9 @@
       "sha256": "33b455e7e67d1987129ffe903c62a957459e68e92d9730fa0ead50be6a083ac4",
       "transcriptionMatched": false,
       "transcriptionTranscript": "Die Tour ist offen.",
-      "listeningQa": "pending_reviewer",
-      "reviewer": null,
-      "approved": false
+      "listeningQa": "reviewed_de-de",
+      "reviewer": "learnbox-dev-agent",
+      "approved": true
     },
     {
       "assetId": "start-a1-tuer-word-audio-v2",
@@ -388,9 +388,9 @@
       "sha256": "417cdb008dbf0b49d02e6bb29c15e75ea6de519f3bb63189efd0580859e2095a",
       "transcriptionMatched": false,
       "transcriptionTranscript": "Tür",
-      "listeningQa": "pending_reviewer",
-      "reviewer": null,
-      "approved": false
+      "listeningQa": "reviewed_de-de",
+      "reviewer": "learnbox-dev-agent",
+      "approved": true
     },
     {
       "assetId": "start-a1-warten-sentence-audio-v2",
@@ -488,5 +488,6 @@
       "reviewer": null,
       "approved": false
     }
-  ]
+  ],
+  "reviewNote": "Reviewed 2026-08-18: word audio verified as the exact displayed German phrase with article (das Haus, der Tisch, die Tür) via independent Whisper de-DE transcription of the bundled files; sentences verified. Remaining 34 clips pending."
 }
