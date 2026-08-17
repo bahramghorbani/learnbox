@@ -12,6 +12,30 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
   review its provenance and listening-QA evidence against issue #59, then preserve the normal
   current-base and green-check merge rule.
 
+## Agent work log
+
+This log records what the development agent did and did not do on the current `main`, so the
+other agent can pick up without re-deriving state. It does not define anyone's role.
+
+### Done on 2026-08-18
+
+- Updated the repository to current `origin/main` (`899d8c6`, PR #78 merged).
+- Confirmed LB-DS-001/002/003 are `accepted` in `.ai/WORK_QUEUE.md` and their branches/PRs
+  (#70, #73, #75, #76) are merged. No further action is needed on them.
+- Confirmed the only open PR owned by prior work is #65 (`chore/mobile-audio-assets`, Draft),
+  and the only open issue is #59. Both are left untouched and available for the other agent.
+- Did **not** create or push any code, branch, or Draft PR for new work. No feature, fix, or
+  refactor was started.
+
+### Not done (open for the other agent)
+
+- **PR #65** was not continued, rebased, or merged (it still targets the pre-`d68fadd` base and
+  may need a rebase on current `origin/main`). It is intentionally left as-is.
+- **Issue #59** (native pronunciation audio) was not advanced. Its web correction (PRs #63/#64)
+  is merged, but the native audio continuation remains open.
+- No design/UI work was started or modified. The visual assets in `apps/mobile/assets/bobo/` and
+  the `assets/audio/` bundling are untouched.
+
 ## Known continuation gate
 
 - Native offline pronunciation is intentionally absent from `main`. During physical Android QA on
