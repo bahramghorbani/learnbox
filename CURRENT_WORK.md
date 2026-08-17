@@ -8,9 +8,10 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 - **PR #65 — `chore/mobile-audio-assets` (Draft):** bundles the six linguistically approved V2
   German phrase clips for the three canonical Start cards in the Flutter asset package, including
   a bundle-presence test. It does not add a player or activate a release path. The branch is clean
-  and all required GitHub checks are green as of 2026-08-16. Before marking it ready or merging,
-  review its provenance and listening-QA evidence against issue #59, then preserve the normal
-  current-base and green-check merge rule.
+  and all required GitHub checks are green as of 2026-08-16. **Owned by the UI/design agent**:
+  the development agent is not continuing it. The UI/design agent should review its provenance and
+  listening-QA evidence against issue #59, rebase on current `origin/main`, then preserve the
+  normal current-base and green-check merge rule before marking ready or merging.
 
 ## Known continuation gate
 
@@ -22,7 +23,12 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
   then make a new isolated PR. Never restore the closed branch or candidate media.
 - The Issue #59 web delivery correction is merged through PRs #63 and #64: the local preview now
   serves only approved V2 full German phrase audio. This does not make native pronunciation
-  complete; PR #65 remains the isolated native-asset continuation.
+  complete; PR #65 remains the isolated native-asset continuation, owned by the UI/design agent.
+- **Work ownership split:** the development agent handles code, tests, logic and infrastructure.
+  The UI/design agent owns visual/interface work, pronunciation/audio UX and issue #59. Before
+  touching a file, check `git log` and open PRs to see which agent owns it; do not edit the other
+  agent's in-flight files. When a design decision blocks code, leave a clear note here and in the
+  PR for the design agent.
 - PRs #60 and #61 merged after their required CI gates became available and green. Do not treat
   their historical billing note as an active blocker; always inspect live GitHub checks instead.
 
@@ -96,4 +102,6 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 ## Owner action
 
 No owner action is required. Issue #59 and its Draft PR #65 remain the single controlled native
-audio continuation path; no provider, release flag or production service was enabled.
+audio continuation path and are owned by the UI/design agent; no provider, release flag or
+production service was enabled. The development agent is available for the next scoped
+code/implementation task when one is queued.
