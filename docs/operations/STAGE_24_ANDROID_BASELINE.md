@@ -45,6 +45,26 @@ Cafe Bazaar publication.
   verification after the reviewed completion presentation is merged; no release, provider,
   authentication, audio or production claim follows from it.
 
+## Review-visuals follow-up
+
+- **Date:** 2026-08-17
+- **Source:** `feature/mobile-review-visuals` at `37f891e` (Draft PR #77)
+- **Physical device:** Xiaomi M2006C3LG (Android 11, 720 × 1600), installed with
+  `flutter run --debug --no-resident -d 5PPBXCP7LBCMHQDE`.
+- **Physical observation:** Today, all three Start cards, revealed answers, the complete four-grade
+  control set (after ordinary scrolling), completion Bobo and `بازگشت به امروز` rendered and
+  worked. The completion surface accurately showed six locally pending answers because earlier
+  debug review events were retained on the device; no upload or server acknowledgement was claimed.
+- **Large-text observation:** device `font_scale` was temporarily changed from `0.81` to `1.3`, the
+  app was cold-started and Today plus the active `das Haus` card remained readable without clipped
+  essential controls. The device setting was restored to `0.81` immediately after the check.
+- **Emulator observation:** Pixel 7 API 37 arm64 launched the same debug APK with
+  `flutter run --debug --no-resident -d emulator-5554`; launch, Today and the active `das Haus`
+  review surface rendered successfully. A previous emulator attempt under memory pressure produced
+  a system-UI ANR and is not counted as evidence.
+- **Boundary:** debug-only local evidence. No flag, provider, authentication, audio, production
+  route, signing or release action was enabled.
+
 ## Interpretation
 
 The native host and first offline review slice are installable and usable on this device. These
