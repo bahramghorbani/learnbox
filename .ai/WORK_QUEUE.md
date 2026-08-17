@@ -48,7 +48,7 @@ for traceability; do not reopen or duplicate it.
 
 ## LB-DS-003
 
-- Status: review_requested
+- Status: accepted
 - Executor: deepseek-flash
 - Base: main at `04d6205` (PR #70 merged)
 - Branch: worker/lb-ds-003-completion-screen
@@ -59,6 +59,9 @@ for traceability; do not reopen or duplicate it.
 - Simulator required: no
 - Draft PR required: yes
 - Merge allowed: yes
+
+Accepted through green-check PR #73 on 2026-08-17. The review fixed the synthetic duplicate-event
+ID test defect and added end-to-end return-to-Today coverage; do not reopen or duplicate this task.
 
 Implement only the daily-completion presentation slice. First write a failing widget test that
 verifies the canonical `celebrate-v2` image exposes the semantic label `بوبو موفقیت تو را جشن
