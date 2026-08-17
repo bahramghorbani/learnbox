@@ -12,6 +12,14 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
   review its provenance and listening-QA evidence against issue #59, then preserve the normal
   current-base and green-check merge rule.
 
+- **PR #77 — `feature/mobile-review-visuals` (Draft):** refines only the active Flutter review
+  presentation with approved LearnBox tokens, separate media/answer surfaces and LTR German text.
+  Grading, offline persistence and the disabled sync boundary are unchanged. Local Flutter tests
+  (65) and debug APK build passed. On 2026-08-17, a healthy Pixel 7 emulator smoke and the required
+  Xiaomi M2006C3LG normal/large-text physical-device checks passed; the evidence is in
+  `docs/operations/STAGE_24_ANDROID_BASELINE.md`. Review the documented boundaries, refresh the
+  base and require current green GitHub checks before merge.
+
 ## Known continuation gate
 
 - Native offline pronunciation is intentionally absent from `main`. During physical Android QA on

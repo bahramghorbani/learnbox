@@ -75,6 +75,43 @@ void main() {
   });
 
   testWidgets(
+      'review keeps German LTR and grade controls readable on a narrow large-text view',
+      (tester) async {
+    await _pumpApp(
+      tester,
+      size: const Size(320, 480),
+      textScaleFactor: 2,
+    );
+
+    await tester.ensureVisible(find.text('شروع مرور'));
+    await tester.tap(find.text('شروع مرور'));
+    await tester.pumpAndSettle();
+
+    final german = find.text('das Haus');
+    expect(german, findsOneWidget);
+    expect(Directionality.of(tester.element(german)), TextDirection.ltr);
+
+    await tester.ensureVisible(find.text('نمایش پاسخ'));
+    await tester.tap(find.text('نمایش پاسخ'));
+    await tester.pumpAndSettle();
+
+    // The media and revealed answer are separate readable surfaces.
+    expect(find.byType(Card), findsNWidgets(2));
+
+    for (final label in [
+      'دوباره می‌خوانم',
+      'سخت بود',
+      'بلد بودم',
+      'خیلی آسان بود',
+    ]) {
+      final button = find.text(label);
+      await tester.ensureVisible(button);
+      expect(tester.getRect(button).height, greaterThan(0));
+    }
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets(
       'completion shows canonical celebrate Bobo, truthful pending count and a return action',
       (tester) async {
     await tester.pumpWidget(
@@ -134,9 +171,13 @@ Future<void> _completeDailyReview(WidgetTester tester) async {
   expect(find.text('das Haus'), findsOneWidget, reason: 'card 1 shown');
 
   for (var index = 0; index < 3; index += 1) {
-    await tester.tap(find.text('نمایش پاسخ'), warnIfMissed: false);
+    final reveal = find.text('نمایش پاسخ');
+    await tester.ensureVisible(reveal);
+    await tester.tap(reveal);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('بلد بودم'), warnIfMissed: false);
+    final remembered = find.text('بلد بودم');
+    await tester.ensureVisible(remembered);
+    await tester.tap(remembered);
     await tester.pumpAndSettle();
     await tester.pump(const Duration(milliseconds: 100));
   }
