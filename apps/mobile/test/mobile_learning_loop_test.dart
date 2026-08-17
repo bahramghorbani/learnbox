@@ -32,14 +32,14 @@ void main() {
       expect(find.text('das Haus'), findsOneWidget);
       expect(find.text('خانه'), findsNothing);
 
-      await tester.tap(find.text('نمایش پاسخ'));
+      await _tapVisibleText(tester, 'نمایش پاسخ');
       await tester.pump();
 
       expect(find.text('خانه'), findsOneWidget);
       expect(find.text('Das Haus ist klein.'), findsOneWidget);
       expect(find.text('خانه کوچک است.'), findsOneWidget);
 
-      await tester.tap(find.text('بلد بودم'));
+      await _tapVisibleText(tester, 'بلد بودم');
       await store.firstWriteStarted.future;
       await tester.pump();
 
@@ -73,10 +73,10 @@ void main() {
       await _pumpApp(tester, queue: queue);
       await tester.tap(find.text('شروع مرور'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('نمایش پاسخ'));
+      await _tapVisibleText(tester, 'نمایش پاسخ');
       await tester.pump();
 
-      await tester.tap(find.text(entry.key));
+      await _tapVisibleText(tester, entry.key);
       await tester.pumpAndSettle();
 
       expect(_persistedGrades(store.value), [entry.value], reason: entry.key);
@@ -99,9 +99,9 @@ void main() {
     await tester.pumpAndSettle();
 
     for (var index = 0; index < 3; index += 1) {
-      await tester.tap(find.text('نمایش پاسخ'));
+      await _tapVisibleText(tester, 'نمایش پاسخ');
       await tester.pump();
-      await tester.tap(find.text('بلد بودم'));
+      await _tapVisibleText(tester, 'بلد بودم');
       await tester.pumpAndSettle();
     }
 
@@ -123,17 +123,17 @@ void main() {
     await _pumpApp(tester, queue: queue);
     await tester.tap(find.text('شروع مرور'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('نمایش پاسخ'));
+    await _tapVisibleText(tester, 'نمایش پاسخ');
     await tester.pump();
 
-    await tester.tap(find.text('سخت بود'));
+    await _tapVisibleText(tester, 'سخت بود');
     await tester.pumpAndSettle();
 
     expect(find.text('ذخیره انجام نشد؛ دوباره تلاش کن.'), findsOneWidget);
     expect(find.text('das Haus'), findsOneWidget);
     expect(find.text('خانه'), findsOneWidget);
 
-    await tester.tap(find.text('سخت بود'));
+    await _tapVisibleText(tester, 'سخت بود');
     await tester.pumpAndSettle();
 
     expect(find.text('ذخیره انجام نشد؛ دوباره تلاش کن.'), findsNothing);
@@ -178,10 +178,10 @@ void main() {
       await _pumpApp(tester, queue: queue);
       await tester.tap(find.text('شروع مرور'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('نمایش پاسخ'));
+      await _tapVisibleText(tester, 'نمایش پاسخ');
       await tester.pump();
 
-      await tester.tap(find.text('سخت بود'));
+      await _tapVisibleText(tester, 'سخت بود');
       await tester.pumpAndSettle();
 
       expect(find.text('ذخیره انجام نشد؛ دوباره تلاش کن.'), findsOneWidget);
@@ -204,7 +204,7 @@ void main() {
       );
       expect(calls.where((call) => call.method.startsWith('delete')), isEmpty);
 
-      await tester.tap(find.text('سخت بود'));
+      await _tapVisibleText(tester, 'سخت بود');
       await tester.pumpAndSettle();
 
       expect(find.text('ذخیره انجام نشد؛ دوباره تلاش کن.'), findsNothing);
@@ -256,7 +256,7 @@ void main() {
     await tester.pump();
     await tester.tap(find.text('شروع مرور'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('نمایش پاسخ'));
+    await _tapVisibleText(tester, 'نمایش پاسخ');
     await tester.pump();
 
     for (final label in [
@@ -313,11 +313,11 @@ void main() {
     for (var index = 0; index < 3; index += 1) {
       await tester.ensureVisible(find.text('نمایش پاسخ'));
       await tester.pump();
-      await tester.tap(find.text('نمایش پاسخ'));
+      await _tapVisibleText(tester, 'نمایش پاسخ');
       await tester.pump();
       await tester.ensureVisible(find.text('بلد بودم'));
       await tester.pump();
-      await tester.tap(find.text('بلد بودم'));
+      await _tapVisibleText(tester, 'بلد بودم');
       await tester.pumpAndSettle();
     }
 
@@ -377,6 +377,12 @@ List<String> _persistedGrades(String? serializedQueue) {
   return events
       .map((event) => (event as Map<String, dynamic>)['grade'] as String)
       .toList();
+}
+
+Future<void> _tapVisibleText(WidgetTester tester, String text) async {
+  final target = find.text(text);
+  await tester.ensureVisible(target);
+  await tester.tap(target);
 }
 
 class InMemoryStartPackRepository implements StartPackRepository {

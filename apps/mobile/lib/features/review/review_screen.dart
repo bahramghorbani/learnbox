@@ -4,6 +4,7 @@ import 'completion_screen.dart';
 import 'review_grade.dart';
 import 'review_queue.dart';
 import 'start_card.dart';
+import '../../ui/learnbox_theme.dart';
 
 class ReviewScreen extends StatefulWidget {
   const ReviewScreen({
@@ -103,14 +104,23 @@ class _ReviewScreenState extends State<ReviewScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              LinearProgressIndicator(
-                value: (_cardIndex + 1) / widget.cards.length,
-                semanticsLabel:
+              Semantics(
+                label:
                     'پیشرفت مرور: ${_persianDigits(_cardIndex + 1)} از ${_persianDigits(widget.cards.length)}',
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(99),
+                  child: LinearProgressIndicator(
+                    value: (_cardIndex + 1) / widget.cards.length,
+                    minHeight: 8,
+                    color: learnBoxPrimary,
+                    backgroundColor: learnBoxLavender,
+                  ),
+                ),
               ),
               const SizedBox(height: 20),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(20),
+              Card(
+                margin: EdgeInsets.zero,
+                clipBehavior: Clip.antiAlias,
                 child: AspectRatio(
                   aspectRatio: 16 / 9,
                   child: Image.asset(
@@ -120,15 +130,25 @@ class _ReviewScreenState extends State<ReviewScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
-              Directionality(
-                textDirection: TextDirection.ltr,
-                child: Text(
-                  card.german,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
+              const SizedBox(height: 24),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+                decoration: BoxDecoration(
+                  color: learnBoxLavender,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Directionality(
+                  textDirection: TextDirection.ltr,
+                  child: Text(
+                    card.german,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                          fontFamily: learnBoxFontFamily,
+                          fontWeight: FontWeight.w800,
+                          color: learnBoxInk,
+                        ),
+                  ),
                 ),
               ),
               const SizedBox(height: 18),
@@ -136,37 +156,68 @@ class _ReviewScreenState extends State<ReviewScreen> {
                 FilledButton.tonal(
                   style: FilledButton.styleFrom(
                     minimumSize: const Size.fromHeight(56),
+                    backgroundColor: learnBoxLavender,
+                    foregroundColor: learnBoxPrimary,
                   ),
                   onPressed: () => setState(() => _answerVisible = true),
                   child: const Text('نمایش پاسخ'),
                 )
               else ...[
+                Card(
+                  margin: EdgeInsets.zero,
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          card.persian,
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context)
+                              .textTheme
+                              .headlineSmall
+                              ?.copyWith(fontWeight: FontWeight.w700),
+                        ),
+                        const SizedBox(height: 12),
+                        Directionality(
+                          textDirection: TextDirection.ltr,
+                          child: Text(
+                            card.definition,
+                            textAlign: TextAlign.center,
+                            style: learnBoxGermanStyle(context),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Directionality(
+                          textDirection: TextDirection.ltr,
+                          child: Text(
+                            card.exampleGerman,
+                            textAlign: TextAlign.center,
+                            style: learnBoxGermanStyle(context),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          card.examplePersian,
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.copyWith(color: learnBoxMuted),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 18),
                 Text(
-                  card.persian,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  'یادآوری‌ات چطور بود؟',
+                  textAlign: TextAlign.right,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
                 ),
-                const SizedBox(height: 8),
-                Directionality(
-                  textDirection: TextDirection.ltr,
-                  child: Text(
-                    card.definition,
-                    textAlign: TextAlign.center,
-                  ),
-                ),
                 const SizedBox(height: 12),
-                Directionality(
-                  textDirection: TextDirection.ltr,
-                  child: Text(
-                    card.exampleGerman,
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(card.examplePersian, textAlign: TextAlign.center),
-                const SizedBox(height: 18),
                 if (_storageError != null) ...[
                   Semantics(
                     liveRegion: true,
