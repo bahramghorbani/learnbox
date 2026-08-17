@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:learnbox/app.dart';
 import 'package:learnbox/features/review/completion_screen.dart';
+import 'package:learnbox/features/review/review_queue.dart';
 
-import 'support/mobile_test_app.dart';
+import 'mobile_learning_loop_test.dart'
+    show ControlledReviewQueueStore, InMemoryStartPackRepository;
 
 void main() {
   testWidgets(
@@ -101,25 +104,44 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('completion return action pops back to the first route',
+  testWidgets(
+      'reviewing all three cards and returning lands back on the Today screen',
       (tester) async {
-    var returned = false;
-    await tester.pumpWidget(
-      MaterialApp(
-        home: CompletionScreen(
-          pendingCount: 3,
-          storageError: null,
-          onReturnToToday: () => returned = true,
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
+    // Full-path test (PR #73 review): grade all three cards from Today, tap
+    // the return action, and verify the Today shell is shown again. This
+    // proves ReviewScreen actually pops back to the first route.
+    await _pumpApp(tester);
+
+    await _completeDailyReview(tester);
+
+    expect(find.text('آفرین، مرور امروز تمام شد.'), findsOneWidget);
 
     await tester.tap(find.text('بازگشت به امروز'));
     await tester.pumpAndSettle();
 
-    expect(returned, isTrue);
+    // Back on the Today shell.
+    expect(find.text('شروع مرور'), findsOneWidget);
+    expect(find.text('آفرین، مرور امروز تمام شد.'), findsNothing);
+    expect(tester.takeException(), isNull);
   });
+}
+
+/// Grades all three cards to reach the daily-completion surface.
+Future<void> _completeDailyReview(WidgetTester tester) async {
+  await tester.tap(find.text('شروع مرور'));
+  await tester.pumpAndSettle();
+  await tester.pump(const Duration(milliseconds: 400));
+  expect(find.text('das Haus'), findsOneWidget, reason: 'card 1 shown');
+
+  for (var index = 0; index < 3; index += 1) {
+    await tester.tap(find.text('نمایش پاسخ'), warnIfMissed: false);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('بلد بودم'), warnIfMissed: false);
+    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 100));
+  }
+
+  expect(find.text('آفرین، مرور امروز تمام شد.'), findsOneWidget);
 }
 
 Future<void> _pumpApp(
@@ -134,8 +156,21 @@ Future<void> _pumpApp(
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
 
+  final ids = ['vp-event-a', 'vp-event-b', 'vp-event-c'].iterator;
+  final queue = ReviewQueue(
+    store: ControlledReviewQueueStore(),
+    idFactory: () {
+      ids.moveNext();
+      return ids.current;
+    },
+  );
   await tester.pumpWidget(
-    buildMobileTestApp(splashDuration: Duration.zero),
+    LearnBoxApp(
+      key: UniqueKey(),
+      startPackRepository: InMemoryStartPackRepository(),
+      reviewQueue: queue,
+      splashDuration: Duration.zero,
+    ),
   );
   await tester.pumpAndSettle();
 }

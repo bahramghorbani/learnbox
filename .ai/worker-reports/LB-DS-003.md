@@ -20,6 +20,8 @@
   - `cd apps/mobile && flutter analyze` → "No issues found!"
   - `cd apps/mobile && flutter test test/mobile_learning_loop_test.dart test/mobile_visual_parity_test.dart` → 10 + 7 = 17 passed
   - `cd apps/mobile && flutter test` (full suite) → 64/64 passed
+- Review follow-up: the real completion-return flow now uses three distinct synthetic event IDs;
+  it grades all three cards and verifies the Today shell after `بازگشت به امروز`.
 - Checks unavailable: none. Flutter toolchain is available; all required checks ran.
 - Remaining work: none for this slice. `CompletionScreen` return uses
   `Navigator.popUntil(route.isFirst)`; the celebration Bobo (`celebrate-v2`)
