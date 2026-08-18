@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:learnbox/features/review/bundled_start_pack_repository.dart';
 
@@ -10,6 +11,8 @@ const canonicalBundleJson = '''
 ''';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   test('loads the bundled daily session in its canonical three-card order',
       () async {
     final cards =
@@ -38,5 +41,25 @@ void main() {
       () => BundledStartPackRepository.fromJsonString(malformedJson),
       throwsFormatException,
     );
+  });
+
+  test('Issue59 v2 word/sentence audio assets are bundled for the Start cards',
+      () async {
+    // Infrastructure check: the linguistically approved V2 clips (full German
+    // phrase with article, e.g. `das Haus`) are present as mobile assets so a
+    // future pronunciation player can resolve them without regeneration.
+    const expectedAudioAssets = [
+      'assets/audio/start-a1-haus-word-audio-v2.mp3',
+      'assets/audio/start-a1-haus-sentence-audio-v2.mp3',
+      'assets/audio/start-a1-tisch-word-audio-v2.mp3',
+      'assets/audio/start-a1-tisch-sentence-audio-v2.mp3',
+      'assets/audio/start-a1-tuer-word-audio-v2.mp3',
+      'assets/audio/start-a1-tuer-sentence-audio-v2.mp3',
+    ];
+
+    for (final asset in expectedAudioAssets) {
+      final data = await rootBundle.load(asset);
+      expect(data.lengthInBytes, greaterThan(0), reason: '$asset is present');
+    }
   });
 }
