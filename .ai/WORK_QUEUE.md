@@ -3,6 +3,31 @@
 Read `.ai/WORKER_PROTOCOL.md` before this file. `blocked` tasks are context, not authorization to
 start. Historical tasks remain for traceability and must not be duplicated.
 
+## LB-DS-004
+
+- Status: ready
+- Executor: any-capable-coding-agent
+- Base: main at `198abd0` (PR #82 merged)
+- Branch: worker/lb-ds-004-start-pack-audio-resolver
+- Risk: routine-offline-content-contract
+- Specification: GitHub issue #59; `CURRENT_WORK.md` native-audio continuation gate
+- Allowed paths: apps/mobile/lib/features/review/start_pack_audio_assets.dart; apps/mobile/test/start_pack_audio_assets_test.dart; .ai/WORK_QUEUE.md; .ai/worker-reports/LB-DS-004.md; CURRENT_WORK.md
+- Required checks: dart format --output=none --set-exit-if-changed apps/mobile/lib/features/review/start_pack_audio_assets.dart apps/mobile/test/start_pack_audio_assets_test.dart; cd apps/mobile && flutter analyze; cd apps/mobile && flutter test test/start_pack_audio_assets_test.dart; cd apps/mobile && flutter test
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+
+Implement only a pure, offline `StartPackAudioAssets` resolver for the three canonical Start-card
+IDs. It must return the exact already-approved V2 word and sentence asset paths for
+`start-a1-haus`, `start-a1-tisch` and `start-a1-tuer`; it must return no mapping for an unknown
+card ID. Keep the resolver independent of platform audio plugins and UI, with no `pubspec.yaml`,
+dependency, asset, network, storage, sync, identity, provider, flag, release or Bobo change.
+First add a failing unit test for the three exact mappings and the unknown-ID failure case, then
+implement the smallest typed immutable API that makes it pass. Do not add a playback button or
+player: physical `de-DE` listening QA and bundled asset provenance are already recorded, while
+the native playback experience itself remains a separately reviewed follow-up. Record a standard
+handoff report, mark the task `review_requested`, and stop at a Draft PR with actual check output.
+
 ## LB-DS-001
 
 - Status: accepted
