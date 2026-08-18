@@ -5,12 +5,10 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-- **PR #65 — `chore/mobile-audio-assets` (Draft):** bundles the six linguistically approved V2
-  German phrase clips for the three canonical Start cards in the Flutter asset package, including
-  a bundle-presence test. It does not add a player or activate a release path. The branch is clean
-  and all required GitHub checks are green as of 2026-08-16. Before marking it ready or merging,
-  review its provenance and listening-QA evidence against issue #59, then preserve the normal
-  current-base and green-check merge rule.
+- **LB-DS-004 — `worker/lb-ds-004-start-pack-audio-resolver` (ready):** a bounded routine task
+  for any capable coding agent to add the pure offline mapping from each canonical Start-card ID
+  to its six already-approved V2 audio assets. It must stop at a Draft PR; no player, package,
+  provider, release or feature activation is authorized.
 
 ## Agent work log
 
