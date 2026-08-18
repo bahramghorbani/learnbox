@@ -19,22 +19,22 @@ other agent can pick up without re-deriving state. It does not define anyone's r
 
 ### Done on 2026-08-18
 
-- Updated the repository to current `origin/main` (`899d8c6`, PR #78 merged).
-- Confirmed LB-DS-001/002/003 are `accepted` in `.ai/WORK_QUEUE.md` and their branches/PRs
-  (#70, #73, #75, #76) are merged. No further action is needed on them.
-- Confirmed the only open PR owned by prior work is #65 (`chore/mobile-audio-assets`, Draft),
-  and the only open issue is #59. Both are left untouched and available for the other agent.
-- Did **not** create or push any code, branch, or Draft PR for new work. No feature, fix, or
-  refactor was started.
+- Rebased PR #65 (`chore/mobile-audio-assets`) on current `origin/main`, resolved the `pubspec.yaml`
+  conflict (`assets/fonts/` + `assets/audio/` both kept), ran `flutter analyze` (clean) and full
+  `flutter test` (66/66 pass). With owner approval for the force-push, PR #65 was merged.
+- Opened PR #81 (`docs/audio-listening-qa`): recorded the de-DE listening QA for the six bundled
+  Start-card clips (`das Haus`, `der Tisch`, `die Tür`) — each word clip verified as the exact
+  displayed German phrase with its article (independent Whisper transcription; `die Tür` reads
+  "Die Tür."). With owner approval for the force-push, PR #81 was merged.
+- Confirmed LB-DS-001/002/003 are `accepted` and their PRs (#70, #73, #75, #76) are merged.
 
 ### Not done (open for the other agent)
 
-- **PR #65** was not continued, rebased, or merged (it still targets the pre-`d68fadd` base and
-  may need a rebase on current `origin/main`). It is intentionally left as-is.
-- **Issue #59** (native pronunciation audio) was not advanced. Its web correction (PRs #63/#64)
-  is merged, but the native audio continuation remains open.
-- No design/UI work was started or modified. The visual assets in `apps/mobile/assets/bobo/` and
-  the `assets/audio/` bundling are untouched.
+- **Issue #59** (native pronunciation player) was not advanced: the approved V2 audio assets and
+  their listening-QA ledger are now merged, but the native playback UI remains open.
+- **Native identity + authenticated transport** (the next roadmap item in `STATUS.md`) was not
+  started; no design spec exists yet.
+- No new development task is currently queued in `.ai/WORK_QUEUE.md`; no code/feature was started.
 
 ## Known continuation gate
 
