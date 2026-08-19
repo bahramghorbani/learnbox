@@ -4,7 +4,7 @@
 - Original base commit: `198abd0` (PR #82 merged)
 - Current base commit: `448060c` (PR #83 merged)
 - Reconciliation commit: `37bd06d`
-- Draft PR: pending creation
+- Draft PR: `#84` — Draft, independent Codex review pending
 - Scope completed: pure, offline `StartPackAudioAssets` resolver for the three
   canonical Start-card IDs (`start-a1-haus`, `start-a1-tisch`, `start-a1-tuer`),
   returning the exact approved V2 word and sentence asset paths and null for any
