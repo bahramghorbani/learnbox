@@ -9,7 +9,7 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
   the bounded pure offline mapping is implemented. Independent high-reasoning review found its code
   and scope correct and fixed a report-format CI finding; required CI rerun is pending. Standalone
   Codex was unavailable, so no Codex review is claimed.
-- **`docs/hermes-orchestration-policy` (Draft PR pending):** adds one provider-portable orchestration
+- **PR #85 — `docs/hermes-orchestration-policy` (Draft):** adds one provider-portable orchestration
   policy and links it from the existing bootstrap, manifest, provider mappings and active brief. It
   changes no product, provider, credential, release or production behavior.
 
