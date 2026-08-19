@@ -5,9 +5,11 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-- **PR #84 / LB-DS-004 — `worker/lb-ds-004-start-pack-audio-resolver` (Draft, review requested):** the bounded
-  pure offline mapping from each canonical Start-card ID to its six already-approved V2 audio
-  assets is implemented and locally verified. Independent Codex review pending; no player, package, provider,
+- **PR #84 / LB-DS-004 — `worker/lb-ds-004-start-pack-audio-resolver` (Draft, review requested):**
+  the bounded pure offline mapping from each canonical Start-card ID to its six already-approved
+  V2 audio assets is implemented and locally verified. Independent `lbsol` review found the code
+  and scope correct; the required quality CI rerun remains pending after its report-format finding.
+  Standalone Codex was unavailable, so no Codex review is claimed. No player, package, provider,
   release or feature activation is included.
 
 ## Agent work log

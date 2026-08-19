@@ -4,7 +4,7 @@
 - Original base commit: `198abd0` (PR #82 merged)
 - Current base commit: `448060c` (PR #83 merged)
 - Reconciliation commit: `37bd06d`
-- Draft PR: `#84` — Draft, independent Codex review pending
+- Draft PR: `#84` — Draft, independent `lbsol` review completed; required CI rerun pending
 - Scope completed: pure, offline `StartPackAudioAssets` resolver for the three
   canonical Start-card IDs (`start-a1-haus`, `start-a1-tisch`, `start-a1-tuer`),
   returning the exact approved V2 word and sentence asset paths and null for any
@@ -25,7 +25,10 @@
   - `cd apps/mobile && flutter test test/start_pack_audio_assets_test.dart` → 3/3 passed
   - `cd apps/mobile && flutter test` (full suite) → 69/69 passed (no regressions)
 - Checks unavailable: none. Flutter toolchain was available and all required checks ran.
-- Remaining work: independent Codex review. The native playback UI is intentionally a separately reviewed follow-up;
+- Independent review: `lbsol` (`aval-ai/gpt-5.6-sol`) verified scope, resolver correctness,
+  mobile checks, and preserved security boundaries. Standalone Codex was unavailable and no Codex
+  review is claimed.
+- Remaining work: required `quality` CI rerun after formatting this report. The native playback UI is intentionally a separately reviewed follow-up;
   this slice adds no player or button. Physical `de-DE` listening QA and bundled asset
   provenance are already recorded (PRs #65/#81).
 - Risks: none raised. The resolver is pure and immutable; no pubspec, dependency, asset,
