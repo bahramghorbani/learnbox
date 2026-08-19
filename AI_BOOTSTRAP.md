@@ -17,6 +17,8 @@ Before changing code, documentation, infrastructure or content, every capable co
    branch's directly linked plan or ADR.
 6. Read [`.ai/manifest.yaml`](./.ai/manifest.yaml), then resolve the needed abstract
    capabilities through [`.ai/provider-mappings.yaml`](./.ai/provider-mappings.yaml).
+   A supervising agent must also follow [`.ai/ORCHESTRATION_POLICY.md`](./.ai/ORCHESTRATION_POLICY.md)
+   before classifying, delegating or reviewing work.
    An agent continuing a queued task must also read [`.ai/WORKER_PROTOCOL.md`](./.ai/WORKER_PROTOCOL.md)
    and its task record in [`.ai/WORK_QUEUE.md`](./.ai/WORK_QUEUE.md).
 7. Inspect the live repository with `git status --short --branch`, `git diff --name-only` and

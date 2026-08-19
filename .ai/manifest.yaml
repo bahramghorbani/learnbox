@@ -6,6 +6,7 @@ handoff: AI_HANDOFF.md
 stable_state: PROJECT_STATE.md
 active_work: CURRENT_WORK.md
 routine_worker_protocol: .ai/WORKER_PROTOCOL.md
+orchestration_policy: .ai/ORCHESTRATION_POLICY.md
 routine_worker_queue: .ai/WORK_QUEUE.md
 routine_worker_reports: .ai/worker-reports/
 product_authority: docs/product/MASTER_SPEC.md

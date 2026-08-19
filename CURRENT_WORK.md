@@ -5,10 +5,13 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-- **LB-DS-004 — `worker/lb-ds-004-start-pack-audio-resolver` (ready):** a bounded routine task
-  for any capable coding agent to add the pure offline mapping from each canonical Start-card ID
-  to its six already-approved V2 audio assets. It must stop at a Draft PR; no player, package,
-  provider, release or feature activation is authorized.
+- **PR #84 / LB-DS-004 — `worker/lb-ds-004-start-pack-audio-resolver` (Draft, review requested):**
+  the bounded pure offline mapping is implemented. Independent high-reasoning review found its code
+  and scope correct and fixed a report-format CI finding; required CI rerun is pending. Standalone
+  Codex was unavailable, so no Codex review is claimed.
+- **`docs/hermes-orchestration-policy` (Draft PR pending):** adds one provider-portable orchestration
+  policy and links it from the existing bootstrap, manifest, provider mappings and active brief. It
+  changes no product, provider, credential, release or production behavior.
 
 ## Agent work log
 

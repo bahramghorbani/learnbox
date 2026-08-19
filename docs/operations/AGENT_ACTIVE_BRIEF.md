@@ -59,12 +59,13 @@ the authoritative product and security documents.
 
 ## Quality and model routing
 
-- Default operating mode: **GPT-5.6 Terra** with medium reasoning for ordinary implementation,
-  targeted tests, documentation and routine refactors.
-- Ask the owner to switch temporarily to **GPT-5.6 Sol** before authentication or session changes,
-  security boundaries, database migrations, payment/provider activation, difficult regressions,
-  cross-application refactors, or final release verification. Tell the owner when it is safe to
-  return to Terra.
+- Supervising agents follow [`.ai/ORCHESTRATION_POLICY.md`](../../.ai/ORCHESTRATION_POLICY.md): use
+  the strongest configured reasoning tier for supervision, then route implementation to the
+  cheapest reliable routine, substantial or high-reasoning worker. Provider failover must not
+  silently downgrade supervisor capability; worker escalation is explicit.
+- Architecture, authentication/session changes, security boundaries, database migrations,
+  payment/provider activation, important product or UI decisions, difficult regressions,
+  cross-application refactors and final high-risk verification require high-reasoning review.
 - Do not create a subagent or load a Skill by default. Use either only when the task is truly
   independent, a review materially reduces risk, or the selected Skill is directly relevant or
   mandatory.
