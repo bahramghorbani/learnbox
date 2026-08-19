@@ -5,10 +5,10 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-- **LB-DS-004 — `worker/lb-ds-004-start-pack-audio-resolver` (ready):** a bounded routine task
-  for any capable coding agent to add the pure offline mapping from each canonical Start-card ID
-  to its six already-approved V2 audio assets. It must stop at a Draft PR; no player, package,
-  provider, release or feature activation is authorized.
+- **LB-DS-004 — `worker/lb-ds-004-start-pack-audio-resolver` (review requested):** the bounded
+  pure offline mapping from each canonical Start-card ID to its six already-approved V2 audio
+  assets is implemented and locally verified. Draft PR pending; no player, package, provider,
+  release or feature activation is included.
 
 ## Agent work log
 
@@ -32,7 +32,7 @@ other agent can pick up without re-deriving state. It does not define anyone's r
   their listening-QA ledger are now merged, but the native playback UI remains open.
 - **Native identity + authenticated transport** (the next roadmap item in `STATUS.md`) was not
   started; no design spec exists yet.
-- No new development task is currently queued in `.ai/WORK_QUEUE.md`; no code/feature was started.
+- No other development task was started; LB-DS-004 remains the only active queued work.
 
 ## Known continuation gate
 
@@ -117,5 +117,5 @@ other agent can pick up without re-deriving state. It does not define anyone's r
 
 ## Owner action
 
-No owner action is required. Issue #59 and its Draft PR #65 remain the single controlled native
-audio continuation path; no provider, release flag or production service was enabled.
+No owner action is required. LB-DS-004 remains the single controlled native-audio continuation
+path; no provider, release flag or production service was enabled.

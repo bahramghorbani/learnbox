@@ -5,7 +5,7 @@ start. Historical tasks remain for traceability and must not be duplicated.
 
 ## LB-DS-004
 
-- Status: ready
+- Status: review_requested
 - Executor: any-capable-coding-agent
 - Base: main at `198abd0` (PR #82 merged)
 - Branch: worker/lb-ds-004-start-pack-audio-resolver
