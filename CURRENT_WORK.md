@@ -5,7 +5,13 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-No active product or implementation work is registered.
+- **PR #87 — `docs/mobile-pronunciation-design` (Draft):** documents the separately bounded
+  offline pronunciation-player design and its blocked future worker task. It adds no player,
+  dependency, provider, release or product activation.
+- **Mobile web-parity expansion — `docs/mobile-web-parity-design` (in design review):** documents
+  the native offline Today/Words/Progress shell that inherits the established learner-web visual
+  system. Implementation remains blocked until the owner reviews the written design; no identity,
+  transport, pronunciation player, provider, release or Bobo change is authorized.
 
 ## Agent work log
 
