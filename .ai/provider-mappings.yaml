@@ -3,6 +3,12 @@ policy: >-
   Providers are interchangeable. Map required abstract capabilities to the available native tool,
   workflow, or careful manual process; do not make this repository depend on a provider-specific
   skill name.
+capabilities:
+  supervisor: Use the strongest configured reasoning tier; fail over only to the same capability tier.
+  routine_worker: Bounded repetitive low-risk implementation and straightforward tests.
+  substantial_worker: Significant implementation, debugging, refactoring and difficult coding.
+  high_reasoning_worker: Architecture, security-sensitive work, important product or UI decisions and high-risk review.
+  independent_critical_reviewer: Preferred critical execution or review route when separately verified as available.
 providers:
   codex:
     repository_orientation: Git inspection and repository-document reading.
