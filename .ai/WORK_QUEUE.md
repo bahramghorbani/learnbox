@@ -5,9 +5,9 @@ start. Historical tasks remain for traceability and must not be duplicated.
 
 ## LB-DS-005
 
-- Status: blocked
+- Status: ready
 - Executor: substantial-worker
-- Base: current main after the design PR merges
+- Base: main at `c568702` (PR #87 merged)
 - Branch: worker/lb-ds-005-mobile-offline-pronunciation
 - Risk: substantial-native-offline-audio
 - Specification: docs/superpowers/specs/2026-08-20-mobile-offline-pronunciation-design.md; GitHub issue #59
@@ -17,14 +17,14 @@ start. Historical tasks remain for traceability and must not be duplicated.
 - Draft PR required: yes
 - Merge allowed: yes
 
-Blocked until this design merges. Then implement only the reviewed offline pronunciation slice for
+The reviewed design merged through PR #87. Implement only the offline pronunciation slice for
 the three canonical Start cards. Use the six existing V2 assets through `StartPackAudioAssets`, one
 injected player contract and a fixed-allowlist native bridge. Add accessible Persian word and
 revealed-sentence controls, no autoplay, calm failure and lifecycle cleanup while preserving every
 grading invariant. Do not restore PR #58 or V1 media; do not change assets, `pubspec.yaml`,
 dependencies, network, storage, sync, identity, providers, flags, release settings, Bobo or any
-unlisted path. Start with failing direct tests. After the design merge, a supervisor may change only
-the status to `ready` and base to the exact merge commit before dispatching the substantial worker.
+unlisted path. Start with failing direct tests. This is the only authorized implementation task;
+keep the separate mobile web-parity expansion design blocked to avoid overlapping mobile edits.
 The recorded build and device checks govern the future implementation PR, not this design-only PR.
 
 ## LB-DS-004
