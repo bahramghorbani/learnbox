@@ -59,9 +59,10 @@ added.
    names, packaged-asset loading and absence of URL/network APIs.
 5. Run formatter, Flutter analysis, focused tests, full Flutter tests, debug Android build and
    no-codesign debug iOS build.
-6. Before merge, perform Android emulator smoke plus physical Android listening QA for all six clips
-   and record that each plays the already-approved German phrase. Unavailable device evidence is a
-   merge blocker, not a passing result.
+6. Before the future implementation PR merges, perform Android emulator smoke plus physical Android
+   listening QA for all six clips and record that each plays the already-approved German phrase.
+   Unavailable device evidence blocks that implementation merge; it is not a gate on this
+   documentation-only design PR.
 
 ## Allowed implementation paths
 

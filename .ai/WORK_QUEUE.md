@@ -25,6 +25,7 @@ grading invariant. Do not restore PR #58 or V1 media; do not change assets, `pub
 dependencies, network, storage, sync, identity, providers, flags, release settings, Bobo or any
 unlisted path. Start with failing direct tests. After the design merge, a supervisor may change only
 the status to `ready` and base to the exact merge commit before dispatching the substantial worker.
+The recorded build and device checks govern the future implementation PR, not this design-only PR.
 
 ## LB-DS-004
 
