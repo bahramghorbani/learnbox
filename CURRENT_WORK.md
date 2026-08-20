@@ -42,7 +42,7 @@ other agent can pick up without re-deriving state. It does not define anyone's r
   their listening-QA ledger are now merged, but the native playback UI remains open.
 - **Native identity + authenticated transport** (the next roadmap item in `STATUS.md`) was not
   started; no design spec exists yet.
-- No new product task is currently queued.
+- `LB-DS-005` is recorded as blocked until its design PR merges; implementation has not started.
 
 ## Known continuation gate
 
