@@ -27,10 +27,10 @@ Choose the cheapest tier that can reliably satisfy the task:
 | High-reasoning worker                  | Architecture, security-sensitive work, important product decisions, critical UI/UX, difficult escalation and high-risk review |
 | Independent critical executor/reviewer | Preferred for critical execution or review when a separately verified route is available                                      |
 
-Current local aliases may map these capabilities to `lbdeepseek`, `lbterra` and `lbsol`, but those
-names, providers, endpoints and credentials are machine-local implementation details and must not
-be committed. Record the actual model and provider used in task evidence. Never claim an
-independent reviewer or execution lane that was unavailable.
+Current installations may map these capabilities to machine-local worker profiles, but profile names,
+providers, endpoints and credentials are implementation details and must not be committed. Record
+the actual capability tier, model and provider used in task evidence. Never claim an independent
+reviewer or execution lane that was unavailable.
 
 ## Escalation and review
 
