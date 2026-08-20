@@ -3,6 +3,29 @@
 Read `.ai/WORKER_PROTOCOL.md` before this file. `blocked` tasks are context, not authorization to
 start. Historical tasks remain for traceability and must not be duplicated.
 
+## LB-DS-005
+
+- Status: blocked
+- Executor: substantial-worker
+- Base: current main after the design PR merges
+- Branch: worker/lb-ds-005-mobile-offline-pronunciation
+- Risk: substantial-native-offline-audio
+- Specification: docs/superpowers/specs/2026-08-20-mobile-offline-pronunciation-design.md; GitHub issue #59
+- Allowed paths: apps/mobile/lib/app.dart; apps/mobile/lib/main.dart; apps/mobile/lib/features/review/pronunciation_player.dart; apps/mobile/lib/features/review/review_screen.dart; apps/mobile/lib/features/review/today_screen.dart; apps/mobile/android/app/src/main/kotlin/com/learnbox/learnbox/MainActivity.kt; apps/mobile/ios/Runner/AppDelegate.swift; apps/mobile/test/mobile_learning_loop_test.dart; apps/mobile/test/native_pronunciation_bridge_test.dart; apps/mobile/test/support/mobile_test_app.dart; apps/mobile/README.md; docs/architecture/MOBILE_PRONUNCIATION.md; .ai/WORK_QUEUE.md; .ai/worker-reports/LB-DS-005.md; CURRENT_WORK.md
+- Required checks: dart format --output=none --set-exit-if-changed apps/mobile/lib/app.dart apps/mobile/lib/main.dart apps/mobile/lib/features/review/pronunciation_player.dart apps/mobile/lib/features/review/review_screen.dart apps/mobile/lib/features/review/today_screen.dart apps/mobile/test/mobile_learning_loop_test.dart apps/mobile/test/native_pronunciation_bridge_test.dart apps/mobile/test/support/mobile_test_app.dart; cd apps/mobile && flutter analyze; cd apps/mobile && flutter test test/mobile_learning_loop_test.dart test/native_pronunciation_bridge_test.dart; cd apps/mobile && flutter test; cd apps/mobile && flutter build apk --debug; cd apps/mobile && flutter build ios --debug --no-codesign; Android emulator smoke; physical Android listening QA for all six approved V2 clips
+- Simulator required: yes
+- Draft PR required: yes
+- Merge allowed: yes
+
+Blocked until this design merges. Then implement only the reviewed offline pronunciation slice for
+the three canonical Start cards. Use the six existing V2 assets through `StartPackAudioAssets`, one
+injected player contract and a fixed-allowlist native bridge. Add accessible Persian word and
+revealed-sentence controls, no autoplay, calm failure and lifecycle cleanup while preserving every
+grading invariant. Do not restore PR #58 or V1 media; do not change assets, `pubspec.yaml`,
+dependencies, network, storage, sync, identity, providers, flags, release settings, Bobo or any
+unlisted path. Start with failing direct tests. After the design merge, a supervisor may change only
+the status to `ready` and base to the exact merge commit before dispatching the substantial worker.
+
 ## LB-DS-004
 
 - Status: accepted

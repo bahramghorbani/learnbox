@@ -5,7 +5,9 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-No active product or implementation work is registered.
+- **`docs/mobile-pronunciation-design` (Draft PR pending):** defines the smallest offline native
+  playback boundary for the six approved Start Pack V2 clips and records blocked task `LB-DS-005`.
+  No implementation, dependency, asset, provider, release or production behavior is included.
 
 ## Agent work log
 
@@ -36,7 +38,7 @@ other agent can pick up without re-deriving state. It does not define anyone's r
   their listening-QA ledger are now merged, but the native playback UI remains open.
 - **Native identity + authenticated transport** (the next roadmap item in `STATUS.md`) was not
   started; no design spec exists yet.
-- No new product task is currently queued.
+- `LB-DS-005` is recorded as blocked until its design PR merges; implementation has not started.
 
 ## Known continuation gate
 
