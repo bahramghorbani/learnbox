@@ -5,7 +5,7 @@ start. Historical tasks remain for traceability and must not be duplicated.
 
 ## LB-DS-004
 
-- Status: ready
+- Status: accepted
 - Executor: any-capable-coding-agent
 - Base: main at `198abd0` (PR #82 merged)
 - Branch: worker/lb-ds-004-start-pack-audio-resolver
@@ -27,6 +27,10 @@ implement the smallest typed immutable API that makes it pass. Do not add a play
 player: physical `de-DE` listening QA and bundled asset provenance are already recorded, while
 the native playback experience itself remains a separately reviewed follow-up. Record a standard
 handoff report, mark the task `review_requested`, and stop at a Draft PR with actual check output.
+
+Accepted and merged through green-check PR #84 on 2026-08-20 after independent high-reasoning
+scope review. Standalone Codex was unavailable, so no Codex review is claimed. Do not reopen or
+duplicate this task.
 
 ## LB-DS-001
 
