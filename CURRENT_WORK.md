@@ -5,10 +5,11 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-- **LB-DS-006 — `worker/lb-ds-006-mobile-web-parity` (ready):** the owner approved starting the
-  reviewed native offline Today/Words/Progress expansion. One substantial worker may implement it
-  serially; pronunciation, native hosts, identity, transport, providers, release and Bobo are out of
-  scope.
+- **PR #94 / LB-DS-006 — `worker/lb-ds-006-mobile-web-parity` (Draft, review requested):** the
+  offline Today/Words/Progress shell is implemented and all local code, Flutter, root quality,
+  Android-build, emulator and physical visual checks are recorded. Independent high-reasoning
+  review approved it; fresh CI remains. Pronunciation, native hosts, identity, transport, providers,
+  release and Bobo are out of scope.
 
 ## Agent work log
 

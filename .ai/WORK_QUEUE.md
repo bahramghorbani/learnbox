@@ -5,7 +5,7 @@ start. Historical tasks remain for traceability and must not be duplicated.
 
 ## LB-DS-006
 
-- Status: ready
+- Status: review_requested
 - Executor: substantial-worker
 - Base: main at `164270a` (PR #91 merged)
 - Branch: worker/lb-ds-006-mobile-web-parity
