@@ -5,7 +5,7 @@ start. Historical tasks remain for traceability and must not be duplicated.
 
 ## LB-DS-005
 
-- Status: review_requested
+- Status: accepted
 - Executor: substantial-worker
 - Base: main at `c568702` (PR #87 merged)
 - Branch: worker/lb-ds-005-mobile-offline-pronunciation
@@ -26,6 +26,11 @@ dependencies, network, storage, sync, identity, providers, flags, release settin
 unlisted path. Start with failing direct tests. This is the only authorized implementation task;
 keep the separate mobile web-parity expansion design blocked to avoid overlapping mobile edits.
 The recorded build and device checks govern the future implementation PR, not this design-only PR.
+
+Accepted and merged through green-check PR #90 on 2026-08-22 after independent high-reasoning
+review, Android/iOS builds, emulator smoke and owner-confirmed physical Android listening QA for all
+six approved V2 clips. No dependency, network, provider, release or production path was added. Do
+not reopen or duplicate this task.
 
 ## LB-DS-004
 
