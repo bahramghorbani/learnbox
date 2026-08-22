@@ -5,10 +5,10 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-- **Native identity + authenticated transport design** (branch `docs/native-identity-transport-design`):
-  design at `docs/superpowers/specs/2026-08-22-native-identity-authenticated-transport-design.md`,
-  recorded in `docs/architecture/ADR/0011-native-mobile-session-and-transport.md`. Design only; no
-  implementation started. Issue #92 is CLOSED.
+- **LB-DS-007 / NI-001 pure mobile session contract** is ready for a high-reasoning worker from
+  `main` at `97bf8af` on branch `worker/lb-ds-007-mobile-session-contract`. Scope is limited to injected pure
+  server contracts/tests; no route, database, migration, network, flag or mobile composition is
+  authorized. The reviewed design merged through PR #97.
 
 ## Agent work log
 
@@ -43,8 +43,8 @@ other agent can pick up without re-deriving state. It does not define anyone's r
 
 ### Not done (open for the other agent)
 
-- **Native identity + authenticated transport** (the next roadmap item in `STATUS.md`) is now in
-  active design on branch `docs/native-identity-transport-design`; no implementation is started.
+- **Native identity + authenticated transport:** reviewed design merged through PR #97. Only
+  LB-DS-007 (design slice NI-001) is now ready; NI-002–NI-007 remain unauthorized and must stay serial.
 - **Issue #92** is **CLOSED**: the physical Android secure-storage write failure was a local
   `--no-pub` artifact missing its generated plugin registrant, not a source defect, so no source fix
   was required.
