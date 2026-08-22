@@ -71,6 +71,8 @@
     "repair:avalai:audio-candidates": "node scripts/repair-avalai-audio-candidates.mjs",
     "verify:avalai:audio-candidates": "node scripts/verify-avalai-audio-candidates.mjs",
     "dev": "pnpm --filter @learnbox/website dev",
+    "dashboard": "node tools/project-dashboard/server.mjs",
+    "test:dashboard": "node --test tools/project-dashboard/test/*.test.mjs",
     "preview:web": "pnpm --filter @learnbox/website exec next start --hostname 127.0.0.1 --port 3010"
   },
   "devDependencies": {
