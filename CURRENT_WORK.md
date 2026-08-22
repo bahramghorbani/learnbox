@@ -5,8 +5,8 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-- **LB-DS-005 — `worker/lb-ds-005-mobile-offline-pronunciation` (review requested, Draft PR
-  pending):** the reviewed offline pronunciation slice is implemented and all available local
+- **PR #90 / LB-DS-005 — `worker/lb-ds-005-mobile-offline-pronunciation` (Draft, review
+  requested):** the reviewed offline pronunciation slice is implemented and all available local
   code, Flutter, Android-build, iOS-build and emulator-smoke gates pass. Physical Android listening
   QA for all six V2 clips is still unavailable and blocks merge. No other worker may edit its paths.
 - **Mobile web-parity expansion — `docs/mobile-web-parity-design` (in design review):** documents

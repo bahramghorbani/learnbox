@@ -3,7 +3,7 @@
 - Branch: `worker/lb-ds-005-mobile-offline-pronunciation`
 - Base commit: `aee1c85` (PR #89 merged)
 - Head commit: `7a38118`
-- Draft PR: pending creation
+- Draft PR: `#90` — Draft, independent review and physical Android listening QA pending
 - Scope completed: offline word and revealed-sentence playback for exactly the three canonical Start
   cards, using the six existing approved V2 assets, an injected Dart player contract and exact
   native allowlists. No autoplay or network path was added.
