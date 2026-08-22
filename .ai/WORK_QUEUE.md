@@ -3,6 +3,28 @@
 Read `.ai/WORKER_PROTOCOL.md` before this file. `blocked` tasks are context, not authorization to
 start. Historical tasks remain for traceability and must not be duplicated.
 
+## LB-DS-006
+
+- Status: ready
+- Executor: substantial-worker
+- Base: main at `164270a` (PR #91 merged)
+- Branch: worker/lb-ds-006-mobile-web-parity
+- Risk: substantial-offline-mobile-presentation
+- Specification: docs/superpowers/specs/2026-08-20-mobile-web-parity-expansion-design.md
+- Allowed paths: apps/mobile/lib/app.dart; apps/mobile/lib/features/review/learner_home_shell.dart; apps/mobile/lib/features/review/today_screen.dart; apps/mobile/lib/features/review/words_screen.dart; apps/mobile/lib/features/review/progress_screen.dart; apps/mobile/lib/ui/learner_bottom_navigation.dart; apps/mobile/test/app_test.dart; apps/mobile/test/widget_test.dart; apps/mobile/test/mobile_learning_loop_test.dart; apps/mobile/test/mobile_visual_parity_test.dart; apps/mobile/test/learner_bottom_navigation_test.dart; apps/mobile/test/support/mobile_test_app.dart; apps/mobile/README.md; docs/architecture/MOBILE_WEB_PARITY.md; .ai/WORK_QUEUE.md; .ai/worker-reports/LB-DS-006.md; CURRENT_WORK.md
+- Required checks: dart format --output=none --set-exit-if-changed apps/mobile/lib/app.dart apps/mobile/lib/features/review/learner_home_shell.dart apps/mobile/lib/features/review/today_screen.dart apps/mobile/lib/features/review/words_screen.dart apps/mobile/lib/features/review/progress_screen.dart apps/mobile/lib/ui/learner_bottom_navigation.dart apps/mobile/test/app_test.dart apps/mobile/test/widget_test.dart apps/mobile/test/mobile_learning_loop_test.dart apps/mobile/test/mobile_visual_parity_test.dart apps/mobile/test/learner_bottom_navigation_test.dart apps/mobile/test/support/mobile_test_app.dart; cd apps/mobile && flutter analyze; cd apps/mobile && flutter test test/mobile_visual_parity_test.dart test/mobile_learning_loop_test.dart test/learner_bottom_navigation_test.dart; cd apps/mobile && flutter test; cd apps/mobile && flutter build apk --debug; Android emulator visual smoke; physical Android visual smoke
+- Simulator required: yes
+- Draft PR required: yes
+- Merge allowed: yes
+
+Implement only the approved offline Today/Words/Progress shell from the linked design. Preserve the
+same repository, queue and pronunciation-player instances; Words shows exactly the three canonical
+cards and Progress reports only `ReviewQueue.pendingCount()` as device-local. Navigation changes
+presentation only. Do not touch pronunciation implementation/native hosts, identity, sync,
+network, storage internals, dependencies, assets, providers, flags, release settings, Bobo or any
+unlisted path. Start with failing widget tests, work serially and stop at a Draft PR. Issue #92 is a
+separate baseline secure-storage investigation and must not be fixed or masked in this task.
+
 ## LB-DS-005
 
 - Status: accepted
