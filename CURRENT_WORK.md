@@ -5,7 +5,10 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-No active implementation is registered. Issue #92 remains the next isolated mobile investigation.
+- **Native identity + authenticated transport design** (branch `docs/native-identity-transport-design`):
+  design at `docs/superpowers/specs/2026-08-22-native-identity-authenticated-transport-design.md`,
+  recorded in `docs/architecture/ADR/0011-native-mobile-session-and-transport.md`. Design only; no
+  implementation started. Issue #92 is CLOSED.
 
 ## Agent work log
 
@@ -40,10 +43,11 @@ other agent can pick up without re-deriving state. It does not define anyone's r
 
 ### Not done (open for the other agent)
 
-- **Native identity + authenticated transport** (the next roadmap item in `STATUS.md`) was not
-  started; no design spec exists yet.
-- **Issue #92** records the physical Android secure-storage write failure reproduced on unchanged
-  `origin/main`; it is separate and no fix is authorized while `LB-DS-006` is active.
+- **Native identity + authenticated transport** (the next roadmap item in `STATUS.md`) is now in
+  active design on branch `docs/native-identity-transport-design`; no implementation is started.
+- **Issue #92** is **CLOSED**: the physical Android secure-storage write failure was a local
+  `--no-pub` artifact missing its generated plugin registrant, not a source defect, so no source fix
+  was required.
 
 ## Known continuation gate
 
