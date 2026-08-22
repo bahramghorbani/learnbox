@@ -5,11 +5,6 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-- **PR #90 / LB-DS-005 — `worker/lb-ds-005-mobile-offline-pronunciation` (Draft, review
-  requested):** the reviewed offline pronunciation slice is implemented and all available local
-  code, Flutter, Android-build, iOS-build, emulator-smoke and physical Android listening gates pass.
-  Independent high-reasoning review approved the resolved findings; fresh green CI remains before
-  merge. No other worker may edit its paths.
 - **Mobile web-parity expansion — `docs/mobile-web-parity-design` (in design review):** documents
   the native offline Today/Words/Progress shell that inherits the established learner-web visual
   system. Implementation remains blocked until the owner reviews the written design; no identity,
@@ -38,26 +33,24 @@ other agent can pick up without re-deriving state. It does not define anyone's r
 - PR #85 merged the provider-portable orchestration policy after independent high-reasoning review
   and green local and GitHub gates. No machine-local aliases, credentials or endpoints were added.
 
+### Done on 2026-08-22
+
+- PR #90 merged the no-dependency native offline pronunciation controls for all three Start cards
+  after local/full CI, Android/iOS builds, emulator smoke, independent high-reasoning review and
+  owner-confirmed physical Android listening QA for all six approved V2 clips.
+
 ### Not done (open for the other agent)
 
-- **Issue #59** (native pronunciation player) was not advanced: the approved V2 audio assets and
-  their listening-QA ledger are now merged, but the native playback UI remains open.
 - **Native identity + authenticated transport** (the next roadmap item in `STATUS.md`) was not
   started; no design spec exists yet.
-- `LB-DS-005` awaits fresh green CI. The mobile web-parity expansion remains design-only and blocked
-  from implementation until this task closes, preventing path overlap.
+- The mobile web-parity expansion remains design-only pending owner review; no implementation task
+  is authorized yet.
 
 ## Known continuation gate
 
-- Native offline pronunciation is intentionally absent from `main`. During physical Android QA on
-  2026-08-14, the unmerged candidate played English-like `house` and omitted the displayed German
-  article. Its Draft PR #58 was closed without merge and its branch/assets were deleted. Continue
-  only from GitHub issue #59: regenerate or license source audio for the exact displayed German
-  phrase (for example `das Haus`), require `de-DE` listening QA plus provenance/version/checksum,
-  then make a new isolated PR. Never restore the closed branch or candidate media.
-- The Issue #59 web delivery correction is merged through PRs #63 and #64: the local preview now
-  serves only approved V2 full German phrase audio. This does not make native pronunciation
-  complete; PR #65 remains the isolated native-asset continuation.
+- Native offline pronunciation is now merged through PR #90 using only the approved V2 German word
+  phrases and sentences. Closed PR #58 and its rejected V1 media remain historical and must never be
+  restored. No network, provider or release path was enabled.
 - PRs #60 and #61 merged after their required CI gates became available and green. Do not treat
   their historical billing note as an active blocker; always inspect live GitHub checks instead.
 
