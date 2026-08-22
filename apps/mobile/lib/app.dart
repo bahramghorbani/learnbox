@@ -3,10 +3,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
+import 'features/review/learner_home_shell.dart';
 import 'features/review/pronunciation_player.dart';
 import 'features/review/review_queue.dart';
 import 'features/review/start_pack_repository.dart';
-import 'features/review/today_screen.dart';
 import 'features/sync/review_sync_coordinator.dart';
 import 'ui/learnbox_theme.dart';
 
@@ -89,7 +89,7 @@ class _LearnBoxLaunchScreenState extends State<LearnBoxLaunchScreen> {
   @override
   Widget build(BuildContext context) {
     if (_showToday) {
-      return TodayScreen(
+      return LearnerHomeShell(
         startPackRepository: widget.startPackRepository,
         reviewQueue: widget.reviewQueue,
         pronunciationPlayer: widget.pronunciationPlayer,

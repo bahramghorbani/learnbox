@@ -13,12 +13,17 @@ class TodayScreen extends StatefulWidget {
     required this.startPackRepository,
     required this.reviewQueue,
     required this.pronunciationPlayer,
+    this.onDestinationSelected,
     super.key,
   });
 
   final StartPackRepository startPackRepository;
   final ReviewQueue reviewQueue;
   final PronunciationPlayer pronunciationPlayer;
+
+  /// Optional injected navigation callback. When null, Today renders without
+  /// the bottom navigation so the owning shell provides the only one.
+  final ValueChanged<LearnerDestination>? onDestinationSelected;
 
   @override
   State<TodayScreen> createState() => _TodayScreenState();
@@ -35,16 +40,6 @@ class _TodayScreenState extends State<TodayScreen> {
 
   void _loadSession() {
     _session = widget.startPackRepository.loadDailySession();
-  }
-
-  void _showUnavailableDestination(LearnerDestination destination) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        const SnackBar(
-          content: Text('این بخش به‌زودی در اپ موبایل آماده می‌شود.'),
-        ),
-      );
   }
 
   @override
@@ -85,7 +80,7 @@ class _TodayScreenState extends State<TodayScreen> {
                       ),
                     ),
                   ),
-                  onDestinationSelected: _showUnavailableDestination,
+                  onDestinationSelected: widget.onDestinationSelected,
                 );
               },
             ),
@@ -103,7 +98,7 @@ class _TodayContent extends StatelessWidget {
 
   final List<StartCard> cards;
   final VoidCallback onStart;
-  final ValueChanged<LearnerDestination> onDestinationSelected;
+  final ValueChanged<LearnerDestination>? onDestinationSelected;
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(
@@ -173,11 +168,13 @@ class _TodayContent extends StatelessWidget {
                     onPressed: onStart,
                     child: const Text('شروع مرور'),
                   ),
-                  const SizedBox(height: 16),
-                  LearnerBottomNavigation(
-                    current: LearnerDestination.today,
-                    onDestinationSelected: onDestinationSelected,
-                  ),
+                  if (onDestinationSelected != null) ...[
+                    const SizedBox(height: 16),
+                    LearnerBottomNavigation(
+                      current: LearnerDestination.today,
+                      onDestinationSelected: onDestinationSelected!,
+                    ),
+                  ],
                 ],
               ),
             ),

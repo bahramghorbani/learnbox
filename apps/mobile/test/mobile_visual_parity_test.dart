@@ -1,8 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:learnbox/app.dart';
 import 'package:learnbox/features/review/completion_screen.dart';
 import 'package:learnbox/features/review/review_queue.dart';
+import 'package:learnbox/features/review/review_queue_store.dart';
+import 'package:learnbox/features/review/start_card.dart';
+import 'package:learnbox/features/review/start_pack_repository.dart';
 
 import 'mobile_learning_loop_test.dart'
     show ControlledReviewQueueStore, InMemoryStartPackRepository;
@@ -33,30 +38,230 @@ void main() {
     expect(image.excludeFromSemantics, isTrue);
   });
 
-  testWidgets('Words destination shows a truthful unavailable notice',
+  testWidgets('Words shows exactly three canonical offline cards',
       (tester) async {
     await _pumpApp(tester);
 
     await tester.tap(find.text('واژه‌ها'));
-    await tester.pump();
+    await tester.pumpAndSettle();
 
-    expect(
-      find.text('این بخش به‌زودی در اپ موبایل آماده می‌شود.'),
-      findsOneWidget,
-    );
+    expect(find.text('واژه‌های شروع'), findsOneWidget);
+    expect(find.text('das Haus'), findsOneWidget);
+    expect(find.text('der Tisch'), findsOneWidget);
+    expect(find.text('die Tür'), findsOneWidget);
+    expect(find.byType(Card), findsNWidgets(3));
+    expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Progress destination shows a truthful unavailable notice',
+  testWidgets(
+      'Words lists the exact canonical cards in canonical order with labeled images',
+      (tester) async {
+    await _pumpApp(tester);
+
+    await tester.tap(find.text('واژه‌ها'));
+    await tester.pumpAndSettle();
+
+    const german = ['das Haus', 'der Tisch', 'die Tür'];
+    final positions = [
+      for (final phrase in german) tester.getTopLeft(find.text(phrase)),
+    ];
+    expect(positions[0].dy, lessThan(positions[1].dy));
+    expect(positions[1].dy, lessThan(positions[2].dy));
+    for (final phrase in german) {
+      expect(find.bySemanticsLabel('تصویر واژه $phrase'), findsOneWidget);
+    }
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Progress shows only device-local pending answers',
       (tester) async {
     await _pumpApp(tester);
 
     await tester.tap(find.text('پیشرفت'));
-    await tester.pump();
+    await tester.pumpAndSettle();
 
+    expect(find.text('پیشرفت'), findsNWidgets(2));
+    expect(find.text('۰ پاسخ ذخیره‌شده در این دستگاه'), findsOneWidget);
     expect(
-      find.text('این بخش به‌زودی در اپ موبایل آماده می‌شود.'),
+        find.text('هنوز پاسخی در این دستگاه ذخیره نشده است.'), findsOneWidget);
+    expect(find.textContaining('همگام'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('shell navigation switches Today, Words and Progress content',
+      (tester) async {
+    await _pumpApp(tester);
+
+    // Words destination: content replaces the Today body, and the shell keeps
+    // the single navigation with both inactive labels visible.
+    await tester.tap(find.text('واژه‌ها'));
+    await tester.pumpAndSettle();
+    expect(find.text('واژه‌های شروع'), findsOneWidget);
+    expect(find.text('امروز'), findsOneWidget);
+    expect(find.text('پیشرفت'), findsOneWidget);
+
+    // Progress destination.
+    await tester.tap(find.text('پیشرفت'));
+    await tester.pumpAndSettle();
+    expect(find.text('۰ پاسخ ذخیره‌شده در این دستگاه'), findsOneWidget);
+    expect(find.text('امروز'), findsOneWidget);
+
+    // Back to Today: heading and navigation label both present again.
+    await tester.tap(find.text('امروز'));
+    await tester.pumpAndSettle();
+    expect(find.text('۳ کارت برای مرور امروز آماده است.'), findsOneWidget);
+    expect(find.text('امروز'), findsNWidgets(2));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Progress refreshes to three device-local answers after grading',
+      (tester) async {
+    await _pumpApp(tester);
+
+    // The truthful zero state before any grade on this device.
+    await tester.tap(find.text('پیشرفت'));
+    await tester.pumpAndSettle();
+    expect(find.text('۰ پاسخ ذخیره‌شده در این دستگاه'), findsOneWidget);
+
+    // Return to Today and grade all three cards.
+    await tester.tap(find.text('امروز'));
+    await tester.pumpAndSettle();
+    await _completeDailyReview(tester);
+    await tester.tap(find.text('بازگشت به امروز'));
+    await tester.pumpAndSettle();
+
+    // Progress re-reads the queue when selected again.
+    await tester.tap(find.text('پیشرفت'));
+    await tester.pumpAndSettle();
+    expect(find.text('۳ پاسخ ذخیره‌شده در این دستگاه'), findsOneWidget);
+    expect(find.text('۰ پاسخ ذخیره‌شده در این دستگاه'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Words loading, empty, error and retry states stay honest',
+      (tester) async {
+    // Loading shows descriptive progress semantics before content resolves.
+    final gated = _GatedStartPackRepository();
+    await _pumpApp(tester, startPackRepository: gated, settle: false);
+    await tester.pump(const Duration(milliseconds: 1));
+
+    await tester.tap(find.text('واژه‌ها'));
+    await tester.pump();
+    expect(find.bySemanticsLabel('در حال آماده‌کردن واژه‌ها'), findsOneWidget);
+
+    gated.gate.complete(await InMemoryStartPackRepository().loadDailySession());
+    await tester.pumpAndSettle();
+    expect(find.text('das Haus'), findsOneWidget);
+
+    // An empty session reports honestly.
+    await _pumpApp(tester, startPackRepository: _EmptyStartPackRepository());
+    await tester.tap(find.text('واژه‌ها'));
+    await tester.pumpAndSettle();
+    expect(find.text('واژه‌ای برای نمایش آماده نیست.'), findsOneWidget);
+
+    // A failed load is descriptive, offers retry, and recovers.
+    await _pumpApp(
+      tester,
+      startPackRepository: _RetryStartPackRepository(failuresBeforeSuccess: 2),
+    );
+    await tester.tap(find.text('واژه‌ها'));
+    await tester.pumpAndSettle();
+    expect(find.text('واژه‌ها آماده نشد؛ دوباره تلاش کن.'), findsOneWidget);
+    expect(find.text('تلاش دوباره'), findsOneWidget);
+    await tester.tap(find.text('تلاش دوباره'));
+    await tester.pumpAndSettle();
+    expect(find.text('das Haus'), findsOneWidget);
+    expect(find.text('واژه‌ها آماده نشد؛ دوباره تلاش کن.'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Progress loading, empty, error and retry states stay honest',
+      (tester) async {
+    // Loading shows descriptive progress semantics before the count resolves.
+    final gatedStore = _GatedReviewQueueStore();
+    await _pumpApp(
+      tester,
+      reviewQueue: ReviewQueue(
+        store: gatedStore,
+        idFactory: () => 'vp-event-a',
+      ),
+      settle: false,
+    );
+    await tester.pump(const Duration(milliseconds: 1));
+
+    await tester.tap(find.text('پیشرفت'));
+    await tester.pump();
+    expect(
+      find.bySemanticsLabel('در حال خواندن وضعیت دستگاه'),
       findsOneWidget,
     );
+
+    gatedStore.gate.complete(null);
+    await tester.pumpAndSettle();
+    expect(find.text('۰ پاسخ ذخیره‌شده در این دستگاه'), findsOneWidget);
+    expect(
+        find.text('هنوز پاسخی در این دستگاه ذخیره نشده است.'), findsOneWidget);
+
+    // A failed read is descriptive, offers retry, and recovers.
+    final retryStore = _RetryReviewQueueStore(failuresBeforeRead: 1);
+    await _pumpApp(
+      tester,
+      reviewQueue: ReviewQueue(
+        store: retryStore,
+        idFactory: () => 'vp-event-a',
+      ),
+    );
+    await tester.tap(find.text('پیشرفت'));
+    await tester.pumpAndSettle();
+    expect(
+        find.text('وضعیت دستگاه خوانده نشد؛ دوباره تلاش کن.'), findsOneWidget);
+    expect(find.text('تلاش دوباره'), findsOneWidget);
+    await tester.tap(find.text('تلاش دوباره'));
+    await tester.pumpAndSettle();
+    expect(find.text('۰ پاسخ ذخیره‌شده در این دستگاه'), findsOneWidget);
+    expect(find.text('وضعیت دستگاه خوانده نشد؛ دوباره تلاش کن.'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets(
+      'Words and Progress stay overflow-free on a narrow large-text view',
+      (tester) async {
+    await _pumpApp(
+      tester,
+      size: const Size(320, 480),
+      textScaleFactor: 2,
+    );
+
+    await tester.tap(find.text('واژه‌ها'));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    await tester.scrollUntilVisible(find.text('die Tür'), 100);
+    expect(find.text('die Tür'), findsOneWidget);
+
+    await tester.tap(find.text('پیشرفت'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('شروع مرور'));
+    await tester.pump();
+    expect(find.text('شروع مرور'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Words and Progress reflow without overflow in landscape',
+      (tester) async {
+    await _pumpApp(tester, size: const Size(844, 390));
+
+    await tester.tap(find.text('واژه‌ها'));
+    await tester.pumpAndSettle();
+    expect(find.text('das Haus'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('die Tür'), 100);
+    expect(find.text('die Tür'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+
+    await tester.tap(find.text('پیشرفت'));
+    await tester.pumpAndSettle();
+    expect(find.text('۰ پاسخ ذخیره‌شده در این دستگاه'), findsOneWidget);
+    expect(find.text('شروع مرور'), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('primary action remains discoverable on a short large-text view',
@@ -189,6 +394,9 @@ Future<void> _pumpApp(
   WidgetTester tester, {
   Size size = const Size(390, 844),
   double textScaleFactor = 1,
+  StartPackRepository? startPackRepository,
+  ReviewQueue? reviewQueue,
+  bool settle = true,
 }) async {
   tester.view.devicePixelRatio = 1;
   tester.view.physicalSize = size;
@@ -198,20 +406,89 @@ Future<void> _pumpApp(
   addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
 
   final ids = ['vp-event-a', 'vp-event-b', 'vp-event-c'].iterator;
-  final queue = ReviewQueue(
-    store: ControlledReviewQueueStore(),
-    idFactory: () {
-      ids.moveNext();
-      return ids.current;
-    },
-  );
+  final queue = reviewQueue ??
+      ReviewQueue(
+        store: ControlledReviewQueueStore(),
+        idFactory: () {
+          ids.moveNext();
+          return ids.current;
+        },
+      );
   await tester.pumpWidget(
     LearnBoxApp(
       key: UniqueKey(),
-      startPackRepository: InMemoryStartPackRepository(),
+      startPackRepository: startPackRepository ?? InMemoryStartPackRepository(),
       reviewQueue: queue,
       splashDuration: Duration.zero,
     ),
   );
-  await tester.pumpAndSettle();
+  if (settle) {
+    await tester.pumpAndSettle();
+  }
+}
+
+/// A repository whose session future stays pending until the gate completes.
+class _GatedStartPackRepository implements StartPackRepository {
+  final Completer<List<StartCard>> gate = Completer<List<StartCard>>();
+
+  @override
+  Future<List<StartCard>> loadDailySession() => gate.future;
+}
+
+/// A repository that always returns an empty session.
+class _EmptyStartPackRepository implements StartPackRepository {
+  @override
+  Future<List<StartCard>> loadDailySession() async => const [];
+}
+
+/// A repository that fails the first [failuresBeforeSuccess] loads.
+class _RetryStartPackRepository implements StartPackRepository {
+  _RetryStartPackRepository({this.failuresBeforeSuccess = 1});
+
+  final int failuresBeforeSuccess;
+  var _calls = 0;
+  final _ok = InMemoryStartPackRepository();
+
+  @override
+  Future<List<StartCard>> loadDailySession() async {
+    _calls += 1;
+    if (_calls <= failuresBeforeSuccess) {
+      throw StateError('synthetic session failure');
+    }
+    return _ok.loadDailySession();
+  }
+}
+
+/// A queue store whose read stays pending until the gate completes.
+class _GatedReviewQueueStore implements ReviewQueueStore {
+  final Completer<String?> gate = Completer<String?>();
+
+  @override
+  Future<String?> read() => gate.future;
+
+  @override
+  Future<void> write(String serializedEvents) async {}
+}
+
+/// A queue store whose first [failuresBeforeRead] reads fail.
+class _RetryReviewQueueStore implements ReviewQueueStore {
+  _RetryReviewQueueStore({this.failuresBeforeRead = 1});
+
+  final int failuresBeforeRead;
+  var _reads = 0;
+  String? value;
+
+  @override
+  Future<String?> read() async {
+    _reads += 1;
+    if (_reads <= failuresBeforeRead) {
+      throw StateError('synthetic queue read failure');
+    }
+    return value;
+  }
+
+  @override
+  Future<void> write(String serializedEvents) async {
+    value = serializedEvents;
+  }
 }

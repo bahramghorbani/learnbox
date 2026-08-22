@@ -8,6 +8,10 @@ the bundled three-card Start session and a device-local review-event queue.
 
 - The approved Germany welcome image remains visible in Flutter for three seconds before Today.
 - Today loads exactly the validated bundled Start cards and has one primary `شروع مرور` action.
+- The persistent learner shell now exposes truthful offline Today, `واژه‌های شروع` and Progress
+  destinations. Words shows only the canonical three-card session; Progress reports only answers
+  stored on this device. See
+  [`MOBILE_WEB_PARITY.md`](../../docs/architecture/MOBILE_WEB_PARITY.md).
 - Each card uses active recall: the Persian answer and example stay hidden until `نمایش پاسخ`.
 - The four Persian grade labels persist `forgot`, `hard`, `remembered` and `mastered` events to the
   secure local queue. The UI cannot advance until that write succeeds, disables every grade while
