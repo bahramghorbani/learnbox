@@ -38,15 +38,20 @@
   - `node scripts/validate-migrations.mjs` → pass, 11 migrations.
   - Android emulator smoke → pass: APK installed and launched on Pixel 7/API 37, the word control
     appeared, and tapping it produced no platform/Flutter playback error or calm-failure UI.
-- Checks unavailable: no physical Android device is connected, so manual listening QA for all six
-  clips is not run. This remains a merge blocker. No physical iOS claim is made. `flutter pub get`
-  also returns a pub.dev authorization failure; tests and builds used existing local generated
-  metadata with `--no-pub` and changed no dependency or lockfile.
-- Remaining work: create the Draft PR, complete independent high-reasoning review and GitHub CI,
-  then connect a physical Android phone and listen to all six controls before any merge decision.
-- Risks: native media lifecycle and real-device audio output require physical QA. Playback failure
-  is isolated from grading, exact native allowlists reject unknown paths, and both platform builds
-  compile.
+- Physical Android listening QA → pass on Xiaomi M2006C3LG / Android 11. The owner heard all six
+  approved V2 clips in order and confirmed that every word phrase and sentence was clear and
+  exactly matched its German text. A temporary uncommitted QA entrypoint exercised the same
+  packaged assets and native allowlist after the unchanged baseline secure-storage flow prevented
+  card advancement; it was removed and the production APK was rebuilt and restored afterward.
+- Checks unavailable: no required LB-DS-005 check remains unavailable. No physical iOS claim is
+  made. `flutter pub get` returns a pub.dev authorization failure; tests and builds used existing
+  local generated metadata with `--no-pub` and changed no dependency or lockfile.
+- Remaining work: complete independent high-reasoning review and require green GitHub CI before any
+  merge decision.
+- Risks: playback failure is isolated from grading, exact native allowlists reject unknown paths,
+  both platform builds compile and real-device output passed. The secure-storage retry UI also
+  appeared on a clean install, but the same behavior reproduced from unmodified `origin/main`, so
+  it is not introduced by this audio branch and should be handled as separate follow-up work.
 - Secrets or production changes: none. No credential, provider, URL, network client, storage, sync,
   identity, flag, release or production behavior changed.
 - Bobo canonical status: unchanged.
