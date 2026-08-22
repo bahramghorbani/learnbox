@@ -1,6 +1,6 @@
 # Native Identity + Authenticated Transport Design
 
-**Status:** Draft — design and contract boundary only, no implementation
+**Status:** Reviewed design — contract boundary only; no implementation authorized
 **Storyboard:** 24 of 30 — Beta and load testing
 **Scope:** Native learner identity and authenticated review transport; server contract; default-disabled
 **Recording:** ADR [0011](../../architecture/ADR/0011-native-mobile-session-and-transport.md)

@@ -1,6 +1,6 @@
 # ADR 0011 — Native mobile session and authenticated transport
 
-- **Status:** proposed; design review required before implementation
+- **Status:** accepted design; implementation requires a separately authorized queue task
 - **Date:** 2026-08-22
 
 ## Context
