@@ -8,7 +8,8 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 - **LB-DS-007 / NI-001 pure mobile session contract** is at Draft PR handoff on branch
   `worker/lb-ds-007-mobile-session-contract`. Scope remains injected pure server contracts/tests;
   no route, database, migration, network, flag or mobile composition is authorized. Awaiting
-  independent high-reasoning security review; evidence is `.ai/worker-reports/LB-DS-007.md`.
+  independent high-reasoning security review at Draft PR
+  https://github.com/bahramghorbani/learnbox/pull/100; evidence is `.ai/worker-reports/LB-DS-007.md`.
 
 ## Agent work log
 

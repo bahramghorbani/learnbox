@@ -2,8 +2,8 @@
 
 - Branch: `worker/lb-ds-007-mobile-session-contract`
 - Base commit: `97bf8af`
-- Head commit: pending commit after required checks
-- Draft PR: pending creation after commit/push
+- Head commit: `bfd8fc46ded65774cd77dfe4fdf875a24c205524` (report evidence update commit follows)
+- Draft PR: https://github.com/bahramghorbani/learnbox/pull/100
 - Scope completed: NI-001 only: pure injected mobile session and identity contracts. No HTTP, DB adapter, migration, environment read, provider, network, flag, mobile composition, or NI-002 work.
 - Files changed: `apps/api/src/auth/mobile-session.ts`; `apps/api/src/auth/mobile-identity.service.ts`; `apps/api/test/mobile-session.test.ts`; `apps/api/test/mobile-identity.service.test.ts`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-007.md`; `CURRENT_WORK.md`.
 - Checks run: `pnpm install --frozen-lockfile`; focused API Vitest 2 files/5 tests; API typecheck/build; `pnpm build`; `node scripts/validate-migrations.mjs` validated 11; `git diff --check`. `pnpm check` must rerun after report-format correction.
