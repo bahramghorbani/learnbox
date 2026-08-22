@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:learnbox/app.dart';
+import 'package:learnbox/features/review/pronunciation_player.dart';
 import 'package:learnbox/features/review/review_queue.dart';
 import 'package:learnbox/features/review/review_queue_store.dart';
 import 'package:learnbox/features/review/secure_review_queue_store.dart';
@@ -12,6 +13,68 @@ import 'package:learnbox/features/review/start_card.dart';
 import 'package:learnbox/features/review/start_pack_repository.dart';
 
 void main() {
+  testWidgets('routes approved word and revealed sentence audio paths',
+      (tester) async {
+    final player = RecordingPronunciationPlayer();
+    final queue = ReviewQueue(
+      store: ControlledReviewQueueStore(),
+      idFactory: () => 'event-a',
+    );
+    await _pumpApp(tester, queue: queue, pronunciationPlayer: player);
+    await tester.tap(find.text('شروع مرور'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('پخش تلفظ واژه'), findsOneWidget);
+    expect(
+      tester
+          .getSize(find.widgetWithText(OutlinedButton, 'پخش تلفظ واژه'))
+          .height,
+      greaterThanOrEqualTo(56),
+    );
+    expect(find.text('پخش جمله نمونه'), findsNothing);
+    await tester.tap(find.text('پخش تلفظ واژه'));
+    await tester.pump();
+    expect(
+      player.playedPaths,
+      ['assets/audio/start-a1-haus-word-audio-v2.mp3'],
+    );
+
+    await _tapVisibleText(tester, 'نمایش پاسخ');
+    await tester.pump();
+    expect(find.text('پخش جمله نمونه'), findsOneWidget);
+    await tester.tap(find.text('پخش جمله نمونه'));
+    await tester.pump();
+    expect(
+      player.playedPaths,
+      [
+        'assets/audio/start-a1-haus-word-audio-v2.mp3',
+        'assets/audio/start-a1-haus-sentence-audio-v2.mp3',
+      ],
+    );
+  });
+
+  testWidgets('audio failure stays calm and never blocks grading',
+      (tester) async {
+    final player = RecordingPronunciationPlayer(failNextPlay: true);
+    final store = ControlledReviewQueueStore();
+    final queue = ReviewQueue(store: store, idFactory: () => 'event-a');
+    await _pumpApp(tester, queue: queue, pronunciationPlayer: player);
+    await tester.tap(find.text('شروع مرور'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('پخش تلفظ واژه'));
+    await tester.pumpAndSettle();
+    expect(find.text('پخش صدا انجام نشد؛ دوباره تلاش کن.'), findsOneWidget);
+
+    await _tapVisibleText(tester, 'نمایش پاسخ');
+    await tester.pump();
+    await _tapVisibleText(tester, 'بلد بودم');
+    await tester.pumpAndSettle();
+    expect(_persistedGrades(store.value), ['remembered']);
+    expect(find.text('der Tisch'), findsOneWidget);
+    expect(player.stopCalls, 1);
+  });
+
   testWidgets(
     'Today starts active recall and waits for durable grading before advancing',
     (tester) async {
@@ -349,6 +412,7 @@ void main() {
 Future<void> _pumpApp(
   WidgetTester tester, {
   required ReviewQueue queue,
+  PronunciationPlayer? pronunciationPlayer,
   Size size = const Size(390, 844),
   double textScaleFactor = 1,
 }) async {
@@ -365,10 +429,34 @@ Future<void> _pumpApp(
       key: UniqueKey(),
       startPackRepository: InMemoryStartPackRepository(),
       reviewQueue: queue,
+      pronunciationPlayer:
+          pronunciationPlayer ?? RecordingPronunciationPlayer(),
       splashDuration: Duration.zero,
     ),
   );
   await tester.pumpAndSettle();
+}
+
+class RecordingPronunciationPlayer implements PronunciationPlayer {
+  RecordingPronunciationPlayer({this.failNextPlay = false});
+
+  bool failNextPlay;
+  final playedPaths = <String>[];
+  var stopCalls = 0;
+
+  @override
+  Future<void> playAsset(String assetPath) async {
+    if (failNextPlay) {
+      failNextPlay = false;
+      throw PlatformException(code: 'synthetic_playback_failure');
+    }
+    playedPaths.add(assetPath);
+  }
+
+  @override
+  Future<void> stop() async {
+    stopCalls += 1;
+  }
 }
 
 List<String> _persistedGrades(String? serializedQueue) {

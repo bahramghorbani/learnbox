@@ -19,6 +19,10 @@ the bundled three-card Start session and a device-local review-event queue.
   through Today and the complete three-card flow. Widget builds never create another queue.
 - Completion reports the current number of responses waiting on the device. This boundary does not
   upload or acknowledge them.
+- The review screen exposes explicit offline word and revealed-sentence playback controls for the
+  six approved Start Pack V2 clips. Flutter and both native hosts enforce exact local-asset paths;
+  there is no autoplay, URL, download, provider or audio dependency. See
+  [`MOBILE_PRONUNCIATION.md`](../../docs/architecture/MOBILE_PRONUNCIATION.md).
 - The approved foreground-sync coordinator is present behind typed identity and transport ports. In
   the current production composition identity is always `signedOut` and its transport throws before
   any delivery; there is no sync UI action, HTTP client, credential, timer, connectivity listener or
