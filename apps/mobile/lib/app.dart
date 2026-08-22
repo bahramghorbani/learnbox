@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
+import 'features/review/pronunciation_player.dart';
 import 'features/review/review_queue.dart';
 import 'features/review/start_pack_repository.dart';
 import 'features/review/today_screen.dart';
@@ -13,6 +14,7 @@ class LearnBoxApp extends StatelessWidget {
   const LearnBoxApp({
     required this.startPackRepository,
     required this.reviewQueue,
+    this.pronunciationPlayer = const MethodChannelPronunciationPlayer(),
     this.reviewSyncCoordinator,
     super.key,
     this.splashDuration = const Duration(seconds: 3),
@@ -20,6 +22,7 @@ class LearnBoxApp extends StatelessWidget {
 
   final StartPackRepository startPackRepository;
   final ReviewQueue reviewQueue;
+  final PronunciationPlayer pronunciationPlayer;
 
   /// Reserved, disabled foreground sync boundary; no UI invokes it yet.
   final ReviewSyncCoordinator? reviewSyncCoordinator;
@@ -38,6 +41,7 @@ class LearnBoxApp extends StatelessWidget {
           child: LearnBoxLaunchScreen(
             startPackRepository: startPackRepository,
             reviewQueue: reviewQueue,
+            pronunciationPlayer: pronunciationPlayer,
             splashDuration: splashDuration,
           ),
         ),
@@ -48,12 +52,14 @@ class LearnBoxLaunchScreen extends StatefulWidget {
   const LearnBoxLaunchScreen({
     required this.startPackRepository,
     required this.reviewQueue,
+    required this.pronunciationPlayer,
     required this.splashDuration,
     super.key,
   });
 
   final StartPackRepository startPackRepository;
   final ReviewQueue reviewQueue;
+  final PronunciationPlayer pronunciationPlayer;
   final Duration splashDuration;
 
   @override
@@ -86,6 +92,7 @@ class _LearnBoxLaunchScreenState extends State<LearnBoxLaunchScreen> {
       return TodayScreen(
         startPackRepository: widget.startPackRepository,
         reviewQueue: widget.reviewQueue,
+        pronunciationPlayer: widget.pronunciationPlayer,
       );
     }
 

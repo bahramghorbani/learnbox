@@ -5,7 +5,7 @@ start. Historical tasks remain for traceability and must not be duplicated.
 
 ## LB-DS-005
 
-- Status: ready
+- Status: review_requested
 - Executor: substantial-worker
 - Base: main at `c568702` (PR #87 merged)
 - Branch: worker/lb-ds-005-mobile-offline-pronunciation

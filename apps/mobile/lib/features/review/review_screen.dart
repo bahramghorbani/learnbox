@@ -1,20 +1,26 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'completion_screen.dart';
+import 'pronunciation_player.dart';
 import 'review_grade.dart';
 import 'review_queue.dart';
 import 'start_card.dart';
+import 'start_pack_audio_assets.dart';
 import '../../ui/learnbox_theme.dart';
 
 class ReviewScreen extends StatefulWidget {
   const ReviewScreen({
     required this.cards,
     required this.reviewQueue,
+    required this.pronunciationPlayer,
     super.key,
   });
 
   final List<StartCard> cards;
   final ReviewQueue reviewQueue;
+  final PronunciationPlayer pronunciationPlayer;
 
   @override
   State<ReviewScreen> createState() => _ReviewScreenState();
@@ -27,8 +33,41 @@ class _ReviewScreenState extends State<ReviewScreen> {
   var _isComplete = false;
   int? _pendingCount;
   String? _storageError;
+  String? _audioError;
+  var _isStartingAudio = false;
 
   StartCard get _card => widget.cards[_cardIndex];
+
+  Future<void> _playAudio(String? assetPath) async {
+    if (assetPath == null || _isStartingAudio) return;
+    setState(() {
+      _isStartingAudio = true;
+      _audioError = null;
+    });
+    try {
+      await widget.pronunciationPlayer.playAsset(assetPath);
+    } catch (_) {
+      if (mounted) {
+        setState(() => _audioError = 'پخش صدا انجام نشد؛ دوباره تلاش کن.');
+      }
+    } finally {
+      if (mounted) setState(() => _isStartingAudio = false);
+    }
+  }
+
+  Future<void> _stopPlayback() async {
+    try {
+      await widget.pronunciationPlayer.stop();
+    } catch (_) {
+      // Cleanup must never block review persistence or navigation.
+    }
+  }
+
+  @override
+  void dispose() {
+    unawaited(_stopPlayback());
+    super.dispose();
+  }
 
   Future<void> _grade(ReviewGrade grade) async {
     if (_isSaving) {
@@ -38,6 +77,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
       _isSaving = true;
       _storageError = null;
     });
+    unawaited(_stopPlayback());
 
     try {
       await widget.reviewQueue.record(_card.id, grade, DateTime.now());
@@ -59,6 +99,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
         _cardIndex += 1;
         _answerVisible = false;
         _isSaving = false;
+        _audioError = null;
       });
       return;
     }
@@ -92,6 +133,8 @@ class _ReviewScreenState extends State<ReviewScreen> {
     }
 
     final card = _card;
+    final wordAudioPath = StartPackAudioAssets.wordPath(card.id);
+    final sentenceAudioPath = StartPackAudioAssets.sentencePath(card.id);
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -152,6 +195,27 @@ class _ReviewScreenState extends State<ReviewScreen> {
                 ),
               ),
               const SizedBox(height: 18),
+              if (wordAudioPath != null) ...[
+                _AudioButton(
+                  label: 'پخش تلفظ واژه',
+                  enabled: !_isStartingAudio,
+                  onPressed: () => _playAudio(wordAudioPath),
+                ),
+                const SizedBox(height: 12),
+              ],
+              if (_audioError != null) ...[
+                Semantics(
+                  liveRegion: true,
+                  child: Text(
+                    _audioError!,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
               if (!_answerVisible)
                 FilledButton.tonal(
                   style: FilledButton.styleFrom(
@@ -196,6 +260,14 @@ class _ReviewScreenState extends State<ReviewScreen> {
                             style: learnBoxGermanStyle(context),
                           ),
                         ),
+                        if (sentenceAudioPath != null) ...[
+                          const SizedBox(height: 12),
+                          _AudioButton(
+                            label: 'پخش جمله نمونه',
+                            enabled: !_isStartingAudio,
+                            onPressed: () => _playAudio(sentenceAudioPath),
+                          ),
+                        ],
                         const SizedBox(height: 6),
                         Text(
                           card.examplePersian,
@@ -242,6 +314,28 @@ class _ReviewScreenState extends State<ReviewScreen> {
       ),
     );
   }
+}
+
+class _AudioButton extends StatelessWidget {
+  const _AudioButton({
+    required this.label,
+    required this.enabled,
+    required this.onPressed,
+  });
+
+  final String label;
+  final bool enabled;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) => OutlinedButton.icon(
+        style: OutlinedButton.styleFrom(
+          minimumSize: const Size.fromHeight(56),
+        ),
+        onPressed: enabled ? onPressed : null,
+        icon: const Icon(Icons.volume_up_outlined),
+        label: Text(label),
+      );
 }
 
 class _GradeButtons extends StatelessWidget {

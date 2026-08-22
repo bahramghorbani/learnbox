@@ -5,9 +5,11 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-- **LB-DS-005 — `worker/lb-ds-005-mobile-offline-pronunciation` (ready):** PR #87 merged the
-  reviewed offline pronunciation design. This is the only authorized implementation task and will
-  run serially; no other worker may edit its mobile paths.
+- **PR #90 / LB-DS-005 — `worker/lb-ds-005-mobile-offline-pronunciation` (Draft, review
+  requested):** the reviewed offline pronunciation slice is implemented and all available local
+  code, Flutter, Android-build, iOS-build, emulator-smoke and physical Android listening gates pass.
+  Independent high-reasoning review approved the resolved findings; fresh green CI remains before
+  merge. No other worker may edit its paths.
 - **Mobile web-parity expansion — `docs/mobile-web-parity-design` (in design review):** documents
   the native offline Today/Words/Progress shell that inherits the established learner-web visual
   system. Implementation remains blocked until the owner reviews the written design; no identity,
@@ -42,8 +44,8 @@ other agent can pick up without re-deriving state. It does not define anyone's r
   their listening-QA ledger are now merged, but the native playback UI remains open.
 - **Native identity + authenticated transport** (the next roadmap item in `STATUS.md`) was not
   started; no design spec exists yet.
-- `LB-DS-005` is ready for one substantial worker. The mobile web-parity expansion remains
-  design-only and blocked from implementation until this task closes, preventing path overlap.
+- `LB-DS-005` awaits fresh green CI. The mobile web-parity expansion remains design-only and blocked
+  from implementation until this task closes, preventing path overlap.
 
 ## Known continuation gate
 

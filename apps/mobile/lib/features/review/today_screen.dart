@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../ui/learner_bottom_navigation.dart';
 import '../../ui/learnbox_theme.dart';
+import 'pronunciation_player.dart';
 import 'review_queue.dart';
 import 'review_screen.dart';
 import 'start_card.dart';
@@ -11,11 +12,13 @@ class TodayScreen extends StatefulWidget {
   const TodayScreen({
     required this.startPackRepository,
     required this.reviewQueue,
+    required this.pronunciationPlayer,
     super.key,
   });
 
   final StartPackRepository startPackRepository;
   final ReviewQueue reviewQueue;
+  final PronunciationPlayer pronunciationPlayer;
 
   @override
   State<TodayScreen> createState() => _TodayScreenState();
@@ -78,6 +81,7 @@ class _TodayScreenState extends State<TodayScreen> {
                       builder: (_) => ReviewScreen(
                         cards: cards,
                         reviewQueue: widget.reviewQueue,
+                        pronunciationPlayer: widget.pronunciationPlayer,
                       ),
                     ),
                   ),
