@@ -5,7 +5,7 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-- **LB-DS-006 — `worker/lb-ds-006-mobile-web-parity` (review requested, Draft PR pending):** the
+- **PR #94 / LB-DS-006 — `worker/lb-ds-006-mobile-web-parity` (Draft, review requested):** the
   offline Today/Words/Progress shell is implemented and all local code, Flutter, root quality,
   Android-build, emulator and physical visual checks are recorded. Independent review and fresh CI
   remain; pronunciation, native hosts, identity, transport, providers, release and Bobo are out of

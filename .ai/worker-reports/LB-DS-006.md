@@ -3,7 +3,7 @@
 - Branch: `worker/lb-ds-006-mobile-web-parity`
 - Base commit: `80719e0` (PR #93 merged)
 - Head commit: `07775f0`
-- Draft PR: pending creation
+- Draft PR: `#94` — Draft, independent review and fresh CI pending
 - Scope completed: persistent local Today/Words/Progress shell using the same repository, review queue
   and pronunciation-player instances. Words shows exactly the canonical three-card session;
   Progress reports only the device-local pending count and returns to Today for review.
