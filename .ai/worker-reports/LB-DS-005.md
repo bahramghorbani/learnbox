@@ -3,7 +3,7 @@
 - Branch: `worker/lb-ds-005-mobile-offline-pronunciation`
 - Base commit: `aee1c85` (PR #89 merged)
 - Head commit: `cdb7dd2`
-- Draft PR: `#90` — Draft, high-reasoning review findings resolved; final confirmation pending
+- Draft PR: `#90` — Draft, independent high-reasoning review approved; fresh CI pending
 - Scope completed: offline word and revealed-sentence playback for exactly the three canonical Start
   cards, using the six existing approved V2 assets, an injected Dart player contract and exact
   native allowlists. No autoplay or network path was added.
@@ -46,11 +46,12 @@
 - Checks unavailable: no required LB-DS-005 check remains unavailable. No physical iOS claim is
   made. `flutter pub get` returns a pub.dev authorization failure; tests and builds used existing
   local generated metadata with `--no-pub` and changed no dependency or lockfile.
-- Remaining work: complete independent high-reasoning review and require green GitHub CI before any
-  merge decision.
+- Remaining work: require fresh green GitHub CI before any merge decision.
 - Review follow-up: the high-reasoning reviewer requested current handoff metadata, sentence
   target/semantics coverage, one-request-at-a-time coverage and explicit native lifecycle/network
   source contracts. Commit `cdb7dd2` adds those checks; all focused tests pass.
+- Final review: the independent high-reasoning worker confirmed `APPROVE_FOR_GATE` after every
+  blocking finding was resolved. Standalone Codex was unavailable and no Codex review is claimed.
 - Risks: playback failure is isolated from grading, exact native allowlists reject unknown paths,
   both platform builds compile and real-device output passed. The secure-storage retry UI also
   appeared on a clean install, but the same behavior reproduced from unmodified `origin/main`, so
