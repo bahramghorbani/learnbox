@@ -113,3 +113,25 @@ test('mergeLiveTasks promotes a branch with a Draft PR to review-requested', () 
   assert.equal(current.status, 'review-requested');
   assert.match(current.note, /#101/);
 });
+
+test('mergeLiveTasks exposes an open PR from another worktree as current work', () => {
+  const tasks = mergeLiveTasks(
+    [{ id: 'roadmap', title: 'Roadmap', status: 'in-progress' }],
+    [],
+    [],
+    { branch: 'main', status: { dirty: false } },
+    [
+      {
+        branch: 'docs/native-design',
+        isDraft: true,
+        number: 97,
+        title: 'Native design',
+        url: 'https://example/97',
+      },
+    ],
+  );
+  const activePr = tasks.find((task) => task.id === 'OPEN-PR-97');
+  assert.equal(activePr.status, 'review-requested');
+  assert.equal(activePr.title, 'PR #97 — Native design');
+  assert.match(activePr.note, /docs\/native-design/);
+});

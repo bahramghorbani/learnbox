@@ -109,6 +109,16 @@ export function mergeLiveTasks(roadmapTasks, queueTasks, currentWork, git, prs) 
   });
 
   const branch = git?.branch;
+  for (const pr of [...prs].reverse()) {
+    if (pr.branch === branch) continue;
+    tasks.unshift({
+      id: `OPEN-PR-${pr.number}`,
+      title: `PR #${pr.number} — ${pr.title}`,
+      status: 'review-requested',
+      note: `${pr.isDraft ? 'Draft' : 'Open'} روی شاخه ${pr.branch}`,
+    });
+  }
+
   if (branch && branch !== 'main' && branch !== 'unknown') {
     const pr = prs.find((candidate) => candidate.branch === branch);
     tasks.unshift({
