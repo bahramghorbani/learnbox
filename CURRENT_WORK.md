@@ -5,10 +5,10 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-- **Mobile web-parity expansion — `docs/mobile-web-parity-design` (in design review):** documents
-  the native offline Today/Words/Progress shell that inherits the established learner-web visual
-  system. Implementation remains blocked until the owner reviews the written design; no identity,
-  transport, pronunciation player, provider, release or Bobo change is authorized.
+- **LB-DS-006 — `worker/lb-ds-006-mobile-web-parity` (ready):** the owner approved starting the
+  reviewed native offline Today/Words/Progress expansion. One substantial worker may implement it
+  serially; pronunciation, native hosts, identity, transport, providers, release and Bobo are out of
+  scope.
 
 ## Agent work log
 
@@ -43,8 +43,8 @@ other agent can pick up without re-deriving state. It does not define anyone's r
 
 - **Native identity + authenticated transport** (the next roadmap item in `STATUS.md`) was not
   started; no design spec exists yet.
-- The mobile web-parity expansion remains design-only pending owner review; no implementation task
-  is authorized yet.
+- **Issue #92** records the physical Android secure-storage write failure reproduced on unchanged
+  `origin/main`; it is separate and no fix is authorized while `LB-DS-006` is active.
 
 ## Known continuation gate
 
