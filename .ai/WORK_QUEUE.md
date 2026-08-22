@@ -5,7 +5,7 @@ start. Historical tasks remain for traceability and must not be duplicated.
 
 ## LB-DS-007
 
-- Status: ready
+- Status: review_requested
 - Executor: high-reasoning-worker
 - Base: main at `97bf8af` (PR #97 merged)
 - Branch: worker/lb-ds-007-mobile-session-contract
