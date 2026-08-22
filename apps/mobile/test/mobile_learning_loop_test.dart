@@ -31,6 +31,14 @@ void main() {
           .height,
       greaterThanOrEqualTo(56),
     );
+    expect(
+      tester
+          .getSemantics(
+            find.widgetWithText(OutlinedButton, 'پخش تلفظ واژه'),
+          )
+          .label,
+      'پخش تلفظ واژه',
+    );
     expect(find.text('پخش جمله نمونه'), findsNothing);
     await tester.tap(find.text('پخش تلفظ واژه'));
     await tester.pump();
@@ -42,6 +50,22 @@ void main() {
     await _tapVisibleText(tester, 'نمایش پاسخ');
     await tester.pump();
     expect(find.text('پخش جمله نمونه'), findsOneWidget);
+    expect(
+      tester
+          .getSize(
+            find.widgetWithText(OutlinedButton, 'پخش جمله نمونه'),
+          )
+          .height,
+      greaterThanOrEqualTo(56),
+    );
+    expect(
+      tester
+          .getSemantics(
+            find.widgetWithText(OutlinedButton, 'پخش جمله نمونه'),
+          )
+          .label,
+      'پخش جمله نمونه',
+    );
     await tester.tap(find.text('پخش جمله نمونه'));
     await tester.pump();
     expect(
@@ -50,6 +74,41 @@ void main() {
         'assets/audio/start-a1-haus-word-audio-v2.mp3',
         'assets/audio/start-a1-haus-sentence-audio-v2.mp3',
       ],
+    );
+  });
+
+  testWidgets('allows only one platform audio start request at a time',
+      (tester) async {
+    final player = BlockingPronunciationPlayer();
+    final queue = ReviewQueue(
+      store: ControlledReviewQueueStore(),
+      idFactory: () => 'event-a',
+    );
+    await _pumpApp(tester, queue: queue, pronunciationPlayer: player);
+    await tester.tap(find.text('شروع مرور'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('پخش تلفظ واژه'));
+    await tester.pump();
+    expect(
+      tester
+          .widget<OutlinedButton>(
+            find.widgetWithText(OutlinedButton, 'پخش تلفظ واژه'),
+          )
+          .onPressed,
+      isNull,
+    );
+    expect(player.playedPaths, hasLength(1));
+
+    player.allowPlay();
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<OutlinedButton>(
+            find.widgetWithText(OutlinedButton, 'پخش تلفظ واژه'),
+          )
+          .onPressed,
+      isNotNull,
     );
   });
 
@@ -457,6 +516,22 @@ class RecordingPronunciationPlayer implements PronunciationPlayer {
   Future<void> stop() async {
     stopCalls += 1;
   }
+}
+
+class BlockingPronunciationPlayer implements PronunciationPlayer {
+  final playedPaths = <String>[];
+  final _playCompleter = Completer<void>();
+
+  void allowPlay() => _playCompleter.complete();
+
+  @override
+  Future<void> playAsset(String assetPath) {
+    playedPaths.add(assetPath);
+    return _playCompleter.future;
+  }
+
+  @override
+  Future<void> stop() async {}
 }
 
 List<String> _persistedGrades(String? serializedQueue) {

@@ -51,6 +51,14 @@ void main() {
       expect(source, isNot(contains('http://')));
       expect(source, isNot(contains('https://')));
     }
+    expect(android, contains('releasePlayer()'));
+    expect(android, contains('override fun onDestroy()'));
+    expect(android, isNot(contains('java.net')));
+    expect(android, isNot(contains('openConnection')));
+    expect(ios, contains('stopPlayback()'));
+    expect(ios, contains('applicationWillTerminate'));
+    expect(ios, isNot(contains('URLSession')));
+    expect(ios, isNot(contains('dataTask')));
   });
 }
 
