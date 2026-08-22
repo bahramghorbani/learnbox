@@ -3,6 +3,29 @@
 Read `.ai/WORKER_PROTOCOL.md` before this file. `blocked` tasks are context, not authorization to
 start. Historical tasks remain for traceability and must not be duplicated.
 
+## LB-DS-007
+
+- Status: ready
+- Executor: high-reasoning-worker
+- Base: main at `97bf8af` (PR #97 merged)
+- Branch: worker/lb-ds-007-mobile-session-contract
+- Risk: security-sensitive-pure-identity-contract
+- Specification: docs/superpowers/specs/2026-08-22-native-identity-authenticated-transport-design.md (NI-001 only); docs/architecture/ADR/0011-native-mobile-session-and-transport.md
+- Allowed paths: apps/api/src/auth/mobile-session.ts; apps/api/src/auth/mobile-identity.service.ts; apps/api/test/mobile-session.test.ts; apps/api/test/mobile-identity.service.test.ts; .ai/WORK_QUEUE.md; .ai/worker-reports/LB-DS-007.md; CURRENT_WORK.md
+- Required checks: pnpm --filter @learnbox/api build; pnpm --filter @learnbox/api typecheck; pnpm --filter @learnbox/api exec vitest run test/mobile-session.test.ts test/mobile-identity.service.test.ts; pnpm check; pnpm build; node scripts/validate-migrations.mjs
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+
+Implement only the pure server identity/session contract with injected fake stores. Start with failing direct
+tests. Lock the exact versioned access-token claims and 15-minute lifetime, server-derived learner/session
+subjects, challenge-bound normalized-phone input to one atomic store call, generic verification failure,
+opaque refresh rotation/reuse behavior and deterministic time/random dependencies. No HTTP route,
+PostgreSQL adapter, migration, environment read, mobile code, secure-storage adapter, provider call,
+network request, cookie, flag, UI or Production activation. Do not implement NI-002 or later work. Record
+actual test output and routing evidence, mark `review_requested`, and stop at a Draft PR for independent
+high-reasoning security review.
+
 ## LB-DS-006
 
 - Status: accepted
