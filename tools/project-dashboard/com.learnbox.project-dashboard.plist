@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  LearnBox local dashboard — OPTIONAL macOS LaunchAgent TEMPLATE.
+  NOT installed or activated. Edit the paths below to suit this machine, then
+  follow README.md "Optional macOS LaunchAgent" instructions to install/remove.
+  KeepAlive / RunAtLoad are deliberately false until you opt in to running it.
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.learnbox.project-dashboard</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/REPLACE_WITH_NODE_BIN</string>
+    <string>/REPLACE_WITH_REPO_PATH/tools/project-dashboard/server.mjs</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>/REPLACE_WITH_REPO_PATH</string>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PORT</key>
+    <string>4173</string>
+  </dict>
+
+  <key>RunAtLoad</key>
+  <false/>
+  <key>KeepAlive</key>
+  <false/>
+
+  <key>StandardOutPath</key>
+  <string>/tmp/learnbox-dashboard.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>/tmp/learnbox-dashboard.err.log</string>
+
+  <key>ProcessType</key>
+  <string>Interactive</string>
+</dict>
+</plist>
