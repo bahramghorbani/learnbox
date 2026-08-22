@@ -2,8 +2,8 @@
 
 - Branch: `worker/lb-ds-005-mobile-offline-pronunciation`
 - Base commit: `aee1c85` (PR #89 merged)
-- Head commit: `7a38118`
-- Draft PR: `#90` — Draft, independent review and physical Android listening QA pending
+- Head commit: `cdb7dd2`
+- Draft PR: `#90` — Draft, high-reasoning review findings resolved; final confirmation pending
 - Scope completed: offline word and revealed-sentence playback for exactly the three canonical Start
   cards, using the six existing approved V2 assets, an injected Dart player contract and exact
   native allowlists. No autoplay or network path was added.
@@ -27,7 +27,7 @@
   - `dart format --output=none --set-exit-if-changed ...` → pass, 0 changed.
   - `cd apps/mobile && flutter analyze --no-pub` → pass, no issues.
   - Focused Flutter tests (`mobile_learning_loop_test.dart`,
-    `native_pronunciation_bridge_test.dart`) → pass, 14/14.
+    `native_pronunciation_bridge_test.dart`) → pass, 15/15 after review coverage was strengthened.
   - `cd apps/mobile && flutter test --no-pub` → pass, 73/73.
   - `FLUTTER_STORAGE_BASE_URL=https://storage.flutter-io.cn flutter build apk --debug --no-pub`
     → pass; the default Google artifact endpoint returned HTTP 403 before the mirror retry.
@@ -48,6 +48,9 @@
   local generated metadata with `--no-pub` and changed no dependency or lockfile.
 - Remaining work: complete independent high-reasoning review and require green GitHub CI before any
   merge decision.
+- Review follow-up: the high-reasoning reviewer requested current handoff metadata, sentence
+  target/semantics coverage, one-request-at-a-time coverage and explicit native lifecycle/network
+  source contracts. Commit `cdb7dd2` adds those checks; all focused tests pass.
 - Risks: playback failure is isolated from grading, exact native allowlists reject unknown paths,
   both platform builds compile and real-device output passed. The secure-storage retry UI also
   appeared on a clean install, but the same behavior reproduced from unmodified `origin/main`, so
