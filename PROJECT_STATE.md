@@ -51,8 +51,11 @@ product specification or storyboard.
   cards, active recall, four grades and a secure device-local pending-event queue. It also exposes
   explicit offline playback for the six approved V2 German word-phrase and sentence clips through
   fixed native allowlists; Android/iOS builds, emulator smoke and Xiaomi physical listening QA pass,
-  with no autoplay, network, provider or release path. A reviewed provider-neutral foreground sync
-  coordinator is present with a maximum batch of twenty, exact acknowledgement validation and
+  with no autoplay, network, provider or release path. A persistent offline learner shell now adds
+  truthful Today, the exact three canonical Words rows and Progress derived only from the local
+  pending count; emulator and physical visual smoke pass without identity or sync claims. A reviewed
+  provider-neutral foreground sync coordinator is present with a maximum batch of twenty, exact
+  acknowledgement validation and
   no-data-loss failure behavior; production supplies only a `signedOut` identity state and disabled
   transport, with no UI trigger or network client. It performs no upload, authentication or server
   acknowledgement and is not a released mobile product.

@@ -5,7 +5,7 @@ start. Historical tasks remain for traceability and must not be duplicated.
 
 ## LB-DS-006
 
-- Status: review_requested
+- Status: accepted
 - Executor: substantial-worker
 - Base: main at `164270a` (PR #91 merged)
 - Branch: worker/lb-ds-006-mobile-web-parity
@@ -24,6 +24,11 @@ presentation only. Do not touch pronunciation implementation/native hosts, ident
 network, storage internals, dependencies, assets, providers, flags, release settings, Bobo or any
 unlisted path. Start with failing widget tests, work serially and stop at a Draft PR. Issue #92 is a
 separate baseline secure-storage investigation and must not be fixed or masked in this task.
+
+Accepted and merged through green-check PR #94 on 2026-08-22 after sequential Terra/DeepSeek
+implementation, full local and GitHub gates, emulator and Xiaomi physical visual smoke, and
+independent high-reasoning review. No dependency, storage, identity, network, provider, release or
+production path was added. Do not reopen or duplicate this task.
 
 ## LB-DS-005
 

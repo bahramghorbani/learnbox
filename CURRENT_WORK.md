@@ -5,11 +5,7 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-- **PR #94 / LB-DS-006 — `worker/lb-ds-006-mobile-web-parity` (Draft, review requested):** the
-  offline Today/Words/Progress shell is implemented and all local code, Flutter, root quality,
-  Android-build, emulator and physical visual checks are recorded. Independent high-reasoning
-  review approved it; fresh CI remains. Pronunciation, native hosts, identity, transport, providers,
-  release and Bobo are out of scope.
+No active implementation is registered. Issue #92 remains the next isolated mobile investigation.
 
 ## Agent work log
 
@@ -39,6 +35,8 @@ other agent can pick up without re-deriving state. It does not define anyone's r
 - PR #90 merged the no-dependency native offline pronunciation controls for all three Start cards
   after local/full CI, Android/iOS builds, emulator smoke, independent high-reasoning review and
   owner-confirmed physical Android listening QA for all six approved V2 clips.
+- PR #94 merged the offline Today/Words/Progress learner shell after sequential lower-cost coding,
+  full local and GitHub gates, emulator/physical visual smoke and independent high-reasoning review.
 
 ### Not done (open for the other agent)
 
