@@ -5,9 +5,9 @@ start. Historical tasks remain for traceability and must not be duplicated.
 
 ## LB-DS-009
 
-- Status: ready
+- Status: review_requested
 - Executor: high-reasoning-worker
-- Base: main at `6b730ff` (PR #105 merged)
+- Base: main at `9c5a6ef` (authorization PR #106 merged)
 - Branch: worker/lb-ds-009-mobile-auth-http
 - Risk: security-sensitive-native-auth-http
 - Specification: docs/superpowers/specs/2026-08-22-native-identity-authenticated-transport-design.md (NI-003 only); docs/architecture/ADR/0011-native-mobile-session-and-transport.md
