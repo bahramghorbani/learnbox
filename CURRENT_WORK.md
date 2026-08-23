@@ -5,10 +5,10 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-- **LB-DS-008 / NI-002 atomic mobile identity store** is ready for a high-reasoning worker from
-  `main` at `9eccc59` on branch `worker/lb-ds-008-mobile-identity-store`. Scope is limited to the
-  migration/store transaction and direct tests; no route, network, provider, mobile composition or
-  flag is authorized. The reviewed design and LB-DS-007 pure contract are merged.
+- **LB-DS-008 / NI-002 atomic mobile identity store** is `review_requested` on branch
+  `worker/lb-ds-008-mobile-identity-store`; Draft PR #104. Scope remains migration/store transaction
+  and direct tests only; no route, network, provider, mobile composition or flag. Required
+  local checks pass; supervisor high-reasoning security review remains required before merge.
 
 ## Agent work log
 

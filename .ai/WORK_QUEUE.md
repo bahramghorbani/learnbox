@@ -5,7 +5,7 @@ start. Historical tasks remain for traceability and must not be duplicated.
 
 ## LB-DS-008
 
-- Status: ready
+- Status: review_requested
 - Executor: high-reasoning-worker
 - Base: main at `9eccc59` (PR #102 merged)
 - Branch: worker/lb-ds-008-mobile-identity-store
