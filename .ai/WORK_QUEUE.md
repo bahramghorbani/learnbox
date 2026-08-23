@@ -5,7 +5,7 @@ start. Historical tasks remain for traceability and must not be duplicated.
 
 ## LB-DS-007
 
-- Status: review_requested
+- Status: accepted
 - Executor: high-reasoning-worker
 - Base: main at `97bf8af` (PR #97 merged)
 - Branch: worker/lb-ds-007-mobile-session-contract
@@ -25,6 +25,11 @@ PostgreSQL adapter, migration, environment read, mobile code, secure-storage ada
 network request, cookie, flag, UI or Production activation. Do not implement NI-002 or later work. Record
 actual test output and routing evidence, mark `review_requested`, and stop at a Draft PR for independent
 high-reasoning security review.
+
+Accepted and merged through PR #100 at merge commit `02d846a`. Supervisor high-reasoning review corrected
+weak-key acceptance, configurable token lifetime, future/extra claims, entropy length, malformed-input
+validation and duplicate refresh rotation. No route, database, migration, network, flag, provider,
+mobile composition or Production behavior was enabled. Keep NI-002 and later work unauthorized.
 
 ## LB-DS-006
 
