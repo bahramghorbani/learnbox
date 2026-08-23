@@ -5,10 +5,11 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-- **LB-DS-007 / NI-001 pure mobile session contract** is ready for a high-reasoning worker from
-  `main` at `97bf8af` on branch `worker/lb-ds-007-mobile-session-contract`. Scope is limited to injected pure
-  server contracts/tests; no route, database, migration, network, flag or mobile composition is
-  authorized. The reviewed design merged through PR #97.
+- **LB-DS-007 / NI-001 pure mobile session contract** is at Draft PR handoff on branch
+  `worker/lb-ds-007-mobile-session-contract`. Scope remains injected pure server contracts/tests;
+  no route, database, migration, network, flag or mobile composition is authorized. Supervisor high-reasoning
+  review is complete; independent critical reviewer route is unavailable. Awaiting final Draft PR gate
+  at https://github.com/bahramghorbani/learnbox/pull/100; evidence is `.ai/worker-reports/LB-DS-007.md`.
 
 ## Agent work log
 
