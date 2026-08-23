@@ -39,6 +39,12 @@ product specification or storyboard.
   stopped-server recovery checks use aggregate-only evidence; Preview, Production, provider and
   real-user traffic remain excluded. See
   [`STAGE_24_LOAD_TESTING.md`](./docs/operations/STAGE_24_LOAD_TESTING.md).
+- **Native identity contract:** a pure injected server-side mobile session and identity contract now
+  exists through merged PR #100 (LB-DS-007 / NI-001): signed 15-minute access-token claims,
+  hash-only refresh boundary, server-derived identity inputs and generic failure outcomes. It has no
+  HTTP route, database adapter, migration, environment read, provider call, network path, mobile
+  composition or enabled flag. Real native authentication and review transport remain future,
+  default-disabled work governed by ADR 0011.
 - **Stage 24 learning-engine guardrail:** `pnpm test:engine-load` exercises 100,000 deterministic
   review transitions and 10,000 retry-queue events. It is CPU-only and therefore is not evidence of
   Flutter, Preview or Production capacity.
