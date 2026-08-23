@@ -2,8 +2,8 @@
 
 - Branch: `worker/lb-ds-008-mobile-identity-store`
 - Base commit: `9eccc59`
-- Head commit: `bf7e426ff24700d131c9d57c9ecaa279b73f132c`.
-- Draft PR: pending creation; replace before commit.
+- Head commit: `fd6bf55`.
+- Draft PR: https://github.com/bahramghorbani/learnbox/pull/104.
 - Scope completed: NI-002 only. Hash-only PostgreSQL mobile-session migration and atomic OTP/learner/session persistence. No HTTP route, environment read, provider, network, mobile code, flag, UI, Production activation, review schema, or NI-003+ work.
 - Files changed: `database/migrations/0012_mobile_learner_sessions.sql`; `apps/api/src/auth/postgres-mobile-identity.store.ts`; `apps/api/test/mobile-session-migration.test.ts`; `apps/api/test/postgres-mobile-identity.store.test.ts`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-008.md`; `CURRENT_WORK.md`.
 - Checks run: `pnpm install --frozen-lockfile`; focused API Vitest 2 files/3 tests; API typecheck/build; `pnpm check`; `pnpm build`; `node scripts/validate-migrations.mjs` validated 12; `git diff --check`. All passed.
