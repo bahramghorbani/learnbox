@@ -3,6 +3,30 @@
 Read `.ai/WORKER_PROTOCOL.md` before this file. `blocked` tasks are context, not authorization to
 start. Historical tasks remain for traceability and must not be duplicated.
 
+## LB-DS-009
+
+- Status: ready
+- Executor: high-reasoning-worker
+- Base: main at `6b730ff` (PR #105 merged)
+- Branch: worker/lb-ds-009-mobile-auth-http
+- Risk: security-sensitive-native-auth-http
+- Specification: docs/superpowers/specs/2026-08-22-native-identity-authenticated-transport-design.md (NI-003 only); docs/architecture/ADR/0011-native-mobile-session-and-transport.md
+- Allowed paths: apps/website/lib/mobile-auth-http.ts; apps/website/lib/mobile-auth-runtime.ts; apps/website/app/api/auth/mobile/otp/request/route.ts; apps/website/app/api/auth/mobile/otp/verify/route.ts; apps/website/app/api/auth/mobile/session/refresh/route.ts; apps/website/app/api/auth/mobile/session/revoke/route.ts; apps/website/test/mobile-auth-http.test.ts; apps/website/test/mobile-auth-routes.test.ts; .ai/WORK_QUEUE.md; .ai/worker-reports/LB-DS-009.md; CURRENT_WORK.md
+- Required checks: pnpm --filter @learnbox/website exec vitest run test/mobile-auth-http.test.ts test/mobile-auth-routes.test.ts; pnpm --filter @learnbox/website typecheck; pnpm --filter @learnbox/website build; pnpm check; pnpm build; node scripts/validate-migrations.mjs
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+
+Implement only the NI-003 default-disabled native auth HTTP boundary after failing direct tests.
+Keep native OTP routes distinct from browser cookie routes: no cookie, no browser-Origin requirement,
+no CORS/custom-header/installation-ID trust, strict JSON/body limits, HTTPS outside bounded loopback
+development, generic errors and fail-closed `MOBILE_AUTH_ENABLED=false` runtime. Derive learner/session
+only from the NI-001/NI-002 server contracts; never accept client user IDs or provider secrets. Add
+refresh/revoke routes only behind the same disabled runtime. No review route, mobile code, dependency,
+network activation, flag enablement, UI or Production work. Do not implement NI-004 or later. Record
+exact output, mark `review_requested`, and stop at a Draft PR for supervisor high-reasoning security
+review.
+
 ## LB-DS-008
 
 - Status: accepted

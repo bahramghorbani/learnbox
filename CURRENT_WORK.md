@@ -5,8 +5,10 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-No active implementation is registered. LB-DS-008 / NI-002 atomic mobile identity store is accepted
-through PR #104. NI-003–NI-007 remain unauthorized and unstarted.
+- **LB-DS-009 / NI-003 native auth HTTP boundary** is ready for a high-reasoning worker from `main`
+  at `6b730ff` on branch `worker/lb-ds-009-mobile-auth-http`. Scope is limited to default-disabled
+  website routes/runtime and direct tests; no review route, mobile code, provider, network activation
+  or flag enablement is authorized. LB-DS-008 / NI-002 is accepted through PR #104.
 
 ## Agent work log
 
@@ -41,9 +43,9 @@ other agent can pick up without re-deriving state. It does not define anyone's r
 
 ### Not done (open for the other agent)
 
-- **Native identity + authenticated transport:** reviewed design, LB-DS-007 / NI-001 pure session
-  contract and LB-DS-008 / NI-002 store persistence merged through PRs #97, #100 and #104.
-  NI-003–NI-007 remain unauthorized and unstarted.
+- **Native identity + authenticated transport:** reviewed design and LB-DS-007/008 merged through
+  PRs #97, #100 and #104. LB-DS-009 / NI-003 is now the sole authorized next slice; NI-004–NI-007
+  remain unauthorized and unstarted.
 - **Issue #92** is **CLOSED**: the physical Android secure-storage write failure was a local
   `--no-pub` artifact missing its generated plugin registrant, not a source defect, so no source fix
   was required.
