@@ -2,13 +2,13 @@
 
 - Branch: `worker/lb-ds-007-mobile-session-contract`
 - Base commit: `97bf8af`
-- Head commit: `7c20e7083ec599e9f042c5ea2ecbe089a5315a2b` (security hardening and final handoff metadata)
+- Head commit: `7c20e7083ec599e9f042c5ea2ecbe089a5315a2b` (merged through PR #100 as `02d846a`)
 - Draft PR: https://github.com/bahramghorbani/learnbox/pull/100
 - Scope completed: NI-001 only: pure injected mobile session and identity contracts. No HTTP, DB adapter, migration, environment read, provider, network, flag, mobile composition, or NI-002 work.
 - Files changed: `apps/api/src/auth/mobile-session.ts`; `apps/api/src/auth/mobile-identity.service.ts`; `apps/api/test/mobile-session.test.ts`; `apps/api/test/mobile-identity.service.test.ts`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-007.md`; `CURRENT_WORK.md`.
 - Checks run: `pnpm install --frozen-lockfile`; focused API Vitest 2 files/7 tests (after hardening); API typecheck/build; `pnpm check`; `pnpm build`; `node scripts/validate-migrations.mjs` validated 11; `git diff --check`. All passed after the final hardening commit.
 - Checks unavailable: none. No simulator required.
-- Remaining work: independent high-reasoning security review of Draft PR #100; no implementation beyond NI-001 is authorized.
+- Remaining work: NI-002 must receive a separate scoped decision and task handoff; no implementation beyond NI-001 was authorized in this task.
 - Risks: NI-002 must supply database transaction semantics, session-family revocation, expiry windows and real store atomicity. NI-001 deliberately has no persistence or route.
 - Secrets or production changes: none. No secret, environment read, provider, network, flag, release, Preview, or Production change.
 - Bobo canonical status: untouched.

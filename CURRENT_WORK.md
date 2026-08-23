@@ -5,11 +5,9 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-- **LB-DS-007 / NI-001 pure mobile session contract** is at Draft PR handoff on branch
-  `worker/lb-ds-007-mobile-session-contract`. Scope remains injected pure server contracts/tests;
-  no route, database, migration, network, flag or mobile composition is authorized. Supervisor high-reasoning
-  review is complete; independent critical reviewer route is unavailable. Awaiting final Draft PR gate
-  at https://github.com/bahramghorbani/learnbox/pull/100; evidence is `.ai/worker-reports/LB-DS-007.md`.
+No active implementation is registered. The reviewed native identity design is merged, and LB-DS-007
+(NI-001 pure session contract) is accepted through PR #100. NI-002–NI-007 remain unauthorized pending
+a fresh scoped decision and task handoff.
 
 ## Agent work log
 
@@ -44,8 +42,8 @@ other agent can pick up without re-deriving state. It does not define anyone's r
 
 ### Not done (open for the other agent)
 
-- **Native identity + authenticated transport:** reviewed design merged through PR #97. Only
-  LB-DS-007 (design slice NI-001) is now ready; NI-002–NI-007 remain unauthorized and must stay serial.
+- **Native identity + authenticated transport:** reviewed design and LB-DS-007 / NI-001 pure session
+  contract merged through PRs #97 and #100. NI-002–NI-007 remain unauthorized and unstarted.
 - **Issue #92** is **CLOSED**: the physical Android secure-storage write failure was a local
   `--no-pub` artifact missing its generated plugin registrant, not a source defect, so no source fix
   was required.
