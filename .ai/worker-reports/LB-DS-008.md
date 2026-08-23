@@ -2,20 +2,20 @@
 
 - Branch: `worker/lb-ds-008-mobile-identity-store`
 - Base commit: `9eccc59`
-- Head commit: `99c1409` (code commit; handoff metadata follows in later commits).
+- Head commit: `99c1409` (code commit; merged through PR #104 at `f9f3c3b`).
 - Draft PR: https://github.com/bahramghorbani/learnbox/pull/104.
 - Scope completed: NI-002 only. Hash-only PostgreSQL mobile-session migration and atomic OTP/learner/session persistence. No HTTP route, environment read, provider, network, mobile code, flag, UI, Production activation, review schema, or NI-003+ work.
 - Files changed: `database/migrations/0012_mobile_learner_sessions.sql`; `apps/api/src/auth/postgres-mobile-identity.store.ts`; `apps/api/test/mobile-session-migration.test.ts`; `apps/api/test/postgres-mobile-identity.store.test.ts`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-008.md`; `CURRENT_WORK.md`.
 - Checks run: `pnpm install --frozen-lockfile`; focused API Vitest 2 files/3 tests; API typecheck/build; `pnpm check`; `pnpm build`; `node scripts/validate-migrations.mjs` validated 12; `git diff --check`. All passed.
 - Checks unavailable: none. No simulator required.
-- Remaining work: supervisor high-reasoning security review and Draft PR CI only; NI-003+ remain unauthorized.
+- Remaining work: NI-003 requires a separate scoped decision and task handoff; no implementation beyond NI-002 was authorized.
 - Risks: store is uncomposed by design. NI-003 must wire no route until separately authorized, default-disabled runtime controls exist, and review schema remains a separate NI-004 migration.
 - Secrets or production changes: none. No secret, environment read, provider, network, flag, release, Preview, or Production change.
 - Bobo canonical status: untouched.
 
 ## Routing
 
-Queue executor: `high-reasoning-worker`. Actual route: Hermes Agent, `aval-ai/gpt-5.6-terra`, custom provider; sole executor. No delegation. Draft PR requires supervisor high-reasoning security review before merge.
+Queue executor: `high-reasoning-worker`. Actual route: Hermes Agent, `aval-ai/gpt-5.6-terra`, custom provider; sole executor. No delegation. Supervisor high-reasoning review completed before merge; independent critical reviewer route was unavailable.
 
 ## TDD RED evidence
 

@@ -5,7 +5,7 @@ start. Historical tasks remain for traceability and must not be duplicated.
 
 ## LB-DS-008
 
-- Status: review_requested
+- Status: accepted
 - Executor: high-reasoning-worker
 - Base: main at `9eccc59` (PR #102 merged)
 - Branch: worker/lb-ds-008-mobile-identity-store
@@ -25,6 +25,10 @@ dependency, UI, flag or Production activation. Preserve generic failures, refres
 revocation, session expiry/idle windows and the existing queue. Do not implement NI-003 or later.
 Record exact migration/test output, mark `review_requested`, and stop at a Draft PR for supervisor
 high-reasoning security review.
+
+Accepted and merged through PR #104 at merge commit `f9f3c3b`. Supervisor review and all local/GitHub
+checks passed. No HTTP route, network, provider, mobile composition, flag or NI-003+ work was enabled.
+Keep NI-003 through NI-007 unauthorized.
 
 ## LB-DS-007
 
