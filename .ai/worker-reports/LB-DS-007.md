@@ -2,20 +2,20 @@
 
 - Branch: `worker/lb-ds-007-mobile-session-contract`
 - Base commit: `97bf8af`
-- Head commit: `8695d588814821e07dedc4f7162b1c7624923c0d` (Draft handoff metadata)
+- Head commit: `7c20e7083ec599e9f042c5ea2ecbe089a5315a2b` (security hardening and final handoff metadata)
 - Draft PR: https://github.com/bahramghorbani/learnbox/pull/100
 - Scope completed: NI-001 only: pure injected mobile session and identity contracts. No HTTP, DB adapter, migration, environment read, provider, network, flag, mobile composition, or NI-002 work.
 - Files changed: `apps/api/src/auth/mobile-session.ts`; `apps/api/src/auth/mobile-identity.service.ts`; `apps/api/test/mobile-session.test.ts`; `apps/api/test/mobile-identity.service.test.ts`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-007.md`; `CURRENT_WORK.md`.
-- Checks run: `pnpm install --frozen-lockfile`; focused API Vitest 2 files/5 tests; API typecheck/build; `pnpm build`; `node scripts/validate-migrations.mjs` validated 11; `git diff --check`. `pnpm check` must rerun after report-format correction.
+- Checks run: `pnpm install --frozen-lockfile`; focused API Vitest 2 files/7 tests (after hardening); API typecheck/build; `pnpm check`; `pnpm build`; `node scripts/validate-migrations.mjs` validated 11; `git diff --check`. All passed after the final hardening commit.
 - Checks unavailable: none. No simulator required.
-- Remaining work: run final `pnpm check`; refresh commit/PR fields; commit, push, create Draft PR; stop for independent high-reasoning security review.
+- Remaining work: independent high-reasoning security review of Draft PR #100; no implementation beyond NI-001 is authorized.
 - Risks: NI-002 must supply database transaction semantics, session-family revocation, expiry windows and real store atomicity. NI-001 deliberately has no persistence or route.
 - Secrets or production changes: none. No secret, environment read, provider, network, flag, release, Preview, or Production change.
 - Bobo canonical status: untouched.
 
 ## Routing
 
-Queue executor: `high-reasoning-worker`. Actual route: Hermes Agent, `aval-ai/gpt-5.6-terra`, custom provider; sole executor. Independent critical reviewer unavailable. Draft PR requests independent high-reasoning security review.
+Queue executor: `high-reasoning-worker`. Actual route: Hermes Agent, `aval-ai/gpt-5.6-terra`, custom provider; sole executor. Independent critical reviewer route was unavailable; supervisor high-reasoning review found and corrected weak-key acceptance, configurable token lifetime, future/extra claims, entropy length, malformed-input boundary and duplicate refresh rotation before final checks.
 
 ## TDD RED evidence
 
