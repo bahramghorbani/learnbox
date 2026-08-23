@@ -3,6 +3,29 @@
 Read `.ai/WORKER_PROTOCOL.md` before this file. `blocked` tasks are context, not authorization to
 start. Historical tasks remain for traceability and must not be duplicated.
 
+## LB-DS-008
+
+- Status: ready
+- Executor: high-reasoning-worker
+- Base: main at `9eccc59` (PR #102 merged)
+- Branch: worker/lb-ds-008-mobile-identity-store
+- Risk: security-sensitive-auth-database-migration
+- Specification: docs/superpowers/specs/2026-08-22-native-identity-authenticated-transport-design.md (NI-002 only); docs/architecture/ADR/0011-native-mobile-session-and-transport.md
+- Allowed paths: database/migrations/0012_mobile_learner_sessions.sql; apps/api/src/auth/postgres-mobile-identity.store.ts; apps/api/src/auth/postgres-otp-challenge.store.ts; apps/api/test/mobile-session-migration.test.ts; apps/api/test/postgres-mobile-identity.store.test.ts; .ai/WORK_QUEUE.md; .ai/worker-reports/LB-DS-008.md; CURRENT_WORK.md
+- Required checks: pnpm --filter @learnbox/api exec vitest run test/mobile-session-migration.test.ts test/postgres-mobile-identity.store.test.ts; pnpm --filter @learnbox/api typecheck; pnpm --filter @learnbox/api build; pnpm check; pnpm build; node scripts/validate-migrations.mjs
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+
+Implement only the NI-002 atomic PostgreSQL identity/session persistence seam after failing direct
+tests. Lock the OTP challenge row; normalize/hash-bind the submitted phone; verify and consume the
+challenge; upsert `users.phone_e164`; and create/rotate/revoke only hash-stored mobile sessions in
+one transaction. Add no HTTP route, environment read, provider call, network path, mobile code,
+dependency, UI, flag or Production activation. Preserve generic failures, refresh-family reuse
+revocation, session expiry/idle windows and the existing queue. Do not implement NI-003 or later.
+Record exact migration/test output, mark `review_requested`, and stop at a Draft PR for supervisor
+high-reasoning security review.
+
 ## LB-DS-007
 
 - Status: accepted
