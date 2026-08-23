@@ -5,9 +5,10 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-No active implementation is registered. The reviewed native identity design is merged, and LB-DS-007
-(NI-001 pure session contract) is accepted through PR #100. NI-002–NI-007 remain unauthorized pending
-a fresh scoped decision and task handoff.
+- **LB-DS-008 / NI-002 atomic mobile identity store** is ready for a high-reasoning worker from
+  `main` at `9eccc59` on branch `worker/lb-ds-008-mobile-identity-store`. Scope is limited to the
+  migration/store transaction and direct tests; no route, network, provider, mobile composition or
+  flag is authorized. The reviewed design and LB-DS-007 pure contract are merged.
 
 ## Agent work log
 
@@ -43,7 +44,8 @@ other agent can pick up without re-deriving state. It does not define anyone's r
 ### Not done (open for the other agent)
 
 - **Native identity + authenticated transport:** reviewed design and LB-DS-007 / NI-001 pure session
-  contract merged through PRs #97 and #100. NI-002–NI-007 remain unauthorized and unstarted.
+  contract merged through PRs #97 and #100. LB-DS-008 is now the sole authorized next slice;
+  NI-003–NI-007 remain unauthorized and unstarted.
 - **Issue #92** is **CLOSED**: the physical Android secure-storage write failure was a local
   `--no-pub` artifact missing its generated plugin registrant, not a source defect, so no source fix
   was required.
