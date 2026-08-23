@@ -70,6 +70,13 @@ describe('MobileIdentityService', () => {
 
   it('uses one atomic hash-only rotation call and collapses verification and reuse failures', async () => {
     const store = new Store();
+    let entropyByte = 10;
+    const rotatingSession = new MobileSessionContract({
+      audience: 'learnbox-mobile',
+      clock,
+      key: 'mobile-identity-test-key-long-enough',
+      random: { bytes: (size) => Buffer.alloc(size, entropyByte++) },
+    });
     store.verifyAndCreate = async (input) => {
       store.verificationCalls.push(input);
       return { status: 'rejected' as const };
@@ -81,10 +88,10 @@ describe('MobileIdentityService', () => {
     const service = new MobileIdentityService({
       clock,
       otpSecret: 'otp-secret-long-enough-for-hmac-tests',
-      session,
+      session: rotatingSession,
       store,
     });
-    const refreshToken = session.createRefreshToken();
+    const refreshToken = rotatingSession.createRefreshToken();
     await expect(
       service.verify({
         challengeId: 'challenge-12345678',
@@ -99,8 +106,57 @@ describe('MobileIdentityService', () => {
     expect(store.rotationCalls).toHaveLength(1);
     expect(store.rotationCalls[0]).toMatchObject({
       sessionId: 'session-server',
-      refreshTokenHash: session.hashRefreshToken(refreshToken),
+      refreshTokenHash: rotatingSession.hashRefreshToken(refreshToken),
+    });
+    expect(store.rotationCalls[0]).not.toMatchObject({
+      nextRefreshTokenHash: rotatingSession.hashRefreshToken(refreshToken),
     });
     expect(JSON.stringify(store.rotationCalls[0])).not.toContain(refreshToken);
+
+    const duplicateStore = new Store();
+    const duplicateService = new MobileIdentityService({
+      clock,
+      otpSecret: 'otp-secret-long-enough-for-hmac-tests',
+      session,
+      store: duplicateStore,
+    });
+    const duplicateToken = session.createRefreshToken();
+    await expect(
+      duplicateService.refresh({ sessionId: 'session-server', refreshToken: duplicateToken }),
+    ).resolves.toEqual({ status: 'authentication_failed' });
+    expect(duplicateStore.rotationCalls).toHaveLength(0);
+  });
+
+  it('rejects malformed verification input before the atomic store boundary', async () => {
+    const store = new Store();
+    const service = new MobileIdentityService({
+      clock,
+      otpSecret: 'otp-secret-long-enough-for-hmac-tests',
+      session,
+      store,
+    });
+    for (const input of [
+      {
+        challengeId: 'short',
+        code: '12345',
+        installationId: 'install-12345678',
+        phone: '09123456789',
+      },
+      {
+        challengeId: 'challenge-12345678',
+        code: '1234x',
+        installationId: 'install-12345678',
+        phone: '09123456789',
+      },
+      {
+        challengeId: 'challenge-12345678',
+        code: '12345',
+        installationId: '',
+        phone: '09123456789',
+      },
+    ]) {
+      await expect(service.verify(input)).resolves.toEqual({ status: 'verification_failed' });
+    }
+    expect(store.verificationCalls).toHaveLength(0);
   });
 });

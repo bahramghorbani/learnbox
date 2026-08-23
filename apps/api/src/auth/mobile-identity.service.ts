@@ -47,6 +47,12 @@ export class MobileIdentityService {
     input: Readonly<{ challengeId: string; code: string; installationId: string; phone: string }>,
   ): Promise<MobileIdentityResult> {
     try {
+      if (
+        !/^[A-Za-z0-9_-]{16,128}$/.test(input.challengeId) ||
+        !/^\d{5}$/.test(input.code) ||
+        !/^[A-Za-z0-9_-]{16,128}$/.test(input.installationId)
+      )
+        throw new Error('Mobile verification input is invalid.');
       const now = this.dependencies.clock.now();
       const phoneE164 = normalizeIranianPhone(input.phone);
       const refreshToken = this.dependencies.session.createRefreshToken();
@@ -80,7 +86,11 @@ export class MobileIdentityService {
     input: Readonly<{ sessionId: string; refreshToken: string }>,
   ): Promise<MobileRefreshResult> {
     try {
+      if (!/^[A-Za-z0-9_-]{1,128}$/.test(input.sessionId))
+        throw new Error('Mobile session ID is invalid.');
       const refreshToken = this.dependencies.session.createRefreshToken();
+      if (refreshToken === input.refreshToken)
+        throw new Error('Refresh token rotation produced a duplicate token.');
       const result = await this.dependencies.store.rotateRefresh(
         Object.freeze({
           sessionId: input.sessionId,

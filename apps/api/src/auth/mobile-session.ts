@@ -20,26 +20,17 @@ type Dependencies = Readonly<{
   key: string;
   random: MobileSessionRandom;
 }>;
-type AccessInput = Readonly<{ learnerId: string; sessionId: string; lifetimeMs?: number }>;
+type AccessInput = Readonly<{ learnerId: string; sessionId: string }>;
 
 /** Pure native-token contract. Persistence and HTTP remain separate NI slices. */
 export class MobileSessionContract {
   constructor(private readonly dependencies: Dependencies) {
-    if (!dependencies.audience || !dependencies.key)
+    if (!dependencies.audience || Buffer.byteLength(dependencies.key, 'utf8') < 32)
       throw new Error('Mobile session configuration is invalid.');
   }
 
-  createAccessToken({
-    learnerId,
-    sessionId,
-    lifetimeMs = mobileAccessTokenPolicy.lifetimeMs,
-  }: AccessInput): string {
-    if (
-      !isOpaque(learnerId) ||
-      !isOpaque(sessionId) ||
-      !Number.isFinite(lifetimeMs) ||
-      lifetimeMs < 0
-    ) {
+  createAccessToken({ learnerId, sessionId }: AccessInput): string {
+    if (!isOpaque(learnerId) || !isOpaque(sessionId)) {
       throw new Error('Mobile access token input is invalid.');
     }
     const iat = epoch(this.dependencies.clock.now());
@@ -47,8 +38,8 @@ export class MobileSessionContract {
       sub: learnerId,
       sid: sessionId,
       iat,
-      exp: iat + Math.floor(lifetimeMs / 1000),
-      jti: Buffer.from(this.dependencies.random.bytes(16)).toString('base64url'),
+      exp: iat + mobileAccessTokenPolicy.lifetimeMs / 1000,
+      jti: this.randomBytes(16).toString('base64url'),
     });
     const encodedHeader = encode({
       v: mobileAccessTokenPolicy.version,
@@ -79,7 +70,9 @@ export class MobileSessionContract {
       if (
         meta.v !== mobileAccessTokenPolicy.version ||
         meta.aud !== this.dependencies.audience ||
+        !hasExactKeys(meta, ['v', 'aud']) ||
         !validClaims(claims) ||
+        claims.iat > epoch(this.dependencies.clock.now()) ||
         claims.exp <= epoch(this.dependencies.clock.now())
       )
         return { status: 'invalid' };
@@ -90,7 +83,7 @@ export class MobileSessionContract {
   }
 
   createRefreshToken(): string {
-    return Buffer.from(this.dependencies.random.bytes(32)).toString('base64url');
+    return this.randomBytes(32).toString('base64url');
   }
 
   hashRefreshToken(token: string): string {
@@ -102,6 +95,12 @@ export class MobileSessionContract {
 
   refreshTokenEquals(hash: string, token: string): boolean {
     return safeEqual(hash, this.hashRefreshToken(token));
+  }
+
+  private randomBytes(size: number): Buffer {
+    const bytes = Buffer.from(this.dependencies.random.bytes(size));
+    if (bytes.length !== size) throw new Error('Injected entropy length is invalid.');
+    return bytes;
   }
 
   private sign(value: string): string {
@@ -127,11 +126,20 @@ function safeEqual(left: string, right: string): boolean {
 }
 function validClaims(value: MobileAccessClaims): boolean {
   return (
+    hasExactKeys(value, ['sub', 'sid', 'iat', 'exp', 'jti']) &&
     isOpaque(value.sub) &&
     isOpaque(value.sid) &&
     /^[A-Za-z0-9_-]{22}$/.test(value.jti) &&
     Number.isInteger(value.iat) &&
     Number.isInteger(value.exp) &&
-    value.exp >= value.iat
+    value.exp - value.iat === mobileAccessTokenPolicy.lifetimeMs / 1000
+  );
+}
+
+function hasExactKeys(value: object, expected: readonly string[]): boolean {
+  const actual = Object.keys(value).sort();
+  return (
+    actual.length === expected.length &&
+    actual.every((key, index) => key === [...expected].sort()[index])
   );
 }
