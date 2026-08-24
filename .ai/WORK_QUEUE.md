@@ -5,7 +5,7 @@ start. Historical tasks remain for traceability and must not be duplicated.
 
 ## LB-DS-011
 
-- Status: ready
+- Status: review_requested
 - Executor: high-reasoning-worker
 - Base: main at `4db4819` (NI-004 close handoff merged through PR #112)
 - Branch: worker/lb-ds-011-native-review-route
