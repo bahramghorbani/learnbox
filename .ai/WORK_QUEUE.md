@@ -3,6 +3,22 @@
 Read `.ai/WORKER_PROTOCOL.md` before this file. `blocked` tasks are context, not authorization to
 start. Historical tasks remain for traceability and must not be duplicated.
 
+## LB-DS-012
+
+- Status: ready
+- Executor: high-reasoning-worker
+- Base: main at `e5bc629` (NI-005 close handoff merged through PR #115)
+- Branch: worker/lb-ds-012-native-adapters
+- Risk: security-sensitive-mobile-credential-transport
+- Specification: docs/superpowers/specs/2026-08-22-native-identity-authenticated-transport-design.md (NI-006 only); docs/architecture/ADR/0011-native-mobile-session-and-transport.md
+- Allowed paths: apps/mobile/lib/features/identity/mobile_session.dart; apps/mobile/lib/features/identity/mobile_session_store.dart; apps/mobile/lib/features/identity/secure_mobile_session_store.dart; apps/mobile/lib/features/sync/http_review_sync_transport.dart; apps/mobile/test/mobile_session_test.dart; apps/mobile/test/secure_mobile_session_store_test.dart; apps/mobile/test/http_review_sync_transport_test.dart; .ai/WORK_QUEUE.md; .ai/worker-reports/LB-DS-012.md; CURRENT_WORK.md
+- Required checks: dart format --output=none --set-exit-if-changed apps/mobile/lib/features/identity/mobile_session.dart apps/mobile/lib/features/identity/mobile_session_store.dart apps/mobile/lib/features/identity/secure_mobile_session_store.dart apps/mobile/lib/features/sync/http_review_sync_transport.dart apps/mobile/test/mobile_session_test.dart apps/mobile/test/secure_mobile_session_store_test.dart apps/mobile/test/http_review_sync_transport_test.dart; cd apps/mobile && flutter analyze; cd apps/mobile && flutter test test/mobile_session_test.dart test/secure_mobile_session_store_test.dart test/http_review_sync_transport_test.dart; cd apps/mobile && flutter test; cd apps/mobile && flutter build apk --debug; git diff --check
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+
+Owner-authorized NI-006 implementation only: add dormant Flutter credential/session and HTTP review transport adapters using the existing `flutter_secure_storage` dependency. Keep defaults disabled and adapters uncomposed. No new dependency, endpoint, native host permission, composition, trigger, UI, flag enablement, provider/network activation, background sync, Preview, Production or NI-007+ work. Start with failing direct tests, record exact output, mark review_requested and stop at Draft PR for supervisor high-reasoning security review.
+
 ## LB-DS-011
 
 - Status: accepted
