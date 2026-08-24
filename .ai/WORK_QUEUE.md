@@ -3,6 +3,22 @@
 Read `.ai/WORKER_PROTOCOL.md` before this file. `blocked` tasks are context, not authorization to
 start. Historical tasks remain for traceability and must not be duplicated.
 
+## LB-DS-010
+
+- Status: ready
+- Executor: high-reasoning-worker
+- Base: main at `06bf51f` (PR #109 merged)
+- Branch: worker/lb-ds-010-native-review-core
+- Risk: security-sensitive-review-database-migration
+- Specification: docs/superpowers/specs/2026-08-22-native-identity-authenticated-transport-design.md (NI-004 only); docs/architecture/ADR/0011-native-mobile-session-and-transport.md
+- Allowed paths: database/migrations/0013_native_review_transport.sql; apps/api/src/reviews/postgres-review-event.store.ts; apps/api/src/reviews/mobile-review-batch.service.ts; apps/api/test/native-review-migration.test.ts; apps/api/test/postgres-review-event.store.test.ts; apps/api/test/mobile-review-batch.service.test.ts; .ai/WORK_QUEUE.md; .ai/worker-reports/LB-DS-010.md; CURRENT_WORK.md
+- Required checks: pnpm --filter @learnbox/api exec vitest run test/native-review-migration.test.ts test/postgres-review-event.store.test.ts test/mobile-review-batch.service.test.ts; pnpm --filter @learnbox/api typecheck; pnpm --filter @learnbox/api build; pnpm check; pnpm build; node scripts/validate-migrations.mjs
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+
+Owner-authorized NI-004 implementation only: add migration 0013 for lossless text client-event IDs, learner-scoped uniqueness, immutable canonical content IDs, approved-content schedule bootstrap and server applied_at; implement learner-scoped PostgreSQL review persistence and max-20 batch service with payload equality, exact idempotent acknowledgements and generic typed failures. No HTTP route, mobile code, flag enablement, provider, network activation, UI, background sync, Preview, Production or NI-005+ work. Start with failing direct tests, record exact output, mark review_requested and stop at Draft PR for supervisor high-reasoning review.
+
 ## LB-DS-009
 
 - Status: accepted
