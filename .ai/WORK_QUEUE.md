@@ -5,7 +5,7 @@ start. Historical tasks remain for traceability and must not be duplicated.
 
 ## LB-DS-012
 
-- Status: ready
+- Status: review_requested
 - Executor: high-reasoning-worker
 - Base: main at `e5bc629` (NI-005 close handoff merged through PR #115)
 - Branch: worker/lb-ds-012-native-adapters
