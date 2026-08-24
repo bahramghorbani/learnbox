@@ -5,10 +5,7 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-- **LB-DS-009 / NI-003 native auth HTTP boundary** is ready for a high-reasoning worker from `main`
-  at `6b730ff` on branch `worker/lb-ds-009-mobile-auth-http`. Scope is limited to default-disabled
-  website routes/runtime and direct tests; no review route, mobile code, provider, network activation
-  or flag enablement is authorized. LB-DS-008 / NI-002 is accepted through PR #104.
+- **LB-DS-009 / NI-003 native auth HTTP boundary** is `review_requested` on branch `worker/lb-ds-009-mobile-auth-http`, based on `origin/main` at `9c5a6ef`. Implementation commit `a0e91bc` passed focused tests, website typecheck/build, full `pnpm check`, full `pnpm build`, migration validation, queue and continuity validators. A Draft PR and independent high-reasoning security review remain pending; Terra and Sol review attempts failed upstream with HTTP 500. Scope remains limited to default-disabled website routes/runtime and direct tests; no review route, mobile code, provider, network activation or flag enablement is authorized. LB-DS-008 / NI-002 is accepted through PR #104.
 
 ## Agent work log
 
