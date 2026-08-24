@@ -5,7 +5,16 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-- **LB-DS-010 / NI-004 review schema and learner-scoped server core** is authorized and ready on branch `worker/lb-ds-010-native-review-core`, based on `main` at `06bf51f`. Scope is limited to migration 0013, PostgreSQL review persistence, mobile review batch service and direct tests; no route, mobile code, flag, provider, network activation, UI, background sync or Production work.
+- **LB-DS-010 / NI-004 review schema and learner-scoped server core** — implemented on branch
+  `worker/lb-ds-010-native-review-core` (uncommitted, no PR). Migration `0013_native_review_transport.sql`
+  (TEXT `client_event_id` 1–128, `UNIQUE (user_id, client_event_id)`, server `applied_at`, canonical
+  immutable `cards.content_id` with unique index + trigger, `bootstrap_approved_card_schedules`),
+  `PostgresReviewEventStore` (learner-scoped exact-payload idempotency with
+  `ReviewIdempotencyConflictError`, content-id resolution, bootstrap, schedule read),
+  `MobileReviewBatchService` (max-20 ordered batch, generic typed per-item outcomes:
+  `acknowledged`/`idempotencyConflict`/`validation`/`clockSkew`, typed batch failure). Local gates:
+  API tests 93/93, migration validation (13), typecheck, build, `git diff --check`. No route,
+  mobile code, flag or network activation.
 
 ## Agent work log
 

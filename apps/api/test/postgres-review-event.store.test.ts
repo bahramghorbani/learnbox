@@ -116,3 +116,182 @@ describe('PostgresReviewEventStore', () => {
     expect(connectCount).toBe(0);
   });
 });
+
+import { ReviewIdempotencyConflictError } from '../src/reviews/postgres-review-event.store.js';
+
+const conflictingRow = {
+  id: 'persisted-event-1',
+  user_id: input.userId,
+  card_id: input.cardId,
+  grade: 'hard' as 'forgot' | 'hard' | 'remembered' | 'mastered',
+  occurred_at: input.occurredAt,
+  client_event_id: input.clientEventId,
+  state: 'review' as const,
+  stability_days: 2,
+  difficulty: 4.9,
+  lapses: 0,
+  due_at: new Date('2026-07-28T12:00:00Z'),
+};
+
+const replayPool = (existingRow: typeof conflictingRow) => {
+  let updateCalls = 0;
+  let scopedLookupSql = '';
+  const client = {
+    query: async (sql: string) => {
+      if (sql.startsWith('INSERT INTO review_events')) return { rows: [] };
+      if (sql.startsWith('UPDATE card_schedules')) {
+        updateCalls += 1;
+        return { rows: [] };
+      }
+      return { rows: [] };
+    },
+    release: () => undefined,
+  };
+  const pool = {
+    query: async (sql: string) => {
+      if (sql.startsWith('SELECT e.id')) {
+        scopedLookupSql = sql;
+        return { rows: [existingRow] };
+      }
+      return { rows: [] };
+    },
+    connect: async () => client,
+  } as unknown as Pool;
+  return { pool, updateCalls: () => updateCalls, scopedLookupSql: () => scopedLookupSql };
+};
+
+describe('PostgresReviewEventStore learner-scoped idempotency', () => {
+  it('rejects a same-learner replay whose payload differs without mutating the schedule', async () => {
+    const { pool, updateCalls, scopedLookupSql } = replayPool(conflictingRow);
+
+    const store = new PostgresReviewEventStore(pool);
+    await expect(
+      store.writeAtomically(input, { ...currentSchedule, state: 'relearning' }),
+    ).rejects.toBeInstanceOf(ReviewIdempotencyConflictError);
+
+    expect(updateCalls()).toBe(0);
+    expect(scopedLookupSql()).toMatch(/WHERE e\.user_id = \$1 AND e\.client_event_id = \$2/);
+  });
+
+  it('acknowledges a same-learner replay with an exact payload match', async () => {
+    const { pool, updateCalls } = replayPool({
+      ...conflictingRow,
+      grade: input.grade,
+      occurred_at: input.occurredAt,
+    });
+
+    const store = new PostgresReviewEventStore(pool);
+    const result = await store.writeAtomically(input, { ...currentSchedule, state: 'relearning' });
+
+    expect(result.idempotent).toBe(true);
+    expect(result.event.clientEventId).toBe(input.clientEventId);
+    expect(updateCalls()).toBe(0);
+  });
+
+  it('claims the learner-scoped key and derives applied_at monotonically in one transaction', async () => {
+    const transactionCalls: string[] = [];
+    let insertSql = '';
+    const client = {
+      query: async (sql: string) => {
+        transactionCalls.push(sql);
+        if (sql.startsWith('INSERT INTO review_events')) {
+          insertSql = sql;
+          return {
+            rows: [
+              {
+                id: 'persisted-event-1',
+                user_id: input.userId,
+                card_id: input.cardId,
+                grade: input.grade,
+                occurred_at: input.occurredAt,
+                client_event_id: input.clientEventId,
+              },
+            ],
+          };
+        }
+        if (sql.startsWith('UPDATE card_schedules')) {
+          return {
+            rows: [
+              {
+                state: 'relearning',
+                stability_days: 10 / (24 * 60),
+                difficulty: 5.5,
+                lapses: 1,
+                due_at: new Date('2026-07-26T12:10:00Z'),
+              },
+            ],
+          };
+        }
+        return { rows: [] };
+      },
+      release: () => undefined,
+    };
+    const pool = {
+      query: async () => ({ rows: [] }),
+      connect: async () => client,
+    } as unknown as Pool;
+
+    const result = await new PostgresReviewEventStore(pool).writeAtomically(input, {
+      ...currentSchedule,
+      state: 'relearning',
+    });
+
+    expect(result.idempotent).toBe(false);
+    expect(transactionCalls.map((sql) => sql.split(/\s+/)[0])).toEqual([
+      'BEGIN',
+      'INSERT',
+      'UPDATE',
+      'COMMIT',
+    ]);
+    expect(insertSql).toMatch(/ON CONFLICT \(user_id, client_event_id\) DO NOTHING/i);
+    expect(insertSql).toMatch(/applied_at/i);
+    expect(insertSql).toMatch(/GREATEST/i);
+    expect(insertSql).toMatch(/MAX\(applied_at\)/i);
+    expect(insertSql).toMatch(/LEAST\(\$4, now\(\)\)/i);
+  });
+
+  it('resolves canonical content ids, bootstraps schedules and reads learner schedules', async () => {
+    const queries: Array<{ sql: string; params?: unknown[] }> = [];
+    const pool = {
+      query: async (sql: string, params?: unknown[]) => {
+        queries.push({ sql, params });
+        if (sql.startsWith('SELECT c.id')) {
+          return params?.[0] === 'content-a' ? { rows: [{ id: input.cardId }] } : { rows: [] };
+        }
+        if (sql.startsWith('SELECT state')) {
+          return {
+            rows: [
+              {
+                state: 'review',
+                stability_days: 2,
+                difficulty: 4.9,
+                lapses: 0,
+                due_at: new Date('2026-07-28T12:00:00Z'),
+              },
+            ],
+          };
+        }
+        return { rows: [] };
+      },
+      connect: async () => {
+        throw new Error('lookup methods must not open transactions');
+      },
+    } as unknown as Pool;
+    const store = new PostgresReviewEventStore(pool);
+
+    await expect(store.resolveCardId('content-a')).resolves.toBe(input.cardId);
+    await expect(store.resolveCardId('missing')).resolves.toBeNull();
+    await store.bootstrapSchedules(input.userId);
+    await expect(store.findSchedule(input.userId, input.cardId)).resolves.toMatchObject({
+      state: 'review',
+      stabilityDays: 2,
+    });
+
+    expect(queries[0].sql).toMatch(/FROM cards c\s+WHERE c\.content_id = \$1/i);
+    expect(queries[0].params).toEqual(['content-a']);
+    expect(queries[1].params).toEqual(['missing']);
+    expect(queries[2].sql).toMatch(/bootstrap_approved_card_schedules\(\$1\)/);
+    expect(queries[2].params).toEqual([input.userId]);
+    expect(queries[3].sql).toMatch(/FROM card_schedules\s+WHERE user_id = \$1 AND card_id = \$2/);
+  });
+});
