@@ -5,11 +5,12 @@ start. Historical tasks remain for traceability and must not be duplicated.
 
 ## LB-DS-009
 
-- Status: review_requested
+- Status: accepted
 - Executor: high-reasoning-worker
 - Base: main at `9c5a6ef` (authorization PR #106 merged)
 - Branch: worker/lb-ds-009-mobile-auth-http
 - Risk: security-sensitive-native-auth-http
+- Merge commit: `d7695ee` (PR #107 merged)
 - Specification: docs/superpowers/specs/2026-08-22-native-identity-authenticated-transport-design.md (NI-003 only); docs/architecture/ADR/0011-native-mobile-session-and-transport.md
 - Allowed paths: apps/website/lib/mobile-auth-http.ts; apps/website/lib/mobile-auth-runtime.ts; apps/website/app/api/auth/mobile/otp/request/route.ts; apps/website/app/api/auth/mobile/otp/verify/route.ts; apps/website/app/api/auth/mobile/session/refresh/route.ts; apps/website/app/api/auth/mobile/session/revoke/route.ts; apps/website/test/mobile-auth-http.test.ts; apps/website/test/mobile-auth-routes.test.ts; .ai/WORK_QUEUE.md; .ai/worker-reports/LB-DS-009.md; CURRENT_WORK.md
 - Required checks: pnpm --filter @learnbox/website exec vitest run test/mobile-auth-http.test.ts test/mobile-auth-routes.test.ts; pnpm --filter @learnbox/website typecheck; pnpm --filter @learnbox/website build; pnpm check; pnpm build; node scripts/validate-migrations.mjs
