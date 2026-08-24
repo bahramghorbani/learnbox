@@ -5,16 +5,7 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-- **LB-DS-010 / NI-004 review schema and learner-scoped server core** — implemented on branch
-  `worker/lb-ds-010-native-review-core` (uncommitted, no PR). Migration `0013_native_review_transport.sql`
-  (TEXT `client_event_id` 1–128, `UNIQUE (user_id, client_event_id)`, server `applied_at`, canonical
-  immutable `cards.content_id` with unique index + trigger, `bootstrap_approved_card_schedules`),
-  `PostgresReviewEventStore` (learner-scoped exact-payload idempotency with
-  `ReviewIdempotencyConflictError`, content-id resolution, bootstrap, schedule read),
-  `MobileReviewBatchService` (max-20 ordered batch, generic typed per-item outcomes:
-  `acknowledged`/`idempotencyConflict`/`validation`/`clockSkew`, typed batch failure). Local gates:
-  API tests 93/93, migration validation (13), typecheck, build, `git diff --check`. No route,
-  mobile code, flag or network activation.
+- No unfinished implementation task is currently registered. LB-DS-010 / NI-004 was accepted through PR #111 at merge commit `3534cde`; NI-005 and later slices remain unauthorized and unstarted.
 
 ## Agent work log
 
