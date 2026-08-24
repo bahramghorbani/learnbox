@@ -24,6 +24,27 @@ interface ScheduleRow {
   due_at: Date;
 }
 
+/**
+ * Same-learner client event id already exists with a different payload.
+ * The batch service maps this to a typed `idempotencyConflict` outcome.
+ */
+export class ReviewIdempotencyConflictError extends Error {
+  constructor(
+    readonly userId: string,
+    readonly clientEventId: string,
+    message = 'Review idempotency conflict: existing event payload differs.',
+  ) {
+    super(message);
+    this.name = 'ReviewIdempotencyConflictError';
+  }
+}
+
+const payloadMatches = (existing: PersistedReviewEvent, input: ReviewEventInput): boolean =>
+  existing.cardId === input.cardId &&
+  existing.grade === input.grade &&
+  existing.occurredAt.getTime() === input.occurredAt.getTime() &&
+  existing.clientEventId === input.clientEventId;
+
 const toSchedule = (row: ScheduleRow): CardSchedule => ({
   state: row.state,
   stabilityDays: row.stability_days,
@@ -66,18 +87,28 @@ export class PostgresReviewEventStore implements ReviewEventStore {
     try {
       await client.query('BEGIN');
       const claimed = await client.query<ReviewEventRow>(
-        `INSERT INTO review_events (id, user_id, card_id, grade, occurred_at, client_event_id)
-         VALUES (gen_random_uuid(), $1, $2, $3, $4, $5)
-         ON CONFLICT (client_event_id) DO NOTHING
+        `INSERT INTO review_events (id, user_id, card_id, grade, occurred_at, client_event_id, applied_at)
+         VALUES (gen_random_uuid(), $1, $2, $3, $4, $5,
+                 GREATEST(
+                   COALESCE((SELECT MAX(applied_at) FROM review_events prior
+                              WHERE prior.user_id = $1 AND prior.card_id = $2), now()),
+                   LEAST($4, now())))
+         ON CONFLICT (user_id, client_event_id) DO NOTHING
          RETURNING id, user_id, card_id, grade, occurred_at, client_event_id`,
         [input.userId, input.cardId, input.grade, input.occurredAt, input.clientEventId],
       );
 
       if (claimed.rows.length === 0) {
         await client.query('ROLLBACK');
-        const existing = await this.findByClientEventId(input.clientEventId);
+        const existing = await this.findByLearnerAndClientEventId(
+          input.userId,
+          input.clientEventId,
+        );
         if (!existing) throw new Error('Idempotent review event was not available after conflict.');
-        return existing;
+        if (!payloadMatches(existing.event, input)) {
+          throw new ReviewIdempotencyConflictError(input.userId, input.clientEventId);
+        }
+        return { ...existing, idempotent: true };
       }
 
       const schedule = await client.query<ScheduleRow>(
@@ -113,5 +144,54 @@ export class PostgresReviewEventStore implements ReviewEventStore {
     } finally {
       client.release();
     }
+  }
+
+  private async findByLearnerAndClientEventId(
+    userId: string,
+    clientEventId: string,
+  ): Promise<ReviewEventWriteResult | null> {
+    const result = await this.pool.query<ReviewEventRow & ScheduleRow>(
+      `SELECT e.id, e.user_id, e.card_id, e.grade, e.occurred_at, e.client_event_id,
+              s.state, s.stability_days, s.difficulty, s.lapses, s.due_at
+         FROM review_events e
+         JOIN card_schedules s ON s.user_id = e.user_id AND s.card_id = e.card_id
+        WHERE e.user_id = $1 AND e.client_event_id = $2`,
+      [userId, clientEventId],
+    );
+    const row = result.rows[0];
+    return row ? { event: toEvent(row), schedule: toSchedule(row), idempotent: true } : null;
+  }
+
+  /** Resolves a canonical content id to the DB card uuid; null when unknown. */
+  async resolveCardId(contentId: string): Promise<string | null> {
+    const result = await this.pool.query<{ id: string }>(
+      `SELECT c.id
+         FROM cards c
+        WHERE c.content_id = $1
+          AND EXISTS (
+            SELECT 1
+              FROM card_versions cv
+             WHERE cv.card_id = c.id
+               AND cv.status IN ('approved', 'published')
+          )`,
+      [contentId],
+    );
+    return result.rows[0]?.id ?? null;
+  }
+
+  /** Idempotent server-owned schedule bootstrap for a learner (approved content only). */
+  async bootstrapSchedules(userId: string): Promise<void> {
+    await this.pool.query(`SELECT bootstrap_approved_card_schedules($1)`, [userId]);
+  }
+
+  async findSchedule(userId: string, cardId: string): Promise<CardSchedule | null> {
+    const result = await this.pool.query<ScheduleRow>(
+      `SELECT state, stability_days, difficulty, lapses, due_at
+         FROM card_schedules
+        WHERE user_id = $1 AND card_id = $2`,
+      [userId, cardId],
+    );
+    const row = result.rows[0];
+    return row ? toSchedule(row) : null;
   }
 }
