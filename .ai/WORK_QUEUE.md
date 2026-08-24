@@ -5,11 +5,12 @@ start. Historical tasks remain for traceability and must not be duplicated.
 
 ## LB-DS-011
 
-- Status: review_requested
+- Status: accepted
 - Executor: high-reasoning-worker
-- Base: main at `4db4819` (NI-004 close handoff merged through PR #112)
+- Base: main at `0298810` (NI-005 activation PR #113 merged)
 - Branch: worker/lb-ds-011-native-review-route
 - Risk: security-sensitive-native-review-http
+- Merge commit: `07a5f64` (PR #114 merged)
 - Specification: docs/superpowers/specs/2026-08-22-native-identity-authenticated-transport-design.md (NI-005 only); docs/architecture/ADR/0011-native-mobile-session-and-transport.md
 - Allowed paths: apps/website/lib/mobile-review-http.ts; apps/website/lib/mobile-review-runtime.ts; apps/website/app/api/reviews/mobile/route.ts; apps/website/test/mobile-review-http.test.ts; apps/website/test/mobile-review-route.test.ts; .ai/WORK_QUEUE.md; .ai/worker-reports/LB-DS-011.md; CURRENT_WORK.md
 - Required checks: pnpm --filter @learnbox/website exec vitest run test/mobile-review-http.test.ts test/mobile-review-route.test.ts; pnpm --filter @learnbox/website typecheck; pnpm --filter @learnbox/website build; pnpm verify:security; pnpm check; pnpm build; git diff --check

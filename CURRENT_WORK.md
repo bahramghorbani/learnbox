@@ -5,10 +5,7 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-- **LB-DS-011 / NI-005 default-disabled authenticated mobile review route** is implemented on branch
-  `worker/lb-ds-011-native-review-route` (uncommitted, no PR). Focused tests, website typecheck,
-  security validator, full check and full build pass. Supervisor security review and PR remain pending;
-  no mobile code, flag enablement, provider/network activation, UI, background sync or Production work.
+- No unfinished implementation task is currently registered. LB-DS-011 / NI-005 was accepted through PR #114 at merge commit `07a5f64`; NI-006 and later slices remain unauthorized and unstarted.
 
 ## Agent work log
 
