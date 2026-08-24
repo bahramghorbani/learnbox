@@ -5,7 +5,7 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-- No unfinished implementation task is currently registered. LB-DS-010 / NI-004 was accepted through PR #111 at merge commit `3534cde`; NI-005 and later slices remain unauthorized and unstarted.
+- **LB-DS-011 / NI-005 default-disabled authenticated mobile review route** is authorized and ready on branch `worker/lb-ds-011-native-review-route`, based on `main` at `4db4819`. Scope is limited to website HTTP/runtime/route and direct tests; no Flutter/mobile code, dependency, flag enablement, provider, network activation, UI, background sync or Production work.
 
 ## Agent work log
 

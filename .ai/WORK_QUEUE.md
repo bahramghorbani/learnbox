@@ -3,6 +3,22 @@
 Read `.ai/WORKER_PROTOCOL.md` before this file. `blocked` tasks are context, not authorization to
 start. Historical tasks remain for traceability and must not be duplicated.
 
+## LB-DS-011
+
+- Status: ready
+- Executor: high-reasoning-worker
+- Base: main at `4db4819` (NI-004 close handoff merged through PR #112)
+- Branch: worker/lb-ds-011-native-review-route
+- Risk: security-sensitive-native-review-http
+- Specification: docs/superpowers/specs/2026-08-22-native-identity-authenticated-transport-design.md (NI-005 only); docs/architecture/ADR/0011-native-mobile-session-and-transport.md
+- Allowed paths: apps/website/lib/mobile-review-http.ts; apps/website/lib/mobile-review-runtime.ts; apps/website/app/api/reviews/mobile/route.ts; apps/website/test/mobile-review-http.test.ts; apps/website/test/mobile-review-route.test.ts; .ai/WORK_QUEUE.md; .ai/worker-reports/LB-DS-011.md; CURRENT_WORK.md
+- Required checks: pnpm --filter @learnbox/website exec vitest run test/mobile-review-http.test.ts test/mobile-review-route.test.ts; pnpm --filter @learnbox/website typecheck; pnpm --filter @learnbox/website build; pnpm verify:security; pnpm check; pnpm build; git diff --check
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+
+Owner-authorized NI-005 implementation only: add a default-disabled authenticated mobile review route using the server-derived learner/session contract and exact max-20 request/ack schema. `MOBILE_REVIEW_SYNC_ENABLED` remains false. Preserve generic typed errors, strict JSON/content-type/body/schema validation, HTTPS outside bounded loopback, no browser cookies, no Origin/CORS/custom-header/installation-ID trust, and no client user ID. No Flutter/mobile code, dependency, flag enablement, provider, network activation, UI, background sync, Preview, Production or NI-006+ work. Start with failing direct tests, record exact output, mark review_requested and stop at Draft PR for supervisor high-reasoning security review.
+
 ## LB-DS-010
 
 - Status: accepted
