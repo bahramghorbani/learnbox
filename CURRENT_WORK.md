@@ -5,7 +5,7 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-- No unfinished implementation task is currently registered. LB-DS-009 / NI-003 was accepted through PR #107 at merge commit `d7695ee`; NI-004–NI-007 remain unauthorized and unstarted.
+- **LB-DS-010 / NI-004 review schema and learner-scoped server core** is authorized and ready on branch `worker/lb-ds-010-native-review-core`, based on `main` at `06bf51f`. Scope is limited to migration 0013, PostgreSQL review persistence, mobile review batch service and direct tests; no route, mobile code, flag, provider, network activation, UI, background sync or Production work.
 
 ## Agent work log
 
