@@ -2,8 +2,8 @@
 
 - Branch: `worker/lb-ds-013-dormant-composition`
 - Base commit: `8fe519b` (NI-007 activation PR #119 merged)
-- Head commit: uncommitted implementation; supervisor verification completed on the worktree.
-- Draft PR: not opened yet.
+- Head commit: `051d64c` (implementation/tests; PR #120).
+- Draft PR: https://github.com/bahramghorbani/learnbox/pull/120 (green CI; ready for merge).
 - Scope completed: NI-007 only. Added explicit `MobileAuthConfig.defaults()` composition with auth and review-sync defaults false; production still supplies signed-out identity and `DisabledReviewSyncTransport`. Updated mobile and offline-sync documentation. No network permission, endpoint activation, provider, UI, background trigger, Preview, Production or NI-008+ work.
 - Files changed: `apps/mobile/lib/main.dart`; `apps/mobile/lib/features/identity/mobile_auth_config.dart`; `apps/mobile/test/mobile_auth_composition_test.dart`; `apps/mobile/README.md`; `docs/architecture/OFFLINE_SYNC.md`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-013.md`; `CURRENT_WORK.md`.
 - Checks run: `dart format --output=none --set-exit-if-changed` on Dart files; focused composition tests (3 passing); `flutter analyze`; full `flutter test` (89 passing); root `pnpm check`; root `pnpm build`; migration validation; `git diff --check`; scope audit.
