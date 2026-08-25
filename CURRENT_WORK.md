@@ -5,7 +5,7 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-- No unfinished implementation task is currently registered. LB-DS-012 / NI-006 was accepted through PR #117 at merge commit `92506e3`; NI-007 and later slices remain unauthorized and unstarted.
+- **LB-DS-013 / NI-007 dormant mobile auth composition** is authorized and ready on branch `worker/lb-ds-013-dormant-composition`, based on `main` at `70cb573`. Scope is limited to `apps/mobile/lib/main.dart`, `apps/mobile/lib/features/identity/mobile_auth_config.dart`, `apps/mobile/test/mobile_auth_composition_test.dart`, `apps/mobile/README.md`, `docs/architecture/OFFLINE_SYNC.md`, `.ai/WORK_QUEUE.md`, `.ai/worker-reports/LB-DS-013.md` and `CURRENT_WORK.md`. Both compile/runtime defaults remain false; no network permission, Preview, Production, UI activation, background trigger or NI-008+ work.
 
 ## Agent work log
 
