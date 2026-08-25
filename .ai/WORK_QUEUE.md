@@ -9,7 +9,7 @@ start. Historical tasks remain for traceability and must not be duplicated.
 
 ## LB-DS-013
 
-- Status: ready
+- Status: review_requested
 - Executor: high-reasoning-worker
 - Base: main at `70cb573` (NI-006 close handoff merged through PR #118)
 - Branch: worker/lb-ds-013-dormant-composition

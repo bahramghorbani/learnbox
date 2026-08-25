@@ -33,10 +33,11 @@ client event IDs from a complete, validated server acknowledgement. Empty, dupli
 acknowledgements, transport errors and local acknowledgement-write errors retain all applicable
 events and return a retryable outcome. Concurrent callers share one in-flight attempt.
 
-This is a dormant boundary, not an enabled synchronization feature: production composition supplies
-only `signedOut` and a `DisabledReviewSyncTransport`, and exposes no UI action or automatic trigger.
-There is no native HTTP client, endpoint, token, provider, background work, connectivity listener or
-analytics in this slice. A future implementation must separately establish authenticated learner
-identity, a typed server protocol, timeout/retry policy, Preview verification and owner-approved
-activation. Rollback removes the coordinator composition while preserving the encrypted queue and all
-pending events.
+This is a dormant boundary, not an enabled synchronization feature: `MobileAuthConfig.defaults()` is
+production composition and fixes both auth/review-sync flags to `false`, returning only `signedOut`
+and `DisabledReviewSyncTransport`. The native session and HTTP adapter classes are intentionally not
+composed. There is no native HTTP client, endpoint, token, provider, network permission, background
+work, connectivity listener or analytics in this slice. A future implementation must separately
+establish authenticated learner identity, a typed server protocol, timeout/retry policy, Preview
+verification and owner-approved activation. Rollback removes the coordinator composition while
+preserving the encrypted queue and all pending events.
