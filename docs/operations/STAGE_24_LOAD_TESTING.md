@@ -75,7 +75,18 @@ Record the date, commit SHA, Node version, profile, aggregate JSON result, and w
 passed. Keep any optional local artifact beneath ignored `.artifacts/load/`. Do not treat a
 successful local run as evidence for Preview or Production capacity.
 
-## Foundation evidence
+## Latest local evidence
+
+On 2026-08-25 at `main` commit `7e3d1f3`, the built learner app was served only on
+`http://127.0.0.1:3010` and produced these aggregate-only results:
+
+- `smoke`: 100 requests, 0 failures, p50 4ms, p95 31ms, p99 34ms, passed.
+- `baseline`: 500 requests, 0 failures, p50 8ms, p95 15ms, p99 31ms, passed.
+- CPU-only engine profile: 10,000 schedules, 100,000 transitions, 10,000 queued events, 0 invariant failures, passed.
+- Recovery: with the server stopped, smoke stopped at `failure_limit` with exit code 1; after restart, smoke passed with 100 requests and 0 failures.
+
+This is repeatable local regression evidence only. It does not establish Preview, LAN, Production,
+real-user, provider, or low-end Android capacity.
 
 On 2026-08-12, the local built learner app passed `smoke` with 100 requests, zero failures, p95
 33ms and p99 38ms; it passed `baseline` with 500 requests, zero failures, p95 18ms and p99 34ms.
