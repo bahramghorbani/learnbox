@@ -5,11 +5,12 @@ start. Historical tasks remain for traceability and must not be duplicated.
 
 ## LB-DS-012
 
-- Status: review_requested
+- Status: accepted
 - Executor: high-reasoning-worker
-- Base: main at `e5bc629` (NI-005 close handoff merged through PR #115)
+- Base: main at `24a7805` (NI-006 activation PR #116 merged)
 - Branch: worker/lb-ds-012-native-adapters
 - Risk: security-sensitive-mobile-credential-transport
+- Merge commit: `92506e3` (PR #117 merged)
 - Specification: docs/superpowers/specs/2026-08-22-native-identity-authenticated-transport-design.md (NI-006 only); docs/architecture/ADR/0011-native-mobile-session-and-transport.md
 - Allowed paths: apps/mobile/lib/features/identity/mobile_session.dart; apps/mobile/lib/features/identity/mobile_session_store.dart; apps/mobile/lib/features/identity/secure_mobile_session_store.dart; apps/mobile/lib/features/sync/http_review_sync_transport.dart; apps/mobile/test/mobile_session_test.dart; apps/mobile/test/secure_mobile_session_store_test.dart; apps/mobile/test/http_review_sync_transport_test.dart; .ai/WORK_QUEUE.md; .ai/worker-reports/LB-DS-012.md; CURRENT_WORK.md
 - Required checks: dart format --output=none --set-exit-if-changed apps/mobile/lib/features/identity/mobile_session.dart apps/mobile/lib/features/identity/mobile_session_store.dart apps/mobile/lib/features/identity/secure_mobile_session_store.dart apps/mobile/lib/features/sync/http_review_sync_transport.dart apps/mobile/test/mobile_session_test.dart apps/mobile/test/secure_mobile_session_store_test.dart apps/mobile/test/http_review_sync_transport_test.dart; cd apps/mobile && flutter analyze; cd apps/mobile && flutter test test/mobile_session_test.dart test/secure_mobile_session_store_test.dart test/http_review_sync_transport_test.dart; cd apps/mobile && flutter test; cd apps/mobile && flutter build apk --debug; git diff --check
@@ -17,7 +18,7 @@ start. Historical tasks remain for traceability and must not be duplicated.
 - Draft PR required: yes
 - Merge allowed: yes
 
-Owner-authorized NI-006 implementation only: add dormant Flutter credential/session and HTTP review transport adapters using the existing `flutter_secure_storage` dependency. Keep defaults disabled and adapters uncomposed. No new dependency, endpoint, native host permission, composition, trigger, UI, flag enablement, provider/network activation, background sync, Preview, Production or NI-007+ work. Start with failing direct tests, record exact output, mark review_requested and stop at Draft PR for supervisor high-reasoning security review.
+Owner-authorized NI-006 implementation accepted through PR #117. Added dormant Flutter session/store and injected review transport adapters using existing secure storage. Transport enforces HTTPS or loopback HTTP, positive timeout, strict max-20 batch, typed failure and no credential logging. No new dependency, endpoint activation, native permission, composition, trigger, UI, flag enablement, provider/network activation, background sync, Preview, Production or NI-007+ work.
 
 ## LB-DS-011
 
