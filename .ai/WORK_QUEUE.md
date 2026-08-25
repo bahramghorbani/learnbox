@@ -9,11 +9,12 @@ start. Historical tasks remain for traceability and must not be duplicated.
 
 ## LB-DS-013
 
-- Status: review_requested
+- Status: accepted
 - Executor: high-reasoning-worker
-- Base: main at `70cb573` (NI-006 close handoff merged through PR #118)
+- Base: main at `8fe519b` (NI-007 activation PR #119 merged)
 - Branch: worker/lb-ds-013-dormant-composition
 - Risk: security-sensitive-mobile-composition
+- Merge commit: `dc032d2` (PR #120 merged)
 - Specification: docs/superpowers/specs/2026-08-22-native-identity-authenticated-transport-design.md (NI-007 only); docs/architecture/ADR/0011-native-mobile-session-and-transport.md
 - Allowed paths: apps/mobile/lib/main.dart; apps/mobile/lib/features/identity/mobile_auth_config.dart; apps/mobile/test/mobile_auth_composition_test.dart; apps/mobile/README.md; docs/architecture/OFFLINE_SYNC.md; .ai/WORK_QUEUE.md; .ai/worker-reports/LB-DS-013.md; CURRENT_WORK.md
 - Required checks: dart format --output=none --set-exit-if-changed apps/mobile/lib/main.dart apps/mobile/lib/features/identity/mobile_auth_config.dart apps/mobile/test/mobile_auth_composition_test.dart; cd apps/mobile && flutter analyze; cd apps/mobile && flutter test test/mobile_auth_composition_test.dart; cd apps/mobile && flutter test; cd apps/mobile && flutter build apk --debug; pnpm check; pnpm build; node scripts/validate-migrations.mjs; git diff --check
@@ -21,7 +22,7 @@ start. Historical tasks remain for traceability and must not be duplicated.
 - Draft PR required: yes
 - Merge allowed: yes
 
-Owner-authorized NI-007 only: add dormant mobile auth/transport composition with explicit compile/runtime defaults false and preserve signed-out/disabled production behavior. No network permission, endpoint activation, Preview/Production, UI-visible activation, background trigger, provider activation, dependency change or NI-008+ work. Start with failing direct tests, record exact output, mark review_requested and stop at Draft PR for independent high-reasoning security review.
+Owner-authorized NI-007 implementation accepted through PR #120. Added explicit dormant composition using `MobileAuthConfig.defaults()`: both auth and review-sync defaults are false, production remains signed out and uses `DisabledReviewSyncTransport`. No network permission, endpoint activation, provider, UI-visible activation, background trigger, Preview, Production or NI-008+ work.
 
 ## LB-DS-012
 
