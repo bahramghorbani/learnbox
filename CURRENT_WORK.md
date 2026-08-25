@@ -5,11 +5,7 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-- **LB-DS-013 / NI-007 dormant mobile auth composition** is implemented on branch
-  `worker/lb-ds-013-dormant-composition` (uncommitted, no PR). Focused/full Flutter tests, analyzer,
-  root check/build and migration validation pass. Local APK build is blocked by remote Flutter artifact
-  HTTP 403; supervisor review and Draft PR remain pending. Defaults remain false; no network permission,
-  endpoint activation, UI, background trigger, Preview or Production work.
+- No unfinished implementation task is currently registered. LB-DS-013 / NI-007 was accepted through PR #120 at merge commit `dc032d2`; NI-008 and later slices remain unauthorized and unstarted.
 
 ## Agent work log
 
