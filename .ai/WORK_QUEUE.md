@@ -23,7 +23,6 @@ start. Historical tasks remain for traceability and must not be duplicated.
 
 Owner-authorized NI-007 only: add dormant mobile auth/transport composition with explicit compile/runtime defaults false and preserve signed-out/disabled production behavior. No network permission, endpoint activation, Preview/Production, UI-visible activation, background trigger, provider activation, dependency change or NI-008+ work. Start with failing direct tests, record exact output, mark review_requested and stop at Draft PR for independent high-reasoning security review.
 
-
 ## LB-DS-012
 
 - Status: accepted
