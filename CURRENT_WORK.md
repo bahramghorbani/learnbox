@@ -5,7 +5,11 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-- **LB-DS-012 / NI-006 dormant Flutter credential/transport adapters** is authorized and ready on branch `worker/lb-ds-012-native-adapters`, based on `main` at `e5bc629`. Scope is limited to the four adapter files and three direct test files; no new dependency, endpoint, permission, composition, trigger, UI, flag enablement, provider/network activation or Production work.
+- **LB-DS-012 / NI-006 dormant Flutter credential/transport adapters** is implemented on branch
+  `worker/lb-ds-012-native-adapters` with Draft PR #117. Format, analyzer, focused/full Flutter tests
+  pass; transport hardening enforces HTTPS/loopback and max-20. APK build remains blocked by a remote
+  Flutter artifact HTTP 403. No composition, trigger, UI, flag enablement, provider/network activation
+  or Production work.
 
 ## Agent work log
 
