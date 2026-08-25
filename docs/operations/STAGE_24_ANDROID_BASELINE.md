@@ -65,6 +65,21 @@ Cafe Bazaar publication.
 - **Boundary:** debug-only local evidence. No flag, provider, authentication, audio, production
   route, signing or release action was enabled.
 
+## Native pronunciation QA follow-up
+
+- **Date:** 2026-08-25
+- **Source:** `main` at `fb8a45a` (documentation-only S2 follow-up; mobile source unchanged)
+- **Device:** Xiaomi M2006C3LG (Android 11), `armeabi-v7a`, 720 × 1600, density 320
+- **APK:** existing debug artifact from the clean `main` worktree, installed with `adb install -r`; SHA-256 `51bcd64c05e97916a584825d20a71e14f109f6ce4ece7b180050e99e500a8250`
+- **Build note:** a fresh local build in the isolated QA worktree was blocked before compilation by the existing Flutter artifact repository HTTP 403; Flutter analyze and full tests passed, and the installed artifact was verified to contain all six V2 audio assets.
+- **Physical smoke:** app launched, Today showed the Persian shell and three canonical cards, and review opened on `das Haus` with the word-pronunciation control available.
+- **Cold start:** three `adb shell am start -W` runs after `am force-stop`: 10434ms, 10193ms, 10183ms (median 10193ms; device/process timing only).
+- **Resident memory:** 253,418 KB total PSS from `dumpsys meminfo` after launch/review entry.
+- **Owner-confirmed listening QA:** all six approved V2 clips passed on the connected device: `das Haus` word/sentence, `der Tisch` word/sentence and `die Tür` word/sentence.
+
+This is debug-only physical-device evidence. It does not authorize network, sync, authentication, provider,
+Preview, Production, signing or release activity.
+
 ## Interpretation
 
 The native host and first offline review slice are installable and usable on this device. These
