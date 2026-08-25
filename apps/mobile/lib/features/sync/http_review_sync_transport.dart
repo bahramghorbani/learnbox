@@ -28,7 +28,33 @@ class HttpReviewSyncTransport implements ReviewSyncTransport {
     this.timeout = const Duration(seconds: 15),
   })  : _sessionStore = sessionStore,
         _client = client,
-        _endpoint = endpoint;
+        _endpoint = endpoint {
+    if (!_isAllowedEndpoint(endpoint)) {
+      throw ArgumentError.value(
+        endpoint,
+        'endpoint',
+        'must use HTTPS, or HTTP only on loopback during development',
+      );
+    }
+    if (timeout <= Duration.zero) {
+      throw ArgumentError.value(timeout, 'timeout', 'must be positive');
+    }
+  }
+
+  static const _maxBatchSize = 20;
+
+  static bool _isAllowedEndpoint(Uri endpoint) {
+    if (endpoint.userInfo.isNotEmpty || endpoint.path.isEmpty) {
+      return false;
+    }
+    if (endpoint.scheme == 'https') {
+      return true;
+    }
+    return endpoint.scheme == 'http' &&
+        (endpoint.host == 'localhost' ||
+            endpoint.host == '127.0.0.1' ||
+            endpoint.host == '::1');
+  }
 
   final MobileSessionStore _sessionStore;
   final MobileReviewHttpClient _client;
@@ -37,6 +63,9 @@ class HttpReviewSyncTransport implements ReviewSyncTransport {
 
   @override
   Future<ReviewUploadResponse> upload(List<PendingReviewEvent> events) async {
+    if (events.length > _maxBatchSize) {
+      throw const MobileReviewTransportException('validation');
+    }
     final session = await _sessionStore.read();
     if (session == null) {
       throw const MobileReviewTransportException('authenticationRequired');

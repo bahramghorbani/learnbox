@@ -38,18 +38,38 @@ void main() {
     expect(client.body?['items'], isA<List<Object>>());
   });
 
-  test('fails closed when no session or response is not a valid success',
-      () async {
-    final client = _FakeClient(
-        const MobileReviewHttpResponse(statusCode: 503, body: '{}'));
+  test('rejects batches larger than the strict native maximum', () {
+    final client = _FakeClient(const MobileReviewHttpResponse(
+      statusCode: 200,
+      body: '{"outcomes":[]}',
+    ));
     final transport = HttpReviewSyncTransport(
-      sessionStore: _FakeStore(null),
+      sessionStore: _FakeStore(const MobileSession(
+        accessToken: 'access-token',
+        refreshToken: 'refresh-token',
+        sessionId: 'session-id',
+      )),
       client: client,
       endpoint: Uri.parse('https://learnbox.example/api/reviews/mobile'),
     );
+
     expect(
-      () => transport.upload([event]),
+      () => transport.upload(List<PendingReviewEvent>.filled(21, event)),
       throwsA(isA<MobileReviewTransportException>()),
+    );
+  });
+
+  test('rejects non-loopback HTTP endpoints', () {
+    expect(
+      () => HttpReviewSyncTransport(
+        sessionStore: _FakeStore(null),
+        client: _FakeClient(const MobileReviewHttpResponse(
+          statusCode: 200,
+          body: '{"outcomes":[]}',
+        )),
+        endpoint: Uri.parse('http://learnbox.example/api/reviews/mobile'),
+      ),
+      throwsArgumentError,
     );
   });
 }
