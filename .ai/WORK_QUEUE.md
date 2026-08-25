@@ -3,6 +3,27 @@
 Read `.ai/WORKER_PROTOCOL.md` before this file. `blocked` tasks are context, not authorization to
 start. Historical tasks remain for traceability and must not be duplicated.
 
+## Active work registry
+
+- **LB-DS-013 / NI-007 dormant mobile auth composition** is authorized and ready on branch `worker/lb-ds-013-dormant-composition`, based on `main` at `70cb573`. Scope is limited to `apps/mobile/lib/main.dart`, `apps/mobile/lib/features/identity/mobile_auth_config.dart`, `apps/mobile/test/mobile_auth_composition_test.dart`, `apps/mobile/README.md`, `docs/architecture/OFFLINE_SYNC.md`, `.ai/WORK_QUEUE.md`, `.ai/worker-reports/LB-DS-013.md` and `CURRENT_WORK.md`. Both compile/runtime defaults remain false; no network permission, Preview, Production, UI activation, background trigger or NI-008+ work.
+
+## LB-DS-013
+
+- Status: ready
+- Executor: high-reasoning-worker
+- Base: main at `70cb573` (NI-006 close handoff merged through PR #118)
+- Branch: worker/lb-ds-013-dormant-composition
+- Risk: security-sensitive-mobile-composition
+- Specification: docs/superpowers/specs/2026-08-22-native-identity-authenticated-transport-design.md (NI-007 only); docs/architecture/ADR/0011-native-mobile-session-and-transport.md
+- Allowed paths: apps/mobile/lib/main.dart; apps/mobile/lib/features/identity/mobile_auth_config.dart; apps/mobile/test/mobile_auth_composition_test.dart; apps/mobile/README.md; docs/architecture/OFFLINE_SYNC.md; .ai/WORK_QUEUE.md; .ai/worker-reports/LB-DS-013.md; CURRENT_WORK.md
+- Required checks: dart format --output=none --set-exit-if-changed apps/mobile/lib/main.dart apps/mobile/lib/features/identity/mobile_auth_config.dart apps/mobile/test/mobile_auth_composition_test.dart; cd apps/mobile && flutter analyze; cd apps/mobile && flutter test test/mobile_auth_composition_test.dart; cd apps/mobile && flutter test; cd apps/mobile && flutter build apk --debug; pnpm check; pnpm build; node scripts/validate-migrations.mjs; git diff --check
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+
+Owner-authorized NI-007 only: add dormant mobile auth/transport composition with explicit compile/runtime defaults false and preserve signed-out/disabled production behavior. No network permission, endpoint activation, Preview/Production, UI-visible activation, background trigger, provider activation, dependency change or NI-008+ work. Start with failing direct tests, record exact output, mark review_requested and stop at Draft PR for independent high-reasoning security review.
+
+
 ## LB-DS-012
 
 - Status: accepted
