@@ -40,12 +40,8 @@ other agent can pick up without re-deriving state. It does not define anyone's r
 
 ### Not done (open for the other agent)
 
-- **Native identity + authenticated transport:** reviewed design and LB-DS-007/008 merged through
-  PRs #97, #100 and #104. LB-DS-009 / NI-003 is now the sole authorized next slice; NI-004–NI-007
-  remain unauthorized and unstarted.
-- **Issue #92** is **CLOSED**: the physical Android secure-storage write failure was a local
-  `--no-pub` artifact missing its generated plugin registrant, not a source defect, so no source fix
-  was required.
+- No implementation task is currently authorized or active. LB-DS-007 through LB-DS-013 are accepted and merged; NI-008 and later slices require separate owner authorization.
+- Issue #92 is **CLOSED**: the physical Android secure-storage write failure was a local `--no-pub` artifact missing its generated plugin registrant, not a source defect, so no source fix was required.
 
 ## Known continuation gate
 
