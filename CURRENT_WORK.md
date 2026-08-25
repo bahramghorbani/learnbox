@@ -5,7 +5,11 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-- **LB-DS-013 / NI-007 dormant mobile auth composition** is authorized and ready on branch `worker/lb-ds-013-dormant-composition`, based on `main` at `70cb573`. Scope is limited to `apps/mobile/lib/main.dart`, `apps/mobile/lib/features/identity/mobile_auth_config.dart`, `apps/mobile/test/mobile_auth_composition_test.dart`, `apps/mobile/README.md`, `docs/architecture/OFFLINE_SYNC.md`, `.ai/WORK_QUEUE.md`, `.ai/worker-reports/LB-DS-013.md` and `CURRENT_WORK.md`. Both compile/runtime defaults remain false; no network permission, Preview, Production, UI activation, background trigger or NI-008+ work.
+- **LB-DS-013 / NI-007 dormant mobile auth composition** is implemented on branch
+  `worker/lb-ds-013-dormant-composition` (uncommitted, no PR). Focused/full Flutter tests, analyzer,
+  root check/build and migration validation pass. Local APK build is blocked by remote Flutter artifact
+  HTTP 403; supervisor review and Draft PR remain pending. Defaults remain false; no network permission,
+  endpoint activation, UI, background trigger, Preview or Production work.
 
 ## Agent work log
 

@@ -27,11 +27,7 @@ the bundled three-card Start session and a device-local review-event queue.
   six approved Start Pack V2 clips. Flutter and both native hosts enforce exact local-asset paths;
   there is no autoplay, URL, download, provider or audio dependency. See
   [`MOBILE_PRONUNCIATION.md`](../../docs/architecture/MOBILE_PRONUNCIATION.md).
-- The approved foreground-sync coordinator is present behind typed identity and transport ports. In
-  the current production composition identity is always `signedOut` and its transport throws before
-  any delivery; there is no sync UI action, HTTP client, credential, timer, connectivity listener or
-  background worker. A future separately reviewed authenticated adapter may invoke it only after a
-  real learner identity and server protocol exist.
+- The approved foreground-sync coordinator is present behind typed identity and transport ports. `MobileAuthConfig.defaults()` is the sole production composition and fixes both auth and review-sync flags to `false`; it supplies `signedOut` plus `DisabledReviewSyncTransport`. No UI action, HTTP client, credential, endpoint, timer, connectivity listener or background worker exists. The dormant credential/transport adapters remain uncomposed until a separately reviewed owner-authorized activation slice.
 
 The flow is Persian RTL-first, isolates German text as LTR and uses at least 52–56 logical-pixel
 primary and grading controls. Today, review controls and completion scroll or reflow on short and
