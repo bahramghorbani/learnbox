@@ -5,7 +5,7 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-- **LB-DS-014 / NI-008 native Preview activation design** is authorized and in design on branch `docs/lb-ds-014-native-preview-design`, based on `main` at `ffc403f`. Scope is documentation and test-plan only; native permission, endpoint, flag, deployment, provider, Preview, Production and real-message actions remain disabled and outside this task.
+- **LB-DS-016 / NI-008B dormant native auth client seam** is implemented and in review on branch `worker/lb-ds-016-native-auth-client`, based on `main` at `d6bacdf`. Scope is limited to a provider-neutral injected HTTP contract, typed request/verify/refresh/revoke client, secure-store session seam and direct tests/docs. No UI, production composition, endpoint activation, real OTP, provider call, secret, deployment, Preview execution, Production or review-sync upload is authorized.
 
 ## Agent work log
 
