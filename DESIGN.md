@@ -95,10 +95,9 @@ components:
     rounded: "{rounded.sm}"
     padding: "8px"
   border-subtle:
-    backgroundColor: "{colors.surface}"
-    textColor: "{colors.border}"
+    backgroundColor: "{colors.border}"
     rounded: "{rounded.sm}"
-    padding: "1px"
+    height: 1px
 ---
 
 ## Overview
