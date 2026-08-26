@@ -43,3 +43,16 @@ analytics in this slice. A future implementation must separately establish authe
 identity, a typed server protocol, timeout/retry policy, Preview verification and owner-approved
 activation. Rollback removes the coordinator composition while preserving the encrypted queue and
 all pending events.
+
+## Native auth client seam
+
+NI-008B adds only a dormant typed native auth client boundary: a provider-neutral injected HTTPS
+JSON transport contract (`MobileAuthHttpTransport`/`MobileAuthHttpResponse`) and a typed
+`MobileAuthClient` for OTP request/verify/refresh/revoke. Endpoints are exact relative paths derived
+only from the HTTPS origin supplied to the constructor; no host, path, token or secret is hard-coded
+and no runtime endpoint input exists beyond the origin. Responses are parsed strictly (status,
+content and exact JSON object shape), requests use a bounded timeout, and failures are generic typed
+`MobileAuthException` codes. The client persists a session only through the injected
+`MobileSessionStore` after a successful verify or refresh, and clears the local session before a
+best-effort remote revoke. It is not composed by production, makes no request, and adds no UI, flag,
+background work, connectivity listener, timer or review-sync activation.

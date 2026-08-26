@@ -5,7 +5,7 @@ start. Historical tasks remain for traceability and must not be duplicated.
 
 ## Active work registry
 
-- **LB-DS-016 / NI-008B dormant native auth client seam** is authorized and in activation review on branch `docs/activate-lb-ds-016`, based on `main` at `d5b5fa0`. Scope is limited to a provider-neutral injected HTTP contract, typed request/verify/refresh/revoke client, secure-store session seam and direct tests/docs. No UI, production composition, endpoint activation, real OTP, provider call, secret, deployment, Preview execution, Production or review-sync upload is authorized.
+- **LB-DS-016 / NI-008B dormant native auth client seam** is implemented and in review on branch `worker/lb-ds-016-native-auth-client`, based on `main` at `d6bacdf`. Scope is limited to a provider-neutral injected HTTP contract, typed request/verify/refresh/revoke client, secure-store session seam and direct tests/docs. No UI, production composition, endpoint activation, real OTP, provider call, secret, deployment, Preview execution, Production or review-sync upload is authorized.
 
 ## LB-DS-017
 
