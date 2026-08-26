@@ -7,6 +7,23 @@ start. Historical tasks remain for traceability and must not be duplicated.
 
 - **LB-DS-016 / NI-008B dormant native auth client seam** is authorized and in activation review on branch `docs/activate-lb-ds-016`, based on `main` at `d5b5fa0`. Scope is limited to a provider-neutral injected HTTP contract, typed request/verify/refresh/revoke client, secure-store session seam and direct tests/docs. No UI, production composition, endpoint activation, real OTP, provider call, secret, deployment, Preview execution, Production or review-sync upload is authorized.
 
+## LB-DS-017
+
+- Status: blocked
+- Executor: high-reasoning design review, then dedicated UI worker
+- Base: main at `d6bacdf`
+- Branch: `docs/lb-ds-017-native-auth-ui-brief`
+- Risk: critical-mobile-ui-ux
+- Specification: `docs/superpowers/specs/2026-08-26-native-auth-ui-design-brief.md`
+- Allowed paths: `docs/superpowers/specs/2026-08-26-native-auth-ui-design-brief.md`; `CURRENT_WORK.md`
+- Required checks: `pnpm test:dashboard`; `pnpm verify:ai-worker-queue`; `pnpm verify:ai-continuity`; `pnpm format:check`; `git diff --check`
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+- Future implementation paths require a new queue record and must not overlap NI-008B identity client work.
+- Required design review: web/mobile visual parity, RTL/accessibility, 320/360/412dp responsive behavior, all auth states, default-disabled reachability.
+- Blockers: NI-008B merge, explicit UI implementation authorization, and separate approval before `main.dart` composition.
+
 ## LB-DS-016
 
 - Status: ready
