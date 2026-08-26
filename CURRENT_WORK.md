@@ -40,7 +40,7 @@ other agent can pick up without re-deriving state. It does not define anyone's r
 
 ### Not done (open for the other agent)
 
-- No implementation task is currently authorized or active. LB-DS-007 through LB-DS-014 are accepted and merged; LB-DS-015 / NI-008A is authorized and in activation review. Preview execution and later slices remain owner-gated.
+- No implementation task is currently authorized or active. LB-DS-007 through LB-DS-015 are accepted and merged; LB-DS-016 / NI-008B is authorized and in activation review. Preview execution and later slices remain owner-gated.
 - Issue #92 is **CLOSED**: the physical Android secure-storage write failure was a local `--no-pub` artifact missing its generated plugin registrant, not a source defect, so no source fix was required.
 
 ## Known continuation gate
