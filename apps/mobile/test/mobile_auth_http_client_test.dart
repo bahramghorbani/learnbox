@@ -218,6 +218,25 @@ void main() {
     );
   });
 
+  test('unexpected response keys are a typed validation failure', () async {
+    final client = MobileAuthHttpClient(
+      origin: origin,
+      client: _FakeTransport(
+          response: MobileAuthHttpResponse(
+        statusCode: 201,
+        contentType: 'application/json; charset=utf-8',
+        body:
+            '{"challengeId":"challenge-1","expiresAt":"2026-08-26T10:00:00.000Z","resendAvailableAt":"2026-08-26T10:02:00.000Z","extra":"reject"}',
+      )),
+    );
+
+    await expectLater(
+      client.requestOtp(phone: '+989121234567'),
+      throwsA(isA<MobileAuthException>()
+          .having((error) => error.code, 'code', 'validation')),
+    );
+  });
+
   test('null or non-string JSON values are a typed validation failure',
       () async {
     for (final body in <String>[

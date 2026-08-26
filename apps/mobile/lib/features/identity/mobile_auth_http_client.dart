@@ -95,10 +95,21 @@ class MobileAuthHttpClient {
     if (response.statusCode != 201) {
       throw const MobileAuthException('serverUnavailable');
     }
-    final challengeId = _exactStringField(response, 'challengeId');
-    final expiresAt = _exactDateTimeField(response, 'expiresAt');
-    final resendAvailableAt =
-        _exactDateTimeField(response, 'resendAvailableAt');
+    final challengeId = _exactStringField(
+      response,
+      'challengeId',
+      expectedKeys: const ['challengeId', 'expiresAt', 'resendAvailableAt'],
+    );
+    final expiresAt = _exactDateTimeField(
+      response,
+      'expiresAt',
+      expectedKeys: const ['challengeId', 'expiresAt', 'resendAvailableAt'],
+    );
+    final resendAvailableAt = _exactDateTimeField(
+      response,
+      'resendAvailableAt',
+      expectedKeys: const ['challengeId', 'expiresAt', 'resendAvailableAt'],
+    );
     return MobileOtpChallenge(
       challengeId: challengeId,
       expiresAt: expiresAt,
@@ -190,17 +201,27 @@ class MobileAuthHttpClient {
   }
 
   MobileTokenPair _sessionFrom(MobileAuthHttpResponse response) {
-    final accessToken = _exactStringField(response, 'accessToken');
-    final refreshToken = _exactStringField(response, 'refreshToken');
+    const expectedKeys = ['accessToken', 'refreshToken'];
+    final accessToken = _exactStringField(
+      response,
+      'accessToken',
+      expectedKeys: expectedKeys,
+    );
+    final refreshToken = _exactStringField(
+      response,
+      'refreshToken',
+      expectedKeys: expectedKeys,
+    );
     return MobileTokenPair(
         accessToken: accessToken, refreshToken: refreshToken);
   }
 
   static String _exactStringField(
     MobileAuthHttpResponse response,
-    String key,
-  ) {
-    final decoded = _exactObject(response);
+    String key, {
+    required List<String> expectedKeys,
+  }) {
+    final decoded = _exactObject(response, expectedKeys);
     final value = decoded[key];
     if (value is! String || value.isEmpty) {
       throw const MobileAuthException('validation');
@@ -210,9 +231,14 @@ class MobileAuthHttpClient {
 
   static DateTime _exactDateTimeField(
     MobileAuthHttpResponse response,
-    String key,
-  ) {
-    final value = _exactStringField(response, key);
+    String key, {
+    required List<String> expectedKeys,
+  }) {
+    final value = _exactStringField(
+      response,
+      key,
+      expectedKeys: expectedKeys,
+    );
     final parsed = DateTime.tryParse(value);
     if (parsed == null || !parsed.isUtc) {
       throw const MobileAuthException('validation');
@@ -220,7 +246,10 @@ class MobileAuthHttpClient {
     return parsed;
   }
 
-  static Map<String, Object> _exactObject(MobileAuthHttpResponse response) {
+  static Map<String, Object> _exactObject(
+    MobileAuthHttpResponse response,
+    List<String> expectedKeys,
+  ) {
     final Object? decoded;
     try {
       decoded = jsonDecode(response.body);
@@ -228,6 +257,14 @@ class MobileAuthHttpClient {
       throw const MobileAuthException('validation');
     }
     if (decoded is! Map<String, Object?>) {
+      throw const MobileAuthException('validation');
+    }
+    final actualKeys = decoded.keys.toList()..sort();
+    final sortedExpectedKeys = expectedKeys.toList()..sort();
+    if (actualKeys.length != sortedExpectedKeys.length ||
+        actualKeys.asMap().entries.any(
+              (entry) => entry.value != sortedExpectedKeys[entry.key],
+            )) {
       throw const MobileAuthException('validation');
     }
     return decoded.cast<String, Object>();

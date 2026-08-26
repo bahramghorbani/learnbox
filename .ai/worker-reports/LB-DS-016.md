@@ -25,10 +25,10 @@
 
 ## Direct tests (RED observed, then GREEN)
 
-- `test/mobile_auth_http_client_test.dart` — 11 tests: origin rejection (http, credentials, path,
+- `test/mobile_auth_http_client_test.dart` — 14 tests: origin rejection (http, credentials, path,
   explicit port, query, fragment), positive-timeout requirement, exact request/verify/refresh/revoke
-  JSON bodies and endpoints, strict JSON content type, typed results, bounded timeout → `timeout`,
-  non-2xx → `serverUnavailable`, malformed/unexpected JSON → `validation`.
+  JSON bodies and endpoints, strict exact response keys and JSON content type, typed results, bounded
+  timeout → `timeout`, non-2xx → `serverUnavailable`, malformed/unexpected JSON → `validation`.
 - `test/mobile_auth_client_test.dart` — 8 tests: origin rejection, request forwards without store
   touch, verify persists tokens + session id, verify failure writes nothing, refresh persists
   rotation, refresh without session → `authenticationRequired`, revoke clears locally before remote,
@@ -39,8 +39,8 @@
 - `dart format --output=none --set-exit-if-changed <4 files>` — `Formatted 4 files (0 changed)`; OK.
 - `cd apps/mobile && flutter analyze` — `No issues found! (ran in 1.3s)`.
 - Focused `flutter test test/mobile_auth_http_client_test.dart test/mobile_auth_client_test.dart` —
-  `00:00 +19: All tests passed!`.
-- Full `cd apps/mobile && flutter test` — `00:50 +115: All tests passed!`.
+  `00:00 +22: All tests passed!`.
+- Full `cd apps/mobile && flutter test` — `00:21 +116: All tests passed!`.
 - `cd apps/mobile && flutter build apk --debug` — normal Flutter wrapper is blocked by the network: Gradle
   cannot download `flutter_embedding_debug-1.0.0-...jar` from `storage.googleapis.com/download.flutter.io`
   (HTTP 403 Forbidden, verified by direct `curl -sI`). Correct-JDK offline equivalent
