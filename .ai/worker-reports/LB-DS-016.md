@@ -37,23 +37,18 @@
 ## Required check results (exact)
 
 - `dart format --output=none --set-exit-if-changed <4 files>` — `Formatted 4 files (0 changed)`; OK.
-- `cd apps/mobile && flutter analyze` — `No issues found! (ran in 4.7s)`.
+- `cd apps/mobile && flutter analyze` — `No issues found! (ran in 1.3s)`.
 - Focused `flutter test test/mobile_auth_http_client_test.dart test/mobile_auth_client_test.dart` —
-  `00:00 +21: All tests passed!`.
-- Full `cd apps/mobile && flutter test` — `01:05 +115: All tests passed!`.
-- `cd apps/mobile && flutter build apk --debug` — **fails on network**: Gradle cannot download
-  `flutter_embedding_debug-1.0.0-...jar` from `https://storage.googleapis.com/download.flutter.io/...`
-  (HTTP 403 Forbidden, verified by direct `curl -sI`). Not a source defect.
-  `cd apps/mobile/android && ./gradlew assembleDebug --offline` — `BUILD SUCCESSFUL in 43s`,
-  EXIT=0, artifact `build/app/outputs/flutter-apk/app-debug.apk` (159207620 bytes, 2026-08-26 19:53).
-  The offline build uses the cached jar and produces the real debug APK.
-- `pnpm check` — **fails only on pre-existing `DESIGN.md`** merged by PR #130 (`fd141cc`,
-  origin/main): repo prettier (^3.6.2) requires single quotes; PR #130 committed double-quoted
-  YAML. `DESIGN.md` is outside this task's allowlist and is identical to `origin/main`
-  (`git diff HEAD -- DESIGN.md` empty), so it is not a regression from this branch. All other
-  check stages (lint, typecheck, tests, dashboards, load, engine-load, security, all verifiers)
-  passed.
-- `pnpm build` — EXIT=0, `apps/website build: Done`.
+  `00:00 +19: All tests passed!`.
+- Full `cd apps/mobile && flutter test` — `00:50 +115: All tests passed!`.
+- `cd apps/mobile && flutter build apk --debug` — fails on network: Gradle cannot download
+  `flutter_embedding_debug-1.0.0-...jar` from `storage.googleapis.com/download.flutter.io`
+  (HTTP 403 Forbidden, verified by direct `curl -sI`). Correct-JDK offline Gradle retry reaches
+  `:flutter_secure_storage:compileDebugJavaWithJavac` but fails because no cached version is
+  available in offline mode. No APK success is claimed.
+- `pnpm check` — fails at `pnpm format:check` on pre-existing `DESIGN.md`; no out-of-scope
+  formatting change made.
+- `pnpm build` — EXIT=0; all workspace builds completed.
 - `node scripts/validate-migrations.mjs` — `Validated 13 migration(s).`, EXIT=0.
 - `git diff --check` — clean, EXIT=0.
 
