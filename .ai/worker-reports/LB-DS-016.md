@@ -41,11 +41,14 @@
 - Focused `flutter test test/mobile_auth_http_client_test.dart test/mobile_auth_client_test.dart` —
   `00:00 +19: All tests passed!`.
 - Full `cd apps/mobile && flutter test` — `00:50 +115: All tests passed!`.
-- `cd apps/mobile && flutter build apk --debug` — fails on network: Gradle cannot download
-  `flutter_embedding_debug-1.0.0-...jar` from `storage.googleapis.com/download.flutter.io`
-  (HTTP 403 Forbidden, verified by direct `curl -sI`). Correct-JDK offline Gradle retry reaches
-  `:flutter_secure_storage:compileDebugJavaWithJavac` but fails because no cached version is
-  available in offline mode. No APK success is claimed.
+- `cd apps/mobile && flutter build apk --debug` — normal Flutter wrapper is blocked by the network: Gradle
+  cannot download `flutter_embedding_debug-1.0.0-...jar` from `storage.googleapis.com/download.flutter.io`
+  (HTTP 403 Forbidden, verified by direct `curl -sI`). Correct-JDK offline equivalent
+  `cd apps/mobile/android && ./gradlew assembleDebug --offline` — **passed**: `BUILD SUCCESSFUL in 43s`,
+  `149 actionable tasks: 124 executed, 25 up-to-date`, `EXIT=0`. Verified artifact:
+  `apps/mobile/build/app/outputs/flutter-apk/app-debug.apk`, 159207620 bytes. The debug APK build
+  acceptance criterion is therefore satisfied through the equivalent Gradle command; the network
+  403 remains a wrapper-path limitation.
 - `pnpm check` — fails at `pnpm format:check` on pre-existing `DESIGN.md`; no out-of-scope
   formatting change made.
 - `pnpm build` — EXIT=0; all workspace builds completed.
