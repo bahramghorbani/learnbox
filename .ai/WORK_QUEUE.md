@@ -5,11 +5,23 @@ start. Historical tasks remain for traceability and must not be duplicated.
 
 ## Active work registry
 
-- **LB-DS-014 / NI-008 native Preview activation design** is authorized and ready on branch
-  `docs/lb-ds-014-native-preview-design`, based on `main` at `ffc403f`. Scope is design and test-plan
-  only: define a default-disabled native Preview auth verification contract and later implementation
-  boundaries. No source, native permission, endpoint, flag, deployment, provider, Preview,
-  Production, or real-message action is authorized by this design task.
+- **LB-DS-015 / NI-008A native Preview host/config seam** is authorized and in activation review on branch `docs/activate-lb-ds-015`, based on `main` at `30673a2`. Scope is limited to Android INTERNET permission and immutable compile-time Preview build configuration with tests/docs. No endpoint, HTTP client, token/session composition, UI, provider, secret, flag activation, deployment, Preview request, Production or review-sync upload is authorized.
+
+## LB-DS-015
+
+- Status: ready
+- Executor: high-reasoning-worker
+- Base: main at `30673a2` (NI-008 design merged through PR #126)
+- Branch: docs/activate-lb-ds-015
+- Risk: security-sensitive-native-host-config
+- Specification: docs/superpowers/specs/2026-08-25-native-preview-auth-verification-design.md; docs/architecture/ADR/0011-native-mobile-session-and-transport.md
+- Allowed paths: apps/mobile/android/app/src/main/AndroidManifest.xml; apps/mobile/lib/features/identity/mobile_preview_auth_config.dart; apps/mobile/test/android_network_permission_test.dart; apps/mobile/test/mobile_preview_auth_config_test.dart; apps/mobile/README.md; docs/architecture/OFFLINE_SYNC.md; .ai/WORK_QUEUE.md; .ai/worker-reports/LB-DS-015.md; CURRENT_WORK.md
+- Required checks: dart format --output=none --set-exit-if-changed; cd apps/mobile && flutter analyze; cd apps/mobile && flutter test; cd apps/mobile && flutter build apk --debug; pnpm check; pnpm build; node scripts/validate-migrations.mjs; git diff --check
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+
+Implement only NI-008A. Add Android INTERNET permission and immutable compile-time Preview origin/verification configuration. Defaults remain signed out/disabled; no endpoint, HTTP client, token/session composition, UI, provider, secret, deployment, Preview request, Production, background work or review-sync upload. Start with a failing test, stop at Draft PR for independent security review, and preserve all unrelated worktrees.
 
 ## LB-DS-014
 
