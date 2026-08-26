@@ -101,7 +101,11 @@ class MobileAuthClient {
   /// The opaque server session id is the access token's `sid` claim; the
   /// token is opaque to the client, so the session id is opaque too.
   static String _sessionIdFromAccessToken(String accessToken) {
-    return _decodeSid(accessToken) ?? '';
+    final sessionId = _decodeSid(accessToken);
+    if (sessionId == null || sessionId.isEmpty) {
+      throw const MobileAuthException('validation');
+    }
+    return sessionId;
   }
 
   static String? _decodeSid(String accessToken) {

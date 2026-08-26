@@ -72,7 +72,33 @@ void main() {
     expect(store.written?.sessionId, 'session-1');
   });
 
-  test('verifyOtp failure writes nothing', () async {
+  test('verify rejects a token without a non-empty sid and does not write',
+      () async {
+    final store = _FakeSessionStore();
+    final client = MobileAuthClient(
+      origin: origin,
+      http: _FakeHttpTransport(MobileAuthHttpResponse(
+        statusCode: 200,
+        contentType: 'application/json',
+        body: '{"accessToken":"not-a-jwt","refreshToken":"refresh"}',
+      )),
+      store: store,
+    );
+
+    await expectLater(
+      client.verifyOtp(
+        challengeId: 'challenge',
+        code: '123456',
+        installationId: 'install',
+        phone: '+989121234567',
+      ),
+      throwsA(isA<MobileAuthException>()
+          .having((error) => error.code, 'code', 'validation')),
+    );
+    expect(store.written, isNull);
+  });
+
+  test('verify failure writes nothing', () async {
     final store = _FakeSessionStore();
     final http = _FakeHttpTransport(MobileAuthHttpResponse(
       statusCode: 400,
