@@ -5,7 +5,27 @@ start. Historical tasks remain for traceability and must not be duplicated.
 
 ## Active work registry
 
-- No unfinished implementation task is currently registered. LB-DS-013 / NI-007 was accepted through PR #120 at merge commit `dc032d2`; NI-008 and later slices remain unauthorized and unstarted.
+- **LB-DS-014 / NI-008 native Preview activation design** is authorized and ready on branch
+  `docs/lb-ds-014-native-preview-design`, based on `main` at `ffc403f`. Scope is design and test-plan
+  only: define a default-disabled native Preview auth verification contract and later implementation
+  boundaries. No source, native permission, endpoint, flag, deployment, provider, Preview,
+  Production, or real-message action is authorized by this design task.
+
+## LB-DS-014
+
+- Status: ready
+- Executor: high-reasoning-worker
+- Base: main at `ffc403f` (S2 native audio QA evidence merged through PR #125)
+- Branch: docs/lb-ds-014-native-preview-design
+- Risk: security-sensitive-native-auth-activation-design
+- Specification: docs/superpowers/specs/2026-08-22-native-identity-authenticated-transport-design.md; docs/architecture/ADR/0011-native-mobile-session-and-transport.md; docs/operations/OTP_PROVIDER_ACTIVATION.md
+- Allowed paths: docs/superpowers/specs/2026-08-25-native-preview-auth-verification-design.md; .ai/WORK_QUEUE.md; .ai/worker-reports/LB-DS-014.md; CURRENT_WORK.md
+- Required checks: pnpm test:dashboard; pnpm verify:ai-worker-queue; pnpm verify:ai-continuity; pnpm format:check; git diff --check
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+
+Owner authorized autonomous planning for future native Preview verification. This task is design-only and must preserve all current fail-closed behavior. It must specify later implementation as serial slices: native host transport permission and compile-time Preview endpoint selection; disabled-by-default native OTP/session composition; owner-entered device verification; rollback flags to false; then a separate owner authorization before any review-sync upload. No code, permission, endpoint, deployment, secret, provider call, Preview, Production, real OTP message, background work, UI activation or NI-009+ implementation is allowed in LB-DS-014.
 
 ## LB-DS-013
 

@@ -5,7 +5,7 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-- No unfinished implementation task is currently registered. LB-DS-013 / NI-007 was accepted through PR #120 at merge commit `dc032d2`; NI-008 and later slices remain unauthorized and unstarted.
+- **LB-DS-014 / NI-008 native Preview activation design** is authorized and in design on branch `docs/lb-ds-014-native-preview-design`, based on `main` at `ffc403f`. Scope is documentation and test-plan only; native permission, endpoint, flag, deployment, provider, Preview, Production and real-message actions remain disabled and outside this task.
 
 ## Agent work log
 
