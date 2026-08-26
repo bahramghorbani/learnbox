@@ -28,6 +28,7 @@ the bundled three-card Start session and a device-local review-event queue.
   there is no autoplay, URL, download, provider or audio dependency. See
   [`MOBILE_PRONUNCIATION.md`](../../docs/architecture/MOBILE_PRONUNCIATION.md).
 - The approved foreground-sync coordinator is present behind typed identity and transport ports. `MobileAuthConfig.defaults()` is the sole production composition and fixes both auth and review-sync flags to `false`; it supplies `signedOut` plus `DisabledReviewSyncTransport`. No UI action, HTTP client, credential, endpoint, timer, connectivity listener or background worker exists. The dormant credential/transport adapters remain uncomposed until a separately reviewed owner-authorized activation slice.
+- NI-008A adds only the Android `INTERNET` host capability and a fail-closed, immutable compile-time Preview-origin configuration seam. It is not composed by production, makes no network request, contains no secret, and does not enable authentication, review sync, UI, background work or any deployment flag. The origin is supplied only through the later owner-controlled build process and must be an exact approved HTTPS Preview origin.
 
 The flow is Persian RTL-first, isolates German text as LTR and uses at least 52–56 logical-pixel
 primary and grading controls. Today, review controls and completion scroll or reflow on short and

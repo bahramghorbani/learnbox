@@ -36,8 +36,10 @@ events and return a retryable outcome. Concurrent callers share one in-flight at
 This is a dormant boundary, not an enabled synchronization feature: `MobileAuthConfig.defaults()` is
 production composition and fixes both auth/review-sync flags to `false`, returning only `signedOut`
 and `DisabledReviewSyncTransport`. The native session and HTTP adapter classes are intentionally not
-composed. There is no native HTTP client, endpoint, token, provider, network permission, background
-work, connectivity listener or analytics in this slice. A future implementation must separately
-establish authenticated learner identity, a typed server protocol, timeout/retry policy, Preview
-verification and owner-approved activation. Rollback removes the coordinator composition while
-preserving the encrypted queue and all pending events.
+composed. NI-008A adds only Android `INTERNET` permission and an immutable, fail-closed compile-time
+Preview-origin configuration seam; it makes no request and does not compose identity or transport.
+There is no native HTTP client, endpoint, token, provider, background work, connectivity listener or
+analytics in this slice. A future implementation must separately establish authenticated learner
+identity, a typed server protocol, timeout/retry policy, Preview verification and owner-approved
+activation. Rollback removes the coordinator composition while preserving the encrypted queue and
+all pending events.
