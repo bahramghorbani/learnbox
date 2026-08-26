@@ -3,35 +3,35 @@ version: alpha
 name: LearnBox
 description: Persian-first calm German-learning interface with warm surfaces, precise RTL hierarchy, and encouraging interaction.
 colors:
-  primary: "#4D6BFE"
-  primaryAction: "#4259D6"
-  canvas: "#FFFAF4"
-  surface: "#FFFFFF"
-  ink: "#1E293B"
-  muted: "#64748B"
-  lavender: "#F3ECFF"
-  apricot: "#FFB36B"
-  border: "#E7E3FF"
-  danger: "#B3261E"
+  primary: '#4D6BFE'
+  primaryAction: '#4259D6'
+  canvas: '#FFFAF4'
+  surface: '#FFFFFF'
+  ink: '#1E293B'
+  muted: '#64748B'
+  lavender: '#F3ECFF'
+  apricot: '#FFB36B'
+  border: '#E7E3FF'
+  danger: '#B3261E'
 typography:
   display:
-    fontFamily: "IRANSansX LearnBox"
-    fontSize: "32px"
+    fontFamily: 'IRANSansX LearnBox'
+    fontSize: '32px'
     fontWeight: 800
     lineHeight: 1.35
   heading:
-    fontFamily: "IRANSansX LearnBox"
-    fontSize: "24px"
+    fontFamily: 'IRANSansX LearnBox'
+    fontSize: '24px'
     fontWeight: 700
     lineHeight: 1.45
   body:
-    fontFamily: "IRANSansX LearnBox"
-    fontSize: "16px"
+    fontFamily: 'IRANSansX LearnBox'
+    fontSize: '16px'
     fontWeight: 400
     lineHeight: 1.9
   label:
-    fontFamily: "IRANSansX LearnBox"
-    fontSize: "14px"
+    fontFamily: 'IRANSansX LearnBox'
+    fontSize: '14px'
     fontWeight: 700
     lineHeight: 1.6
 rounded:
@@ -47,56 +47,56 @@ spacing:
   xl: 32px
 components:
   button-primary:
-    backgroundColor: "{colors.primaryAction}"
-    textColor: "#FFFFFF"
-    rounded: "{rounded.md}"
+    backgroundColor: '{colors.primaryAction}'
+    textColor: '#FFFFFF'
+    rounded: '{rounded.md}'
     height: 56px
-    padding: "16px 20px"
+    padding: '16px 20px'
   card-surface:
-    backgroundColor: "{colors.surface}"
-    textColor: "{colors.ink}"
-    rounded: "{rounded.lg}"
-    padding: "16px"
+    backgroundColor: '{colors.surface}'
+    textColor: '{colors.ink}'
+    rounded: '{rounded.lg}'
+    padding: '16px'
   input-default:
-    backgroundColor: "{colors.surface}"
-    textColor: "{colors.ink}"
-    rounded: "{rounded.md}"
+    backgroundColor: '{colors.surface}'
+    textColor: '{colors.ink}'
+    rounded: '{rounded.md}'
     height: 56px
-    padding: "16px"
+    padding: '16px'
   input-focus:
-    backgroundColor: "{colors.surface}"
-    textColor: "{colors.ink}"
-    rounded: "{rounded.md}"
+    backgroundColor: '{colors.surface}'
+    textColor: '{colors.ink}'
+    rounded: '{rounded.md}'
     height: 56px
-    padding: "16px"
+    padding: '16px'
   canvas-surface:
-    backgroundColor: "{colors.canvas}"
-    textColor: "{colors.ink}"
-    rounded: "{rounded.sm}"
-    padding: "24px"
+    backgroundColor: '{colors.canvas}'
+    textColor: '{colors.ink}'
+    rounded: '{rounded.sm}'
+    padding: '24px'
   text-muted:
-    backgroundColor: "{colors.surface}"
-    textColor: "{colors.muted}"
-    rounded: "{rounded.sm}"
-    padding: "8px"
+    backgroundColor: '{colors.surface}'
+    textColor: '{colors.muted}'
+    rounded: '{rounded.sm}'
+    padding: '8px'
   status-danger:
-    backgroundColor: "{colors.surface}"
-    textColor: "{colors.danger}"
-    rounded: "{rounded.sm}"
-    padding: "8px"
+    backgroundColor: '{colors.surface}'
+    textColor: '{colors.danger}'
+    rounded: '{rounded.sm}'
+    padding: '8px'
   accent-lavender:
-    backgroundColor: "{colors.lavender}"
-    textColor: "{colors.ink}"
-    rounded: "{rounded.sm}"
-    padding: "12px"
+    backgroundColor: '{colors.lavender}'
+    textColor: '{colors.ink}'
+    rounded: '{rounded.sm}'
+    padding: '12px'
   accent-apricot:
-    backgroundColor: "{colors.apricot}"
-    textColor: "{colors.ink}"
-    rounded: "{rounded.sm}"
-    padding: "8px"
+    backgroundColor: '{colors.apricot}'
+    textColor: '{colors.ink}'
+    rounded: '{rounded.sm}'
+    padding: '8px'
   border-subtle:
-    backgroundColor: "{colors.border}"
-    rounded: "{rounded.sm}"
+    backgroundColor: '{colors.border}'
+    rounded: '{rounded.sm}'
     height: 1px
 ---
 
