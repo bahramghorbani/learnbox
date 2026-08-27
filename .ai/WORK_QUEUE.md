@@ -5,7 +5,23 @@ start. Historical tasks remain for traceability and must not be duplicated.
 
 ## Active work registry
 
-- No active implementation task is currently authorized. NI-008B was completed and merged through PR #131; the next native-auth UI design work remains separately blocked pending review and explicit UI authorization.
+- **LB-DS-018 / dormant native auth UI surface** is the active authorized implementation task on branch `worker/lb-ds-018-native-auth-ui`. It must remain uncomposed in `main.dart` and disabled in default builds; no real OTP, provider, Preview, Production or secrets are authorized.
+
+## LB-DS-018
+
+- Status: ready
+- Executor: high-reasoning-worker
+- Base: main at `e284169` (NI-008B and registry synchronization merged)
+- Branch: worker/lb-ds-018-native-auth-ui
+- Risk: critical-mobile-ui-ux
+- Specification: docs/superpowers/specs/2026-08-26-native-auth-ui-design-brief.md; apps/mobile/lib/features/identity/mobile_auth_client.dart
+- Allowed paths: apps/mobile/lib/features/identity/mobile_auth_screen.dart; apps/mobile/test/mobile_auth_screen_test.dart; apps/mobile/README.md; .ai/WORK_QUEUE.md; .ai/worker-reports/LB-DS-018.md; CURRENT_WORK.md
+- Required checks: dart format --output=none --set-exit-if-changed; cd apps/mobile && flutter analyze; cd apps/mobile && flutter test test/mobile_auth_screen_test.dart; cd apps/mobile && flutter test; cd apps/mobile && flutter build apk --debug; pnpm check; pnpm build; node scripts/validate-migrations.mjs; git diff --check
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+
+Implement the dormant Persian-first native auth UI surface only: phone entry and OTP entry, injected `MobileAuthClient`, explicit initial/focused/valid/requesting/invalid/expired/rate-limited/offline/server-error/verified/back states, RTL accessibility, LTR isolation for phone/OTP, minimum 44dp controls, keyboard-safe responsive layout and no secret/token display. Start with failing widget tests. Keep `main.dart` and production composition untouched; no direct network, provider, flag, Preview, Production, background, analytics, review-sync or real OTP work. UI must remain unreachable in default builds until a separate composition task.
 
 ## LB-DS-017
 
