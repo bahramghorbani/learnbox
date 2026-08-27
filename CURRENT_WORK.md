@@ -5,7 +5,7 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-- **LB-DS-016 / NI-008B dormant native auth client seam** is implemented and in review on branch `worker/lb-ds-016-native-auth-client`, based on `main` at `d6bacdf`. Scope is limited to a provider-neutral injected HTTP contract, typed request/verify/refresh/revoke client, secure-store session seam and direct tests/docs. No UI, production composition, endpoint activation, real OTP, provider call, secret, deployment, Preview execution, Production or review-sync upload is authorized.
+- No unfinished, unmerged work is currently active. NI-008B was completed and merged through PR #131. The next native-auth UI design work remains documentation-only and separately blocked pending review and explicit UI authorization.
 
 ## Agent work log
 
@@ -40,7 +40,7 @@ other agent can pick up without re-deriving state. It does not define anyone's r
 
 ### Not done (open for the other agent)
 
-- **LB-DS-016 / NI-008B dormant native auth client seam** remains the only authorized implementation task, in progress on its isolated worker branch from `d6bacdf`. **LB-DS-017 / native auth UI brief** is documentation-only and awaiting review; UI implementation and `main.dart` composition remain separate future tasks. Preview execution and later owner-gated slices remain disabled.
+- No unfinished implementation task is currently authorized. **LB-DS-017 / native auth UI brief** remains documentation-only and blocked pending review; UI implementation and `main.dart` composition require separate explicit authorization. Preview execution and later owner-gated slices remain disabled.
 - Issue #92 is **CLOSED**: the physical Android secure-storage write failure was a local `--no-pub` artifact missing its generated plugin registrant, not a source defect, so no source fix was required.
 
 ## Known continuation gate
