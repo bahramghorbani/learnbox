@@ -5,7 +5,7 @@ start. Historical tasks remain for traceability and must not be duplicated.
 
 ## Active work registry
 
-- **LB-DS-016 / NI-008B dormant native auth client seam** is implemented and in review on branch `worker/lb-ds-016-native-auth-client`, based on `main` at `d6bacdf`. Scope is limited to a provider-neutral injected HTTP contract, typed request/verify/refresh/revoke client, secure-store session seam and direct tests/docs. No UI, production composition, endpoint activation, real OTP, provider call, secret, deployment, Preview execution, Production or review-sync upload is authorized.
+- No active implementation task is currently authorized. NI-008B was completed and merged through PR #131; the next native-auth UI design work remains separately blocked pending review and explicit UI authorization.
 
 ## LB-DS-017
 
@@ -26,19 +26,20 @@ start. Historical tasks remain for traceability and must not be duplicated.
 
 ## LB-DS-016
 
-- Status: ready
+- Status: accepted
 - Executor: high-reasoning-worker
-- Base: main at `d5b5fa0` (NI-008A merged through PR #128)
-- Branch: docs/activate-lb-ds-016
+- Base: main at `fd141cc` (NI-008B merged through PR #131)
+- Branch: worker/lb-ds-016-native-auth-client (removed after merge)
 - Risk: security-sensitive-native-auth-client
+- Merge commit: `fb30400` (PR #131 merged)
 - Specification: docs/superpowers/specs/2026-08-25-native-preview-auth-verification-design.md; docs/superpowers/specs/2026-08-22-native-identity-authenticated-transport-design.md; docs/architecture/ADR/0011-native-mobile-session-and-transport.md
 - Allowed paths: apps/mobile/lib/features/identity/mobile_auth_http_client.dart; apps/mobile/lib/features/identity/mobile_auth_client.dart; apps/mobile/test/mobile_auth_http_client_test.dart; apps/mobile/test/mobile_auth_client_test.dart; apps/mobile/README.md; docs/architecture/OFFLINE_SYNC.md; .ai/WORK_QUEUE.md; .ai/worker-reports/LB-DS-016.md; CURRENT_WORK.md
-- Required checks: dart format --output=none --set-exit-if-changed; cd apps/mobile && flutter analyze; cd apps/mobile && flutter test; cd apps/mobile && flutter build apk --debug; pnpm check; pnpm build; node scripts/validate-migrations.mjs; git diff --check
+- Required checks: all passed locally and on GitHub; focused native auth tests `23/23`, full Flutter tests `117`, analyzer, format, pnpm build, migrations and debug APK validation passed.
 - Simulator required: no
 - Draft PR required: yes
 - Merge allowed: yes
 
-Implement only the dormant provider-neutral native auth client contract for request/verify/refresh/revoke using injected HTTP and existing secure session-store interfaces. Strict JSON/body/status/error parsing, bounded timeout, HTTPS endpoint from NI-008A only, no logging/secrets, and no composition into `main.dart`. No UI, endpoint activation, real OTP, provider call, deployment, Preview execution, Production, background work, or review-sync upload. Start with failing direct tests and stop at Draft PR for independent security review.
+Implemented and merged through PR #131. The dormant provider-neutral native auth client provides strict injected request/verify/refresh/revoke transport, typed errors, bounded timeout and injected secure-session persistence. No UI, endpoint activation, real OTP, provider call, secret, deployment, Preview execution, Production, background work or review-sync upload was enabled.
 
 ## LB-DS-015
 
