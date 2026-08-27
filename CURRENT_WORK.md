@@ -5,7 +5,7 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-- No unfinished, unmerged work is currently active. NI-008B was completed and merged through PR #131. The next native-auth UI design work remains documentation-only and separately blocked pending review and explicit UI authorization.
+- **LB-DS-018 / dormant native auth UI surface** is the active authorized implementation task on branch `worker/lb-ds-018-native-auth-ui`. It remains uncomposed in `main.dart` and disabled in default builds; no real OTP, provider, Preview, Production or secrets are authorized.
 
 ## Agent work log
 
