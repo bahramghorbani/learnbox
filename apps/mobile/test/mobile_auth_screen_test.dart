@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:learnbox/features/identity/mobile_auth_client.dart';
@@ -120,11 +122,11 @@ void main() {
       (tester) async {
     final transport = _SequenceTransport([
       _challengeResponse,
-      const MobileAuthHttpResponse(
+      MobileAuthHttpResponse(
         statusCode: 200,
         contentType: 'application/json',
         body:
-            '{"accessToken":"eyJhbGciOiJub25lIn0.eyJzaWQiOiJzZXNzaW9uLTEifQ==.sig","refreshToken":"refresh-token"}',
+            '{"accessToken":"${_fixtureAccessToken()}","refreshToken":"refresh-fixture"}',
       ),
     ]);
     await tester.pumpWidget(_harnessWithTransport(transport));
@@ -145,11 +147,11 @@ void main() {
       (tester) async {
     final transport = _SequenceTransport([
       _challengeResponse,
-      const MobileAuthHttpResponse(
+      MobileAuthHttpResponse(
         statusCode: 200,
         contentType: 'application/json',
         body:
-            '{"accessToken":"eyJhbGciOiJub25lIn0.eyJzaWQiOiJzZXNzaW9uLTEifQ==.sig","refreshToken":"refresh-token"}',
+            '{"accessToken":"${_fixtureAccessToken()}","refreshToken":"refresh-fixture"}',
       ),
     ]);
     await tester.pumpWidget(_harnessWithTransport(transport));
@@ -183,6 +185,12 @@ Widget _harnessWithTransport(MobileAuthHttpTransport transport) {
       ),
     ),
   );
+}
+
+String _fixtureAccessToken() {
+  final payload =
+      base64Url.encode(utf8.encode(jsonEncode({'sid': 'session-1'})));
+  return 'fixture-header.$payload.fixture-signature';
 }
 
 const _challengeResponse = MobileAuthHttpResponse(
