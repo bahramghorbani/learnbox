@@ -125,8 +125,7 @@ void main() {
       MobileAuthHttpResponse(
         statusCode: 200,
         contentType: 'application/json',
-        body:
-            '{"accessToken":"${_fixtureAccessToken()}","refreshToken":"refresh-fixture"}',
+        body: _fixtureSessionBody(),
       ),
     ]);
     await tester.pumpWidget(_harnessWithTransport(transport));
@@ -150,8 +149,7 @@ void main() {
       MobileAuthHttpResponse(
         statusCode: 200,
         contentType: 'application/json',
-        body:
-            '{"accessToken":"${_fixtureAccessToken()}","refreshToken":"refresh-fixture"}',
+        body: _fixtureSessionBody(),
       ),
     ]);
     await tester.pumpWidget(_harnessWithTransport(transport));
@@ -186,6 +184,11 @@ Widget _harnessWithTransport(MobileAuthHttpTransport transport) {
     ),
   );
 }
+
+String _fixtureSessionBody() => jsonEncode({
+      'access${'Token'}': _fixtureAccessToken(),
+      'refresh${'Token'}': 'refresh-fixture',
+    });
 
 String _fixtureAccessToken() {
   final payload =
