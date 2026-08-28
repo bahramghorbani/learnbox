@@ -5,7 +5,7 @@ start. Historical tasks remain for traceability and must not be duplicated.
 
 ## Active work registry
 
-- **LB-DS-018 / dormant native auth UI surface** is the active authorized implementation task on branch `worker/lb-ds-018-native-auth-ui-clean`. It must remain uncomposed in `main.dart` and disabled in default builds; no real OTP, provider, Preview, Production or secrets are authorized.
+- No unfinished implementation task is currently authorized. LB-DS-018 native auth UI was reviewed and merged through PR #137; it remains dormant and uncomposed in `main.dart`. Any composition, real OTP/provider, Preview or Production activation requires a separate owner-gated task.
 
 ## LB-DS-018
 
