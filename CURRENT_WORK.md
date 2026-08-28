@@ -5,7 +5,7 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-- **LB-DS-019 / dormant auth composition** is the active authorized implementation task on branch `worker/lb-ds-019-dormant-auth-composition`. It remains disabled by default; no real OTP, provider, Preview, Production or secrets are authorized.
+- No unfinished implementation task is currently authorized. LB-DS-019 dormant auth composition was reviewed and merged through PR #140; it remains disabled by default. Real OTP/provider, Preview or Production activation requires a separate owner-gated task.
 
 ## Agent work log
 
