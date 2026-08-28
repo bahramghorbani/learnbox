@@ -3,12 +3,12 @@
 - Branch: `worker/lb-ds-018-native-auth-ui-clean`
 - Base commit: `e284169`
 - Head commit: `a4f4c82`
-- Draft PR: #137 — https://github.com/bahramghorbani/learnbox/pull/137
+- Draft PR: #137 merged — https://github.com/bahramghorbani/learnbox/pull/137
 - Scope completed: dormant Persian-first native auth UI with phone/OTP stages, validation, errors, verified state, change-number, RTL/LTR isolation, responsive layout and digit normalization
 - Files changed: `apps/mobile/lib/features/identity/mobile_auth_screen.dart`, `apps/mobile/test/mobile_auth_screen_test.dart`, `.ai/worker-reports/LB-DS-018.md`, `.ai/WORK_QUEUE.md`
 - Checks run: focused/full Flutter tests passed (`+8`, `+125`), Flutter analyze passed, format passed, pnpm check/build passed, migrations validated (`13`), diff check passed, GitHub CI passed
 - Checks unavailable: local gitleaks executable absent; Android APK build blocked by unavailable DNS/network for Flutter embedding artifact and missing offline cache
-- Remaining work: independent UI/security review; separate owner-gated composition task; real OTP/provider/Preview/Production activation remains out of scope
+- Remaining work: separate owner-gated composition task; real OTP/provider/Preview/Production activation remains out of scope
 - Risks: critical mobile UI/UX review remains; visual review at 320/360/412dp and accessibility review remain required; resend cooldown is intentionally not active in this dormant slice
 - Secrets or production changes: none; no secrets, real OTP, provider, endpoint activation, Preview, Production, background work, analytics or review-sync activation
 - Bobo canonical status: no Bobo asset was changed, added or composed
