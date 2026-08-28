@@ -1,57 +1,33 @@
-<p align="center">
-  <img src="./assets/readme/hero.svg" width="100%" alt="LearnBox: پلتفرم فارسی‌محور یادگیری واژگان آلمانی با مرور هوشمند و کارت‌های تصویری">
-</p>
+# LearnBox
 
-<p align="center">
-  <a href="https://github.com/bahramghorbani/learnbox/actions/workflows/quality.yml"><img src="https://github.com/bahramghorbani/learnbox/actions/workflows/quality.yml/badge.svg" alt="وضعیت کنترل کیفیت"></a>
-  <img src="https://img.shields.io/badge/status-closed%20alpha-4d6bfe" alt="وضعیت: آلفای بسته (مرحله ۲۳ از ۳۰)">
-  <img src="https://img.shields.io/badge/language-Persian%20%2B%20German-ffb36b" alt="زبان: فارسی و آلمانی">
-</p>
+LearnBox is a real online-first German vocabulary Leitner product for Persian-speaking learners. It is free to download, includes approximately 350 complete A1 words, and sells additional complete vocabulary packs.
 
-<p align="center"><strong>یک پلتفرم فارسی‌محور و مقاوم در برابر قطعی اینترنت برای به‌خاطر سپردن واژگان آلمانی.</strong></p>
+## Start here
 
-## LearnBox چیست؟
+1. [`docs/PRODUCT_STATUS.md`](docs/PRODUCT_STATUS.md) — current feature inventory and truthful status.
+2. [`PRODUCT.md`](PRODUCT.md) — product definition, platforms and commercial model.
+3. [`ROADMAP.md`](ROADMAP.md) — outcome-based milestones and release criteria.
+4. [`docs/architecture/SYSTEM_CONTEXT.md`](docs/architecture/SYSTEM_CONTEXT.md) — product and system boundaries.
+5. [`docs/DOCUMENTATION_GOVERNANCE.md`](docs/DOCUMENTATION_GOVERNANCE.md) — rule for keeping docs current.
+6. [`.ai/WORK_QUEUE.md`](.ai/WORK_QUEUE.md) and [`.ai/WORKSTREAMS.md`](.ai/WORKSTREAMS.md) — active work and worker model.
+7. [`AI_BOOTSTRAP.md`](AI_BOOTSTRAP.md) and [`AGENTS.md`](AGENTS.md) — contributor rules.
 
-LearnBox به فارسی‌زبان‌ها کمک می‌کند واژگان کاربردی آلمانی را با یادآوری فعال، مرور فاصله‌دارِ تطبیقی، تصویر، مثال و تمرین‌های کوتاه روزانه به خاطر بسپارند. اولویت نسخهٔ اولیه، واژگان A1 و A2 برای مهاجرت کاری، تحصیلی و زندگی روزمره است.
+## Surfaces
 
-### چرا متفاوت است؟
+- `learnboxapp.com`: independent informational landing only; it is not connected to learner, admin or API.
+- Learner Web App: online learner experience and interim iOS route.
+- Android app: native online-first app with tolerance for temporary disconnects.
+- Native iOS app: final App Store surface in a later milestone.
+- Admin panel: AI-assisted content, media QA, pack release, catalog, pricing, commerce and operations.
+- API/workers: account, learning state, sync, canonical vocabulary, content jobs, purchase verification and shared entitlements.
 
-- **یادگیری بر پایهٔ حافظه:** پاسخ فعال و زمان‌بندی مرور؛ نه صرفاً نمایش فلش‌کارت.
-- **آرام و انسانی:** بازگشت پس از وقفه با حالت بازیابی، بدون فشار یا سرزنش.
-- **فارسی از ابتدا:** رابط RTL، تایپوگرافی خوانا و جداسازی درست محتوای آلمانی.
-- **آفلاین‌محور:** صف رویدادهای مرور و داده‌های ضروری روی دستگاه نگهداری و بعداً همگام می‌شوند.
-- **هوش مصنوعیِ کنترل‌شده:** AI برای پیشنهاد و QA محتواست، نه وابستگی هر لحظهٔ جلسهٔ یادگیری.
+## Product model
 
-## مسیر یادگیری
+The normal state is online. If connectivity drops, the client retains pending review actions safely and synchronizes them idempotently after reconnect. The free A1 starter has approximately 350 words. Premium packs are complete vocabulary products with images, pronunciation, examples and translations, generated with AI assistance and approved by a human before publication.
 
-```text
-امروز → کارتِ تصویری و مثال → پاسخ فعال → زمان‌بندی تطبیقی → پیشرفتِ قابل‌فهم
-```
+Payments are platform-specific: Web direct bank gateway, Android Cafe Bazaar in-app billing, and iOS Apple In-App Purchase. Prices and provider product IDs may differ; verified purchases map to a shared backend entitlement.
 
-هستهٔ زمان‌بندی اولیه در [`packages/learning-engine`](./packages/learning-engine) قرار دارد و از ابتدا به‌گونه‌ای طراحی شده که با داده‌های واقعی یادگیری قابل تکامل باشد.
-
-## وضعیت فعلی
-
-| بخش     | آماده است                                                                |
-| ------- | ------------------------------------------------------------------------ |
-| معماری  | مونوریپو، API، وب عمومی، پنل مدیریت و پوستهٔ Flutter                     |
-| یادگیری | مدل درجه‌بندی و موتور زمان‌بندی اولیه با تست واحد                        |
-| داده    | مهاجرت ابتدایی PostgreSQL و طراحی همگام‌سازی idempotent                  |
-| کیفیت   | قالب‌بندی، lint، type check، تست، build، اسکن وابستگی و اسکن رازها در CI |
-| محصول   | سند مرجع، ADR، استوری‌بورد ۳۰ مرحله‌ای، ریسک و امنیت                     |
-
-جزئیات پیشرفت را در [استوری‌بورد](./docs/storyboard/MASTER_PROJECT_STORYBOARD.md) و وضعیت لحظه‌ای را در [`STATUS.md`](./docs/storyboard/STATUS.md) ببینید.
-
-## شروع محلی
-
-### پیش‌نیازها
-
-- Node.js 22 یا جدیدتر
-- pnpm 10 یا جدیدتر
-- Docker Desktop
-- Flutter stable برای اجرای اپ موبایل
-
-### اجرای نخستین نسخهٔ توسعه
+## Development
 
 ```bash
 cp .env.example .env
@@ -61,7 +37,7 @@ pnpm check
 pnpm dev
 ```
 
-برای اجرای تحلیل و تست موبایل:
+For Flutter:
 
 ```bash
 cd apps/mobile
@@ -70,48 +46,4 @@ flutter analyze
 flutter test
 ```
 
-راهنمای عملیاتی کامل در [`docs/operations/RUNBOOK.md`](./docs/operations/RUNBOOK.md) است. هیچ رمز، کلید یا OTP واقعی را در فایل‌ها یا گزارش‌ها وارد نکنید.
-
-## نقشهٔ فنی
-
-```mermaid
-flowchart LR
-  L["یادگیرنده · Flutter / PWA"] --> A["API · NestJS"]
-  M["پنل مدیریت امن"] --> A
-  A --> P[(PostgreSQL)]
-  A --> R[(Redis)]
-  A --> O["رسانه و ذخیره‌سازی"]
-  W["کارگرهای محتوا، رسانه و اعلان"] --> P
-```
-
-- **موبایل و PWA:** Flutter، رابط RTL و دادهٔ محلی برای مرور آفلاین.
-- **وب و مدیریت:** Next.js برای صفحات SEO و پنل امن.
-- **بک‌اند:** NestJS، PostgreSQL، Redis، مهاجرت‌ها و OpenAPI.
-- **یکپارچه‌سازی‌ها:** SMS، پرداخت، AI، اعلان و ذخیره‌سازی همگی پشت مرزهای قابل‌تعویض می‌مانند.
-
-## مستندات کلیدی
-
-- [سند اجرایی اصلی](./docs/product/MASTER_SPEC.md)
-- [معماری سیستم](./ARCHITECTURE.md)
-- [مدل یادگیری](./docs/learning/LEARNING_MODEL.md)
-- [راهبرد آفلاین و همگام‌سازی](./docs/architecture/OFFLINE_SYNC.md)
-- [امنیت و حریم خصوصی](./SECURITY.md)
-- [نقشهٔ راه](./ROADMAP.md)
-- [راهنمای مشارکت](./CONTRIBUTING.md)
-- [راه‌اندازی Flutter و VS Code](./docs/operations/FLUTTER_DEVELOPMENT_SETUP.md)
-
-## محدودهٔ فعلی
-
-این ریپازیتوری در مرحلهٔ فونداسیون است. ورود با پیامک واقعی، محتوای منتشرشده، Bobo نهایی، پرداخت، زیرساخت تولید و انتشار عمومی هنوز فعال نشده‌اند. این مرزها عمداً قبل از تأیید مالک، قرارداد/اعتبارسنجی لازم و تست‌های مناسب فعال نخواهند شد.
-
-## کیفیت و اصول مشارکت
-
-پیش از هر تغییر، معیارهای پذیرش، RTL، دسترس‌پذیری، وضعیت آفلاین، حریم خصوصی، تحلیل رویدادها و امکان بازگشت بررسی می‌شوند. برای اجرای کنترل‌های پایه:
-
-```bash
-pnpm check
-pnpm build
-node scripts/validate-migrations.mjs
-```
-
-جزئیات در [`AGENTS.md`](./AGENTS.md) و [راهبرد تست](./docs/product/MASTER_SPEC.md#28-testing-strategy) ثبت شده است.
+Use the canonical status and roadmap before treating a component, test fixture or dormant flag as a released feature. Never commit secrets, real phone numbers, OTPs, receipts or provider credentials.

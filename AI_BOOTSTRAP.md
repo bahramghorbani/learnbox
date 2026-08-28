@@ -19,8 +19,8 @@ Before changing code, documentation, infrastructure or content, every capable co
    capabilities through [`.ai/provider-mappings.yaml`](./.ai/provider-mappings.yaml).
    A supervising agent must also follow [`.ai/ORCHESTRATION_POLICY.md`](./.ai/ORCHESTRATION_POLICY.md)
    before classifying, delegating or reviewing work.
-   An agent continuing a queued task must also read [`.ai/WORKER_PROTOCOL.md`](./.ai/WORKER_PROTOCOL.md)
-   and its task record in [`.ai/WORK_QUEUE.md`](./.ai/WORK_QUEUE.md).
+   An agent continuing a queued task must also read [`.ai/WORKER_PROTOCOL.md`](./.ai/WORKER_PROTOCOL.md),
+   [`.ai/WORKSTREAMS.md`](./.ai/WORKSTREAMS.md) and its task record in [`.ai/WORK_QUEUE.md`](./.ai/WORK_QUEUE.md).
 7. Inspect the live repository with `git status --short --branch`, `git diff --name-only` and
    `git log -1 --oneline`.
 8. Run proportionate validation before implementation. At a feature boundary, run
@@ -55,6 +55,9 @@ the current repository state.
   autonomously.
 - Update [`PROJECT_STATE.md`](./PROJECT_STATE.md) only for facts true on stable `main`. Update
   [`CURRENT_WORK.md`](./CURRENT_WORK.md) for active, unmerged work. Keep both secret-free.
+- For product, feature, architecture, payment, content, admin, deployment or release changes,
+  update the matching canonical status/roadmap document in the same PR as required by
+  [`docs/DOCUMENTATION_GOVERNANCE.md`](./docs/DOCUMENTATION_GOVERNANCE.md).
 
 ## Finish condition
 
