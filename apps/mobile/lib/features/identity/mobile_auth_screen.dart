@@ -335,6 +335,8 @@ class _MobileAuthScreenState extends State<MobileAuthScreen> {
         'offline' => 'اتصال اینترنت در دسترس نیست. اتصال را بررسی کن.',
         'timeout' => 'ارتباط طول کشید. دوباره تلاش کن.',
         'serverUnavailable' => 'فعلاً امکان ارسال کد نیست. دوباره تلاش کن.',
+        'previewAccessRequired' =>
+          'این محیط Preview نیاز به دسترسی مالک دارد؛ بعداً دوباره تلاش کن.',
         'authenticationRequired' => 'برای ادامه دوباره وارد شو.',
         _ => 'مشکلی پیش آمد. دوباره تلاش کن.',
       };

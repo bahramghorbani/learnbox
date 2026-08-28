@@ -181,6 +181,29 @@ void main() {
     );
   });
 
+  test('platform access responses use a distinct Preview access failure',
+      () async {
+    final client = MobileAuthHttpClient(
+      origin: origin,
+      client: _FakeTransport(
+        response: const MobileAuthHttpResponse(
+          statusCode: 401,
+          contentType: 'text/plain',
+          body: 'protected by platform',
+        ),
+      ),
+    );
+
+    await expectLater(
+      client.requestOtp(phone: '+989****4567'),
+      throwsA(isA<MobileAuthException>().having(
+        (error) => error.code,
+        'code',
+        'previewAccessRequired',
+      )),
+    );
+  });
+
   test('wrong response content type is a typed validation failure', () async {
     final client = MobileAuthHttpClient(
       origin: origin,
