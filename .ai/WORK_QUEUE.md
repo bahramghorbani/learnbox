@@ -9,9 +9,10 @@ start. Historical tasks remain for traceability and must not be duplicated.
 
 ## LB-DS-018
 
-- Status: review_requested
+- Status: accepted
 - Executor: high-reasoning-worker
 - Base: main at `e284169` (NI-008B and registry synchronization merged)
+- Merge commit: `60e3046` (PR #137 merged)
 - Branch: worker/lb-ds-018-native-auth-ui-clean
 - Risk: critical-mobile-ui-ux
 - Specification: docs/superpowers/specs/2026-08-26-native-auth-ui-design-brief.md; apps/mobile/lib/features/identity/mobile_auth_client.dart
