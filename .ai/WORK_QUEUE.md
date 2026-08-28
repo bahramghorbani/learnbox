@@ -5,13 +5,14 @@ start. Historical tasks remain for traceability and must not be duplicated.
 
 ## Active work registry
 
-- **LB-DS-020 / Preview auth runtime composition** is the active authorized implementation task on branch `worker/lb-ds-020-preview-auth-runtime`. It remains fail-closed by default; server flags stay unchanged until a verified build exists.
+- No unfinished implementation task is currently authorized. LB-DS-020 Preview auth runtime composition was reviewed and merged through PR #142; Preview server flags remain disabled pending a separate owner-controlled device verification run.
 
 ## LB-DS-020
 
-- Status: review_requested
+- Status: accepted
 - Executor: high-reasoning-worker
 - Base: main at `8667cab`
+- Merge commit: `4eca7dd` (PR #142 merged)
 - Branch: worker/lb-ds-020-preview-auth-runtime
 - Risk: security-sensitive-mobile-auth-runtime
 - Specification: docs/superpowers/specs/2026-08-25-native-preview-auth-verification-design.md; docs/superpowers/specs/2026-08-22-native-identity-authenticated-transport-design.md
