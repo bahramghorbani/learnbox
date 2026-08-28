@@ -4,9 +4,9 @@
 
 ## Active work
 
-- M0 Product truth and delivery reset has been completed on `docs/product-truth-and-milestones` and is awaiting merge.
-- No feature implementation is authorized until the M0 documentation PR is reviewed and merged.
-- M0-03 documentation validator is included in the M0 PR.
+- M0 Product truth and delivery reset is merged in `origin/main` through PR #146.
+- M1 Online Learning Core is queued and is not active until the owner explicitly starts the milestone.
+- No unmerged implementation work is currently active.
 
 ## Owner-approved product decisions captured in M0
 
