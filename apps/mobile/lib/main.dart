@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import 'app.dart';
 import 'features/identity/mobile_auth_config.dart';
+import 'features/identity/mobile_preview_auth_runtime.dart';
 import 'features/review/bundled_start_pack_repository.dart';
 import 'features/review/review_queue.dart';
 import 'features/review/secure_review_queue_store.dart';
@@ -19,6 +20,18 @@ Future<void> main() async {
       BundledStartPackRepository.fromJsonString(startPackJson);
   final reviewQueue = ReviewQueue(store: SecureReviewQueueStore());
   const mobileAuthConfig = MobileAuthConfig.defaults();
+  final previewRuntime = MobilePreviewAuthRuntime.fromCompileTime(
+    approvedOrigin: const String.fromEnvironment(
+      'LEARNBOX_MOBILE_APPROVED_PREVIEW_ORIGIN',
+    ),
+  );
+  final WidgetBuilder? authScreenBuilder;
+  if (previewRuntime == null) {
+    authScreenBuilder = null;
+  } else {
+    final authScreen = await previewRuntime.createAuthScreen();
+    authScreenBuilder = (_) => authScreen;
+  }
   // Fail-closed production invariant: MobileIdentityState.signedOut plus
   // DisabledReviewSyncTransport() until a separately authorized activation.
   final reviewSyncCoordinator = ReviewSyncCoordinator(
@@ -32,6 +45,8 @@ Future<void> main() async {
       startPackRepository: startPackRepository,
       reviewQueue: reviewQueue,
       reviewSyncCoordinator: reviewSyncCoordinator,
+      authEnabled: authScreenBuilder != null,
+      authScreenBuilder: authScreenBuilder,
     ),
   );
 }

@@ -5,7 +5,23 @@ start. Historical tasks remain for traceability and must not be duplicated.
 
 ## Active work registry
 
-- No unfinished implementation task is currently authorized. LB-DS-019 dormant auth composition was reviewed and merged through PR #140; it remains disabled by default. Real OTP/provider, Preview or Production activation requires a separate owner-gated task.
+- **LB-DS-020 / Preview auth runtime composition** is the active authorized implementation task on branch `worker/lb-ds-020-preview-auth-runtime`. It remains fail-closed by default; server flags stay unchanged until a verified build exists.
+
+## LB-DS-020
+
+- Status: review_requested
+- Executor: high-reasoning-worker
+- Base: main at `8667cab`
+- Branch: worker/lb-ds-020-preview-auth-runtime
+- Risk: security-sensitive-mobile-auth-runtime
+- Specification: docs/superpowers/specs/2026-08-25-native-preview-auth-verification-design.md; docs/superpowers/specs/2026-08-22-native-identity-authenticated-transport-design.md
+- Allowed paths: apps/mobile/lib/main.dart; apps/mobile/lib/features/identity/mobile_preview_auth_runtime.dart; apps/mobile/lib/features/identity/mobile_auth_http_transport.dart; apps/mobile/lib/features/identity/mobile_installation_id_store.dart; apps/mobile/lib/features/identity/secure_mobile_session_store.dart; apps/mobile/test/mobile_preview_auth_runtime_test.dart; apps/mobile/test/mobile_auth_http_transport_test.dart; apps/mobile/test/mobile_installation_id_store_test.dart; apps/mobile/README.md; .ai/WORK_QUEUE.md; .ai/worker-reports/LB-DS-020.md; CURRENT_WORK.md
+- Required checks: focused tests; full Flutter tests; Flutter analyze; debug APK; pnpm check; pnpm build; migration validation; diff check
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+
+Implement only fail-closed runtime composition for the owner-controlled native Preview verification. Production/default builds must remain unchanged; no review sync, background work, analytics, Production origin, secret or provider credential may reach the client. Use exact compile-time Preview origin validation, HTTPS-only injected transport, secure installation ID and existing secure session store. The Preview server flags remain unchanged until a separately verified build is ready. Start with failing tests and stop at Draft PR for review.
 
 ## LB-DS-019
 
