@@ -5,7 +5,7 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-- No unfinished implementation task is currently authorized. LB-DS-018 native auth UI was reviewed and merged through PR #137; it remains dormant and uncomposed in `main.dart`. Any composition, real OTP/provider, Preview or Production activation requires a separate owner-gated task.
+- **LB-DS-019 / dormant auth composition** is the active authorized implementation task on branch `worker/lb-ds-019-dormant-auth-composition`. It remains disabled by default; no real OTP, provider, Preview, Production or secrets are authorized.
 
 ## Agent work log
 

@@ -5,7 +5,23 @@ start. Historical tasks remain for traceability and must not be duplicated.
 
 ## Active work registry
 
-- No unfinished implementation task is currently authorized. LB-DS-018 native auth UI was reviewed and merged through PR #137; it remains dormant and uncomposed in `main.dart`. Any composition, real OTP/provider, Preview or Production activation requires a separate owner-gated task.
+- **LB-DS-019 / dormant auth composition** is the active authorized implementation task on branch `worker/lb-ds-019-dormant-auth-composition`. It must remain disabled by default; no real OTP, provider, Preview, Production or secrets are authorized.
+
+## LB-DS-019
+
+- Status: review_requested
+- Executor: high-reasoning-worker
+- Base: main at `8ff6384` (LB-DS-018 merged and registry clean)
+- Branch: worker/lb-ds-019-dormant-auth-composition
+- Risk: security-sensitive-mobile-composition
+- Specification: docs/superpowers/specs/2026-08-26-native-auth-ui-design-brief.md; apps/mobile/lib/features/identity/mobile_auth_config.dart
+- Allowed paths: apps/mobile/lib/app.dart; apps/mobile/lib/main.dart; apps/mobile/lib/features/identity/mobile_auth_config.dart; apps/mobile/lib/features/identity/mobile_auth_screen.dart; apps/mobile/test/mobile_auth_composition_test.dart; apps/mobile/test/mobile_auth_screen_test.dart; apps/mobile/README.md; .ai/WORK_QUEUE.md; .ai/worker-reports/LB-DS-019.md; CURRENT_WORK.md
+- Required checks: dart format --output=none --set-exit-if-changed; cd apps/mobile && flutter analyze; cd apps/mobile && flutter test test/mobile_auth_composition_test.dart test/mobile_auth_screen_test.dart; cd apps/mobile && flutter test; cd apps/mobile && flutter build apk --debug; pnpm check; pnpm build; node scripts/validate-migrations.mjs; git diff --check
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+
+Implement only dormant composition of the already-reviewed native auth UI. The default `MobileAuthConfig.defaults()` must remain auth-disabled, signed-out, and review-sync-disabled. Inject an optional auth surface/builder without creating a provider, endpoint, secret, real OTP, background trigger, analytics, sync upload, Preview or Production path. Start with failing composition tests. `main.dart` must remain default-safe and must not activate the surface.
 
 ## LB-DS-018
 

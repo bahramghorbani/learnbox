@@ -16,6 +16,8 @@ class LearnBoxApp extends StatelessWidget {
     required this.reviewQueue,
     this.pronunciationPlayer = const MethodChannelPronunciationPlayer(),
     this.reviewSyncCoordinator,
+    this.authEnabled = false,
+    this.authScreenBuilder,
     super.key,
     this.splashDuration = const Duration(seconds: 3),
   });
@@ -24,8 +26,9 @@ class LearnBoxApp extends StatelessWidget {
   final ReviewQueue reviewQueue;
   final PronunciationPlayer pronunciationPlayer;
 
-  /// Reserved, disabled foreground sync boundary; no UI invokes it yet.
   final ReviewSyncCoordinator? reviewSyncCoordinator;
+  final bool authEnabled;
+  final WidgetBuilder? authScreenBuilder;
   final Duration splashDuration;
 
   @override
@@ -42,6 +45,8 @@ class LearnBoxApp extends StatelessWidget {
             startPackRepository: startPackRepository,
             reviewQueue: reviewQueue,
             pronunciationPlayer: pronunciationPlayer,
+            authEnabled: authEnabled,
+            authScreenBuilder: authScreenBuilder,
             splashDuration: splashDuration,
           ),
         ),
@@ -53,6 +58,8 @@ class LearnBoxLaunchScreen extends StatefulWidget {
     required this.startPackRepository,
     required this.reviewQueue,
     required this.pronunciationPlayer,
+    this.authEnabled = false,
+    this.authScreenBuilder,
     required this.splashDuration,
     super.key,
   });
@@ -60,6 +67,8 @@ class LearnBoxLaunchScreen extends StatefulWidget {
   final StartPackRepository startPackRepository;
   final ReviewQueue reviewQueue;
   final PronunciationPlayer pronunciationPlayer;
+  final bool authEnabled;
+  final WidgetBuilder? authScreenBuilder;
   final Duration splashDuration;
 
   @override
@@ -89,6 +98,9 @@ class _LearnBoxLaunchScreenState extends State<LearnBoxLaunchScreen> {
   @override
   Widget build(BuildContext context) {
     if (_showToday) {
+      if (widget.authEnabled && widget.authScreenBuilder != null) {
+        return widget.authScreenBuilder!(context);
+      }
       return LearnerHomeShell(
         startPackRepository: widget.startPackRepository,
         reviewQueue: widget.reviewQueue,
