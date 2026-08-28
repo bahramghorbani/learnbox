@@ -102,6 +102,27 @@ void main() {
     expect(find.bySemanticsLabel('شماره موبایل'), findsOneWidget);
   });
 
+  testWidgets('Preview access failure explains owner-only environment',
+      (tester) async {
+    await tester.pumpWidget(harness(const MobileAuthHttpResponse(
+      statusCode: 401,
+      contentType: 'text/plain',
+      body: 'platform protection',
+    )));
+
+    await tester.enterText(
+        find.bySemanticsLabel('شماره موبایل'), '09121234567');
+    await tester.tap(find.text('ارسال کد ورود'));
+    await tester.pumpAndSettle();
+
+    expect(
+        find.text(
+            'این محیط Preview نیاز به دسترسی مالک دارد؛ بعداً دوباره تلاش کن.'),
+        findsOneWidget);
+    expect(
+        find.text('فعلاً امکان ارسال کد نیست. دوباره تلاش کن.'), findsNothing);
+  });
+
   testWidgets('back changes the number without exposing session data',
       (tester) async {
     final transport = _FakeHttpTransport(_challengeResponse);

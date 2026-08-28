@@ -93,7 +93,7 @@ class MobileAuthHttpClient {
         await _post(_requestPath, <String, Object>{'phone': phone});
     _requireJsonContentType(response);
     if (response.statusCode != 201) {
-      throw const MobileAuthException('serverUnavailable');
+      throw _exceptionForStatus(response.statusCode);
     }
     final challengeId = _exactStringField(
       response,
@@ -135,7 +135,7 @@ class MobileAuthHttpClient {
     );
     _requireJsonContentType(response);
     if (response.statusCode != 200) {
-      throw const MobileAuthException('serverUnavailable');
+      throw _exceptionForStatus(response.statusCode);
     }
     return _sessionFrom(response);
   }
@@ -151,7 +151,7 @@ class MobileAuthHttpClient {
     );
     _requireJsonContentType(response);
     if (response.statusCode != 200) {
-      throw const MobileAuthException('serverUnavailable');
+      throw _exceptionForStatus(response.statusCode);
     }
     return _sessionFrom(response);
   }
@@ -168,7 +168,16 @@ class MobileAuthHttpClient {
     }
   }
 
+  static MobileAuthException _exceptionForStatus(int statusCode) =>
+      switch (statusCode) {
+        401 || 403 => const MobileAuthException('previewAccessRequired'),
+        _ => const MobileAuthException('serverUnavailable'),
+      };
+
   static void _requireJsonContentType(MobileAuthHttpResponse response) {
+    if (response.statusCode == 401 || response.statusCode == 403) {
+      throw const MobileAuthException('previewAccessRequired');
+    }
     if (!RegExp(r'^application/json(?:;\s*charset=utf-8)?$',
             caseSensitive: false)
         .hasMatch(response.contentType)) {
