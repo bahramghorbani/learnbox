@@ -4,9 +4,9 @@
 
 ## Active work
 
-- M0 Product truth and delivery reset is being prepared on `docs/product-truth-and-milestones`.
+- M0 Product truth and delivery reset has been completed on `docs/product-truth-and-milestones` and is awaiting merge.
 - No feature implementation is authorized until the M0 documentation PR is reviewed and merged.
-- M0-03 documentation validator is planned after M0-01/M0-02 terminology is merged.
+- M0-03 documentation validator is included in the M0 PR.
 
 ## Owner-approved product decisions captured in M0
 
