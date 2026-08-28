@@ -5,13 +5,14 @@ start. Historical tasks remain for traceability and must not be duplicated.
 
 ## Active work registry
 
-- **LB-DS-019 / dormant auth composition** is the active authorized implementation task on branch `worker/lb-ds-019-dormant-auth-composition`. It must remain disabled by default; no real OTP, provider, Preview, Production or secrets are authorized.
+- No unfinished implementation task is currently authorized. LB-DS-019 dormant auth composition was reviewed and merged through PR #140; it remains disabled by default. Real OTP/provider, Preview or Production activation requires a separate owner-gated task.
 
 ## LB-DS-019
 
-- Status: review_requested
+- Status: accepted
 - Executor: high-reasoning-worker
 - Base: main at `8ff6384` (LB-DS-018 merged and registry clean)
+- Merge commit: `1a96e61` (PR #140 merged)
 - Branch: worker/lb-ds-019-dormant-auth-composition
 - Risk: security-sensitive-mobile-composition
 - Specification: docs/superpowers/specs/2026-08-26-native-auth-ui-design-brief.md; apps/mobile/lib/features/identity/mobile_auth_config.dart

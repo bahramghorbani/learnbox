@@ -2,8 +2,8 @@
 
 - Branch: `worker/lb-ds-019-dormant-auth-composition`
 - Base commit: `8ff6384`
-- Head commit: `b2150e2`
-- Draft PR: pending at push time
+- Head commit: `859a8d5`
+- Draft PR: #140 merged — https://github.com/bahramghorbani/learnbox/pull/140
 - Scope completed: injected optional auth screen builder with explicit false-by-default gate; default app remains Today shell and no auth surface is reachable unless a caller explicitly enables the injected dormant composition
 - Files changed: `apps/mobile/lib/app.dart`, `apps/mobile/test/mobile_auth_composition_test.dart`, `.ai/WORK_QUEUE.md`, `.ai/worker-reports/LB-DS-019.md`
 - Checks run: focused composition tests passed (`+3`), full Flutter tests passed (`+127`), Flutter analyze passed, format passed, AI queue validator passed, continuity validator passed, diff check passed
