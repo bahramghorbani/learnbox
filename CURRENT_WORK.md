@@ -5,7 +5,7 @@ must be refreshed whenever its recorded branch is merged, abandoned or materiall
 
 ## Active work registry
 
-- **LB-DS-020 / Preview auth runtime composition** is the active authorized implementation task on branch `worker/lb-ds-020-preview-auth-runtime`. It remains fail-closed by default; server flags stay unchanged until a verified build exists.
+- No unfinished implementation task is currently authorized. LB-DS-020 Preview auth runtime composition was reviewed and merged through PR #142; Preview server flags remain disabled pending a separate owner-controlled device verification run.
 
 ## Agent work log
 

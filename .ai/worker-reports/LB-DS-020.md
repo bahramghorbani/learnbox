@@ -2,9 +2,9 @@
 
 - Branch: `worker/lb-ds-020-preview-auth-runtime`
 - Base commit: `8667cab`
-- Head commit: pending at commit time
-- Draft PR: pending at push time
-- Status: review_requested
+- **Head commit:** `aab49c2`
+- **Draft PR:** #142 — merged as `4eca7dd`
+- Status: accepted
 - Scope completed: fail-closed native Preview auth runtime composition; secure installation ID; dart:io HTTPS JSON transport; build-time exact Preview origin gate; `main.dart` composes the auth screen only when both explicit compile-time gates validate
 - Files changed: `apps/mobile/lib/main.dart`, `apps/mobile/lib/features/identity/mobile_installation_id_store.dart`, `apps/mobile/lib/features/identity/mobile_auth_http_transport.dart`, `apps/mobile/lib/features/identity/mobile_preview_auth_runtime.dart`, `apps/mobile/test/mobile_preview_auth_runtime_test.dart`, `apps/mobile/README.md`, `.ai/WORK_QUEUE.md`, `CURRENT_WORK.md`, `.ai/worker-reports/LB-DS-020.md`
 - Checks run: focused runtime tests `+4`; full Flutter suite `+131`; `flutter analyze`; Dart format; `pnpm check`; `pnpm build`; migration validation; queue/continuity validators; `git diff --check`
