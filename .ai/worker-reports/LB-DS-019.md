@@ -2,7 +2,7 @@
 
 - Branch: `worker/lb-ds-019-dormant-auth-composition`
 - Base commit: `8ff6384`
-- Head commit: pending at commit time
+- Head commit: `b2150e2`
 - Draft PR: pending at push time
 - Scope completed: injected optional auth screen builder with explicit false-by-default gate; default app remains Today shell and no auth surface is reachable unless a caller explicitly enables the injected dormant composition
 - Files changed: `apps/mobile/lib/app.dart`, `apps/mobile/test/mobile_auth_composition_test.dart`, `.ai/WORK_QUEUE.md`, `.ai/worker-reports/LB-DS-019.md`
