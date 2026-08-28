@@ -1,36 +1,22 @@
-# LearnBox master project storyboard
+# LearnBox delivery storyboard
 
-| #   | Stage                         | Status   |
-| --- | ----------------------------- | -------- |
-| 1   | Product foundation            | complete |
-| 2   | Market and user understanding | next     |
-| 3   | Learning model                | planned  |
-| 4   | Information architecture      | planned  |
-| 5   | Brand and Bobo system         | started  |
-| 6   | UI design direction           | complete |
-| 7   | Clickable prototype           | started  |
-| 8   | Technical foundation          | complete |
-| 9   | Authentication and onboarding | started  |
-| 10  | Core review engine            | started  |
-| 11  | Cards, images, and audio      | started  |
-| 12  | Personal vocabulary           | started  |
-| 13  | Gamification                  | started  |
-| 14  | Progress analytics            | started  |
-| 15  | Offline sync                  | started  |
-| 16  | AI content pipeline           | started  |
-| 17  | Admin panel                   | started  |
-| 18  | Notifications                 | started  |
-| 19  | Billing and products          | started  |
-| 20  | PWA and website               | started  |
-| 21  | Security and compliance       | started  |
-| 22  | Automated testing             | started  |
-| 23  | Closed alpha                  | started  |
-| 24  | Beta and load testing         | planned  |
-| 25  | Cafe Bazaar submission        | planned  |
-| 26  | Public v1.0                   | planned  |
-| 27  | Continuous improvement        | planned  |
-| 28  | Google Play preparation       | planned  |
-| 29  | iOS preparation               | planned  |
-| 30  | Growth and content expansion  | planned  |
+The former 30-stage storyboard is retained as historical design context. The active execution plan uses eight outcome-based milestones so the team can ship a real product without treating every technical slice as a separate project phase.
 
-Export targets (PNG/PDF/web image) are generated after approved brand and storyboard visual direction; source remains this document.
+| Milestone                | Delivery outcome                                                          | Main surfaces                          |
+| ------------------------ | ------------------------------------------------------------------------- | -------------------------------------- |
+| M0 Product truth         | One canonical status, architecture, roadmap and worker model              | All documentation                      |
+| M1 Online learning core  | Online learner loop, free A1 content, progress and reconnect sync         | Web, Android, API                      |
+| M2 Content factory/Admin | AI-assisted complete packs with QA, review, release and rollback          | Admin, workers, API                    |
+| M3 Account center        | Profile, settings, purchases, pack access, sync status and personal words | Web, Android, API                      |
+| M4 Commerce              | Platform-specific real purchase adapters and shared entitlements          | Web, Android, iOS contract, Admin, API |
+| M5 Native online         | Secure native gateway, Android online auth/sync and iOS preparation       | Infrastructure, API, mobile            |
+| M6 Private beta          | Reliability, observability, abuse, backup, support and limited cohort     | All                                    |
+| M7/M8 public platforms   | Android release followed by native iOS App Store release                  | Mobile, commerce, operations           |
+
+## Relationship to historical stages
+
+Historical stages 1–30 describe how the repository evolved and should not be deleted because they contain evidence and design decisions. They are not the active backlog. New work must reference an active milestone and workstream in `.ai/WORK_QUEUE.md` and `.ai/WORKSTREAMS.md`.
+
+## Current status
+
+M0 is in progress. Product capability truth is in `docs/PRODUCT_STATUS.md`; release exit criteria are in `ROADMAP.md`; documentation update rules are in `docs/DOCUMENTATION_GOVERNANCE.md`.

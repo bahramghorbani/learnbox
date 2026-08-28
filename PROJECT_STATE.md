@@ -1,86 +1,41 @@
-# LearnBox project state
+# LearnBox stable project state
 
-**Scope:** stable `main` only. This is a concise operational index, not a replacement for the
-product specification or storyboard.
+**Last reviewed:** 2026-08-28
 
-## Stable position
+## Product
 
-- **Storyboard:** [24 of 30 — Beta and load testing](./docs/storyboard/STATUS.md). Stage 23 exited
-  after the owner-controlled Preview invitation, OTP/session and private-media journey passed; the
-  storyboard must not be reset.
-- **Product authority:** [`docs/product/MASTER_SPEC.md`](./docs/product/MASTER_SPEC.md), approved
-  product decisions, architecture ADRs and the current storyboard.
-- **Application boundary:** learner product is `apps/website`; public marketing is
-  `apps/learnbox-website`. They share the monorepo but must not be rebuilt into one application.
-- **Bobo:** canonical approved identity and versioned assets are governed by
-  [`PDR-003`](./docs/product-decisions/PDR-003-BOBO-VISUAL-VOCABULARY.md). Do not alter the
-  appearance without explicit owner approval.
-- **Admin passkeys:** a single-owner WebAuthn boundary, passkey UI gate, session store and
-  activation runbook are implemented. The server and UI flags remain disabled by default; no
-  enrollment, deployment or production activation has occurred.
-- **Owner splash replacement:** migration `0011`, private image normalization, atomic current
-  pointer promotion, protected preview/upload routes, explicit-confirmation UI and activation
-  runbook are implemented. Learner delivery uses a separately gated same-origin byte stream with
-  the bundled launch image as fallback. Both server flags remain false; no production upload or
-  app-icon management is included.
-- **Closed-alpha invite + consent boundary:** an allowlist invite-code gate with consent
-  acknowledgment, keyed-hash persistence (migration 0010) and consent versioning is implemented
-  (merged PR #4). The owner approved consent version `v1` and a maximum group size of five on
-  2026-08-11, then approved private-message delivery and a two-person first cohort. On 2026-08-12
-  the owner-controlled Preview journey completed invite consent, SMS.ir OTP, secure-session
-  creation, three daily cards and authenticated private-image delivery. No code, phone or OTP is
-  recorded; every temporary Preview flag was returned to `false` and no participant invitation was
-  sent by the repository workflow.
-- **Start pack V2 media:** the 20 approved 1024px card images are versioned, stored privately in
-  `learnbox-media-private`, and receipt-attested. Session-guarded media delivery prefers V2 images
-  while retaining the verified V1 German audio. No public or participant release flag is enabled.
-- **Stage 24 local load foundation:** the learner app has a bounded concurrent synthetic runner,
-  restricted to loopback HTTP on port `3010` and public read-only routes. Smoke, baseline and
-  stopped-server recovery checks use aggregate-only evidence; Preview, Production, provider and
-  real-user traffic remain excluded. See
-  [`STAGE_24_LOAD_TESTING.md`](./docs/operations/STAGE_24_LOAD_TESTING.md).
-- **Native identity and authenticated transport:** the pure server-side identity/session contract exists through merged PR #100 (LB-DS-007 / NI-001), PostgreSQL atomic persistence through PR #104 (LB-DS-008 / NI-002), default-disabled native mobile auth HTTP routes through PR #107 (LB-DS-009 / NI-003), and the dormant provider-neutral native mobile auth client seam through PR #131 (LB-DS-016 / NI-008B). The native client provides injected request/verify/refresh/revoke transport, strict JSON/HTTPS boundaries, bounded timeout, typed generic failures and injected secure-session persistence, but remains uncomposed and disabled. No mobile auth composition, review transport activation, enabled flag, provider activation, real OTP delivery or Production behavior is active. The next native-auth UI design remains review-gated and does not authorize composition.
-- **Stage 24 learning-engine guardrail:** `pnpm test:engine-load` exercises 100,000 deterministic
-  review transitions and 10,000 retry-queue events. It is CPU-only and therefore is not evidence of
-  Flutter, Preview or Production capacity.
-- **Native mobile host:** generated Android and iOS hosts are versioned with the Android Gradle
-  wrapper, CI builds a non-release debug APK, and the local Android emulator completed an install
-  and visual smoke. The approved icon and a static three-second Flutter launch image are packaged
-  in the native host. A first physical low-end Android baseline was recorded on a Xiaomi M2006C3LG;
-  see [`STAGE_24_ANDROID_BASELINE.md`](./docs/operations/STAGE_24_ANDROID_BASELINE.md). The native
-  app now includes the first approved offline learning-loop slice: exactly three canonical Start
-  cards, active recall, four grades and a secure device-local pending-event queue. It also exposes
-  explicit offline playback for the six approved V2 German word-phrase and sentence clips through
-  fixed native allowlists; Android/iOS builds, emulator smoke and Xiaomi physical listening QA pass,
-  with no autoplay, network, provider or release path. A persistent offline learner shell now adds
-  truthful Today, the exact three canonical Words rows and Progress derived only from the local
-  pending count; emulator and physical visual smoke pass without identity or sync claims. A reviewed
-  provider-neutral foreground sync coordinator is present with a maximum batch of twenty, exact
-  acknowledgement validation and
-  no-data-loss failure behavior; production supplies only a `signedOut` identity state and disabled
-  transport, with no UI trigger or network client. It performs no upload, authentication or server
-  acknowledgement and is not a released mobile product.
+LearnBox is an online-first German vocabulary Leitner product for Persian-speaking learners. The free app includes approximately 350 complete A1 words. Premium vocabulary packs are purchased separately. Temporary connectivity loss is tolerated with a durable local queue and idempotent reconnect sync.
 
-## Release and safety posture
+## Boundaries
 
-- Beta/load-test preparation is private. Provider and learner-release seams remain disabled by
-  default unless a committed, owner-approved activation record says otherwise; Stage 24 does not
-  authorize a real beta cohort or production traffic.
-- Do not infer production readiness from a prototype, screenshot, healthy endpoint or successful
-  local test. Validate code publication, deployment, infrastructure state and the relevant user
-  flow separately.
-- The main quality command is `pnpm check`. Feature-boundary validation also includes
-  `pnpm build` and `node scripts/validate-migrations.mjs`; run relevant Flutter checks when mobile
-  code changes.
+- `learnboxapp.com` is an independent informational landing site only.
+- Learner Web is the current online learner surface and interim iOS route.
+- Android is a native learner surface; native iOS is a later App Store milestone.
+- Admin manages content, AI drafts, media QA, packs, catalog, commerce and operations.
+- API/backend owns identity, learning state, sync, content, purchases and entitlements.
 
-## Source hierarchy
+## Current implementation truth
 
-1. Product and security authority: `docs/product/`, approved PDRs and ADRs.
-2. Stable operational position: this file.
-3. Unmerged implementation state: [`CURRENT_WORK.md`](./CURRENT_WORK.md) plus live Git and PRs.
-4. Agent procedure and capability mapping: [`AI_BOOTSTRAP.md`](./AI_BOOTSTRAP.md) and `.ai/`.
+- Web and Flutter learner foundations include Today, Words, Progress, review scheduling, active recall, media/pronunciation foundations, recovery and local pending review events.
+- Admin foundations include protected authentication boundaries, content review workspace, pack readiness/release panel and owner-only splash replacement control.
+- Content Factory includes schemas, normalization, batch validation, duplicate foundations, review gates and media-plan boundaries; AI generation and complete Admin job UX remain incomplete.
+- Native mobile auth client, UI, fail-closed runtime and local lifecycle harness exist; real native online auth is blocked until a non-SSO gateway is available.
+- Commerce currently has provider-neutral foundations only. Real Web bank, Cafe Bazaar and Apple StoreKit adapters, server verification and entitlements are planned.
 
-## Owner boundary
+## Release position
 
-Proceed autonomously on ordinary reversible technical work. Ask the owner only for credentials,
-paid services, legal acceptance, destructive or irreversible actions, and production activation.
+The repository is a tested product foundation, not a released commercial application. M0 Product Truth is the current documentation/delivery reset. The next product milestones are M1 Online Learning Core, M2 AI Content Factory/Admin Operations, M3 Profile/Personal Vocabulary, M4 Commerce, M5 Native Online Mobile, M6 Closed Beta, M7 Android Release and M8 Native iOS Release. See `docs/PRODUCT_STATUS.md` and `ROADMAP.md`.
+
+## Canonical references
+
+- Product requirements: `docs/product/MASTER_SPEC.md`.
+- Product decisions remain traceable in `docs/product-decisions/`, including `PDR-003` for the Bobo/content visual decision.
+- Current capability truth: `docs/PRODUCT_STATUS.md`.
+- Delivery roadmap: `ROADMAP.md`.
+
+## Safety state
+
+- Production services, broad public cohort, live payment, native gateway and store release remain gated.
+- Preview SSO must not be bypassed with client secrets.
+- No real phone, OTP, receipt, token or provider secret belongs in repository evidence.
+- Main remains buildable through reviewed PRs.

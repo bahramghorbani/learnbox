@@ -9,11 +9,10 @@ When the owner says «پروژه را بخوان، به‌روز شو و وظا�
 
 1. Follow `AGENTS.md` and the complete `AI_BOOTSTRAP.md` order.
 2. Fetch and fast-forward from `origin/main`; inspect open PRs and `CURRENT_WORK.md`.
-3. Read this protocol and `.ai/WORK_QUEUE.md`.
-4. Select a non-overlapping task or work item, confirm its base is current, and create a dedicated
+3. Read this protocol, `docs/DOCUMENTATION_GOVERNANCE.md`, `.ai/WORKSTREAMS.md` and `.ai/WORK_QUEUE.md`.
+4. Select a non-overlapping milestone workstream or work item, confirm its base is current, and create a dedicated
    branch from the recorded base.
-5. Keep the scope explicit, use test-first development where practical, and run every relevant
-   documented check.
+5. Keep the scope explicit, use test-first development where practical, and run every relevant documented check.
 6. Update the task/report and canonical state documents accurately, commit, push and open a PR.
 7. An agent may mark the PR ready and merge it into `main` only after all required local and GitHub
    checks are green, its base is current, no open review finding remains, and the merge preserves a

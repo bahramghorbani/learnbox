@@ -1,34 +1,50 @@
-# Learning Content Factory architecture
+# Learning Content Factory
+
+The Learning Content Factory is a real product capability for creating complete, high-quality German vocabulary packs from an Admin request. It is AI-assisted, batch-oriented and human-controlled; it is not a chat demo and AI cannot publish directly.
+
+## Admin request
+
+A manager can use a form or natural language:
+
+> Create a complete B1 travel vocabulary pack with images, German pronunciation, examples and Persian translations. Do not repeat canonical words already used in the approved catalog.
+
+The system converts this into a reviewable specification containing level, topic, target count, item types, required media and duplicate policy before generation begins.
+
+## Pack output
+
+Each official card can contain German lemma/display form, word type, article/plural where relevant, Persian meaning, CEFR level, topic, German example, Persian translation, word audio, example audio, image and alt text. A canonical vocabulary item can belong to multiple packs without duplicating its review state or media.
+
+## Controlled job pipeline
+
+```text
+Admin request
+→ specification preview
+→ queued batch job
+→ AI vocabulary/translation/example draft
+→ normalization and exact/semantic duplicate scan
+→ schema, German, Persian and CEFR validation
+→ image and pronunciation generation/candidate attachment
+→ media and licensing/provenance QA
+→ human editorial review
+→ pack readiness
+→ versioned release or rejection
+```
+
+Jobs are batched so failures can be retried without regenerating a whole pack. Every card and asset retains provenance, version and validation state. AI success is never publication authority.
+
+## Duplicate policy
+
+- Exact duplicate: block automatically.
+- Cross-pack canonical duplicate: reuse the vocabulary item and attach pack membership.
+- Possible semantic duplicate: flag for editor decision.
+- Personal user word: check against canonical catalog and that user's collection; keep unknown personal words separate from official content.
 
 ## Boundaries
 
-- `packages/content-models/`: stable schemas, statuses and deterministic validation.
-- `services/content-factory/`: provider-neutral orchestration adapters and repeatable scripts.
-- `services/content-pipeline/`: current job-state and human-review gate foundation.
-- `apps/content-admin/`: review, rejection, publisher separation, audit and later configuration UI.
-- `content/packs/`: versioned manifests and reviewed source/asset relationships.
+- `packages/content-models/` owns stable schemas and deterministic validation.
+- `services/content-factory/` owns provider-neutral orchestration.
+- `services/content-pipeline/` owns job state and review gate.
+- `apps/admin/` owns the future operator workflow.
+- `content/packs/` owns versioned reviewed manifests and asset relationships.
 
-## Controlled pipeline
-
-`candidate → normalization → duplicate check → linguistic generation → schema validation → German validation → Persian validation → CEFR validation → visual concept → image prompt → image generation → Bobo/semantic visual QA → audio generation → audio QA → staging → app validation → approved versioned release`
-
-An item may be `rejected` at any gate. AI success only reaches an editorial queue; it cannot publish. Use stable content IDs in media paths, explicit batch versions and a release manifest to support audit, replacement and rollback.
-
-## Initial implementation boundary
-
-The repository now has the data contract, pack manifest and a provider-free batch validator in
-`@learnbox/content-factory`. It normalizes lemmas, finds within-batch duplicates and validates a
-batch only for human review; it cannot publish or call an external provider. Provider adapters,
-audio/image generators, content-admin release controls and bulk generation stay backlog tasks.
-Paid external services are inactive pending cost estimate and explicit owner approval.
-
-The content model now also records provider-free visual and audio QA. Publication requires the
-recorded semantic, Bobo, mobile-readability, text/watermark/clutter and audio checks to pass.
-
-`prepareContentBatchForReview` is the executable queue boundary. It accepts only a fully valid
-batch whose items are still `needs_review`, returns a publication-blocked review record and has no
-publish operation.
-
-`createPendingMediaPlan` creates three stable future asset names per review-queued card (image,
-word audio and sentence audio). It makes no provider request and labels every asset
-`not_requested` until the linguistic review gate passes.
+The repository has schema, normalization, within-batch duplicate and review-gate foundations. The complete Admin generation UX, cross-pack duplicate index, production AI/media adapters and release operations are milestone M2 work. No provider credential or paid AI call belongs in a client.

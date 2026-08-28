@@ -1,18 +1,46 @@
-# Monetization
+# LearnBox monetization
 
-LearnBox is one product with two stable entitlement tiers: `learnbox_start` (permanent free) and
-`learnbox_plus` (paid subscription). Plus has stable period IDs `monthly`, `three_month` and
-`annual`. Public names, prices, limits and feature presentation are configuration, never client
-constants. The default tier and paywall configuration lives in
-[`config/product-experience.json`](../../config/product-experience.json).
+## Model
 
-Start provides real learning value before any serious offer: controlled A1 content, 10–15
-recommended new cards daily, unlimited due reviews and retained learned free content. A payment
-state must never block due reviews or remove learned content. The offer is supportive, does not
-appear aggressively on day one and excludes fear, guilt, countdowns, streak threats and false
-scarcity.
+LearnBox is a free-to-download app with a permanent free A1 starter collection of approximately 350 words. Premium products are complete vocabulary packs sold as one-time purchases initially. Subscription is deferred until pack commerce and retention are proven.
 
-Future provider-neutral subscriptions and one-time packs use Cafe Bazaar and direct Iranian PWA
-payment adapters. Pricing, legal terms, provider contracts, and production billing require owner approval.
+## Platform payment adapters
 
-The executable foundation keeps LearnBox products separate from provider identifiers and resolves access only after server verification. No final price is committed to the repository. Before a real provider is connected, the owner must approve its account, terms, legal requirements and production configuration.
+| Surface | Payment                          | Verification                                        | Entitlement             |
+| ------- | -------------------------------- | --------------------------------------------------- | ----------------------- |
+| Web App | Direct bank gateway              | Server callback/status verification and idempotency | Shared pack entitlement |
+| Android | Cafe Bazaar in-app billing       | Server-side purchase-token verification             | Shared pack entitlement |
+| iOS     | Apple In-App Purchase / StoreKit | Server-side transaction/receipt verification        | Shared pack entitlement |
+
+The same pack can have distinct platform offers, prices, currencies, taxes and provider product IDs. The content and entitlement key remain canonical.
+
+## Data boundaries
+
+```text
+Pack
+└── canonical educational content
+
+PackOffer
+└── platform, provider, product ID, currency, amount, active window
+
+Purchase
+└── provider transaction, amount, status, verification evidence
+
+Entitlement
+└── user + pack access, source purchase, active/revoked state
+```
+
+The client never grants access based only on a local purchase result. Refunds, chargebacks and revocations update entitlement through a verified server process.
+
+## Admin requirements
+
+Admin must manage catalog, pack availability, platform offers, pricing, product IDs, promotions, purchase status, entitlement repair and audit history. Price changes are versioned; historic purchases retain their original transaction data.
+
+## Rollout
+
+1. Implement provider-neutral catalog and entitlement contracts.
+2. Test all providers in their approved sandbox/test environments.
+3. Verify one controlled real transaction per enabled platform.
+4. Enable broader sales only after support, refund, reconciliation and rollback procedures pass.
+
+No price, provider credential or production payment activation belongs in source control.

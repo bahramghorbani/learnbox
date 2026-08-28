@@ -27,5 +27,5 @@
   task navigation and read only task-relevant files and direct references.
 - Prefer `git status`, `git diff --name-only`, `rg` and focused tests over broad repository reads
   and repeated full checks.
-- Use the brief's model-routing and minimal-delegation policy. Never trade away security, release
-  gates or required verification merely to reduce token use.
+- Keep the product truth current through [`docs/PRODUCT_STATUS.md`](./docs/PRODUCT_STATUS.md), [`PRODUCT.md`](./PRODUCT.md), [`ROADMAP.md`](./ROADMAP.md) and [`docs/DOCUMENTATION_GOVERNANCE.md`](./docs/DOCUMENTATION_GOVERNANCE.md). A feature PR must update its capability/status row or explain why no update is needed.
+- Group normal work by milestone and workstream using [`.ai/WORKSTREAMS.md`](./.ai/WORKSTREAMS.md); do not create serial micro-tasks when a coherent deliverable can be implemented and reviewed together. Parallelize only disjoint paths with resolved contracts.

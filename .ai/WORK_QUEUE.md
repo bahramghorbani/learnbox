@@ -5,7 +5,12 @@ start. Historical tasks remain for traceability and must not be duplicated.
 
 ## Active work registry
 
-- No unfinished implementation task is currently authorized. LB-DS-020 Preview auth runtime composition was reviewed and merged through PR #142; Preview server flags remain disabled pending a separate owner-controlled device verification run.
+- **M0 — Product truth and delivery reset:** in progress on the documentation PR branch. The outcome is a canonical product inventory, online-first architecture, platform-specific commerce model, milestone roadmap and documentation governance.
+- **M0-01 — Product truth documentation:** in progress. See `docs/PRODUCT_STATUS.md`, `PRODUCT.md`, `docs/product/FEATURE_CATALOG.md`, `docs/product/PRD.md`, `docs/product/MONETIZATION.md`, `ROADMAP.md` and `docs/architecture/SYSTEM_CONTEXT.md`.
+- **M0-02 — Documentation and worker governance:** in progress. See `docs/DOCUMENTATION_GOVERNANCE.md`, `.ai/WORKSTREAMS.md`, `AGENTS.md`, `AI_BOOTSTRAP.md`, `.ai/WORKER_PROTOCOL.md` and `CURRENT_WORK.md`.
+- **M0-03 — Documentation validator:** planned after M0-01 and M0-02 merge. It must be a separate workstream and cannot be treated as complete by documentation alone.
+
+The historical LB-DS and NI records below remain for traceability. They are not authorization to duplicate or reopen completed work.
 
 ## LB-DS-020
 
