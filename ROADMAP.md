@@ -22,7 +22,16 @@ The landing site at `learnboxapp.com` is informational only and remains independ
 | M7 Android public release      | Android commercial release                 | Cafe Bazaar listing, signing, store compliance, support, production release and rollback                                                                 | approved production release with monitoring and rollback evidence                       |                                         3–5 weeks |
 | M8 Native iOS release          | iOS App Store product                      | native iOS shell, StoreKit, account/entitlement handling, privacy/deletion, device QA, App Store submission                                              | App Store review-ready build and operational support                                    |                                4–7 weeks after M4 |
 
-## Suggested sequencing
+## Design gates
+
+Visual design is a delivery track, not polish after engineering. It runs alongside M0–M3 and gates implementation of new surfaces:
+
+- **D0 Visual language:** tokens, typography, RTL/LTR rules, iconography, Bobo/brand usage and responsive grid.
+- **D1 Learner UI kit:** Splash, Onboarding, Today, Review, Words, Progress, Profile and Settings with loading, empty, error, offline and sync states.
+- **D2 Commerce/Admin UI:** Store, Pack detail, offers, checkout result, Purchases, My Packs and Content Factory/review.
+- **D3 Visual verification:** target-size screenshots, Web responsive checks, accessibility, reduced motion and implementation parity.
+
+The current evidence and readiness matrix live in [`docs/design/DESIGN_STATUS.md`](docs/design/DESIGN_STATUS.md). Existing concept images may be shown for review, but a concept is not a release approval. A new surface may enter production implementation only after its design states, copy, accessibility behavior and acceptance criteria are recorded.
 
 ```text
 M0

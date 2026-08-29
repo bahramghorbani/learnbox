@@ -99,6 +99,10 @@ LearnBox is an online-first German vocabulary Leitner application for Persian-sp
 | Public production              | Not enabled        | No production activation without owner-approved release gate                         |
 | Store release                  | Planned            | Android/Cafe Bazaar first; native iOS/App Store later                                |
 
+## Design and visual readiness
+
+The current design direction is credible and reviewed, but the complete application visual system is not yet production-ready. See [`docs/design/DESIGN_STATUS.md`](design/DESIGN_STATUS.md) for the evidence, readiness matrix and design gates. Existing concept screens may be shown as references; they must not be represented as completed product surfaces.
+
 ## Current release position
 
 The repository is a tested foundation, not a finished commercial application. The next release target is a real closed alpha of the online learner web product plus operational admin/content tooling. Android remains a real learner app with offline tolerance, not an offline-only product. Native iOS is a later store release. Premium commerce is part of the product plan and must be designed now, but provider activation remains a separate controlled milestone.
