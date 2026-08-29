@@ -49,7 +49,7 @@ The mobile theme currently encodes the core tokens in `apps/mobile/lib/ui/learnb
 
 Design is a first-class workstream in M0/M1 and must not be improvised during implementation:
 
-1. **D0 — Consolidate visual language:** approve the token set, typography, Bobo/brand usage, icon rules and responsive grid.
+1. **D0 — Consolidate visual language:** approve the token set, typography, Bobo/brand usage, icon rules and responsive grid. Contract draft: [`D0_VISUAL_LANGUAGE.md`](./D0_VISUAL_LANGUAGE.md) (ready for review).
 2. **D1 — Complete learner UI kit:** finalize Splash, Onboarding, Today, Review, Words, Progress, Profile and Settings, including loading, empty, error, offline and sync states.
 3. **D2 — Complete commerce/admin surfaces:** finalize Store, Pack detail, offer comparison, checkout result, Purchases, My Packs and Admin Content Factory/review.
 4. **D3 — Visual verification:** review mobile screenshots at target sizes, Web responsive states, RTL/LTR, accessibility, reduced motion and implementation parity.
