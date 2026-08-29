@@ -34,7 +34,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - uses: subosito/flutter-action@v2
-        with: { channel: stable }
+        with: { channel: stable, flutter-version: 3.44.9 }
       - working-directory: apps/mobile
         run: dart format --output=none --set-exit-if-changed lib test && flutter pub get && flutter analyze && flutter test && flutter build apk --debug
   production-stack:
