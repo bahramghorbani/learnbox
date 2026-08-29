@@ -11,6 +11,7 @@ start. Historical tasks remain for traceability and must not be duplicated.
 - **M1 — Online Learning Core:** **slice-1 QA complete, milestone remains partial/not production-ready**. M1-B Web and M1-C Mobile Today slices are merged with truthful local-only boundaries; server wiring and full learning loop remain queued.
 - **M1-A — Online learning contract audit:** accepted and merged in PR #151. Contract: `docs/architecture/M1_ONLINE_LEARNING_CONTRACT.md`.
 - **M1-D slice 1 — Learner state snapshot:** accepted and merged in PR #152. Implementation: `GET /api/learner/state`, fail-closed and not Web-wired yet.
+- **M1-B server-wiring contract — Web learner state:** accepted design (ADR 0012). Web HttpOnly learner cookie → Next.js `GET /api/learner/state` route → server-side identity mapping → existing `LearnerStateService`/repository is approved; route implementation, Web session → `users.id` mapping and Start Pack seed/release remain separate owner/review-gated decisions.
 - **M1-B slice 1 — Web Today truth label:** accepted and merged in PR #156; server wiring blocked by route/session/content-id gaps documented in `apps/website/README-M1B-WEB-SLICE1.md`.
 - **M1-C slice 1 — Mobile Today states:** accepted and merged in PR #155; local queue chip is truthful, sync coordinator remains dormant.
 - **M1-Q — Independent QA:** accepted and merged in PR #157; report: `.ai/qa-reports/M1-Q-INDEPENDENT-QA.md`.
