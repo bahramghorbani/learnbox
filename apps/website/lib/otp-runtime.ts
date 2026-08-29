@@ -9,6 +9,7 @@ import { requireVerifiedDatabaseTls } from '../../api/dist/database/migration-ru
 
 import type { OtpHttpDependencies } from './otp-http';
 import { createLearnerSession } from './server-session';
+import { PostgresWebLearnerIdentityStore } from './web-identity-runtime';
 
 type OtpRuntimeEnvironment = Record<string, string | undefined>;
 
@@ -62,6 +63,7 @@ export function otpHttpDependenciesFromEnvironment(
 
   const pool = otpPool(config.databaseUrl);
   const store = new PostgresOtpChallengeStore(pool);
+  const identityStore = new PostgresWebLearnerIdentityStore(pool, config.otpSecret);
   const requestService = new OtpRequestService({
     store,
     delivery: new SmsIrVerificationClient(config.sms),
@@ -73,6 +75,7 @@ export function otpHttpDependenciesFromEnvironment(
     hashClientIp: (clientIp) => hashOtpClientIp(config.otpSecret, clientIp),
     requestChallenge: (input) => requestService.request(input),
     verifyChallenge: (input) => verificationService.verify(input),
+    resolveSessionSubject: (input) => identityStore.resolveUserId(input),
     createSession: (subject) => createLearnerSession(subject),
   };
 }
