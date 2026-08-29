@@ -4,7 +4,7 @@ import { act, createElement, Fragment, type FunctionComponent } from 'react';
 import { createRoot } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { LearnerSyncState } from '../app/learner-sync-state';
+import type { TodayScreenProps } from '../app/components/TodayScreen';
 
 describe('Today sync truth label (D1 §5 sync row)', () => {
   let rendered: Rendered | undefined;
@@ -47,8 +47,9 @@ async function renderToday(): Promise<Rendered> {
   const { TodayScreen } = await import('../app/components/TodayScreen.jsx');
   await act(async () => {
     root.render(
-      createElement(TodayScreen as FunctionComponent<{ syncState?: LearnerSyncState }>, {
+      createElement(TodayScreen as FunctionComponent<TodayScreenProps>, {
         syncState: 'local-only',
+        reviewCount: 3,
       }),
     );
   });

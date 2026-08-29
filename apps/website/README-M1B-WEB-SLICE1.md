@@ -58,3 +58,14 @@ label exists and is tested so the future wiring is a one-line switch plus a fetc
   be untruthful UI for a route that does not exist. They are D1 states for the future
   server-wired slice (see `docs/design/D1_LEARNER_UI_KIT.md` §5).
 - Removed now-unused `defaultSuggestedNewWords` import from `LearnerHome`.
+
+## Follow-up hardening (M-L2 / M-L3, merged with this slice's tracking)
+
+- M-L2: Today summary figures render Persian digits (`app/persian-digits.ts`,
+  `toPersianDigits`), matching mobile `_persianDigits` parity (D0 §3 tabular numerals).
+- M-L3: Today shows a pending-sync chip (`sync-status` + `today-chip` styles) with count
+  only when the device-local queue read succeeds and returns > 0; empty queue and failed
+  read render no chip (fail-closed). Copy never claims server acknowledgement
+  («در انتظار همگام‌سازی» = awaiting sync, not synced); `syncState="local-only"` is
+  preserved. Counts come from the same `learnbox:review-sync:v1:local-prototype` queue
+  read that already drives the completion screen (`loadSyncQueue`).

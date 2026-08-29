@@ -44,7 +44,7 @@ describe('learner core flows', () => {
 
     // 3. Today screen with the three-card Start session.
     expect(rendered.text()).toContain('مرورهای امروز');
-    expect(rendered.text()).toContain('3 کارت برای شروع');
+    expect(rendered.text()).toContain('۳ کارت برای شروع');
 
     // 4. Start review → first card front.
     await rendered.startReview();
