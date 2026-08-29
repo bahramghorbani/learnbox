@@ -50,16 +50,17 @@ Independently checks acceptance criteria, user journey, security boundaries, acc
 
 ## Workstream map
 
-| Workstream               | Primary role    | Can overlap                                     | Must wait for                          |
-| ------------------------ | --------------- | ----------------------------------------------- | -------------------------------------- |
-| M0 product truth         | W1 + supervisor | none initially                                  | owner scope decisions                  |
-| M1 online learning core  | W2 + W6         | M2 content contracts, M3 UI if contracts stable | M0                                     |
-| M2 content factory/admin | W4 + W5         | M1 only on stable contracts                     | M0, content schema decisions           |
-| M3 profile/account       | W2 + W3         | M1/M2 on disjoint paths                         | account/status contracts               |
-| M4 commerce              | W5 + W6         | limited                                         | pack/catalog and entitlement contracts |
-| M5 native online         | W3 + W6 + W7    | none with payment activation                    | secure server gateway                  |
-| M6 beta hardening        | W7 + W8         | content cadence                                 | M1–M5 release criteria                 |
-| M7/M8 store release      | W3/W5/W7/W8     | platform-specific work may overlap              | beta evidence and owner approval       |
+| Workstream               | Primary role               | Can overlap                                         | Must wait for                          |
+| ------------------------ | -------------------------- | --------------------------------------------------- | -------------------------------------- |
+| D0 visual language       | W1 + design-capable worker | M1 contract audit                                   | M0                                     |
+| D1 learner UI kit        | design-capable worker + W8 | M1 contract audit                                   | D0                                     |
+| M1 online learning core  | W2 + W6                    | D0/D1 design, M2 content contracts, M3 UI if stable | M0                                     |
+| M2 content factory/admin | W4 + W5                    | M1 only on stable contracts                         | M0, content schema decisions           |
+| M3 profile/account       | W2 + W3                    | M1/M2 on disjoint paths                             | account/status contracts               |
+| M4 commerce              | W5 + W6                    | limited                                             | pack/catalog and entitlement contracts |
+| M5 native online         | W3 + W6 + W7               | none with payment activation                        | secure server gateway                  |
+| M6 beta hardening        | W7 + W8                    | content cadence                                     | M1–M5 release criteria                 |
+| M7/M8 store release      | W3/W5/W7/W8                | platform-specific work may overlap                  | beta evidence and owner approval       |
 
 ## Work item contract
 
