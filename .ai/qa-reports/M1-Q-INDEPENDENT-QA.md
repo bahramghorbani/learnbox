@@ -15,21 +15,21 @@ truth labels + pending chip, 8 widget tests, worker report LB-DS-021.
 
 ## Checks run (real commands, actual output)
 
-| Check | Command | Result |
-| --- | --- | --- |
-| Web full test suite | `cd apps/website && pnpm test` | 26 files / 146 tests passed |
-| Web typecheck | `cd apps/website && pnpm typecheck` | clean (learning-engine + billing-core + api tsc + tsc --noEmit) |
-| Web eslint (slice files) | `npx eslint apps/website/app/components/TodayScreen.tsx apps/website/app/learner-sync-state.ts apps/website/test/learner-today-sync.test.tsx apps/website/test/learner-sync-state.test.ts --max-warnings=0` | clean |
-| Web prettier (slice files) | `npx prettier --check ...7 slice files` | clean |
-| Root build | `pnpm build` | green (Next build Done) |
-| Migration validation | `node scripts/validate-migrations.mjs` | 13 migrations validated |
-| `git diff --check` | — | clean |
-| Flutter full suite | `cd apps/mobile && flutter test` | 143/143 passed |
-| Flutter focused (new slice tests) | `flutter test test/today_screen_states_test.dart` | 8/8 passed |
-| Flutter loop+parity | `flutter test test/mobile_learning_loop_test.dart test/mobile_visual_parity_test.dart` | 28 tests passed |
-| Flutter analyze | `flutter analyze` | No issues found |
-| Dart format (check-only) | `dart format --output=none --set-exit-if-changed lib test` | **FAILED — 2 files changed** (see finding M-L1) |
-| CI on merged commits | `gh api .../commits/{75ee7be,5185e41}/check-runs` | mobile / quality / production-stack / secrets all `success` |
+| Check                             | Command                                                                                                                                                                                                     | Result                                                          |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| Web full test suite               | `cd apps/website && pnpm test`                                                                                                                                                                              | 26 files / 146 tests passed                                     |
+| Web typecheck                     | `cd apps/website && pnpm typecheck`                                                                                                                                                                         | clean (learning-engine + billing-core + api tsc + tsc --noEmit) |
+| Web eslint (slice files)          | `npx eslint apps/website/app/components/TodayScreen.tsx apps/website/app/learner-sync-state.ts apps/website/test/learner-today-sync.test.tsx apps/website/test/learner-sync-state.test.ts --max-warnings=0` | clean                                                           |
+| Web prettier (slice files)        | `npx prettier --check ...7 slice files`                                                                                                                                                                     | clean                                                           |
+| Root build                        | `pnpm build`                                                                                                                                                                                                | green (Next build Done)                                         |
+| Migration validation              | `node scripts/validate-migrations.mjs`                                                                                                                                                                      | 13 migrations validated                                         |
+| `git diff --check`                | —                                                                                                                                                                                                           | clean                                                           |
+| Flutter full suite                | `cd apps/mobile && flutter test`                                                                                                                                                                            | 143/143 passed                                                  |
+| Flutter focused (new slice tests) | `flutter test test/today_screen_states_test.dart`                                                                                                                                                           | 8/8 passed                                                      |
+| Flutter loop+parity               | `flutter test test/mobile_learning_loop_test.dart test/mobile_visual_parity_test.dart`                                                                                                                      | 28 tests passed                                                 |
+| Flutter analyze                   | `flutter analyze`                                                                                                                                                                                           | No issues found                                                 |
+| Dart format (check-only)          | `dart format --output=none --set-exit-if-changed lib test`                                                                                                                                                  | **FAILED — 2 files changed** (see finding M-L1)                 |
+| CI on merged commits              | `gh api .../commits/{75ee7be,5185e41}/check-runs`                                                                                                                                                           | mobile / quality / production-stack / secrets all `success`     |
 
 ## Live Web exercise (local, no secrets, no server)
 
@@ -63,18 +63,21 @@ route handlers, never imported by the learner home path; `DATABASE_URL` points a
 ## Findings
 
 ### Blocker
+
 None.
 
 ### High
+
 None.
 
 ### Medium
+
 None.
 
 ### Low
 
 - **M-L1 (both slices, verified): Dart formatting drift.** `dart format
-  --output=none --set-exit-if-changed lib test` reports 2 changed files at baseline:
+--output=none --set-exit-if-changed lib test` reports 2 changed files at baseline:
   `apps/mobile/lib/features/review/today_screen.dart` (missing trailing newline at EOF)
   and `apps/mobile/test/today_screen_states_test.dart` (one line-wrap difference).
   Worker report LB-DS-021 claims «dart format … clean»; CI `mobile` job does NOT run
@@ -101,23 +104,24 @@ None.
 
 ## Readiness matrix (M1-B Web + M1-C Mobile slice 1)
 
-| Criterion | Web | Mobile | Verdict |
-| --- | --- | --- | --- |
-| Truthful local/server labels | ✅ `local-only` label, no server claim | ✅ same + pending chip | Pass |
-| No placeholder numbers presented as real | ✅ counts = device-local, labelled | ✅ same | Pass |
-| Fail-closed defaults | ✅ auth mode default `local-prototype`; no API route added | ✅ queue read failure → no chip; `DisabledReviewSyncTransport` untouched | Pass |
-| RTL/LTR | ✅ `dir=rtl lang=fa`; German `lang="de"` | ✅ Persian RTL, `_persianDigits` | Pass |
-| Accessibility semantics | ✅ `role="status"`, summary aria-label, Bobo alt text | ✅ Semantics labels on loading/pending chip, ExcludeSemantics on Bobo | Pass |
-| Contrast AA | ✅ muted-on-canvas 4.58:1, primary-on-white 4.33:1 (D0 doc claims 4.6 — measured 4.33, AA large/UI ok, borderline for small text) | Dart tokens match D0 | Pass w/ note |
-| 390×844 no overflow | ✅ measured | ✅ existing parity tests | Pass |
-| Tests green | ✅ 146 web + 8 new | ✅ 143 flutter + 8 new | Pass |
-| CI on merged commits | ✅ quality/mobile/production-stack/secrets | ✅ same | Pass |
-| Server-wiring blocker documented | ✅ README-M1B-WEB-SLICE1 + PR body; verified: no `apps/website/app/api/learner/state` route exists | n/a (contract M1-D) | Pass |
+| Criterion                                | Web                                                                                                                               | Mobile                                                                   | Verdict      |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ | ------------ |
+| Truthful local/server labels             | ✅ `local-only` label, no server claim                                                                                            | ✅ same + pending chip                                                   | Pass         |
+| No placeholder numbers presented as real | ✅ counts = device-local, labelled                                                                                                | ✅ same                                                                  | Pass         |
+| Fail-closed defaults                     | ✅ auth mode default `local-prototype`; no API route added                                                                        | ✅ queue read failure → no chip; `DisabledReviewSyncTransport` untouched | Pass         |
+| RTL/LTR                                  | ✅ `dir=rtl lang=fa`; German `lang="de"`                                                                                          | ✅ Persian RTL, `_persianDigits`                                         | Pass         |
+| Accessibility semantics                  | ✅ `role="status"`, summary aria-label, Bobo alt text                                                                             | ✅ Semantics labels on loading/pending chip, ExcludeSemantics on Bobo    | Pass         |
+| Contrast AA                              | ✅ muted-on-canvas 4.58:1, primary-on-white 4.33:1 (D0 doc claims 4.6 — measured 4.33, AA large/UI ok, borderline for small text) | Dart tokens match D0                                                     | Pass w/ note |
+| 390×844 no overflow                      | ✅ measured                                                                                                                       | ✅ existing parity tests                                                 | Pass         |
+| Tests green                              | ✅ 146 web + 8 new                                                                                                                | ✅ 143 flutter + 8 new                                                   | Pass         |
+| CI on merged commits                     | ✅ quality/mobile/production-stack/secrets                                                                                        | ✅ same                                                                  | Pass         |
+| Server-wiring blocker documented         | ✅ README-M1B-WEB-SLICE1 + PR body; verified: no `apps/website/app/api/learner/state` route exists                                | n/a (contract M1-D)                                                      | Pass         |
 
 ## Verified blocker claim (Web slice)
 
 M1-B README states `GET /api/learner/state` is not exposed by any Next.js route and
 requires the mobile-session Bearer token. Verified:
+
 - `apps/website/app/api/` contains only auth/development-session/launch/local-preview-media/
   owner/private-media/reviews — no `learner/state` route.
 - The snapshot service lives in `apps/api/src/learner-state/` (NestJS), token audience
@@ -129,6 +133,7 @@ requires the mobile-session Bearer token. Verified:
 ## Release recommendation
 
 **Not production-ready (both slices are bounded foundation, as documented).**
+
 - Web Today remains device-local prototype; server wiring blocked on: (a) Web route +
   learner-cookie boundary for the snapshot endpoint, (b) Start-pack ↔ contentId mapping
   contract (M1-A open item), (c) D1 loading/empty/error/offline/sync states for the
