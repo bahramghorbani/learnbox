@@ -21,12 +21,18 @@ type VerifyChallengeInput = {
   purpose: OtpPurpose;
 };
 
+type ResolveSessionSubjectInput = {
+  phoneE164: string;
+  phoneHash: string;
+};
+
 type VerifyChallengeOutcome = { status: 'verified'; phoneHash: string } | { status: 'rejected' };
 
 export type OtpHttpDependencies = {
   hashClientIp(clientIp: string): string;
   requestChallenge(input: RequestChallengeInput): Promise<RequestChallengeOutcome>;
   verifyChallenge(input: VerifyChallengeInput): Promise<VerifyChallengeOutcome>;
+  resolveSessionSubject(input: ResolveSessionSubjectInput): Promise<string | null>;
   createSession(subject: string): string;
 };
 
@@ -78,8 +84,9 @@ export async function handleOtpVerification(
 
   const body = await readJsonObject(request);
   const challengeId = typeof body?.challengeId === 'string' ? body.challengeId : '';
+  const phoneE164 = normalizeIranianPhone(body?.phone);
   const code = normalizeDigits(body?.code);
-  if (!/^[a-zA-Z0-9_-]{16,128}$/.test(challengeId) || !/^\d{5}$/.test(code)) {
+  if (!phoneE164 || !/^[a-zA-Z0-9_-]{16,128}$/.test(challengeId) || !/^\d{5}$/.test(code)) {
     return jsonResponse({ error: 'verification_failed' }, 400);
   }
 
@@ -89,7 +96,13 @@ export async function handleOtpVerification(
       return jsonResponse({ error: 'verification_failed' }, 400);
     }
 
-    const cookie = serializeSessionCookie(dependencies.createSession(outcome.phoneHash), request);
+    const subject = await dependencies.resolveSessionSubject({
+      phoneE164,
+      phoneHash: outcome.phoneHash,
+    });
+    if (!subject) return jsonResponse({ error: 'verification_failed' }, 400);
+
+    const cookie = serializeSessionCookie(dependencies.createSession(subject), request);
     return new Response(null, {
       status: 204,
       headers: { 'cache-control': 'no-store', 'set-cookie': cookie },

@@ -14,6 +14,7 @@ function dependencies(overrides: Partial<OtpHttpDependencies> = {}): OtpHttpDepe
       resendAvailableAt: new Date('2026-08-06T10:01:00Z'),
     }),
     verifyChallenge: async () => ({ status: 'verified', phoneHash: 'opaque-phone-hash' }),
+    resolveSessionSubject: async () => '2efaf676-84e4-45b1-8a13-50735a8df2c8',
     createSession: () => 'signed-session-token',
     ...overrides,
   };
@@ -81,21 +82,39 @@ describe('handleOtpRequest', () => {
 });
 
 describe('handleOtpVerification', () => {
-  it('issues the signed HttpOnly session only after a consumed valid challenge', async () => {
+  it('issues the signed HttpOnly session only after resolving the canonical user id', async () => {
+    let sessionSubject = '';
     const response = await handleOtpVerification(
-      post('/api/auth/otp/verify', { challengeId, code: '۱۲۳۴۵' }),
-      dependencies(),
+      post('/api/auth/otp/verify', { challengeId, code: '۱۲۳۴۵', phone: '۰۹۱۲۱۲۳۴۵۶۷' }),
+      dependencies({
+        createSession: (subject) => {
+          sessionSubject = subject;
+          return 'signed-session-token';
+        },
+      }),
     );
 
     expect(response.status).toBe(204);
-    expect(response.headers.get('set-cookie')).toBe(
-      'learnbox_alpha_session=signed-session-token; Path=/; Max-Age=28800; HttpOnly; Secure; SameSite=Lax',
+    expect(sessionSubject).toBe('2efaf676-84e4-45b1-8a13-50735a8df2c8');
+    expect(sessionSubject).not.toBe('opaque-phone-hash');
+    expect(response.headers.get('set-cookie')).toContain(
+      'learnbox_alpha_session=signed-session-token',
     );
+  });
+
+  it('returns no cookie when the verified phone cannot resolve a canonical user', async () => {
+    const response = await handleOtpVerification(
+      post('/api/auth/otp/verify', { challengeId, code: '۱۲۳۴۵', phone: '۰۹۱۲۱۲۳۴۵۶۷' }),
+      dependencies({ resolveSessionSubject: async () => null }),
+    );
+
+    expect(response.status).toBe(400);
+    expect(response.headers.has('set-cookie')).toBe(false);
   });
 
   it('returns a generic response without a cookie for a rejected challenge', async () => {
     const response = await handleOtpVerification(
-      post('/api/auth/otp/verify', { challengeId, code: '12345' }),
+      post('/api/auth/otp/verify', { challengeId, code: '12345', phone: '09121234567' }),
       dependencies({ verifyChallenge: async () => ({ status: 'rejected' }) }),
     );
 

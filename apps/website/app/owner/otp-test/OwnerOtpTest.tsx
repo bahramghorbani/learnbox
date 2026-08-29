@@ -85,7 +85,7 @@ export function OwnerOtpTest() {
         fetch('/api/auth/otp/verify', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ challengeId, code: normalizedCode }),
+          body: JSON.stringify({ challengeId, code: normalizedCode, phone }),
         }),
       );
       if (verification.outcome === 'success') {
