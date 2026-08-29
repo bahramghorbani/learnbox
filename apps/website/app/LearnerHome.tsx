@@ -540,7 +540,11 @@ export function LearnerHome({
 
   return (
     <>
-      <TodayScreen reviewCount={remainingTodayReviews} syncState="local-only" />
+      <TodayScreen
+        reviewCount={remainingTodayReviews}
+        syncState="local-only"
+        pendingReviewCount={pendingReviewCount}
+      />
       <button className="primary-button" onClick={begin}>
         {resumableSessionIndex === null ? 'شروع مرور' : 'ادامهٔ مرور'}{' '}
         <span aria-hidden="true">←</span>
