@@ -146,8 +146,8 @@ Future<void> _pumpApp(
     LearnBoxApp(
       key: UniqueKey(),
       startPackRepository: startPackRepository ?? InMemoryStartPackRepository(),
-      reviewQueue: reviewQueue ??
-          ReviewQueue(store: ControlledReviewQueueStore()),
+      reviewQueue:
+          reviewQueue ?? ReviewQueue(store: ControlledReviewQueueStore()),
       splashDuration: Duration.zero,
     ),
   );
