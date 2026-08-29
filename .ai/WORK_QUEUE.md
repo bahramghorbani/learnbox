@@ -8,9 +8,13 @@ start. Historical tasks remain for traceability and must not be duplicated.
 - **M0 — Product truth and delivery reset:** accepted and merged in PR #146.
 - **D0 — Visual language:** accepted and merged in PR #150. Contract: `docs/design/D0_VISUAL_LANGUAGE.md`.
 - **D1 — Learner UI kit:** accepted and merged in PR #153. State board: `docs/design/D1_LEARNER_UI_KIT.md`.
-- **M1 — Online Learning Core:** **active**. Web and Mobile implementation may now start only against D0/D1 and M1-A contracts.
+- **M1 — Online Learning Core:** **slice-1 QA complete, milestone remains partial/not production-ready**. M1-B Web and M1-C Mobile Today slices are merged with truthful local-only boundaries; server wiring and full learning loop remain queued.
 - **M1-A — Online learning contract audit:** accepted and merged in PR #151. Contract: `docs/architecture/M1_ONLINE_LEARNING_CONTRACT.md`.
 - **M1-D slice 1 — Learner state snapshot:** accepted and merged in PR #152. Implementation: `GET /api/learner/state`, fail-closed and not Web-wired yet.
+- **M1-B slice 1 — Web Today truth label:** accepted and merged in PR #156; server wiring blocked by route/session/content-id gaps documented in `apps/website/README-M1B-WEB-SLICE1.md`.
+- **M1-C slice 1 — Mobile Today states:** accepted and merged in PR #155; local queue chip is truthful, sync coordinator remains dormant.
+- **M1-Q — Independent QA:** accepted and merged in PR #157; report: `.ai/qa-reports/M1-Q-INDEPENDENT-QA.md`.
+- **Next:** resolve M-L1 formatting gate, M-L2 Web numeral parity, M-L3 Web pending-sync parity, then design and implement the server-wired learner slice.
 
 ### Active grouped workstreams
 
@@ -29,8 +33,8 @@ start. Historical tasks remain for traceability and must not be duplicated.
 - [x] D0 contract is reviewed and linked from `docs/design/DESIGN_STATUS.md`.
 - [x] D1 surface/state boards exist for learner screens entering implementation.
 - [x] M1-A records API/domain contracts and conflict/idempotency rules.
-- [ ] M1-B Web and M1-C Mobile have separate worktrees and disjoint allowed paths.
-- [ ] M1-Q independent QA evidence is complete.
+- [x] M1-B Web and M1-C Mobile have separate worktrees and disjoint allowed paths.
+- [x] M1-Q independent QA evidence is complete (`.ai/qa-reports/M1-Q-INDEPENDENT-QA.md`).
 - [x] Safety boundary remains: no production, payment, provider credential, real OTP or server activation is implied by this queue.
 
 The historical LB-DS and NI records below remain for traceability. They are not authorization to duplicate or reopen completed work.
