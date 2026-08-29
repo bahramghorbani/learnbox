@@ -308,7 +308,7 @@ void main() {
 
       expect(find.text('ذخیره انجام نشد؛ دوباره تلاش کن.'), findsOneWidget);
       expect(find.text('das Haus'), findsOneWidget);
-      expect(calls.map((call) => call.method), ['read', 'write']);
+      expect(calls.map((call) => call.method), ['read', 'read', 'write']);
       final writeArguments = calls.last.arguments as Map<Object?, Object?>;
       expect(writeArguments['key'], 'learnbox.reviewQueue.v1');
       expect(writeArguments['options'], containsPair('resetOnError', 'false'));

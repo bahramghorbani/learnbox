@@ -202,8 +202,10 @@ void main() {
     expect(
         find.text('هنوز پاسخی در این دستگاه ذخیره نشده است.'), findsOneWidget);
 
-    // A failed read is descriptive, offers retry, and recovers.
-    final retryStore = _RetryReviewQueueStore(failuresBeforeRead: 1);
+    // A failed read is descriptive, offers retry, and recovers. The first
+    // failure is consumed by Today's truthful pending-count read; Progress
+    // then fails its own read and can retry it.
+    final retryStore = _RetryReviewQueueStore(failuresBeforeRead: 2);
     await _pumpApp(
       tester,
       reviewQueue: ReviewQueue(

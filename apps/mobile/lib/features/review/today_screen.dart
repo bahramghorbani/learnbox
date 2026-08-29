@@ -31,15 +31,31 @@ class TodayScreen extends StatefulWidget {
 
 class _TodayScreenState extends State<TodayScreen> {
   late Future<List<StartCard>> _session;
+  int? _pendingCount;
 
   @override
   void initState() {
     super.initState();
     _loadSession();
+    _loadPendingCount();
   }
 
   void _loadSession() {
     _session = widget.startPackRepository.loadDailySession();
+  }
+
+  /// Reads the device-local pending queue truthfully. A failed read keeps the
+  /// session usable and shows no pending chip (fail-closed).
+  Future<void> _loadPendingCount() async {
+    try {
+      final count = await widget.reviewQueue.pendingCount();
+      if (mounted) {
+        setState(() => _pendingCount = count);
+      }
+    } catch (_) {
+      // The local queue is unavailable; Today keeps working from the bundled
+      // session and never claims a pending count it could not read.
+    }
   }
 
   @override
@@ -71,6 +87,7 @@ class _TodayScreenState extends State<TodayScreen> {
                 }
                 return _TodayContent(
                   cards: cards,
+                  pendingCount: _pendingCount,
                   onStart: () => Navigator.of(context).push(
                     MaterialPageRoute<void>(
                       builder: (_) => ReviewScreen(
@@ -92,11 +109,13 @@ class _TodayScreenState extends State<TodayScreen> {
 class _TodayContent extends StatelessWidget {
   const _TodayContent({
     required this.cards,
+    required this.pendingCount,
     required this.onStart,
     required this.onDestinationSelected,
   });
 
   final List<StartCard> cards;
+  final int? pendingCount;
   final VoidCallback onStart;
   final ValueChanged<LearnerDestination>? onDestinationSelected;
 
@@ -144,10 +163,23 @@ class _TodayContent extends StatelessWidget {
                             'یک مرور کوتاه و آرام؛ پاسخ هر کارت روی همین دستگاه ذخیره می‌شود.',
                             style: Theme.of(context).textTheme.bodyLarge,
                           ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'این فهرست از بستهٔ درون‌دستگاهی همین دستگاه است و هنوز به '
+                            'سرور وصل نشده است.',
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodySmall
+                                ?.copyWith(color: learnBoxMuted),
+                          ),
                         ],
                       ),
                     ),
                   ),
+                  const SizedBox(height: 16),
+                  if (pendingCount case final pendingCount?
+                      when pendingCount > 0)
+                    _PendingSyncChip(count: pendingCount),
                   if (constraints.maxHeight >= 620) ...[
                     const Spacer(),
                     ExcludeSemantics(
@@ -177,6 +209,46 @@ class _TodayContent extends StatelessWidget {
                   ],
                 ],
               ),
+            ),
+          ),
+        ),
+      );
+}
+
+/// D1 sync-state chip: shows only when the device-local queue has real
+/// pending events awaiting an acknowledgement. Count is the local queue
+/// length; the server acknowledgement remains the only way events leave it.
+class _PendingSyncChip extends StatelessWidget {
+  const _PendingSyncChip({required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+        container: true,
+        label: 'رویدادهای در انتظار همگام‌سازی',
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: learnBoxLavender,
+            borderRadius: BorderRadius.circular(99),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.cloud_sync_outlined,
+                    size: 18, color: learnBoxPrimary),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    '${_persianDigits(count)} رویداد در انتظار همگام‌سازی',
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                          color: learnBoxPrimary,
+                        ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
