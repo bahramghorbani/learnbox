@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { POST } from '../app/api/reviews/mobile/route';
 import { readMobileReviewRuntimeConfig } from '../lib/mobile-review-runtime';
+import { readLearnerStateRuntimeConfig } from '../../api/dist/learner-state/learner-state-runtime.js';
 
 const originalEnvironment = { ...process.env };
 
@@ -41,5 +42,26 @@ describe('disabled mobile review route', () => {
     expect(response.headers.get('cache-control')).toBe('no-store');
     expect(response.headers.has('set-cookie')).toBe(false);
     expect(await response.json()).toEqual({ error: 'serverUnavailable' });
+  });
+});
+
+describe('learner state runtime fails closed', () => {
+  it('never exposes the learner state read unless its explicit flag and config are complete', () => {
+    const complete = {
+      LEARNER_STATE_ENABLED: 'true',
+      DATABASE_URL: 'postgresql://learnbox:***@example.test/learnbox?sslmode=require',
+      LEARNBOX_MOBILE_SESSION_SECRET: 'session-secret-that-is-at-least-thirty-two-bytes',
+    };
+    expect(
+      readLearnerStateRuntimeConfig({ ...complete, LEARNER_STATE_ENABLED: 'false' }),
+    ).toBeNull();
+    expect(readLearnerStateRuntimeConfig({ ...complete, DATABASE_URL: undefined })).toBeNull();
+    expect(
+      readLearnerStateRuntimeConfig({ ...complete, LEARNER_STATE_ENABLED: undefined }),
+    ).toBeNull();
+    expect(readLearnerStateRuntimeConfig(complete)).toEqual({
+      databaseUrl: complete.DATABASE_URL,
+      sessionSecret: complete.LEARNBOX_MOBILE_SESSION_SECRET,
+    });
   });
 });
