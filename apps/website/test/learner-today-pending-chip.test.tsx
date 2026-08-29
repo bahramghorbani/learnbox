@@ -27,6 +27,7 @@ describe('Today pending-sync chip (D1 §5 sync row, M-L3 parity)', () => {
     expect(rendered.text()).toContain('دستگاه');
     expect(rendered.text()).toContain('در انتظار همگام‌سازی');
     expect(rendered.text()).toContain('۲ رویداد در انتظار همگام‌سازی');
+    expect(rendered.pendingChip()).toBe(true);
   });
 
   it('shows no pending chip when the local queue is empty', async () => {
@@ -51,6 +52,7 @@ describe('Today pending-sync chip (D1 §5 sync row, M-L3 parity)', () => {
 });
 
 type Rendered = {
+  pendingChip(): boolean;
   statusText(): string;
   text(): string;
   unmount(): Promise<void>;
@@ -71,6 +73,7 @@ async function renderToday(props: TodayScreenProps): Promise<Rendered> {
   });
 
   return {
+    pendingChip: () => container.querySelector('.today-chip.sync-status') !== null,
     statusText: () => container.querySelector('[role="status"]')?.textContent?.trim() ?? '',
     text: () => container.textContent ?? '',
     unmount: async () => {

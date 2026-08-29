@@ -1674,7 +1674,7 @@ p {
   font-size: 13px;
   line-height: 1.8;
 }
-.today-chip .sync-status {
+.today-chip.sync-status {
   margin: -8px 0 14px;
   color: var(--primary);
   font-size: 13px;
