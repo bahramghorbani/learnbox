@@ -13,19 +13,19 @@ Warm, calm, intelligent, legible, lightly playful — not childish, not noisy. P
 
 The palette below is locked by the mobile theme (`learnbox_theme.dart`), Web learner CSS (`globals.css`) and the foundation package (`tokens.css`). All three currently agree on the same hex values.
 
-| Token                     | Value      | Web CSS var       | Dart const          | Usage                                                                 |
-| ------------------------- | ---------- | ----------------- | ------------------- | --------------------------------------------------------------------- |
-| `bg.canvas`               | `#fffaf4`  | `--bg`            | `learnBoxCanvas`    | Warm off-white app canvas / scaffold background                       |
-| `bg.surface`              | `#ffffff`  | `--surface`       | `learnBoxSurface`   | Cards, sheets, inputs (ColorScheme.surface)                           |
-| `text.ink`                | `#1e293b`  | `--ink`           | `learnBoxInk`       | Primary text on canvas/surface (onSurface)                            |
-| `text.muted`              | `#64748b`  | `--muted`         | `learnBoxMuted`     | Secondary/helper text                                                 |
-| `brand.primary`           | `#4d6bfe`  | `--primary`       | `learnBoxPrimary`   | Primary action buttons, active nav, selected states, progress         |
-| `brand.apricot`           | `#ffb36b`  | `--apricot`       | `learnBoxApricot`   | Warm secondary accent; streak/today-summary emphasis                 |
-| `brand.lavender`          | `#f3ecff`  | `--lavender`      | `learnBoxLavender`  | Restrained support fills (goal icons, progress icon)                  |
-| `border.default`          | `#e7e3ff`  | `--border`        | `learnBoxBorder`    | Card borders                                                          |
-| `semantic.error`          | `#b3261e`  | —                 | `learnBoxError`     | Error text/feedback (ColorScheme.error; web uses `#bd3f3f` locally)   |
-| `semantic.success`        | `#228b62`  | `--lb-success`    | —                   | Success states (foundation token only; verify before web use)         |
-| `semantic.warning`        | `#e87c23`  | —                 | —                   | Streak/today-apricot emphasis (web local `#ef852e` summary figure)    |
+| Token              | Value     | Web CSS var    | Dart const         | Usage                                                               |
+| ------------------ | --------- | -------------- | ------------------ | ------------------------------------------------------------------- |
+| `bg.canvas`        | `#fffaf4` | `--bg`         | `learnBoxCanvas`   | Warm off-white app canvas / scaffold background                     |
+| `bg.surface`       | `#ffffff` | `--surface`    | `learnBoxSurface`  | Cards, sheets, inputs (ColorScheme.surface)                         |
+| `text.ink`         | `#1e293b` | `--ink`        | `learnBoxInk`      | Primary text on canvas/surface (onSurface)                          |
+| `text.muted`       | `#64748b` | `--muted`      | `learnBoxMuted`    | Secondary/helper text                                               |
+| `brand.primary`    | `#4d6bfe` | `--primary`    | `learnBoxPrimary`  | Primary action buttons, active nav, selected states, progress       |
+| `brand.apricot`    | `#ffb36b` | `--apricot`    | `learnBoxApricot`  | Warm secondary accent; streak/today-summary emphasis                |
+| `brand.lavender`   | `#f3ecff` | `--lavender`   | `learnBoxLavender` | Restrained support fills (goal icons, progress icon)                |
+| `border.default`   | `#e7e3ff` | `--border`     | `learnBoxBorder`   | Card borders                                                        |
+| `semantic.error`   | `#b3261e` | —              | `learnBoxError`    | Error text/feedback (ColorScheme.error; web uses `#bd3f3f` locally) |
+| `semantic.success` | `#228b62` | `--lb-success` | —                  | Success states (foundation token only; verify before web use)       |
+| `semantic.warning` | `#e87c23` | —              | —                  | Streak/today-apricot emphasis (web local `#ef852e` summary figure)  |
 
 ### Contrast rules
 
@@ -45,14 +45,14 @@ The palette below is locked by the mobile theme (`learnbox_theme.dart`), Web lea
 
 ### Type scale (observed sizes, learner surfaces)
 
-| Role            | Web size                        | Mobile (Dart)                                  | Notes                                  |
-| --------------- | ------------------------------- | ---------------------------------------------- | -------------------------------------- |
-| Display H1      | `clamp(36–48px)` (screen-based) | `textTheme.headlineLarge` + theme defaults     | Today/Onboarding/Progress/Words H1     |
-| Card lemma (DE) | `clamp(42px,10vw,64px)` 800     | `learnBoxGermanStyle` bodyLarge bold           | Always LTR, wordmark-level weight      |
-| H2 / section    | 21px                            | theme `titleLarge`                              | Chart headings, insights               |
-| Body / lead     | 15–17px, line-height 1.8–2.0    | theme `bodyLarge`                               | Persian body; 1.9–2.0 web line-height  |
-| Label / small   | 12–14px                         | theme `labelLarge` (16px on filled button)      | Muted labels, notes, meta              |
-| CTA button      | 16–20px 700                     | 16px 700 (filled button), min height 56px       | Single clear primary action per screen |
+| Role            | Web size                        | Mobile (Dart)                              | Notes                                  |
+| --------------- | ------------------------------- | ------------------------------------------ | -------------------------------------- |
+| Display H1      | `clamp(36–48px)` (screen-based) | `textTheme.headlineLarge` + theme defaults | Today/Onboarding/Progress/Words H1     |
+| Card lemma (DE) | `clamp(42px,10vw,64px)` 800     | `learnBoxGermanStyle` bodyLarge bold       | Always LTR, wordmark-level weight      |
+| H2 / section    | 21px                            | theme `titleLarge`                         | Chart headings, insights               |
+| Body / lead     | 15–17px, line-height 1.8–2.0    | theme `bodyLarge`                          | Persian body; 1.9–2.0 web line-height  |
+| Label / small   | 12–14px                         | theme `labelLarge` (16px on filled button) | Muted labels, notes, meta              |
+| CTA button      | 16–20px 700                     | 16px 700 (filled button), min height 56px  | Single clear primary action per screen |
 
 Rules: never `letter-spacing` on Persian text (`CONCEPTS.md`); German terms LTR and isolated with safe spacing from Persian text; keep `direction: ltr` on German lemma, article, code inputs and brand wordmark. Test dynamic text scaling (web zoom to 200%; mobile `textScaler`) — screens must not overflow horizontally at 390px × 844px with default scaling.
 
@@ -60,24 +60,24 @@ Rules: never `letter-spacing` on Persian text (`CONCEPTS.md`); German terms LTR 
 
 ### Spacing (4px base, observed values)
 
-| Token          | Value | Web evidence                                | Dart evidence                          |
-| -------------- | ----- | ------------------------------------------- | -------------------------------------- |
-| `space.xs`     | 4px   | gaps `6–9px`, `11–14px` component clusters  | —                                      |
-| `space.sm`     | 8px   | gaps 8–10px                                 | `EdgeInsets.all(8)` (progress)         |
-| `space.md`     | 16px  | padding `16px`, form gap 13px, card padding | `EdgeInsets.all(16)` (today/progress)  |
-| `space.lg`     | 20–24px | shell padding `22px`, `24px`, card padding 20px | `EdgeInsets.symmetric(horizontal: 24)`, `all(20/24)` |
-| `space.xl`     | 28–32px | shell top padding `28–42px`, section margins `27–35px` | `fromLTRB(20,24,20,32)` auth        |
+| Token      | Value   | Web evidence                                           | Dart evidence                                        |
+| ---------- | ------- | ------------------------------------------------------ | ---------------------------------------------------- |
+| `space.xs` | 4px     | gaps `6–9px`, `11–14px` component clusters             | —                                                    |
+| `space.sm` | 8px     | gaps 8–10px                                            | `EdgeInsets.all(8)` (progress)                       |
+| `space.md` | 16px    | padding `16px`, form gap 13px, card padding            | `EdgeInsets.all(16)` (today/progress)                |
+| `space.lg` | 20–24px | shell padding `22px`, `24px`, card padding 20px        | `EdgeInsets.symmetric(horizontal: 24)`, `all(20/24)` |
+| `space.xl` | 28–32px | shell top padding `28–42px`, section margins `27–35px` | `fromLTRB(20,24,20,32)` auth                         |
 
 Mobile shell and web `.app-shell` both cap content width at `520px` (`width: min(100%, 520px)`; web `.owner-otp-card` at `430px`, `.offline-content` at `440px`).
 
 ### Radius
 
-| Token            | Value   | Web evidence                                  | Dart evidence                              |
-| ---------------- | ------- | --------------------------------------------- | ------------------------------------------ |
-| `radius.sm`      | 12–16px | chips `12px`, examples `16px`, inputs `14–17px` | auth inputs `18px`                         |
-| `radius.md`      | 18–22px | primary button `22px`, phone input `22px`, search `22px` | filled button `18px`, card `20px`    |
-| `radius.lg`      | 25–30px | study card `30px`, weekly chart `30px`, summary `26px`, rows `25px` | mobile card `20px` (CardTheme) |
-| `radius.pill`    | 99px    | progress bars, nav indicator                  | progress track `circular(99)`              |
+| Token         | Value   | Web evidence                                                        | Dart evidence                     |
+| ------------- | ------- | ------------------------------------------------------------------- | --------------------------------- |
+| `radius.sm`   | 12–16px | chips `12px`, examples `16px`, inputs `14–17px`                     | auth inputs `18px`                |
+| `radius.md`   | 18–22px | primary button `22px`, phone input `22px`, search `22px`            | filled button `18px`, card `20px` |
+| `radius.lg`   | 25–30px | study card `30px`, weekly chart `30px`, summary `26px`, rows `25px` | mobile card `20px` (CardTheme)    |
+| `radius.pill` | 99px    | progress bars, nav indicator                                        | progress track `circular(99)`     |
 
 Card `20px` radius is the locked mobile CardTheme; web `30px` study card is the current evidence — D1 must reconcile these two values into one `radius.lg` before new surfaces ship.
 
@@ -85,11 +85,11 @@ Card `20px` radius is the locked mobile CardTheme; web `30px` study card is the 
 
 Flat-first design: surfaces are white on warm canvas with hairline `1px` borders; elevation is soft shadow only, never layered surfaces inside surfaces (`CONCEPTS.md`).
 
-| Level      | Shadow (web evidence)              | Dart                                  |
-| ---------- | ----------------------------------- | ------------------------------------- |
-| Resting    | `0 10–12px 25–34px #34426f0a–0d`    | Card elevation 0 + border             |
-| Raised     | `0 18px 44px #34426f12` (study card) | —                                     |
-| Action     | `0 12px 24px #4d6bfe35` (primary button) | —                                |
+| Level   | Shadow (web evidence)                    | Dart                      |
+| ------- | ---------------------------------------- | ------------------------- |
+| Resting | `0 10–12px 25–34px #34426f0a–0d`         | Card elevation 0 + border |
+| Raised  | `0 18px 44px #34426f12` (study card)     | —                         |
+| Action  | `0 12px 24px #4d6bfe35` (primary button) | —                         |
 
 Use `#34426f`-based soft shadows on neutral surfaces; blue-tinted shadow only on primary actions. No surface may sit inside another card without a reason.
 
@@ -115,11 +115,11 @@ Use `#34426f`-based soft shadows on neutral surfaces; blue-tinted shadow only on
 
 Evidence-based (web learner CSS; mobile is single-column 390×844 primary target):
 
-| Breakpoint           | Behavior (web evidence)                                            |
-| -------------------- | ------------------------------------------------------------------ |
-| `< 420px`            | Compact spacing: shell padding 22→16px, H1 42→36px, summary figures 45→38px, card padding 22→16px, grade padding/16px font, learner-nav negative margins |
-| `≤ 520px`            | Content column caps at `520px` (`.app-shell`), learner surfaces single-column |
-| `> 520px` (desktop)  | Learner shells stay centered max-520 column; desktop dashboards/Admin use wider grids (Admin: true-white RTL workspace per `admin-content-review-concept-v1.png`) |
+| Breakpoint          | Behavior (web evidence)                                                                                                                                           |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `< 420px`           | Compact spacing: shell padding 22→16px, H1 42→36px, summary figures 45→38px, card padding 22→16px, grade padding/16px font, learner-nav negative margins          |
+| `≤ 520px`           | Content column caps at `520px` (`.app-shell`), learner surfaces single-column                                                                                     |
+| `> 520px` (desktop) | Learner shells stay centered max-520 column; desktop dashboards/Admin use wider grids (Admin: true-white RTL workspace per `admin-content-review-concept-v1.png`) |
 
 All learner screens verified at 390×844 (no horizontal overflow); `@media (max-width: 420px)` is the only learner media query in `globals.css`.
 
