@@ -25,6 +25,7 @@ import {
 } from '@learnbox/learning-engine';
 
 import { LearnerNav } from './components/LearnerNav';
+import { TodayScreen } from './components/TodayScreen';
 import { AuthGate } from './components/AuthGate';
 import { InviteGate } from './components/InviteGate';
 import { resolveInviteGateMode } from './alpha-invite-mode';
@@ -35,7 +36,7 @@ import { OnboardingGoal } from './components/OnboardingGoal';
 import { ProgressScreen } from './components/ProgressScreen';
 import { SupportivePlusOffer } from './components/SupportivePlusOffer';
 import { StartMediaVisual } from './components/StartMediaVisual';
-import { defaultSuggestedNewWords, personalWordLimit } from './product-experience';
+import { personalWordLimit } from './product-experience';
 import { resolveSupportivePlusOffer } from './paywall';
 import { buildStartMediaSources, resolveStartMediaMode, type StartMediaMode } from './start-media';
 import { selectTodayStartSession, stagedStartSlice } from './start-slice';
@@ -538,36 +539,8 @@ export function LearnerHome({
   }
 
   return (
-    <main className="app-shell" data-testid="learnbox-app">
-      <header className="brand-row">
-        <span className="brand">LearnBox</span>
-        <Bobo expression="encourage" className="bobo bobo-header" priority />
-      </header>
-      <section className="today-intro">
-        <p className="eyeline">امروز</p>
-        <h1>با چند دقیقه شروع کن</h1>
-        <p>مرور کوتاه امروز، مسیر یادگیریت را زنده نگه می‌دارد.</p>
-        <p className="staging-note">
-          {studyItems.length.toLocaleString('fa-IR')} کارت از بستهٔ آزمایشی Start برای امروز آماده
-          است.
-        </p>
-      </section>
-      <section className="summary" aria-label="پیشنهاد امروز">
-        <div>
-          <span>مرورهای امروز</span>
-          <strong>{remainingTodayReviews}</strong>
-          <small>
-            {reviewedToday
-              ? `${reviewedToday} کارت امروز ثبت شد`
-              : `${studyItems.length} کارت برای شروع آماده است`}
-          </small>
-        </div>
-        <div>
-          <span>کلمهٔ پیشنهادی</span>
-          <strong>{defaultSuggestedNewWords}</strong>
-          <small>جدید برای یادگیری</small>
-        </div>
-      </section>
+    <>
+      <TodayScreen reviewCount={remainingTodayReviews} syncState="local-only" />
       <button className="primary-button" onClick={begin}>
         {resumableSessionIndex === null ? 'شروع مرور' : 'ادامهٔ مرور'}{' '}
         <span aria-hidden="true">←</span>
@@ -592,7 +565,7 @@ export function LearnerHome({
         <span>{streakDays ? `${streakDays} روز` : 'شروع تازه'}</span>
       </section>
       <LearnerNav current="today" onNavigate={(destination) => setScreen(destination)} />
-    </main>
+    </>
   );
 }
 
