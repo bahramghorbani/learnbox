@@ -14,6 +14,7 @@
 - **M1-C Mobile slice 1:** completed in PR #155; Today local queue state is truthful, sync coordinator remains dormant.
 - **M1-Q independent QA:** completed in PR #157; report `.ai/qa-reports/M1-Q-INDEPENDENT-QA.md`.
 - **Next active work:** resolve QA findings M-L1/M-L2/M-L3, then implement the server-wired learner path and push reconciliation only after its cursor/watermark policy is approved.
+- **M1-B server-wiring contract:** accepted design (ADR 0012); Web HttpOnly cookie → `GET /api/learner/state` Next.js route → `LearnerStateService` is approved; the route, Web session → `users.id` mapping and Start Pack seed remain separate implementation/owner decisions.
 - No production, payment, provider credential, real OTP or server activation is implied by this next work.
 
 ## Immediate execution order
