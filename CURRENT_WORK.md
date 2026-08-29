@@ -7,18 +7,18 @@
 ### Active milestone
 
 - **M1 — Online Learning Core:** active after owner approval.
-- **Design gates D0/D1:** active and required before implementation of affected screens.
-- M0 Product truth and delivery reset is merged in `origin/main` through PR #146.
-- No production, payment, provider credential, real OTP or server activation is implied by starting M1.
+- **D0/D1 design gates:** completed for the current learner implementation surfaces (D0 PR #150, D1 PR #153).
+- **M1-A contract audit:** completed in PR #151.
+- **M1-D slice 1:** completed in PR #152; learner state snapshot exists behind fail-closed configuration and is not Web-wired yet.
+- **Next active implementation:** M1-B Web learner core and M1-C Mobile learner core, each in a separate worktree.
+- No production, payment, provider credential, real OTP or server activation is implied by starting these slices.
 
 ## Immediate execution order
 
-1. D0 visual language contract and review evidence.
-2. M1-A online learning API/domain contract audit.
-3. D1 learner UI kit and state boards, using D0 tokens.
-4. M1-D sync/persistence implementation after contract review.
-5. M1-B Web and M1-C Mobile implementation in separate worktrees where paths are disjoint.
-6. M1-Q independent QA, visual parity and documentation freshness review.
+1. M1-B Web learner core: wire the authenticated learner state/read and review flow without inventing endpoints.
+2. M1-C Mobile learner core: implement the approved learner UI and preserve local queue/fail-closed sync boundaries.
+3. M1-D slice 2: decide and implement push-reconciliation only after the unresolved cursor/watermark policy is approved.
+4. M1-Q independent product, visual, accessibility and documentation QA.
 
 ## Owner-approved product decisions captured in M0
 

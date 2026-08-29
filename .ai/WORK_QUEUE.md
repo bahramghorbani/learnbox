@@ -6,9 +6,11 @@ start. Historical tasks remain for traceability and must not be duplicated.
 ## Active work registry
 
 - **M0 — Product truth and delivery reset:** accepted and merged in PR #146.
-- **D0 — Visual language:** **active**. Consolidate approved colors, typography, spacing, surfaces, icon rules, RTL/LTR and Bobo usage. No new product screen implementation until the contract is recorded.
-- **D1 — Learner UI kit:** **active, dependent on D0.** Finalize Splash, Onboarding, Today, Review, Words, Progress, Profile and Settings, including loading, empty, error, offline and sync states. Evidence must be reviewable screenshots/specs.
-- **M1 — Online Learning Core:** **active, implementation starts after D0/D1 contracts for affected surfaces.** Deliver the online learner loop, free A1 collection, server persistence, reconnect sync and truthful states. M1 code must not invent visual patterns outside the approved D0/D1 contract.
+- **D0 — Visual language:** accepted and merged in PR #150. Contract: `docs/design/D0_VISUAL_LANGUAGE.md`.
+- **D1 — Learner UI kit:** accepted and merged in PR #153. State board: `docs/design/D1_LEARNER_UI_KIT.md`.
+- **M1 — Online Learning Core:** **active**. Web and Mobile implementation may now start only against D0/D1 and M1-A contracts.
+- **M1-A — Online learning contract audit:** accepted and merged in PR #151. Contract: `docs/architecture/M1_ONLINE_LEARNING_CONTRACT.md`.
+- **M1-D slice 1 — Learner state snapshot:** accepted and merged in PR #152. Implementation: `GET /api/learner/state`, fail-closed and not Web-wired yet.
 
 ### Active grouped workstreams
 
@@ -24,11 +26,12 @@ start. Historical tasks remain for traceability and must not be duplicated.
 
 ### Start conditions
 
-- [ ] D0 contract is reviewed and linked from `docs/design/DESIGN_STATUS.md`.
-- [ ] D1 surface/state boards exist for any screen entering implementation.
-- [ ] M1-A records API/domain contracts and conflict/idempotency rules.
-- [ ] Each implementation worker has a separate worktree and disjoint allowed paths.
-- [ ] No production, payment, provider credential, real OTP or server activation is implied by this queue.
+- [x] D0 contract is reviewed and linked from `docs/design/DESIGN_STATUS.md`.
+- [x] D1 surface/state boards exist for learner screens entering implementation.
+- [x] M1-A records API/domain contracts and conflict/idempotency rules.
+- [ ] M1-B Web and M1-C Mobile have separate worktrees and disjoint allowed paths.
+- [ ] M1-Q independent QA evidence is complete.
+- [x] Safety boundary remains: no production, payment, provider credential, real OTP or server activation is implied by this queue.
 
 The historical LB-DS and NI records below remain for traceability. They are not authorization to duplicate or reopen completed work.
 
