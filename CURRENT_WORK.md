@@ -6,19 +6,24 @@
 
 ### Active milestone
 
-- **M1 — Online Learning Core:** active after owner approval.
-- **D0/D1 design gates:** completed for the current learner implementation surfaces (D0 PR #150, D1 PR #153).
+- **M1 — Online Learning Core:** slice 1 QA complete; milestone remains **partial and not production-ready**.
+- **D0/D1 design gates:** completed for current learner surfaces.
 - **M1-A contract audit:** completed in PR #151.
-- **M1-D slice 1:** completed in PR #152; learner state snapshot exists behind fail-closed configuration and is not Web-wired yet.
-- **Next active implementation:** M1-B Web learner core and M1-C Mobile learner core, each in a separate worktree.
-- No production, payment, provider credential, real OTP or server activation is implied by starting these slices.
+- **M1-D slice 1:** completed in PR #152; server snapshot remains fail-closed and not Web-wired.
+- **M1-B Web slice 1:** completed in PR #156; Today remains explicitly local-only because server wiring is blocked.
+- **M1-C Mobile slice 1:** completed in PR #155; Today local queue state is truthful, sync coordinator remains dormant.
+- **M1-Q independent QA:** completed in PR #157; report `.ai/qa-reports/M1-Q-INDEPENDENT-QA.md`.
+- **Next active work:** resolve QA findings M-L1/M-L2/M-L3, then implement the server-wired learner path and push reconciliation only after its cursor/watermark policy is approved.
+- No production, payment, provider credential, real OTP or server activation is implied by this next work.
 
 ## Immediate execution order
 
-1. M1-B Web learner core: wire the authenticated learner state/read and review flow without inventing endpoints.
-2. M1-C Mobile learner core: implement the approved learner UI and preserve local queue/fail-closed sync boundaries.
-3. M1-D slice 2: decide and implement push-reconciliation only after the unresolved cursor/watermark policy is approved.
-4. M1-Q independent product, visual, accessibility and documentation QA.
+1. Fix M-L1: add a Dart format gate and normalize the two reported drift files in a dedicated fix.
+2. Fix M-L2/M-L3: align Web Today numerals and pending-sync parity, with tests.
+3. Decide the Web server-wiring contract: Web session boundary plus Start-pack ↔ canonical `contentId` mapping.
+4. Implement the authenticated server-wired learner path and complete D1 fetch states.
+5. Decide and implement M1-D push reconciliation only after cursor/watermark policy approval.
+6. Re-run M1-Q independent acceptance, visual and accessibility QA.
 
 ## Owner-approved product decisions captured in M0
 
