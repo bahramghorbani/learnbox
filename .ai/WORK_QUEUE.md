@@ -5,11 +5,30 @@ start. Historical tasks remain for traceability and must not be duplicated.
 
 ## Active work registry
 
-- **M0 — Product truth and delivery reset:** accepted by this PR. The canonical product inventory, online-first architecture, platform-specific commerce model, milestone roadmap, worker map and documentation governance are now committed.
-- **M0-01 — Product truth documentation:** accepted. See `docs/PRODUCT_STATUS.md`, `PRODUCT.md`, `docs/product/FEATURE_CATALOG.md`, `docs/product/PRD.md`, `docs/product/MONETIZATION.md`, `ROADMAP.md` and `docs/architecture/SYSTEM_CONTEXT.md`.
-- **M0-02 — Documentation and worker governance:** accepted. See `docs/DOCUMENTATION_GOVERNANCE.md`, `.ai/WORKSTREAMS.md`, `AGENTS.md`, `AI_BOOTSTRAP.md`, `.ai/WORKER_PROTOCOL.md` and `CURRENT_WORK.md`.
-- **M0-03 — Documentation validator:** accepted. `pnpm check` runs its tests and validator.
-- **Next:** M1 Online Learning Core is queued; it must be activated as a new grouped workstream after the owner confirms the product truth baseline.
+- **M0 — Product truth and delivery reset:** accepted and merged in PR #146.
+- **D0 — Visual language:** **active**. Consolidate approved colors, typography, spacing, surfaces, icon rules, RTL/LTR and Bobo usage. No new product screen implementation until the contract is recorded.
+- **D1 — Learner UI kit:** **active, dependent on D0.** Finalize Splash, Onboarding, Today, Review, Words, Progress, Profile and Settings, including loading, empty, error, offline and sync states. Evidence must be reviewable screenshots/specs.
+- **M1 — Online Learning Core:** **active, implementation starts after D0/D1 contracts for affected surfaces.** Deliver the online learner loop, free A1 collection, server persistence, reconnect sync and truthful states. M1 code must not invent visual patterns outside the approved D0/D1 contract.
+
+### Active grouped workstreams
+
+| ID   | Workstream                         | Worker role                | Allowed scope                                                 | Depends on                 | Parallel rule                                                                                |
+| ---- | ---------------------------------- | -------------------------- | ------------------------------------------------------------- | -------------------------- | -------------------------------------------------------------------------------------------- |
+| D0   | Visual language and token contract | W1 + design-capable worker | `docs/design/**`, shared visual token docs, design evidence   | M0                         | Can run alongside M1 contract audit; no overlapping implementation paths                     |
+| D1   | Learner UI kit and state boards    | design-capable worker + W8 | `docs/design/**`, UI acceptance/spec artifacts                | D0                         | Can run alongside backend contract audit; implementation waits for affected surface approval |
+| M1-A | Online learning contract audit     | W1 + W6                    | API/domain/schema docs and tests only                         | M0                         | Can overlap D0/D1; no mobile/Web surface edits                                               |
+| M1-B | Web learning core                  | W2                         | learner Web components/routes/tests                           | M1-A + relevant D1 surface | Must not edit API, mobile, Admin or design token paths                                       |
+| M1-C | Mobile learning core               | W3                         | Flutter learner screens/tests/assets                          | M1-A + relevant D1 surface | Must not edit Web, API or Admin paths                                                        |
+| M1-D | Sync and persistence               | W6                         | API, persistence, migrations, sync tests                      | M1-A                       | Serial for migrations/auth; separate worktree required                                       |
+| M1-Q | Independent product QA             | W8                         | QA evidence, screenshots, accessibility and acceptance review | D1 + M1 deliverables       | Cannot approve its own implementation                                                        |
+
+### Start conditions
+
+- [ ] D0 contract is reviewed and linked from `docs/design/DESIGN_STATUS.md`.
+- [ ] D1 surface/state boards exist for any screen entering implementation.
+- [ ] M1-A records API/domain contracts and conflict/idempotency rules.
+- [ ] Each implementation worker has a separate worktree and disjoint allowed paths.
+- [ ] No production, payment, provider credential, real OTP or server activation is implied by this queue.
 
 The historical LB-DS and NI records below remain for traceability. They are not authorization to duplicate or reopen completed work.
 
