@@ -9,4 +9,7 @@ when they share one production server,
 default-disabled native mobile session and authenticated review transport, and
 [ADR 0012](0012-web-learner-state-server-wiring.md), which records the approved
 Web HttpOnly-cookie → Next.js route → learner-state-service wiring contract and
-its explicit blockers.
+its explicit blockers, and
+[ADR 0013](0013-start-pack-contentid-contract.md), which records that bundled
+Start Pack IDs are canonical immutable `cards.content_id` values for M1 (clients
+send `contentId`; the server resolves it to `cards.id`).

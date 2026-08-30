@@ -66,17 +66,20 @@ reviewEventsCount }`, `200`, `cache-control: no-store`,
   `'legacy-' || id` backfill, migration 0013). The repository already joins
   `card_schedules ⋈ cards` on `cards.id`. The Web client must treat `contentId` as the
   stable key for local-queue/Start-pack correlation and `cardId` only as the schedule row
-  identity returned by the server. No Web code may construct or infer `contentId` from a
-  Start-pack id or vice versa; the mapping from Start-pack ids (`start-a1-*`) to canonical
-  `contentId`s remains the unsolved catalog contract (M1-A §3.2) and is a blocker, not a
-  join rule.
+  identity returned by the server. The bundled-Start mapping is resolved for M1 in
+  [ADR 0013](ADR/0013-start-pack-contentid-contract.md): `start-a1-*` IDs **are** canonical
+  `cards.content_id` values, so no inference is needed for bundled content; the equality
+  rule replaces the earlier "unsolved catalog contract" blocker. Catalog-added content with
+  any other ID scheme remains a future decision.
 - **`reviewEventsCount` semantics:** exact server count of `review_events` rows for the
   learner (`COUNT(*)` in `postgres-learner-state.repository.ts`). It is **not** a
   pending/acknowledged delta and not a "synced" proof. The client reconciles its local
   pending queue against it; a count of zero does not mean the local queue is empty, and a
   non-zero count does not mean the local queue is acknowledged. Until the server-side push
   acknowledgement watermark exists (M1-D open item), no UI may claim server persistence of
-  local events.
+  local events. The Start Pack ↔ canonical `contentId` mapping is resolved for M1 in
+  [ADR 0013](ADR/0013-start-pack-contentid-contract.md): bundled IDs **are** canonical
+  `cards.content_id` values; clients send `contentId`, the server resolves `cards.id`.
 - **Loading / offline / error truth states (D1 §5, M1-B §12.2):** when the route is wired,
   the Today surface must render the D1 state board truthfully:
   - Loading: skeleton figures, no "0" flash, no partial numbers.
