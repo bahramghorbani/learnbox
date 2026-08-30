@@ -13,7 +13,7 @@ start. Historical tasks remain for traceability and must not be duplicated.
 - **M1-D slice 1 — Learner state snapshot:** accepted and merged in PR #152. Implementation: `GET /api/learner/state`, fail-closed and not Web-wired yet.
 - **M1-B server-wiring contract — Web learner state:** accepted design (ADR 0012). Web HttpOnly learner cookie → Next.js `GET /api/learner/state` route → server-side identity mapping → existing `LearnerStateService`/`repository` is approved; route implementation merged in PR #163 (LB-DS-022) behind the fail-closed `WEB_LEARNER_STATE_ENABLED` runtime; Web session → `users.id` mapping is merged (PR #162); Start Pack seed/release remains a separate owner/review-gated decision.
 - **M1-B slice 1 — Web Today truth label:** accepted and merged in PR #156; server wiring merged in LB-DS-022 (PR #163, merge commit `73cdb62`) behind the fail-closed `WEB_LEARNER_STATE_ENABLED` runtime.
-- **M1-B slice 2 — Web learner-state read route + truthful Today fetch:** accepted and merged in PR #163 at merge commit `73cdb62`; server-backed figures only after a successful cookie-authenticated read; Today figure stays local until the Start Pack ↔ canonical `contentId` join exists; Start Pack ↔ canonical `contentId` contract is recorded in ADR 0013 (bundled IDs are canonical immutable `cards.content_id`; clients send `contentId`, server resolves `cards.id`); seed/catalog/reconciliation remain separate review-gated tasks.
+- **M1-B slice 2 — Web learner-state read route + truthful Today fetch:** accepted and merged in PR #163 at merge commit `73cdb62`; server-backed figures only after a successful cookie-authenticated read; Today figure stays local until the approved/published Start Pack seed/catalog rows are implemented and released; Start Pack ↔ canonical `contentId` contract is recorded in ADR 0013 (bundled IDs are canonical immutable `cards.content_id`; clients send `contentId`, server resolves `cards.id`); seed/catalog/reconciliation remain separate review-gated tasks.
 - **M1-C slice 1 — Mobile Today states:** accepted and merged in PR #155; local queue chip is truthful, sync coordinator remains dormant.
 - **M1-Q — Independent QA:** accepted and merged in PR #157; report: `.ai/qa-reports/M1-Q-INDEPENDENT-QA.md`.
 - **Next:** Start Pack ↔ canonical `contentId` contract is recorded in ADR 0013; seed/catalog implementation and M1-D push reconciliation remain separate review-gated tasks (reconciliation blocked pending cursor/watermark policy approval); independent QA of the merged server-wired slice remains pending.
@@ -71,8 +71,9 @@ fallbacks, and never claims server acknowledgement. No Start Pack ↔ canonical 
 join was invented; server `contentId` is authoritative and the local review path is unchanged.
 No migrations, schema, seed, catalog, mobile, API source contract, payment, deployment,
 secret, OTP delivery, push reconciliation or auth activation work was merged.
-Remaining: Start Pack ↔ canonical `contentId` catalog contract remains unresolved and
-owner/review-gated; push-reconciliation cursor/watermark remains blocked pending policy
+Remaining: Start Pack ↔ canonical `contentId` contract is recorded in ADR 0013;
+seed/catalog implementation and release remain separate owner/review-gated tasks;
+push-reconciliation cursor/watermark remains blocked pending policy
 approval; independent acceptance/visual/accessibility QA of the merged server-wired slice
 remains pending. Do not reopen or duplicate this task.
 
