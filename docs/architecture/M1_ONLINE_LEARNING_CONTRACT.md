@@ -100,9 +100,12 @@ LEAST(occurred_at, now()))` — monotonic, never before prior applied_at for tha
 
 ### 3.2 Proposed / gaps (M1-D must decide)
 
-- **Offline event payload identity:** mobile `PendingReviewEvent` currently persists
-  `cardId` (e.g. `start-a1-haus`) — see §5. Server wire item uses `contentId`; the mapping
-  client-side (`contentId == canonical card content_id`) must be specified explicitly.
+- **Offline event payload identity — DECIDED (ADR 0013):** for M1, bundled Start Pack IDs
+  are canonical immutable `cards.content_id` values. `PendingReviewEvent.cardId` (e.g.
+  `start-a1-haus`) is the same value as `cards.content_id` for the corresponding card; clients
+  send `contentId`, and the server resolves it to `cards.id` (`resolveCardId`). No inference,
+  mapping table or rename exists. Future aliases/taxonomy are separate ADR decisions, and the
+  reconciliation cursor/watermark policy remains a separate M1-D decision.
 - **Event read API:** no endpoint returns a learner's review events or due cards to a client.
   All "Today"/due selection endpoints are **proposed**, not implemented.
 
