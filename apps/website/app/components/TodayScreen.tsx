@@ -28,7 +28,11 @@ export function TodayScreen({
       <section className="summary" aria-label="پیشنهاد امروز">
         <div>
           <span>مرورهای امروز</span>
-          <strong>{toPersianDigits(reviewCount)}</strong>
+          {syncState === 'loading' ? (
+            <span className="today-summary-skeleton" aria-hidden="true" />
+          ) : (
+            <strong>{toPersianDigits(reviewCount)}</strong>
+          )}
           <small>
             {syncState === 'loading'
               ? 'در حال آماده‌کردن مرور امروز…'
@@ -46,7 +50,7 @@ export function TodayScreen({
       </p>
       {syncState === 'server-backed' && lastSyncedAt ? (
         <p className="sync-truth last-synced" role="status">
-          آخرین همگام‌سازی: {formatSyncTime(lastSyncedAt)}
+          آخرین خواندن از سرور: {formatSyncTime(lastSyncedAt)}
         </p>
       ) : null}
       <Bobo expression="welcome" className="bobo bobo-header" priority />

@@ -3,7 +3,7 @@ export type LearnerSyncState = 'local-only' | 'server-backed' | 'loading' | 'err
 export function syncStateText(state: LearnerSyncState): string {
   switch (state) {
     case 'server-backed':
-      return 'این فهرست از سرور LearnBox خوانده شده است.';
+      return 'وضعیت یادگیری از سرور خوانده شد؛ کارت‌های این دستگاه برای مرور آماده‌اند.';
     case 'loading':
       return 'در حال خواندن وضعیت از سرور…';
     case 'error':
