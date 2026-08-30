@@ -1,10 +1,10 @@
 # LB-DS-022 handoff
 
-- Branch: `worker/m1b-web-learner-state-read`
+- Branch: `worker/m1b-web-learner-state-read` (removed after merge)
 - Base commit: `5616d0d` (PR #162 merged; Web OTP cookie subject = canonical `users.id`)
 - Head commit: `131ef42` (implementation/tests; review pending)
 - Fix head: branch head after review-finding fixes (review pending)
-- Draft PR: https://github.com/bahramghorbani/learnbox/pull/163 (draft, review pending)
+- Draft PR: https://github.com/bahramghorbani/learnbox/pull/163 — merged 2026-08-30 at `73cdb62`
 - Scope completed: ADR 0012 Web learner-state read route plus truthful Today fetch integration. Added `GET /api/learner/state` Next.js route (cookie-only identity, subject = canonical `users.id`), fail-closed `WEB_LEARNER_STATE_ENABLED` runtime reusing the existing API `LearnerStateService`/`PostgresLearnerStateRepository` via the `api/dist` mount pattern and verified-TLS pool, and a Today client fetch that treats the snapshot as server-backed only after a successful fetch/parse while preserving the local pending-sync chip and loading/error/offline truth labels. No sync acknowledgement is ever claimed; Start Pack ↔ canonical `contentId` join is not invented (server `contentId` authoritative, local review path unchanged).
 - Review fixes: (1) Today no longer displays `plan.reviewCardIds.length` as the actionable review figure — the CTA still launches the local bundled 3-card session until the catalog join and server-driven session exist, so the figure stays tied to the local session (`studyItems.length - reviewedToday`) while the truthful server-read label and last-synced timestamp are preserved. (2) `learner-state-web-client.ts` now strictly validates the complete parsed response before normalize: every schedule entry requires nonempty string `cardId`/`contentId`, a `CardSchedule`-allowed state (`new`/`learning`/`review`/`relearning`/`mastered`/`suspended`/`archived`), finite nonnegative `stabilityDays`/`lapses`, finite `difficulty` and a valid `dueAt` date; `plan` requires `mode` `normal`/`recovery`, string arrays `reviewCardIds`/`newCardIds` and string `message`; `reviewEventsCount` must be a finite nonnegative integer. Any malformed nested payload fails closed as `unavailable` with regression tests.
 - Files changed: `apps/website/app/api/learner/state/route.ts`; `apps/website/lib/learner-state-web-http.ts`; `apps/website/lib/learner-state-web-runtime.ts`; `apps/website/lib/learner-state-web-client.ts`; `apps/website/app/components/TodayScreen.tsx`; `apps/website/app/LearnerHome.tsx`; `apps/website/app/learner-sync-state.ts`; `apps/website/test/learner-state-web-route.test.ts`; `apps/website/test/learner-state-web-http.test.ts`; `apps/website/test/learner-state-web-client.test.ts`; `apps/website/test/learner-today-server-states.test.tsx`; `apps/website/README-M1B-WEB-SLICE1.md`; `.env.example`; `docs/architecture/ADR/0012-web-learner-state-server-wiring.md`; `docs/PRODUCT_STATUS.md`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-022.md`; `CURRENT_WORK.md`
@@ -12,6 +12,6 @@
 - Checks unavailable: no simulator/device checks required for this website-only slice.
 - Remaining work: none for LB-DS-022. Start Pack seed/release and push-reconciliation watermark remain separate owner-reviewed decisions; server-backed figures require the route enabled with `WEB_LEARNER_STATE_ENABLED=true` and complete verified config.
 - Risks: identity boundary is the security seam — cookie subject maps directly to `users.id` and must never accept client-supplied identifiers; enabling the flag requires a verified TLS `DATABASE_URL`; Start-pack content join still unsolved.
-- Review status: review_requested; stop at Draft PR for independent high-reasoning review.
+- Review status: accepted — merged through PR #163 at `73cdb62` (2026-08-30) after independent high-reasoning review and green checks; report retained for traceability.
 - Secrets or production changes: none. No credentials, real personal data, provider activation, production flag enablement or network activation was added; `WEB_LEARNER_STATE_ENABLED` defaults false.
 - Bobo canonical status: untouched.

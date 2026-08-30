@@ -1,6 +1,6 @@
 # ADR 0012 — Web learner-state server wiring
 
-- **Status:** accepted design contract; route implemented on branch `worker/m1b-web-learner-state-read` (pending review); Start Pack seed/release remains a separate owner/review-gated decision
+- **Status:** accepted design contract; route implemented and merged in PR #163 at `73cdb62` (2026-08-30) behind the fail-closed `WEB_LEARNER_STATE_ENABLED` runtime; Start Pack seed/release remains a separate owner/review-gated decision
 - **Date:** 2026-08-30
 - **Basis:** `origin/main` at `0edd338` (M1-B Web slice 1, PR #156; M1-D slice 1, PR #152; M1-A contract, PR #151)
 
@@ -94,8 +94,8 @@ reviewEventsCount }`, `200`, `cache-control: no-store`,
 ## Explicit blockers (this document records them; it does not resolve them)
 
 1. **Route not yet implemented (resolved).** `apps/website/app/api/learner/state/route.ts` is
-   implemented on branch `worker/m1b-web-learner-state-read` behind the fail-closed
-   `WEB_LEARNER_STATE_ENABLED` runtime (pending review).
+   implemented behind the fail-closed `WEB_LEARNER_STATE_ENABLED` runtime and merged in PR #163
+   at `73cdb62`.
 2. **Web session → `users.id` mapping (resolved).** PR #162 ("bind OTP sessions to canonical
    users") resolved this: the Web OTP verification resolves `users.id` server-side and issues
    the signed cookie with the canonical UUID subject, so the read route maps the cookie
@@ -144,7 +144,7 @@ reviewEventsCount }`, `200`, `cache-control: no-store`,
 - Web Today moves from `local-only` to server-backed figures only when the read succeeds and
   is parsed; the truthful local labels, loading/error/offline fallbacks and pending chip (PR
   #156, this slice) remain otherwise. Start Pack seed/release (blocker 3) and API-module
-  pool wiring (blocker 4) remain open; the route is implemented and review-pending.
+  pool wiring (blocker 4) remain open; the route is merged (PR #163).
 - The Web read reuses the verified M1-D service/repository seam, so plan and schedules
   match what the server would schedule next (`createDailySessionPlan`), and
   `reviewEventsCount` is exact server truth.
