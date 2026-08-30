@@ -1,5 +1,18 @@
 # LB-DS-023 — M1-D client-side reconciliation cursor capture/persistence
 
+- Branch: `worker/m1d-client-cursor-slice`
+- Base commit: `9ff7c99` (PR #169 server-core reconciliation cursor merge)
+- Head commit: `001d390` (implementation/tests; metadata normalization pending)
+- Draft PR: https://github.com/bahramghorbani/learnbox/pull/170 (open, non-draft)
+- Scope completed: client-side cursor capture/persistence at the dormant foreground sync boundary; strict decimal-string parsing; fail-closed storage; exact acknowledgement safety; no production activation.
+- Files changed: sync-boundary Dart files and sync tests under `apps/mobile`; `docs/architecture/M1D_SYNC_PERSISTENCE_SLICE1.md`; `CURRENT_WORK.md`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-023.md`.
+- Checks run: Flutter focused sync suites 56/56; full Flutter tests 173/173; Flutter analyze; Dart format; `pnpm check`; AI worker queue and documentation validators; GitHub mobile, production-stack and secrets checks; `git diff --check`.
+- Checks unavailable: none for the required gate; no native simulator or release build was required by this slice.
+- Remaining work: read cursor from learner-state; send cursor in a future authenticated request contract; route/client integration and flag enablement remain separately gated.
+- Risks: cursor write failure after durable queue acknowledgement returns retryable and requires later cursor recovery; production sync remains disabled.
+- Secrets or production changes: none; no credentials, endpoints, flags, auth, route, server, schema, deployment or production activation changed.
+- Bobo canonical status: not affected.
+
 - Status: review_requested
 - Executor: mobile-worker (W3)
 - Base: `main` at `9ff7c99` (PR #169, server-core reconciliation cursor merged)

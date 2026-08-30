@@ -56,8 +56,9 @@ The historical LB-DS and NI records below remain for traceability. They are not 
 - Allowed paths: apps/mobile/lib/features/sync/**; apps/mobile/test/** sync-related tests; docs/architecture/M1D_SYNC_PERSISTENCE_SLICE1.md; CURRENT_WORK.md; .ai/WORK_QUEUE.md; .ai/worker-reports/LB-DS-023.md
 - Required checks: flutter pub get (offline if possible); dart format --output=none --set-exit-if-changed; flutter analyze; focused sync tests; flutter test; git diff --check
 - Simulator required: no
-- Draft PR required: no (non-draft PR opened for supervisor review)
+- Draft PR required: no
 - Merge allowed: yes
+- Non-draft PR #170 is open for supervisor review.
 
 Client-side cursor capture/persistence for the existing dormant foreground sync
 boundary (ADR 0014). `ReviewUploadResponse` gains an optional decimal-string
