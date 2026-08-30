@@ -45,6 +45,41 @@ start. Historical tasks remain for traceability and must not be duplicated.
 
 The historical LB-DS and NI records below remain for traceability. They are not authorization to duplicate or reopen completed work.
 
+## LB-DS-023
+
+- Status: review_requested
+- Executor: mobile-worker (W3)
+- Base: main at `9ff7c99` (PR #169, server-core reconciliation cursor merged)
+- Branch: worker/m1d-client-cursor-slice
+- Risk: routine-offline-mobile-sync-boundary
+- Specification: docs/architecture/ADR/0014-push-reconciliation-cursor-policy.md; docs/architecture/M1D_SYNC_PERSISTENCE_SLICE1.md (appendix Slice 1c)
+- Allowed paths: apps/mobile/lib/features/sync/**; apps/mobile/test/** sync-related tests; docs/architecture/M1D_SYNC_PERSISTENCE_SLICE1.md; CURRENT_WORK.md; .ai/WORK_QUEUE.md; .ai/worker-reports/LB-DS-023.md
+- Required checks: flutter pub get (offline if possible); dart format --output=none --set-exit-if-changed; flutter analyze; focused sync tests; flutter test; git diff --check
+- Simulator required: no
+- Draft PR required: no
+- Merge allowed: yes
+- Non-draft PR #170 is open for supervisor review.
+
+Client-side cursor capture/persistence for the existing dormant foreground sync
+boundary (ADR 0014). `ReviewUploadResponse` gains an optional decimal-string
+`reconciliationCursor`; `HttpReviewSyncTransport` strictly parses the existing
+single-key `{ "outcomes": [...] }` response (acknowledged outcomes must carry a
+non-empty exact `clientEventId` and a valid non-negative decimal-string cursor;
+malformed acknowledged cursor or response is retryable with no acknowledgements;
+non-acknowledged outcomes stay non-acknowledged; request keeps exactly one
+`items` key and sends no cursor). New injected `ReconciliationCursorStore` seam
+(fail-closed invalid stored cursor; write only after exact acknowledgement
+validation and successful queue acknowledgement). `ReviewSyncCoordinator` reads
+the prior cursor, persists the response cursor only after exact ack validation
+and a successful queue acknowledge; a cursor alone never removes queue entries;
+no-ack means no cursor write; in-flight serialization unchanged.
+`ReviewSyncResult.Synchronized` carries the persisted cursor (decimal string,
+null when absent) and never claims server sync beyond exact acknowledgements.
+Cursor write failure returns retryable failure and never reports Synchronized;
+queue acknowledgement is durable first, so no acknowledged event is lost
+(documented and tested). No API/server/schema/route/auth/main.dart/UI/flag
+change; production sync remains disabled and no request carries a cursor yet.
+
 ## LB-DS-022
 
 - Status: accepted

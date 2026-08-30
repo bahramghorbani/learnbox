@@ -13,6 +13,7 @@ sealed class ReviewSyncResult {
   const factory ReviewSyncResult.synchronized({
     required int acknowledgedCount,
     required int remainingCount,
+    String? cursor,
   }) = Synchronized;
 
   /// The attempt failed; [remainingCount] events were left pending.
@@ -33,10 +34,15 @@ class Synchronized extends ReviewSyncResult {
   const Synchronized({
     required this.acknowledgedCount,
     required this.remainingCount,
+    this.cursor,
   });
 
   final int acknowledgedCount;
   final int remainingCount;
+
+  /// Persisted authoritative reconciliation cursor (ADR 0014); null when the
+  /// transport did not report one.
+  final String? cursor;
 }
 
 class RetryableFailure extends ReviewSyncResult {
