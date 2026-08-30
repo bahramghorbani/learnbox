@@ -35,6 +35,7 @@ function dependencies(): {
         clientEventId: 'evt-1',
         eventId: 'event-1',
         idempotent: false,
+        reconciliationCursor: 1,
       },
     ]),
   };
@@ -47,7 +48,13 @@ describe('mobile review HTTP boundary', () => {
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({
       outcomes: [
-        { status: 'acknowledged', clientEventId: 'evt-1', eventId: 'event-1', idempotent: false },
+        {
+          status: 'acknowledged',
+          clientEventId: 'evt-1',
+          eventId: 'event-1',
+          idempotent: false,
+          reconciliationCursor: 1,
+        },
       ],
     });
     expect(deps.submit).toHaveBeenCalledWith({
