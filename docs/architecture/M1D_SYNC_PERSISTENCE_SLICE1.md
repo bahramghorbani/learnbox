@@ -156,3 +156,60 @@ advance_learner_reconciliation_cursor` → `COMMIT`). Exact idempotent replay re
 Remaining (separate serial M1-D slices): reading the cursor in `GET /api/learner/state`,
 client-side cursor storage/reconciliation, and any route/client integration. Until then the
 cursor is server-core only and the milestone stays partial / not production-ready.
+
+---
+
+## Appendix — Slice 1c: client-side cursor capture and persistence (ADR 0014)
+
+**Status:** merged (PR #170); client-side capture/persistence only. **Network sync remains
+dormant** — production composition (`MobileAuthConfig.defaults()`) still returns
+`signedOut` + `DisabledReviewSyncTransport`, and no request carries a cursor field yet.
+Basis `origin/main` at `9ff7c99` (PR #169). ADR 0014 remains the authoritative decision
+contract and is unchanged.
+
+What Slice 1c implements (allowed paths: `apps/mobile/lib/features/sync/**`,
+`apps/mobile/test/**` sync tests, this appendix, `CURRENT_WORK.md`):
+
+- `ReviewUploadResponse` gains an optional `reconciliationCursor` decimal string
+  (never a Dart double or JS number); `acknowledgedClientEventIds` is preserved.
+- `HttpReviewSyncTransport` strictly parses the existing single-key `{ "outcomes": [...] }`
+  shape. An acknowledged outcome must carry a non-empty exact `clientEventId` **and** a valid
+  non-negative decimal-string `reconciliationCursor`; a malformed acknowledged cursor or a
+  malformed response is retryable (`validation`) and produces no acknowledgements.
+  Non-acknowledged outcomes stay non-acknowledged. The request body keeps exactly one
+  `items` key; no cursor is sent.
+- New `ReconciliationCursorStore` seam (`Future<String?> read()`,
+  `Future<void> write(String cursor)`), injected into `ReviewSyncCoordinator` (optional;
+  production does not inject one). Implementations fail closed: an invalid stored cursor is
+  treated as absent (`parseReconciliationCursor`). `write` is called only after the response
+  acknowledgement was fully validated **and** the queue acknowledgement succeeded.
+- `ReviewSyncCoordinator` reads the prior cursor and persists the response cursor only after
+  exact acknowledgement validation and a successful queue acknowledge. A cursor alone never
+  removes queue entries. With no acknowledged events the cursor is never written. In-flight
+  serialization is unchanged.
+- `ReviewSyncResult.Synchronized` carries the persisted cursor as a decimal string
+  (`cursor`), null when the transport reported none. It claims only exact acknowledgements;
+  it never claims server sync beyond them.
+- A cursor write failure returns `RetryableFailure` (never `Synchronized`) and preserves
+  queue safety: the queue acknowledgement has already durably removed only the exact
+  acknowledged events, so a retry reports `nothingPending` and the server's idempotency +
+  next-batch cursor recover the position. No event loss and no false synchronized claim.
+  This ordering (queue acknowledge before cursor write) is deliberate and documented.
+
+Tests (TDD: failing first, then implementation):
+
+- `apps/mobile/test/reconciliation_cursor_store_test.dart` — fail-closed invalid stored
+  cursors (empty, whitespace, sign, decimal, exponent, hex, non-ASCII), round-trip,
+  no clearing on failed write.
+- `apps/mobile/test/reconciliation_cursor_transport_test.dart` — valid decimal-string
+  cursor parse, no cursor without an acknowledged outcome, one-key request shape with no
+  cursor field, malformed/missing/negative/non-decimal/non-string cursor rejection,
+  extra top-level key rejection.
+- `apps/mobile/test/reconciliation_cursor_coordinator_test.dart` — exact ack + cursor
+  persistence, invalid stored cursor fail-closed, no-ack no-write, cursor write failure is
+  retryable and never deletes acknowledged events (recoverable on retry), cursor alone
+  never authorizes queue removal, idempotent replay keeps acknowledged removal semantics.
+
+Remaining (separate serial M1-D slices): reading the cursor in `GET /api/learner/state`,
+sending the stored cursor with a request, and any route/client integration. The milestone
+stays partial / not production-ready; production sync remains disabled.

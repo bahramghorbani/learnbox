@@ -19,7 +19,7 @@ void main() {
     final client = _FakeClient(const MobileReviewHttpResponse(
       statusCode: 200,
       body:
-          '{"outcomes":[{"status":"acknowledged","clientEventId":"event-1"}]}',
+          '{"outcomes":[{"status":"acknowledged","clientEventId":"event-1","eventId":"event-1","idempotent":false,"reconciliationCursor":"1"}]}',
     ));
     final transport = HttpReviewSyncTransport(
       sessionStore: _FakeStore(const MobileSession(

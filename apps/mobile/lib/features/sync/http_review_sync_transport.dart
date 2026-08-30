@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:learnbox/features/identity/mobile_session_store.dart';
 import 'package:learnbox/features/review/pending_review_event.dart';
+import 'package:learnbox/features/sync/reconciliation_cursor_store.dart';
 import 'package:learnbox/features/sync/review_sync_transport.dart';
 
 abstract interface class MobileReviewHttpClient {
@@ -87,17 +88,28 @@ class HttpReviewSyncTransport implements ReviewSyncTransport {
       throw const MobileReviewTransportException('validation');
     }
     final acknowledged = <String>[];
+    String? acknowledgedCursor;
     for (final outcome in decoded['outcomes'] as List<Object?>) {
       if (outcome is! Map<String, dynamic> ||
           outcome['status'] != 'acknowledged') {
         continue;
       }
       final clientEventId = outcome['clientEventId'];
-      if (clientEventId is String && clientEventId.isNotEmpty) {
-        acknowledged.add(clientEventId);
+      // An acknowledged outcome must carry an exact non-empty client event id
+      // and a valid non-negative decimal-string reconciliation cursor
+      // (ADR 0014). A malformed acknowledged cursor makes the whole response
+      // retryable with no acknowledgements.
+      final cursor = parseReconciliationCursor(outcome['reconciliationCursor']);
+      if (cursor == null || clientEventId is! String || clientEventId.isEmpty) {
+        throw const MobileReviewTransportException('validation');
       }
+      acknowledged.add(clientEventId);
+      acknowledgedCursor = cursor;
     }
-    return ReviewUploadResponse(acknowledgedClientEventIds: acknowledged);
+    return ReviewUploadResponse(
+      acknowledgedClientEventIds: acknowledged,
+      reconciliationCursor: acknowledgedCursor,
+    );
   }
 }
 
