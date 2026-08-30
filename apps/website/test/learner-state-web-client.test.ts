@@ -73,4 +73,117 @@ describe('web learner state client', () => {
     });
     expect((await fetchWebLearnerState(networkFailure)).status).toBe('unavailable');
   });
+
+  it.each([
+    ['missing cardId', (schedule: Record<string, unknown>) => ({ ...schedule, cardId: undefined })],
+    ['empty cardId', (schedule: Record<string, unknown>) => ({ ...schedule, cardId: '' })],
+    [
+      'missing contentId',
+      (schedule: Record<string, unknown>) => ({ ...schedule, contentId: undefined }),
+    ],
+    ['empty contentId', (schedule: Record<string, unknown>) => ({ ...schedule, contentId: '' })],
+    [
+      'disallowed schedule state',
+      (schedule: Record<string, unknown>) => ({ ...schedule, state: 'vaporized' }),
+    ],
+    [
+      'non-finite stabilityDays',
+      (schedule: Record<string, unknown>) => ({
+        ...schedule,
+        stabilityDays: Number.POSITIVE_INFINITY,
+      }),
+    ],
+    [
+      'negative stabilityDays',
+      (schedule: Record<string, unknown>) => ({ ...schedule, stabilityDays: -1 }),
+    ],
+    [
+      'non-finite lapses',
+      (schedule: Record<string, unknown>) => ({ ...schedule, lapses: Number.NaN }),
+    ],
+    ['negative lapses', (schedule: Record<string, unknown>) => ({ ...schedule, lapses: -2 })],
+    [
+      'non-finite difficulty',
+      (schedule: Record<string, unknown>) => ({ ...schedule, difficulty: Number.NaN }),
+    ],
+    [
+      'invalid dueAt date',
+      (schedule: Record<string, unknown>) => ({ ...schedule, dueAt: 'not-a-date' }),
+    ],
+  ])('rejects a schedule entry with %s', async (_label, mutate) => {
+    const body = structuredClone(canonicalBody) as {
+      schedules: Array<Record<string, unknown>>;
+      plan: Record<string, unknown>;
+      reviewEventsCount: unknown;
+    };
+    body.schedules = [mutate(structuredClone(canonicalBody.schedules[0]))];
+    expect((await fetchWebLearnerState(vi.fn(async () => jsonResponse(200, body)))).status).toBe(
+      'unavailable',
+    );
+  });
+
+  it.each([
+    ['disallowed plan mode', (plan: Record<string, unknown>) => ({ ...plan, mode: 'party' })],
+    ['missing plan', () => null],
+    [
+      'non-array reviewCardIds',
+      (plan: Record<string, unknown>) => ({ ...plan, reviewCardIds: 'all' }),
+    ],
+    [
+      'non-string reviewCardIds entry',
+      (plan: Record<string, unknown>) => ({ ...plan, reviewCardIds: [1] }),
+    ],
+    ['non-array newCardIds', (plan: Record<string, unknown>) => ({ ...plan, newCardIds: 3 })],
+    [
+      'non-string newCardIds entry',
+      (plan: Record<string, unknown>) => ({ ...plan, newCardIds: [true] }),
+    ],
+    ['missing plan message', (plan: Record<string, unknown>) => ({ ...plan, message: undefined })],
+  ])('rejects a plan with %s', async (_label, mutate) => {
+    const body = structuredClone(canonicalBody) as {
+      schedules: Array<Record<string, unknown>>;
+      plan: Record<string, unknown>;
+      reviewEventsCount: unknown;
+    };
+    body.plan = mutate(structuredClone(canonicalBody.plan)) as Record<string, unknown>;
+    expect((await fetchWebLearnerState(vi.fn(async () => jsonResponse(200, body)))).status).toBe(
+      'unavailable',
+    );
+  });
+
+  it.each([
+    ['fractional reviewEventsCount', 1.5],
+    ['negative reviewEventsCount', -1],
+    ['non-finite reviewEventsCount', Number.POSITIVE_INFINITY],
+    ['string reviewEventsCount', '2'],
+  ])('rejects %s', async (_label, value) => {
+    const body = structuredClone(canonicalBody) as {
+      schedules: Array<Record<string, unknown>>;
+      plan: Record<string, unknown>;
+      reviewEventsCount: unknown;
+    };
+    body.reviewEventsCount = value;
+    expect((await fetchWebLearnerState(vi.fn(async () => jsonResponse(200, body)))).status).toBe(
+      'unavailable',
+    );
+  });
+
+  it('accepts the canonical schedule states and zero reviewEventsCount', async () => {
+    const body = structuredClone(canonicalBody);
+    body.schedules = (
+      ['new', 'learning', 'review', 'relearning', 'mastered', 'suspended', 'archived'] as const
+    ).map((state, index) => ({
+      ...body.schedules[0],
+      cardId: `11111111-1111-4111-8111-1111111111${String(index).padStart(2, '0')}`,
+      state,
+    }));
+    body.plan = { ...body.plan, mode: 'recovery' };
+    body.reviewEventsCount = 0;
+    const result = await fetchWebLearnerState(vi.fn(async () => jsonResponse(200, body)));
+    expect(result.status).toBe('ok');
+    if (result.status !== 'ok') throw new Error('unreachable');
+    expect(result.snapshot.schedules).toHaveLength(7);
+    expect(result.snapshot.schedules[6].state).toBe('archived');
+    expect(result.snapshot.plan.mode).toBe('recovery');
+  });
 });

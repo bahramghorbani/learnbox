@@ -55,7 +55,7 @@ describe('Today server snapshot truth states', () => {
     expect(fetchMock.mock.calls.filter(([url]) => url === '/api/learner/state')).toHaveLength(0);
   });
 
-  it('shows server-backed figures only after a successful fetch and parse, without claiming acknowledgement', async () => {
+  it('shows the server-read label after a successful fetch while keeping the local session figure, without claiming acknowledgement', async () => {
     vi.stubGlobal('fetch', mockRouter({ state: () => json(200, canonicalBody) }));
     rendered = await renderLearner({ otpUiFlag: 'true' });
     await rendered.signInLocally();
@@ -64,7 +64,7 @@ describe('Today server snapshot truth states', () => {
       await Promise.resolve();
     });
     expect(rendered.text()).toContain('سرور LearnBox خوانده شده');
-    expect(rendered.text()).toContain('۱ کارت برای شروع');
+    expect(rendered.text()).toContain('۳ کارت برای شروع');
     expect(rendered.text()).not.toContain('همگام‌سازی شد');
   });
 
@@ -107,6 +107,39 @@ describe('Today server snapshot truth states', () => {
     });
     expect(rendered.text()).toContain('آفلاین');
     expect(rendered.text()).not.toContain('سرور LearnBox خوانده شده');
+  });
+
+  it('keeps the local session figure for the Today CTA when the server snapshot lists one review card', async () => {
+    const serverSnapshotWithOneReview = {
+      schedules: [
+        {
+          cardId: '11111111-1111-4111-8111-111111111111',
+          contentId: 'start-a1-haus',
+          state: 'review',
+          stabilityDays: 4,
+          difficulty: 0.4,
+          lapses: 0,
+          dueAt: '2026-08-08T06:00:00.000Z',
+        },
+      ],
+      plan: {
+        mode: 'normal',
+        reviewCardIds: ['11111111-1111-4111-8111-111111111111'],
+        newCardIds: [],
+        message: 'daily',
+      },
+      reviewEventsCount: 1,
+    };
+    vi.stubGlobal('fetch', mockRouter({ state: () => json(200, serverSnapshotWithOneReview) }));
+    rendered = await renderLearner({ otpUiFlag: 'true' });
+    await rendered.signInLocally();
+    await rendered.clickButton('ادامه');
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(rendered.text()).toContain('سرور LearnBox خوانده شده');
+    expect(rendered.text()).toContain('۳ کارت برای شروع');
+    expect(rendered.text()).not.toContain('۱ کارت برای شروع');
   });
 
   it('preserves the local pending-sync chip alongside server-backed figures', async () => {

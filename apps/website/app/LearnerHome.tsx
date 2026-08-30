@@ -130,12 +130,10 @@ export function LearnerHome({
   const [startMediaMode, setStartMediaMode] = useState<StartMediaMode>('placeholder');
   const [isRecordingGrade, setIsRecordingGrade] = useState(false);
   const [serverSyncState, setServerSyncState] = useState<LearnerSyncState>('local-only');
-  const [serverReviewCount, setServerReviewCount] = useState<number | null>(null);
   const [serverLastSyncedAt, setServerLastSyncedAt] = useState<string | null>(null);
   const gradeSubmissionRef = useRef(false);
   const remainingTodayReviews = Math.max(0, studyItems.length - reviewedToday);
   const isServerOtp = authMode === 'server-otp';
-  const displayReviewCount = serverReviewCount ?? remainingTodayReviews;
 
   useEffect(() => {
     if (!authenticated || typeof window === 'undefined') return;
@@ -214,25 +212,20 @@ export function LearnerHome({
       .then((result) => {
         if (cancelled) return;
         if (result.status === 'ok') {
-          const serverScheduledCount = result.snapshot.plan.reviewCardIds.length;
-          setServerReviewCount(serverScheduledCount);
           setServerLastSyncedAt(new Date().toISOString());
           setServerSyncState('server-backed');
           return;
         }
         if (result.status === 'unauthorized') {
-          setServerReviewCount(null);
           setServerSyncState('local-only');
           return;
         }
-        setServerReviewCount(null);
         setServerSyncState(
           typeof navigator !== 'undefined' && navigator.onLine === false ? 'offline' : 'error',
         );
       })
       .catch(() => {
         if (cancelled) return;
-        setServerReviewCount(null);
         setServerSyncState('error');
       });
     return () => {
@@ -582,7 +575,7 @@ export function LearnerHome({
   return (
     <>
       <TodayScreen
-        reviewCount={displayReviewCount}
+        reviewCount={remainingTodayReviews}
         syncState={serverSyncState}
         pendingReviewCount={pendingReviewCount}
         lastSyncedAt={serverLastSyncedAt}

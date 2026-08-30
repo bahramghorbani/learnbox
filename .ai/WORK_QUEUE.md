@@ -13,7 +13,7 @@ start. Historical tasks remain for traceability and must not be duplicated.
 - **M1-D slice 1 — Learner state snapshot:** accepted and merged in PR #152. Implementation: `GET /api/learner/state`, fail-closed and not Web-wired yet.
 - **M1-B server-wiring contract — Web learner state:** accepted design (ADR 0012). Web HttpOnly learner cookie → Next.js `GET /api/learner/state` route → server-side identity mapping → existing `LearnerStateService`/repository is approved; route implementation, Web session → `users.id` mapping and Start Pack seed/release remain separate owner/review-gated decisions.
 - **M1-B slice 1 — Web Today truth label:** accepted and merged in PR #156; server wiring implemented in LB-DS-022 (`worker/m1b-web-learner-state-read`, Draft PR pending review) behind the fail-closed `WEB_LEARNER_STATE_ENABLED` runtime.
-- **M1-B slice 2 — Web learner-state read route + truthful Today fetch:** Draft PR on `worker/m1b-web-learner-state-read` (LB-DS-022); server-backed figures only after a successful cookie-authenticated read; Start Pack ↔ canonical `contentId` join remains an open catalog contract.
+- **M1-B slice 2 — Web learner-state read route + truthful Today fetch:** Draft PR on `worker/m1b-web-learner-state-read` (LB-DS-022); review findings fixed (Today figure stays local until the Start Pack ↔ canonical `contentId` join exists; strict nested snapshot validation on the client); server-backed figures only after a successful cookie-authenticated read; Start Pack ↔ canonical `contentId` join remains an open catalog contract.
 - **M1-C slice 1 — Mobile Today states:** accepted and merged in PR #155; local queue chip is truthful, sync coordinator remains dormant.
 - **M1-Q — Independent QA:** accepted and merged in PR #157; report: `.ai/qa-reports/M1-Q-INDEPENDENT-QA.md`.
 - **Next:** resolve M-L1 formatting gate, M-L2 Web numeral parity, M-L3 Web pending-sync parity, then design and implement the server-wired learner slice.
@@ -47,6 +47,7 @@ The historical LB-DS and NI records below remain for traceability. They are not 
 - Executor: web-worker (W2)
 - Base: main at `5616d0d` (PR #162 merged; cookie subject = canonical users.id)
 - Branch: worker/m1b-web-learner-state-read
+- Fix head: branch head after review-finding fixes
 - Risk: security-sensitive-web-learner-session-boundary
 - Specification: docs/architecture/ADR/0012-web-learner-state-server-wiring.md; docs/architecture/M1_ONLINE_LEARNING_CONTRACT.md §9/§12
 - Allowed paths: apps/website/app/api/learner/state/route.ts; apps/website/lib/learner-state-web-http.ts; apps/website/lib/learner-state-web-runtime.ts; apps/website/lib/learner-state-web-client.ts; apps/website/app/components/TodayScreen.tsx; apps/website/app/LearnerHome.tsx; apps/website/app/learner-sync-state.ts; apps/website/test/learner-state-web-route.test.ts; apps/website/test/learner-state-web-http.test.ts; apps/website/test/learner-state-web-client.test.ts; apps/website/test/learner-today-server-states.test.tsx; apps/website/README-M1B-WEB-SLICE1.md; .env.example; docs/architecture/ADR/0012-web-learner-state-server-wiring.md; docs/PRODUCT_STATUS.md; .ai/WORK_QUEUE.md; .ai/worker-reports/LB-DS-022.md; CURRENT_WORK.md

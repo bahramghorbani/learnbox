@@ -11,7 +11,7 @@
 - **M1-A contract audit:** completed in PR #151.
 - **M1-D slice 1:** completed in PR #152; server snapshot remains fail-closed and not Web-wired.
 - **M1-B Web slice 1:** completed in PR #156; Today was explicitly local-only until the server wiring slice.
-- **M1-B Web slice 2 (LB-DS-022):** Draft PR on `worker/m1b-web-learner-state-read` — ADR 0012 route `GET /api/learner/state` (cookie subject = canonical `users.id`) plus truthful Today fetch; server-backed figures only after a successful read; Start Pack ↔ canonical `contentId` join still open; `WEB_LEARNER_STATE_ENABLED` defaults false.
+- **M1-B Web slice 2 (LB-DS-022):** Draft PR on `worker/m1b-web-learner-state-read` — ADR 0012 route `GET /api/learner/state` (cookie subject = canonical `users.id`) plus truthful Today fetch; server read is truthful and the actionable Today figure stays tied to the local bundled session until the Start Pack ↔ canonical `contentId` join exists; `WEB_LEARNER_STATE_ENABLED` defaults false. Review findings fixed on this branch (local figure preserved; strict nested snapshot validation).
 - **M1-C Mobile slice 1:** completed in PR #155; Today local queue state is truthful, sync coordinator remains dormant.
 - **M1-Q independent QA:** completed in PR #157; report `.ai/qa-reports/M1-Q-INDEPENDENT-QA.md`.
 - **Next active work:** review LB-DS-022, then resolve the Start Pack ↔ canonical `contentId` catalog contract, then implement push reconciliation only after its cursor/watermark policy is approved.
