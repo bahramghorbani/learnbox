@@ -36,9 +36,12 @@ production path that reuses only verified M1-A seams:
   direction (server-persisted `acknowledgement` watermark / client-cursor), which the M1-A
   contract explicitly leaves open ("Proposed (M1-D): policy ... not specified today"). Adding
   a table for an unspecified push contract would be speculative schema.
-- Future push-reconciliation slice must be serial, additive and covered by a migration test
-  (M1-D 12.5); it will also need an explicit decision on what the server should do with events
-  acknowledged-but-not-yet-applied vs applied.
+- **Future push-reconciliation slice must be serial, additive and covered by a migration test
+  (M1-D 12.5); it must implement the cursor/watermark policy approved in
+  [ADR 0014](ADR/0014-push-reconciliation-cursor-policy.md): a per-learner monotonic integer
+  version, incremented only when a review event is newly applied, committed in the same
+  transaction as the event and schedule update. It will also need an explicit decision on
+  what the server should do with events acknowledged-but-not-yet-applied vs applied.
 
 ## Wire contract (documented, matches implementation)
 
@@ -113,7 +116,9 @@ production path that reuses only verified M1-A seams:
 ## Next steps (not in this slice)
 
 1. Push-reconciliation contract decision (server ack watermark / client cursor) with migration
-   test coverage (M1-D 12.5) — serial, owner-reviewed.
+   test coverage (M1-D 12.5) — serial, owner-reviewed. The cursor/watermark **policy** is
+   approved in [ADR 0014](ADR/0014-push-reconciliation-cursor-policy.md); the migration +
+   service implementation remains a separate serial M1-D queue task.
 2. M1-B web client moves from `learnbox:review-sync:v1:local-prototype` to this authenticated
    read + the existing review-write protocol; versioned storage keys.
 3. New-card catalog candidates for `createDailySessionPlan` once pack membership is defined.

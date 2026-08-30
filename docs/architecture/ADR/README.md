@@ -12,4 +12,8 @@ Web HttpOnly-cookie → Next.js route → learner-state-service wiring contract 
 its explicit blockers, and
 [ADR 0013](0013-start-pack-contentid-contract.md), which records that bundled
 Start Pack IDs are canonical immutable `cards.content_id` values for M1 (clients
-send `contentId`; the server resolves it to `cards.id`).
+send `contentId`; the server resolves it to `cards.id`), and
+[ADR 0014](0014-push-reconciliation-cursor-policy.md), which records the approved
+M1-D push reconciliation cursor/watermark policy: a per-learner monotonic integer
+version incremented only when a review event is newly applied, committed in the
+same transaction as the event and schedule update.

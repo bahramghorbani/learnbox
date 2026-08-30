@@ -14,7 +14,11 @@
 - **M1-B Web slice 2 (LB-DS-022):** merged in PR #163 at `73cdb62` (2026-08-30); ADR 0012 route `GET /api/learner/state` (cookie subject = canonical `users.id`) plus truthful Today fetch are on `main` behind the fail-closed `WEB_LEARNER_STATE_ENABLED` runtime (defaults false). The actionable Today figure stays tied to the local bundled session until the approved/published Start Pack seed/catalog rows are implemented and released (the Start Pack ↔ canonical `contentId` contract itself is recorded in ADR 0013; seed/catalog implementation remains a separate review-gated task).
 - **M1-C Mobile slice 1:** completed in PR #155; Today local queue state is truthful, sync coordinator remains dormant.
 - **M1-Q independent QA:** completed in PR #157; report `.ai/qa-reports/M1-Q-INDEPENDENT-QA.md`. Independent acceptance/visual/accessibility QA remains pending for the merged server-wired slice.
-- **Next active work:** Start Pack ↔ canonical `contentId` contract is recorded in ADR 0013 (bundled IDs are canonical immutable `cards.content_id`; clients send `contentId`, server resolves `cards.id`); seed/catalog implementation and M1-D push reconciliation remain separate review-gated tasks (reconciliation blocked pending cursor/watermark policy approval).
+- **Next active work:** M1-D push reconciliation cursor/watermark policy is approved in
+  ADR 0014 (per-learner monotonic version, incremented only on newly applied events,
+  committed in the same transaction as event and schedule update); the migration/service
+  implementation remains a separate serial, review-gated M1-D queue task; seed/catalog
+  implementation remains a separate review-gated task.
 
 ## Immediate execution order
 
@@ -22,7 +26,9 @@
 2. Fix M-L2/M-L3: align Web Today numerals and pending-sync parity, with tests.
 3. Start Pack ↔ canonical `contentId` contract is decided and recorded in ADR 0013; seed/catalog implementation remains a separate review-gated task.
 4. Implement the authenticated server-wired learner path completion and any remaining D1 fetch states.
-5. Decide and implement M1-D push reconciliation only after cursor/watermark policy approval. Blocked pending policy approval.
+5. Decide and implement M1-D push reconciliation. The cursor/watermark policy is approved in
+   ADR 0014; the migration/service implementation is a separate serial, review-gated queue
+   task.
 6. Re-run M1-Q independent acceptance, visual and accessibility QA against the merged server-wired slice (PR #163).
 
 ## Owner-approved product decisions captured in M0
