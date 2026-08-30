@@ -108,6 +108,15 @@ LEAST(occurred_at, now()))` — monotonic, never before prior applied_at for tha
   reconciliation cursor/watermark policy remains a separate M1-D decision.
 - **Event read API:** no endpoint returns a learner's review events or due cards to a client.
   All "Today"/due selection endpoints are **proposed**, not implemented.
+- **Push reconciliation cursor/watermark — DECIDED (ADR 0014):** each learner has one
+  monotonic integer version/cursor, incremented only when a review event is newly applied to
+  the server projection, and committed in the same transaction as the event and schedule
+  update. Idempotent replay, validation/conflict/unknown/unpublished outcomes, and clock skew
+  do not increment it. A response cursor is the authoritative projection version, not proof
+  that all local events are acknowledged; the client removes only exactly acknowledged
+  `clientEventId`s and preserves the queue and prior cursor on malformed/partial responses.
+  The cursor is never a timestamp, never global, and does not replace idempotency;
+  `applied_at` remains audit metadata. Implementation remains a serial M1-D queue task.
 
 ---
 
@@ -127,9 +136,12 @@ LEAST(occurred_at, now()))` — monotonic, never before prior applied_at for tha
 - Schedules must exist before an event can be applied: `findSchedule` miss → per-item
   `validation`; store refuses to update a missing schedule (`writeAtomically` throws).
 
-**Proposed (M1-D):** server-side snapshot/state endpoint (e.g. due cards + schedules +
-pending-count reconciliation) so clients can rebuild state after reconnect; the exact shape
-is not implemented.
+- **Proposed (M1-D):** server-side snapshot/state endpoint (e.g. due cards + schedules +
+  pending-count reconciliation) so clients can rebuild state after reconnect; the exact shape
+  is not implemented. The push-reconciliation cursor/watermark policy that this read pairs
+  with is decided in [ADR 0014](ADR/0014-push-reconciliation-cursor-policy.md): a per-learner
+  monotonic integer version incremented only on newly applied events, committed in the same
+  transaction as event and schedule update; implementation remains a serial M1-D queue task.
 
 ---
 
@@ -203,7 +215,10 @@ before acknowledgement" invariant must hold across surfaces.
 
 **Proposed (M1-D):** policy for `idempotencyConflict` events (retry with new ID after
 resolving payload mismatch vs. permanent tombstone), and conflict surface between concurrent
-devices editing the same personal vocabulary. Not specified today.
+devices editing the same personal vocabulary. Not specified today. The push-reconciliation
+cursor/watermark policy (how acknowledged events are compactly reported to clients) is
+decided in [ADR 0014](ADR/0014-push-reconciliation-cursor-policy.md); it does not change any
+of the conflict rules above.
 
 ---
 
@@ -356,7 +371,11 @@ contract for the future task.
    `serverUnavailable`, no cookie, no-store.
 3. **[P]** A learner can fetch server-authoritative due cards and schedule state after
    reconnect; the response matches what the server would schedule, and local pending events
-   are not dropped or duplicated in the process.
+   are not dropped or duplicated in the process. Push reconciliation is governed by the
+   cursor/watermark policy in [ADR 0014](ADR/0014-push-reconciliation-cursor-policy.md):
+   the server returns a per-learner monotonic integer version that increments only when a
+   review event is newly applied, and the client removes only exactly acknowledged
+   `clientEventId`s.
 4. **[P]** All pending events survive app restart and are removed only after an exact
    acknowledgement of their `clientEventId`; a corrupt local queue fails closed and never
    reaches the server.

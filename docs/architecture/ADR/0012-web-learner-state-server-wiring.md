@@ -75,9 +75,11 @@ reviewEventsCount }`, `200`, `cache-control: no-store`,
   learner (`COUNT(*)` in `postgres-learner-state.repository.ts`). It is **not** a
   pending/acknowledged delta and not a "synced" proof. The client reconciles its local
   pending queue against it; a count of zero does not mean the local queue is empty, and a
-  non-zero count does not mean the local queue is acknowledged. Until the server-side push
-  acknowledgement watermark exists (M1-D open item), no UI may claim server persistence of
-  local events. The Start Pack ↔ canonical `contentId` mapping is resolved for M1 in
+  non-zero count does not mean the local queue is acknowledged. The server-side push
+  acknowledgement watermark policy is decided in
+  [ADR 0014](ADR/0014-push-reconciliation-cursor-policy.md) (per-learner monotonic version
+  incremented only on newly applied events); until it is implemented, no UI may claim server
+  persistence of local events. The Start Pack ↔ canonical `contentId` mapping is resolved for M1 in
   [ADR 0013](ADR/0013-start-pack-contentid-contract.md): bundled IDs **are** canonical
   `cards.content_id` values; clients send `contentId`, the server resolves `cards.id`.
 - **Loading / offline / error truth states (D1 §5, M1-B §12.2):** when the route is wired,
