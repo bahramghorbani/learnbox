@@ -1,6 +1,7 @@
 # M1-D Sync and Persistence — Implementation Slice 1
 
-**Status:** Draft PR — first M1-D implementation slice.
+**Status:** merged (PR #152); superseded for cursor semantics by **Slice 1b** (this file's
+appendix below) and ADR 0014.
 **Basis:** `origin/main` at `8806543` (M1-A contract PR #151 merged).
 **Scope authority:** `.ai/WORK_QUEUE.md` M1-D workstream (W6, serial for migrations/auth,
 separate worktree). **No production, payment, OTP, Preview, background sync or server
@@ -123,3 +124,35 @@ production path that reuses only verified M1-A seams:
    read + the existing review-write protocol; versioned storage keys.
 3. New-card catalog candidates for `createDailySessionPlan` once pack membership is defined.
 4. Observability names for sync outcomes per `docs/architecture/OBSERVABILITY.md` intent.
+
+---
+
+## Appendix — Slice 1b: per-learner reconciliation cursor (ADR 0014)
+
+**Status:** implementation **partial** — server core only, no route/client integration.
+Basis `origin/main` at `491611b` (ADR 0014 merged, PR #168). ADR 0014 remains the authoritative
+decision contract and is unchanged.
+
+What Slice 1b implements:
+
+- Additive migration `0014_learner_reconciliation_cursor.sql`: per-learner monotonic
+  `learner_reconciliation_cursors` table (`user_id UUID PK REFERENCES users(id)`, `cursor BIGINT
+NOT NULL DEFAULT 0 CHECK (cursor >= 0)`) and atomic `advance_learner_reconciliation_cursor`
+  function (`INSERT ... ON CONFLICT DO UPDATE SET cursor = cursor + 1 RETURNING cursor`).
+- `PostgresReviewEventStore.writeAtomically` advances the cursor **only** for a newly claimed
+  event (`claimed.rows.length === 1`) whose schedule update succeeded, in the same transaction
+  as the event insert and schedule update (`BEGIN` → `INSERT` → `UPDATE` → `SELECT
+advance_learner_reconciliation_cursor` → `COMMIT`). Exact idempotent replay returns the
+  existing authoritative cursor and does not advance; idempotency conflict, missing schedule,
+  validation, unknown/unpublished content and clock skew never advance.
+- `ReviewEventWriteResult` gains `reconciliationCursor`; `MobileReviewBatchItemOutcome`
+  `acknowledged` carries `reconciliationCursor` (authoritative projection version after the
+  item), while `idempotencyConflict` / `validation` / `clockSkew` outcomes carry no cursor.
+- No route, flag, environment, mobile/web client or queue file changed; the HTTP response
+  shape keeps a single `outcomes` key (Flutter transport still requires exactly one key) and
+  per-item exact acknowledgements remain the only basis for local queue removal. A cursor alone
+  never deletes queue entries.
+
+Remaining (separate serial M1-D slices): reading the cursor in `GET /api/learner/state`,
+client-side cursor storage/reconciliation, and any route/client integration. Until then the
+cursor is server-core only and the milestone stays partial / not production-ready.

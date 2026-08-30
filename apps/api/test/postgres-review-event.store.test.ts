@@ -53,6 +53,9 @@ describe('PostgresReviewEventStore', () => {
             ],
           };
         }
+        if (sql.includes('advance_learner_reconciliation_cursor')) {
+          return { rows: [{ cursor: '1' }] };
+        }
         return { rows: [] };
       },
       release: () => undefined,
@@ -69,11 +72,13 @@ describe('PostgresReviewEventStore', () => {
     );
 
     expect(result.idempotent).toBe(false);
+    expect(result.reconciliationCursor).toBe('1');
     expect(result.schedule).toMatchObject({ state: 'relearning', lapses: 1, difficulty: 5.5 });
     expect(transactionCalls.map(({ sql }) => sql.split(/\s+/)[0])).toEqual([
       'BEGIN',
       'INSERT',
       'UPDATE',
+      'SELECT',
       'COMMIT',
     ]);
     expect(transactionCalls[2].params?.[7]).toEqual(input.occurredAt);
@@ -131,6 +136,7 @@ const conflictingRow = {
   difficulty: 4.9,
   lapses: 0,
   due_at: new Date('2026-07-28T12:00:00Z'),
+  cursor: '5',
 };
 
 const replayPool = (existingRow: typeof conflictingRow) => {
@@ -188,9 +194,10 @@ describe('PostgresReviewEventStore learner-scoped idempotency', () => {
     expect(updateCalls()).toBe(0);
   });
 
-  it('claims the learner-scoped key and derives applied_at monotonically in one transaction', async () => {
+  it('claims the learner-scoped key, derives applied_at and advances the cursor in one transaction', async () => {
     const transactionCalls: string[] = [];
     let insertSql = '';
+    let advanceSql = '';
     const client = {
       query: async (sql: string) => {
         transactionCalls.push(sql);
@@ -222,6 +229,10 @@ describe('PostgresReviewEventStore learner-scoped idempotency', () => {
             ],
           };
         }
+        if (sql.includes('advance_learner_reconciliation_cursor')) {
+          advanceSql = sql;
+          return { rows: [{ cursor: '3' }] };
+        }
         return { rows: [] };
       },
       release: () => undefined,
@@ -237,17 +248,88 @@ describe('PostgresReviewEventStore learner-scoped idempotency', () => {
     });
 
     expect(result.idempotent).toBe(false);
+    expect(result.reconciliationCursor).toBe('3');
     expect(transactionCalls.map((sql) => sql.split(/\s+/)[0])).toEqual([
       'BEGIN',
       'INSERT',
       'UPDATE',
+      'SELECT',
       'COMMIT',
     ]);
+    expect(advanceSql).toMatch(/SELECT advance_learner_reconciliation_cursor\(\$1\) AS cursor/i);
     expect(insertSql).toMatch(/ON CONFLICT \(user_id, client_event_id\) DO NOTHING/i);
     expect(insertSql).toMatch(/applied_at/i);
     expect(insertSql).toMatch(/GREATEST/i);
     expect(insertSql).toMatch(/MAX\(applied_at\)/i);
     expect(insertSql).toMatch(/LEAST\(\$4, now\(\)\)/i);
+  });
+
+  it('returns the authoritative cursor on an exact idempotent replay without advancing', async () => {
+    const { pool, updateCalls, scopedLookupSql } = replayPool({
+      ...conflictingRow,
+      grade: input.grade,
+      occurred_at: input.occurredAt,
+      cursor: '7',
+    });
+
+    const store = new PostgresReviewEventStore(pool);
+    const result = await store.writeAtomically(input, { ...currentSchedule, state: 'relearning' });
+
+    expect(result.idempotent).toBe(true);
+    expect(result.reconciliationCursor).toBe('7');
+    expect(updateCalls()).toBe(0);
+    expect(scopedLookupSql()).toMatch(/FROM review_events e/);
+    expect(scopedLookupSql()).toMatch(/learner_reconciliation_cursors/i);
+  });
+
+  it('never advances the cursor when the schedule update misses', async () => {
+    const transactionCalls: string[] = [];
+    const client = {
+      query: async (sql: string) => {
+        transactionCalls.push(sql);
+        if (sql.startsWith('INSERT INTO review_events')) {
+          return {
+            rows: [
+              {
+                id: 'persisted-event-1',
+                user_id: input.userId,
+                card_id: input.cardId,
+                grade: input.grade,
+                occurred_at: input.occurredAt,
+                client_event_id: input.clientEventId,
+              },
+            ],
+          };
+        }
+        return { rows: [] };
+      },
+      release: () => undefined,
+    };
+    const pool = {
+      query: async () => ({ rows: [] }),
+      connect: async () => client,
+    } as unknown as Pool;
+
+    const store = new PostgresReviewEventStore(pool);
+    await expect(
+      store.writeAtomically(input, { ...currentSchedule, state: 'relearning' }),
+    ).rejects.toThrow('Card schedule must exist');
+    expect(
+      transactionCalls.some((sql) => sql.includes('advance_learner_reconciliation_cursor')),
+    ).toBe(false);
+    expect(transactionCalls).toContain('ROLLBACK');
+  });
+
+  it('never advances the cursor on an idempotency conflict', async () => {
+    const { pool, updateCalls, scopedLookupSql } = replayPool(conflictingRow);
+
+    const store = new PostgresReviewEventStore(pool);
+    await expect(
+      store.writeAtomically(input, { ...currentSchedule, state: 'relearning' }),
+    ).rejects.toBeInstanceOf(ReviewIdempotencyConflictError);
+
+    expect(updateCalls()).toBe(0);
+    expect(scopedLookupSql()).not.toMatch(/advance_learner_reconciliation_cursor/i);
   });
 
   it('resolves canonical content ids, bootstraps schedules and reads learner schedules', async () => {

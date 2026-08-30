@@ -45,6 +45,8 @@ interface AcknowledgedOutcome {
   clientEventId: string;
   eventId: string;
   idempotent: boolean;
+  /** Authoritative per-learner projection version after this item (ADR 0014). BIGINT string; never a JS number. */
+  reconciliationCursor: string;
 }
 
 interface IdempotencyConflictOutcome {
@@ -172,6 +174,7 @@ export class MobileReviewBatchService {
         clientEventId: item.clientEventId,
         eventId: result.event.id,
         idempotent: result.idempotent,
+        reconciliationCursor: result.reconciliationCursor,
       };
     } catch (error) {
       const conflict = error as ReviewIdempotencyConflictError;

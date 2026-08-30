@@ -10,6 +10,10 @@
 - **D0/D1 design gates:** completed for current learner surfaces.
 - **M1-A contract audit:** completed in PR #151.
 - **M1-D slice 1:** completed in PR #152; server snapshot remains fail-closed and not Web-wired.
+- **M1-D cursor slice (ADR 0014):** server-core implementation **partial** — migration 0014 +
+  atomic cursor advance in `PostgresReviewEventStore.writeAtomically` + cursor on acknowledged
+  batch outcomes merged pending review; no route/client integration yet, milestone stays
+  partial/not production-ready.
 - **M1-B Web slice 1:** completed in PR #156; Today was explicitly local-only until the server wiring slice.
 - **M1-B Web slice 2 (LB-DS-022):** merged in PR #163 at `73cdb62` (2026-08-30); ADR 0012 route `GET /api/learner/state` (cookie subject = canonical `users.id`) plus truthful Today fetch are on `main` behind the fail-closed `WEB_LEARNER_STATE_ENABLED` runtime (defaults false). The actionable Today figure stays tied to the local bundled session until the approved/published Start Pack seed/catalog rows are implemented and released (the Start Pack ↔ canonical `contentId` contract itself is recorded in ADR 0013; seed/catalog implementation remains a separate review-gated task).
 - **M1-C Mobile slice 1:** completed in PR #155; Today local queue state is truthful, sync coordinator remains dormant.

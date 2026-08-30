@@ -35,6 +35,7 @@ const written = (clientEventId: string, grade: 'forgot' | 'hard' | 'remembered' 
     },
     schedule,
     idempotent: false,
+    reconciliationCursor: '3',
   }) satisfies ReviewEventWriteResult;
 
 const item = (overrides: Partial<MobileReviewBatchItem> = {}): MobileReviewBatchItem => ({
@@ -141,20 +142,50 @@ describe('MobileReviewBatchService', () => {
       if (outcome.status === 'acknowledged') {
         expect(outcome.idempotent).toBe(false);
         expect(outcome.eventId).toMatch(/^persisted-/);
+        expect(outcome.reconciliationCursor).toBe('3');
       }
     }
   });
 
-  it('acknowledges an exact idempotent replay exactly once', async () => {
+  it('acknowledges an exact idempotent replay with the authoritative cursor and no bump', async () => {
     const { store, log } = mockStore({
-      write: async () => ({ ...written('evt-1', 'forgot'), idempotent: true }),
+      write: async () => ({
+        ...written('evt-1', 'forgot'),
+        idempotent: true,
+        reconciliationCursor: '7',
+      }),
     });
     const service = new MobileReviewBatchService(store, () => fixedNow);
 
     const [outcome] = await service.submit(request([item()]));
 
     expect(outcome).toMatchObject({ status: 'acknowledged', idempotent: true });
+    if (outcome.status === 'acknowledged') {
+      expect(outcome.reconciliationCursor).toBe('7');
+    }
     expect(log.write).toEqual(['evt-1']);
+  });
+
+  it('never reports a cursor for validation or clockSkew outcomes', async () => {
+    const { store, log } = mockStore();
+    const service = new MobileReviewBatchService(store, () => fixedNow);
+    const unknown = item({ contentId: 'content-unknown', clientEventId: 'evt-u' });
+    const skew = item({ occurredAt: new Date('2026-07-26T12:40:00Z'), clientEventId: 'evt-f' });
+    // make the schedule lookup miss only for the second card
+    store.findSchedule = vi.fn(async (learnerId: string, foundCardId: string) =>
+      foundCardId === cardId ? schedule : null,
+    ) as typeof store.findSchedule;
+    const noSchedule = item({ contentId: 'content-b', clientEventId: 'evt-s' });
+
+    const outcomes = await service.submit(request([unknown, noSchedule, skew]));
+
+    expect(outcomes[0]).toMatchObject({ status: 'validation', clientEventId: 'evt-u' });
+    expect(outcomes[1]).toMatchObject({ status: 'validation', clientEventId: 'evt-s' });
+    expect(outcomes[2]).toMatchObject({ status: 'clockSkew', clientEventId: 'evt-f' });
+    for (const outcome of outcomes) {
+      expect(outcome).not.toHaveProperty('reconciliationCursor');
+    }
+    expect(log.write).toEqual([]);
   });
 
   it('surfaces an idempotency conflict per item and keeps processing the rest', async () => {

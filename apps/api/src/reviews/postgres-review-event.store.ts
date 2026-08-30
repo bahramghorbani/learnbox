@@ -16,6 +16,10 @@ interface ReviewEventRow {
   client_event_id: string;
 }
 
+interface ReconciliationCursorRow {
+  cursor: string;
+}
+
 interface ScheduleRow {
   state: CardSchedule['state'];
   stability_days: number;
@@ -62,21 +66,32 @@ const toEvent = (row: ReviewEventRow): PersistedReviewEvent => ({
   clientEventId: row.client_event_id,
 });
 
+const CURSOR_COLUMN = 'COALESCE(c.cursor, 0) AS cursor';
+
 /** PostgreSQL adapter. Callers must pass a current schedule projection. */
 export class PostgresReviewEventStore implements ReviewEventStore {
   constructor(private readonly pool: Pool) {}
 
   async findByClientEventId(clientEventId: string): Promise<ReviewEventWriteResult | null> {
-    const result = await this.pool.query<ReviewEventRow & ScheduleRow>(
+    const result = await this.pool.query<ReviewEventRow & ScheduleRow & ReconciliationCursorRow>(
       `SELECT e.id, e.user_id, e.card_id, e.grade, e.occurred_at, e.client_event_id,
-              s.state, s.stability_days, s.difficulty, s.lapses, s.due_at
+              s.state, s.stability_days, s.difficulty, s.lapses, s.due_at,
+              ${CURSOR_COLUMN}
          FROM review_events e
          JOIN card_schedules s ON s.user_id = e.user_id AND s.card_id = e.card_id
+         LEFT JOIN learner_reconciliation_cursors c ON c.user_id = e.user_id
         WHERE e.client_event_id = $1`,
       [clientEventId],
     );
     const row = result.rows[0];
-    return row ? { event: toEvent(row), schedule: toSchedule(row), idempotent: true } : null;
+    return row
+      ? {
+          event: toEvent(row),
+          schedule: toSchedule(row),
+          idempotent: true,
+          reconciliationCursor: row.cursor,
+        }
+      : null;
   }
 
   async writeAtomically(
@@ -132,11 +147,19 @@ export class PostgresReviewEventStore implements ReviewEventStore {
         throw new Error('Card schedule must exist before accepting a review event.');
       }
 
+      // ADR 0014: a newly claimed event that successfully updated the schedule
+      // advances the learner cursor exactly once, in this same transaction.
+      const cursor = await client.query<ReconciliationCursorRow>(
+        `SELECT advance_learner_reconciliation_cursor($1) AS cursor`,
+        [input.userId],
+      );
+
       await client.query('COMMIT');
       return {
         event: toEvent(claimed.rows[0]),
         schedule: toSchedule(schedule.rows[0]),
         idempotent: false,
+        reconciliationCursor: cursor.rows[0]?.cursor ?? '0',
       };
     } catch (error) {
       await client.query('ROLLBACK');
@@ -150,16 +173,25 @@ export class PostgresReviewEventStore implements ReviewEventStore {
     userId: string,
     clientEventId: string,
   ): Promise<ReviewEventWriteResult | null> {
-    const result = await this.pool.query<ReviewEventRow & ScheduleRow>(
+    const result = await this.pool.query<ReviewEventRow & ScheduleRow & ReconciliationCursorRow>(
       `SELECT e.id, e.user_id, e.card_id, e.grade, e.occurred_at, e.client_event_id,
-              s.state, s.stability_days, s.difficulty, s.lapses, s.due_at
+              s.state, s.stability_days, s.difficulty, s.lapses, s.due_at,
+              ${CURSOR_COLUMN}
          FROM review_events e
          JOIN card_schedules s ON s.user_id = e.user_id AND s.card_id = e.card_id
+         LEFT JOIN learner_reconciliation_cursors c ON c.user_id = e.user_id
         WHERE e.user_id = $1 AND e.client_event_id = $2`,
       [userId, clientEventId],
     );
     const row = result.rows[0];
-    return row ? { event: toEvent(row), schedule: toSchedule(row), idempotent: true } : null;
+    return row
+      ? {
+          event: toEvent(row),
+          schedule: toSchedule(row),
+          idempotent: true,
+          reconciliationCursor: row.cursor,
+        }
+      : null;
   }
 
   /** Resolves a canonical content id to the DB card uuid; null when unknown. */
