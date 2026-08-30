@@ -1307,6 +1307,29 @@ p {
   line-height: 1.25;
   margin: 10px 0 2px;
 }
+.today-summary-skeleton {
+  display: block;
+  width: 92px;
+  height: 57px;
+  margin: 10px auto 2px;
+  border-radius: 12px;
+  background: linear-gradient(90deg, #eeeaff 25%, #f8f6ff 50%, #eeeaff 75%);
+  background-size: 200% 100%;
+  animation: today-summary-skeleton 1.4s ease-in-out infinite;
+}
+@keyframes today-summary-skeleton {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .today-summary-skeleton {
+    animation: none;
+  }
+}
 .summary div + div strong {
   color: #ef852e;
 }

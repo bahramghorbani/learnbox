@@ -52,10 +52,11 @@ describe('Today server snapshot truth states', () => {
     expect(rendered.text()).toContain('این فهرست');
     expect(rendered.text()).toContain('دستگاه');
     expect(rendered.text()).not.toContain('سرور LearnBox خوانده شده');
+    expect(rendered.text()).not.toContain('وضعیت یادگیری از سرور خوانده شد');
     expect(fetchMock.mock.calls.filter(([url]) => url === '/api/learner/state')).toHaveLength(0);
   });
 
-  it('shows the server-read label after a successful fetch while keeping the local session figure, without claiming acknowledgement', async () => {
+  it('shows the server-read status label after a successful fetch while keeping the local session figure, without claiming acknowledgement or a server-read list', async () => {
     vi.stubGlobal('fetch', mockRouter({ state: () => json(200, canonicalBody) }));
     rendered = await renderLearner({ otpUiFlag: 'true' });
     await rendered.signInLocally();
@@ -63,9 +64,36 @@ describe('Today server snapshot truth states', () => {
     await act(async () => {
       await Promise.resolve();
     });
-    expect(rendered.text()).toContain('سرور LearnBox خوانده شده');
+    expect(rendered.text()).toContain('وضعیت یادگیری از سرور خوانده شد');
+    expect(rendered.text()).toContain('کارت‌های این دستگاه برای مرور آماده‌اند');
     expect(rendered.text()).toContain('۳ کارت برای شروع');
     expect(rendered.text()).not.toContain('همگام‌سازی شد');
+  });
+
+  it('labels the last successful server read as خواندن از سرور, never همگام‌سازی', async () => {
+    vi.stubGlobal('fetch', mockRouter({ state: () => json(200, canonicalBody) }));
+    rendered = await renderLearner({ otpUiFlag: 'true' });
+    await rendered.signInLocally();
+    await rendered.clickButton('ادامه');
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(rendered.text()).toContain('آخرین خواندن از سرور');
+    expect(rendered.text()).not.toContain('آخرین همگام‌سازی');
+    expect(rendered.text()).not.toContain('همگام‌سازی شد');
+  });
+
+  it('never renders the old overclaiming server-read list copy', async () => {
+    vi.stubGlobal('fetch', mockRouter({ state: () => json(200, canonicalBody) }));
+    rendered = await renderLearner({ otpUiFlag: 'true' });
+    await rendered.signInLocally();
+    await rendered.clickButton('ادامه');
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(rendered.text()).not.toContain('این فهرست از سرور LearnBox خوانده شده');
+    expect(rendered.text()).not.toContain('فهرست از سرور LearnBox');
+    expect(rendered.text()).not.toContain('این فهرست از سرور');
   });
 
   it('fails closed to the truthful error label when the server read fails', async () => {
@@ -137,7 +165,7 @@ describe('Today server snapshot truth states', () => {
     await act(async () => {
       await Promise.resolve();
     });
-    expect(rendered.text()).toContain('سرور LearnBox خوانده شده');
+    expect(rendered.text()).toContain('وضعیت یادگیری از سرور خوانده شد');
     expect(rendered.text()).toContain('۳ کارت برای شروع');
     expect(rendered.text()).not.toContain('۱ کارت برای شروع');
   });
@@ -165,7 +193,7 @@ describe('Today server snapshot truth states', () => {
     await act(async () => {
       await Promise.resolve();
     });
-    expect(rendered.text()).toContain('سرور LearnBox خوانده شده');
+    expect(rendered.text()).toContain('وضعیت یادگیری از سرور خوانده شد');
     expect(rendered.text()).toContain('۱ رویداد در انتظار همگام‌سازی');
     expect(rendered.text()).not.toContain('همگام‌سازی شد');
   });
