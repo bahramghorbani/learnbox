@@ -45,8 +45,8 @@ interface AcknowledgedOutcome {
   clientEventId: string;
   eventId: string;
   idempotent: boolean;
-  /** Authoritative per-learner projection version after this item (ADR 0014). */
-  reconciliationCursor: number;
+  /** Authoritative per-learner projection version after this item (ADR 0014). BIGINT string; never a JS number. */
+  reconciliationCursor: string;
 }
 
 interface IdempotencyConflictOutcome {

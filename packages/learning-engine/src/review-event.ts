@@ -16,8 +16,8 @@ export interface ReviewEventWriteResult {
   event: PersistedReviewEvent;
   schedule: CardSchedule;
   idempotent: boolean;
-  /** Per-learner monotonic projection version after this write (ADR 0014). */
-  reconciliationCursor: number;
+  /** Per-learner monotonic projection version after this write (ADR 0014). BIGINT string; never a JS number. */
+  reconciliationCursor: string;
 }
 
 export interface ReviewEventStore {

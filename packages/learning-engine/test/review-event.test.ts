@@ -28,7 +28,7 @@ describe('recordReviewEvent', () => {
       },
       schedule,
       idempotent: false,
-      reconciliationCursor: 4,
+      reconciliationCursor: '4',
     };
     const store: ReviewEventStore = {
       findByClientEventId: async () => existing,

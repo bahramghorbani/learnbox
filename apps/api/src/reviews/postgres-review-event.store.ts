@@ -17,7 +17,7 @@ interface ReviewEventRow {
 }
 
 interface ReconciliationCursorRow {
-  cursor: number;
+  cursor: string;
 }
 
 interface ScheduleRow {
@@ -159,7 +159,7 @@ export class PostgresReviewEventStore implements ReviewEventStore {
         event: toEvent(claimed.rows[0]),
         schedule: toSchedule(schedule.rows[0]),
         idempotent: false,
-        reconciliationCursor: cursor.rows[0]?.cursor ?? 0,
+        reconciliationCursor: cursor.rows[0]?.cursor ?? '0',
       };
     } catch (error) {
       await client.query('ROLLBACK');

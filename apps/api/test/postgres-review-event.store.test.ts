@@ -54,7 +54,7 @@ describe('PostgresReviewEventStore', () => {
           };
         }
         if (sql.includes('advance_learner_reconciliation_cursor')) {
-          return { rows: [{ cursor: 1 }] };
+          return { rows: [{ cursor: '1' }] };
         }
         return { rows: [] };
       },
@@ -72,7 +72,7 @@ describe('PostgresReviewEventStore', () => {
     );
 
     expect(result.idempotent).toBe(false);
-    expect(result.reconciliationCursor).toBe(1);
+    expect(result.reconciliationCursor).toBe('1');
     expect(result.schedule).toMatchObject({ state: 'relearning', lapses: 1, difficulty: 5.5 });
     expect(transactionCalls.map(({ sql }) => sql.split(/\s+/)[0])).toEqual([
       'BEGIN',
@@ -136,7 +136,7 @@ const conflictingRow = {
   difficulty: 4.9,
   lapses: 0,
   due_at: new Date('2026-07-28T12:00:00Z'),
-  cursor: 5,
+  cursor: '5',
 };
 
 const replayPool = (existingRow: typeof conflictingRow) => {
@@ -231,7 +231,7 @@ describe('PostgresReviewEventStore learner-scoped idempotency', () => {
         }
         if (sql.includes('advance_learner_reconciliation_cursor')) {
           advanceSql = sql;
-          return { rows: [{ cursor: 3 }] };
+          return { rows: [{ cursor: '3' }] };
         }
         return { rows: [] };
       },
@@ -248,7 +248,7 @@ describe('PostgresReviewEventStore learner-scoped idempotency', () => {
     });
 
     expect(result.idempotent).toBe(false);
-    expect(result.reconciliationCursor).toBe(3);
+    expect(result.reconciliationCursor).toBe('3');
     expect(transactionCalls.map((sql) => sql.split(/\s+/)[0])).toEqual([
       'BEGIN',
       'INSERT',
@@ -269,14 +269,14 @@ describe('PostgresReviewEventStore learner-scoped idempotency', () => {
       ...conflictingRow,
       grade: input.grade,
       occurred_at: input.occurredAt,
-      cursor: 7,
+      cursor: '7',
     });
 
     const store = new PostgresReviewEventStore(pool);
     const result = await store.writeAtomically(input, { ...currentSchedule, state: 'relearning' });
 
     expect(result.idempotent).toBe(true);
-    expect(result.reconciliationCursor).toBe(7);
+    expect(result.reconciliationCursor).toBe('7');
     expect(updateCalls()).toBe(0);
     expect(scopedLookupSql()).toMatch(/FROM review_events e/);
     expect(scopedLookupSql()).toMatch(/learner_reconciliation_cursors/i);

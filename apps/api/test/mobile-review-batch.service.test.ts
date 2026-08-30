@@ -35,7 +35,7 @@ const written = (clientEventId: string, grade: 'forgot' | 'hard' | 'remembered' 
     },
     schedule,
     idempotent: false,
-    reconciliationCursor: 3,
+    reconciliationCursor: '3',
   }) satisfies ReviewEventWriteResult;
 
 const item = (overrides: Partial<MobileReviewBatchItem> = {}): MobileReviewBatchItem => ({
@@ -142,7 +142,7 @@ describe('MobileReviewBatchService', () => {
       if (outcome.status === 'acknowledged') {
         expect(outcome.idempotent).toBe(false);
         expect(outcome.eventId).toMatch(/^persisted-/);
-        expect(outcome.reconciliationCursor).toBe(3);
+        expect(outcome.reconciliationCursor).toBe('3');
       }
     }
   });
@@ -152,7 +152,7 @@ describe('MobileReviewBatchService', () => {
       write: async () => ({
         ...written('evt-1', 'forgot'),
         idempotent: true,
-        reconciliationCursor: 7,
+        reconciliationCursor: '7',
       }),
     });
     const service = new MobileReviewBatchService(store, () => fixedNow);
@@ -161,7 +161,7 @@ describe('MobileReviewBatchService', () => {
 
     expect(outcome).toMatchObject({ status: 'acknowledged', idempotent: true });
     if (outcome.status === 'acknowledged') {
-      expect(outcome.reconciliationCursor).toBe(7);
+      expect(outcome.reconciliationCursor).toBe('7');
     }
     expect(log.write).toEqual(['evt-1']);
   });

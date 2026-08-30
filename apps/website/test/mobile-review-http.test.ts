@@ -35,7 +35,7 @@ function dependencies(): {
         clientEventId: 'evt-1',
         eventId: 'event-1',
         idempotent: false,
-        reconciliationCursor: 1,
+        reconciliationCursor: '1',
       },
     ]),
   };
@@ -53,7 +53,7 @@ describe('mobile review HTTP boundary', () => {
           clientEventId: 'evt-1',
           eventId: 'event-1',
           idempotent: false,
-          reconciliationCursor: 1,
+          reconciliationCursor: '1',
         },
       ],
     });
