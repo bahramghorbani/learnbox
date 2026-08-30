@@ -7,12 +7,15 @@ export interface TodayScreenProps {
   syncState?: LearnerSyncState;
   /** Number of events pending in the device-local sync queue; null when the read failed. */
   pendingReviewCount?: number | null;
+  /** ISO timestamp of the last successful server snapshot; shown only with server-backed state. */
+  lastSyncedAt?: string | null;
 }
 
 export function TodayScreen({
   reviewCount,
   syncState = 'local-only',
   pendingReviewCount = 0,
+  lastSyncedAt = null,
 }: TodayScreenProps) {
   const pendingChipVisible = typeof pendingReviewCount === 'number' && pendingReviewCount > 0;
   return (
@@ -26,7 +29,11 @@ export function TodayScreen({
         <div>
           <span>مرورهای امروز</span>
           <strong>{toPersianDigits(reviewCount)}</strong>
-          <small>{toPersianDigits(reviewCount)} کارت برای شروع آماده است</small>
+          <small>
+            {syncState === 'loading'
+              ? 'در حال آماده‌کردن مرور امروز…'
+              : `${toPersianDigits(reviewCount)} کارت برای شروع آماده است`}
+          </small>
         </div>
       </section>
       {pendingChipVisible ? (
@@ -37,7 +44,20 @@ export function TodayScreen({
       <p className="sync-truth" role="status">
         {syncStateText(syncState)}
       </p>
+      {syncState === 'server-backed' && lastSyncedAt ? (
+        <p className="sync-truth last-synced" role="status">
+          آخرین همگام‌سازی: {formatSyncTime(lastSyncedAt)}
+        </p>
+      ) : null}
       <Bobo expression="welcome" className="bobo bobo-header" priority />
     </main>
   );
+}
+
+function formatSyncTime(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '';
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  return `${hours}:${minutes}`;
 }

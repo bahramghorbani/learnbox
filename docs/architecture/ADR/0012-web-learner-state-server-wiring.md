@@ -1,6 +1,6 @@
 # ADR 0012 — Web learner-state server wiring
 
-- **Status:** accepted design contract; implementation requires a separately authorized M1-B queue task
+- **Status:** accepted design contract; route implemented on branch `worker/m1b-web-learner-state-read` (pending review); Start Pack seed/release remains a separate owner/review-gated decision
 - **Date:** 2026-08-30
 - **Basis:** `origin/main` at `0edd338` (M1-B Web slice 1, PR #156; M1-D slice 1, PR #152; M1-A contract, PR #151)
 
@@ -56,7 +56,8 @@ Pack seed/release remains a separate owner/review-gated decision.
   `handleLearnerStateGet`/`LearnerStateService` serialize it — `{ schedules, plan,
 reviewEventsCount }`, `200`, `cache-control: no-store`,
   `content-type: application/json; charset=utf-8`. The Web client performs **no server-side
-  caching** of learner state; every read is fresh.
+  caching** of learner state; every read is fresh, and the Today surface treats a snapshot as
+  server-backed only after the fetch succeeds and the response parses (`lib/learner-state-web-client.ts`).
 - **Typed errors:** only the taxonomy from `M1_ONLINE_LEARNING_CONTRACT.md` §9:
   `validation` (400), `invalidToken` (401), `serverUnavailable` (503). No raw phone, OTP,
   token, hash or secret ever appears in responses or logs.
@@ -92,25 +93,24 @@ reviewEventsCount }`, `200`, `cache-control: no-store`,
 
 ## Explicit blockers (this document records them; it does not resolve them)
 
-1. **Route not yet implemented.** `apps/website/app/api/learner/state/route.ts` does not
-   exist. This ADR is the contract for a separate M1-B implementation slice; no route code
-   is added here.
-2. **Web session → `users.id` mapping.** Cookie `subject` is an opaque phone hash; the
-   snapshot read is keyed by `users.id`. The server-side mapping (lookup or creation) is
-   undefined and must be designed and authorized before any Web route can serve state. This
-   is the same open item recorded in `M1_ONLINE_LEARNING_CONTRACT.md` §7 ("future internal
-   learner-identity mapper").
+1. **Route not yet implemented (resolved).** `apps/website/app/api/learner/state/route.ts` is
+   implemented on branch `worker/m1b-web-learner-state-read` behind the fail-closed
+   `WEB_LEARNER_STATE_ENABLED` runtime (pending review).
+2. **Web session → `users.id` mapping (resolved).** PR #162 ("bind OTP sessions to canonical
+   users") resolved this: the Web OTP verification resolves `users.id` server-side and issues
+   the signed cookie with the canonical UUID subject, so the read route maps the cookie
+   `subject` directly to `users.id` with no lookup and no client-supplied identifier.
 3. **Start Pack seed/release.** New-card intake (`newCards`, `suggestedNewCards`,
    `bootstrap_approved_card_schedules` for Start-pack content) requires the catalog and
    pack-membership contract plus approved content. This is a **separate owner/review-gated
    decision** and is out of scope here. Until then the plan always returns `newCardIds: []`
    and `suggestedNewCards: 0` (M1-D slice 1 `ponytail` comment), and the Web surface keeps
    its bundled device-local Start pack with local-only labels.
-4. **API module mounting / DB access.** The Next.js route depends on the API package's
-   built `dist` artifacts and a verified-TLS `DATABASE_URL` pool (`requireVerifiedDatabaseTls`).
-   The exact build/mount wiring and the shared-pool lifecycle in the website runtime are not
-   implemented and must be part of the implementation slice. DB access stays server-side
-   only; nothing reaches the client.
+4. **API module mounting / DB access (resolved).** The Next.js route imports the existing
+   API package's built `dist` artifacts (`apps/website/lib/learner-state-web-runtime.ts`,
+   same pattern as `lib/mobile-review-runtime.ts`) and a shared verified-TLS
+   `DATABASE_URL` pool (`requireVerifiedDatabaseTls`). DB access stays server-side only;
+   nothing reaches the client.
 
 ## Security constraints
 
@@ -141,8 +141,10 @@ reviewEventsCount }`, `200`, `cache-control: no-store`,
 
 ## Consequences
 
-- Web Today can move from `local-only` to server-backed figures only when all four blockers
-  are resolved; until then the truthful local labels and pending chip (PR #156) remain.
+- Web Today moves from `local-only` to server-backed figures only when the read succeeds and
+  is parsed; the truthful local labels, loading/error/offline fallbacks and pending chip (PR
+  #156, this slice) remain otherwise. Start Pack seed/release (blocker 3) and API-module
+  pool wiring (blocker 4) remain open; the route is implemented and review-pending.
 - The Web read reuses the verified M1-D service/repository seam, so plan and schedules
   match what the server would schedule next (`createDailySessionPlan`), and
   `reviewEventsCount` is exact server truth.
