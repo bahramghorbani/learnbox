@@ -11,12 +11,12 @@ start. Historical tasks remain for traceability and must not be duplicated.
 - **M1 — Online Learning Core:** **slice-1 QA complete, milestone remains partial/not production-ready**. M1-B Web and M1-C Mobile Today slices are merged with truthful local-only boundaries; server wiring and full learning loop remain queued.
 - **M1-A — Online learning contract audit:** accepted and merged in PR #151. Contract: `docs/architecture/M1_ONLINE_LEARNING_CONTRACT.md`.
 - **M1-D slice 1 — Learner state snapshot:** accepted and merged in PR #152. Implementation: `GET /api/learner/state`, fail-closed and not Web-wired yet.
-- **M1-B server-wiring contract — Web learner state:** accepted design (ADR 0012). Web HttpOnly learner cookie → Next.js `GET /api/learner/state` route → server-side identity mapping → existing `LearnerStateService`/repository is approved; route implementation, Web session → `users.id` mapping and Start Pack seed/release remain separate owner/review-gated decisions.
-- **M1-B slice 1 — Web Today truth label:** accepted and merged in PR #156; server wiring implemented in LB-DS-022 (`worker/m1b-web-learner-state-read`, Draft PR pending review) behind the fail-closed `WEB_LEARNER_STATE_ENABLED` runtime.
-- **M1-B slice 2 — Web learner-state read route + truthful Today fetch:** Draft PR on `worker/m1b-web-learner-state-read` (LB-DS-022); review findings fixed (Today figure stays local until the Start Pack ↔ canonical `contentId` join exists; strict nested snapshot validation on the client); server-backed figures only after a successful cookie-authenticated read; Start Pack ↔ canonical `contentId` join remains an open catalog contract.
+- **M1-B server-wiring contract — Web learner state:** accepted design (ADR 0012). Web HttpOnly learner cookie → Next.js `GET /api/learner/state` route → server-side identity mapping → existing `LearnerStateService`/`repository` is approved; route implementation merged in PR #163 (LB-DS-022) behind the fail-closed `WEB_LEARNER_STATE_ENABLED` runtime; Web session → `users.id` mapping is merged (PR #162); Start Pack seed/release remains a separate owner/review-gated decision.
+- **M1-B slice 1 — Web Today truth label:** accepted and merged in PR #156; server wiring merged in LB-DS-022 (PR #163, merge commit `73cdb62`) behind the fail-closed `WEB_LEARNER_STATE_ENABLED` runtime.
+- **M1-B slice 2 — Web learner-state read route + truthful Today fetch:** accepted and merged in PR #163 at merge commit `73cdb62`; server-backed figures only after a successful cookie-authenticated read; Today figure stays local until the Start Pack ↔ canonical `contentId` join exists; Start Pack ↔ canonical `contentId` join remains an open catalog contract (owner/review-gated).
 - **M1-C slice 1 — Mobile Today states:** accepted and merged in PR #155; local queue chip is truthful, sync coordinator remains dormant.
 - **M1-Q — Independent QA:** accepted and merged in PR #157; report: `.ai/qa-reports/M1-Q-INDEPENDENT-QA.md`.
-- **Next:** resolve M-L1 formatting gate, M-L2 Web numeral parity, M-L3 Web pending-sync parity, then design and implement the server-wired learner slice.
+- **Next:** resolve the Start Pack ↔ canonical `contentId` catalog contract (unresolved, owner/review-gated), then design and implement M1-D push reconciliation after its cursor/watermark policy is approved (blocked pending policy approval); independent QA of the merged server-wired slice remains pending.
 
 ### Active grouped workstreams
 
@@ -43,10 +43,11 @@ The historical LB-DS and NI records below remain for traceability. They are not 
 
 ## LB-DS-022
 
-- Status: review_requested
+- Status: accepted
 - Executor: web-worker (W2)
 - Base: main at `5616d0d` (PR #162 merged; cookie subject = canonical users.id)
-- Branch: worker/m1b-web-learner-state-read
+- Branch: worker/m1b-web-learner-state-read (removed after merge)
+- Merge commit: `73cdb62` (PR #163 merged 2026-08-30)
 - Fix head: branch head after review-finding fixes
 - Risk: security-sensitive-web-learner-session-boundary
 - Specification: docs/architecture/ADR/0012-web-learner-state-server-wiring.md; docs/architecture/M1_ONLINE_LEARNING_CONTRACT.md §9/§12
@@ -54,23 +55,26 @@ The historical LB-DS and NI records below remain for traceability. They are not 
 - Required checks: focused website learner-state tests; full website tests; website typecheck; website build; pnpm check; pnpm build; node scripts/validate-migrations.mjs; git diff --check
 - Simulator required: no
 - Draft PR required: yes
-- Merge allowed: no
+- Merge allowed: yes
 
-Implement only the ADR 0012 Web learner-state read: `GET /api/learner/state` Next.js route
-reusing the existing API `LearnerStateService`/`PostgresLearnerStateRepository` via the
-`api/dist` mount pattern and verified-TLS pool. Identity comes only from the signed Web
-learner cookie (`readLearnerSession`, subject = canonical `users.id`); never accept an
-`Authorization` header, client user ID, phone or mobile Bearer token. Fail closed 503
-`serverUnavailable` unless `WEB_LEARNER_STATE_ENABLED=true` plus complete `DATABASE_URL` and
+Accepted and merged through PR #163 at merge commit `73cdb62` on 2026-08-30. ADR 0012
+Web learner-state read implemented: `GET /api/learner/state` Next.js route reusing the
+existing API `LearnerStateService`/`PostgresLearnerStateRepository` via the `api/dist`
+mount pattern and verified-TLS pool; identity only from the signed Web learner cookie
+(`readLearnerSession`, subject = canonical `users.id`); fail-closed 503 `serverUnavailable`
+unless `WEB_LEARNER_STATE_ENABLED=true` plus complete `DATABASE_URL` and
 `LEARNBOX_SESSION_SECRET`; 401 `invalidToken` on cookie miss/invalid; 400 `validation` on
 non-GET or insecure transport; all responses `no-store`. Today fetches the route only in
 `server-otp` mode after authentication, treats the snapshot as server-backed only after a
 successful fetch/parse, keeps the local pending-sync chip and truthful loading/error/offline
-fallbacks, and never claims server acknowledgement. Do not invent a Start Pack ↔ canonical
-`contentId` join; server `contentId` is authoritative and the local review path is unchanged.
+fallbacks, and never claims server acknowledgement. No Start Pack ↔ canonical `contentId`
+join was invented; server `contentId` is authoritative and the local review path is unchanged.
 No migrations, schema, seed, catalog, mobile, API source contract, payment, deployment,
-secret, OTP delivery, push reconciliation or auth activation work. Start with a failing route
-test, stop at Draft PR for independent high-reasoning review.
+secret, OTP delivery, push reconciliation or auth activation work was merged.
+Remaining: Start Pack ↔ canonical `contentId` catalog contract remains unresolved and
+owner/review-gated; push-reconciliation cursor/watermark remains blocked pending policy
+approval; independent acceptance/visual/accessibility QA of the merged server-wired slice
+remains pending. Do not reopen or duplicate this task.
 
 ## LB-DS-020
 

@@ -56,12 +56,12 @@ label exists and is tested so the future wiring is a one-line switch plus a fetc
   labelled as such.
 - No loading/empty/error fetch states added in slice 1 because there was no fetch — adding
   them would be untruthful UI for a route that did not exist. They are implemented in the
-  follow-up server-wired slice (`worker/m1b-web-learner-state-read`, ADR 0012).
+  follow-up server-wired slice (ADR 0012), merged in PR #163 at `73cdb62`.
 - Removed now-unused `defaultSuggestedNewWords` import from `LearnerHome`.
 
-## Follow-up: server-wired learner-state read (branch `worker/m1b-web-learner-state-read`)
+## Follow-up: server-wired learner-state read (merged, PR #163)
 
-The follow-up slice implements the ADR 0012 contract:
+The follow-up slice implements the ADR 0012 contract and merged in PR #163 at `73cdb62`:
 
 - `GET /api/learner/state` Next.js route (`apps/website/app/api/learner/state/route.ts`) behind
   the fail-closed `WEB_LEARNER_STATE_ENABLED=true` runtime; cookie `subject` (canonical
