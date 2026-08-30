@@ -10,6 +10,46 @@ import 'package:learnbox/features/sync/review_sync_result.dart';
 import 'package:learnbox/features/sync/review_sync_transport.dart';
 
 void main() {
+  test('reads the prior cursor from the store before uploading', () async {
+    final queue = await _queueWithEvents(_MemoryStore(), 1);
+    final cursorStore = _TrackingCursorStore('7');
+    final transport =
+        _CursoredTransport(acknowledged: ['event-0'], cursor: '8');
+    final coordinator = _authenticatedCoordinator(
+      queue,
+      transport,
+      cursorStore: cursorStore,
+    );
+
+    await coordinator.synchronize();
+
+    expect(cursorStore.readCalls, 1);
+    expect(transport.calls, 1);
+    expect(
+      cursorStore.readCalls,
+      lessThanOrEqualTo(transport.calls),
+      reason: 'The prior cursor must be read before the batch is uploaded.',
+    );
+  });
+
+  test('cursor read failure fails closed before any upload', () async {
+    final queue = await _queueWithEvents(_MemoryStore(), 1);
+    final cursorStore = _TrackingCursorStore(null)..failReads = true;
+    final transport =
+        _CursoredTransport(acknowledged: ['event-0'], cursor: '8');
+    final coordinator = _authenticatedCoordinator(
+      queue,
+      transport,
+      cursorStore: cursorStore,
+    );
+
+    final result = await coordinator.synchronize();
+
+    expect(result, isA<RetryableFailure>());
+    expect(transport.calls, 0);
+    expect(await queue.pendingCount(), 1);
+  });
+
   test('persists the response cursor only after exact acknowledgements',
       () async {
     final queue = await _queueWithEvents(_MemoryStore(), 2);
@@ -190,6 +230,28 @@ class _MemoryReconciliationCursorStore implements ReconciliationCursorStore {
   }
 }
 
+/// Records when the coordinator reads the stored cursor, without hiding
+/// failures: read failures propagate exactly like the memory store.
+class _TrackingCursorStore implements ReconciliationCursorStore {
+  _TrackingCursorStore(this.value);
+
+  final String? value;
+  var readCalls = 0;
+  var failReads = false;
+
+  @override
+  Future<String?> read() async {
+    readCalls += 1;
+    if (failReads) {
+      throw StateError('Cursor storage unavailable.');
+    }
+    return value;
+  }
+
+  @override
+  Future<void> write(String cursor) async {}
+}
+
 class _DelegatingCursorStore implements ReconciliationCursorStore {
   _DelegatingCursorStore(this._read, this._write);
 
@@ -208,9 +270,11 @@ class _CursoredTransport implements ReviewSyncTransport {
 
   final List<String> acknowledged;
   final String cursor;
+  var calls = 0;
 
   @override
   Future<ReviewUploadResponse> upload(List<PendingReviewEvent> events) async {
+    calls += 1;
     return ReviewUploadResponse(
       acknowledgedClientEventIds: acknowledged,
       reconciliationCursor: cursor,

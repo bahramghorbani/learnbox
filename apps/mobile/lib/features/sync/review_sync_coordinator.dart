@@ -44,6 +44,15 @@ class ReviewSyncCoordinator {
 
     final batch = pendingEvents.take(_batchSize).toList(growable: false);
     try {
+      // ADR 0014: read the stored cursor before uploading so the next slice
+      // can send it with the request. The read fails closed: an invalid stored
+      // cursor is treated as absent, and a read failure is retryable with no
+      // transport or queue mutation.
+      final cursorStore = _reconciliationCursorStore;
+      if (cursorStore != null) {
+        final storedCursor = await cursorStore.read();
+        parseReconciliationCursor(storedCursor);
+      }
       final response = await _transport.upload(batch);
       final acknowledged = validateAcknowledgements(batch, response);
       if (acknowledged.isEmpty) {
@@ -55,9 +64,9 @@ class ReviewSyncCoordinator {
       // the queue acknowledgement; a cursor write failure is retryable and
       // never reports Synchronized, so no acknowledged event is lost.
       await _queue.acknowledge(acknowledged);
-      final cursorStore = _reconciliationCursorStore;
-      if (cursorStore != null && response.reconciliationCursor != null) {
-        await cursorStore.write(response.reconciliationCursor!);
+      final store = _reconciliationCursorStore;
+      if (store != null && response.reconciliationCursor != null) {
+        await store.write(response.reconciliationCursor!);
       }
       return Synchronized(
         acknowledgedCount: acknowledged.length,
