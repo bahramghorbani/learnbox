@@ -10,21 +10,21 @@
 - **D0/D1 design gates:** completed for current learner surfaces.
 - **M1-A contract audit:** completed in PR #151.
 - **M1-D slice 1:** completed in PR #152; server snapshot remains fail-closed and not Web-wired.
-- **M1-B Web slice 1:** completed in PR #156; Today remains explicitly local-only because server wiring is blocked.
+- **M1-B Web slice 1:** completed in PR #156; Today was explicitly local-only until the server wiring slice.
+- **M1-B Web slice 2 (LB-DS-022):** Draft PR on `worker/m1b-web-learner-state-read` — ADR 0012 route `GET /api/learner/state` (cookie subject = canonical `users.id`) plus truthful Today fetch; server-backed figures only after a successful read; Start Pack ↔ canonical `contentId` join still open; `WEB_LEARNER_STATE_ENABLED` defaults false.
 - **M1-C Mobile slice 1:** completed in PR #155; Today local queue state is truthful, sync coordinator remains dormant.
 - **M1-Q independent QA:** completed in PR #157; report `.ai/qa-reports/M1-Q-INDEPENDENT-QA.md`.
-- **Next active work:** resolve QA findings M-L1/M-L2/M-L3, then implement the server-wired learner path and push reconciliation only after its cursor/watermark policy is approved.
-- **M1-B server-wiring contract:** accepted design (ADR 0012); Web HttpOnly cookie → `GET /api/learner/state` Next.js route → `LearnerStateService` is approved; the route, Web session → `users.id` mapping and Start Pack seed remain separate implementation/owner decisions.
-- No production, payment, provider credential, real OTP or server activation is implied by this next work.
+- **Next active work:** review LB-DS-022, then resolve the Start Pack ↔ canonical `contentId` catalog contract, then implement push reconciliation only after its cursor/watermark policy is approved.
 
 ## Immediate execution order
 
 1. Fix M-L1: add a Dart format gate and normalize the two reported drift files in a dedicated fix.
 2. Fix M-L2/M-L3: align Web Today numerals and pending-sync parity, with tests.
-3. Decide the Web server-wiring contract: Web session boundary plus Start-pack ↔ canonical `contentId` mapping.
-4. Implement the authenticated server-wired learner path and complete D1 fetch states.
-5. Decide and implement M1-D push reconciliation only after cursor/watermark policy approval.
-6. Re-run M1-Q independent acceptance, visual and accessibility QA.
+3. Review and merge LB-DS-022 (`worker/m1b-web-learner-state-read`, ADR 0012 route + truthful Today fetch).
+4. Decide the Start-pack ↔ canonical `contentId` catalog contract; server `contentId` is authoritative and the local review path is unchanged until it is approved.
+5. Implement the authenticated server-wired learner path completion and any remaining D1 fetch states.
+6. Decide and implement M1-D push reconciliation only after cursor/watermark policy approval.
+7. Re-run M1-Q independent acceptance, visual and accessibility QA.
 
 ## Owner-approved product decisions captured in M0
 

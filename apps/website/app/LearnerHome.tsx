@@ -40,6 +40,8 @@ import { personalWordLimit } from './product-experience';
 import { resolveSupportivePlusOffer } from './paywall';
 import { buildStartMediaSources, resolveStartMediaMode, type StartMediaMode } from './start-media';
 import { selectTodayStartSession, stagedStartSlice } from './start-slice';
+import { fetchWebLearnerState } from '../lib/learner-state-web-client';
+import type { LearnerSyncState } from './learner-sync-state';
 
 type Grade = 'forgot' | 'hard' | 'remembered' | 'mastered';
 type LearningGoal = 'life' | 'career' | 'travel';
@@ -127,8 +129,13 @@ export function LearnerHome({
   const [plusOfferDismissed, setPlusOfferDismissed] = useState(false);
   const [startMediaMode, setStartMediaMode] = useState<StartMediaMode>('placeholder');
   const [isRecordingGrade, setIsRecordingGrade] = useState(false);
+  const [serverSyncState, setServerSyncState] = useState<LearnerSyncState>('local-only');
+  const [serverReviewCount, setServerReviewCount] = useState<number | null>(null);
+  const [serverLastSyncedAt, setServerLastSyncedAt] = useState<string | null>(null);
   const gradeSubmissionRef = useRef(false);
   const remainingTodayReviews = Math.max(0, studyItems.length - reviewedToday);
+  const isServerOtp = authMode === 'server-otp';
+  const displayReviewCount = serverReviewCount ?? remainingTodayReviews;
 
   useEffect(() => {
     if (!authenticated || typeof window === 'undefined') return;
@@ -198,6 +205,40 @@ export function LearnerHome({
     gradeSubmissionRef.current = false;
     setIsRecordingGrade(false);
   }, [screen, sessionIndex]);
+
+  useEffect(() => {
+    if (!authenticated || !isServerOtp || typeof window === 'undefined') return;
+    let cancelled = false;
+    setServerSyncState('loading');
+    void fetchWebLearnerState()
+      .then((result) => {
+        if (cancelled) return;
+        if (result.status === 'ok') {
+          const serverScheduledCount = result.snapshot.plan.reviewCardIds.length;
+          setServerReviewCount(serverScheduledCount);
+          setServerLastSyncedAt(new Date().toISOString());
+          setServerSyncState('server-backed');
+          return;
+        }
+        if (result.status === 'unauthorized') {
+          setServerReviewCount(null);
+          setServerSyncState('local-only');
+          return;
+        }
+        setServerReviewCount(null);
+        setServerSyncState(
+          typeof navigator !== 'undefined' && navigator.onLine === false ? 'offline' : 'error',
+        );
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setServerReviewCount(null);
+        setServerSyncState('error');
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [authenticated, isServerOtp]);
 
   const begin = () => {
     const nextIndex = resumableSessionIndex ?? 0;
@@ -541,9 +582,10 @@ export function LearnerHome({
   return (
     <>
       <TodayScreen
-        reviewCount={remainingTodayReviews}
-        syncState="local-only"
+        reviewCount={displayReviewCount}
+        syncState={serverSyncState}
         pendingReviewCount={pendingReviewCount}
+        lastSyncedAt={serverLastSyncedAt}
       />
       <button className="primary-button" onClick={begin}>
         {resumableSessionIndex === null ? 'شروع مرور' : 'ادامهٔ مرور'}{' '}

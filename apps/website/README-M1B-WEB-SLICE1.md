@@ -50,14 +50,31 @@ label exists and is tested so the future wiring is a one-line switch plus a fetc
 
 ## Deliberate limits
 
-- No `apps/website/app/api/**` route added; no API/mobile/admin/docs/queue/deployment
+- No `apps/website/app/api/**` route added in slice 1; no API/mobile/admin/docs/queue/deployment
   edits; no secrets.
-- Today still uses the bundled Start pack (device-local); counts remain device-local and
-  are labelled as such.
-- No loading/empty/error fetch states added because there is no fetch — adding them would
-  be untruthful UI for a route that does not exist. They are D1 states for the future
-  server-wired slice (see `docs/design/D1_LEARNER_UI_KIT.md` §5).
+- Today still uses the bundled Start pack (device-local); counts remain device-local and are
+  labelled as such.
+- No loading/empty/error fetch states added in slice 1 because there was no fetch — adding
+  them would be untruthful UI for a route that did not exist. They are implemented in the
+  follow-up server-wired slice (`worker/m1b-web-learner-state-read`, ADR 0012).
 - Removed now-unused `defaultSuggestedNewWords` import from `LearnerHome`.
+
+## Follow-up: server-wired learner-state read (branch `worker/m1b-web-learner-state-read`)
+
+The follow-up slice implements the ADR 0012 contract:
+
+- `GET /api/learner/state` Next.js route (`apps/website/app/api/learner/state/route.ts`) behind
+  the fail-closed `WEB_LEARNER_STATE_ENABLED=true` runtime; cookie `subject` (canonical
+  `users.id` since PR #162) → `LearnerStateService`/`PostgresLearnerStateRepository` via the
+  existing `api/dist` mount pattern. `401 invalidToken`, `400 validation`, `503
+serverUnavailable`, all `no-store`.
+- Today fetches the route (`lib/learner-state-web-client.ts`) only in `server-otp` mode and
+  only after authentication; the snapshot is treated as server-backed only after a successful
+  fetch and parse. Loading/error/offline fallbacks keep the truthful device-local label, and
+  the local pending-sync chip is preserved. No sync acknowledgement is ever claimed.
+- Start Pack ↔ canonical `contentId` join remains unsolved (M1-A §3.2): the server `contentId`
+  is authoritative, the bundled `start-a1-*` ids are not joined, and the local review path is
+  unchanged. `newCardIds` stays empty until the catalog contract is approved.
 
 ## Follow-up hardening (M-L2 / M-L3, merged with this slice's tracking)
 
