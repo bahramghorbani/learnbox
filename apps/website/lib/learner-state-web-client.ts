@@ -38,6 +38,8 @@ interface ParsedSnapshot {
     message: string;
   };
   reviewEventsCount: number;
+  /** Authoritative per-learner reconciliation cursor (ADR 0014); always a decimal string, never a number. */
+  reconciliationCursor: string;
 }
 
 /**
@@ -88,6 +90,11 @@ function isNonNegativeInteger(value: unknown): value is number {
   return isFiniteNumber(value) && Number.isInteger(value) && value >= 0;
 }
 
+/** Non-negative decimal-string only (BIGINT-as-string, ADR 0014); rejects numbers, signs, fractions, exponents. */
+function isNonNegativeDecimalString(value: unknown): value is string {
+  return typeof value === 'string' && /^(0|[1-9]\d*)$/.test(value);
+}
+
 function isValidIsoDate(value: unknown): value is string {
   return typeof value === 'string' && !Number.isNaN(new Date(value).getTime());
 }
@@ -128,7 +135,8 @@ function isSnapshot(body: unknown): body is ParsedSnapshot {
     Array.isArray(candidate.schedules) &&
     candidate.schedules.every(isSchedule) &&
     isPlan(candidate.plan) &&
-    isNonNegativeInteger(candidate.reviewEventsCount)
+    isNonNegativeInteger(candidate.reviewEventsCount) &&
+    isNonNegativeDecimalString(candidate.reconciliationCursor)
   );
 }
 
@@ -140,5 +148,6 @@ function normalizeSnapshot(body: ParsedSnapshot): LearnerStateSnapshot {
     })),
     plan: body.plan,
     reviewEventsCount: body.reviewEventsCount,
+    reconciliationCursor: body.reconciliationCursor,
   };
 }

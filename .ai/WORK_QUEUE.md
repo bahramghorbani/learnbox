@@ -18,8 +18,11 @@ start. Historical tasks remain for traceability and must not be duplicated.
 - **M1-Q — Independent QA:** accepted and merged in PR #157; report: `.ai/qa-reports/M1-Q-INDEPENDENT-QA.md`.
 - **Next:** M1-D push reconciliation cursor/watermark **policy** is approved in ADR 0014
   (per-learner monotonic version, incremented only on newly applied events, same transaction
-  as event+schedule); the migration/service implementation remains a separate serial,
-  review-gated M1-D queue task; seed/catalog implementation remains a separate owner/
+  as event+schedule); the server-core implementation merged in PR #169 and the client-side
+  cursor capture/persistence merged in PR #170; the read-side cursor exposure in
+  `GET /api/learner/state` is **in review** in LB-DS-024 (draft PR required); sending the
+  stored cursor in a request and route/client flag enablement remain separate serial,
+  review-gated M1-D queue tasks; seed/catalog implementation remains a separate owner/
   review-gated task; independent QA of the merged server-wired slice remains pending.
 
 ### Active grouped workstreams
@@ -44,6 +47,32 @@ start. Historical tasks remain for traceability and must not be duplicated.
 - [x] Safety boundary remains: no production, payment, provider credential, real OTP or server activation is implied by this queue.
 
 The historical LB-DS and NI records below remain for traceability. They are not authorization to duplicate or reopen completed work.
+
+## LB-DS-024
+
+- Status: review_requested
+- Executor: subagent (W6, server read-side)
+- Base: main at `246779d` (PR #170 merged)
+- Branch: worker/m1d-cursor-read
+- Risk: routine-offline-sync-read-boundary
+- Specification: docs/architecture/ADR/0014-push-reconciliation-cursor-policy.md; docs/architecture/M1D_SYNC_PERSISTENCE_SLICE1.md (appendix Slice 1b/1c)
+- Allowed paths: apps/api/src/learner-state/**; apps/api/test/learner-state*.test.ts; apps/api/test/postgres-learner-state.repository.test.ts; apps/website/lib/learner-state-web-http.ts; apps/website/lib/learner-state-web-client.ts; apps/website/test/learner-state-web-http.test.ts; apps/website/test/learner-state-web-client.test.ts; apps/website/test/learner-today-server-states.test.tsx; CURRENT_WORK.md; .ai/WORK_QUEUE.md; .ai/worker-reports/LB-DS-024.md
+- Required checks: focused API learner-state tests; focused Website learner-state tests; API/Website typecheck; pnpm check; node scripts/validate-migrations.mjs; pnpm format:check; git diff --check
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: no
+
+Read-side reconciliation cursor exposure only (ADR 0014). `LearnerStateSnapshot`
+gains the authoritative per-learner `reconciliationCursor` decimal string;
+`LearnerStateRepository.readReconciliationCursor` reads
+`learner_reconciliation_cursors` via a parameterized `$1` user-scoped query with
+`cursor::text`, defaulting to `'0'` when no row exists; the snapshot is
+serialized in both the API Bearer route and the Web cookie route
+(`GET /api/learner/state`), and the Web client strictly parses the cursor as a
+non-negative decimal string (never a JS number). No request sends a cursor, no
+network sync is activated, flags/defaults are untouched, and mobile/auth/
+main.dart/migrations/seed/production are not modified. Stop at Draft PR for
+supervisor review.
 
 ## LB-DS-023
 

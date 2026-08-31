@@ -25,6 +25,7 @@ const canonicalBody = {
     message: 'daily',
   },
   reviewEventsCount: 2,
+  reconciliationCursor: '0',
 };
 
 describe('Today server snapshot truth states', () => {
@@ -157,6 +158,7 @@ describe('Today server snapshot truth states', () => {
         message: 'daily',
       },
       reviewEventsCount: 1,
+      reconciliationCursor: '0',
     };
     vi.stubGlobal('fetch', mockRouter({ state: () => json(200, serverSnapshotWithOneReview) }));
     rendered = await renderLearner({ otpUiFlag: 'true' });

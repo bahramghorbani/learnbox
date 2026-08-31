@@ -45,4 +45,19 @@ export class PostgresLearnerStateRepository implements LearnerStateRepository {
     );
     return Number(result.rows[0]?.count ?? 0);
   }
+
+  /**
+   * Authoritative per-learner reconciliation cursor (ADR 0014). BIGINT is cast
+   * to text so the decimal string survives without JS-number precision loss;
+   * no row means the learner never had an applied event, so the cursor is '0'.
+   */
+  async readReconciliationCursor(userId: string): Promise<string> {
+    const result = await this.pool.query<{ cursor: string }>(
+      `SELECT cursor::text AS cursor
+         FROM learner_reconciliation_cursors
+        WHERE user_id = $1`,
+      [userId],
+    );
+    return result.rows[0]?.cursor ?? '0';
+  }
 }

@@ -28,6 +28,7 @@ const canonicalBody = {
     message: 'daily',
   },
   reviewEventsCount: 2,
+  reconciliationCursor: '0',
 };
 
 describe('web learner state client', () => {
@@ -38,6 +39,7 @@ describe('web learner state client', () => {
     if (result.status !== 'ok') throw new Error('unreachable');
     expect(result.snapshot.plan.reviewCardIds).toEqual(['11111111-1111-4111-8111-111111111111']);
     expect(result.snapshot.schedules[0].dueAt).toBeInstanceOf(Date);
+    expect(result.snapshot.reconciliationCursor).toBe('0');
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/learner/state',
       expect.objectContaining({ method: 'GET' }),
@@ -166,6 +168,31 @@ describe('web learner state client', () => {
     expect((await fetchWebLearnerState(vi.fn(async () => jsonResponse(200, body)))).status).toBe(
       'unavailable',
     );
+  });
+
+  it.each([
+    ['missing reconciliationCursor', undefined],
+    ['number reconciliationCursor', 42],
+    ['negative reconciliationCursor', '-1'],
+    ['fractional reconciliationCursor', '1.5'],
+    ['scientific-notation reconciliationCursor', '1e3'],
+    ['non-decimal reconciliationCursor', 'abc'],
+  ])('rejects %s and never treats the cursor as a JS number', async (_label, value) => {
+    const body = structuredClone(canonicalBody) as Record<string, unknown>;
+    if (value === undefined) delete body.reconciliationCursor;
+    else body.reconciliationCursor = value;
+    expect((await fetchWebLearnerState(vi.fn(async () => jsonResponse(200, body)))).status).toBe(
+      'unavailable',
+    );
+  });
+
+  it('accepts a large decimal-string cursor beyond Number.MAX_SAFE_INTEGER', async () => {
+    const body = structuredClone(canonicalBody) as Record<string, unknown>;
+    body.reconciliationCursor = '9007199254740993123456789';
+    const result = await fetchWebLearnerState(vi.fn(async () => jsonResponse(200, body)));
+    expect(result.status).toBe('ok');
+    if (result.status !== 'ok') throw new Error('unreachable');
+    expect(result.snapshot.reconciliationCursor).toBe('9007199254740993123456789');
   });
 
   it('accepts the canonical schedule states and zero reviewEventsCount', async () => {

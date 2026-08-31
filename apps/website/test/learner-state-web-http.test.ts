@@ -25,6 +25,7 @@ const snapshot: LearnerStateSnapshot = {
     message: 'daily',
   },
   reviewEventsCount: 2,
+  reconciliationCursor: '42',
 };
 
 function get(url: string, init: RequestInit = {}): Request {
@@ -76,6 +77,7 @@ describe('web learner state HTTP boundary', () => {
         message: 'daily',
       },
       reviewEventsCount: 2,
+      reconciliationCursor: '42',
     });
     expect(deps.readLearnerState).toHaveBeenCalledWith('00000000-0000-4000-8000-000000000000');
   });

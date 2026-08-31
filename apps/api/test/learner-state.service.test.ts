@@ -33,6 +33,9 @@ const repository: LearnerStateRepository = {
   async countReviewEvents() {
     return 3;
   },
+  async readReconciliationCursor() {
+    return '42';
+  },
 };
 
 describe('LearnerStateService', () => {
@@ -45,6 +48,20 @@ describe('LearnerStateService', () => {
     expect(state.plan.newCardIds).toEqual([]);
     expect(state.plan.mode).toBe('normal');
     expect(state.reviewEventsCount).toBe(3);
+    expect(state.reconciliationCursor).toBe('42');
+  });
+
+  it('exposes the authoritative per-learner reconciliation cursor as a decimal string', async () => {
+    const cursorRepository: LearnerStateRepository = {
+      ...repository,
+      async readReconciliationCursor() {
+        return '0';
+      },
+    };
+    const service = new LearnerStateService(cursorRepository, () => fixedNow);
+    const state = await service.readLearnerState(userId);
+
+    expect(state.reconciliationCursor).toBe('0');
   });
 
   it('passes a fixed clock through to plan composition', async () => {
@@ -63,6 +80,9 @@ describe('LearnerStateService', () => {
       async countReviewEvents() {
         return 0;
       },
+      async readReconciliationCursor() {
+        return '0';
+      },
     };
     const service = new LearnerStateService(empty);
     const state = await service.readLearnerState(userId);
@@ -75,5 +95,6 @@ describe('LearnerStateService', () => {
       message: 'امروز یک قدم کوچک و پیوسته کافی است.',
     });
     expect(state.reviewEventsCount).toBe(0);
+    expect(state.reconciliationCursor).toBe('0');
   });
 });

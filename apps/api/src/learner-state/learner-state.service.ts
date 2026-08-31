@@ -22,11 +22,18 @@ export interface LearnerStateSnapshot {
   plan: LearnerStatePlan;
   /** Server-held review event count; clients reconcile their local pending queue against it. */
   reviewEventsCount: number;
+  /**
+   * Authoritative per-learner reconciliation cursor (ADR 0014) as a decimal
+   * string. BIGINT-backed; never a JS number. '0' when the learner has no
+   * cursor row yet.
+   */
+  reconciliationCursor: string;
 }
 
 export interface LearnerStateRepository {
   findSchedules(userId: string): Promise<LearnerScheduleRow[]>;
   countReviewEvents(userId: string): Promise<number>;
+  readReconciliationCursor(userId: string): Promise<string>;
 }
 
 const SESSION_DURATION_MINUTES = 5 as const;
@@ -67,6 +74,7 @@ export class LearnerStateService {
       schedules,
       plan,
       reviewEventsCount: await this.repository.countReviewEvents(userId),
+      reconciliationCursor: await this.repository.readReconciliationCursor(userId),
     };
   }
 }
