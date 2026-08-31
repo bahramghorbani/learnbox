@@ -206,7 +206,7 @@ describe('PostgresReviewEventStore learner-scoped idempotency', () => {
     let advanceSql = '';
     let bindSql = '';
     const client = {
-      query: async (sql: string, params?: unknown[]) => {
+      query: async (sql: string) => {
         transactionCalls.push(sql);
         if (sql.startsWith('INSERT INTO review_events')) {
           insertSql = sql;
