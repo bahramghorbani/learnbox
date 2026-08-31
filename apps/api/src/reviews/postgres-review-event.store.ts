@@ -14,6 +14,7 @@ interface ReviewEventRow {
   grade: ReviewEventInput['grade'];
   occurred_at: Date;
   client_event_id: string;
+  reconciliation_cursor: string | null;
 }
 
 interface ReconciliationCursorRow {
@@ -66,7 +67,11 @@ const toEvent = (row: ReviewEventRow): PersistedReviewEvent => ({
   clientEventId: row.client_event_id,
 });
 
-const CURSOR_COLUMN = 'COALESCE(c.cursor, 0) AS cursor';
+// The event's own stored cursor (ADR 0014 per-event binding), never the current
+// learner cursor: an idempotent replay must return the cursor that was assigned
+// to that exact event. Legacy rows (applied before migration 0015) are NULL and
+// coalesce to 0, matching the pre-cursor default.
+const CURSOR_COLUMN = 'COALESCE(e.reconciliation_cursor, 0) AS cursor';
 
 /** PostgreSQL adapter. Callers must pass a current schedule projection. */
 export class PostgresReviewEventStore implements ReviewEventStore {
@@ -79,7 +84,6 @@ export class PostgresReviewEventStore implements ReviewEventStore {
               ${CURSOR_COLUMN}
          FROM review_events e
          JOIN card_schedules s ON s.user_id = e.user_id AND s.card_id = e.card_id
-         LEFT JOIN learner_reconciliation_cursors c ON c.user_id = e.user_id
         WHERE e.client_event_id = $1`,
       [clientEventId],
     );
@@ -153,13 +157,24 @@ export class PostgresReviewEventStore implements ReviewEventStore {
         `SELECT advance_learner_reconciliation_cursor($1) AS cursor`,
         [input.userId],
       );
+      const eventCursor = cursor.rows[0]?.cursor ?? '0';
+
+      // Bind the exact assigned cursor to the newly claimed event in the same
+      // transaction, so idempotent replay and learner+cursor reads use the
+      // event's own cursor rather than the current learner cursor.
+      await client.query(
+        `UPDATE review_events
+            SET reconciliation_cursor = $2
+          WHERE id = $1`,
+        [claimed.rows[0].id, eventCursor],
+      );
 
       await client.query('COMMIT');
       return {
         event: toEvent(claimed.rows[0]),
         schedule: toSchedule(schedule.rows[0]),
         idempotent: false,
-        reconciliationCursor: cursor.rows[0]?.cursor ?? '0',
+        reconciliationCursor: eventCursor,
       };
     } catch (error) {
       await client.query('ROLLBACK');
@@ -179,7 +194,6 @@ export class PostgresReviewEventStore implements ReviewEventStore {
               ${CURSOR_COLUMN}
          FROM review_events e
          JOIN card_schedules s ON s.user_id = e.user_id AND s.card_id = e.card_id
-         LEFT JOIN learner_reconciliation_cursors c ON c.user_id = e.user_id
         WHERE e.user_id = $1 AND e.client_event_id = $2`,
       [userId, clientEventId],
     );

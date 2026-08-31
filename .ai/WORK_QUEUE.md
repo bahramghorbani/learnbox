@@ -20,10 +20,11 @@ start. Historical tasks remain for traceability and must not be duplicated.
   (per-learner monotonic version, incremented only on newly applied events, same transaction
   as event+schedule); the server-core implementation merged in PR #169 and the client-side
   cursor capture/persistence merged in PR #170; the read-side cursor exposure in
-  `GET /api/learner/state` is **in review** in LB-DS-024 (draft PR required); sending the
-  stored cursor in a request and route/client flag enablement remain separate serial,
-  review-gated M1-D queue tasks; seed/catalog implementation remains a separate owner/
-  review-gated task; independent QA of the merged server-wired slice remains pending.
+  `GET /api/learner/state` is **in review** in LB-DS-024 (draft PR required) and the per-event
+  cursor binding is **in review** in LB-DS-025 (draft PR #172, branch `worker/m1d-event-cursor`); sending the stored cursor in a request and route/client flag enablement remain
+  separate serial, review-gated M1-D queue tasks; seed/catalog implementation remains a
+  separate owner/review-gated task; independent QA of the merged server-wired slice remains
+  pending.
 
 ### Active grouped workstreams
 
@@ -47,6 +48,34 @@ start. Historical tasks remain for traceability and must not be duplicated.
 - [x] Safety boundary remains: no production, payment, provider credential, real OTP or server activation is implied by this queue.
 
 The historical LB-DS and NI records below remain for traceability. They are not authorization to duplicate or reopen completed work.
+
+## LB-DS-025
+
+- Status: review_requested
+- Executor: subagent (W6, server persistence)
+- Base: main at `0057419` (PR #171 merged)
+- Branch: worker/m1d-event-cursor
+- Risk: routine-offline-sync-persistence-boundary
+- Specification: docs/architecture/ADR/0014-push-reconciliation-cursor-policy.md; docs/architecture/M1D_SYNC_PERSISTENCE_SLICE1.md (appendix Slice 1b/1c)
+- Allowed paths: database/migrations/0015_event_reconciliation_cursor.sql; apps/api/src/reviews/postgres-review-event.store.ts; apps/api/test/postgres-review-event.store.test.ts; apps/api/test/event-reconciliation-cursor-migration.test.ts; CURRENT_WORK.md; .ai/WORK_QUEUE.md; .ai/worker-reports/LB-DS-025.md
+- Required checks: focused API review-event store + migration tests; full API tests; API typecheck; pnpm check; node scripts/validate-migrations.mjs; pnpm format:check; pnpm verify:ai-worker-queue; pnpm verify:documentation-governance; pnpm verify:ai-continuity; git diff --check
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: no
+
+Per-event cursor binding only (ADR 0014). Additive migration 0015 adds nullable
+`review_events.reconciliation_cursor BIGINT` with a non-negative check and an
+index on `(user_id, reconciliation_cursor)` for learner+cursor reads; legacy
+rows are NOT backfilled (NULL means "applied before 0015"). After the atomic
+cursor advance, `PostgresReviewEventStore.writeAtomically` records the
+returned cursor on the newly claimed event in the same transaction and returns
+that exact event cursor. Idempotent replay returns the cursor stored on that
+event (`COALESCE(e.reconciliation_cursor, 0)`, never the current learner
+cursor); conflicts/retries/missing-schedule never bump the cursor and never
+rebind the event. No route, flag, auth, mobile or request-shape change;
+sync stays dormant. Start with a failing migration/domain test, record exact
+RED output, mark review_requested only after the Draft PR is open, and stop
+for supervisor review.
 
 ## LB-DS-024
 
