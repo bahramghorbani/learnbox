@@ -4,6 +4,7 @@
 - Base commit: 0057419 (origin/main, PR #171 merged)
 - Head commit: 29079a9 (docs(m1d): mark LB-DS-025 review_requested with draft PR #172; code head 8549115)
 - Draft PR: https://github.com/bahramghorbani/learnbox/pull/172
+- Merged: PR #172 merged 2026-08-31 at merge commit `caa3a39`
 - Scope completed: Per-event reconciliation cursor binding (ADR 0014). Additive
   migration 0015 adds nullable `review_events.reconciliation_cursor BIGINT` with a
   non-negative check (`reconciliation_cursor IS NULL OR reconciliation_cursor >= 0`) and
