@@ -2,8 +2,8 @@
 
 - Branch: `worker/m1d-cursor-read`
 - Base commit: `246779d` (PR #170 client-side cursor capture/persistence merge)
-- Head commit: `PENDING` (filled at push time)
-- Draft PR: PENDING (filled at push time)
+- Head commit: `118bdf9` (implementation/tests; metadata filled at PR time)
+- Draft PR: https://github.com/bahramghorbani/learnbox/pull/171 (open, draft)
 - Scope completed: read-side exposure of the authoritative per-learner reconciliation cursor (ADR 0014) in the learner-state snapshot and both `GET /api/learner/state` serializers; strict decimal-string client parsing; no request cursor, no sync activation.
 - Files changed: `apps/api/src/learner-state/learner-state.service.ts`, `apps/api/src/learner-state/postgres-learner-state.repository.ts`, `apps/api/src/learner-state/learner-state-http.ts`, `apps/api/test/learner-state.service.test.ts`, `apps/api/test/learner-state-http.test.ts`, `apps/api/test/postgres-learner-state.repository.test.ts` (new), `apps/website/lib/learner-state-web-http.ts`, `apps/website/lib/learner-state-web-client.ts`, `apps/website/test/learner-state-web-http.test.ts`, `apps/website/test/learner-state-web-client.test.ts`, `apps/website/test/learner-today-server-states.test.tsx`, `CURRENT_WORK.md`, `.ai/WORK_QUEUE.md`, `.ai/worker-reports/LB-DS-024.md`.
 - Checks run: focused API learner-state suites; focused Website learner-state suites; API/Website typecheck; `pnpm check`; `node scripts/validate-migrations.mjs`; `pnpm format:check`; `git diff --check`.
