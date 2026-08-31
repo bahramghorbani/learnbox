@@ -31,6 +31,7 @@ const dependencies: LearnerStateHttpDependencies = {
         message: 'امروز یک قدم کوچک و پیوسته کافی است.',
       },
       reviewEventsCount: 3,
+      reconciliationCursor: '42',
     };
   },
 };
@@ -92,6 +93,7 @@ describe('GET learner state boundary (contract M1-D 12.3)', () => {
         message: 'امروز یک قدم کوچک و پیوسته کافی است.',
       },
       reviewEventsCount: 3,
+      reconciliationCursor: '42',
     });
   });
 
