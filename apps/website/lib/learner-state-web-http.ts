@@ -59,6 +59,7 @@ function serialize(state: LearnerStateSnapshot): JsonObject {
       message: state.plan.message,
     },
     reviewEventsCount: state.reviewEventsCount,
+    reconciliationCursor: state.reconciliationCursor,
   };
 }
 
