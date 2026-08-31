@@ -13,20 +13,21 @@
 - **M1-D cursor slice (ADR 0014):** server-core implementation **merged** in PR #169 at
   `9ff7c99` (migration 0014 + atomic cursor advance in `PostgresReviewEventStore.writeAtomically`
   - cursor on acknowledged batch outcomes); client-side cursor capture/persistence for the
-    dormant foreground sync boundary merged in PR #170 at `c8b8dfd` (strict transport parse,
+    dormant foreground sync boundary merged in PR #170 at `246779d` (strict transport parse,
     `ReconciliationCursorStore`, coordinator persistence — **no request cursor yet, network sync
-    remains disabled**); the read-side cursor exposure slice (LB-DS-024) is **in review** on
-    branch `worker/m1d-cursor-read` from `main` at `246779d` (snapshot contract + Web
-    `GET /api/learner/state` now serialize the authoritative per-learner cursor as a decimal
-    string from `learner_reconciliation_cursors`, default `'0'`, BIGINT-as-string throughout);
-    the per-event cursor binding slice (LB-DS-025) is **in review** in draft PR #172 on
-    branch `worker/m1d-event-cursor` from `main` at `0057419` (migration 0015 adds nullable
-    `review_events.reconciliation_cursor` with a non-negative check and a
-    `(user_id, reconciliation_cursor)` index, no legacy backfill; `writeAtomically` records the
-    returned cursor on the newly claimed event in the same transaction and returns that exact
-    event cursor; idempotent replay returns the event-stored cursor, never the current learner
-    cursor); sending the cursor in a request and route/client flag enablement remain separate
-    serial M1-D tasks; milestone stays partial/not production-ready.
+    remains disabled**); the read-side cursor exposure slice (LB-DS-024) **merged** in PR #171 at
+    `0057419` (snapshot contract + Web `GET /api/learner/state` now serialize the authoritative
+    per-learner cursor as a decimal string from `learner_reconciliation_cursors`, default `'0'`,
+    BIGINT-as-string throughout); the per-event cursor binding slice (LB-DS-025) **merged** in
+    PR #172 at `caa3a39` (migration 0015 adds nullable `review_events.reconciliation_cursor`
+    with a non-negative check and a `(user_id, reconciliation_cursor)` index, no legacy
+    backfill; `writeAtomically` records the returned cursor on the newly claimed event in the
+    same transaction and returns that exact event cursor; idempotent replay returns the
+    event-stored cursor, never the current learner cursor); sending the cursor in a request and
+    route/client flag enablement remain separate serial, review-gated M1-D tasks; the documented
+    M1-D wire contract covers the snapshot only (no delta endpoint exists; `reviewEventsCount`
+    is not a delta), and wire-contract/delta-endpoint work remains separate review-gated;
+    milestone stays partial/not production-ready.
 - **M1-B Web slice 1:** completed in PR #156; Today was explicitly local-only until the server wiring slice.
 - **M1-B Web slice 2 (LB-DS-022):** merged in PR #163 at `73cdb62` (2026-08-30); ADR 0012 route `GET /api/learner/state` (cookie subject = canonical `users.id`) plus truthful Today fetch are on `main` behind the fail-closed `WEB_LEARNER_STATE_ENABLED` runtime (defaults false). The actionable Today figure stays tied to the local bundled session until the approved/published Start Pack seed/catalog rows are implemented and released (the Start Pack ↔ canonical `contentId` contract itself is recorded in ADR 0013; seed/catalog implementation remains a separate review-gated task).
 - **M1-C Mobile slice 1:** completed in PR #155; Today local queue state is truthful, sync coordinator remains dormant.
@@ -35,11 +36,13 @@
   ADR 0014 (per-learner monotonic version, incremented only on newly applied events,
   committed in the same transaction as event and schedule update); the server-core
   implementation merged in PR #169, the client-side cursor capture/persistence merged in
-  PR #170, the read-side cursor exposure in `GET /api/learner/state` is in review in
-  LB-DS-024, and the per-event cursor binding is in review in draft PR #172 (LB-DS-025,
-  branch `worker/m1d-event-cursor`); sending the
+  PR #170, the read-side cursor exposure in `GET /api/learner/state` merged in PR #171
+  (LB-DS-024, merge commit `0057419`), and the per-event cursor binding merged in PR #172
+  (LB-DS-025, merge commit `caa3a39`); sending the
   stored cursor in a request and route/client flag enablement remain separate serial,
-  review-gated M1-D queue tasks; seed/catalog implementation remains a separate
+  review-gated M1-D queue tasks; the documented M1-D wire contract remains snapshot-only
+  (no delta endpoint exists), so wire-contract/delta-endpoint work remains separate
+  review-gated; seed/catalog implementation remains a separate
   review-gated task.
 
 ## Immediate execution order
@@ -49,10 +52,9 @@
 3. Start Pack ↔ canonical `contentId` contract is decided and recorded in ADR 0013; seed/catalog implementation remains a separate review-gated task.
 4. Implement the authenticated server-wired learner path completion and any remaining D1 fetch states.
 5. Decide and implement M1-D push reconciliation. The cursor/watermark policy is approved in
-   ADR 0014; server-core (PR #169) and client-side cursor capture/persistence (PR #170) are
-   merged, the read-side cursor exposure in `GET /api/learner/state` is in review in LB-DS-024,
-   and the per-event cursor binding is in review in draft PR #172 (LB-DS-025, branch
-   `worker/m1d-event-cursor`); sending the cursor in a request and flag enablement remain
+   ADR 0014; server-core (PR #169), client-side cursor capture/persistence (PR #170),
+   read-side cursor exposure (PR #171/LB-DS-024) and per-event cursor binding (PR #172/LB-DS-025)
+   are merged; sending the cursor in a request and flag enablement remain
    separate review-gated tasks.
 6. Re-run M1-Q independent acceptance, visual and accessibility QA against the merged server-wired slice (PR #163).
 
