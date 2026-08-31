@@ -19,8 +19,8 @@
     branch `worker/m1d-cursor-read` from `main` at `246779d` (snapshot contract + Web
     `GET /api/learner/state` now serialize the authoritative per-learner cursor as a decimal
     string from `learner_reconciliation_cursors`, default `'0'`, BIGINT-as-string throughout);
-    the per-event cursor binding slice (LB-DS-025) is **in progress** on branch
-    `worker/m1d-event-cursor` from `main` at `0057419` (migration 0015 adds nullable
+    the per-event cursor binding slice (LB-DS-025) is **in review** in draft PR #172 on
+    branch `worker/m1d-event-cursor` from `main` at `0057419` (migration 0015 adds nullable
     `review_events.reconciliation_cursor` with a non-negative check and a
     `(user_id, reconciliation_cursor)` index, no legacy backfill; `writeAtomically` records the
     returned cursor on the newly claimed event in the same transaction and returns that exact
@@ -36,8 +36,8 @@
   committed in the same transaction as event and schedule update); the server-core
   implementation merged in PR #169, the client-side cursor capture/persistence merged in
   PR #170, the read-side cursor exposure in `GET /api/learner/state` is in review in
-  LB-DS-024, and the per-event cursor binding is in progress in LB-DS-025 (migration 0015 +
-  `writeAtomically` event-cursor binding, branch `worker/m1d-event-cursor`); sending the
+  LB-DS-024, and the per-event cursor binding is in review in draft PR #172 (LB-DS-025,
+  branch `worker/m1d-event-cursor`); sending the
   stored cursor in a request and route/client flag enablement remain separate serial,
   review-gated M1-D queue tasks; seed/catalog implementation remains a separate
   review-gated task.
@@ -51,7 +51,7 @@
 5. Decide and implement M1-D push reconciliation. The cursor/watermark policy is approved in
    ADR 0014; server-core (PR #169) and client-side cursor capture/persistence (PR #170) are
    merged, the read-side cursor exposure in `GET /api/learner/state` is in review in LB-DS-024,
-   and the per-event cursor binding is in progress in LB-DS-025 (branch
+   and the per-event cursor binding is in review in draft PR #172 (LB-DS-025, branch
    `worker/m1d-event-cursor`); sending the cursor in a request and flag enablement remain
    separate review-gated tasks.
 6. Re-run M1-Q independent acceptance, visual and accessibility QA against the merged server-wired slice (PR #163).

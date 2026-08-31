@@ -21,8 +21,7 @@ start. Historical tasks remain for traceability and must not be duplicated.
   as event+schedule); the server-core implementation merged in PR #169 and the client-side
   cursor capture/persistence merged in PR #170; the read-side cursor exposure in
   `GET /api/learner/state` is **in review** in LB-DS-024 (draft PR required) and the per-event
-  cursor binding is **in progress** in LB-DS-025 (branch `worker/m1d-event-cursor`, draft PR
-  required); sending the stored cursor in a request and route/client flag enablement remain
+  cursor binding is **in review** in LB-DS-025 (draft PR #172, branch `worker/m1d-event-cursor`); sending the stored cursor in a request and route/client flag enablement remain
   separate serial, review-gated M1-D queue tasks; seed/catalog implementation remains a
   separate owner/review-gated task; independent QA of the merged server-wired slice remains
   pending.
@@ -52,7 +51,7 @@ The historical LB-DS and NI records below remain for traceability. They are not 
 
 ## LB-DS-025
 
-- Status: in_progress
+- Status: review_requested
 - Executor: subagent (W6, server persistence)
 - Base: main at `0057419` (PR #171 merged)
 - Branch: worker/m1d-event-cursor

@@ -3,7 +3,7 @@
 - Branch: worker/m1d-event-cursor
 - Base commit: 0057419 (origin/main, PR #171 merged)
 - Head commit: 8549115 (feat(m1d): bind per-event reconciliation cursor in writeAtomically)
-- Draft PR: pending after push (recorded on status flip to review_requested)
+- Draft PR: https://github.com/bahramghorbani/learnbox/pull/172
 - Scope completed: Per-event reconciliation cursor binding (ADR 0014). Additive
   migration 0015 adds nullable `review_events.reconciliation_cursor BIGINT` with a
   non-negative check (`reconciliation_cursor IS NULL OR reconciliation_cursor >= 0`) and
