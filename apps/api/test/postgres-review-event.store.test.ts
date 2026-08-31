@@ -269,7 +269,9 @@ describe('PostgresReviewEventStore learner-scoped idempotency', () => {
       'COMMIT',
     ]);
     expect(advanceSql).toMatch(/SELECT advance_learner_reconciliation_cursor\(\$1\) AS cursor/i);
-    expect(bindSql).toMatch(/UPDATE review_events\s+SET reconciliation_cursor = \$2\s+WHERE id = \$1/i);
+    expect(bindSql).toMatch(
+      /UPDATE review_events\s+SET reconciliation_cursor = \$2\s+WHERE id = \$1/i,
+    );
     expect(insertSql).toMatch(/ON CONFLICT \(user_id, client_event_id\) DO NOTHING/i);
     expect(insertSql).toMatch(/applied_at/i);
     expect(insertSql).toMatch(/GREATEST/i);
@@ -403,9 +405,7 @@ describe('PostgresReviewEventStore learner-scoped idempotency', () => {
       'INSERT',
       'ROLLBACK',
     ]);
-    expect(
-      transactionCalls.some((sql) => sql.startsWith('UPDATE review_events')),
-    ).toBe(false);
+    expect(transactionCalls.some((sql) => sql.startsWith('UPDATE review_events'))).toBe(false);
   });
 
   it('resolves canonical content ids, bootstraps schedules and reads learner schedules', async () => {
