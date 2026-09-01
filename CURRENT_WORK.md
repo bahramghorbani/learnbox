@@ -4,10 +4,6 @@
 
 ## Active work
 
-- **M2 content-review safety gate:** an isolated TDD fix is in progress to prevent `approve` from
-  moving a card version forward until all six required review dimensions have passed. No content
-  is being published by this slice.
-
 ### Active milestone
 
 - **M1 — Online Learning Core:** slice 1 QA complete; milestone remains **partial and not production-ready**.
@@ -51,14 +47,15 @@
 
 ## Immediate execution order
 
-1. Start Pack ↔ canonical `contentId` contract is decided and recorded in ADR 0013; implement the seed/catalog slice as a separate review-gated task.
-2. Implement the authenticated server-wired learner path completion and any remaining D1 fetch states.
-3. Decide and implement M1-D push reconciliation. The cursor/watermark policy is approved in
+1. Complete content/media review operations for the 20-item Start Pack without bypassing human review.
+2. Start Pack ↔ canonical `contentId` contract is decided and recorded in ADR 0013; implement the seed/catalog slice as a separate review-gated task.
+3. Implement the authenticated server-wired learner path completion and any remaining D1 fetch states.
+4. Decide and implement M1-D push reconciliation. The cursor/watermark policy is approved in
    ADR 0014; server-core (PR #169), client-side cursor capture/persistence (PR #170),
    read-side cursor exposure (PR #171/LB-DS-024) and per-event cursor binding (PR #172/LB-DS-025)
    are merged; sending the cursor in a request and flag enablement remain
    separate review-gated tasks.
-4. Re-run browser visual and accessibility QA when the Chrome permission blocker is cleared; do not treat the current functional QA as visual acceptance.
+5. Re-run browser visual and accessibility QA when the Chrome permission blocker is cleared; do not treat the current functional QA as visual acceptance.
 
 ## Owner-approved product decisions captured in M0
 
