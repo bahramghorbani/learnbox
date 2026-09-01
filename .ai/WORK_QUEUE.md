@@ -112,10 +112,11 @@ review-gated M1-D queue tasks. Do not reopen or duplicate this task.
 
 ## LB-DS-023
 
-- Status: review_requested
+- Status: accepted
 - Executor: mobile-worker (W3)
 - Base: main at `9ff7c99` (PR #169, server-core reconciliation cursor merged)
 - Branch: worker/m1d-client-cursor-slice
+- Merge commit: `246779d` (PR #170 merged 2026-08-30)
 - Risk: routine-offline-mobile-sync-boundary
 - Specification: docs/architecture/ADR/0014-push-reconciliation-cursor-policy.md; docs/architecture/M1D_SYNC_PERSISTENCE_SLICE1.md (appendix Slice 1c)
 - Allowed paths: apps/mobile/lib/features/sync/**; apps/mobile/test/** sync-related tests; docs/architecture/M1D_SYNC_PERSISTENCE_SLICE1.md; CURRENT_WORK.md; .ai/WORK_QUEUE.md; .ai/worker-reports/LB-DS-023.md
@@ -123,7 +124,11 @@ review-gated M1-D queue tasks. Do not reopen or duplicate this task.
 - Simulator required: no
 - Draft PR required: no
 - Merge allowed: yes
-- Non-draft PR #170 is open for supervisor review.
+
+Accepted and merged through PR #170 at merge commit `246779d` on
+2026-08-30. No request cursor or network sync activation: this record closes
+the stale `review_requested` state truthfully from live GitHub evidence;
+no code, test, schema, flag or product behavior was modified.
 
 Client-side cursor capture/persistence for the existing dormant foreground sync
 boundary (ADR 0014). `ReviewUploadResponse` gains an optional decimal-string
@@ -144,6 +149,7 @@ Cursor write failure returns retryable failure and never reports Synchronized;
 queue acknowledgement is durable first, so no acknowledged event is lost
 (documented and tested). No API/server/schema/route/auth/main.dart/UI/flag
 change; production sync remains disabled and no request carries a cursor yet.
+Do not reopen or duplicate this task.
 
 ## LB-DS-022
 
