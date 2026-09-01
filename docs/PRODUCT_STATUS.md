@@ -49,16 +49,16 @@ LearnBox is an online-first German vocabulary Leitner application for Persian-sp
 
 ### Content and packages
 
-| Capability                            | Status               | Truth                                                                                                 |
-| ------------------------------------- | -------------------- | ----------------------------------------------------------------------------------------------------- |
-| Free A1 starter collection            | Partial / controlled | Start slice and validated content foundations exist; target product is about 350 words                |
-| Vocabulary item schema                | Verified foundation  | Canonical items, media and validation boundaries exist                                                |
-| AI pack generation from admin request | Partial foundation   | Content Factory and provider-neutral validation exist; admin generation UX and production jobs remain |
-| Image and pronunciation package       | Partial foundation   | Media plans and QA contracts exist; complete pack production flow remains                             |
-| Duplicate prevention                  | Partial foundation   | Normalization and within-batch checks exist; cross-pack and per-user dedupe must be completed         |
-| Human editorial review                | Verified foundation  | Review gate blocks AI direct publication                                                              |
-| Pack versioning/release/rollback      | Partial              | Release readiness panel and manifests exist; complete operational flow remains                        |
-| Personal word generation              | Planned              | Keep personal content separate from official published catalog                                        |
+| Capability                            | Status               | Truth                                                                                                      |
+| ------------------------------------- | -------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Free A1 starter collection            | Partial / controlled | Start slice and validated content foundations exist; target product is about 350 words                     |
+| Vocabulary item schema                | Verified foundation  | Canonical items, media and validation boundaries exist                                                     |
+| AI pack generation from admin request | Partial foundation   | Content Factory and provider-neutral validation exist; admin generation UX and production jobs remain      |
+| Image and pronunciation package       | Partial foundation   | Media plans and QA contracts exist; complete pack production flow remains                                  |
+| Duplicate prevention                  | Partial foundation   | Normalization and within-batch checks exist; cross-pack and per-user dedupe must be completed              |
+| Human editorial review                | Verified foundation  | Review gate blocks AI direct publication; approval additionally requires all six review dimensions to pass |
+| Pack versioning/release/rollback      | Partial              | Release readiness panel and manifests exist; complete operational flow remains                             |
+| Personal word generation              | Planned              | Keep personal content separate from official published catalog                                             |
 
 ### Admin panel
 

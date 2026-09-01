@@ -41,20 +41,49 @@ describe('PostgresContentReviewStore', () => {
       'SELECT',
       'SELECT',
       'SELECT',
+      'SELECT',
       'INSERT',
       'UPDATE',
       'INSERT',
       'COMMIT',
     ]);
     expect(calls[3].sql).toContain('FOR UPDATE');
-    expect(calls[5].params).toEqual([submission.cardVersionId, 'approved']);
-    expect(calls[6].params).toEqual([
+    expect(calls[4].sql).toContain('FROM content_review_checks');
+    expect(calls[6].params).toEqual([submission.cardVersionId, 'approved']);
+    expect(calls[7].params).toEqual([
       submission.actorUserId,
       'content_review.approve',
       submission.cardVersionId,
       submission.decisionKey,
     ]);
     expect(calls.some(({ sql }) => sql.includes("status = 'published'"))).toBe(false);
+  });
+
+  it('blocks approval while any required review dimension is pending', async () => {
+    const calls: string[] = [];
+    const client = {
+      query: async (sql: string) => {
+        calls.push(sql);
+        if (sql.includes('FROM admin_role_assignments'))
+          return { rows: [{ role: 'content_reviewer' }] };
+        if (sql.includes('FROM content_review_decisions WHERE')) return { rows: [] };
+        if (sql.includes('FROM card_versions')) {
+          return { rows: [{ id: submission.cardVersionId, status: 'needs_review' }] };
+        }
+        if (sql.includes('FROM content_review_checks')) return { rows: [{ dimension: 'audio' }] };
+        return { rows: [] };
+      },
+      release: () => undefined,
+    };
+    const pool = { connect: async () => client } as unknown as Pool;
+
+    await expect(new PostgresContentReviewStore(pool).submit(submission)).resolves.toEqual({
+      status: 'review_incomplete',
+      pendingDimensions: ['audio'],
+    });
+    expect(calls).toContain('ROLLBACK');
+    expect(calls.some((sql) => sql.includes('INSERT INTO content_review_decisions'))).toBe(false);
+    expect(calls.some((sql) => sql.includes('UPDATE card_versions'))).toBe(false);
   });
 
   it('rejects a publisher-only actor before reading the target content', async () => {

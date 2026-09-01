@@ -4,6 +4,10 @@
 
 ## Active work
 
+- **M2 content-review safety gate:** an isolated TDD fix is in progress to prevent `approve` from
+  moving a card version forward until all six required review dimensions have passed. No content
+  is being published by this slice.
+
 ### Active milestone
 
 - **M1 — Online Learning Core:** slice 1 QA complete; milestone remains **partial and not production-ready**.

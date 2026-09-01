@@ -18,6 +18,7 @@ export type ContentReviewWriteResult =
   | { action: ContentReviewAction; status: 'idempotent' }
   | { status: 'forbidden' }
   | { status: 'not_found' }
+  | { pendingDimensions: string[]; status: 'review_incomplete' }
   | { currentStatus: string; status: 'not_reviewable' };
 
 type ContentVersionRow = { id: string; status: string };
@@ -83,6 +84,36 @@ export class PostgresContentReviewStore {
       if (!reviewableStatuses.includes(current.status as ReviewableContentStatus)) {
         await client.query('ROLLBACK');
         return { status: 'not_reviewable', currentStatus: current.status };
+      }
+
+      if (input.action === 'approve') {
+        const pending = await client.query<{ dimension: string }>(
+          `SELECT required.dimension
+             FROM unnest(ARRAY[
+               'german_linguistic'::content_review_dimension,
+               'persian_translation'::content_review_dimension,
+               'provenance'::content_review_dimension,
+               'visual'::content_review_dimension,
+               'audio'::content_review_dimension,
+               'app_flow'::content_review_dimension
+             ]) AS required(dimension)
+            WHERE NOT EXISTS (
+              SELECT 1
+                FROM content_review_checks check_row
+               WHERE check_row.card_version_id = $1
+                 AND check_row.dimension = required.dimension
+                 AND check_row.outcome = 'passed'
+            )
+            ORDER BY required.dimension`,
+          [input.cardVersionId],
+        );
+        if (pending.rows.length > 0) {
+          await client.query('ROLLBACK');
+          return {
+            status: 'review_incomplete',
+            pendingDimensions: pending.rows.map(({ dimension }) => dimension),
+          };
+        }
       }
 
       const decision = await client.query<DecisionRow>(
