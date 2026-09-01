@@ -26,7 +26,7 @@ start. Historical tasks remain for traceability and must not be duplicated.
   snapshot-only (no delta endpoint exists), so wire-contract/delta-endpoint work remains a
   separate review-gated task; seed/catalog implementation remains a
   separate owner/review-gated task; independent functional QA of the merged server-wired slice is accepted in PR #175;
- browser visual/AX/keyboard acceptance remains blocked by the Chrome permission dialog.
+  browser visual/AX/keyboard acceptance remains blocked by the Chrome permission dialog.
 
 ### Active grouped workstreams
 
