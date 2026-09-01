@@ -15,7 +15,7 @@ start. Historical tasks remain for traceability and must not be duplicated.
 - **M1-B slice 1 — Web Today truth label:** accepted and merged in PR #156; server wiring merged in LB-DS-022 (PR #163, merge commit `73cdb62`) behind the fail-closed `WEB_LEARNER_STATE_ENABLED` runtime.
 - **M1-B slice 2 — Web learner-state read route + truthful Today fetch:** accepted and merged in PR #163 at merge commit `73cdb62`; server-backed figures only after a successful cookie-authenticated read; Today figure stays local until the approved/published Start Pack seed/catalog rows are implemented and released; Start Pack ↔ canonical `contentId` contract is recorded in ADR 0013 (bundled IDs are canonical immutable `cards.content_id`; clients send `contentId`, server resolves `cards.id`); seed/catalog/reconciliation remain separate review-gated tasks.
 - **M1-C slice 1 — Mobile Today states:** accepted and merged in PR #155; local queue chip is truthful, sync coordinator remains dormant.
-- **M1-Q — Independent QA:** accepted and merged in PR #157; report: `.ai/qa-reports/M1-Q-INDEPENDENT-QA.md`.
+- **M1-Q — Independent QA:** accepted and merged in PR #157; current server-wired follow-up QA accepted and merged in PR #175; report: `.ai/qa-reports/M1-Q3-CURRENT-WEB-SERVER-WIRED.md`. Functional checks are green; browser visual/AX/keyboard acceptance remains blocked and explicitly unclaimed.
 - **Next:** M1-D push reconciliation cursor/watermark **policy** is approved in ADR 0014
   (per-learner monotonic version, incremented only on newly applied events, same transaction
   as event+schedule); the server-core implementation merged in PR #169 and the client-side
@@ -25,8 +25,8 @@ start. Historical tasks remain for traceability and must not be duplicated.
   separate serial, review-gated M1-D queue tasks; the documented M1-D wire contract remains
   snapshot-only (no delta endpoint exists), so wire-contract/delta-endpoint work remains a
   separate review-gated task; seed/catalog implementation remains a
-  separate owner/review-gated task; independent QA of the merged server-wired slice remains
-  pending.
+  separate owner/review-gated task; independent functional QA of the merged server-wired slice is accepted in PR #175;
+  browser visual/AX/keyboard acceptance remains blocked by the Chrome permission dialog.
 
 ### Active grouped workstreams
 
