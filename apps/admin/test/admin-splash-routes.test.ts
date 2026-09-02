@@ -25,6 +25,7 @@ describe('owner splash routes', () => {
       now: () => now,
       sessionStore: {
         findActiveSession: async () => ({
+          userId: '2efaf676-84e4-45b1-8a13-50735a8df2c8',
           csrfHash: hashAdminSecret(csrfToken, config.tokenHashKey),
           lastSeenAt: now,
           absoluteExpiresAt: new Date(now.getTime() + 60_000),
@@ -77,6 +78,7 @@ describe('owner splash routes', () => {
       now: () => now,
       sessionStore: {
         findActiveSession: async () => ({
+          userId: '2efaf676-84e4-45b1-8a13-50735a8df2c8',
           csrfHash: hashAdminSecret(csrfToken, config.tokenHashKey),
           lastSeenAt: now,
           absoluteExpiresAt: new Date(now.getTime() + 60_000),
@@ -145,6 +147,7 @@ describe('owner splash routes', () => {
       now: () => now,
       sessionStore: {
         findActiveSession: async () => ({
+          userId: '2efaf676-84e4-45b1-8a13-50735a8df2c8',
           csrfHash: hashAdminSecret(csrfToken, config.tokenHashKey),
           lastSeenAt: now,
           absoluteExpiresAt: new Date(now.getTime() + 60_000),
@@ -187,6 +190,7 @@ describe('owner splash routes', () => {
       now: () => now,
       sessionStore: {
         findActiveSession: async () => ({
+          userId: '2efaf676-84e4-45b1-8a13-50735a8df2c8',
           csrfHash: hashAdminSecret(csrfToken, config.tokenHashKey),
           lastSeenAt: now,
           absoluteExpiresAt: new Date(now.getTime() + 60_000),
@@ -280,6 +284,7 @@ describe('owner splash routes', () => {
       now: () => now,
       sessionStore: {
         findActiveSession: async () => ({
+          userId: '2efaf676-84e4-45b1-8a13-50735a8df2c8',
           csrfHash: hashAdminSecret(csrfToken, config.tokenHashKey),
           lastSeenAt: now,
           absoluteExpiresAt: new Date(now.getTime() + 60_000),
