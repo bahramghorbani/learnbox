@@ -501,6 +501,68 @@ button {
   margin: 16px 0 0;
   color: var(--muted);
 }
+.review-queue-overview {
+  max-width: 1170px;
+  margin: 0 auto 28px;
+  padding: 24px 28px;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  background: #fff;
+}
+.review-queue-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+.review-queue-heading h2 {
+  margin: 0;
+  color: var(--purple);
+  font-size: 20px;
+}
+.review-queue-heading p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.review-queue-heading strong {
+  white-space: nowrap;
+  color: #a52b24;
+}
+.review-queue-overview > p {
+  margin: 20px 0 0;
+  color: var(--muted);
+}
+.review-queue-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.review-queue-list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.review-queue-list li > span:first-child {
+  font-size: 17px;
+}
+.review-queue-list small {
+  overflow: hidden;
+  color: var(--muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.review-queue-list strong {
+  color: #9a5a00;
+  font-size: 13px;
+}
 @media (max-width: 1420px) {
   .admin-sidebar {
     width: 86px;
@@ -545,6 +607,20 @@ button {
   }
 }
 @media (max-width: 600px) {
+  .review-queue-overview {
+    margin: 0 16px 22px;
+    padding: 20px;
+  }
+  .review-queue-heading {
+    display: block;
+  }
+  .review-queue-heading strong {
+    display: block;
+    margin-top: 12px;
+  }
+  .review-queue-list {
+    grid-template-columns: 1fr;
+  }
   .review-gate-summary {
     margin: 0 16px 22px;
     padding: 20px;

@@ -9,6 +9,7 @@ import type { ContentPackManifest, LearningVocabularyItem } from '@learnbox/cont
 import { AdminSidebar } from './AdminSidebar';
 import { PackReleasePanel } from './PackReleasePanel';
 import { ReviewGateSummary } from './ReviewGateSummary';
+import { ReviewQueueOverview } from './ReviewQueueOverview';
 import { SplashReplacementPanel } from './SplashReplacementPanel';
 
 type LocalReviewStatus = 'needs_review' | 'approved' | 'returned';
@@ -151,6 +152,16 @@ export function ContentReviewWorkspace() {
             { dimension: 'audio', outcome: 'pending' },
             { dimension: 'app_flow', outcome: 'pending' },
           ]}
+        />
+
+        <ReviewQueueOverview
+          batchId="learnbox-start-a1-vertical-slice-drafts-v1"
+          items={(drafts.items as LearningVocabularyItem[]).map((item) => ({
+            id: item.id,
+            lemma: item.lemma,
+            status: item.status === 'needs_review' ? 'needs_review' : 'returned',
+          }))}
+          publicationBlocked
         />
 
         <PackReleasePanel
