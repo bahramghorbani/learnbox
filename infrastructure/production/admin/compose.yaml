@@ -1,0 +1,56 @@
+name: learnbox-admin-staging
+
+services:
+  admin:
+    build:
+      context: ../../..
+      dockerfile: infrastructure/production/admin/Dockerfile
+    image: learnbox-admin:${ADMIN_VERSION:-local}
+    restart: unless-stopped
+    init: true
+    environment:
+      NODE_ENV: production
+      APP_ENV: ${APP_ENV:-production}
+      HOSTNAME: 0.0.0.0
+      PORT: 3000
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL required}
+      NODE_EXTRA_CA_CERTS: /run/db-tls/ca.crt
+      PGSSLROOTCERT: /run/db-tls/ca.crt
+      LEARNBOX_ADMIN_PASSKEY_ENABLED: ${LEARNBOX_ADMIN_PASSKEY_ENABLED:-false}
+      NEXT_PUBLIC_LEARNBOX_ADMIN_PASSKEY_UI_ENABLED: ${NEXT_PUBLIC_LEARNBOX_ADMIN_PASSKEY_UI_ENABLED:-false}
+      LEARNBOX_ADMIN_BOOTSTRAP_ENABLED: ${LEARNBOX_ADMIN_BOOTSTRAP_ENABLED:-false}
+      LEARNBOX_ADMIN_ORIGIN: ${LEARNBOX_ADMIN_ORIGIN:?LEARNBOX_ADMIN_ORIGIN required}
+      LEARNBOX_ADMIN_RP_ID: ${LEARNBOX_ADMIN_RP_ID:?LEARNBOX_ADMIN_RP_ID required}
+      LEARNBOX_ADMIN_TOKEN_HASH_KEY: ${LEARNBOX_ADMIN_TOKEN_HASH_KEY:-}
+      LEARNBOX_ADMIN_BOOTSTRAP_SECRET: ${LEARNBOX_ADMIN_BOOTSTRAP_SECRET:-}
+    volumes:
+      - ${STAGING_DB_CA_PATH:-/srv/learnbox/staging/tls/ca.crt}:/run/db-tls/ca.crt:ro
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3000/').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+    networks:
+      staging-internal:
+        aliases: [admin-staging]
+      edge:
+        aliases: [admin-staging]
+
+networks:
+  staging-internal:
+    name: learnbox-staging-internal
+  edge:
+    name: learnbox-edge
+    external: true
