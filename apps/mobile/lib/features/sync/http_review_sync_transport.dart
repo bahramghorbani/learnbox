@@ -63,7 +63,10 @@ class HttpReviewSyncTransport implements ReviewSyncTransport {
   final Duration timeout;
 
   @override
-  Future<ReviewUploadResponse> upload(List<PendingReviewEvent> events) async {
+  Future<ReviewUploadResponse> upload(
+    List<PendingReviewEvent> events, {
+    String? reconciliationCursor,
+  }) async {
     if (events.length > _maxBatchSize) {
       throw const MobileReviewTransportException('validation');
     }
@@ -71,13 +74,23 @@ class HttpReviewSyncTransport implements ReviewSyncTransport {
     if (session == null) {
       throw const MobileReviewTransportException('authenticationRequired');
     }
-    final response = await _client.postJson(
-      endpoint: _endpoint,
-      accessToken: session.accessToken,
-      body: <String, Object>{
-        'items': events.map((event) => event.toJson()).toList(growable: false),
-      },
-    ).timeout(timeout);
+    final body = <String, Object>{
+      'items': events.map((event) => event.toJson()).toList(growable: false),
+    };
+    if (reconciliationCursor != null) {
+      final parsedCursor = parseReconciliationCursor(reconciliationCursor);
+      if (parsedCursor == null) {
+        throw const MobileReviewTransportException('validation');
+      }
+      body['reconciliationCursor'] = parsedCursor;
+    }
+    final response = await _client
+        .postJson(
+          endpoint: _endpoint,
+          accessToken: session.accessToken,
+          body: body,
+        )
+        .timeout(timeout);
     if (response.statusCode != 200) {
       throw const MobileReviewTransportException('serverUnavailable');
     }

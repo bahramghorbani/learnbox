@@ -161,9 +161,9 @@ cursor is server-core only and the milestone stays partial / not production-read
 
 ## Appendix — Slice 1c: client-side cursor capture and persistence (ADR 0014)
 
-**Status:** merged (PR #170); client-side capture/persistence only. **Network sync remains
-dormant** — production composition (`MobileAuthConfig.defaults()`) still returns
-`signedOut` + `DisabledReviewSyncTransport`, and no request carries a cursor field yet.
+**Status:** implementation merged locally in this slice; client-side capture/persistence plus
+request serialization. **Network sync remains dormant** — production composition
+(`MobileAuthConfig.defaults()`) still returns `signedOut` + `DisabledReviewSyncTransport`.
 Basis `origin/main` at `9ff7c99` (PR #169). ADR 0014 remains the authoritative decision
 contract and is unchanged.
 
@@ -176,8 +176,9 @@ What Slice 1c implements (allowed paths: `apps/mobile/lib/features/sync/**`,
   shape. An acknowledged outcome must carry a non-empty exact `clientEventId` **and** a valid
   non-negative decimal-string `reconciliationCursor`; a malformed acknowledged cursor or a
   malformed response is retryable (`validation`) and produces no acknowledgements.
-  Non-acknowledged outcomes stay non-acknowledged. The request body keeps exactly one
-  `items` key; no cursor is sent.
+  Non-acknowledged outcomes stay non-acknowledged. The request body always contains `items` and
+  includes optional `reconciliationCursor` only when the stored cursor is present and valid.
+  The cursor is a non-negative decimal string and is never sent as a Dart number.
 - New `ReconciliationCursorStore` seam (`Future<String?> read()`,
   `Future<void> write(String cursor)`), injected into `ReviewSyncCoordinator` (optional;
   production does not inject one). Implementations fail closed: an invalid stored cursor is
@@ -210,6 +211,6 @@ Tests (TDD: failing first, then implementation):
   retryable and never deletes acknowledged events (recoverable on retry), cursor alone
   never authorizes queue removal, idempotent replay keeps acknowledged removal semantics.
 
-Remaining (separate serial M1-D slices): reading the cursor in `GET /api/learner/state`,
-sending the stored cursor with a request, and any route/client integration. The milestone
-stays partial / not production-ready; production sync remains disabled.
+Remaining (separate serial M1-D slices): server request parsing/route integration, delta response
+semantics, and production composition/flag enablement. The milestone stays partial /
+not production-ready; production sync remains disabled.

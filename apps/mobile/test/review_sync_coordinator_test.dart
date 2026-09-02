@@ -152,7 +152,10 @@ class _RecordingTransport implements ReviewSyncTransport {
   List<String> uploadedIds = const [];
 
   @override
-  Future<ReviewUploadResponse> upload(List<PendingReviewEvent> events) async {
+  Future<ReviewUploadResponse> upload(
+    List<PendingReviewEvent> events, {
+    String? reconciliationCursor,
+  }) async {
     calls += 1;
     uploadedIds = List.unmodifiable(
       events.map((event) => event.clientEventId).toList(),
@@ -165,7 +168,10 @@ class _RecordingTransport implements ReviewSyncTransport {
 
 class _ThrowingTransport implements ReviewSyncTransport {
   @override
-  Future<ReviewUploadResponse> upload(List<PendingReviewEvent> events) =>
+  Future<ReviewUploadResponse> upload(
+    List<PendingReviewEvent> events, {
+    String? reconciliationCursor,
+  }) =>
       throw StateError('Transport unavailable.');
 }
 
@@ -179,7 +185,10 @@ class _BlockingTransport implements ReviewSyncTransport {
   }
 
   @override
-  Future<ReviewUploadResponse> upload(List<PendingReviewEvent> events) async {
+  Future<ReviewUploadResponse> upload(
+    List<PendingReviewEvent> events, {
+    String? reconciliationCursor,
+  }) async {
     calls += 1;
     uploadStarted.complete();
     return _response.future;

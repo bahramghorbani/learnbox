@@ -54,7 +54,9 @@
    ADR 0014; server-core (PR #169), client-side cursor capture/persistence (PR #170),
    read-side cursor exposure (PR #171/LB-DS-024) and per-event cursor binding (PR #172/LB-DS-025)
    are merged; sending the cursor in a request and flag enablement remain
-   separate review-gated tasks.
+   separate review-gated tasks. Client transport serialization now accepts and sends the stored
+   valid decimal-string cursor without enabling production sync; server request parsing and route
+   integration remain separate review-gated tasks.
 5. Re-run browser visual and accessibility QA when the Chrome permission blocker is cleared; do not treat the current functional QA as visual acceptance.
 
 ## Owner-approved product decisions captured in M0

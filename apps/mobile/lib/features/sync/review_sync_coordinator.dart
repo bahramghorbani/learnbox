@@ -49,11 +49,15 @@ class ReviewSyncCoordinator {
       // cursor is treated as absent, and a read failure is retryable with no
       // transport or queue mutation.
       final cursorStore = _reconciliationCursorStore;
+      String? storedCursor;
       if (cursorStore != null) {
-        final storedCursor = await cursorStore.read();
+        storedCursor = await cursorStore.read();
         parseReconciliationCursor(storedCursor);
       }
-      final response = await _transport.upload(batch);
+      final response = await _transport.upload(
+        batch,
+        reconciliationCursor: storedCursor,
+      );
       final acknowledged = validateAcknowledgements(batch, response);
       if (acknowledged.isEmpty) {
         return RetryableFailure(remainingCount: pendingEvents.length);
