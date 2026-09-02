@@ -40,7 +40,8 @@
   (LB-DS-024, merge commit `0057419`), and the per-event cursor binding merged in PR #172
   (LB-DS-025, merge commit `caa3a39`); sending the
   stored cursor in a request and route/client flag enablement remain separate serial,
-  review-gated M1-D queue tasks; the documented M1-D wire contract remains snapshot-only
+  review-gated M1-D queue tasks; the server request-boundary parser is now covered by
+  `apps/api/src/reviews/mobile-review-batch.request.ts`; the documented M1-D wire contract remains snapshot-only
   (no delta endpoint exists), so wire-contract/delta-endpoint work remains separate
   review-gated; seed/catalog implementation remains a separate
   review-gated task.

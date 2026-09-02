@@ -214,3 +214,12 @@ Tests (TDD: failing first, then implementation):
 Remaining (separate serial M1-D slices): server request parsing/route integration, delta response
 semantics, and production composition/flag enablement. The milestone stays partial /
 not production-ready; production sync remains disabled.
+
+### Server request-boundary contract
+
+The dormant server-boundary parser (`apps/api/src/reviews/mobile-review-batch.request.ts`)
+strictly accepts the existing `items` payload plus an optional non-negative decimal-string
+`reconciliationCursor`. It rejects unknown top-level fields (including client-supplied `userId`),
+malformed item shapes, invalid timestamps, duplicate client event IDs, and non-string cursors.
+The canonical `userId` is supplied by the authenticated server boundary, never parsed from the
+request body. This parser is not a route and does not enable network sync.
