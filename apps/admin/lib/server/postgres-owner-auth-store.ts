@@ -45,6 +45,8 @@ type PendingChallengeLookup = {
 };
 
 const bootstrapLockId = 1_913_268_079;
+const canonicalUserIdPattern =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function credentialParameters(credential: PasskeyCredentialRecord, now: Date) {
   return [
@@ -61,6 +63,21 @@ function credentialParameters(credential: PasskeyCredentialRecord, now: Date) {
 
 export class PostgresOwnerAuthStore {
   constructor(private readonly pool: DatabasePool) {}
+
+  /** Binds the single owner exactly once; caller must derive userId server-side. */
+  async bindOwnerToUser(userId: string): Promise<boolean> {
+    if (!canonicalUserIdPattern.test(userId)) {
+      throw new Error('Canonical owner user id is invalid.');
+    }
+    const result = await this.pool.query(
+      `UPDATE admin_owner
+          SET user_id = $1, updated_at = now()
+        WHERE singleton_id = 1 AND user_id IS NULL
+        RETURNING user_id`,
+      [userId],
+    );
+    return result.rows.length === 1;
+  }
 
   async issueChallenge(input: ChallengeInput) {
     const result = await this.pool.query(
