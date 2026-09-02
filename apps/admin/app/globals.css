@@ -437,6 +437,70 @@ button {
   line-height: 1.8;
   margin: 4px 0 0;
 }
+.review-gate-summary {
+  max-width: 1170px;
+  margin: 0 auto 28px;
+  padding: 24px 28px;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  background: #fff;
+}
+.review-gate-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+.review-gate-heading h2 {
+  margin: 0;
+  color: var(--purple);
+  font-size: 20px;
+}
+.review-gate-heading p {
+  margin: 6px 0 0;
+  color: var(--muted);
+}
+.review-gate-heading strong {
+  white-space: nowrap;
+  color: #a52b24;
+}
+.review-gate-heading strong[data-status='review-complete'] {
+  color: var(--green);
+}
+.review-gate-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 20px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.review-gate-list li {
+  display: grid;
+  grid-template-columns: 22px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.review-gate-list li[data-outcome='failed'] {
+  border-color: #e9aaa5;
+  background: #fff5f4;
+}
+.review-gate-list li[data-outcome='passed'] > span:first-child {
+  color: var(--green);
+}
+.review-gate-list li[data-outcome='failed'] > span:first-child {
+  color: #a52b24;
+}
+.review-gate-list small {
+  color: var(--muted);
+}
+.review-gate-note {
+  margin: 16px 0 0;
+  color: var(--muted);
+}
 @media (max-width: 1420px) {
   .admin-sidebar {
     width: 86px;
@@ -481,6 +545,20 @@ button {
   }
 }
 @media (max-width: 600px) {
+  .review-gate-summary {
+    margin: 0 16px 22px;
+    padding: 20px;
+  }
+  .review-gate-heading {
+    display: block;
+  }
+  .review-gate-heading strong {
+    display: block;
+    margin-top: 12px;
+  }
+  .review-gate-list {
+    grid-template-columns: 1fr;
+  }
   .admin-shell {
     display: block;
   }

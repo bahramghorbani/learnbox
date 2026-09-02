@@ -8,6 +8,7 @@ import type { ContentPackManifest, LearningVocabularyItem } from '@learnbox/cont
 
 import { AdminSidebar } from './AdminSidebar';
 import { PackReleasePanel } from './PackReleasePanel';
+import { ReviewGateSummary } from './ReviewGateSummary';
 import { SplashReplacementPanel } from './SplashReplacementPanel';
 
 type LocalReviewStatus = 'needs_review' | 'approved' | 'returned';
@@ -140,6 +141,17 @@ export function ContentReviewWorkspace() {
             </div>
           </aside>
         </div>
+
+        <ReviewGateSummary
+          checks={[
+            { dimension: 'german_linguistic', outcome: 'pending' },
+            { dimension: 'persian_translation', outcome: 'pending' },
+            { dimension: 'provenance', outcome: 'pending' },
+            { dimension: 'visual', outcome: 'pending' },
+            { dimension: 'audio', outcome: 'pending' },
+            { dimension: 'app_flow', outcome: 'pending' },
+          ]}
+        />
 
         <PackReleasePanel
           manifest={manifest as ContentPackManifest}
