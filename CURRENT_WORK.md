@@ -47,7 +47,7 @@
 
 ## Immediate execution order
 
-1. Connect the Admin review queue to an authenticated server read/write contract; preserve the six-dimensional gate and do not bypass human review.
+1. Resolve the Admin session → canonical `users.id` binding before connecting the review queue to an authenticated server read/write contract; ADR 0015 records the fail-closed boundary.
 2. Start Pack ↔ canonical `contentId` contract is decided and recorded in ADR 0013; implement the seed/catalog slice as a separate review-gated task.
 3. Implement the authenticated server-wired learner path completion and any remaining D1 fetch states.
 4. Decide and implement M1-D push reconciliation. The cursor/watermark policy is approved in
