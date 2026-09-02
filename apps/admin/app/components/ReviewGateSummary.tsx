@@ -27,10 +27,23 @@ const outcomeLabels: Record<ReviewOutcome, string> = {
   failed: 'ناموفق',
 };
 
+const requiredDimensions: ReviewDimension[] = [
+  'german_linguistic',
+  'persian_translation',
+  'provenance',
+  'visual',
+  'audio',
+  'app_flow',
+];
+
 export function ReviewGateSummary({ checks }: { checks: ReviewDimensionState[] }) {
-  const failedCount = checks.filter((check) => check.outcome === 'failed').length;
-  const pendingCount = checks.filter((check) => check.outcome === 'pending').length;
-  const complete = checks.length === 6 && checks.every((check) => check.outcome === 'passed');
+  const checksByDimension = new Map(checks.map((check) => [check.dimension, check]));
+  const normalizedChecks = requiredDimensions.map(
+    (dimension) => checksByDimension.get(dimension) ?? { dimension, outcome: 'pending' as const },
+  );
+  const failedCount = normalizedChecks.filter((check) => check.outcome === 'failed').length;
+  const pendingCount = normalizedChecks.filter((check) => check.outcome === 'pending').length;
+  const complete = normalizedChecks.every((check) => check.outcome === 'passed');
 
   return (
     <section className="review-gate-summary" aria-labelledby="review-gate-title">
@@ -45,7 +58,7 @@ export function ReviewGateSummary({ checks }: { checks: ReviewDimensionState[] }
       </div>
 
       <ul className="review-gate-list">
-        {checks.map((check) => (
+        {normalizedChecks.map((check) => (
           <li key={check.dimension} data-outcome={check.outcome}>
             <span aria-hidden="true">
               {check.outcome === 'passed' ? '✓' : check.outcome === 'failed' ? '!' : '○'}
