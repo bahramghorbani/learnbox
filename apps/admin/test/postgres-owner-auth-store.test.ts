@@ -223,6 +223,7 @@ describe('PostgresOwnerAuthStore', () => {
       sql.includes('FROM admin_sessions')
         ? [
             {
+              user_id: '2efaf676-84e4-45b1-8a13-50735a8df2c8',
               csrf_hash: 'csrf-hash',
               last_seen_at: now,
               absolute_expires_at: new Date(now.getTime() + 1_000),
@@ -235,6 +236,7 @@ describe('PostgresOwnerAuthStore', () => {
     const store = new PostgresOwnerAuthStore(database.pool);
 
     await expect(store.findActiveSession('token-hash', now)).resolves.toEqual({
+      userId: '2efaf676-84e4-45b1-8a13-50735a8df2c8',
       csrfHash: 'csrf-hash',
       lastSeenAt: now,
       absoluteExpiresAt: new Date(now.getTime() + 1_000),
@@ -246,5 +248,6 @@ describe('PostgresOwnerAuthStore', () => {
     expect(select?.sql).toContain('revoked_at IS NULL');
     expect(select?.sql).toContain('absolute_expires_at > $2');
     expect(select?.sql).toContain("last_seen_at >= $2 - INTERVAL '15 minutes'");
+    expect(select?.sql).toContain('JOIN admin_owner');
   });
 });

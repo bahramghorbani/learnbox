@@ -30,6 +30,7 @@ describe('admin route session security', () => {
         findActiveSession: async (receivedHash) => {
           calls.push(receivedHash);
           return {
+            userId: '2efaf676-84e4-45b1-8a13-50735a8df2c8',
             csrfHash: hashAdminSecret('csrf-token', hashKey),
             lastSeenAt: now,
             absoluteExpiresAt: new Date(now.getTime() + 1_000),
@@ -47,10 +48,39 @@ describe('admin route session security', () => {
 
     expect(session).toEqual({
       tokenHash,
+      userId: '2efaf676-84e4-45b1-8a13-50735a8df2c8',
       recent: true,
       csrfHash: hashAdminSecret('csrf-token', hashKey),
     });
     expect(calls).toEqual([tokenHash, tokenHash]);
+  });
+
+  it('fails closed when the active session has no canonical user binding', async () => {
+    let touched = false;
+    await expect(
+      loadAdminSession(
+        new Request('https://admin.learnbox.app/api/auth/session', {
+          headers: { cookie: `__Host-learnbox_admin_session=${'t'.repeat(43)}` },
+        }),
+        config,
+        {
+          findActiveSession: async () => ({
+            userId: null,
+            csrfHash: 'csrf-hash',
+            lastSeenAt: now,
+            absoluteExpiresAt: new Date(now.getTime() + 1_000),
+            revokedAt: null,
+            recentAuthenticatedAt: now,
+          }),
+          touchSession: async () => {
+            touched = true;
+            return true;
+          },
+        },
+        now,
+      ),
+    ).resolves.toBeUndefined();
+    expect(touched).toBe(false);
   });
 
   it('does not accept missing, expired, or untouchable sessions', async () => {

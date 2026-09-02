@@ -32,6 +32,7 @@ const enabledEnvironment = {
 };
 
 const sessionRecord = {
+  userId: '2efaf676-84e4-45b1-8a13-50735a8df2c8',
   csrfHash: 'csrf-hash',
   lastSeenAt: new Date('2026-08-08T12:00:00.000Z'),
   absoluteExpiresAt: new Date('2026-08-08T13:00:00.000Z'),

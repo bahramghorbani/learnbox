@@ -9,7 +9,7 @@ type SessionStore = {
   findActiveSession(
     tokenHash: string,
     now: Date,
-  ): Promise<(AdminSessionRecord & { csrfHash: string }) | undefined>;
+  ): Promise<(AdminSessionRecord & { csrfHash: string; userId: string | null }) | undefined>;
   touchSession(tokenHash: string, now: Date): Promise<boolean>;
 };
 
@@ -41,12 +41,14 @@ export async function loadAdminSession(
   const tokenHash = hashAdminSecret(token, config.tokenHashKey);
   const session = await store.findActiveSession(tokenHash, now);
   if (!session) return undefined;
+  if (!session.userId) return undefined;
   const evaluation = evaluateAdminSession(session, now);
   if (!evaluation.active) return undefined;
   if (!(await store.touchSession(tokenHash, now))) return undefined;
 
   return {
     tokenHash,
+    userId: session.userId,
     csrfHash: session.csrfHash,
     recent: evaluation.recent,
   };

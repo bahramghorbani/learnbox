@@ -1,6 +1,6 @@
 # ADR 0015 — Admin session canonical-user binding for content review
 
-- **Status:** blocked design gate; implementation requires an owner-approved serial schema/auth task
+- **Status:** decision approved; schema and lookup implementation pending merge and staging bootstrap verification
 - **Date:** 2026-09-02
 - **Basis:** `origin/main` at `8ab2226`; `database/migrations/0003_content_review.sql`; `database/migrations/0009_owner_passkey_auth.sql`; `apps/admin/lib/server/admin-route-security.ts`; `apps/admin/lib/server/postgres-owner-auth-store.ts`
 
@@ -19,6 +19,10 @@ The current Admin authentication schema deliberately models one passkey owner:
 - `loadAdminSession` therefore returns token/CSRF/session freshness, but no `users.id`;
 - review roles and review/audit records require a UUID from `users.id`.
 
+The approved binding is a nullable, unique `admin_owner.user_id` foreign key to `users(id)`.
+Sessions inherit this owner-level binding through `owner_singleton_id`; they do not store or accept
+a browser-supplied application user id.
+
 The singleton integer is not a valid substitute for a `users.id`. A browser-provided user id,
 phone, OTP, role, or arbitrary actor value is also not an acceptable substitute.
 
@@ -27,7 +31,7 @@ phone, OTP, role, or arbitrary actor value is also not an acceptable substitute.
 Keep the content-review server route fail-closed until every authenticated Admin session can resolve
 to a canonical `users.id` through a server-owned, foreign-key-constrained relation.
 
-The future implementation must satisfy all of these invariants:
+The implementation must satisfy all of these invariants:
 
 1. The mapping is stored and resolved server-side, never supplied by the browser.
 2. The relation is explicit and constrained by a foreign key to `users(id)`.
@@ -52,7 +56,7 @@ The future implementation must satisfy all of these invariants:
 A separate owner-approved serial task must choose and implement the mapping lifecycle, including:
 
 - how the permanent Admin owner is linked to an existing canonical `users` row;
-- whether the relation belongs on `admin_owner` or a separate constrained binding table;
+- the selected relation belongs on `admin_owner` for the current single-owner model;
 - bootstrap and recovery rules without exposing secrets or allowing account takeover;
 - migration and staging integration tests;
 - session lookup and revocation behavior after binding changes;

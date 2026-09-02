@@ -271,6 +271,7 @@ export class PostgresOwnerAuthStore {
     now: Date,
   ): Promise<
     | {
+        userId: string | null;
         csrfHash: string;
         lastSeenAt: Date;
         absoluteExpiresAt: Date;
@@ -280,18 +281,21 @@ export class PostgresOwnerAuthStore {
     | undefined
   > {
     const result = await this.pool.query(
-      `SELECT csrf_hash, last_seen_at, absolute_expires_at, revoked_at, recent_authenticated_at
-         FROM admin_sessions
-        WHERE token_hash = $1
-          AND revoked_at IS NULL
-          AND absolute_expires_at > $2
-          AND last_seen_at >= $2 - INTERVAL '15 minutes'
+      `SELECT ao.user_id, s.csrf_hash, s.last_seen_at, s.absolute_expires_at,
+              s.revoked_at, s.recent_authenticated_at
+         FROM admin_sessions s
+         JOIN admin_owner ao ON ao.singleton_id = s.owner_singleton_id
+        WHERE s.token_hash = $1
+          AND s.revoked_at IS NULL
+          AND s.absolute_expires_at > $2
+          AND s.last_seen_at >= $2 - INTERVAL '15 minutes'
         LIMIT 1`,
       [tokenHash, now],
     );
     const row = result.rows[0];
     if (!row) return undefined;
     return {
+      userId: row.user_id ? String(row.user_id) : null,
       csrfHash: String(row.csrf_hash),
       lastSeenAt: new Date(row.last_seen_at as string | Date),
       absoluteExpiresAt: new Date(row.absolute_expires_at as string | Date),
