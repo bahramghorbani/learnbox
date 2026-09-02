@@ -3,12 +3,7 @@
 import React from 'react';
 
 export type ReviewDimension =
-  | 'german_linguistic'
-  | 'persian_translation'
-  | 'provenance'
-  | 'visual'
-  | 'audio'
-  | 'app_flow';
+  'german_linguistic' | 'persian_translation' | 'provenance' | 'visual' | 'audio' | 'app_flow';
 
 export type ReviewOutcome = 'pending' | 'passed' | 'failed';
 
@@ -52,7 +47,9 @@ export function ReviewGateSummary({ checks }: { checks: ReviewDimensionState[] }
       <ul className="review-gate-list">
         {checks.map((check) => (
           <li key={check.dimension} data-outcome={check.outcome}>
-            <span aria-hidden="true">{check.outcome === 'passed' ? '✓' : check.outcome === 'failed' ? '!' : '○'}</span>
+            <span aria-hidden="true">
+              {check.outcome === 'passed' ? '✓' : check.outcome === 'failed' ? '!' : '○'}
+            </span>
             <span>{labels[check.dimension]}</span>
             <small>{outcomeLabels[check.outcome]}</small>
           </li>

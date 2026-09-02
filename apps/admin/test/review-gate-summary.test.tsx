@@ -53,7 +53,10 @@ describe('ReviewGateSummary', () => {
       'visual',
       'audio',
       'app_flow',
-    ].map((dimension) => ({ dimension: dimension as ReviewDimensionState['dimension'], outcome: 'passed' }));
+    ].map((dimension) => ({
+      dimension: dimension as ReviewDimensionState['dimension'],
+      outcome: 'passed',
+    }));
     container = document.createElement('div');
     document.body.append(container);
     root = createRoot(container);
