@@ -69,4 +69,23 @@ describe('ReviewGateSummary', () => {
     expect(container.textContent).toContain('انتشار همچنان نیازمند تأیید ناشر است');
     expect(container.querySelector('[data-status="review-complete"]')).not.toBeNull();
   });
+
+  it('renders missing dimensions as pending instead of hiding a review gate', async () => {
+    const checks: ReviewDimensionState[] = [
+      { dimension: 'german_linguistic', outcome: 'passed' },
+      { dimension: 'persian_translation', outcome: 'passed' },
+    ];
+    container = document.createElement('div');
+    document.body.append(container);
+    root = createRoot(container);
+
+    await act(async () => {
+      root?.render(createElement(ReviewGateSummary, { checks }));
+    });
+
+    expect(container.querySelectorAll('.review-gate-list li')).toHaveLength(6);
+    expect(container.textContent).toContain('بازبینی صوتی');
+    expect(container.textContent).toContain('۴ مورد در انتظار بررسی');
+    expect(container.querySelector('[data-status="publication-blocked"]')).not.toBeNull();
+  });
 });
