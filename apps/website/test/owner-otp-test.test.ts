@@ -86,7 +86,14 @@ describe('owner OTP test helpers', () => {
     expect(
       isOwnerOtpTestEnabled({
         LEARNBOX_OTP_TEST_UI_ENABLED: 'true',
-        VERCEL_ENV: 'production',
+        APP_ENV: 'staging',
+        NODE_ENV: 'production',
+      }),
+    ).toBe(true);
+    expect(
+      isOwnerOtpTestEnabled({
+        LEARNBOX_OTP_TEST_UI_ENABLED: 'true',
+        APP_ENV: 'production',
         NODE_ENV: 'production',
       }),
     ).toBe(false);

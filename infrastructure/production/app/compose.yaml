@@ -10,6 +10,7 @@ services:
     init: true
     environment:
       NODE_ENV: production
+      APP_ENV: ${APP_ENV:-production}
       HOSTNAME: 0.0.0.0
       PORT: 3000
       DATABASE_URL: ${DATABASE_URL:?DATABASE_URL must be configured in the restricted app environment}
