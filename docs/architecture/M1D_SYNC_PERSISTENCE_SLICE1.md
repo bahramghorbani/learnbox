@@ -203,8 +203,8 @@ Tests (TDD: failing first, then implementation):
   cursors (empty, whitespace, sign, decimal, exponent, hex, non-ASCII), round-trip,
   no clearing on failed write.
 - `apps/mobile/test/reconciliation_cursor_transport_test.dart` — valid decimal-string
-  cursor parse, no cursor without an acknowledged outcome, one-key request shape with no
-  cursor field, malformed/missing/negative/non-decimal/non-string cursor rejection,
+  cursor parse, no response cursor without an acknowledged outcome, one-key response shape,
+  optional request cursor field, malformed/missing/negative/non-decimal/non-string cursor rejection,
   extra top-level key rejection.
 - `apps/mobile/test/reconciliation_cursor_coordinator_test.dart` — exact ack + cursor
   persistence, invalid stored cursor fail-closed, no-ack no-write, cursor write failure is
