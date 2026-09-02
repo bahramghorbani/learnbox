@@ -14,8 +14,8 @@
   `9ff7c99` (migration 0014 + atomic cursor advance in `PostgresReviewEventStore.writeAtomically`
   - cursor on acknowledged batch outcomes); client-side cursor capture/persistence for the
     dormant foreground sync boundary merged in PR #170 at `246779d` (strict transport parse,
-    `ReconciliationCursorStore`, coordinator persistence — **no request cursor yet, network sync
-    remains disabled**); the read-side cursor exposure slice (LB-DS-024) **merged** in PR #171 at
+    `ReconciliationCursorStore`, coordinator persistence, and optional request cursor serialization
+    — network sync remains disabled); the read-side cursor exposure slice (LB-DS-024) **merged** in PR #171 at
     `0057419` (snapshot contract + Web `GET /api/learner/state` now serialize the authoritative
     per-learner cursor as a decimal string from `learner_reconciliation_cursors`, default `'0'`,
     BIGINT-as-string throughout); the per-event cursor binding slice (LB-DS-025) **merged** in

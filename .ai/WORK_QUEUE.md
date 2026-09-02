@@ -8,7 +8,7 @@ start. Historical tasks remain for traceability and must not be duplicated.
 - **M0 — Product truth and delivery reset:** accepted and merged in PR #146.
 - **D0 — Visual language:** accepted and merged in PR #150. Contract: `docs/design/D0_VISUAL_LANGUAGE.md`.
 - **D1 — Learner UI kit:** accepted and merged in PR #153. State board: `docs/design/D1_LEARNER_UI_KIT.md`.
-- **M1 — Online Learning Core:** **slice-1 QA complete, milestone remains partial/not production-ready**. M1-B Web and M1-C Mobile Today slices are merged with truthful local-only boundaries; M1-D cursor slices (server-core, client capture/persistence, read-side exposure, per-event binding) are merged but no request sends a cursor and network sync stays dormant; server wiring and full learning loop remain queued.
+- **M1 — Online Learning Core:** **slice-1 QA complete, milestone remains partial/not production-ready**. M1-B Web and M1-C Mobile Today slices are merged with truthful local-only boundaries; M1-D cursor slices (server-core, client capture/persistence, read-side exposure, per-event binding, request serialization and server request-boundary parsing) are merged, while route integration and network sync remain dormant; server wiring and full learning loop remain queued.
 - **M1-A — Online learning contract audit:** accepted and merged in PR #151. Contract: `docs/architecture/M1_ONLINE_LEARNING_CONTRACT.md`.
 - **M1-D slice 1 — Learner state snapshot:** accepted and merged in PR #152. Implementation: `GET /api/learner/state`, fail-closed and not Web-wired yet.
 - **M1-B server-wiring contract — Web learner state:** accepted design (ADR 0012). Web HttpOnly learner cookie → Next.js `GET /api/learner/state` route → server-side identity mapping → existing `LearnerStateService`/`repository` is approved; route implementation merged in PR #163 (LB-DS-022) behind the fail-closed `WEB_LEARNER_STATE_ENABLED` runtime; Web session → `users.id` mapping is merged (PR #162); Start Pack seed/release remains a separate owner/review-gated decision.
@@ -23,7 +23,7 @@ start. Historical tasks remain for traceability and must not be duplicated.
   as event+schedule); the server-core implementation merged in PR #169 and the client-side
   cursor capture/persistence merged in PR #170; the read-side cursor exposure in
   `GET /api/learner/state` **merged** in PR #171 (LB-DS-024, merge commit `0057419`) and the
-  per-event cursor binding **merged** in PR #172 (LB-DS-025, merge commit `caa3a39`); sending the stored cursor in a request and route/client flag enablement remain
+  per-event cursor binding **merged** in PR #172 (LB-DS-025, merge commit `caa3a39`); request serialization and server request-boundary parsing are merged; route/client flag enablement remain
   separate serial, review-gated M1-D queue tasks; client transport serialization now accepts and sends the stored valid decimal-string cursor without enabling production sync; server request-boundary parsing is covered by `apps/api/src/reviews/mobile-review-batch.request.ts` and its strict tests, while route integration remains
   snapshot-only (no delta endpoint exists), so wire-contract/delta-endpoint work remains a
   separate review-gated task; seed/catalog implementation remains a
