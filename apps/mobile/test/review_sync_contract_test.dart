@@ -141,7 +141,10 @@ void main() {
 
 class _EchoTransport implements ReviewSyncTransport {
   @override
-  Future<ReviewUploadResponse> upload(List<PendingReviewEvent> events) async {
+  Future<ReviewUploadResponse> upload(
+    List<PendingReviewEvent> events, {
+    String? reconciliationCursor,
+  }) async {
     return ReviewUploadResponse(
       acknowledgedClientEventIds:
           events.map((event) => event.clientEventId).toList(),

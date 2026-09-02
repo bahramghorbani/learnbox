@@ -7,6 +7,9 @@ class DisabledReviewSyncTransport implements ReviewSyncTransport {
   const DisabledReviewSyncTransport();
 
   @override
-  Future<ReviewUploadResponse> upload(List<PendingReviewEvent> events) =>
+  Future<ReviewUploadResponse> upload(
+    List<PendingReviewEvent> events, {
+    String? reconciliationCursor,
+  }) =>
       throw StateError('Review synchronization transport is disabled.');
 }

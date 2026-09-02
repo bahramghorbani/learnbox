@@ -23,7 +23,7 @@ start. Historical tasks remain for traceability and must not be duplicated.
   cursor capture/persistence merged in PR #170; the read-side cursor exposure in
   `GET /api/learner/state` **merged** in PR #171 (LB-DS-024, merge commit `0057419`) and the
   per-event cursor binding **merged** in PR #172 (LB-DS-025, merge commit `caa3a39`); sending the stored cursor in a request and route/client flag enablement remain
-  separate serial, review-gated M1-D queue tasks; the documented M1-D wire contract remains
+  separate serial, review-gated M1-D queue tasks; client transport serialization now accepts and sends the stored valid decimal-string cursor without enabling production sync; the documented M1-D wire contract remains
   snapshot-only (no delta endpoint exists), so wire-contract/delta-endpoint work remains a
   separate review-gated task; seed/catalog implementation remains a
   separate owner/review-gated task; independent functional QA of the merged server-wired slice is accepted in PR #175;

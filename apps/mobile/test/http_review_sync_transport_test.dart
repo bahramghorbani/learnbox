@@ -31,11 +31,12 @@ void main() {
       endpoint: Uri.parse('https://learnbox.example/api/reviews/mobile'),
     );
 
-    final result = await transport.upload([event]);
+    final result = await transport.upload([event], reconciliationCursor: '41');
 
     expect(result.acknowledgedClientEventIds, ['event-1']);
     expect(client.accessToken, 'access-token');
     expect(client.body?['items'], isA<List<Object>>());
+    expect(client.body?['reconciliationCursor'], '41');
   });
 
   test('rejects batches larger than the strict native maximum', () {

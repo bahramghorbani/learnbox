@@ -25,6 +25,7 @@ void main() {
 
     expect(cursorStore.readCalls, 1);
     expect(transport.calls, 1);
+    expect(transport.receivedCursor, '7');
     expect(
       cursorStore.readCalls,
       lessThanOrEqualTo(transport.calls),
@@ -271,10 +272,15 @@ class _CursoredTransport implements ReviewSyncTransport {
   final List<String> acknowledged;
   final String cursor;
   var calls = 0;
+  String? receivedCursor;
 
   @override
-  Future<ReviewUploadResponse> upload(List<PendingReviewEvent> events) async {
+  Future<ReviewUploadResponse> upload(
+    List<PendingReviewEvent> events, {
+    String? reconciliationCursor,
+  }) async {
     calls += 1;
+    receivedCursor = reconciliationCursor;
     return ReviewUploadResponse(
       acknowledgedClientEventIds: acknowledged,
       reconciliationCursor: cursor,

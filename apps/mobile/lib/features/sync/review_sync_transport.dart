@@ -6,7 +6,10 @@ import 'package:learnbox/features/review/pending_review_event.dart';
 /// server user identifier. Implementations durably acknowledge exact
 /// [PendingReviewEvent.clientEventId] values only.
 abstract interface class ReviewSyncTransport {
-  Future<ReviewUploadResponse> upload(List<PendingReviewEvent> events);
+  Future<ReviewUploadResponse> upload(
+    List<PendingReviewEvent> events, {
+    String? reconciliationCursor,
+  });
 }
 
 /// Immutable acknowledgement returned by [ReviewSyncTransport.upload].
