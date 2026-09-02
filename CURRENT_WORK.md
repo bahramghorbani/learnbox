@@ -48,7 +48,7 @@
 
 ## Immediate execution order
 
-1. Complete the Admin session → canonical `users.id` binding: migration `0016` and session lookup are implemented in the current worktree; owner bootstrap and staging verification remain gated. ADR 0015 records the fail-closed boundary.
+1. Complete the Admin session → canonical `users.id` binding: migration `0016`, session lookup, and the one-shot server-side binding operation are implemented in the current worktree; owner bootstrap, role assignment and staging verification remain gated. ADR 0015 records the fail-closed boundary.
 2. Start Pack ↔ canonical `contentId` contract is decided and recorded in ADR 0013; implement the seed/catalog slice as a separate review-gated task.
 3. Implement the authenticated server-wired learner path completion and any remaining D1 fetch states.
 4. Decide and implement M1-D push reconciliation. The cursor/watermark policy is approved in

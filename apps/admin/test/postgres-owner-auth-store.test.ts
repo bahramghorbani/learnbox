@@ -250,4 +250,20 @@ describe('PostgresOwnerAuthStore', () => {
     expect(select?.sql).toContain("last_seen_at >= $2 - INTERVAL '15 minutes'");
     expect(select?.sql).toContain('JOIN admin_owner');
   });
+
+  it('binds the singleton owner once to a server-selected canonical user', async () => {
+    const database = recordingPool((sql) =>
+      sql.includes('UPDATE admin_owner')
+        ? [{ user_id: '2efaf676-84e4-45b1-8a13-50735a8df2c8' }]
+        : [],
+    );
+    const store = new PostgresOwnerAuthStore(database.pool);
+
+    await expect(store.bindOwnerToUser('2efaf676-84e4-45b1-8a13-50735a8df2c8')).resolves.toBe(true);
+
+    const update = database.calls.find(({ sql }) => sql.includes('UPDATE admin_owner'));
+    expect(update?.sql).toContain('user_id = $1');
+    expect(update?.sql).toContain('user_id IS NULL');
+    expect(update?.parameters).toEqual(['2efaf676-84e4-45b1-8a13-50735a8df2c8']);
+  });
 });
