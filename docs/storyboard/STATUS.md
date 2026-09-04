@@ -11,7 +11,7 @@ The original 30-stage storyboard remains historical planning context. Delivery i
 | Milestone | Outcome                                                                   | Status      |
 | --------- | ------------------------------------------------------------------------- | ----------- |
 | M0        | Product truth, boundaries, inventory and documentation governance         | in progress |
-| M1        | Online learning core with free 35-word A1 pack and reconnect sync        | planned     |
+| M1        | Online learning core with free 35-word A1 pack and reconnect sync         | planned     |
 | M2        | AI content factory and Admin content operations                           | planned     |
 | M3        | Profile, settings, purchases, sync status and personal vocabulary         | planned     |
 | M4        | Web bank, Cafe Bazaar and Apple StoreKit commerce with shared entitlement | planned     |
