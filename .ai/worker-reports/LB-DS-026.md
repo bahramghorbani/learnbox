@@ -2,11 +2,11 @@
 
 - Branch: docs/m1d-wire-contract-design
 - Base commit: 4718f93 (origin/main, PR #204 merged)
-- Head commit: PENDING LOCAL — commit `docs(m1d): specify proposed sync wire contract` created; no push, no PR
+- Head commit: `fee10f1` (local design commit; no push, no PR)
 - Draft PR: none (not pushed, not opened — retry task stops after local commit)
 - Scope completed: Decision-ready PROPOSED / NOT IMPLEMENTED sync wire contract for the M1-D
-  pull-based reconciliation read, plus this handoff report. Design-only retry: no queue /
-  CURRENT_WORK edits, no implementation, no code/test/migration/route/flag/auth/mobile/web
+  pull-based reconciliation read, plus this handoff report and the LB-DS-026 queue/current-work
+  registration. Design-only retry: no implementation, no code/test/migration/route/flag/auth/mobile/web
   changes. Contract (docs/architecture/M1D_SYNC_WIRE_CONTRACT.md) covers: scope and current
   facts; proposed `GET /api/reviews/mobile/reconciliation?after=<cursor>` pull-based read
   paired with the existing POST (explicitly stated as NOT existing today — no route is

@@ -4,6 +4,11 @@
 
 ## Active work
 
+### LB-DS-026 — proposed M1-D sync wire contract
+
+- **Status:** review requested; design-only and not implemented. `docs/architecture/M1D_SYNC_WIRE_CONTRACT.md` proposes a pull-based reconciliation read paired with the existing dormant POST route. The endpoint does not exist, all sync/auth/state flags remain disabled, and no route, migration, schema, client composition or network sync changed.
+- **Next dependency:** owner/supervisor review of open decisions O-1–O-5, followed by a separately authorized serial implementation task with API, migration and security review.
+
 ### Active milestone
 
 - **M1 — Online Learning Core:** slice 1 QA complete; milestone remains **partial and not production-ready**.
