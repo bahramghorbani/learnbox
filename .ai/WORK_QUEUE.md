@@ -31,6 +31,23 @@ start. Historical tasks remain for traceability and must not be duplicated.
 
 ### Active grouped workstreams
 
+## LB-DS-026
+
+- Status: review_requested
+- Executor: subagent (W6, design-only sync contract)
+- Base: main at `4718f93` (PR #204 merged)
+- Branch: docs/m1d-wire-contract-design
+- Head commit: `fee10f1` (local; PR not yet opened)
+- Risk: security-sensitive-sync-wire-contract
+- Specification: docs/architecture/M1D_SYNC_WIRE_CONTRACT.md; docs/architecture/ADR/0014-push-reconciliation-cursor-policy.md; docs/architecture/M1_ONLINE_LEARNING_CONTRACT.md; docs/architecture/M1D_SYNC_PERSISTENCE_SLICE1.md
+- Allowed paths: docs/architecture/M1D_SYNC_WIRE_CONTRACT.md; .ai/WORK_QUEUE.md; .ai/worker-reports/LB-DS-026.md; CURRENT_WORK.md
+- Required checks: markdown/prettier; pnpm verify:ai-worker-queue; pnpm verify:documentation-governance; pnpm verify:ai-continuity; pnpm test:dashboard; git diff --check
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+
+Decision-ready proposed contract only. No reconciliation endpoint exists yet; no code, route, migration, flag, auth, mobile/web composition, sync activation, seed, deployment or production change is authorized. The design records a recommended pull-based GET contract, explicit cursor/idempotency/no-data-loss invariants, and open owner decisions O-1 through O-5. A separate serial implementation task and security/API review are required before any route or flag enablement.
+
 | ID   | Workstream                         | Worker role                | Allowed scope                                                 | Depends on                 | Parallel rule                                                                                |
 | ---- | ---------------------------------- | -------------------------- | ------------------------------------------------------------- | -------------------------- | -------------------------------------------------------------------------------------------- |
 | D0   | Visual language and token contract | W1 + design-capable worker | `docs/design/**`, shared visual token docs, design evidence   | M0                         | Can run alongside M1 contract audit; no overlapping implementation paths                     |
