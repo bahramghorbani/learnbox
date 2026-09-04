@@ -44,7 +44,7 @@ const manifest = {
   displayName: 'Synthetic test pack',
   locale: 'de-DE' as const,
   targetCefr: 'A1' as const,
-  targetItemCount: 350,
+  targetItemCount: 35,
   releaseStatus: 'draft' as const,
 };
 
@@ -111,7 +111,7 @@ describe('content factory batch validation', () => {
       displayName: 'LearnBox Start — German A1 Essentials',
       locale: 'de-DE',
       targetCefr: 'A1',
-      targetItemCount: 350,
+      targetItemCount: 35,
       releaseStatus: 'draft',
     };
     expect(

@@ -2,7 +2,7 @@
 
 ## Model
 
-LearnBox is a free-to-download app with a permanent free A1 starter collection of approximately 350 words. Premium products are complete vocabulary packs sold as one-time purchases initially. Subscription is deferred until pack commerce and retention are proven.
+LearnBox is a free-to-download app with a permanent free A1 starter collection of approximately 35 words. Premium products are complete vocabulary packs sold as one-time purchases initially. Subscription is deferred until pack commerce and retention are proven.
 
 ## Platform payment adapters
 

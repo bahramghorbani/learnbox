@@ -5,7 +5,7 @@ Use this brief after `AGENTS.md` and `AI_BOOTSTRAP.md`. The canonical product st
 ## Current product truth
 
 - LearnBox is an online-first German vocabulary Leitner product, not an offline-only app and not a prototype.
-- The free app includes approximately 350 complete A1 words; premium vocabulary packs are purchased separately.
+- The free app includes approximately 35 complete A1 words; premium vocabulary packs are purchased separately.
 - Temporary connectivity loss is tolerated by a durable local queue and idempotent reconnect sync.
 - `learnboxapp.com` is an independent informational landing site and must not be coupled to learner, admin, API or private media.
 - Web is the current learner/iOS interim surface; Android is native; native iOS is a later App Store milestone.

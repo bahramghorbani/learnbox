@@ -11,7 +11,7 @@ or unreviewed word list.
 ## Decision
 
 Create `learnbox_start_a1_essentials`, displayed as “LearnBox Start — German A1 Essentials”,
-with a target of about 350 high-value German A1 words and practical expressions. Selection uses
+with a target of about 35 high-value German A1 words and practical expressions. Selection uses
 CEFR fit, practical frequency, migration relevance, progression, duplicate avoidance and visual
 teachability across greetings, people, home, food, shopping, time, transport, city, work, health,
 weather, clothing, core verbs/adjectives, questions and early administration.
@@ -30,8 +30,8 @@ paywall signals.
 Every item carries stable ID, normalized lemma, article/POS, Persian meaning, simple German
 definition, CEFR, inflection, pronunciation, word and sentence audio, example plus Persian,
 grammar note, tags, difficulty, visual concept/prompt, validation, version and provenance. Build
-a balanced 20-item slice first, validate it in the app, then make versioned batches of about 50;
-never generate all 350 media assets at once.
+a balanced 20-item slice first, validate it in the app, then make versioned batches of up to 35;
+never generate all 35 media assets at once.
 
 ## Metrics
 

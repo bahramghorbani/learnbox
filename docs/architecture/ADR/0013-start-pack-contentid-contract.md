@@ -18,7 +18,7 @@ The bundled Start Pack is the free A1 vertical slice shipped inside the learner 
   item's `id` is the stable identity (e.g. `start-a1-haus`). These drafts are
   `needs_editorial_review`; the manifest `content/packs/learnbox-start/manifest.json` remains
   `releaseStatus: "draft"`. PDR-004 names the target pack
-  `learnbox_start_a1_essentials` (~350 words). No draft is approved or published content.
+  `learnbox_start_a1_essentials` (~35 words). No draft is approved or published content.
 - The server's canonical content identity is `cards.content_id`: `TEXT NOT NULL`, 1–128
   characters, unique, immutable via trigger `cards_content_id_immutable`, backfilled
   `'legacy-' || id` for legacy rows (migration 0013). Server review writes resolve

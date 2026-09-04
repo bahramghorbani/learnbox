@@ -14,7 +14,7 @@
 
 ## Product definition
 
-LearnBox is an online-first German vocabulary Leitner application for Persian-speaking learners. The app is free to download and includes a complete free A1 starter collection of approximately 350 words. Premium vocabulary packs are purchased separately. Account, content ownership, progress and entitlements are server-backed; a temporary loss of connectivity must preserve local review actions and synchronize them idempotently after reconnect.
+LearnBox is an online-first German vocabulary Leitner application for Persian-speaking learners. The app is free to download and includes a complete free A1 starter collection of approximately 35 words. Premium vocabulary packs are purchased separately. Account, content ownership, progress and entitlements are server-backed; a temporary loss of connectivity must preserve local review actions and synchronize them idempotently after reconnect.
 
 ## Product surfaces and boundaries
 
@@ -51,7 +51,7 @@ LearnBox is an online-first German vocabulary Leitner application for Persian-sp
 
 | Capability                            | Status               | Truth                                                                                                      |
 | ------------------------------------- | -------------------- | ---------------------------------------------------------------------------------------------------------- |
-| Free A1 starter collection            | Partial / controlled | Start slice and validated content foundations exist; target product is about 350 words                     |
+| Free A1 starter collection            | Partial / controlled | Start slice and validated content foundations exist; target product is about 35 words                     |
 | Vocabulary item schema                | Verified foundation  | Canonical items, media and validation boundaries exist                                                     |
 | AI pack generation from admin request | Partial foundation   | Content Factory and provider-neutral validation exist; admin generation UX and production jobs remain      |
 | Image and pronunciation package       | Partial foundation   | Media plans and QA contracts exist; complete pack production flow remains                                  |

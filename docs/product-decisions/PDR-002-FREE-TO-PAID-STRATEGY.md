@@ -9,7 +9,7 @@ Learners need to experience the core review loop before a serious purchase reque
 
 ## Decision
 
-`learnbox_start` offers about 350 selected A1 words and practical expressions, 10–15 recommended
+`learnbox_start` offers about 35 selected A1 words and practical expressions, 10–15 recommended
 new words daily, unlimited due and learned-content review, images, standard audio, basic Bobo,
 XP, levels, missions, streak, basic statistics and about 30 personal words. Limits are remote
 configuration, not client constants.
