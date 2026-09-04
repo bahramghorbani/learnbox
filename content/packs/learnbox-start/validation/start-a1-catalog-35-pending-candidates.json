@@ -1,0 +1,117 @@
+{
+  "batchId": "learnbox-start-a1-catalog-35-pending-candidates-v1",
+  "status": "source_referenced_pending_linguistic_review",
+  "purpose": "Candidate intake for the remaining 15 free-starter target items (catalog target 35). Intake only: this is not learner-facing card content and has no media or publish approval.",
+  "source": {
+    "name": "Goethe-Zertifikat A1: Start Deutsch 1 Wortliste",
+    "url": "https://www.goethe.de/pro/relaunch/prf/de/A1_SD1_Wortliste_02.pdf",
+    "use": "A1 scope and topic reference; each candidate still requires German and Persian editorial review."
+  },
+  "candidates": [
+    {
+      "candidateId": "start-a1-fenster",
+      "lemmaHint": "Fenster",
+      "category": "household_noun",
+      "selectionRationale": "Clear household object with strong visual recognition.",
+      "sourceEntryVerification": "pending_linguistic_review"
+    },
+    {
+      "candidateId": "start-a1-zimmer",
+      "lemmaHint": "Zimmer",
+      "category": "household_noun",
+      "selectionRationale": "Core home space noun that pairs with Haus and Wohnen.",
+      "sourceEntryVerification": "pending_linguistic_review"
+    },
+    {
+      "candidateId": "start-a1-uhr",
+      "lemmaHint": "Uhr",
+      "category": "household_noun",
+      "selectionRationale": "Frequent daily time noun with an unambiguous visual.",
+      "sourceEntryVerification": "pending_linguistic_review"
+    },
+    {
+      "candidateId": "start-a1-milch",
+      "lemmaHint": "Milch",
+      "category": "food_drink",
+      "selectionRationale": "Basic drink noun used in everyday routines.",
+      "sourceEntryVerification": "pending_linguistic_review"
+    },
+    {
+      "candidateId": "start-a1-kaffee",
+      "lemmaHint": "Kaffee",
+      "category": "food_drink",
+      "selectionRationale": "Very frequent drink noun in German daily life.",
+      "sourceEntryVerification": "pending_linguistic_review"
+    },
+    {
+      "candidateId": "start-a1-ei",
+      "lemmaHint": "Ei",
+      "category": "food_drink",
+      "selectionRationale": "Common breakfast food noun with a clear visual.",
+      "sourceEntryVerification": "pending_linguistic_review"
+    },
+    {
+      "candidateId": "start-a1-tee",
+      "lemmaHint": "Tee",
+      "category": "food_drink",
+      "selectionRationale": "Common drink noun that complements Kaffee.",
+      "sourceEntryVerification": "pending_linguistic_review"
+    },
+    {
+      "candidateId": "start-a1-stadt",
+      "lemmaHint": "Stadt",
+      "category": "place",
+      "selectionRationale": "Central place noun for orientation and city talk.",
+      "sourceEntryVerification": "pending_linguistic_review"
+    },
+    {
+      "candidateId": "start-a1-supermarkt",
+      "lemmaHint": "Supermarkt",
+      "category": "place",
+      "selectionRationale": "Everyday shopping place with a clear environment.",
+      "sourceEntryVerification": "pending_linguistic_review"
+    },
+    {
+      "candidateId": "start-a1-gehen",
+      "lemmaHint": "gehen",
+      "category": "verb",
+      "selectionRationale": "Most frequent movement verb for A1 travel talk.",
+      "sourceEntryVerification": "pending_linguistic_review"
+    },
+    {
+      "candidateId": "start-a1-essen",
+      "lemmaHint": "essen",
+      "category": "verb",
+      "selectionRationale": "Core daily action verb for meals.",
+      "sourceEntryVerification": "pending_linguistic_review"
+    },
+    {
+      "candidateId": "start-a1-trinken",
+      "lemmaHint": "trinken",
+      "category": "verb",
+      "selectionRationale": "Core daily action verb that pairs with essen.",
+      "sourceEntryVerification": "pending_linguistic_review"
+    },
+    {
+      "candidateId": "start-a1-gross",
+      "lemmaHint": "groß",
+      "category": "adjective_emotion",
+      "selectionRationale": "Basic descriptive adjective with contrast potential.",
+      "sourceEntryVerification": "pending_linguistic_review"
+    },
+    {
+      "candidateId": "start-a1-kalt",
+      "lemmaHint": "kalt",
+      "category": "adjective_emotion",
+      "selectionRationale": "Basic temperature adjective with a clear visual state.",
+      "sourceEntryVerification": "pending_linguistic_review"
+    },
+    {
+      "candidateId": "start-a1-neu",
+      "lemmaHint": "neu",
+      "category": "adjective_emotion",
+      "selectionRationale": "Basic descriptive adjective with strong daily use.",
+      "sourceEntryVerification": "pending_linguistic_review"
+    }
+  ]
+}

@@ -1,0 +1,557 @@
+{
+  "batchId": "learnbox-start-a1-catalog-35-pending-drafts-v1",
+  "status": "needs_editorial_review",
+  "purpose": "Structured linguistic drafts for the remaining 15 free-starter target items (catalog target 35). Pending intake only: no item is linguistically approved, published or has production media.",
+  "sourceReference": "https://www.goethe.de/pro/relaunch/prf/de/A1_SD1_Wortliste_02.pdf",
+  "items": [
+    {
+      "id": "start-a1-fenster",
+      "version": 1,
+      "status": "needs_review",
+      "lemma": "Fenster",
+      "normalizedLemma": "fenster",
+      "partOfSpeech": "noun",
+      "cefr": "A1",
+      "persianMeanings": ["پنجره"],
+      "simpleGermanDefinition": "Ein Teil der Wand, den man öffnen kann.",
+      "essentialInflection": "die Fenster",
+      "pronunciation": {
+        "ipa": "ˈfɛnstɐ",
+        "locale": "de-DE"
+      },
+      "examples": [
+        {
+          "german": "Das Fenster ist offen.",
+          "persian": "پنجره باز است."
+        }
+      ],
+      "grammarNote": "اسم خنثی؛ جمع بدون تغییر است.",
+      "topicTags": ["home", "household"],
+      "difficulty": 1,
+      "visualConcept": "An open window in a simple wall is the clear primary object.",
+      "imagePrompt": "Soft 3D open window in a simple room wall, window dominant, simple controlled background, no text or watermark.",
+      "media": [],
+      "source": {
+        "provider": "ai_suggestion",
+        "reference": "Goethe A1 scope reference; editorial verification pending."
+      },
+      "provenance": {
+        "sourceType": "ai_assisted",
+        "sourceReference": "Goethe A1 scope reference; German and Persian review pending."
+      },
+      "article": "das"
+    },
+    {
+      "id": "start-a1-zimmer",
+      "version": 1,
+      "status": "needs_review",
+      "lemma": "Zimmer",
+      "normalizedLemma": "zimmer",
+      "partOfSpeech": "noun",
+      "cefr": "A1",
+      "persianMeanings": ["اتاق"],
+      "simpleGermanDefinition": "Ein Raum in einer Wohnung oder in einem Haus.",
+      "essentialInflection": "die Zimmer",
+      "pronunciation": {
+        "ipa": "ˈtsɪmɐ",
+        "locale": "de-DE"
+      },
+      "examples": [
+        {
+          "german": "Das Zimmer ist groß.",
+          "persian": "اتاق بزرگ است."
+        }
+      ],
+      "grammarNote": "اسم خنثی؛ جمع بدون تغییر است.",
+      "topicTags": ["home", "household"],
+      "difficulty": 1,
+      "visualConcept": "A simple furnished room is the dominant scene; no Bobo needed.",
+      "imagePrompt": "Soft 3D simple furnished room, room dominant, clean controlled background, no text or watermark.",
+      "media": [],
+      "source": {
+        "provider": "ai_suggestion",
+        "reference": "Goethe A1 scope reference; editorial verification pending."
+      },
+      "provenance": {
+        "sourceType": "ai_assisted",
+        "sourceReference": "Goethe A1 scope reference; German and Persian review pending."
+      },
+      "article": "das"
+    },
+    {
+      "id": "start-a1-uhr",
+      "version": 1,
+      "status": "needs_review",
+      "lemma": "Uhr",
+      "normalizedLemma": "uhr",
+      "partOfSpeech": "noun",
+      "cefr": "A1",
+      "persianMeanings": ["ساعت"],
+      "simpleGermanDefinition": "Ein Gerät, das die Zeit zeigt.",
+      "essentialInflection": "die Uhren",
+      "pronunciation": {
+        "ipa": "uːɐ̯",
+        "locale": "de-DE"
+      },
+      "examples": [
+        {
+          "german": "Die Uhr ist neu.",
+          "persian": "ساعت نو است."
+        }
+      ],
+      "grammarNote": "اسم مؤنث؛ جمع با پسوند -en ساخته می‌شود.",
+      "topicTags": ["time", "daily_life"],
+      "difficulty": 1,
+      "visualConcept": "A wall clock is the only dominant object; the time concept is unambiguous.",
+      "imagePrompt": "Soft 3D wall clock, clock dominant, simple controlled background, no text or watermark.",
+      "media": [],
+      "source": {
+        "provider": "ai_suggestion",
+        "reference": "Goethe A1 scope reference; editorial verification pending."
+      },
+      "provenance": {
+        "sourceType": "ai_assisted",
+        "sourceReference": "Goethe A1 scope reference; German and Persian review pending."
+      },
+      "article": "die"
+    },
+    {
+      "id": "start-a1-milch",
+      "version": 1,
+      "status": "needs_review",
+      "lemma": "Milch",
+      "normalizedLemma": "milch",
+      "partOfSpeech": "noun",
+      "cefr": "A1",
+      "persianMeanings": ["شیر"],
+      "simpleGermanDefinition": "Ein weißes Getränk, das von der Kuh kommt.",
+      "essentialInflection": "kein Plural im üblichen Gebrauch",
+      "pronunciation": {
+        "ipa": "mɪlç",
+        "locale": "de-DE"
+      },
+      "examples": [
+        {
+          "german": "Ich trinke Milch.",
+          "persian": "من شیر می‌نوشم."
+        }
+      ],
+      "grammarNote": "اسم مؤنث؛ معمولاً غیرقابل‌شمارش است.",
+      "topicTags": ["food", "daily_life"],
+      "difficulty": 1,
+      "visualConcept": "A glass of milk is the clear primary object.",
+      "imagePrompt": "Soft 3D glass of milk, glass dominant, simple controlled background, no text or watermark.",
+      "media": [],
+      "source": {
+        "provider": "ai_suggestion",
+        "reference": "Goethe A1 scope reference; editorial verification pending."
+      },
+      "provenance": {
+        "sourceType": "ai_assisted",
+        "sourceReference": "Goethe A1 scope reference; German and Persian review pending."
+      },
+      "article": "die"
+    },
+    {
+      "id": "start-a1-kaffee",
+      "version": 1,
+      "status": "needs_review",
+      "lemma": "Kaffee",
+      "normalizedLemma": "kaffee",
+      "partOfSpeech": "noun",
+      "cefr": "A1",
+      "persianMeanings": ["قهوه"],
+      "simpleGermanDefinition": "Ein heißes Getränk, das viele Menschen am Morgen trinken.",
+      "essentialInflection": "kein Plural im üblichen Gebrauch",
+      "pronunciation": {
+        "ipa": "ˈkafeː",
+        "locale": "de-DE"
+      },
+      "examples": [
+        {
+          "german": "Der Kaffee ist heiß.",
+          "persian": "قهوه داغ است."
+        }
+      ],
+      "grammarNote": "اسم مذکر؛ معمولاً غیرقابل‌شمارش است.",
+      "topicTags": ["food", "daily_life"],
+      "difficulty": 1,
+      "visualConcept": "A cup of coffee is the dominant object; steam makes it readable.",
+      "imagePrompt": "Soft 3D cup of hot coffee with light steam, cup dominant, simple controlled background, no text or watermark.",
+      "media": [],
+      "source": {
+        "provider": "ai_suggestion",
+        "reference": "Goethe A1 scope reference; editorial verification pending."
+      },
+      "provenance": {
+        "sourceType": "ai_assisted",
+        "sourceReference": "Goethe A1 scope reference; German and Persian review pending."
+      },
+      "article": "der"
+    },
+    {
+      "id": "start-a1-ei",
+      "version": 1,
+      "status": "needs_review",
+      "lemma": "Ei",
+      "normalizedLemma": "ei",
+      "partOfSpeech": "noun",
+      "cefr": "A1",
+      "persianMeanings": ["تخم‌مرغ"],
+      "simpleGermanDefinition": "Ein Lebensmittel vom Huhn.",
+      "essentialInflection": "die Eier",
+      "pronunciation": {
+        "ipa": "aɪ̯",
+        "locale": "de-DE"
+      },
+      "examples": [
+        {
+          "german": "Ich esse ein Ei.",
+          "persian": "من یک تخم‌مرغ می‌خورم."
+        }
+      ],
+      "grammarNote": "اسم خنثی؛ جمع با تغییر واکه و پسوند -er ساخته می‌شود.",
+      "topicTags": ["food", "daily_life"],
+      "difficulty": 1,
+      "visualConcept": "One egg is the clear primary object.",
+      "imagePrompt": "Soft 3D single egg on a plain surface, egg dominant, simple controlled background, no text or watermark.",
+      "media": [],
+      "source": {
+        "provider": "ai_suggestion",
+        "reference": "Goethe A1 scope reference; editorial verification pending."
+      },
+      "provenance": {
+        "sourceType": "ai_assisted",
+        "sourceReference": "Goethe A1 scope reference; German and Persian review pending."
+      },
+      "article": "das"
+    },
+    {
+      "id": "start-a1-tee",
+      "version": 1,
+      "status": "needs_review",
+      "lemma": "Tee",
+      "normalizedLemma": "tee",
+      "partOfSpeech": "noun",
+      "cefr": "A1",
+      "persianMeanings": ["چای"],
+      "simpleGermanDefinition": "Ein heißes Getränk aus Blättern.",
+      "essentialInflection": "die Tees",
+      "pronunciation": {
+        "ipa": "teː",
+        "locale": "de-DE"
+      },
+      "examples": [
+        {
+          "german": "Der Tee ist heiß.",
+          "persian": "چای داغ است."
+        }
+      ],
+      "grammarNote": "اسم مذکر؛ جمع با پسوند -s ساخته می‌شود.",
+      "topicTags": ["food", "daily_life"],
+      "difficulty": 1,
+      "visualConcept": "A cup of tea with a tea bag is the dominant object.",
+      "imagePrompt": "Soft 3D cup of tea, cup dominant, simple controlled background, no text or watermark.",
+      "media": [],
+      "source": {
+        "provider": "ai_suggestion",
+        "reference": "Goethe A1 scope reference; editorial verification pending."
+      },
+      "provenance": {
+        "sourceType": "ai_assisted",
+        "sourceReference": "Goethe A1 scope reference; German and Persian review pending."
+      },
+      "article": "der"
+    },
+    {
+      "id": "start-a1-stadt",
+      "version": 1,
+      "status": "needs_review",
+      "lemma": "Stadt",
+      "normalizedLemma": "stadt",
+      "partOfSpeech": "noun",
+      "cefr": "A1",
+      "persianMeanings": ["شهر"],
+      "simpleGermanDefinition": "Ein großer Ort, in dem viele Menschen wohnen.",
+      "essentialInflection": "die Städte",
+      "pronunciation": {
+        "ipa": "ʃtat",
+        "locale": "de-DE"
+      },
+      "examples": [
+        {
+          "german": "Die Stadt ist groß.",
+          "persian": "شهر بزرگ است."
+        }
+      ],
+      "grammarNote": "اسم مؤنث؛ جمع با تغییر واکه ساخته می‌شود.",
+      "topicTags": ["place", "city"],
+      "difficulty": 1,
+      "visualConcept": "A small city skyline carries the meaning; Bobo may be a small pedestrian.",
+      "imagePrompt": "Soft 3D small city skyline, environment dominant, optional small canonical Bobo as pedestrian, no text or watermark.",
+      "media": [],
+      "source": {
+        "provider": "ai_suggestion",
+        "reference": "Goethe A1 scope reference; editorial verification pending."
+      },
+      "provenance": {
+        "sourceType": "ai_assisted",
+        "sourceReference": "Goethe A1 scope reference; German and Persian review pending."
+      },
+      "article": "die"
+    },
+    {
+      "id": "start-a1-supermarkt",
+      "version": 1,
+      "status": "needs_review",
+      "lemma": "Supermarkt",
+      "normalizedLemma": "supermarkt",
+      "partOfSpeech": "noun",
+      "cefr": "A1",
+      "persianMeanings": ["سوپرمارکت"],
+      "simpleGermanDefinition": "Ein großes Geschäft, in dem man Lebensmittel kauft.",
+      "essentialInflection": "die Supermärkte",
+      "pronunciation": {
+        "ipa": "ˈzuːpɐmaʁkt",
+        "locale": "de-DE"
+      },
+      "examples": [
+        {
+          "german": "Ich kaufe im Supermarkt ein.",
+          "persian": "من از سوپرمارکت خرید می‌کنم."
+        }
+      ],
+      "grammarNote": "اسم مذکر؛ جمع با تغییر واکه ساخته می‌شود.",
+      "topicTags": ["shopping", "place"],
+      "difficulty": 2,
+      "visualConcept": "A supermarket interior with shelves carries the meaning; Bobo shops with a basket.",
+      "imagePrompt": "Soft 3D supermarket interior with shelves, environment dominant, small canonical Bobo with a basket, no text or watermark.",
+      "media": [],
+      "source": {
+        "provider": "ai_suggestion",
+        "reference": "Goethe A1 scope reference; editorial verification pending."
+      },
+      "provenance": {
+        "sourceType": "ai_assisted",
+        "sourceReference": "Goethe A1 scope reference; German and Persian review pending."
+      },
+      "article": "der"
+    },
+    {
+      "id": "start-a1-gehen",
+      "version": 1,
+      "status": "needs_review",
+      "lemma": "gehen",
+      "normalizedLemma": "gehen",
+      "partOfSpeech": "verb",
+      "cefr": "A1",
+      "persianMeanings": ["رفتن"],
+      "simpleGermanDefinition": "Sich zu Fuß von einem Ort zu einem anderen bewegen.",
+      "essentialInflection": "geht, ging, ist gegangen",
+      "pronunciation": {
+        "ipa": "ˈɡeːən",
+        "locale": "de-DE"
+      },
+      "examples": [
+        {
+          "german": "Ich gehe zur Schule.",
+          "persian": "من به مدرسه می‌روم."
+        }
+      ],
+      "grammarNote": "فعل بی‌قاعده؛ با فعل کمکی sein صرف می‌شود.",
+      "topicTags": ["transport", "core_verb"],
+      "difficulty": 1,
+      "visualConcept": "Bobo walks along a street and is the clear action subject.",
+      "imagePrompt": "Soft 3D canonical Bobo walking along a simple street, action clear, no text or watermark.",
+      "media": [],
+      "source": {
+        "provider": "ai_suggestion",
+        "reference": "Goethe A1 scope reference; editorial verification pending."
+      },
+      "provenance": {
+        "sourceType": "ai_assisted",
+        "sourceReference": "Goethe A1 scope reference; German and Persian review pending."
+      }
+    },
+    {
+      "id": "start-a1-essen",
+      "version": 1,
+      "status": "needs_review",
+      "lemma": "essen",
+      "normalizedLemma": "essen",
+      "partOfSpeech": "verb",
+      "cefr": "A1",
+      "persianMeanings": ["خوردن"],
+      "simpleGermanDefinition": "Etwas als Nahrung zu sich nehmen.",
+      "essentialInflection": "isst, aß, hat gegessen",
+      "pronunciation": {
+        "ipa": "ˈɛsn̩",
+        "locale": "de-DE"
+      },
+      "examples": [
+        {
+          "german": "Ich esse Brot.",
+          "persian": "من نان می‌خورم."
+        }
+      ],
+      "grammarNote": "فعل بی‌قاعده؛ ریشه در حالت دوم شخص مفرد تغییر می‌کند.",
+      "topicTags": ["food", "core_verb"],
+      "difficulty": 1,
+      "visualConcept": "Bobo eats at a simple table and is the clear action subject.",
+      "imagePrompt": "Soft 3D canonical Bobo eating at a simple table, action clear, no text or watermark.",
+      "media": [],
+      "source": {
+        "provider": "ai_suggestion",
+        "reference": "Goethe A1 scope reference; editorial verification pending."
+      },
+      "provenance": {
+        "sourceType": "ai_assisted",
+        "sourceReference": "Goethe A1 scope reference; German and Persian review pending."
+      }
+    },
+    {
+      "id": "start-a1-trinken",
+      "version": 1,
+      "status": "needs_review",
+      "lemma": "trinken",
+      "normalizedLemma": "trinken",
+      "partOfSpeech": "verb",
+      "cefr": "A1",
+      "persianMeanings": ["نوشیدن"],
+      "simpleGermanDefinition": "Eine Flüssigkeit zu sich nehmen.",
+      "essentialInflection": "trinkt, trank, hat getrunken",
+      "pronunciation": {
+        "ipa": "ˈtʁɪŋkn̩",
+        "locale": "de-DE"
+      },
+      "examples": [
+        {
+          "german": "Ich trinke Wasser.",
+          "persian": "من آب می‌نوشم."
+        }
+      ],
+      "grammarNote": "فعل بی‌قاعده؛ زمان گذشته و ماضی نقلی تغییر واکه دارند.",
+      "topicTags": ["food", "core_verb"],
+      "difficulty": 1,
+      "visualConcept": "Bobo drinks a glass of water and is the clear action subject.",
+      "imagePrompt": "Soft 3D canonical Bobo drinking from a glass of water, action clear, no text or watermark.",
+      "media": [],
+      "source": {
+        "provider": "ai_suggestion",
+        "reference": "Goethe A1 scope reference; editorial verification pending."
+      },
+      "provenance": {
+        "sourceType": "ai_assisted",
+        "sourceReference": "Goethe A1 scope reference; German and Persian review pending."
+      }
+    },
+    {
+      "id": "start-a1-gross",
+      "version": 1,
+      "status": "needs_review",
+      "lemma": "groß",
+      "normalizedLemma": "groß",
+      "partOfSpeech": "adjective",
+      "cefr": "A1",
+      "persianMeanings": ["بزرگ"],
+      "simpleGermanDefinition": "Von großer Größe; nicht klein.",
+      "essentialInflection": "groß, größer, am größten",
+      "pronunciation": {
+        "ipa": "ɡʁoːs",
+        "locale": "de-DE"
+      },
+      "examples": [
+        {
+          "german": "Das Haus ist groß.",
+          "persian": "خانه بزرگ است."
+        }
+      ],
+      "grammarNote": "صفت؛ در جایگاه خبری بعد از sein بدون پسوند می‌آید.",
+      "topicTags": ["adjective", "description"],
+      "difficulty": 1,
+      "visualConcept": "A large house beside a much smaller tree gives a single clear comparison.",
+      "imagePrompt": "Soft 3D large house beside a smaller tree, size relationship clear, no text or watermark.",
+      "media": [],
+      "source": {
+        "provider": "ai_suggestion",
+        "reference": "Goethe A1 scope reference; editorial verification pending."
+      },
+      "provenance": {
+        "sourceType": "ai_assisted",
+        "sourceReference": "Goethe A1 scope reference; German and Persian review pending."
+      }
+    },
+    {
+      "id": "start-a1-kalt",
+      "version": 1,
+      "status": "needs_review",
+      "lemma": "kalt",
+      "normalizedLemma": "kalt",
+      "partOfSpeech": "adjective",
+      "cefr": "A1",
+      "persianMeanings": ["سرد"],
+      "simpleGermanDefinition": "Mit niedriger Temperatur; nicht warm.",
+      "essentialInflection": "kalt, kälter, am kältesten",
+      "pronunciation": {
+        "ipa": "kalt",
+        "locale": "de-DE"
+      },
+      "examples": [
+        {
+          "german": "Das Wasser ist kalt.",
+          "persian": "آب سرد است."
+        }
+      ],
+      "grammarNote": "صفت؛ در جایگاه خبری بعد از sein بدون پسوند می‌آید.",
+      "topicTags": ["adjective", "description"],
+      "difficulty": 1,
+      "visualConcept": "A winter window scene with frost makes the cold concept unmistakable.",
+      "imagePrompt": "Soft 3D frosted winter window scene, cold feeling clear, no text or watermark.",
+      "media": [],
+      "source": {
+        "provider": "ai_suggestion",
+        "reference": "Goethe A1 scope reference; editorial verification pending."
+      },
+      "provenance": {
+        "sourceType": "ai_assisted",
+        "sourceReference": "Goethe A1 scope reference; German and Persian review pending."
+      }
+    },
+    {
+      "id": "start-a1-neu",
+      "version": 1,
+      "status": "needs_review",
+      "lemma": "neu",
+      "normalizedLemma": "neu",
+      "partOfSpeech": "adjective",
+      "cefr": "A1",
+      "persianMeanings": ["جدید"],
+      "simpleGermanDefinition": "Noch nicht lange da; nicht alt.",
+      "essentialInflection": "neu, neuer, am neuesten",
+      "pronunciation": {
+        "ipa": "nɔʏ",
+        "locale": "de-DE"
+      },
+      "examples": [
+        {
+          "german": "Das Auto ist neu.",
+          "persian": "ماشین نو است."
+        }
+      ],
+      "grammarNote": "صفت؛ در جایگاه خبری بعد از sein بدون پسوند می‌آید.",
+      "topicTags": ["adjective", "description"],
+      "difficulty": 1,
+      "visualConcept": "A shiny new bicycle beside an old worn one gives a single clear comparison.",
+      "imagePrompt": "Soft 3D new shiny bicycle beside an old worn bicycle, contrast clear, no text or watermark.",
+      "media": [],
+      "source": {
+        "provider": "ai_suggestion",
+        "reference": "Goethe A1 scope reference; editorial verification pending."
+      },
+      "provenance": {
+        "sourceType": "ai_assisted",
+        "sourceReference": "Goethe A1 scope reference; German and Persian review pending."
+      }
+    }
+  ]
+}
