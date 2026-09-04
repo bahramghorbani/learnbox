@@ -456,6 +456,23 @@ button {
   justify-items: center;
   gap: 15px;
 }
+.retry-server-read {
+  display: inline-block;
+  min-height: 44px;
+  margin: 0 0 22px;
+  padding: 0 20px;
+  border: 1px solid #e2def2;
+  border-radius: 14px;
+  background: var(--surface);
+  color: #5543a7;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+}
+.retry-server-read:focus-visible {
+  outline: 3px solid #25213b;
+  outline-offset: 4px;
+}
 .error-home-link {
   color: #5543a7;
   font-size: 15px;
