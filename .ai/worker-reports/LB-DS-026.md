@@ -2,7 +2,7 @@
 
 - Branch: docs/m1d-wire-contract-design
 - Base commit: 4718f93 (origin/main, PR #204 merged)
-- Head commit: `fee10f1` (local design commit; no push, no PR)
+- Head commit: `921bf2b` (local design + queue registration; no push, no PR)
 - Draft PR: none (not pushed, not opened — retry task stops after local commit)
 - Scope completed: Decision-ready PROPOSED / NOT IMPLEMENTED sync wire contract for the M1-D
   pull-based reconciliation read, plus this handoff report and the LB-DS-026 queue/current-work
