@@ -5,7 +5,7 @@
 
 ## Context
 
-The 350-item Start pack is the first use of a reusable system that must later support thousands
+The 35-item Start pack is the first use of a reusable system that must later support thousands
 of items, advanced levels, specialist packs and other languages.
 
 ## Decision

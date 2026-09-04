@@ -8,7 +8,7 @@ This is the compact product catalog. The detailed status of every item is in [`d
 - Online-first account and session.
 - Today daily review with active recall.
 - Leitner/adaptive scheduling.
-- Free A1 starter collection of approximately 350 words.
+- Free A1 starter collection of approximately 35 words.
 - Premium vocabulary packs.
 - Words/catalog browsing.
 - Personal vocabulary with exact and possible-duplicate checks.

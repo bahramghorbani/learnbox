@@ -46,3 +46,12 @@ production receipts and owner approval.
 `validation/start-a1-media-attachment-draft.json` lists the exact 60 local candidate files,
 their checksums and the intended private storage keys. It intentionally contains no URL, upload
 operation or publication approval.
+
+`validation/start-a1-35-catalog-slice.json` records the derived catalog snapshot for the
+owner-approved 35-word free target (ADR 0016, manifest `targetItemCount: 35`): 20 of 35 items
+drafted, 20 linguistically reviewed, 0 release-approved, `seedable: false`. It is a derived
+snapshot with SHA-256 anchors over its source files — not an approval, a media attestation or a
+DB seed. The fail-closed seed gate it pairs with lives in
+`apps/api/src/catalog/start-catalog-seed-gate.ts` and is exercised by
+`apps/api/test/start-catalog-seed-gate.test.ts`, which re-derives the snapshot from the draft and
+linguistic-approval files so a changed batch fails the test instead of drifting.

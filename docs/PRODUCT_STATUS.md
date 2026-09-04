@@ -1,7 +1,7 @@
 # LearnBox product status
 
 **Document role:** canonical, human-readable product and delivery status.
-**Last reviewed:** 2026-09-02.
+**Last reviewed:** 2026-09-04.
 **Status vocabulary:**
 
 - **Implemented:** code or documented foundation exists.
@@ -14,7 +14,7 @@
 
 ## Product definition
 
-LearnBox is an online-first German vocabulary Leitner application for Persian-speaking learners. The app is free to download and includes a complete free A1 starter collection of approximately 350 words. Premium vocabulary packs are purchased separately. Account, content ownership, progress and entitlements are server-backed; a temporary loss of connectivity must preserve local review actions and synchronize them idempotently after reconnect.
+LearnBox is an online-first German vocabulary Leitner application for Persian-speaking learners. The app is free to download and includes a complete free A1 starter collection of approximately 35 words. Premium vocabulary packs are purchased separately. Account, content ownership, progress and entitlements are server-backed; a temporary loss of connectivity must preserve local review actions and synchronize them idempotently after reconnect.
 
 ## Product surfaces and boundaries
 
@@ -49,16 +49,16 @@ LearnBox is an online-first German vocabulary Leitner application for Persian-sp
 
 ### Content and packages
 
-| Capability                            | Status               | Truth                                                                                                      |
-| ------------------------------------- | -------------------- | ---------------------------------------------------------------------------------------------------------- |
-| Free A1 starter collection            | Partial / controlled | Start slice and validated content foundations exist; target product is about 350 words                     |
-| Vocabulary item schema                | Verified foundation  | Canonical items, media and validation boundaries exist                                                     |
-| AI pack generation from admin request | Partial foundation   | Content Factory and provider-neutral validation exist; admin generation UX and production jobs remain      |
-| Image and pronunciation package       | Partial foundation   | Media plans and QA contracts exist; complete pack production flow remains                                  |
-| Duplicate prevention                  | Partial foundation   | Normalization and within-batch checks exist; cross-pack and per-user dedupe must be completed              |
-| Human editorial review                | Verified foundation  | Review gate blocks AI direct publication; approval additionally requires all six review dimensions to pass |
-| Pack versioning/release/rollback      | Partial              | Release readiness panel and manifests exist; complete operational flow remains                             |
-| Personal word generation              | Planned              | Keep personal content separate from official published catalog                                             |
+| Capability                            | Status               | Truth                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| ------------------------------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Free A1 starter collection            | Partial / controlled | Start slice and validated content foundations exist; target product is about 35 words. The 35-item catalog slice is recorded in `content/packs/learnbox-start/validation/start-a1-35-catalog-slice.json` with a fail-closed seed gate (`apps/api/src/catalog/start-catalog-seed-gate.ts`, ADR 0016): 20 of 35 target items drafted, 20 linguistically reviewed, 0 release-approved, so DB seeding remains blocked until release-approved items exist |
+| Vocabulary item schema                | Verified foundation  | Canonical items, media and validation boundaries exist                                                                                                                                                                                                                                                                                                                                                                                               |
+| AI pack generation from admin request | Partial foundation   | Content Factory and provider-neutral validation exist; admin generation UX and production jobs remain                                                                                                                                                                                                                                                                                                                                                |
+| Image and pronunciation package       | Partial foundation   | Media plans and QA contracts exist; complete pack production flow remains                                                                                                                                                                                                                                                                                                                                                                            |
+| Duplicate prevention                  | Partial foundation   | Normalization and within-batch checks exist; cross-pack and per-user dedupe must be completed                                                                                                                                                                                                                                                                                                                                                        |
+| Human editorial review                | Verified foundation  | Review gate blocks AI direct publication; approval additionally requires all six review dimensions to pass                                                                                                                                                                                                                                                                                                                                           |
+| Pack versioning/release/rollback      | Partial              | Release readiness panel and manifests exist; complete operational flow remains                                                                                                                                                                                                                                                                                                                                                                       |
+| Personal word generation              | Planned              | Keep personal content separate from official published catalog                                                                                                                                                                                                                                                                                                                                                                                       |
 
 ### Admin panel
 

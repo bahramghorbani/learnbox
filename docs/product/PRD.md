@@ -2,7 +2,7 @@
 
 ## Outcome
 
-Deliver a real online-first German vocabulary learning product, not a prototype. Users receive 350 complete A1 words for free, can learn daily, retain progress across connectivity changes, and purchase additional premium vocabulary packs through the payment method appropriate to their platform.
+Deliver a real online-first German vocabulary learning product, not a prototype. Users receive 35 complete A1 words for free, can learn daily, retain progress across connectivity changes, and purchase additional premium vocabulary packs through the payment method appropriate to their platform.
 
 ## Release 1: controlled closed alpha
 
