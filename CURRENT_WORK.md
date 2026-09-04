@@ -32,6 +32,7 @@
 - **M1-B Web slice 2 (LB-DS-022):** merged in PR #163 at `73cdb62` (2026-08-30); ADR 0012 route `GET /api/learner/state` (cookie subject = canonical `users.id`) plus truthful Today fetch are on `main` behind the fail-closed `WEB_LEARNER_STATE_ENABLED` runtime (defaults false). The actionable Today figure stays tied to the local bundled session until the approved/published Start Pack seed/catalog rows are implemented and released (the Start Pack ↔ canonical `contentId` contract itself is recorded in ADR 0013; seed/catalog implementation remains a separate review-gated task).
 - **M1-C Mobile slice 1:** completed in PR #155; Today local queue state is truthful, sync coordinator remains dormant.
 - **M1-Q independent QA:** completed in PR #157; the current server-wired follow-up QA is recorded in `.ai/qa-reports/M1-Q3-CURRENT-WEB-SERVER-WIRED.md` and merged in PR #175. Functional checks are green; browser visual/AX/keyboard acceptance remains blocked by the Chrome permission dialog and is not claimed.
+- **Starter Catalog 35 slice (`feature/starter-catalog-35`, ADR 0016):** branch based on `94cb729` (official free starter target reduced to ~35 words). Fail-closed catalog slice implemented: derived snapshot `content/packs/learnbox-start/validation/start-a1-35-catalog-slice.json` (20 of 35 drafted, 20 linguistically reviewed, 0 release-approved, `seedable: false`), reusable seed gate `apps/api/src/catalog/start-catalog-seed-gate.ts` with tests, no migration and no publication. DB seeding stays blocked: ADR 0013 requires approved/published `card_versions` and 15 target drafts are still missing.
 - **Next active work:** M1-D push reconciliation cursor/watermark policy is approved in
   ADR 0014 (per-learner monotonic version, incremented only on newly applied events,
   committed in the same transaction as event and schedule update); the server-core
@@ -49,7 +50,7 @@
 ## Immediate execution order
 
 1. Complete the Admin session → canonical `users.id` binding: migration `0016`, session lookup, and the one-shot server-side binding operation are implemented in the current worktree; owner bootstrap, role assignment and staging verification remain gated. ADR 0015 records the fail-closed boundary.
-2. Start Pack ↔ canonical `contentId` contract is decided and recorded in ADR 0013; implement the seed/catalog slice as a separate review-gated task.
+2. Start Pack ↔ canonical `contentId` contract is decided and recorded in ADR 0013; the bounded 35-target catalog slice (derived snapshot + fail-closed seed gate, ADR 0016) is implemented on `feature/starter-catalog-35`. DB seed remains blocked: only 20 of 35 target items are drafted and none is release-approved; a separately authorized task must add the missing 15 reviewed drafts and approved/published card versions before any `cards`/`card_versions` seed.
 3. Implement the authenticated server-wired learner path completion and any remaining D1 fetch states.
 4. Decide and implement M1-D push reconciliation. The cursor/watermark policy is approved in
    ADR 0014; server-core (PR #169), client-side cursor capture/persistence (PR #170),

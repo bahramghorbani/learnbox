@@ -1,0 +1,65 @@
+{
+  "sliceLabel": "learnbox-start-catalog-35-v1",
+  "packId": "learnbox_start_a1_essentials",
+  "targetItemCount": 35,
+  "releaseStatus": "draft",
+  "releaseGate": "seed blocked until every target item is release-approved (approved/published card_versions)",
+  "seedDecision": {
+    "seedable": false,
+    "blockers": [
+      "catalog has 20 of 35 target items; seed requires exactly 35 release-approved items",
+      "item start-a1-haus has no approved/published card version (ADR 0013 gate)",
+      "product-owner confirmation covers only german_linguistic and persian_translation; provenance, visual, audio and app_flow remain required before publication"
+    ],
+    "seedableItemIds": []
+  },
+  "counts": {
+    "targetItemCount": 35,
+    "draftedItemCount": 20,
+    "linguisticReviewedItemCount": 20,
+    "approvedForReleaseItemCount": 0,
+    "missingDraftedItemCount": 15
+  },
+  "draftedItemIds": [
+    "start-a1-haus",
+    "start-a1-tisch",
+    "start-a1-tuer",
+    "start-a1-bett",
+    "start-a1-apfel",
+    "start-a1-brot",
+    "start-a1-wasser",
+    "start-a1-bahnhof",
+    "start-a1-schule",
+    "start-a1-lernen",
+    "start-a1-wohnen",
+    "start-a1-kaufen",
+    "start-a1-warten",
+    "start-a1-gluecklich",
+    "start-a1-muede",
+    "start-a1-klein",
+    "start-a1-guten-tag",
+    "start-a1-wie-geht-es-ihnen",
+    "start-a1-danke",
+    "start-a1-entschuldigung"
+  ],
+  "linguisticApproval": {
+    "approvedByRole": "product_owner",
+    "approvedAt": "2026-07-27",
+    "approvedDimensions": ["german_linguistic", "persian_translation"],
+    "approvalReference": "product-owner-confirmation-2026-07-27"
+  },
+  "stillRequiredBeforePublication": ["provenance", "visual", "audio", "app_flow"],
+  "reviewQueueState": "private_media_attested_not_attached",
+  "publicationBlocked": true,
+  "sourceFiles": {
+    "manifest": "content/packs/learnbox-start/manifest.json",
+    "drafts": "content/packs/learnbox-start/vocabulary/start-a1-vertical-slice-drafts.json",
+    "linguisticApproval": "content/packs/learnbox-start/validation/start-a1-slice-linguistic-approval.json",
+    "reviewQueue": "content/packs/learnbox-start/validation/start-a1-slice-review-queue.json"
+  },
+  "integrity": {
+    "draftsSha256": "61ca53fc087fbc6957034e26dee7bf18116a42f31c0fae572013a8b08bde9152",
+    "linguisticApprovalSha256": "88cde63db64ee288c406f97cbd586cd411f49c8d7ba14794a350a5fd74b3b9b7"
+  },
+  "catalogNote": "Derived snapshot, not an approval and not a DB seed. Bundled start-a1-* ids are canonical cards.content_id only after an approved/published card_versions row exists (ADR 0013); no migration or cards/card_versions row is created here."
+}
