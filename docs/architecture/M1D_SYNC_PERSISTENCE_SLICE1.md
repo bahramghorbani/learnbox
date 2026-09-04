@@ -211,8 +211,9 @@ Tests (TDD: failing first, then implementation):
   retryable and never deletes acknowledged events (recoverable on retry), cursor alone
   never authorizes queue removal, idempotent replay keeps acknowledged removal semantics.
 
-Remaining (separate serial M1-D slices): server request parsing/route integration, delta response
-semantics, and production composition/flag enablement. The milestone stays partial /
+Remaining (separate serial M1-D slices): delta response
+semantics, and production composition/flag enablement. Route request-boundary integration is
+implemented in the **Slice 1d** appendix below. The milestone stays partial /
 not production-ready; production sync remains disabled.
 
 ### Server request-boundary contract
@@ -223,3 +224,46 @@ strictly accepts the existing `items` payload plus an optional non-negative deci
 malformed item shapes, invalid timestamps, duplicate client event IDs, and non-string cursors.
 The canonical `userId` is supplied by the authenticated server boundary, never parsed from the
 request body. This parser is not a route and does not enable network sync.
+
+---
+
+## Appendix — Slice 1d: route request-boundary integration
+
+**Status:** implemented locally in this slice; the dormant website review POST route boundary now
+uses the strict documented parser. **Network sync remains dormant** —
+`MOBILE_REVIEW_SYNC_ENABLED` defaults to false/unset and production composition is unchanged.
+Basis `origin/main` at `d20b46a` (PR #177 merged). ADR 0014 remains the authoritative decision
+contract and is unchanged.
+
+What Slice 1d implements (allowed paths: `apps/website/app/api/reviews/mobile/route.ts`,
+`apps/website/lib/mobile-review-http.ts`, `apps/website/lib/mobile-review-runtime.ts`,
+`apps/website/test/mobile-review-http.test.ts`, `apps/website/test/mobile-review-route.test.ts`,
+this appendix, `CURRENT_WORK.md`, `.ai/WORK_QUEUE.md`, `.ai/worker-reports/LB-DS-M1D-ROUTE-INTEGRATION.md`):
+
+- `apps/website/lib/mobile-review-http.ts` now imports and calls the existing strict
+  request-boundary parser `parseMobileReviewBatchRequest`
+  (`apps/api/src/reviews/mobile-review-batch.request.ts`, compiled `api/dist` mount) instead of a
+  duplicated inline parser. `handleMobileReviewPost` maps
+  `MobileReviewBatchRequestError` to the typed 400 `validation` boundary error and forwards the
+  parser-bound `{ userId, items }` to `dependencies.submit`; `reconciliationCursor` is
+  validated but never forwarded (delta/watermark request semantics remain out of scope until the
+  separate delta-response slice).
+- Behavior deltas on the boundary: an optional non-negative decimal-string top-level
+  `reconciliationCursor` is now accepted (still documented, never sent to the domain seam);
+  duplicate `clientEventId`s within one batch are rejected at the boundary with 400
+  `validation` before any `submit` call (previously they surfaced from the batch service); a
+  top-level `userId` and every other extra field remain rejected; the `items` wire shape,
+  grade set, date handling, 20-item limit and 16 KiB body cap are unchanged.
+- No route, flag, environment, auth, schema, migration, seed/catalog, mobile/web surface,
+  background sync, deployment or provider change. `route.ts` and `mobile-review-runtime.ts` are
+  unchanged. The review route keeps returning 503 `serverUnavailable` unless
+  `MOBILE_REVIEW_SYNC_ENABLED=true` plus complete server config are present.
+
+Tests (TDD: failing first, then implementation):
+
+- `apps/website/test/mobile-review-http.test.ts` — optional `reconciliationCursor: '41'`
+  accepted without being forwarded to `submit`; duplicate `clientEventId` in one batch → 400
+  `validation`, no-store, `submit` never called; non-decimal/signed/numeric cursors
+  (`'-1'`, `'1.5'`, `41`) → 400 `validation`.
+- `apps/website/test/mobile-review-route.test.ts` — unchanged and green (fail-closed runtime
+  contract intact).

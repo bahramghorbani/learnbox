@@ -1,3 +1,7 @@
+import {
+  MobileReviewBatchRequestError,
+  parseMobileReviewBatchRequest,
+} from '../../api/dist/reviews/mobile-review-batch.request.js';
 import type { MobileReviewBatchItemOutcome } from '../../api/dist/reviews/mobile-review-batch.service.js';
 
 type JsonObject = Record<string, unknown>;
@@ -20,8 +24,6 @@ export type MobileReviewHttpDependencies = {
 };
 
 const MAX_BODY_BYTES = 16_384;
-const MAX_ITEMS = 20;
-const GRADES = new Set(['forgot', 'hard', 'remembered', 'mastered']);
 const JSON_HEADERS = {
   'cache-control': 'no-store',
   'content-type': 'application/json; charset=utf-8',
@@ -45,11 +47,17 @@ export async function handleMobileReviewPost(
   if (verification.status !== 'valid') return error('invalidToken', 401);
 
   const body = await readJsonBody(request);
-  const parsed = parseBatch(body);
-  if (!parsed) return error('validation', 400);
+  if (body === null) return error('validation', 400);
+  let parsed: ReturnType<typeof parseMobileReviewBatchRequest>;
+  try {
+    parsed = parseMobileReviewBatchRequest(body, verification.claims.sub);
+  } catch (parseError) {
+    if (parseError instanceof MobileReviewBatchRequestError) return error('validation', 400);
+    throw parseError;
+  }
 
   try {
-    const outcomes = await dependencies.submit({ userId: verification.claims.sub, items: parsed });
+    const outcomes = await dependencies.submit({ userId: parsed.userId, items: parsed.items });
     return json({ outcomes }, 200);
   } catch {
     return error('serverUnavailable', 503);
@@ -88,47 +96,6 @@ async function readJsonBody(request: Request): Promise<unknown> {
   }
 }
 
-function parseBatch(
-  value: unknown,
-): MobileReviewHttpDependencies['submit'] extends (input: infer I) => Promise<unknown>
-  ? I extends { items: infer T }
-    ? T
-    : never
-  : never {
-  if (!isObject(value) || Object.keys(value).length !== 1 || !Array.isArray(value.items))
-    return null as never;
-  if (value.items.length > MAX_ITEMS) return null as never;
-  const result = [] as Array<{
-    contentId: string;
-    grade: 'forgot' | 'hard' | 'remembered' | 'mastered';
-    occurredAt: Date;
-    clientEventId: string;
-  }>;
-  for (const item of value.items) {
-    if (!isObject(item) || Object.keys(item).length !== 4) return null as never;
-    if (!hasString(item.contentId, 1, 128) || !hasString(item.clientEventId, 1, 128))
-      return null as never;
-    if (typeof item.grade !== 'string' || !GRADES.has(item.grade)) return null as never;
-    if (typeof item.occurredAt !== 'string' || !/^\d{4}-\d{2}-\d{2}T/.test(item.occurredAt))
-      return null as never;
-    const occurredAt = new Date(item.occurredAt);
-    if (!Number.isFinite(occurredAt.getTime())) return null as never;
-    result.push({
-      contentId: item.contentId,
-      grade: item.grade as 'forgot' | 'hard' | 'remembered' | 'mastered',
-      occurredAt,
-      clientEventId: item.clientEventId,
-    });
-  }
-  return result as never;
-}
-
-function isObject(value: unknown): value is JsonObject {
-  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-}
-function hasString(value: unknown, min: number, max: number): value is string {
-  return typeof value === 'string' && value.length >= min && value.length <= max;
-}
 function isSecure(request: Request, development: boolean): boolean {
   const url = new URL(request.url);
   return (
