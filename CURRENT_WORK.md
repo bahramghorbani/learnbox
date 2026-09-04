@@ -44,7 +44,7 @@
 - **Learner Web server-read error retry:** completed in PR #198 at merge commit `b5ba321` (2026-09-04). Today's failed `GET /api/learner/state` read (D1 §5 + ADR 0012 error state: inline banner with retry) now offers a «تلاش دوباره» button on the Today surface. Retry re-enters the loading state and re-reads through the existing fail-closed `fetchWebLearnerState` client; the server-read label returns only after a successful parsed read, and error/offline/unauthorized mapping is shared between the mount/online re-read and the retry path. Regression test in `apps/website/test/learner-today-server-states.test.tsx` (11 tests). No route, API, schema, migration, flag, seed or auth change.
 - **M1-C Mobile slice 1:** completed in PR #155; Today local queue state is truthful, sync coordinator remains dormant.
 - **M1-Q independent QA:** completed in PR #157; the current server-wired follow-up QA is recorded in `.ai/qa-reports/M1-Q3-CURRENT-WEB-SERVER-WIRED.md` and merged in PR #175. Functional checks are green; browser visual/AX/keyboard acceptance is not claimed — it can be verified only against a staging deployment running the current merged build (staging is not confirmed current; the Chrome permission dialog blocker also remains).
-- **Starter Catalog 35 slice (ADR 0016):** completed in PR #193 at merge commit `73adc02` (2026-09-04; official free starter target reduced to ~35 words). Fail-closed catalog slice implemented: derived snapshot `content/packs/learnbox-start/validation/start-a1-35-catalog-slice.json` (20 of 35 drafted, 20 linguistically reviewed, 0 release-approved, `seedable: false`), reusable seed gate `apps/api/src/catalog/start-catalog-seed-gate.ts` with tests, no migration and no publication. DB seeding stays blocked: ADR 0013 requires approved/published `card_versions` and 15 target drafts are still missing.
+- **Starter Catalog 35 slice (ADR 0016):** completed in PR #193 at merge commit `73adc02` (2026-09-04; official free starter target reduced to ~35 words); the missing 15 pending drafts merged in PR #200 at `2aa5931` (LB-DS-STARTER-DRAFTS-15). Fail-closed catalog slice implemented: derived snapshot `content/packs/learnbox-start/validation/start-a1-35-catalog-slice.json` now records 35/35 drafted, 20 linguistically reviewed, 0 release-approved (`seedable: false`, `publicationBlocked: true`), reusable seed gate `apps/api/src/catalog/start-catalog-seed-gate.ts` with tests, no migration and no publication. DB seeding stays blocked: ADR 0013 requires approved/published `card_versions`, and the 15 pending drafts still need product-owner linguistic review plus all remaining review dimensions.
 - **Next active work:** M1-D push reconciliation cursor/watermark policy is approved in
   ADR 0014 (per-learner monotonic version, incremented only on newly applied events,
   committed in the same transaction as event and schedule update); the server-core
@@ -68,19 +68,20 @@
   panel remain publication-blocked, and the ADR 0016 seed gate stays untouched. No API route,
   schema, migration, content file or publication path changed; server-backed review reads still
   await the gated owner bootstrap/role assignment.
-- **Start Pack 35-target pending drafts (branch `content/starter-drafts-15`, unmerged, not pushed):**
-  the 15 missing target drafts (Fenster, Zimmer, Uhr, Milch, Kaffee, Ei, Tee, Stadt, Supermarkt,
-  gehen, essen, trinken, groß, kalt, neu) are drafted as Goethe-evidenced pending editorial-queue
-  items in `content/packs/learnbox-start/vocabulary/start-a1-catalog-35-pending-drafts.json` with
-  matching candidate intake and provenance-ledger records; the ADR 0016 catalog snapshot now
-  records 35/35 drafted, 20 linguistically reviewed, 0 release-approved (`seedable: false`).
-  Branch is complete locally and awaiting independent parent review; no PR opened and nothing
-  merged or pushed.
+- **Start Pack 35-target pending drafts (LB-DS-STARTER-DRAFTS-15):** merged in PR #200 at merge
+  commit `2aa5931` (2026-09-04; branch `content/starter-drafts-15`). The 15 target drafts (Fenster,
+  Zimmer, Uhr, Milch, Kaffee, Ei, Tee, Stadt, Supermarkt, gehen, essen, trinken, groß, kalt, neu)
+  are Goethe-evidenced pending editorial-queue items in
+  `content/packs/learnbox-start/vocabulary/start-a1-catalog-35-pending-drafts.json` with matching
+  candidate intake and provenance-ledger records; the ADR 0016 catalog snapshot records 35/35
+  drafted, 20 linguistically reviewed, 0 release-approved (`seedable: false`,
+  `publicationBlocked: true`). The 15 still need product-owner linguistic review and all other
+  review dimensions before any ADR 0013 seed; no approval, media, migration or publication merged.
 
 ## Immediate execution order
 
 1. Complete the Admin session → canonical `users.id` binding: migration `0016`, fail-closed session lookup, and the one-shot server-side binding operation are merged (PRs #187–#188; ADR 0015 records the fail-closed boundary). Server-backed Admin content read/auth remains blocked by the missing owner-bootstrap/role-assignment contract: owner bootstrap, role assignment and staging verification remain gated.
-2. Start Pack ↔ canonical `contentId` contract is decided and recorded in ADR 0013; the bounded 35-target catalog slice (derived snapshot + fail-closed seed gate, ADR 0016) was merged in PR #193 at `73adc02`. DB seed remains blocked: only 20 of 35 target items are drafted and none is release-approved; a separately authorized task must add the missing 15 reviewed drafts and approved/published card versions before any `cards`/`card_versions` seed.
+2. Start Pack ↔ canonical `contentId` contract is decided and recorded in ADR 0013; the bounded 35-target catalog slice (derived snapshot + fail-closed seed gate, ADR 0016) was merged in PR #193 at `73adc02`, and the missing 15 pending drafts merged in PR #200 at `2aa5931`. DB seed remains blocked: all 35 target items are drafted but only 20 are linguistically reviewed and none is release-approved; the 15 pending drafts still need product-owner linguistic review and all other review dimensions, and approved/published `card_versions` must exist before any `cards`/`card_versions` seed.
 3. Implement the authenticated server-wired learner path completion and any remaining D1 fetch states.
 4. Decide and implement M1-D push reconciliation. The cursor/watermark policy is approved in
    ADR 0014; server-core (PR #169), client-side cursor capture/persistence (PR #170),

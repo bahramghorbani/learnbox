@@ -33,3 +33,7 @@ The approved single-batch option (append 15 items to `start-a1-vertical-slice-dr
 ## Evidence pages (Goethe-Zertifikat A1 Wortliste PDF, PDF page numbers)
 
 fenster [23, 26], zimmer [13, 26], uhr [7, 24], milch [20, 26], kaffee [18, 20], ei [13, 15], tee [20, 24], stadt [9, 23], supermarkt [19], gehen [15, 16], essen [14, 24], trinken [13, 26], groß [16, 23], kalt [18, 23], neu [18, 20]. Source: https://www.goethe.de/pro/relaunch/prf/de/A1_SD1_Wortliste_02.pdf (direct PDF text extraction, manual contextual review; recorded per item in the pending provenance ledger).
+
+## Merge status (reconciled from live GitHub evidence, 2026-09-04)
+
+Merged through PR #200 at merge commit `2aa5931` (2026-09-04) from branch `content/starter-drafts-15`. The "Draft PR: none opened" line above recorded the pre-PR handoff state only; this record closes it truthfully from live GitHub evidence. The merged content, tests and snapshot are unchanged by the merge. Gate truth unchanged: 35/35 drafted, 20 linguistically reviewed, 0 release-approved, `seedable: false`, `publicationBlocked: true`; the 15 pending drafts still need product-owner linguistic review and all remaining review dimensions. No code, test, schema, flag or product behavior changed in this reconciliation.
