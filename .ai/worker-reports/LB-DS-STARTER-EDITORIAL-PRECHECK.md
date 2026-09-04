@@ -7,6 +7,12 @@
 - Untouched: original 20-item vertical slice (`start-a1-vertical-slice-drafts.json`), approval ledger, catalog counts/gates/blockers, validators, code, tests, ADRs, manifest, runtime, auth, migration, flags, media, deployment, seed, publication.
 - Authority: **AI pre-review is NOT product-owner approval.** Every item keeps `status: needs_review`, `media: []`, AI-assisted provenance, no approval fields. All gates remain pending (`seedable: false`, `publicationBlocked: true`, 20 linguistically reviewed / 0 release-approved). Owner linguistic review of the changed examples is still required.
 
+## Owner approval received (2026-09-04) — addendum to this pre-check record
+
+On 2026-09-04 the product owner explicitly approved **all 15 pending items listed in this report** — `start-a1-fenster`, `start-a1-zimmer`, `start-a1-uhr`, `start-a1-milch`, `start-a1-kaffee`, `start-a1-ei`, `start-a1-tee`, `start-a1-stadt`, `start-a1-supermarkt`, `start-a1-gehen`, `start-a1-essen`, `start-a1-trinken`, `start-a1-gross`, `start-a1-kalt`, `start-a1-neu` — for the **two linguistic dimensions only** (`german_linguistic`, `persian_translation`), based on the review table shown in chat on 2026-09-04. The approval is recorded authoritatively in `content/packs/learnbox-start/validation/start-a1-slice-linguistic-approval.json` as approval event `product-owner-confirmation-2026-09-04` (`approvedAt: 2026-09-04`, pending-drafts batch) alongside the original 2026-07-27 confirmation; the derived catalog snapshot now counts 35/35 linguistically reviewed, 0 release-approved, `seedable: false`, `publicationBlocked: true`.
+
+This addendum changes nothing above: every item-by-item section stays the historical, non-authoritative AI pre-check record written before that approval (including its `pending_owner_review` markers), and no other gate is claimed passed — provenance, visual, audio and app_flow remain required, drafts keep `status: needs_review`, `media: []` and AI-assisted provenance, and no item is published, released or seeded (no `cards`/`card_versions` row).
+
 ## What changed
 
 Three pending drafts carried German examples that duplicated example sentences already used by the original 20-item slice (exact string match in two cases; a third echoed a slice example one-to-one). Replacements are simple, natural, A1-appropriate, and scan non-duplicate against all 35 items' German and Persian example strings:

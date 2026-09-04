@@ -48,8 +48,9 @@ their checksums and the intended private storage keys. It intentionally contains
 operation or publication approval.
 
 `validation/start-a1-35-catalog-slice.json` records the derived catalog snapshot for the
-owner-approved 35-word free target (ADR 0016, manifest `targetItemCount: 35`): 20 of 35 items
-drafted, 20 linguistically reviewed, 0 release-approved, `seedable: false`. It is a derived
+owner-approved 35-word free target (ADR 0016, manifest `targetItemCount: 35`): 35 of 35 items
+drafted, 35 linguistically reviewed (product-owner confirmations 2026-07-27 and 2026-09-04,
+german_linguistic and persian_translation only), 0 release-approved, `seedable: false`. It is a derived
 snapshot with SHA-256 anchors over its source files — not an approval, a media attestation or a
 DB seed. The fail-closed seed gate it pairs with lives in
 `apps/api/src/catalog/start-catalog-seed-gate.ts` and is exercised by

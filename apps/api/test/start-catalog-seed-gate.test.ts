@@ -130,10 +130,17 @@ describe('start catalog seed gate', () => {
         ),
         'utf8',
       ),
-    ) as { itemIds: string[]; approvedDimensions: string[] };
+    ) as {
+      itemIds: string[];
+      approvedDimensions: string[];
+      approvalEvents: Array<{ batchId: string; itemIds: string[] }>;
+    };
     const approvedIds = new Set(approval.itemIds);
     expect(approval.approvedDimensions).toEqual(['german_linguistic', 'persian_translation']);
     expect(pending.items.every((item) => item.status === 'needs_review')).toBe(true);
+    expect(approval.approvalEvents).toHaveLength(2);
+    const eventCoverage = approval.approvalEvents.flatMap((event) => event.itemIds);
+    expect(new Set(eventCoverage).size).toBe(35);
 
     const catalogItems = [...drafts.items, ...pending.items];
     expect(catalogItems).toHaveLength(35);
@@ -151,16 +158,15 @@ describe('start catalog seed gate', () => {
     );
     expect(result.seedable).toBe(false);
     if (result.seedable) throw new Error('unreachable');
-    expect(result.blockers).not.toContain(
-      'catalog has 20 of 35 target items; seed requires exactly 35 release-approved items',
-    );
-    expect(result.blockers).toContain('item start-a1-fenster has not passed linguistic review');
     expect(
       result.blockers.filter((blocker) => blocker.includes('has not passed linguistic review')),
-    ).toHaveLength(15);
+    ).toHaveLength(0);
     expect(
-      result.blockers.some((blocker) => blocker.includes('no approved/published card version')),
-    ).toBe(true);
+      result.blockers.filter((blocker) => blocker.includes('no approved/published card version')),
+    ).toHaveLength(35);
+    expect(result.blockers).toContain(
+      'item start-a1-fenster has no approved/published card version (ADR 0013 gate)',
+    );
   });
 
   it('matches the committed 35-catalog slice snapshot to the real draft sources', () => {
@@ -202,7 +208,7 @@ describe('start catalog seed gate', () => {
     expect(catalog.counts).toEqual({
       targetItemCount: 35,
       draftedItemCount: 35,
-      linguisticReviewedItemCount: 20,
+      linguisticReviewedItemCount: 35,
       approvedForReleaseItemCount: 0,
       missingDraftedItemCount: 0,
     });
