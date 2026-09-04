@@ -33,11 +33,11 @@ start. Historical tasks remain for traceability and must not be duplicated.
 
 ## LB-DS-026
 
-- Status: review_requested
+- Status: accepted
 - Executor: subagent (W6, design-only sync contract)
 - Base: main at `4718f93` (PR #204 merged)
 - Branch: docs/m1d-wire-contract-design
-- Head commit: `fee10f1` (local; PR not yet opened)
+- Head commit: `b372f03`; merge commit: `a6b50b6` (PR #205 merged)
 - Risk: security-sensitive-sync-wire-contract
 - Specification: docs/architecture/M1D_SYNC_WIRE_CONTRACT.md; docs/architecture/ADR/0014-push-reconciliation-cursor-policy.md; docs/architecture/M1_ONLINE_LEARNING_CONTRACT.md; docs/architecture/M1D_SYNC_PERSISTENCE_SLICE1.md
 - Allowed paths: docs/architecture/M1D_SYNC_WIRE_CONTRACT.md; .ai/WORK_QUEUE.md; .ai/worker-reports/LB-DS-026.md; CURRENT_WORK.md
@@ -46,7 +46,7 @@ start. Historical tasks remain for traceability and must not be duplicated.
 - Draft PR required: yes
 - Merge allowed: yes
 
-Decision-ready proposed contract only. No reconciliation endpoint exists yet; no code, route, migration, flag, auth, mobile/web composition, sync activation, seed, deployment or production change is authorized. The design records a recommended pull-based GET contract, explicit cursor/idempotency/no-data-loss invariants, and open owner decisions O-1 through O-5. A separate serial implementation task and security/API review are required before any route or flag enablement.
+Accepted and merged through PR #205 at merge commit `a6b50b6`. Decision-ready proposed contract only. No reconciliation endpoint exists yet; no code, route, migration, flag, auth, mobile/web composition, sync activation, seed, deployment or production change is authorized. The design records a recommended pull-based GET contract, explicit cursor/idempotency/no-data-loss invariants, and open owner decisions O-1 through O-5. A separate serial implementation task and security/API review are required before any route or flag enablement.
 
 | ID   | Workstream                         | Worker role                | Allowed scope                                                 | Depends on                 | Parallel rule                                                                                |
 | ---- | ---------------------------------- | -------------------------- | ------------------------------------------------------------- | -------------------------- | -------------------------------------------------------------------------------------------- |
