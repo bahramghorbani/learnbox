@@ -18,6 +18,7 @@ start. Historical tasks remain for traceability and must not be duplicated.
 - **M1-Q — Independent QA:** accepted and merged in PR #157; current server-wired follow-up QA accepted and merged in PR #175; report: `.ai/qa-reports/M1-Q3-CURRENT-WEB-SERVER-WIRED.md`. Functional checks are green; browser visual/AX/keyboard acceptance remains blocked and explicitly unclaimed.
 - **M2 content-review safety gate:** accepted and merged in PR #177 at merge commit `ae54cee`; approval now requires all six `content_review_checks` dimensions to be `passed`; no publication or provider activation was included. Admin preview queue overview is accepted and merged in PR #181 at `a86c973`; authenticated persistence and reviewer actions remain gated.
 - **M2 Admin identity boundary:** ADR 0015 records that `admin_sessions.owner_singleton_id` cannot substitute for canonical `users.id`; migration `0016` adds the approved nullable unique `admin_owner.user_id → users(id)` binding, session lookup returns it fail-closed, and the one-shot server-side binding operation is implemented. Owner bootstrap, role assignment and staging verification remain gated before server-backed review reads/writes.
+- **Starter Catalog 35 slice (LB-DS-STARTER-CATALOG-35):** accepted decision contract and fail-closed implementation on `feature/starter-catalog-35` (ADR 0016). Adds the reusable seed gate `apps/api/src/catalog/start-catalog-seed-gate.ts`, its tests, and the derived snapshot `content/packs/learnbox-start/validation/start-a1-35-catalog-slice.json`. No migration, seed, approval or publication. DB seed remains blocked (20 of 35 drafted, 0 release-approved); a separately authorized task must add the missing 15 reviewed drafts and approved/published `card_versions` first.
 - **Next:** M1-D push reconciliation cursor/watermark **policy** is approved in ADR 0014
   (per-learner monotonic version, incremented only on newly applied events, same transaction
   as event+schedule); the server-core implementation merged in PR #169 and the client-side
@@ -52,6 +53,29 @@ start. Historical tasks remain for traceability and must not be duplicated.
 - [x] Safety boundary remains: no production, payment, provider credential, real OTP or server activation is implied by this queue.
 
 The historical LB-DS and NI records below remain for traceability. They are not authorization to duplicate or reopen completed work.
+
+## LB-DS-STARTER-CATALOG-35
+
+- Status: review_requested
+- Executor: subagent (starter catalog slice, ADR 0016)
+- Base: main at `d20b46a` plus branch commits `0fcdcaf` and `94cb729` (35-word free starter target)
+- Branch: feature/starter-catalog-35
+- Risk: routine-content-catalog-boundary
+- Specification: ADR 0013 (start-a1-* ids are canonical `cards.content_id`; approved/published `card_versions` required before resolution); ADR 0016 (35-word catalog slice and fail-closed seed gate); PDR-004; docs/content/START_A1_EDITORIAL_REVIEW_PACKET.md
+- Allowed paths: content/packs/learnbox-start/**; apps/api/src/catalog/**; apps/api/test/start-catalog-seed-gate.test.ts; docs/architecture/ADR/0016-starter-catalog-35-seed-gate.md; docs/PRODUCT_STATUS.md; CURRENT_WORK.md; .ai/WORK_QUEUE.md; .ai/worker-reports/LB-DS-STARTER-CATALOG-35.md
+- Required checks: focused API seed-gate tests; API typecheck; node scripts/validate-migrations.mjs; pnpm verify:ai-worker-queue; pnpm verify:documentation-governance; pnpm verify:ai-continuity; pnpm verify:start-drafts; pnpm verify:review-gates; pnpm verify:linguistic-approval; pnpm format:check; git diff --check
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: no
+
+Bounded, additive, fail-closed Starter Catalog slice for the 35-word target (ADR 0016). Adds a
+reusable seed gate that can only report a catalog as seedable when every target item exists and
+is release-approved, plus a derived, SHA-256-anchored catalog snapshot recording the exact
+limitation: 20 of 35 target items drafted, 20 linguistically reviewed (German + Persian only),
+0 release-approved, seed blocked. No migration, DB seed, approval, publication, media
+attestation, price, flag or production activation. DB seeding stays blocked by ADR 0013 until
+the missing 15 reviewed drafts and approved/published card versions exist. Report:
+`.ai/worker-reports/LB-DS-STARTER-CATALOG-35.md`.
 
 ## LB-DS-025
 
