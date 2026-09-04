@@ -2,7 +2,7 @@
 
 - Branch: feature/starter-catalog-35
 - Base commit: 94cb7293b4e4a0f0cf05cd623ce57dbd4cbf36c4 (worktree baseline; origin/main is d20b46a with 0fcdcaf + 94cb729 applied on the branch)
-- Head commit: cc78959d32ae0f9523407a5e6f799c9d3afd6a55
+- Head commit: 6d5dcb525a73db5226476e83c212196b2fffe4d3
 - Draft PR: none opened (required checks green but merge not allowed for this slice; PR left for owner/reviewer per WORK_QUEUE record)
 - Scope completed: bounded, additive, fail-closed Starter Catalog/seed slice for the 35-word target (ADR 0016). Derived catalog snapshot `content/packs/learnbox-start/validation/start-a1-35-catalog-slice.json`; reusable seed gate `apps/api/src/catalog/start-catalog-seed-gate.ts`; tests `apps/api/test/start-catalog-seed-gate.test.ts` (10 passing). No migration, DB seed, approval, publication, media attestation, price, flag or production activation.
 - Files changed: apps/api/src/catalog/start-catalog-seed-gate.ts (new); apps/api/test/start-catalog-seed-gate.test.ts (new); content/packs/learnbox-start/validation/start-a1-35-catalog-slice.json (new); content/packs/learnbox-start/README.md; docs/architecture/ADR/0016-starter-catalog-35-seed-gate.md (new); docs/PRODUCT_STATUS.md; CURRENT_WORK.md; .ai/WORK_QUEUE.md; .ai/worker-reports/LB-DS-STARTER-CATALOG-35.md (this file)
