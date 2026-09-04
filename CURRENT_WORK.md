@@ -28,6 +28,17 @@
     M1-D wire contract covers the snapshot only (no delta endpoint exists; `reviewEventsCount`
     is not a delta), and wire-contract/delta-endpoint work remains separate review-gated;
     milestone stays partial/not production-ready.
+- **M1-D route request-boundary integration (Slice 1d, local branch
+  `feature/m1d-route-integration`, base `d20b46a`):** implemented locally, not merged — the
+  dormant website `POST /api/reviews/mobile` boundary (`apps/website/lib/mobile-review-http.ts`)
+  now calls the existing strict `parseMobileReviewBatchRequest`
+  (`apps/api/dist/reviews/mobile-review-batch.request.js`) instead of a duplicated inline
+  parser: optional decimal-string `reconciliationCursor` is accepted but never forwarded,
+  duplicate `clientEventId`s and malformed cursor/items are rejected as 400 `validation`
+  before `submit`, `userId` still comes only from the verified token. `MOBILE_REVIEW_SYNC_ENABLED`
+  stays false/unset; route and runtime unchanged; see
+  `.ai/worker-reports/LB-DS-M1D-ROUTE-INTEGRATION.md` and
+  `docs/architecture/M1D_SYNC_PERSISTENCE_SLICE1.md` (appendix Slice 1d).
 - **M1-B Web slice 1:** completed in PR #156; Today was explicitly local-only until the server wiring slice.
 - **M1-B Web slice 2 (LB-DS-022):** merged in PR #163 at `73cdb62` (2026-08-30); ADR 0012 route `GET /api/learner/state` (cookie subject = canonical `users.id`) plus truthful Today fetch are on `main` behind the fail-closed `WEB_LEARNER_STATE_ENABLED` runtime (defaults false). The actionable Today figure stays tied to the local bundled session until the approved/published Start Pack seed/catalog rows are implemented and released (the Start Pack ↔ canonical `contentId` contract itself is recorded in ADR 0013; seed/catalog implementation remains a separate review-gated task).
 - **M1-C Mobile slice 1:** completed in PR #155; Today local queue state is truthful, sync coordinator remains dormant.
@@ -56,8 +67,10 @@
    read-side cursor exposure (PR #171/LB-DS-024) and per-event cursor binding (PR #172/LB-DS-025)
    are merged; sending the cursor in a request and flag enablement remain
    separate review-gated tasks. Client transport serialization now accepts and sends the stored
-   valid decimal-string cursor without enabling production sync; server request parsing and route
-   integration remain separate review-gated tasks.
+   valid decimal-string cursor without enabling production sync; the dormant review POST route
+   request-boundary parser integration is implemented locally in Slice 1d
+   (`feature/m1d-route-integration`, unmerged; see CURRENT_WORK active list above); flag
+   enablement and delta-response semantics remain separate review-gated tasks.
 5. Re-run browser visual and accessibility QA when the Chrome permission blocker is cleared; do not treat the current functional QA as visual acceptance.
 
 ## Owner-approved product decisions captured in M0

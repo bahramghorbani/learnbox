@@ -26,7 +26,10 @@ start. Historical tasks remain for traceability and must not be duplicated.
   per-event cursor binding **merged** in PR #172 (LB-DS-025, merge commit `caa3a39`); request serialization and server request-boundary parsing are merged; route/client flag enablement remain
   separate serial, review-gated M1-D queue tasks; client transport serialization now accepts and sends the stored valid decimal-string cursor without enabling production sync; server request-boundary parsing is covered by `apps/api/src/reviews/mobile-review-batch.request.ts` and its strict tests, while route integration remains
   snapshot-only (no delta endpoint exists), so wire-contract/delta-endpoint work remains a
-  separate review-gated task; seed/catalog implementation remains a
+  separate review-gated task; the dormant review POST route request-boundary parser
+  integration is implemented locally in Slice 1d (`feature/m1d-route-integration`, base
+  `d20b46a`, unmerged; report `.ai/worker-reports/LB-DS-M1D-ROUTE-INTEGRATION.md`, appendix
+  Slice 1d in `docs/architecture/M1D_SYNC_PERSISTENCE_SLICE1.md`); seed/catalog implementation remains a
   separate owner/review-gated task; independent functional QA of the merged server-wired slice is accepted in PR #175;
   browser visual/AX/keyboard acceptance remains blocked by the Chrome permission dialog.
 

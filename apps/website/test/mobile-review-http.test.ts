@@ -123,6 +123,44 @@ describe('mobile review HTTP boundary', () => {
     ).toBe(400);
   });
 
+  it('accepts the documented optional reconciliationCursor without forwarding it to submit', async () => {
+    const deps = dependencies();
+    const response = await handleMobileReviewPost(
+      request({ items: [validItem], reconciliationCursor: '41' }),
+      deps,
+    );
+    expect(response.status).toBe(200);
+    expect(deps.submit).toHaveBeenCalledWith({
+      userId: 'learner-1',
+      items: [{ ...validItem, occurredAt: new Date(validItem.occurredAt) }],
+    });
+  });
+
+  it('rejects duplicate client event ids at the boundary as typed validation, before submit', async () => {
+    const deps = dependencies();
+    const response = await handleMobileReviewPost(
+      request({ items: [validItem, { ...validItem, grade: 'hard' }] }),
+      deps,
+    );
+    expect(response.status).toBe(400);
+    expect(response.headers.get('cache-control')).toBe('no-store');
+    expect(await response.json()).toEqual({ error: 'validation' });
+    expect(deps.submit).not.toHaveBeenCalled();
+  });
+
+  it('rejects non-decimal, signed or numeric cursors at the boundary', async () => {
+    const deps = dependencies();
+    for (const cursor of ['-1', '1.5', 41]) {
+      const response = await handleMobileReviewPost(
+        request({ items: [validItem], reconciliationCursor: cursor }),
+        deps,
+      );
+      expect(response.status).toBe(400);
+      expect(await response.json()).toEqual({ error: 'validation' });
+      expect(deps.submit).not.toHaveBeenCalled();
+    }
+  });
+
   it('fails closed with generic no-store errors for malformed item data and service faults', async () => {
     const deps = dependencies();
     for (const body of [
