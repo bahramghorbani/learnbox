@@ -1,3 +1,5 @@
+import React from 'react';
+
 const navItems = [
   ['صف بررسی', '▣', '#review'],
   ['اسپلش', '◉', '#splash-management'],
