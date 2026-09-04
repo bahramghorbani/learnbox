@@ -336,10 +336,11 @@ Implemented and merged through PR #131. The dormant provider-neutral native auth
 
 ## LB-DS-015
 
-- Status: ready
+- Status: accepted
 - Executor: high-reasoning-worker
 - Base: main at `30673a2` (NI-008 design merged through PR #126)
 - Branch: docs/activate-lb-ds-015
+- Merge commit: `cc0125a` (activation/queue docs PR #127 merged) and `d5b5fa0` (implementation PR #128 merged)
 - Risk: security-sensitive-native-host-config
 - Specification: docs/superpowers/specs/2026-08-25-native-preview-auth-verification-design.md; docs/architecture/ADR/0011-native-mobile-session-and-transport.md
 - Allowed paths: apps/mobile/android/app/src/main/AndroidManifest.xml; apps/mobile/lib/features/identity/mobile_preview_auth_config.dart; apps/mobile/test/android_network_permission_test.dart; apps/mobile/test/mobile_preview_auth_config_test.dart; apps/mobile/README.md; docs/architecture/OFFLINE_SYNC.md; .ai/WORK_QUEUE.md; .ai/worker-reports/LB-DS-015.md; CURRENT_WORK.md
@@ -350,12 +351,27 @@ Implemented and merged through PR #131. The dormant provider-neutral native auth
 
 Implement only NI-008A. Add Android INTERNET permission and immutable compile-time Preview origin/verification configuration. Defaults remain signed out/disabled; no endpoint, HTTP client, token/session composition, UI, provider, secret, deployment, Preview request, Production, background work or review-sync upload. Start with a failing test, stop at Draft PR for independent security review, and preserve all unrelated worktrees.
 
+Accepted and merged 2026-08-26: activation/queue docs through PR #127 at merge commit `cc0125a`
+(branch `docs/activate-lb-ds-015`), then the dormant NI-008A implementation through PR #128 at
+merge commit `d5b5fa0` (branch `worker/lb-ds-015-native-preview-host-config`, head `88e63b2`).
+Implementation added only the Android `INTERNET` permission, immutable compile-time
+`LEARNBOX_MOBILE_PREVIEW_ORIGIN` / `LEARNBOX_MOBILE_PREVIEW_VERIFY_ENABLED` config seam with
+direct config/manifest tests, and mobile/offline-sync docs; defaults stay signed out and disabled
+and the config is fail-closed. No endpoint, HTTP client, token/session composition, UI, provider,
+secret, deployment, Preview request, Production, background work or review-sync upload was added
+or activated. Local `flutter build apk --debug` remains blocked by a Flutter embedding artifact
+HTTP 403 from `storage.googleapis.com`; GitHub mobile CI completed the debug APK build
+successfully and passed (`mobile`, `production-stack`, `quality`, `secrets`). Later serial NI-008
+slices (auth client, UI, composition, Preview auth runtime) are recorded separately in this queue
+(LB-DS-016/018/019/020). Do not reopen or duplicate this task.
+
 ## LB-DS-014
 
-- Status: ready
+- Status: accepted
 - Executor: high-reasoning-worker
 - Base: main at `ffc403f` (S2 native audio QA evidence merged through PR #125)
 - Branch: docs/lb-ds-014-native-preview-design
+- Merge commit: `30673a2` (PR #126 merged)
 - Risk: security-sensitive-native-auth-activation-design
 - Specification: docs/superpowers/specs/2026-08-22-native-identity-authenticated-transport-design.md; docs/architecture/ADR/0011-native-mobile-session-and-transport.md; docs/operations/OTP_PROVIDER_ACTIVATION.md
 - Allowed paths: docs/superpowers/specs/2026-08-25-native-preview-auth-verification-design.md; .ai/WORK_QUEUE.md; .ai/worker-reports/LB-DS-014.md; CURRENT_WORK.md
@@ -365,6 +381,16 @@ Implement only NI-008A. Add Android INTERNET permission and immutable compile-ti
 - Merge allowed: yes
 
 Owner authorized autonomous planning for future native Preview verification. This task is design-only and must preserve all current fail-closed behavior. It must specify later implementation as serial slices: native host transport permission and compile-time Preview endpoint selection; disabled-by-default native OTP/session composition; owner-entered device verification; rollback flags to false; then a separate owner authorization before any review-sync upload. No code, permission, endpoint, deployment, secret, provider call, Preview, Production, real OTP message, background work, UI activation or NI-009+ implementation is allowed in LB-DS-014.
+
+Accepted and merged 2026-08-26 through PR #126 at merge commit `30673a2` (branch
+`docs/lb-ds-014-native-preview-design`, head `950ad99`). Merged artifact:
+`docs/superpowers/specs/2026-08-25-native-preview-auth-verification-design.md` plus this queue
+registry, the LB-DS-014 report and `CURRENT_WORK.md`. Design-only; no code, permission, endpoint,
+deployment, secret, provider call, Preview execution, Production, real OTP message, background
+work or UI activation merged. The serial implementation slices defined by the design (NI-008A host
+config, then client/UI/composition/runtime slices) are recorded separately in this queue
+(LB-DS-015/016/018/019/020); a separate owner authorization remains required before any real
+device verification or review-sync upload. Do not reopen or duplicate this task.
 
 ## LB-DS-013
 
