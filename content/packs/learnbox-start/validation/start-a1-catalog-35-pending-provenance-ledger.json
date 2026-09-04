@@ -1,0 +1,113 @@
+{
+  "batchId": "learnbox-start-a1-catalog-35-pending-drafts-v1",
+  "releaseState": "documented_not_released",
+  "verifiedAt": "2026-09-04",
+  "lexicalScopeSource": {
+    "publisher": "Goethe-Institut",
+    "title": "GOETHE-ZERTIFIKAT A1 — Start Deutsch 1 Wortliste",
+    "url": "https://www.goethe.de/pro/relaunch/prf/de/A1_SD1_Wortliste_02.pdf",
+    "pageNumbering": "PDF page number",
+    "verificationMethod": "Direct PDF extraction and manual contextual review"
+  },
+  "learnBoxEditorialText": {
+    "definitionExampleAndTranslationSource": "Original LearnBox editorial drafts; German and Persian dimensions are pending review for these 15 items.",
+    "licensedFromGoethe": false
+  },
+  "candidateMedia": {
+    "status": "none_requested",
+    "generationProviders": ["AvalAI image and speech APIs"],
+    "attachmentAllowed": false,
+    "publicationAllowed": false,
+    "licenseReview": {
+      "status": "platform_terms_reviewed_not_legal_opinion",
+      "reviewedAt": "2026-07-28",
+      "source": "https://avalai.ir/terms-of-use-avalai/",
+      "assessment": "Published AvalAI terms state that users retain rights in their content and may use it commercially subject to the terms and applicable law; outputs may not be unique and the user remains responsible for rights compliance."
+    }
+  },
+  "remainingReleaseGates": [
+    "german_linguistic_review",
+    "persian_translation_review",
+    "final_visual_qa",
+    "final_audio_qa",
+    "app_flow_approval",
+    "owner_release_approval"
+  ],
+  "items": [
+    {
+      "itemId": "start-a1-fenster",
+      "evidencePages": [23, 26],
+      "evidenceType": "headword_or_context"
+    },
+    {
+      "itemId": "start-a1-zimmer",
+      "evidencePages": [13, 26],
+      "evidenceType": "headword_or_context"
+    },
+    {
+      "itemId": "start-a1-uhr",
+      "evidencePages": [7, 24],
+      "evidenceType": "headword_or_context"
+    },
+    {
+      "itemId": "start-a1-milch",
+      "evidencePages": [20, 26],
+      "evidenceType": "headword_or_context"
+    },
+    {
+      "itemId": "start-a1-kaffee",
+      "evidencePages": [18, 20],
+      "evidenceType": "headword_or_context"
+    },
+    {
+      "itemId": "start-a1-ei",
+      "evidencePages": [13, 15],
+      "evidenceType": "headword_or_context"
+    },
+    {
+      "itemId": "start-a1-tee",
+      "evidencePages": [20, 24],
+      "evidenceType": "headword_or_context"
+    },
+    {
+      "itemId": "start-a1-stadt",
+      "evidencePages": [9, 23],
+      "evidenceType": "headword_or_context"
+    },
+    {
+      "itemId": "start-a1-supermarkt",
+      "evidencePages": [19],
+      "evidenceType": "headword_or_context"
+    },
+    {
+      "itemId": "start-a1-gehen",
+      "evidencePages": [15, 16],
+      "evidenceType": "headword_or_context"
+    },
+    {
+      "itemId": "start-a1-essen",
+      "evidencePages": [14, 24],
+      "evidenceType": "headword_or_context"
+    },
+    {
+      "itemId": "start-a1-trinken",
+      "evidencePages": [13, 26],
+      "evidenceType": "headword_or_context"
+    },
+    {
+      "itemId": "start-a1-gross",
+      "evidencePages": [16, 23],
+      "evidenceType": "headword_or_context"
+    },
+    {
+      "itemId": "start-a1-kalt",
+      "evidencePages": [18, 23],
+      "evidenceType": "headword_or_context"
+    },
+    {
+      "itemId": "start-a1-neu",
+      "evidencePages": [18, 20],
+      "evidenceType": "headword_or_context"
+    }
+  ]
+}

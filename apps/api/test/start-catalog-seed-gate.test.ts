@@ -103,11 +103,20 @@ describe('start catalog seed gate', () => {
     ]);
   });
 
-  it('stays blocked for the real 20-draft slice against the 35-word target', () => {
+  it('stays blocked for the real 35-draft catalog against the 35-word target', () => {
     const drafts = JSON.parse(
       readFileSync(
         new URL(
           '../../../content/packs/learnbox-start/vocabulary/start-a1-vertical-slice-drafts.json',
+          import.meta.url,
+        ),
+        'utf8',
+      ),
+    ) as { items: Array<{ id: string; status: string }> };
+    const pending = JSON.parse(
+      readFileSync(
+        new URL(
+          '../../../content/packs/learnbox-start/vocabulary/start-a1-catalog-35-pending-drafts.json',
           import.meta.url,
         ),
         'utf8',
@@ -124,10 +133,15 @@ describe('start catalog seed gate', () => {
     ) as { itemIds: string[]; approvedDimensions: string[] };
     const approvedIds = new Set(approval.itemIds);
     expect(approval.approvedDimensions).toEqual(['german_linguistic', 'persian_translation']);
+    expect(pending.items.every((item) => item.status === 'needs_review')).toBe(true);
+
+    const catalogItems = [...drafts.items, ...pending.items];
+    expect(catalogItems).toHaveLength(35);
+    expect(new Set(catalogItems.map((item) => item.id)).size).toBe(35);
 
     const result = evaluateStartCatalogSeed(
       state(
-        drafts.items.map((item) => ({
+        catalogItems.map((item) => ({
           contentId: item.id,
           linguisticallyReviewed: approvedIds.has(item.id),
           approvedForRelease: false,
@@ -137,9 +151,13 @@ describe('start catalog seed gate', () => {
     );
     expect(result.seedable).toBe(false);
     if (result.seedable) throw new Error('unreachable');
-    expect(result.blockers).toContain(
+    expect(result.blockers).not.toContain(
       'catalog has 20 of 35 target items; seed requires exactly 35 release-approved items',
     );
+    expect(result.blockers).toContain('item start-a1-fenster has not passed linguistic review');
+    expect(
+      result.blockers.filter((blocker) => blocker.includes('has not passed linguistic review')),
+    ).toHaveLength(15);
     expect(
       result.blockers.some((blocker) => blocker.includes('no approved/published card version')),
     ).toBe(true);
@@ -162,6 +180,7 @@ describe('start catalog seed gate', () => {
       targetItemCount: number;
       releaseStatus: string;
       counts: {
+        targetItemCount: number;
         draftedItemCount: number;
         linguisticReviewedItemCount: number;
         approvedForReleaseItemCount: number;
@@ -169,7 +188,11 @@ describe('start catalog seed gate', () => {
       };
       seedDecision: { seedable: boolean; blockers: string[]; seedableItemIds: string[] };
       publicationBlocked: boolean;
-      integrity: { draftsSha256: string; linguisticApprovalSha256: string };
+      integrity: {
+        draftsSha256: string;
+        pendingDraftsSha256: string;
+        linguisticApprovalSha256: string;
+      };
     };
     expect(catalog.targetItemCount).toBe(35);
     expect(catalog.releaseStatus).toBe('draft');
@@ -178,14 +201,19 @@ describe('start catalog seed gate', () => {
     expect(catalog.publicationBlocked).toBe(true);
     expect(catalog.counts).toEqual({
       targetItemCount: 35,
-      draftedItemCount: 20,
+      draftedItemCount: 35,
       linguisticReviewedItemCount: 20,
       approvedForReleaseItemCount: 0,
-      missingDraftedItemCount: 15,
+      missingDraftedItemCount: 0,
     });
     expect(catalog.integrity.draftsSha256).toBe(
       sha256(
         '../../../content/packs/learnbox-start/vocabulary/start-a1-vertical-slice-drafts.json',
+      ),
+    );
+    expect(catalog.integrity.pendingDraftsSha256).toBe(
+      sha256(
+        '../../../content/packs/learnbox-start/vocabulary/start-a1-catalog-35-pending-drafts.json',
       ),
     );
     expect(catalog.integrity.linguisticApprovalSha256).toBe(

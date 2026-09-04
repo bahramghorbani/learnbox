@@ -68,6 +68,14 @@
   panel remain publication-blocked, and the ADR 0016 seed gate stays untouched. No API route,
   schema, migration, content file or publication path changed; server-backed review reads still
   await the gated owner bootstrap/role assignment.
+- **Start Pack 35-target pending drafts (branch `content/starter-drafts-15`, unmerged, not pushed):**
+  the 15 missing target drafts (Fenster, Zimmer, Uhr, Milch, Kaffee, Ei, Tee, Stadt, Supermarkt,
+  gehen, essen, trinken, groß, kalt, neu) are drafted as Goethe-evidenced pending editorial-queue
+  items in `content/packs/learnbox-start/vocabulary/start-a1-catalog-35-pending-drafts.json` with
+  matching candidate intake and provenance-ledger records; the ADR 0016 catalog snapshot now
+  records 35/35 drafted, 20 linguistically reviewed, 0 release-approved (`seedable: false`).
+  Branch is complete locally and awaiting independent parent review; no PR opened and nothing
+  merged or pushed.
 
 ## Immediate execution order
 
