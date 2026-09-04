@@ -8,31 +8,26 @@ start. Historical tasks remain for traceability and must not be duplicated.
 - **M0 — Product truth and delivery reset:** accepted and merged in PR #146.
 - **D0 — Visual language:** accepted and merged in PR #150. Contract: `docs/design/D0_VISUAL_LANGUAGE.md`.
 - **D1 — Learner UI kit:** accepted and merged in PR #153. State board: `docs/design/D1_LEARNER_UI_KIT.md`.
-- **M1 — Online Learning Core:** **slice-1 QA complete, milestone remains partial/not production-ready**. M1-B Web and M1-C Mobile Today slices are merged with truthful local-only boundaries; M1-D cursor slices (server-core, client capture/persistence, read-side exposure, per-event binding, request serialization and server request-boundary parsing) are merged, while route integration and network sync remain dormant; server wiring and full learning loop remain queued.
+- **M1 — Online Learning Core:** **slice-1 QA complete, milestone remains partial/not production-ready**. M1-B Web and M1-C Mobile Today slices are merged with truthful local-only boundaries; M1-D cursor slices (server-core, client capture/persistence, read-side exposure, per-event binding, request serialization and server request-boundary parsing) and the dormant route request-boundary integration (Slice 1d, PR #192 at `9c6c5e0`) are merged, while network sync remains dormant; server wiring and full learning loop remain queued.
 - **M1-A — Online learning contract audit:** accepted and merged in PR #151. Contract: `docs/architecture/M1_ONLINE_LEARNING_CONTRACT.md`.
 - **M1-D slice 1 — Learner state snapshot:** accepted and merged in PR #152. Implementation: `GET /api/learner/state`, fail-closed and not Web-wired yet.
 - **M1-B server-wiring contract — Web learner state:** accepted design (ADR 0012). Web HttpOnly learner cookie → Next.js `GET /api/learner/state` route → server-side identity mapping → existing `LearnerStateService`/`repository` is approved; route implementation merged in PR #163 (LB-DS-022) behind the fail-closed `WEB_LEARNER_STATE_ENABLED` runtime; Web session → `users.id` mapping is merged (PR #162); Start Pack seed/release remains a separate owner/review-gated decision.
 - **M1-B slice 1 — Web Today truth label:** accepted and merged in PR #156; server wiring merged in LB-DS-022 (PR #163, merge commit `73cdb62`) behind the fail-closed `WEB_LEARNER_STATE_ENABLED` runtime.
 - **M1-B slice 2 — Web learner-state read route + truthful Today fetch:** accepted and merged in PR #163 at merge commit `73cdb62`; server-backed figures only after a successful cookie-authenticated read; Today figure stays local until the approved/published Start Pack seed/catalog rows are implemented and released; Start Pack ↔ canonical `contentId` contract is recorded in ADR 0013 (bundled IDs are canonical immutable `cards.content_id`; clients send `contentId`, server resolves `cards.id`); seed/catalog/reconciliation remain separate review-gated tasks.
 - **M1-C slice 1 — Mobile Today states:** accepted and merged in PR #155; local queue chip is truthful, sync coordinator remains dormant.
-- **M1-Q — Independent QA:** accepted and merged in PR #157; current server-wired follow-up QA accepted and merged in PR #175; report: `.ai/qa-reports/M1-Q3-CURRENT-WEB-SERVER-WIRED.md`. Functional checks are green; browser visual/AX/keyboard acceptance remains blocked and explicitly unclaimed.
+- **M1-Q — Independent QA:** accepted and merged in PR #157; current server-wired follow-up QA accepted and merged in PR #175; report: `.ai/qa-reports/M1-Q3-CURRENT-WEB-SERVER-WIRED.md`. Functional checks are green; browser visual/AX/keyboard acceptance is not claimed — it can be verified only against a staging deployment running the current merged build (staging is not confirmed current; the Chrome permission dialog blocker also remains).
 - **M2 content-review safety gate:** accepted and merged in PR #177 at merge commit `ae54cee`; approval now requires all six `content_review_checks` dimensions to be `passed`; no publication or provider activation was included. Admin preview queue overview is accepted and merged in PR #181 at `a86c973`; authenticated persistence and reviewer actions remain gated.
-- **M2 Admin identity boundary:** ADR 0015 records that `admin_sessions.owner_singleton_id` cannot substitute for canonical `users.id`; migration `0016` adds the approved nullable unique `admin_owner.user_id → users(id)` binding, session lookup returns it fail-closed, and the one-shot server-side binding operation is implemented. Owner bootstrap, role assignment and staging verification remain gated before server-backed review reads/writes.
-- **Starter Catalog 35 slice (LB-DS-STARTER-CATALOG-35):** accepted decision contract and fail-closed implementation on `feature/starter-catalog-35` (ADR 0016). Adds the reusable seed gate `apps/api/src/catalog/start-catalog-seed-gate.ts`, its tests, and the derived snapshot `content/packs/learnbox-start/validation/start-a1-35-catalog-slice.json`. No migration, seed, approval or publication. DB seed remains blocked (20 of 35 drafted, 0 release-approved); a separately authorized task must add the missing 15 reviewed drafts and approved/published `card_versions` first.
+- **M2 Admin identity boundary:** ADR 0015 records that `admin_sessions.owner_singleton_id` cannot substitute for canonical `users.id`; migration `0016` adds the approved nullable unique `admin_owner.user_id → users(id)` binding, session lookup returns it fail-closed, and the one-shot server-side binding operation is implemented; the binding slices are merged (PRs #187–#188). Owner bootstrap, role assignment and staging verification remain gated before server-backed review reads/writes, so server-backed Admin content read/auth remains blocked by the missing owner-bootstrap/role-assignment contract.
+- **Starter Catalog 35 slice (LB-DS-STARTER-CATALOG-35):** accepted and merged in PR #193 at merge commit `73adc02` (2026-09-04) per ADR 0016. Adds the reusable seed gate `apps/api/src/catalog/start-catalog-seed-gate.ts`, its tests, and the derived snapshot `content/packs/learnbox-start/validation/start-a1-35-catalog-slice.json` (fail-closed: target 35, drafted 20, linguistically reviewed 20, release-approved 0, `seedable: false`). No migration, seed, approval or publication. DB seed remains blocked (15 target drafts missing, 0 release-approved); a separately authorized task must add the missing 15 reviewed drafts and approved/published `card_versions` first.
 - **Next:** M1-D push reconciliation cursor/watermark **policy** is approved in ADR 0014
   (per-learner monotonic version, incremented only on newly applied events, same transaction
   as event+schedule); the server-core implementation merged in PR #169 and the client-side
   cursor capture/persistence merged in PR #170; the read-side cursor exposure in
   `GET /api/learner/state` **merged** in PR #171 (LB-DS-024, merge commit `0057419`) and the
   per-event cursor binding **merged** in PR #172 (LB-DS-025, merge commit `caa3a39`); request serialization and server request-boundary parsing are merged; route/client flag enablement remain
-  separate serial, review-gated M1-D queue tasks; client transport serialization now accepts and sends the stored valid decimal-string cursor without enabling production sync; server request-boundary parsing is covered by `apps/api/src/reviews/mobile-review-batch.request.ts` and its strict tests, while route integration remains
-  snapshot-only (no delta endpoint exists), so wire-contract/delta-endpoint work remains a
-  separate review-gated task; the dormant review POST route request-boundary parser
-  integration is implemented locally in Slice 1d (`feature/m1d-route-integration`, base
-  `d20b46a`, unmerged; report `.ai/worker-reports/LB-DS-M1D-ROUTE-INTEGRATION.md`, appendix
-  Slice 1d in `docs/architecture/M1D_SYNC_PERSISTENCE_SLICE1.md`); seed/catalog implementation remains a
+  separate serial, review-gated M1-D queue tasks; client transport serialization now accepts and sends the stored valid decimal-string cursor without enabling production sync; the dormant review POST route request-boundary parser integration (Slice 1d) is merged in PR #192 at merge commit `9c6c5e0` (report `.ai/worker-reports/LB-DS-M1D-ROUTE-INTEGRATION.md`, appendix Slice 1d in `docs/architecture/M1D_SYNC_PERSISTENCE_SLICE1.md`); network sync remains dormant — the documented wire contract is snapshot-only (no delta endpoint exists), so flag enablement and wire-contract/delta-endpoint work remain separate review-gated M1-D queue tasks; seed/catalog implementation remains a
   separate owner/review-gated task; independent functional QA of the merged server-wired slice is accepted in PR #175;
-  browser visual/AX/keyboard acceptance remains blocked by the Chrome permission dialog.
+  browser visual/AX/keyboard acceptance is not claimed — it can be verified only against a staging deployment running the current merged build (staging is not confirmed current; the Chrome permission dialog blocker also remains).
 
 ### Active grouped workstreams
 
@@ -59,7 +54,7 @@ The historical LB-DS and NI records below remain for traceability. They are not 
 
 ## LB-DS-STARTER-CATALOG-35
 
-- Status: review_requested
+- Status: accepted
 - Executor: subagent (starter catalog slice, ADR 0016)
 - Base: main at `d20b46a` plus branch commits `0fcdcaf` and `94cb729` (35-word free starter target)
 - Branch: feature/starter-catalog-35
@@ -79,6 +74,16 @@ limitation: 20 of 35 target items drafted, 20 linguistically reviewed (German + 
 attestation, price, flag or production activation. DB seeding stays blocked by ADR 0013 until
 the missing 15 reviewed drafts and approved/published card versions exist. Report:
 `.ai/worker-reports/LB-DS-STARTER-CATALOG-35.md`.
+
+Accepted and merged through PR #193 at merge commit `73adc02` on 2026-09-04. The merged branch
+was `feature/starter-catalog-35-clean`; its snapshot, seed gate, tests and ADR 0016 are
+byte-identical to the recorded head `6d5dcb5` artifacts, and the record's `Merge allowed: no`
+field reflected the original slice instruction, not a blocker on this later reviewed merge.
+The derived snapshot still records the exact fail-closed limitation: target 35, drafted 20,
+linguistically reviewed 20 (German + Persian only), release-approved 0, `seedable: false`,
+15 target drafts missing. No migration, DB seed, approval or publication was merged; DB
+seeding stays blocked by ADR 0013 until the missing 15 reviewed drafts and approved/published
+card versions exist. Do not reopen or duplicate this task.
 
 ## LB-DS-025
 
