@@ -1,6 +1,6 @@
-# LearnBox Start — 350-item selection method
+# LearnBox Start — 35-item selection method
 
-The goal is about 350 high-value A1 words and practical expressions, not an alphabetical list.
+The goal is about 35 high-value A1 words and practical expressions, not an alphabetical list.
 
 1. Collect candidates from CEFR-aligned and editorially licensed/referenceable sources.
 2. Normalize lemma/expression, article, inflection and pronunciation; retain provenance.

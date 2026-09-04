@@ -1,6 +1,6 @@
 # LearnBox product definition
 
-LearnBox is an online-first German vocabulary Leitner application for Persian-speaking learners. The free app gives every user an approximately 350-word A1 starter collection. Learners can buy additional complete vocabulary packs, review them daily, track progress and keep their learning state across Web and mobile.
+LearnBox is an online-first German vocabulary Leitner application for Persian-speaking learners. The free app gives every user an approximately 35-word A1 starter collection. Learners can buy additional complete vocabulary packs, review them daily, track progress and keep their learning state across Web and mobile.
 
 ## User promise
 

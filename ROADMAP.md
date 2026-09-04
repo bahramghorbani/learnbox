@@ -4,7 +4,7 @@
 
 ## Product strategy
 
-LearnBox is an online-first German vocabulary Leitner product. The free app includes approximately 350 complete A1 words. Premium vocabulary packs are sold through platform-appropriate payment adapters: direct bank gateway on Web, Cafe Bazaar in-app billing on Android, and Apple In-App Purchase on iOS. All verified purchases produce shared backend entitlements. Temporary connectivity loss is tolerated through a local pending queue and idempotent sync.
+LearnBox is an online-first German vocabulary Leitner product. The free app includes approximately 35 complete A1 words. Premium vocabulary packs are sold through platform-appropriate payment adapters: direct bank gateway on Web, Cafe Bazaar in-app billing on Android, and Apple In-App Purchase on iOS. All verified purchases produce shared backend entitlements. Temporary connectivity loss is tolerated through a local pending queue and idempotent sync.
 
 The landing site at `learnboxapp.com` is informational only and remains independent from learner, admin, API and private-media surfaces.
 
@@ -13,7 +13,7 @@ The landing site at `learnboxapp.com` is informational only and remains independ
 | Milestone                      | Outcome                                    | Scope                                                                                                                                                    | Exit criteria                                                                           |                                          Estimate |
 | ------------------------------ | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------: |
 | M0 Product truth               | One current product model                  | inventory, boundaries, docs governance, decisions, architecture                                                                                          | status matrix reviewed; stale docs marked; queue aligned                                |                                          3–5 days |
-| M1 Online learning core        | A learner can use the product online       | account/auth, 350-word A1 free pack, Today, review scheduling, progress, server persistence, offline pending queue and reconnect sync                    | complete learner journey tested on Web and Android; no lost or duplicate review events  |                                         3–5 weeks |
+| M1 Online learning core        | A learner can use the product online       | account/auth, 35-word A1 free pack, Today, review scheduling, progress, server persistence, offline pending queue and reconnect sync                    | complete learner journey tested on Web and Android; no lost or duplicate review events  |                                         3–5 weeks |
 | M2 Admin/content operations    | Team can produce and release quality packs | AI request-to-draft, batch generation, duplicate scan, human review, media QA, pack versioning, release/rollback                                         | one approved pack released through Admin with evidence and rollback                     | 3–4 weeks; overlaps M1 only on disjoint contracts |
 | M3 Profile and learner account | User can manage their account and learning | profile, settings, purchases, packs, sync status, support, privacy, personal vocabulary and duplicate checks                                             | account center works on Web/Android with truthful loading/error/offline states          |                         2–3 weeks; overlaps M1/M2 |
 | M4 Commerce MVP                | Real premium pack purchases work           | catalog, platform offers, Web bank gateway, Cafe Bazaar adapter, iOS StoreKit contract, receipt verification, entitlement, restore, refund/revoke, audit | one controlled real purchase per enabled platform is reconciled to a shared entitlement |         4–6 weeks after provider/server readiness |
@@ -49,7 +49,7 @@ M1, M2 and M3 can overlap only where their contracts and allowed paths are disjo
 
 - Independent landing remains unchanged.
 - Web learner completes sign-in, daily review, progress and recovery.
-- 350-word A1 free collection is usable and editorially approved.
+- 35-word A1 free collection is usable and editorially approved.
 - Admin can create/review/release a pack or controlled content update.
 - Real purchases are enabled only for the explicitly approved provider/platform path.
 - Web gateway, Android Cafe Bazaar and iOS StoreKit are separate adapters.

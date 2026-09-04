@@ -64,7 +64,7 @@
 
 - `learnboxapp.com` is an independent informational landing site.
 - LearnBox is online-first and offline-tolerant, with durable pending review events and reconnect sync.
-- The free app includes approximately 350 complete A1 German words.
+- The free app includes approximately 35 complete A1 German words.
 - Premium packs are complete vocabulary products generated with AI assistance and human review.
 - Web uses a direct bank gateway; Android uses Cafe Bazaar in-app billing; iOS uses Apple In-App Purchase.
 - Platform offers may have different prices/product IDs but map to shared backend entitlements.

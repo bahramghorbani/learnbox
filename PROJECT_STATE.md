@@ -4,7 +4,7 @@
 
 ## Product
 
-LearnBox is an online-first German vocabulary Leitner product for Persian-speaking learners. The free app includes approximately 350 complete A1 words. Premium vocabulary packs are purchased separately. Temporary connectivity loss is tolerated with a durable local queue and idempotent reconnect sync.
+LearnBox is an online-first German vocabulary Leitner product for Persian-speaking learners. The free app includes approximately 35 complete A1 words. Premium vocabulary packs are purchased separately. Temporary connectivity loss is tolerated with a durable local queue and idempotent reconnect sync.
 
 ## Boundaries
 
