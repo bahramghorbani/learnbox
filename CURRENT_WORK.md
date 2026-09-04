@@ -58,6 +58,17 @@
   review-gated; seed/catalog implementation remains a separate
   review-gated task.
 
+- **M2 Admin content-operations slice (branch `feature/admin-content-operations`, base `73adc02`):**
+  local truthful review-preview slice for the Admin content workspace. The preview card, media
+  state, provenance and review queue are now derived from the committed Start Pack drafts
+  (`content/packs/learnbox-start`); fabricated review claims (passed validation list, media-ready
+  checks, `۹۲٪` model confidence, demo example `Das Haus ist groß.`) were removed. Unreviewed
+  drafts always show pending gates and absent media; approve/return buttons only flip a local
+  preview label; the six-dimensional gate, the 20-draft/0-release-approved queue and the release
+  panel remain publication-blocked, and the ADR 0016 seed gate stays untouched. No API route,
+  schema, migration, content file or publication path changed; server-backed review reads still
+  await the gated owner bootstrap/role assignment.
+
 ## Immediate execution order
 
 1. Complete the Admin session → canonical `users.id` binding: migration `0016`, session lookup, and the one-shot server-side binding operation are implemented in the current worktree; owner bootstrap, role assignment and staging verification remain gated. ADR 0015 records the fail-closed boundary.
