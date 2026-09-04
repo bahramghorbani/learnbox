@@ -2,7 +2,7 @@
 
 - Branch: feature/m1d-route-integration
 - Base commit: d20b46a (origin/main)
-- Head commit: (see git log; code + docs committed on this branch, no PR opened)
+- Head commit: 352bce7 (code + slice documentation; this report's head-commit field amended in a follow-up docs commit)
 - Draft PR: none (task scope: branch/commit + report, no PR)
 - Scope completed: Smallest verified M1-D route-integration slice — the existing website
   mobile review POST boundary now uses the existing strict request-boundary parser.
