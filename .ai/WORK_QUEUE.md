@@ -18,7 +18,7 @@ start. Historical tasks remain for traceability and must not be duplicated.
 - **M1-Q — Independent QA:** accepted and merged in PR #157; current server-wired follow-up QA accepted and merged in PR #175; report: `.ai/qa-reports/M1-Q3-CURRENT-WEB-SERVER-WIRED.md`. Functional checks are green; browser visual/AX/keyboard acceptance is not claimed — it can be verified only against a staging deployment running the current merged build (staging is not confirmed current; the Chrome permission dialog blocker also remains).
 - **M2 content-review safety gate:** accepted and merged in PR #177 at merge commit `ae54cee`; approval now requires all six `content_review_checks` dimensions to be `passed`; no publication or provider activation was included. Admin preview queue overview is accepted and merged in PR #181 at `a86c973`; authenticated persistence and reviewer actions remain gated.
 - **M2 Admin identity boundary:** ADR 0015 records that `admin_sessions.owner_singleton_id` cannot substitute for canonical `users.id`; migration `0016` adds the approved nullable unique `admin_owner.user_id → users(id)` binding, session lookup returns it fail-closed, and the one-shot server-side binding operation is implemented; the binding slices are merged (PRs #187–#188). Owner bootstrap, role assignment and staging verification remain gated before server-backed review reads/writes, so server-backed Admin content read/auth remains blocked by the missing owner-bootstrap/role-assignment contract.
-- **Starter Catalog 35 slice (LB-DS-STARTER-CATALOG-35):** accepted and merged in PR #193 at merge commit `73adc02` (2026-09-04) per ADR 0016. Adds the reusable seed gate `apps/api/src/catalog/start-catalog-seed-gate.ts`, its tests, and the derived snapshot `content/packs/learnbox-start/validation/start-a1-35-catalog-slice.json` (fail-closed: target 35, drafted 20, linguistically reviewed 20, release-approved 0, `seedable: false`). No migration, seed, approval or publication. DB seed remains blocked (15 target drafts missing, 0 release-approved); a separately authorized task must add the missing 15 reviewed drafts and approved/published `card_versions` first.
+- **Starter Catalog 35 slice (LB-DS-STARTER-CATALOG-35):** accepted and merged in PR #193 at merge commit `73adc02` (2026-09-04) per ADR 0016. Adds the reusable seed gate `apps/api/src/catalog/start-catalog-seed-gate.ts`, its tests, and the derived snapshot `content/packs/learnbox-start/validation/start-a1-35-catalog-slice.json` (fail-closed at merge: target 35, drafted 20, linguistically reviewed 20, release-approved 0, `seedable: false`). No migration, seed, approval or publication. The separately authorized missing-drafts task (LB-DS-STARTER-DRAFTS-15) merged in PR #200 at `2aa5931`: the snapshot now records 35/35 drafted, 20 linguistically reviewed, 0 release-approved, `seedable: false`, `publicationBlocked: true`; DB seed remains blocked — the 15 pending drafts still need product-owner linguistic review and all remaining review dimensions plus approved/published `card_versions` first.
 - **Next:** M1-D push reconciliation cursor/watermark **policy** is approved in ADR 0014
   (per-learner monotonic version, incremented only on newly applied events, same transaction
   as event+schedule); the server-core implementation merged in PR #169 and the client-side
@@ -84,6 +84,34 @@ linguistically reviewed 20 (German + Persian only), release-approved 0, `seedabl
 15 target drafts missing. No migration, DB seed, approval or publication was merged; DB
 seeding stays blocked by ADR 0013 until the missing 15 reviewed drafts and approved/published
 card versions exist. Do not reopen or duplicate this task.
+
+## LB-DS-STARTER-DRAFTS-15
+
+- Status: accepted
+- Executor: subagent (starter catalog 15 pending drafts, ADR 0016)
+- Base: main at `f63538c` (PR #199 merged)
+- Branch: content/starter-drafts-15
+- Merge commit: `2aa5931` (PR #200 merged 2026-09-04)
+- Risk: routine-content-catalog-boundary
+- Specification: ADR 0013 (start-a1-* ids are canonical `cards.content_id`; approved/published `card_versions` required before resolution); ADR 0016 (35-word catalog slice and fail-closed seed gate); docs/content/START_A1_EDITORIAL_REVIEW_PACKET.md
+- Allowed paths: content/packs/learnbox-start/vocabulary/start-a1-catalog-35-pending-drafts.json; content/packs/learnbox-start/validation/start-a1-catalog-35-pending-candidates.json; content/packs/learnbox-start/validation/start-a1-catalog-35-pending-provenance-ledger.json; content/packs/learnbox-start/validation/start-a1-35-catalog-slice.json; apps/api/test/start-catalog-seed-gate.test.ts; CURRENT_WORK.md; .ai/worker-reports/LB-DS-STARTER-DRAFTS-15.md
+- Required checks: focused seed-gate vitest (RED then 10/10 GREEN); content-factory batch validation 13/13; Start Pack validators (verify:start-slice/start-drafts/linguistic-approval/source-scope/start-provenance-ledger/start-candidate-qa/media-handoff/start-attachment-draft/start-v2-image-attachment-draft/start-private-media-attestation/start-v2-images-private-media-attestation/private-media-delivery/website-start-slice/start-local-media-preview/start-pack-v2-contract); test:mobile-start-content; JSON structural sanity; git diff --check; prettier check on changed files
+- Simulator required: no
+- Draft PR required: no
+- Merge allowed: yes
+
+Accepted and merged through PR #200 at merge commit `2aa5931` on 2026-09-04. The record was
+handed off as a local review-requested branch (report `.ai/worker-reports/LB-DS-STARTER-DRAFTS-15.md`:
+branch `content/starter-drafts-15`, head `8010de7b`); the branch was then merged through PR #200.
+Adds 15 Goethe-evidenced pending Start A1 drafts (Fenster, Zimmer, Uhr, Milch, Kaffee, Ei, Tee,
+Stadt, Supermarkt, gehen, essen, trinken, groß, kalt, neu; status `needs_review`, `media: []`,
+every review dimension pending) as a dedicated batch consumed only by the catalog-35 gate and
+snapshot, with candidate-intake and provenance-ledger records; the seed-gate test expectations were
+updated to the 35-draft union. The derived snapshot now records 35/35 drafted, 20 linguistically
+reviewed, 0 release-approved, `seedable: false`, `publicationBlocked: true`; no DB seed, migration,
+approval, media, auth or publication was merged. The 15 pending drafts still need product-owner
+linguistic review and all remaining review dimensions before any ADR 0013 seed of
+`cards`/`card_versions`. Do not reopen or duplicate this task.
 
 ## LB-DS-025
 
