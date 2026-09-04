@@ -1,7 +1,7 @@
 'use client';
 
 import type { CSSProperties } from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { evaluatePersonalWordLimit } from '@learnbox/billing-core';
 import {
   hasPersonalVocabularyDuplicate,
@@ -204,6 +204,24 @@ export function LearnerHome({
     setIsRecordingGrade(false);
   }, [screen, sessionIndex]);
 
+  const applyServerStateResult = useCallback(
+    (result: Awaited<ReturnType<typeof fetchWebLearnerState>>) => {
+      if (result.status === 'ok') {
+        setServerLastSyncedAt(new Date().toISOString());
+        setServerSyncState('server-backed');
+        return;
+      }
+      if (result.status === 'unauthorized') {
+        setServerSyncState('local-only');
+        return;
+      }
+      setServerSyncState(
+        typeof navigator !== 'undefined' && navigator.onLine === false ? 'offline' : 'error',
+      );
+    },
+    [],
+  );
+
   useEffect(() => {
     if (!authenticated || !isServerOtp || typeof window === 'undefined') return;
     let cancelled = false;
@@ -212,18 +230,7 @@ export function LearnerHome({
       void fetchWebLearnerState()
         .then((result) => {
           if (cancelled) return;
-          if (result.status === 'ok') {
-            setServerLastSyncedAt(new Date().toISOString());
-            setServerSyncState('server-backed');
-            return;
-          }
-          if (result.status === 'unauthorized') {
-            setServerSyncState('local-only');
-            return;
-          }
-          setServerSyncState(
-            typeof navigator !== 'undefined' && navigator.onLine === false ? 'offline' : 'error',
-          );
+          applyServerStateResult(result);
         })
         .catch(() => {
           if (cancelled) return;
@@ -244,7 +251,15 @@ export function LearnerHome({
       window.removeEventListener('offline', goOffline);
       window.removeEventListener('online', goOnline);
     };
-  }, [authenticated, isServerOtp]);
+  }, [authenticated, isServerOtp, applyServerStateResult]);
+
+  const retryServerStateRead = useCallback(() => {
+    if (!authenticated || !isServerOtp || typeof window === 'undefined') return;
+    setServerSyncState('loading');
+    void fetchWebLearnerState()
+      .then(applyServerStateResult)
+      .catch(() => setServerSyncState('error'));
+  }, [authenticated, isServerOtp, applyServerStateResult]);
 
   const begin = () => {
     const nextIndex = resumableSessionIndex ?? 0;
@@ -592,6 +607,7 @@ export function LearnerHome({
         syncState={serverSyncState}
         pendingReviewCount={pendingReviewCount}
         lastSyncedAt={serverLastSyncedAt}
+        onRetryServerRead={retryServerStateRead}
       />
       <button className="primary-button" onClick={begin}>
         {resumableSessionIndex === null ? 'شروع مرور' : 'ادامهٔ مرور'}{' '}

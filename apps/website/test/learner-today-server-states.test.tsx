@@ -118,6 +118,44 @@ describe('Today server snapshot truth states', () => {
     expect(rendered.text()).not.toContain('همگام‌سازی شد');
   });
 
+  it('offers a retry action after a failed server read and recovers to the server-read label', async () => {
+    let attempts = 0;
+    const stateFetch = vi.fn(async () => {
+      attempts += 1;
+      if (attempts === 1) throw new Error('network unavailable');
+      return json(200, canonicalBody);
+    });
+    const router = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      const method = init?.method ?? 'GET';
+      if (method === 'POST' && url === '/api/auth/otp/request') {
+        return json(201, {
+          challengeId: 'first-challenge-id-0001',
+          expiresAt: '2026-08-08T12:05:00.000Z',
+          resendAvailableAt: '2026-08-08T12:01:00.000Z',
+        });
+      }
+      if (method === 'POST' && url === '/api/auth/otp/verify') return json(204, null);
+      if (method === 'GET' && url === '/api/learner/state') return stateFetch();
+      throw new Error(`Unexpected fetch: ${method} ${url}`);
+    });
+    vi.stubGlobal('fetch', router);
+    rendered = await renderLearner({ otpUiFlag: 'true' });
+    await rendered.signInLocally();
+    await rendered.clickButton('ادامه');
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(rendered.text()).toContain('خواندن از سرور ممکن نشد');
+    expect(rendered.text()).not.toContain('وضعیت یادگیری از سرور خوانده شد');
+    await rendered.clickButton('تلاش دوباره');
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(stateFetch.mock.calls).toHaveLength(2);
+    expect(rendered.text()).toContain('وضعیت یادگیری از سرور خوانده شد');
+  });
+
   it('shows the offline label when offline and the read cannot reach the server', async () => {
     Object.defineProperty(navigator, 'onLine', { configurable: true, value: false });
     vi.stubGlobal(

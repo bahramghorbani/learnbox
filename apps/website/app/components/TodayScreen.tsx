@@ -9,6 +9,8 @@ export interface TodayScreenProps {
   pendingReviewCount?: number | null;
   /** ISO timestamp of the last successful server snapshot; shown only with server-backed state. */
   lastSyncedAt?: string | null;
+  /** Re-reads GET /api/learner/state after a failed read (D1 §5 error state). */
+  onRetryServerRead?: () => void;
 }
 
 export function TodayScreen({
@@ -16,6 +18,7 @@ export function TodayScreen({
   syncState = 'local-only',
   pendingReviewCount = 0,
   lastSyncedAt = null,
+  onRetryServerRead,
 }: TodayScreenProps) {
   const pendingChipVisible = typeof pendingReviewCount === 'number' && pendingReviewCount > 0;
   return (
@@ -48,6 +51,11 @@ export function TodayScreen({
       <p className="sync-truth" role="status">
         {syncStateText(syncState)}
       </p>
+      {syncState === 'error' && onRetryServerRead ? (
+        <button className="retry-server-read" type="button" onClick={onRetryServerRead}>
+          تلاش دوباره
+        </button>
+      ) : null}
       {syncState === 'server-backed' && lastSyncedAt ? (
         <p className="sync-truth last-synced" role="status">
           آخرین خواندن از سرور: {formatSyncTime(lastSyncedAt)}
