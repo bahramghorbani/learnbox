@@ -3,7 +3,7 @@
 - Branch: docs/m1d-wire-contract-design
 - Base commit: 4718f93 (origin/main, PR #204 merged)
 - Head commit: `921bf2b` (stable design + queue registration; handoff metadata finalized locally; no push, no PR)
-- Draft PR: none (not pushed, not opened — retry task stops after local commit)
+- Draft PR: https://github.com/bahramghorbani/learnbox/pull/205 (open; review requested)
 - Scope completed: Decision-ready PROPOSED / NOT IMPLEMENTED sync wire contract for the M1-D
   pull-based reconciliation read, plus this handoff report and the LB-DS-026 queue/current-work
   registration. Design-only retry: no implementation, no code/test/migration/route/flag/auth/mobile/web
