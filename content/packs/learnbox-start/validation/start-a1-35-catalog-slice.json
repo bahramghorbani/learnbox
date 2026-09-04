@@ -75,7 +75,7 @@
   },
   "integrity": {
     "draftsSha256": "61ca53fc087fbc6957034e26dee7bf18116a42f31c0fae572013a8b08bde9152",
-    "pendingDraftsSha256": "ef8cd15335f99c513dfd275983666d7c22c7b4510c0d31a891fd19de51a4d86d",
+    "pendingDraftsSha256": "766ed7aa0c7443dce1647089080f3b7ecfb020906734ef6c63644b68ac6b27eb",
     "linguisticApprovalSha256": "88cde63db64ee288c406f97cbd586cd411f49c8d7ba14794a350a5fd74b3b9b7"
   },
   "catalogNote": "Derived snapshot, not an approval and not a DB seed. All 35 target items are drafted across two vocabulary sources; the 15 pending drafts remain editorial-queue items with no linguistic approval, no media and every review dimension pending. Bundled start-a1-* ids are canonical cards.content_id only after an approved/published card_versions row exists (ADR 0013); no migration or cards/card_versions row is created here.",
