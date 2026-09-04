@@ -28,23 +28,22 @@
     M1-D wire contract covers the snapshot only (no delta endpoint exists; `reviewEventsCount`
     is not a delta), and wire-contract/delta-endpoint work remains separate review-gated;
     milestone stays partial/not production-ready.
-- **M1-D route request-boundary integration (Slice 1d, local branch
-  `feature/m1d-route-integration`, base `d20b46a`):** implemented locally, not merged — the
-  dormant website `POST /api/reviews/mobile` boundary (`apps/website/lib/mobile-review-http.ts`)
-  now calls the existing strict `parseMobileReviewBatchRequest`
-  (`apps/api/dist/reviews/mobile-review-batch.request.js`) instead of a duplicated inline
-  parser: optional decimal-string `reconciliationCursor` is accepted but never forwarded,
-  duplicate `clientEventId`s and malformed cursor/items are rejected as 400 `validation`
-  before `submit`, `userId` still comes only from the verified token. `MOBILE_REVIEW_SYNC_ENABLED`
-  stays false/unset; route and runtime unchanged; see
-  `.ai/worker-reports/LB-DS-M1D-ROUTE-INTEGRATION.md` and
+- **M1-D route request-boundary integration (Slice 1d):** completed in PR #192 at merge
+  commit `9c6c5e0` (2026-09-04): the dormant website `POST /api/reviews/mobile` boundary
+  (`apps/website/lib/mobile-review-http.ts`) now calls the existing strict
+  `parseMobileReviewBatchRequest` (`apps/api/dist/reviews/mobile-review-batch.request.js`)
+  instead of a duplicated inline parser: optional decimal-string `reconciliationCursor` is
+  accepted but never forwarded, duplicate `clientEventId`s and malformed cursor/items are
+  rejected as 400 `validation` before `submit`, `userId` still comes only from the verified
+  token. `MOBILE_REVIEW_SYNC_ENABLED` stays false/unset; route and runtime unchanged; network
+  sync remains dormant. See `.ai/worker-reports/LB-DS-M1D-ROUTE-INTEGRATION.md` and
   `docs/architecture/M1D_SYNC_PERSISTENCE_SLICE1.md` (appendix Slice 1d).
 - **M1-B Web slice 1:** completed in PR #156; Today was explicitly local-only until the server wiring slice.
 - **M1-B Web slice 2 (LB-DS-022):** merged in PR #163 at `73cdb62` (2026-08-30); ADR 0012 route `GET /api/learner/state` (cookie subject = canonical `users.id`) plus truthful Today fetch are on `main` behind the fail-closed `WEB_LEARNER_STATE_ENABLED` runtime (defaults false). The actionable Today figure stays tied to the local bundled session until the approved/published Start Pack seed/catalog rows are implemented and released (the Start Pack ↔ canonical `contentId` contract itself is recorded in ADR 0013; seed/catalog implementation remains a separate review-gated task).
-- **Web learner-loop connectivity slice (branch `feature/learner-loop-completion`, base `d20b46a`, unmerged):** Today's server-read label now tracks browser connectivity — an `offline` event drops the label to `offline`, an `online` event re-reads `GET /api/learner/state` (same fail-closed route/client, no reload). Device-local figure/copy and the no-acknowledgement rule are unchanged; regression tests added in `apps/website/test/learner-today-server-states.test.tsx`. Blocker unchanged: server-backed Today figures still require the reviewed Starter catalog seed decision.
+- **Web learner-loop connectivity slice:** completed in PR #194 at merge commit `ab09dbd` (2026-09-04): Today's server-read label now tracks browser connectivity — an `offline` event drops the label to `offline`, an `online` event re-reads `GET /api/learner/state` (same fail-closed route/client, no reload). Device-local figure/copy and the no-acknowledgement rule are unchanged; regression tests added in `apps/website/test/learner-today-server-states.test.tsx`. Blocker unchanged: server-backed Today figures still require the reviewed Starter catalog seed decision.
 - **M1-C Mobile slice 1:** completed in PR #155; Today local queue state is truthful, sync coordinator remains dormant.
-- **M1-Q independent QA:** completed in PR #157; the current server-wired follow-up QA is recorded in `.ai/qa-reports/M1-Q3-CURRENT-WEB-SERVER-WIRED.md` and merged in PR #175. Functional checks are green; browser visual/AX/keyboard acceptance remains blocked by the Chrome permission dialog and is not claimed.
-- **Starter Catalog 35 slice (`feature/starter-catalog-35`, ADR 0016):** branch based on `94cb729` (official free starter target reduced to ~35 words). Fail-closed catalog slice implemented: derived snapshot `content/packs/learnbox-start/validation/start-a1-35-catalog-slice.json` (20 of 35 drafted, 20 linguistically reviewed, 0 release-approved, `seedable: false`), reusable seed gate `apps/api/src/catalog/start-catalog-seed-gate.ts` with tests, no migration and no publication. DB seeding stays blocked: ADR 0013 requires approved/published `card_versions` and 15 target drafts are still missing.
+- **M1-Q independent QA:** completed in PR #157; the current server-wired follow-up QA is recorded in `.ai/qa-reports/M1-Q3-CURRENT-WEB-SERVER-WIRED.md` and merged in PR #175. Functional checks are green; browser visual/AX/keyboard acceptance is not claimed — it can be verified only against a staging deployment running the current merged build (staging is not confirmed current; the Chrome permission dialog blocker also remains).
+- **Starter Catalog 35 slice (ADR 0016):** completed in PR #193 at merge commit `73adc02` (2026-09-04; official free starter target reduced to ~35 words). Fail-closed catalog slice implemented: derived snapshot `content/packs/learnbox-start/validation/start-a1-35-catalog-slice.json` (20 of 35 drafted, 20 linguistically reviewed, 0 release-approved, `seedable: false`), reusable seed gate `apps/api/src/catalog/start-catalog-seed-gate.ts` with tests, no migration and no publication. DB seeding stays blocked: ADR 0013 requires approved/published `card_versions` and 15 target drafts are still missing.
 - **Next active work:** M1-D push reconciliation cursor/watermark policy is approved in
   ADR 0014 (per-learner monotonic version, incremented only on newly applied events,
   committed in the same transaction as event and schedule update); the server-core
@@ -59,8 +58,7 @@
   review-gated; seed/catalog implementation remains a separate
   review-gated task.
 
-- **M2 Admin content-operations slice (branch `feature/admin-content-operations`, base `73adc02`):**
-  local truthful review-preview slice for the Admin content workspace. The preview card, media
+- **M2 Admin content-operations truthful review-preview slice:** completed in PR #195 at merge commit `229708a` (2026-09-04). The preview card, media
   state, provenance and review queue are now derived from the committed Start Pack drafts
   (`content/packs/learnbox-start`); fabricated review claims (passed validation list, media-ready
   checks, `۹۲٪` model confidence, demo example `Das Haus ist groß.`) were removed. Unreviewed
@@ -72,19 +70,16 @@
 
 ## Immediate execution order
 
-1. Complete the Admin session → canonical `users.id` binding: migration `0016`, session lookup, and the one-shot server-side binding operation are implemented in the current worktree; owner bootstrap, role assignment and staging verification remain gated. ADR 0015 records the fail-closed boundary.
-2. Start Pack ↔ canonical `contentId` contract is decided and recorded in ADR 0013; the bounded 35-target catalog slice (derived snapshot + fail-closed seed gate, ADR 0016) is implemented on `feature/starter-catalog-35`. DB seed remains blocked: only 20 of 35 target items are drafted and none is release-approved; a separately authorized task must add the missing 15 reviewed drafts and approved/published card versions before any `cards`/`card_versions` seed.
+1. Complete the Admin session → canonical `users.id` binding: migration `0016`, fail-closed session lookup, and the one-shot server-side binding operation are merged (PRs #187–#188; ADR 0015 records the fail-closed boundary). Server-backed Admin content read/auth remains blocked by the missing owner-bootstrap/role-assignment contract: owner bootstrap, role assignment and staging verification remain gated.
+2. Start Pack ↔ canonical `contentId` contract is decided and recorded in ADR 0013; the bounded 35-target catalog slice (derived snapshot + fail-closed seed gate, ADR 0016) was merged in PR #193 at `73adc02`. DB seed remains blocked: only 20 of 35 target items are drafted and none is release-approved; a separately authorized task must add the missing 15 reviewed drafts and approved/published card versions before any `cards`/`card_versions` seed.
 3. Implement the authenticated server-wired learner path completion and any remaining D1 fetch states.
 4. Decide and implement M1-D push reconciliation. The cursor/watermark policy is approved in
    ADR 0014; server-core (PR #169), client-side cursor capture/persistence (PR #170),
    read-side cursor exposure (PR #171/LB-DS-024) and per-event cursor binding (PR #172/LB-DS-025)
-   are merged; sending the cursor in a request and flag enablement remain
-   separate review-gated tasks. Client transport serialization now accepts and sends the stored
-   valid decimal-string cursor without enabling production sync; the dormant review POST route
-   request-boundary parser integration is implemented locally in Slice 1d
-   (`feature/m1d-route-integration`, unmerged; see CURRENT_WORK active list above); flag
-   enablement and delta-response semantics remain separate review-gated tasks.
-5. Re-run browser visual and accessibility QA when the Chrome permission blocker is cleared; do not treat the current functional QA as visual acceptance.
+   are merged, as are request serialization (PR #184) and the dormant review POST route
+   request-boundary parser integration, Slice 1d (PR #192 at `9c6c5e0`); network sync remains
+   dormant. Flag enablement and delta-response semantics remain separate review-gated tasks.
+5. Re-run browser visual and accessibility QA only against a staging deployment running the current merged build (staging is not confirmed current); the Chrome permission blocker must also be cleared. Do not treat the current functional QA as visual acceptance.
 
 ## Owner-approved product decisions captured in M0
 
