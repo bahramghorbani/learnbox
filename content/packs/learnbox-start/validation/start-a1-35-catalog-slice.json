@@ -7,16 +7,15 @@
   "seedDecision": {
     "seedable": false,
     "blockers": [
-      "15 of 35 target drafts (start-a1-catalog-35-pending-drafts.json) have no product-owner linguistic review",
       "no item has an approved/published card version (ADR 0013 gate)",
-      "product-owner confirmation (2026-07-27) covers only german_linguistic and persian_translation for the original 20 slice items; provenance, visual, audio and app_flow remain required before publication"
+      "product-owner confirmations cover only german_linguistic and persian_translation (2026-07-27 for the original 20 slice items, 2026-09-04 for the 15 pending drafts); provenance, visual, audio and app_flow remain required before publication"
     ],
     "seedableItemIds": []
   },
   "counts": {
     "targetItemCount": 35,
     "draftedItemCount": 35,
-    "linguisticReviewedItemCount": 20,
+    "linguisticReviewedItemCount": 35,
     "approvedForReleaseItemCount": 0,
     "missingDraftedItemCount": 0
   },
@@ -59,9 +58,21 @@
   ],
   "linguisticApproval": {
     "approvedByRole": "product_owner",
-    "approvedAt": "2026-07-27",
     "approvedDimensions": ["german_linguistic", "persian_translation"],
-    "approvalReference": "product-owner-confirmation-2026-07-27"
+    "approvalEvents": [
+      {
+        "batchId": "learnbox-start-a1-vertical-slice-drafts-v1",
+        "approvalReference": "product-owner-confirmation-2026-07-27",
+        "approvedAt": "2026-07-27",
+        "itemCount": 20
+      },
+      {
+        "batchId": "learnbox-start-a1-catalog-35-pending-drafts-v1",
+        "approvalReference": "product-owner-confirmation-2026-09-04",
+        "approvedAt": "2026-09-04",
+        "itemCount": 15
+      }
+    ]
   },
   "stillRequiredBeforePublication": ["provenance", "visual", "audio", "app_flow"],
   "reviewQueueState": "private_media_attested_not_attached",
@@ -76,9 +87,9 @@
   "integrity": {
     "draftsSha256": "61ca53fc087fbc6957034e26dee7bf18116a42f31c0fae572013a8b08bde9152",
     "pendingDraftsSha256": "766ed7aa0c7443dce1647089080f3b7ecfb020906734ef6c63644b68ac6b27eb",
-    "linguisticApprovalSha256": "88cde63db64ee288c406f97cbd586cd411f49c8d7ba14794a350a5fd74b3b9b7"
+    "linguisticApprovalSha256": "cecca1b3c4cb46ace34502461570cc9056a793fb270518befb5e9417fb325c71"
   },
-  "catalogNote": "Derived snapshot, not an approval and not a DB seed. All 35 target items are drafted across two vocabulary sources; the 15 pending drafts remain editorial-queue items with no linguistic approval, no media and every review dimension pending. Bundled start-a1-* ids are canonical cards.content_id only after an approved/published card_versions row exists (ADR 0013); no migration or cards/card_versions row is created here.",
+  "catalogNote": "Derived snapshot, not an approval and not a DB seed. All 35 target items are drafted across two vocabulary sources and all 35 carry recorded product-owner linguistic approval (german_linguistic, persian_translation only: 2026-07-27 confirmation for the original 20 slice items, 2026-09-04 confirmation for the 15 pending drafts); no item is release-approved, drafts keep status needs_review with media [] and AI-assisted provenance, and every remaining review dimension (provenance, visual, audio, app_flow) plus an approved/published card_versions row (ADR 0013) is still required. Bundled start-a1-* ids are canonical cards.content_id only after that row exists; no migration or cards/card_versions row is created here.",
   "pendingDraftedItemIds": [
     "start-a1-fenster",
     "start-a1-zimmer",
