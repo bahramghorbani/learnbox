@@ -162,8 +162,10 @@ export function AuthGate({ mode, onAuthenticated }: AuthGateProps) {
               <span dir="ltr">+98</span>
               <input
                 id="mobile-number"
+                type="tel"
                 inputMode="numeric"
                 autoComplete="tel"
+                required
                 value={phone}
                 onChange={(event) => {
                   setPhone(event.target.value);

@@ -154,6 +154,91 @@ describe('learner server OTP behavior', () => {
   });
 });
 
+describe('learner phone input accessibility semantics', () => {
+  let rendered: PhoneGate | undefined;
+
+  afterEach(async () => {
+    await rendered?.unmount();
+    rendered = undefined;
+    vi.unstubAllGlobals();
+  });
+
+  it('declares the mobile field as a required telephone input for assistive tech', async () => {
+    vi.stubGlobal('fetch', vi.fn());
+    rendered = await renderPhoneStage('server-otp');
+
+    expect(rendered.input().type).toBe('tel');
+    expect(rendered.input().getAttribute('type')).toBe('tel');
+    expect(rendered.input().required).toBe(true);
+  });
+
+  it('keeps native validation off so the custom Persian error stays authoritative', async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    rendered = await renderPhoneStage('server-otp');
+
+    expect(rendered.form().noValidate).toBe(true);
+
+    await rendered.submitWith('0912');
+    expect(rendered.text()).toContain('شمارهٔ موبایل را کامل و درست وارد کنید.');
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('accepts Persian digits through the required telephone field in closed-alpha prototype mode', async () => {
+    vi.stubGlobal('fetch', vi.fn());
+    rendered = await renderPhoneStage('local-prototype');
+
+    expect(rendered.input().required).toBe(true);
+
+    await rendered.submitWith('۰۹۱۲۱۲۳۴۵۶۷');
+    expect(rendered.text()).toContain('کد آزمایشی را وارد کن');
+  });
+});
+
+type PhoneGate = {
+  form(): HTMLFormElement;
+  input(): HTMLInputElement;
+  submitWith(value: string): Promise<void>;
+  text(): string;
+  unmount(): Promise<void>;
+};
+
+async function renderPhoneStage(mode: 'local-prototype' | 'server-otp'): Promise<PhoneGate> {
+  const container = document.createElement('div');
+  document.body.append(container);
+  const root = createRoot(container);
+  vi.stubGlobal('React', { createElement, Fragment });
+  (
+    globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }
+  ).IS_REACT_ACT_ENVIRONMENT = true;
+
+  await act(async () => {
+    root.render(createElement(AuthGate, { mode, onAuthenticated: () => {} }));
+  });
+
+  return {
+    form: () => {
+      const form = container.querySelector('form');
+      if (!form) throw new Error('Form not found');
+      return form;
+    },
+    input: () => {
+      const input = container.querySelector<HTMLInputElement>('#mobile-number');
+      if (!input) throw new Error('Input not found: mobile-number');
+      return input;
+    },
+    submitWith: async (value) => {
+      await setInputValue(container, 'mobile-number', value);
+      await submitForm(container);
+    },
+    text: () => container.textContent ?? '',
+    unmount: async () => {
+      await act(async () => root.unmount());
+      container.remove();
+    },
+  };
+}
+
 type RenderedGate = {
   button(label: string): HTMLButtonElement;
   enterCode(value: string): Promise<void>;
