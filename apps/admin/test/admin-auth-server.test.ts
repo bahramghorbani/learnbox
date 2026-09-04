@@ -26,6 +26,34 @@ describe('admin auth server', () => {
     expect(pools).toBe(0);
   });
 
+  it('requires registration options for the enabled bootstrap runtime', async () => {
+    const runtime = createAdminAuthServer({
+      environment: {
+        ...environment,
+        LEARNBOX_ADMIN_BOOTSTRAP_ENABLED: 'true',
+        LEARNBOX_ADMIN_BOOTSTRAP_SECRET: 'b'.repeat(32),
+      },
+      createPool: () => ({
+        connect: async () => ({ query: async () => ({ rows: [] }), release: () => undefined }),
+        query: async () => ({ rows: [] }),
+      }),
+      webauthn: {
+        generateAuthenticationOptions: async () => ({ challenge: 'challenge' }),
+        generateRegistrationOptions: async () => ({
+          challenge: 'registration-challenge',
+          user: { id: 'owner' },
+        }),
+        verifyRegistrationResponse: async () => ({ verified: false }),
+        verifyAuthenticationResponse: async () => ({ verified: false }),
+      },
+    });
+
+    expect(runtime.enabled).toBe(true);
+    if (runtime.enabled !== true) throw new Error('runtime should be enabled');
+    const response = await runtime.bootstrapOptions(new Request('https://admin.learnbox.app/'));
+    expect(response.status).toBe(200);
+  });
+
   it('builds the runtime using a verified database URL only when enabled', () => {
     let connectionString = '';
     const runtime = createAdminAuthServer({
@@ -39,6 +67,11 @@ describe('admin auth server', () => {
       },
       webauthn: {
         generateAuthenticationOptions: async () => ({ challenge: 'challenge' }),
+        generateRegistrationOptions: async () => ({
+          challenge: 'registration-challenge',
+          user: { id: 'owner' },
+        }),
+        verifyRegistrationResponse: async () => ({ verified: false }),
         verifyAuthenticationResponse: async () => ({ verified: false }),
       },
     });

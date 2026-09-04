@@ -15,6 +15,8 @@ FROM dependencies AS builder
 COPY apps/admin apps/admin
 COPY packages/content-models packages/content-models
 COPY content content
+ARG NEXT_PUBLIC_LEARNBOX_ADMIN_PASSKEY_UI_ENABLED=false
+ENV NEXT_PUBLIC_LEARNBOX_ADMIN_PASSKEY_UI_ENABLED=$NEXT_PUBLIC_LEARNBOX_ADMIN_PASSKEY_UI_ENABLED
 RUN pnpm --filter @learnbox/admin build
 
 FROM node:22-bookworm-slim AS runner
@@ -25,6 +27,9 @@ ENV PORT=3000
 RUN groupadd --system --gid 1001 nodejs && useradd --system --uid 1001 --gid nodejs nextjs
 WORKDIR /app
 COPY --from=builder --chown=nextjs:nodejs /workspace/apps/admin/.next/standalone ./
+# Next standalone tracing omits pg's pnpm symlink target; keep the filtered runtime tree.
+COPY --from=dependencies --chown=nextjs:nodejs /workspace/node_modules/.pnpm ./node_modules/.pnpm
+COPY --from=dependencies --chown=nextjs:nodejs /workspace/apps/admin/node_modules ./apps/admin/node_modules
 COPY --from=builder --chown=nextjs:nodejs /workspace/apps/admin/.next/static ./apps/admin/.next/static
 COPY --from=builder --chown=nextjs:nodejs /workspace/apps/admin/public ./apps/admin/public
 USER nextjs

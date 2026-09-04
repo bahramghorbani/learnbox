@@ -4,7 +4,7 @@ import { act, createElement, type ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { AdminAuthGate } from '../app/components/AdminAuthGate';
+import { AdminAuthGate, AdminBootstrap } from '../app/components/AdminAuthGate';
 import { PasskeySignIn } from '../app/components/PasskeySignIn';
 import { resolveAdminAuthMode } from '../app/admin-auth-mode';
 
@@ -13,13 +13,15 @@ vi.mock('@simplewebauthn/browser', async (importOriginal) => {
   return {
     ...original,
     startAuthentication: vi.fn(async () => ({ id: 'credential' })),
+    startRegistration: vi.fn(async () => ({ id: 'registration' })),
   };
 });
 
-import { startAuthentication } from '@simplewebauthn/browser';
+import { startAuthentication, startRegistration } from '@simplewebauthn/browser';
 import { _browserSupportsWebAuthnInternals } from '@simplewebauthn/browser';
 
 const mockedStartAuthentication = vi.mocked(startAuthentication);
+const mockedStartRegistration = vi.mocked(startRegistration);
 
 type Rendered = {
   container: HTMLElement;
@@ -82,6 +84,8 @@ function stubSessionFetch(status: number, body?: unknown) {
 beforeEach(() => {
   mockedStartAuthentication.mockReset();
   mockedStartAuthentication.mockImplementation(async () => ({ id: 'credential' }) as never);
+  mockedStartRegistration.mockReset();
+  mockedStartRegistration.mockImplementation(async () => ({ id: 'registration' }) as never);
   _browserSupportsWebAuthnInternals.stubThis = (value) => value;
 });
 
@@ -244,6 +248,43 @@ describe('admin passkey UI', () => {
       await Promise.resolve();
     });
     expect(onAuthenticated).toHaveBeenCalledOnce();
+    await rendered.unmount();
+  });
+
+  it('returns the bootstrap card to idle after a successful registration response', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.includes('/api/auth/bootstrap/options')) {
+          return new Response(JSON.stringify({ challenge: 'challenge' }), { status: 200 });
+        }
+        if (url.includes('/api/auth/bootstrap/verify')) {
+          return new Response(null, { status: 204 });
+        }
+        return new Response(null, { status: 404 });
+      }),
+    );
+    const onBootstrapped = vi.fn();
+    const rendered = await render(createElement(AdminBootstrap, { onBootstrapped }));
+    const input = rendered.container.querySelector('input')!;
+    await act(async () => {
+      const setValue = Object.getOwnPropertyDescriptor(
+        HTMLInputElement.prototype,
+        'value',
+      )!.set!;
+      setValue.call(input, 'a'.repeat(32));
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    const button = rendered.button('ثبت Passkey مدیر')!;
+    await act(async () => {
+      button.click();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    expect(onBootstrapped).toHaveBeenCalledOnce();
+    expect(rendered.button('ثبت Passkey مدیر')).not.toBeNull();
     await rendered.unmount();
   });
 
