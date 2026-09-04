@@ -390,8 +390,8 @@
       },
       "examples": [
         {
-          "german": "Ich esse Brot.",
-          "persian": "من نان می‌خورم."
+          "german": "Ich esse zu Mittag.",
+          "persian": "من ناهار می‌خورم."
         }
       ],
       "grammarNote": "فعل بی‌قاعده؛ ریشه در حالت دوم شخص مفرد تغییر می‌کند.",
@@ -462,8 +462,8 @@
       },
       "examples": [
         {
-          "german": "Das Haus ist groß.",
-          "persian": "خانه بزرگ است."
+          "german": "Der Elefant ist groß.",
+          "persian": "فیل بزرگ است."
         }
       ],
       "grammarNote": "صفت؛ در جایگاه خبری بعد از sein بدون پسوند می‌آید.",
@@ -498,8 +498,8 @@
       },
       "examples": [
         {
-          "german": "Das Wasser ist kalt.",
-          "persian": "آب سرد است."
+          "german": "Im Winter ist es kalt.",
+          "persian": "در زمستان هوا سرد است."
         }
       ],
       "grammarNote": "صفت؛ در جایگاه خبری بعد از sein بدون پسوند می‌آید.",
