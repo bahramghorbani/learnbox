@@ -207,29 +207,42 @@ export function LearnerHome({
   useEffect(() => {
     if (!authenticated || !isServerOtp || typeof window === 'undefined') return;
     let cancelled = false;
-    setServerSyncState('loading');
-    void fetchWebLearnerState()
-      .then((result) => {
-        if (cancelled) return;
-        if (result.status === 'ok') {
-          setServerLastSyncedAt(new Date().toISOString());
-          setServerSyncState('server-backed');
-          return;
-        }
-        if (result.status === 'unauthorized') {
-          setServerSyncState('local-only');
-          return;
-        }
-        setServerSyncState(
-          typeof navigator !== 'undefined' && navigator.onLine === false ? 'offline' : 'error',
-        );
-      })
-      .catch(() => {
-        if (cancelled) return;
-        setServerSyncState('error');
-      });
+    const readServerState = () => {
+      setServerSyncState('loading');
+      void fetchWebLearnerState()
+        .then((result) => {
+          if (cancelled) return;
+          if (result.status === 'ok') {
+            setServerLastSyncedAt(new Date().toISOString());
+            setServerSyncState('server-backed');
+            return;
+          }
+          if (result.status === 'unauthorized') {
+            setServerSyncState('local-only');
+            return;
+          }
+          setServerSyncState(
+            typeof navigator !== 'undefined' && navigator.onLine === false ? 'offline' : 'error',
+          );
+        })
+        .catch(() => {
+          if (cancelled) return;
+          setServerSyncState('error');
+        });
+    };
+    const goOffline = () => {
+      setServerSyncState('offline');
+    };
+    const goOnline = () => {
+      readServerState();
+    };
+    readServerState();
+    window.addEventListener('offline', goOffline);
+    window.addEventListener('online', goOnline);
     return () => {
       cancelled = true;
+      window.removeEventListener('offline', goOffline);
+      window.removeEventListener('online', goOnline);
     };
   }, [authenticated, isServerOtp]);
 

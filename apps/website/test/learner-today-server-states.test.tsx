@@ -138,6 +138,67 @@ describe('Today server snapshot truth states', () => {
     expect(rendered.text()).not.toContain('سرور LearnBox خوانده شده');
   });
 
+  it('switches from the server-read label to the offline label when the connection drops mid-session', async () => {
+    Object.defineProperty(navigator, 'onLine', { configurable: true, value: true });
+    vi.stubGlobal('fetch', mockRouter({ state: () => json(200, canonicalBody) }));
+    rendered = await renderLearner({ otpUiFlag: 'true' });
+    await rendered.signInLocally();
+    await rendered.clickButton('ادامه');
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(rendered.text()).toContain('وضعیت یادگیری از سرور خوانده شد');
+    await act(async () => {
+      Object.defineProperty(navigator, 'onLine', { configurable: true, value: false });
+      window.dispatchEvent(new Event('offline'));
+      await Promise.resolve();
+    });
+    expect(rendered.text()).toContain('آفلاین');
+    expect(rendered.text()).not.toContain('وضعیت یادگیری از سرور خوانده شد');
+  });
+
+  it('re-reads the learner state after reconnect and returns to the server-read label without a reload', async () => {
+    Object.defineProperty(navigator, 'onLine', { configurable: true, value: true });
+    const stateFetch = vi.fn(async () => json(200, canonicalBody));
+    const router = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      const method = init?.method ?? 'GET';
+      if (method === 'POST' && url === '/api/auth/otp/request') {
+        return json(201, {
+          challengeId: 'first-challenge-id-0001',
+          expiresAt: '2026-08-08T12:05:00.000Z',
+          resendAvailableAt: '2026-08-08T12:01:00.000Z',
+        });
+      }
+      if (method === 'POST' && url === '/api/auth/otp/verify') return json(204, null);
+      if (method === 'GET' && url === '/api/learner/state') return stateFetch();
+      throw new Error(`Unexpected fetch: ${method} ${url}`);
+    });
+    vi.stubGlobal('fetch', router);
+    rendered = await renderLearner({ otpUiFlag: 'true' });
+    await rendered.signInLocally();
+    await rendered.clickButton('ادامه');
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(stateFetch.mock.calls).toHaveLength(1);
+    expect(rendered.text()).toContain('وضعیت یادگیری از سرور خوانده شد');
+    await act(async () => {
+      Object.defineProperty(navigator, 'onLine', { configurable: true, value: false });
+      window.dispatchEvent(new Event('offline'));
+      await Promise.resolve();
+    });
+    expect(rendered.text()).toContain('آفلاین');
+    await act(async () => {
+      Object.defineProperty(navigator, 'onLine', { configurable: true, value: true });
+      window.dispatchEvent(new Event('online'));
+      await Promise.resolve();
+    });
+    expect(stateFetch.mock.calls).toHaveLength(2);
+    expect(rendered.text()).toContain('وضعیت یادگیری از سرور خوانده شد');
+    expect(rendered.text()).not.toContain('آفلاین');
+  });
+
   it('keeps the local session figure for the Today CTA when the server snapshot lists one review card', async () => {
     const serverSnapshotWithOneReview = {
       schedules: [
