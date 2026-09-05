@@ -6,7 +6,11 @@ import { PostgresReviewEventStore } from '../../api/dist/reviews/postgres-review
 import { MobileReviewBatchService } from '../../api/dist/reviews/mobile-review-batch.service.js';
 import { requireVerifiedDatabaseTls } from '../../api/dist/database/migration-runner.js';
 
-import type { MobileReviewHttpDependencies, AccessVerification } from './mobile-review-http';
+import type {
+  MobileReviewHttpDependencies,
+  MobileReviewReconciliationDependencies,
+  AccessVerification,
+} from './mobile-review-http';
 
 export type MobileReviewRuntimeConfig = {
   databaseUrl: string;
@@ -50,6 +54,29 @@ export function mobileReviewHttpDependenciesFromEnvironment(
         : { status: 'invalid' };
     },
     submit: (input) => service.submit(input),
+  };
+}
+
+export function mobileReviewReconciliationDependenciesFromEnvironment(
+  environment: Environment = process.env,
+): MobileReviewReconciliationDependencies | null {
+  const config = readMobileReviewRuntimeConfig(environment);
+  if (!config) return null;
+  const session = new MobileSessionContract({
+    audience: 'learnbox-mobile',
+    clock: { now: () => new Date() },
+    key: config.sessionSecret,
+    random: { bytes: randomBytes },
+  });
+  const store = new PostgresReviewEventStore(reviewPool(config.databaseUrl));
+  return {
+    verifyAccessToken(token: string): AccessVerification {
+      const result = session.verifyAccessToken(token);
+      return result.status === 'valid'
+        ? { status: 'valid', claims: { sub: result.claims.sub } }
+        : { status: 'invalid' };
+    },
+    readReconciliation: (input) => store.readReconciliation(input.userId, input.after),
   };
 }
 

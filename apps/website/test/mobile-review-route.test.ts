@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { POST } from '../app/api/reviews/mobile/route';
+import { GET as GET_RECONCILIATION } from '../app/api/reviews/mobile/reconciliation/route';
 import { readMobileReviewRuntimeConfig } from '../lib/mobile-review-runtime';
 import { readLearnerStateRuntimeConfig } from '../../api/dist/learner-state/learner-state-runtime.js';
 
@@ -41,6 +42,21 @@ describe('disabled mobile review route', () => {
     expect(response.status).toBe(503);
     expect(response.headers.get('cache-control')).toBe('no-store');
     expect(response.headers.has('set-cookie')).toBe(false);
+    expect(await response.json()).toEqual({ error: 'serverUnavailable' });
+  });
+});
+
+describe('disabled reconciliation route', () => {
+  it('keeps the reconciliation read fail-closed while sync is disabled', async () => {
+    process.env.MOBILE_REVIEW_SYNC_ENABLED = 'false';
+    const response = await GET_RECONCILIATION(
+      new Request('https://learnbox.example/api/reviews/mobile/reconciliation?after=0', {
+        method: 'GET',
+        headers: { authorization: 'Bearer token' },
+      }),
+    );
+    expect(response.status).toBe(503);
+    expect(response.headers.get('cache-control')).toBe('no-store');
     expect(await response.json()).toEqual({ error: 'serverUnavailable' });
   });
 });

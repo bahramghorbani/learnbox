@@ -452,4 +452,42 @@ describe('PostgresReviewEventStore learner-scoped idempotency', () => {
     expect(queries[2].params).toEqual([input.userId]);
     expect(queries[3].sql).toMatch(/FROM card_schedules\s+WHERE user_id = \$1 AND card_id = \$2/);
   });
+
+  it('reads only applied events after the learner cursor with bounded ordered paging', async () => {
+    const queries: Array<{ sql: string; params?: unknown[] }> = [];
+    const pool = {
+      query: async (sql: string, params?: unknown[]) => {
+        queries.push({ sql, params });
+        if (sql.includes('FROM review_events')) {
+          return {
+            rows: [
+              {
+                client_event_id: 'evt-2',
+                event_id: 'event-2',
+                applied_at: new Date('2026-09-05T08:20:01Z'),
+                reconciliation_cursor: '42',
+              },
+            ],
+          };
+        }
+        return { rows: [{ cursor: '42' }] };
+      },
+      connect: async () => {
+        throw new Error('reconciliation read must not open a transaction');
+      },
+    } as unknown as Pool;
+    const result = await new PostgresReviewEventStore(pool).readReconciliation(input.userId, '41');
+    expect(result).toEqual({
+      cursor: '41',
+      nextCursor: '42',
+      hasMore: false,
+      events: [
+        { clientEventId: 'evt-2', eventId: 'event-2', appliedAt: '2026-09-05T08:20:01.000Z' },
+      ],
+    });
+    expect(queries[0].sql).toMatch(/e\.reconciliation_cursor > \$2::bigint/i);
+    expect(queries[0].sql).toMatch(/ORDER BY e\.reconciliation_cursor ASC/i);
+    expect(queries[0].params).toEqual([input.userId, '41', 101]);
+    expect(queries[1].params).toEqual([input.userId]);
+  });
 });
