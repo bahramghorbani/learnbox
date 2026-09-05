@@ -6,7 +6,7 @@
 
 ### M1-D sync readiness boundary
 
-- Cursor/persistence foundations and the proposed wire contract are merged and documented. The reconciliation GET endpoint is **not implemented**; network sync and related flags remain dormant. Implementation requires owner decisions O-1/O-2 from `docs/architecture/M1D_SYNC_WIRE_CONTRACT.md`, followed by a separately authorized serial API/security/migration task.
+- Cursor/persistence foundations and the proposed wire contract are merged and documented. Owner decisions O-1/O-2 are now approved: conflicts remain pending and require a new event ID after resolution; M1 acknowledgement is strict one-step after atomic application. The reconciliation GET endpoint is **not implemented**; network sync and related flags remain dormant. Implementation still requires a separately authorized serial API/security/migration task.
 
 ### Active milestone
 
