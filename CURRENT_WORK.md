@@ -4,6 +4,10 @@
 
 ## Active work
 
+### M1-D sync readiness boundary
+
+- Cursor/persistence foundations and the proposed wire contract are merged and documented. The reconciliation GET endpoint is **not implemented**; network sync and related flags remain dormant. Implementation requires owner decisions O-1/O-2 from `docs/architecture/M1D_SYNC_WIRE_CONTRACT.md`, followed by a separately authorized serial API/security/migration task.
+
 ### Active milestone
 
 - **M1 — Online Learning Core:** slice 1 QA complete; milestone remains **partial and not production-ready**.
