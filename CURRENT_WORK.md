@@ -6,12 +6,12 @@
 
 ### M1-D sync readiness boundary
 
-- Cursor/persistence foundations and the proposed wire contract are merged and documented. Owner decisions O-1/O-2 are now approved: conflicts remain pending and require a new event ID after resolution; M1 acknowledgement is strict one-step after atomic application. The reconciliation GET endpoint is **not implemented**; network sync and related flags remain dormant. Implementation still requires a separately authorized serial API/security/migration task.
+- Cursor/persistence foundations and the proposed wire contract are merged and documented. Owner decisions O-1/O-2 are now approved: conflicts remain pending and require a new event ID after resolution; M1 acknowledgement is strict one-step after atomic application. The reconciliation GET endpoint is now implemented in PR #209 but remains **dormant and fail-closed** because network sync is not enabled. Independent API/security review and a separate activation/composition decision remain required.
 
 ### LB-DS-029 — dormant reconciliation read implementation
 
-- **Status:** implementation in progress on `feature/m1d-reconciliation-read-direct`. The read-only GET handler, runtime boundary, route, and per-event cursor query are being validated behind the existing disabled sync flag. No activation or migration is included.
-- **Dependency:** focused security/contract review and green CI before merge; client/network sync composition remains a separate gated task.
+- **Status:** accepted and merged in PR #209 at `14ccaee` from `feature/m1d-reconciliation-read-direct`. The read-only GET handler, runtime boundary, route, and per-event cursor query are present and verified behind the existing disabled sync flag. No activation or migration is included.
+- **Dependency:** independent security/contract review and a separate activation/composition decision; client/network sync remains dormant.
 
 ### Active milestone
 

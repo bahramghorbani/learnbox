@@ -50,10 +50,11 @@ Accepted and merged through PR #205 at merge commit `a6b50b6`. Decision-ready pr
 
 ## LB-DS-029
 
-- Status: in_progress
+- Status: accepted
 - Executor: serial implementation worker (M1-D reconciliation read)
 - Base: main at `3647814` (O-1/O-2 decisions merged in PR #208)
 - Branch: feature/m1d-reconciliation-read-direct
+- Head commit: `95e6c13`; merged by PR #209 at `14ccaee`
 - Risk: security-sensitive-sync-read
 - Specification: docs/architecture/M1D_SYNC_WIRE_CONTRACT.md; docs/architecture/ADR/0014-push-reconciliation-cursor-policy.md
 - Allowed paths: apps/api/src/reviews/postgres-review-event.store.ts; apps/api/test/postgres-review-event.store.test.ts; apps/website/lib/mobile-review-http.ts; apps/website/test/mobile-review-http.test.ts; apps/website/app/api/reviews/mobile/reconciliation/route.ts; apps/website/lib/mobile-review-runtime.ts; apps/website/test/mobile-review-route.test.ts; CURRENT_WORK.md; .ai/WORK_QUEUE.md; .ai/worker-reports/LB-DS-029.md
@@ -62,17 +63,17 @@ Accepted and merged through PR #205 at merge commit `a6b50b6`. Decision-ready pr
 - Draft PR required: yes
 - Merge allowed: yes
 
-Implement the minimal read-only reconciliation GET behind the existing fail-closed `MOBILE_REVIEW_SYNC_ENABLED` boundary. No flag enablement, migration, auth redesign, mobile composition, production or client sync activation is included. O-1/O-2 are owner-approved; the endpoint remains dormant until a separate activation decision.
+Accepted and merged in PR #209 at `14ccaee`. The read-only reconciliation GET exists but remains fail-closed behind the unchanged disabled `MOBILE_REVIEW_SYNC_ENABLED` boundary. No flag enablement, migration, auth redesign, mobile composition, client sync activation, production route activation, deployment or production change is included. Independent API/security review and a separate activation/composition decision remain required.
 
-|| ID | Workstream | Worker role | Allowed scope | Depends on | Parallel rule |
+| ID   | Workstream                         | Worker role                | Allowed scope                                                 | Depends on                 | Parallel rule                                                                                |
 | ---- | ---------------------------------- | -------------------------- | ------------------------------------------------------------- | -------------------------- | -------------------------------------------------------------------------------------------- |
-| D0 | Visual language and token contract | W1 + design-capable worker | `docs/design/**`, shared visual token docs, design evidence | M0 | Can run alongside M1 contract audit; no overlapping implementation paths |
-| D1 | Learner UI kit and state boards | design-capable worker + W8 | `docs/design/**`, UI acceptance/spec artifacts | D0 | Can run alongside backend contract audit; implementation waits for affected surface approval |
-| M1-A | Online learning contract audit | W1 + W6 | API/domain/schema docs and tests only | M0 | Can overlap D0/D1; no mobile/Web surface edits |
-| M1-B | Web learning core | W2 | learner Web components/routes/tests | M1-A + relevant D1 surface | Must not edit API, mobile, Admin or design token paths |
-| M1-C | Mobile learning core | W3 | Flutter learner screens/tests/assets | M1-A + relevant D1 surface | Must not edit Web, API or Admin paths |
-| M1-D | Sync and persistence | W6 | API, persistence, migrations, sync tests | M1-A | Serial for migrations/auth; separate worktree required |
-| M1-Q | Independent product QA | W8 | QA evidence, screenshots, accessibility and acceptance review | D1 + M1 deliverables | Cannot approve its own implementation |
+| D0   | Visual language and token contract | W1 + design-capable worker | `docs/design/**`, shared visual token docs, design evidence   | M0                         | Can run alongside M1 contract audit; no overlapping implementation paths                     |
+| D1   | Learner UI kit and state boards    | design-capable worker + W8 | `docs/design/**`, UI acceptance/spec artifacts                | D0                         | Can run alongside backend contract audit; implementation waits for affected surface approval |
+| M1-A | Online learning contract audit     | W1 + W6                    | API/domain/schema docs and tests only                         | M0                         | Can overlap D0/D1; no mobile/Web surface edits                                               |
+| M1-B | Web learning core                  | W2                         | learner Web components/routes/tests                           | M1-A + relevant D1 surface | Must not edit API, mobile, Admin or design token paths                                       |
+| M1-C | Mobile learning core               | W3                         | Flutter learner screens/tests/assets                          | M1-A + relevant D1 surface | Must not edit Web, API or Admin paths                                                        |
+| M1-D | Sync and persistence               | W6                         | API, persistence, migrations, sync tests                      | M1-A                       | Serial for migrations/auth; separate worktree required                                       |
+| M1-Q | Independent product QA             | W8                         | QA evidence, screenshots, accessibility and acceptance review | D1 + M1 deliverables       | Cannot approve its own implementation                                                        |
 
 ### Start conditions
 
