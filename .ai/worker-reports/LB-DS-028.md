@@ -2,7 +2,7 @@
 
 - Branch: docs/m1d-owner-decisions
 - Base commit: 796e43b (origin/main; PR #207 merged)
-- Head commit: PENDING LOCAL — owner-decision documentation commit, no push yet
+- Head commit: `aa5f667` (local owner-decision documentation commit; no push yet)
 - Draft PR: none
 - Scope completed: Recorded the product owner's approval of M1-D wire-contract decisions O-1 and O-2. O-1 keeps a conflicting local event pending without overwrite/delete; resolution requires a new clientEventId. O-2 adopts strict one-step semantics: acknowledge only after atomic review-event and schedule application; no accepted-but-not-applied state in M1. Updated the proposed wire contract, canonical product status, and CURRENT_WORK. No implementation authorization was created.
 - Files changed: docs/architecture/M1D_SYNC_WIRE_CONTRACT.md; docs/PRODUCT_STATUS.md; CURRENT_WORK.md; .ai/worker-reports/LB-DS-028.md
