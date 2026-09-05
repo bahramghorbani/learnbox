@@ -23,6 +23,18 @@ export type MobileReviewHttpDependencies = {
   }): Promise<MobileReviewBatchItemOutcome[]>;
 };
 
+export type MobileReviewReconciliation = {
+  cursor: string;
+  nextCursor: string;
+  hasMore: boolean;
+  events: Array<{ clientEventId: string; eventId: string; appliedAt: string }>;
+};
+
+export type MobileReviewReconciliationDependencies = {
+  verifyAccessToken(token: string): AccessVerification;
+  readReconciliation(input: { userId: string; after: string }): Promise<MobileReviewReconciliation>;
+};
+
 const MAX_BODY_BYTES = 16_384;
 const JSON_HEADERS = {
   'cache-control': 'no-store',
@@ -59,6 +71,41 @@ export async function handleMobileReviewPost(
   try {
     const outcomes = await dependencies.submit({ userId: parsed.userId, items: parsed.items });
     return json({ outcomes }, 200);
+  } catch {
+    return error('serverUnavailable', 503);
+  }
+}
+
+export async function handleMobileReviewGet(
+  request: Request,
+  dependencies: MobileReviewReconciliationDependencies,
+  options: BoundaryOptions = {},
+): Promise<Response> {
+  if (
+    request.method !== 'GET' ||
+    !isSecure(request, options.development ?? process.env.NODE_ENV === 'development')
+  )
+    return error('validation', 400);
+
+  const authorization = request.headers.get('authorization') ?? '';
+  const match = /^Bearer ([A-Za-z0-9._-]{1,2048})$/.exec(authorization);
+  if (!match) return error('invalidToken', 401);
+  const verification = dependencies.verifyAccessToken(match[1]);
+  if (verification.status !== 'valid') return error('invalidToken', 401);
+
+  const after = new URL(request.url).searchParams.get('after') ?? '0';
+  if (!/^\d+$/.test(after)) return error('validation', 400);
+
+  try {
+    return json(
+      {
+        reconciliation: await dependencies.readReconciliation({
+          userId: verification.claims.sub,
+          after,
+        }),
+      },
+      200,
+    );
   } catch {
     return error('serverUnavailable', 503);
   }

@@ -1,7 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { handleMobileReviewPost } from '../lib/mobile-review-http';
-import type { MobileReviewHttpDependencies } from '../lib/mobile-review-http';
+import { handleMobileReviewGet, handleMobileReviewPost } from '../lib/mobile-review-http';
+import type {
+  MobileReviewHttpDependencies,
+  MobileReviewReconciliationDependencies,
+} from '../lib/mobile-review-http';
 
 const validItem = {
   contentId: 'card-house',
@@ -42,6 +45,69 @@ function dependencies(): {
 }
 
 describe('mobile review HTTP boundary', () => {
+  it('reads learner reconciliation events after the verified cursor', async () => {
+    const deps: MobileReviewReconciliationDependencies = {
+      verifyAccessToken: vi.fn(() => ({ status: 'valid' as const, claims: { sub: 'learner-1' } })),
+      readReconciliation: vi.fn(async ({ userId, after }) => {
+        expect(userId).toBe('learner-1');
+        expect(after).toBe('41');
+        return {
+          cursor: '41',
+          nextCursor: '42',
+          hasMore: false,
+          events: [
+            { clientEventId: 'evt-2', eventId: 'event-2', appliedAt: '2026-09-05T08:20:01.000Z' },
+          ],
+        };
+      }),
+    };
+    const response = await handleMobileReviewGet(
+      new Request('https://learnbox.example/api/reviews/mobile/reconciliation?after=41', {
+        headers: { authorization: 'Bearer valid-token' },
+      }),
+      deps,
+    );
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      reconciliation: {
+        cursor: '41',
+        nextCursor: '42',
+        hasMore: false,
+        events: [
+          { clientEventId: 'evt-2', eventId: 'event-2', appliedAt: '2026-09-05T08:20:01.000Z' },
+        ],
+      },
+    });
+  });
+
+  it('rejects malformed reconciliation cursors and hides read failures', async () => {
+    const deps: MobileReviewReconciliationDependencies = {
+      verifyAccessToken: vi.fn(() => ({ status: 'valid' as const, claims: { sub: 'learner-1' } })),
+      readReconciliation: vi.fn(async () => {
+        throw new Error('database details must not escape');
+      }),
+    };
+    for (const after of ['-1', '1.5', '1e2']) {
+      const response = await handleMobileReviewGet(
+        new Request(`https://learnbox.example/api/reviews/mobile/reconciliation?after=${after}`, {
+          headers: { authorization: 'Bearer valid-token' },
+        }),
+        deps,
+      );
+      expect(response.status).toBe(400);
+      expect(await response.json()).toEqual({ error: 'validation' });
+    }
+    const response = await handleMobileReviewGet(
+      new Request('https://learnbox.example/api/reviews/mobile/reconciliation?after=41', {
+        headers: { authorization: 'Bearer valid-token' },
+      }),
+      deps,
+    );
+    expect(response.status).toBe(503);
+    expect(response.headers.get('cache-control')).toBe('no-store');
+    expect(await response.json()).toEqual({ error: 'serverUnavailable' });
+  });
+
   it('derives learner identity from the verified bearer token and preserves ordered outcomes', async () => {
     const deps = dependencies();
     const response = await handleMobileReviewPost(request({ items: [validItem] }), deps);

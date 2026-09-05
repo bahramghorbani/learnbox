@@ -21,6 +21,13 @@ interface ReconciliationCursorRow {
   cursor: string;
 }
 
+export interface MobileReviewReconciliationResult {
+  cursor: string;
+  nextCursor: string;
+  hasMore: boolean;
+  events: Array<{ clientEventId: string; eventId: string; appliedAt: string }>;
+}
+
 interface ScheduleRow {
   state: CardSchedule['state'];
   stability_days: number;
@@ -239,5 +246,40 @@ export class PostgresReviewEventStore implements ReviewEventStore {
     );
     const row = result.rows[0];
     return row ? toSchedule(row) : null;
+  }
+
+  async readReconciliation(
+    userId: string,
+    after: string,
+    pageSize = 100,
+  ): Promise<MobileReviewReconciliationResult> {
+    const rows = await this.pool.query<{
+      client_event_id: string;
+      event_id: string;
+      applied_at: Date;
+      reconciliation_cursor: string;
+    }>(
+      `SELECT e.client_event_id, e.id AS event_id, e.applied_at, e.reconciliation_cursor
+         FROM review_events e
+        WHERE e.user_id = $1
+          AND e.reconciliation_cursor IS NOT NULL
+          AND e.reconciliation_cursor > $2::bigint
+        ORDER BY e.reconciliation_cursor ASC
+        LIMIT $3`,
+      [userId, after, pageSize + 1],
+    );
+    const hasMore = rows.rows.length > pageSize;
+    const events = rows.rows.slice(0, pageSize).map((row) => ({
+      clientEventId: row.client_event_id,
+      eventId: row.event_id,
+      appliedAt: row.applied_at.toISOString(),
+    }));
+    const cursor = await this.pool.query<ReconciliationCursorRow>(
+      `SELECT cursor::text AS cursor FROM learner_reconciliation_cursors WHERE user_id = $1`,
+      [userId],
+    );
+    const currentCursor = cursor.rows[0]?.cursor ?? '0';
+    const nextCursor = hasMore ? rows.rows[pageSize - 1].reconciliation_cursor : currentCursor;
+    return { cursor: after, nextCursor, hasMore, events };
   }
 }
