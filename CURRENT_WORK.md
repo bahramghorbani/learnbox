@@ -92,10 +92,10 @@
 
 ## Immediate execution order
 
-1. Complete the Admin session → canonical `users.id` binding: migration `0016`, fail-closed session lookup, and the one-shot server-side binding operation are merged (PRs #187–#188; ADR 0015 records the fail-closed boundary). Server-backed Admin content read/auth remains blocked by the missing owner-bootstrap/role-assignment contract: owner bootstrap, role assignment and staging verification remain gated.
-2. Start Pack ↔ canonical `contentId` contract is decided and recorded in ADR 0013; the bounded 35-target catalog slice (derived snapshot + fail-closed seed gate, ADR 0016) was merged in PR #193 at `73adc02`, and the missing 15 pending drafts merged in PR #200 at `2aa5931`. DB seed remains blocked: all 35 target items are drafted and linguistically reviewed (product-owner confirmations 2026-07-27 and 2026-09-04, linguistic dimensions only) but none is release-approved; all remaining review dimensions plus approved/published `card_versions` must exist before any `cards`/`card_versions` seed.
+1. Admin session → canonical `users.id` binding is merged (PRs #187–#188; migration `0016`, fail-closed session lookup and one-shot binding operation). Remaining work is owner bootstrap, role assignment and staging verification; ADR 0015 records the fail-closed boundary.
+2. Start Pack ↔ canonical `contentId` contract is recorded in ADR 0013 and the bounded 35-item catalog/draft slice is merged (PRs #193 and #200); release-approved `card_versions` and all remaining review dimensions are required before seed/publication.
 3. Implement the authenticated server-wired learner path completion and any remaining D1 fetch states.
-4. Decide and implement M1-D push reconciliation. The cursor/watermark policy is approved in
+4. Complete the separately review-gated M1-D push reconciliation activation/composition work. The cursor/watermark policy is approved in
    ADR 0014; server-core (PR #169), client-side cursor capture/persistence (PR #170),
    read-side cursor exposure (PR #171/LB-DS-024) and per-event cursor binding (PR #172/LB-DS-025)
    are merged, as are request serialization (PR #184) and the dormant review POST route

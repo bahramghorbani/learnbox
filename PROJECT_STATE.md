@@ -1,6 +1,6 @@
 # LearnBox stable project state
 
-**Last reviewed:** 2026-08-30
+**Last reviewed:** 2026-09-05
 
 ## Product
 
@@ -18,14 +18,14 @@ LearnBox is an online-first German vocabulary Leitner product for Persian-speaki
 
 - Web and Flutter learner foundations include Today, Words, Progress, review scheduling, active recall, media/pronunciation foundations, recovery and local pending review events.
 - Admin foundations include protected authentication boundaries, content review workspace, pack readiness/release panel and owner-only splash replacement control.
-- Web learner foundations include a fail-closed server-backed learner-state read (`GET /api/learner/state`, `WEB_LEARNER_STATE_ENABLED` defaults false, merged in PR #163); the actionable Today figure stays local until the Start Pack ↔ canonical `contentId` catalog contract is approved, and push reconciliation remains blocked pending cursor/watermark policy approval.
+- Web learner foundations include a fail-closed server-backed learner-state read (`GET /api/learner/state`, `WEB_LEARNER_STATE_ENABLED` defaults false, merged in PR #163); the actionable Today figure stays local until approved/published Start Pack catalog rows exist. M1-D cursor persistence, request validation and the dormant reconciliation read route are merged (PRs #169–#172, #184–#185 and #209); network sync and client composition remain disabled.
 - Content Factory includes schemas, normalization, batch validation, duplicate foundations, review gates and media-plan boundaries; AI generation and complete Admin job UX remain incomplete.
 - Native mobile auth client, UI, fail-closed runtime and local lifecycle harness exist; real native online auth is blocked until a non-SSO gateway is available.
 - Commerce currently has provider-neutral foundations only. Real Web bank, Cafe Bazaar and Apple StoreKit adapters, server verification and entitlements are planned.
 
 ## Release position
 
-The repository is a tested product foundation, not a released commercial application. M0 Product Truth is the current documentation/delivery reset. The next product milestones are M1 Online Learning Core, M2 AI Content Factory/Admin Operations, M3 Profile/Personal Vocabulary, M4 Commerce, M5 Native Online Mobile, M6 Closed Beta, M7 Android Release and M8 Native iOS Release. See `docs/PRODUCT_STATUS.md` and `ROADMAP.md`.
+The repository is a tested product foundation, not a released commercial application. M1/M2 foundations and controlled Preview slices exist; the next release target remains a real closed alpha, with production activation, payment and public release gated.
 
 ## Canonical references
 
