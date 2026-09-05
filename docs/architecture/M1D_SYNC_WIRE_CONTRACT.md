@@ -314,12 +314,7 @@ The GET read never replaces per-item acknowledgement; it complements it.
   applied events remain applied and remain listed; the GET is a statement about the event
   log, not about current content publishability. Client consequences (e.g. hiding a card)
   are a content-surface decision, out of scope here.
-- **Server filtering semantics for acknowledged-but-not-yet-applied events remain an open
-  owner decision** (Slice 1 "Next steps"): events cannot be acknowledged without being
-  applied today (acknowledgement _is_ the applied write winning the race), so this phrase
-  refers to future states where an event is accepted-but-deferred. This contract assumes
-  the current one-step semantics (accepted = applied = cursor advanced) and does not invent
-  a deferred/queued server state.
+- **Server filtering semantics are owner-resolved for M1:** acknowledge is issued only after application, so there is no acknowledged-but-not-yet-applied state and no deferred filtering behavior. Future deferred server states would require a new decision.
 
 ## 10. Server identity boundary
 
@@ -379,24 +374,12 @@ rule):
   implemented as a serial M1-D queue task with migration test coverage, additive,
   learner-scoped, dormant behind the existing sync flag.
 
-## 13. Open owner decisions (not resolved here)
-
-- **O-1 `idempotencyConflict` policy:** retry-with-new-ID vs permanent tombstone vs
-  client-visible resolution UI. Explicitly open (contract §6, ADR 0014 §Out of scope).
-  This contract adds no behavior for it; a conflicting POST keeps the event pending and
-  the GET neither lists it (never applied) nor removes it.
-- **O-2 Server filtering semantics** for acknowledged-but-not-yet-applied events (Slice 1
-  "Next steps"); assumed one-step semantics in §9, not decided here.
-- **O-3 Event detail in reconciliation responses:** this contract returns
-  `clientEventId`/`eventId`/`appliedAt` only. Whether the GET should later carry content,
-  grade, schedule or per-device attribution requires the anonymous-device-identity and
-  event-read-API decisions (contract §1.2, §3.2) and a privacy review — the response
-  contains learner-identifying event history.
-- **O-4 Page size** for `hasMore` paging (proposed 100, unbounded beyond the current
-  flag-gated rollout) and whether the response cap should be a route constant mirroring
-  the POST 16 KiB body cap.
-- **O-5 Whether `GET /api/learner/state` should also expose the learner cursor** for a
-  one-round-trip client (additive field, deferred).
+- **Owner-approved O-1:** on `idempotencyConflict` (same learner-scoped `clientEventId` with a different payload), keep the conflicting local event pending; do not overwrite or delete the previously applied event. After client-visible resolution, retry requires a new `clientEventId`. No silent automatic retry or tombstone behavior is added.
+- **Owner-approved O-2:** M1 uses strict one-step semantics. Acknowledge only after the review event and schedule are applied atomically in the same transaction. There is no accepted-but-not-yet-applied state in M1, and deferred server filtering semantics are not implemented.
+- **Implementation boundary:** these decisions do not implement or enable the proposed GET endpoint; implementation remains a separate serial task requiring API/security/migration review.
+- **O-3 Event detail in reconciliation responses:** this contract returns `clientEventId`/`eventId`/`appliedAt` only. Whether the GET should later carry content, grade, schedule or per-device attribution requires the anonymous-device-identity and event-read-API decisions (contract §1.2, §3.2) and a privacy review — the response contains learner-identifying event history.
+- **O-4 Page size** for `hasMore` paging (proposed 100, unbounded beyond the current flag-gated rollout) and whether the response cap should be a route constant mirroring the POST 16 KiB body cap.
+- **O-5 Whether `GET /api/learner/state` should also expose the learner cursor** for a one-round-trip client (additive field, deferred).
 
 ## 14. Observability without PII
 
