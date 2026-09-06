@@ -164,10 +164,12 @@ changed.
 
 ## LB-DS-034
 
-- Status: review_requested
+- Status: accepted
 - Executor: supervisor (Web review-session keyboard/SR accessibility)
 - Base: `origin/main` at `2e2d7a36e4f2abf6ab5ed4a04edadcfdda15c1a8`
 - Branch: `fix/web-review-session-focus`
+- Head commit: `ab93453f2d4696a104fc6696d49ebd579dd9db73`
+- Merge commit: `e7069b8d8e86c143179fecad0b181b900309dc57` (PR #221)
 - Risk: routine-web-accessibility
 - Specification: `docs/design/D1_LEARNER_UI_KIT.md`; `docs/design/ACCESSIBILITY.md`; `docs/design/UI_QA.md`
 - Allowed paths: `apps/website/app/LearnerHome.tsx`; `apps/website/test/learner-core-flows.test.tsx`; `CURRENT_WORK.md`; `docs/PRODUCT_STATUS.md`; `docs/design/UI_QA.md`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-034.md`
@@ -180,6 +182,11 @@ Restore keyboard focus after review-session DOM transitions that remove the focu
 only moves when the active element has been removed: start/next-card front → flip control; card back
 → return control; completion → heading; exit/return → Today review CTA. No API, auth, flag, schema,
 migration, seed, content, payment, deployment, publication or Production change.
+
+Accepted and merged in PR #221 at `e7069b8` after all seven GitHub checks passed. Focus recovery is
+verified for start, both flip directions, next-card grade, completion and return-to-Today transitions.
+No API, auth, sync flag, schema, migration, seed, payment, deployment, publication or Production
+state changed.
 
 | ID   | Workstream                         | Worker role                | Allowed scope                                                 | Depends on                 | Parallel rule                                                                                |
 | ---- | ---------------------------------- | -------------------------- | ------------------------------------------------------------- | -------------------------- | -------------------------------------------------------------------------------------------- |
