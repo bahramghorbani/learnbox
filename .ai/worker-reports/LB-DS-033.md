@@ -1,9 +1,10 @@
 # LB-DS-033 — M1-D reconciliation GET security review and hardening
 
-- Status: review_requested
+- Status: accepted
 - Base: `fd81158be2bc79746115b836a2e7d674a47d9c11`
 - Branch: `review/m1d-reconciliation-read-security`
 - Head commit: `b719235c5277f4d502eea68f69acc7eb59667e50`
+- Merge commit: `82afe3b0149fc93d28a769ffb5d7f560b18daa41` (PR #219)
 - Risk: security-sensitive sync read
 
 ## Findings
@@ -52,12 +53,17 @@
 - Secret-pattern scan: zero private-key, AWS-key or credential-assignment findings.
 - GPT-5.6 Sol security/contract review: both activation blockers corrected; no remaining blocker in
   the dormant server read itself.
+- GitHub CI: 7/7 passed; PR was clean/mergeable before merge.
 
 ## Unchanged gates
 
 `MOBILE_REVIEW_SYNC_ENABLED` and all auth/sync flags remain false/unset by default. No client GET
 transport or composition was added. No migration, database data, seed, payment, deployment,
 publication or Production state changed. Activation remains a separate consequential decision.
+
+## Merge
+
+Merged to `main` through PR #219 at `82afe3b0149fc93d28a769ffb5d7f560b18daa41`.
 
 ## Rollback
 

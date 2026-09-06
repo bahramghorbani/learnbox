@@ -130,11 +130,12 @@ migration, seed, content, payment, deployment, publication and Production remain
 
 ## LB-DS-033
 
-- Status: review_requested
+- Status: accepted
 - Executor: supervisor (GPT-5.6 Sol security/contract review and hardening)
 - Base: `origin/main` at `fd81158`
 - Branch: `review/m1d-reconciliation-read-security`
 - Head commit: `b719235c5277f4d502eea68f69acc7eb59667e50`
+- Merge commit: `82afe3b0149fc93d28a769ffb5d7f560b18daa41` (PR #219)
 - Risk: security-sensitive-sync-read
 - Specification: ADR 0014; `docs/architecture/M1D_SYNC_WIRE_CONTRACT.md`
 - Allowed paths: `apps/api/src/reviews/postgres-review-event.store.ts`; `apps/api/test/postgres-review-event.store.test.ts`; `apps/website/lib/mobile-review-http.ts`; `apps/website/test/mobile-review-http.test.ts`; `docs/architecture/M1D_SYNC_WIRE_CONTRACT.md`; `docs/PRODUCT_STATUS.md`; `CURRENT_WORK.md`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-033.md`
@@ -155,6 +156,11 @@ The HTTP boundary rejects values above signed PostgreSQL BIGINT before storage a
 store tests pass 13/13; focused Website review boundary tests pass 14/14; full API passes 133/133
 and full Website passes 225/225. Builds, typecheck, migration validation, formatting, governance
 validators, diff check and secret scan pass. Runtime flags remain false and no client is composed.
+
+Accepted and merged in PR #219 at `82afe3b` after all seven GitHub checks passed. The two activation
+blockers are resolved in the dormant server read; client composition and activation remain separate
+gates. No migration, database data, deployment, seed, publication, payment or Production state
+changed.
 
 | ID   | Workstream                         | Worker role                | Allowed scope                                                 | Depends on                 | Parallel rule                                                                                |
 | ---- | ---------------------------------- | -------------------------- | ------------------------------------------------------------- | -------------------------- | -------------------------------------------------------------------------------------------- |
