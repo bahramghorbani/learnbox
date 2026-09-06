@@ -4,6 +4,15 @@
 
 ## Active work
 
+### LB-DS-036 — Android Words offline search and recovery
+
+- **Status:** review requested on `feat/mobile-words-search`, based on `origin/main` at `58a6590`;
+  Flutter tests (176/176), analyze, debug APK, validators and responsive large-text QA pass.
+- **Outcome:** locally filters bundled official words across German/Persian, reports no results
+  truthfully and restores search focus after clearing.
+- **Boundary:** bundled canonical Android content only. No personal vocabulary, API, auth, sync,
+  schema, migration, seed, payment, deployment, publication or Production change.
+
 ### M1-D sync readiness boundary
 
 - Cursor/persistence foundations and the wire contract are merged and documented. Owner decisions O-1/O-2 are approved: conflicts remain pending and require a new event ID after resolution; M1 acknowledgement is strict one-step after atomic application. The reconciliation GET from PR #209 remains **dormant and fail-closed**; LB-DS-033 completed its API/security review and hardening in PR #219 at `82afe3b`. A separate client-composition/activation decision remains required.
