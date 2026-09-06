@@ -1,8 +1,10 @@
 # LB-DS-035 — Learner Web Words source filters and search recovery
 
-- Status: review_requested
+- Status: accepted
 - Base: `1634744a1929edd31f68c90af8d41228e3df4c27`
 - Branch: `feat/web-words-source-filters`
+- Head commit: `0066af2749653246fff865aa91e2571de744946c`
+- Merge commit: `bd4491563a69fdc0aca44160889c41c6c2339488` (PR #223)
 - Risk: routine Web UI/accessibility
 
 ## Outcome
@@ -32,9 +34,9 @@
 - Desktop browser at 1440×900: 44px controls, three official rows and no horizontal overflow.
 - Local verification server was stopped.
 
-## Pending merge
+## Merge
 
-Open a Draft PR, verify all GitHub checks, then reconcile canonical status after merge.
+Merged in PR #223 at `bd44915` after GitHub CI passed 7/7.
 
 ## Unchanged gates
 

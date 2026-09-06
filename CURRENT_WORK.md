@@ -4,16 +4,6 @@
 
 ## Active work
 
-### LB-DS-035 — Learner Web Words source filters
-
-- **Status:** review requested on `feat/web-words-source-filters`, based on `origin/main` at
-  `1634744`; focused/full Website tests (228/228), typecheck/build, validators and responsive browser
-  QA pass. GitHub CI remains.
-- **Outcome:** accessible `همه` / `رسمی` / `شخصی` filters compose with search and truthful visible
-  counts; empty search includes a clear action that restores focus to the search input.
-- **Boundary:** device-local/canonical Words state only. No API, auth, sync flag, schema, migration,
-  seed, content, payment, deployment, publication or Production change.
-
 ### M1-D sync readiness boundary
 
 - Cursor/persistence foundations and the wire contract are merged and documented. Owner decisions O-1/O-2 are approved: conflicts remain pending and require a new event ID after resolution; M1 acknowledgement is strict one-step after atomic application. The reconciliation GET from PR #209 remains **dormant and fail-closed**; LB-DS-033 completed its API/security review and hardening in PR #219 at `82afe3b`. A separate client-composition/activation decision remains required.
@@ -30,6 +20,9 @@
 - **Learner Web review-session accessibility (LB-DS-034):** accepted and merged in PR #221 at
   `e7069b8`; keyboard focus is restored only when a review-stage transition removes the active
   control, covering start, flip, grade, completion and return. No server boundary changed.
+- **Learner Web Words source filters (LB-DS-035):** accepted and merged in PR #223 at `bd44915`;
+  accessible all/official/personal filtering composes with search, truthful visible counts and
+  clear-search focus recovery. Android/server-backed parity remains incomplete.
 - **D0/D1 design gates:** completed for current learner surfaces.
 - **M1-A contract audit:** completed in PR #151.
 - **M1-D slice 1:** completed in PR #152; server snapshot remains fail-closed and not Web-wired.
