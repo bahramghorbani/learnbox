@@ -1,8 +1,10 @@
 # LB-DS-034 — Learner Web review-session focus recovery
 
-- Status: review_requested
+- Status: accepted
 - Base: `2e2d7a36e4f2abf6ab5ed4a04edadcfdda15c1a8`
 - Branch: `fix/web-review-session-focus`
+- Head commit: `ab93453f2d4696a104fc6696d49ebd579dd9db73`
+- Merge commit: `e7069b8d8e86c143179fecad0b181b900309dc57` (PR #221)
 - Risk: routine Web accessibility
 
 ## Problem
@@ -36,6 +38,6 @@ Production state is introduced.
 - Local browser keyboard smoke: passed through start → front flip → back return → next-card grade;
   focus remained on the active stage control. Desktop overflow was absent. Local server was stopped.
 
-## Pending merge
+## Merge
 
-Open a Draft PR, verify its CI, then reconcile this report and canonical status after merge.
+Merged in PR #221 at `e7069b8` after GitHub CI passed 7/7.
