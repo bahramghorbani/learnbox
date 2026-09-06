@@ -4,20 +4,6 @@
 
 ## Active work
 
-### LB-DS-032 — Web Words truthfulness
-
-- **Status:** review requested on `fix/web-words-truth`; implementation commit `f1794ab`, based on
-  `origin/main` at `900f43a`.
-- **Outcome:** separate canonical Start words from personal additions, apply the quota only to
-  personal entries, preserve duplicate prevention across both groups, and remove fabricated static
-  mastery percentages.
-- **Boundary:** device-local Web UI only. No API, auth, database, migration, seed, content,
-  publication, payment, deployment or Production change.
-- **Verification:** focused learner flows 9/9 and full Website suite 224/224 across 35 files;
-  Website typecheck/build, formatting and repository validators pass. Mobile/desktop browser smoke
-  confirms RTL, no horizontal overflow, separate official/personal sections and truthful no-result
-  copy.
-
 ### M1-D sync readiness boundary
 
 - Cursor/persistence foundations and the proposed wire contract are merged and documented. Owner decisions O-1/O-2 are now approved: conflicts remain pending and require a new event ID after resolution; M1 acknowledgement is strict one-step after atomic application. The reconciliation GET endpoint is now implemented in PR #209 but remains **dormant and fail-closed** because network sync is not enabled. Independent API/security review and a separate activation/composition decision remain required.
