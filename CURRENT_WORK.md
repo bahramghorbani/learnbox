@@ -33,11 +33,10 @@
     with a non-negative check and a `(user_id, reconciliation_cursor)` index, no legacy
     backfill; `writeAtomically` records the returned cursor on the newly claimed event in the
     same transaction and returns that exact event cursor; idempotent replay returns the
-    event-stored cursor, never the current learner cursor); sending the cursor in a request and
-    route/client flag enablement remain separate serial, review-gated M1-D tasks; the documented
-    M1-D wire contract covers the snapshot only (no delta endpoint exists; `reviewEventsCount`
-    is not a delta), and wire-contract/delta-endpoint work remains separate review-gated;
-    milestone stays partial/not production-ready.
+    event-stored cursor, never the current learner cursor); request cursor serialization merged in
+    PR #184, the dormant reconciliation GET merged in PR #209, and its cursor/page security
+    hardening merged in PR #219. Route/client flag enablement and client composition remain a
+    separate serial, review-gated M1-D task; milestone stays partial/not production-ready.
 - **M1-D route request-boundary integration (Slice 1d):** completed in PR #192 at merge
   commit `9c6c5e0` (2026-09-04): the dormant website `POST /api/reviews/mobile` boundary
   (`apps/website/lib/mobile-review-http.ts`) now calls the existing strict
@@ -62,12 +61,11 @@
   PR #170, the read-side cursor exposure in `GET /api/learner/state` merged in PR #171
   (LB-DS-024, merge commit `0057419`), and the per-event cursor binding merged in PR #172
   (LB-DS-025, merge commit `caa3a39`); sending the
-  stored cursor in a request and route/client flag enablement remain separate serial,
-  review-gated M1-D queue tasks; the server request-boundary parser is now covered by
-  `apps/api/src/reviews/mobile-review-batch.request.ts`; the documented M1-D wire contract remains snapshot-only
-  (no delta endpoint exists), so wire-contract/delta-endpoint work remains separate
-  review-gated; seed/catalog implementation remains a separate
-  review-gated task.
+  stored cursor in a request merged in PR #184, the dormant reconciliation GET merged in PR #209,
+  and its cursor/page security hardening merged in PR #219; route/client flag enablement and client
+  composition remain a separate serial, review-gated M1-D queue task. The server request-boundary
+  parser is covered by `apps/api/src/reviews/mobile-review-batch.request.ts`; seed/catalog
+  implementation remains a separate review-gated task.
 
 - **M2 Admin content-operations truthful review-preview slice:** completed in PR #195 at merge commit `229708a` (2026-09-04). The preview card, media
   state, provenance and review queue are derived from the committed Start Pack drafts
@@ -102,7 +100,8 @@
    read-side cursor exposure (PR #171/LB-DS-024) and per-event cursor binding (PR #172/LB-DS-025)
    are merged, as are request serialization (PR #184) and the dormant review POST route
    request-boundary parser integration, Slice 1d (PR #192 at `9c6c5e0`); network sync remains
-   dormant. Flag enablement and delta-response semantics remain separate review-gated tasks.
+   dormant. The reconciliation GET and its hardened delta-response semantics are merged in PRs
+   #209 and #219; flag enablement and client composition remain separate review-gated tasks.
 5. Re-run browser visual and accessibility QA only against a staging deployment running the current merged build (staging is not confirmed current); the Chrome permission blocker must also be cleared. Do not treat the current functional QA as visual acceptance.
 
 ## Owner-approved product decisions captured in M0
