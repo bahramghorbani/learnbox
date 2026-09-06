@@ -2,11 +2,13 @@
 
 import React, { useState } from 'react';
 
+import pendingDraftsJson from '../../../../content/packs/learnbox-start/vocabulary/start-a1-catalog-35-pending-drafts.json';
 import manifest from '../../../../content/packs/learnbox-start/manifest.json';
-import draftsJson from '../../../../content/packs/learnbox-start/vocabulary/start-a1-vertical-slice-drafts.json';
+import verticalSliceDraftsJson from '../../../../content/packs/learnbox-start/vocabulary/start-a1-vertical-slice-drafts.json';
 import type { ContentPackManifest, LearningVocabularyItem } from '@learnbox/content-models';
 
 import { AdminSidebar } from './AdminSidebar';
+import { useAdminWorkspaceAccess } from './AdminAuthGate';
 import { PackReleasePanel } from './PackReleasePanel';
 import { ReviewGateSummary, type ReviewDimensionState } from './ReviewGateSummary';
 import { ReviewQueueOverview, type ReviewQueueItem } from './ReviewQueueOverview';
@@ -65,10 +67,15 @@ function toQueueStatus(status: LearningVocabularyItem['status']): ReviewQueueIte
  * the drafts, the queue, the gate or any server state. Publication stays blocked here.
  */
 export function ContentReviewWorkspace() {
+  const access = useAdminWorkspaceAccess();
+  const serverAuthenticated = access === 'server-authenticated';
   const [status, setStatus] = useState<LocalReviewStatus>('needs_review');
   const chooseStatus = (nextStatus: LocalReviewStatus) => setStatus(nextStatus);
 
-  const drafts = draftsJson.items as LearningVocabularyItem[];
+  const drafts = [
+    ...(verticalSliceDraftsJson.items as LearningVocabularyItem[]),
+    ...(pendingDraftsJson.items as LearningVocabularyItem[]),
+  ];
   const queueItems: ReviewQueueItem[] = drafts.map((item) => ({
     id: item.id,
     lemma: item.lemma,
@@ -87,15 +94,20 @@ export function ContentReviewWorkspace() {
               پ
             </span>
             <span>
-              <strong>پیش‌نمایش محلی</strong>
-              <small>بدون ورود یا دسترسی انتشار</small>
+              <strong>{serverAuthenticated ? 'ورود امن فعال' : 'پیش‌نمایش محلی'}</strong>
+              <small>
+                {serverAuthenticated
+                  ? 'داده‌های بازبینی محلی · انتشار همچنان غیرفعال'
+                  : 'بدون ورود یا دسترسی انتشار'}
+              </small>
             </span>
           </div>
         </header>
 
         <p className="admin-preview-notice" role="status">
-          بازبینی محتوا در این نسخه پیش‌نمایش است. قابلیت‌های حساس فقط پس از ورود امن و فعال‌سازی
-          مستقل همان قابلیت در سرور در دسترس قرار می‌گیرند.
+          {serverAuthenticated
+            ? 'ورود امن تأیید شده است، اما داده‌ها و اقدام‌های بازبینی این صفحه هنوز محلی‌اند و در پایگاه داده ثبت نمی‌شوند. انتشار نیز غیرفعال است.'
+            : 'بازبینی محتوا در این نسخه پیش‌نمایش است. قابلیت‌های حساس فقط پس از ورود امن و فعال‌سازی مستقل همان قابلیت در سرور در دسترس قرار می‌گیرند.'}
         </p>
 
         <div className="review-layout">
@@ -140,7 +152,7 @@ export function ContentReviewWorkspace() {
         <ReviewGateSummary checks={reviewDimensions} />
 
         <ReviewQueueOverview
-          batchId="learnbox-start-a1-vertical-slice-drafts-v1"
+          batchId="learnbox-start-a1-catalog-35-drafts-v1"
           items={queueItems}
           publicationBlocked
         />

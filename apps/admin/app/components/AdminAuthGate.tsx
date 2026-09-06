@@ -1,9 +1,31 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 
 import type { AdminAuthMode } from '../admin-auth-mode';
 import { PasskeySignIn } from './PasskeySignIn';
+
+export type AdminWorkspaceAccess = 'local-prototype' | 'server-authenticated';
+
+const AdminWorkspaceAccessContext = createContext<AdminWorkspaceAccess>('local-prototype');
+
+export function useAdminWorkspaceAccess() {
+  return useContext(AdminWorkspaceAccessContext);
+}
+
+function WorkspaceAccess({
+  access,
+  children,
+}: {
+  access: AdminWorkspaceAccess;
+  children?: React.ReactNode;
+}) {
+  return (
+    <AdminWorkspaceAccessContext.Provider value={access}>
+      {children}
+    </AdminWorkspaceAccessContext.Provider>
+  );
+}
 
 type AdminAuthGateProps = {
   mode: AdminAuthMode;
@@ -32,7 +54,9 @@ export function AdminAuthGate({ mode, children }: AdminAuthGateProps) {
     };
   }, [mode]);
 
-  if (mode === 'local-prototype') return <>{children}</>;
+  if (mode === 'local-prototype') {
+    return <WorkspaceAccess access="local-prototype">{children}</WorkspaceAccess>;
+  }
   if (state === 'checking') {
     return (
       <main className="admin-auth-loading" aria-live="polite">
@@ -42,5 +66,5 @@ export function AdminAuthGate({ mode, children }: AdminAuthGateProps) {
   }
   if (state === 'signed-out')
     return <PasskeySignIn onAuthenticated={() => setState('signed-in')} />;
-  return <>{children}</>;
+  return <WorkspaceAccess access="server-authenticated">{children}</WorkspaceAccess>;
 }

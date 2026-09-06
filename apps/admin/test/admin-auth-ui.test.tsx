@@ -1,11 +1,12 @@
 // @vitest-environment jsdom
 
-import { act, createElement, type ReactNode } from 'react';
+import { act, createElement, Fragment, type ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { AdminAuthGate } from '../app/components/AdminAuthGate';
+import { AdminAuthGate, useAdminWorkspaceAccess } from '../app/components/AdminAuthGate';
 import { PasskeySignIn } from '../app/components/PasskeySignIn';
+import { ContentReviewWorkspace } from '../app/components/ContentReviewWorkspace';
 import { resolveAdminAuthMode } from '../app/admin-auth-mode';
 
 vi.mock('@simplewebauthn/browser', async (importOriginal) => {
@@ -60,6 +61,10 @@ async function render(node: ReactNode): Promise<Rendered> {
   };
 }
 
+function AccessProbe() {
+  return createElement('div', null, useAdminWorkspaceAccess());
+}
+
 function stubSessionFetch(status: number, body?: unknown) {
   vi.stubGlobal(
     'fetch',
@@ -80,6 +85,7 @@ function stubSessionFetch(status: number, body?: unknown) {
 }
 
 beforeEach(() => {
+  vi.stubGlobal('React', { createElement, Fragment });
   mockedStartAuthentication.mockReset();
   mockedStartAuthentication.mockImplementation(async () => ({ id: 'credential' }) as never);
   _browserSupportsWebAuthnInternals.stubThis = (value) => value;
@@ -116,6 +122,32 @@ describe('admin passkey UI', () => {
 
     expect(rendered.text()).toContain('workspace');
     expect(rendered.findText('ورود مدیر')).toBe(false);
+    await rendered.unmount();
+  });
+
+  it('exposes server-authenticated access to workspace children after session restore', async () => {
+    stubSessionFetch(200, { authenticated: true, recent: true });
+    const rendered = await render(
+      createElement(AdminAuthGate, { mode: 'server-passkey' }, createElement(AccessProbe)),
+    );
+
+    expect(rendered.text()).toContain('server-authenticated');
+    await rendered.unmount();
+  });
+
+  it('shows truthful authenticated-preview status after restoring a server session', async () => {
+    stubSessionFetch(200, { authenticated: true, recent: true });
+    const rendered = await render(
+      createElement(
+        AdminAuthGate,
+        { mode: 'server-passkey' },
+        createElement(ContentReviewWorkspace),
+      ),
+    );
+
+    expect(rendered.findText('ورود امن فعال')).toBe(true);
+    expect(rendered.findText('انتشار همچنان غیرفعال')).toBe(true);
+    expect(rendered.findText('بدون ورود یا دسترسی انتشار')).toBe(false);
     await rendered.unmount();
   });
 

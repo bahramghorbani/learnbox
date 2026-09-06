@@ -55,14 +55,17 @@ describe('ContentReviewWorkspace (local admin content preview)', () => {
     vi.unstubAllGlobals();
   });
 
-  it('shows the real Start Pack review queue of 20 drafts and keeps publication blocked', async () => {
+  it('shows the complete Start Pack review queue of 35 drafts and keeps publication blocked', async () => {
     const rendered = await renderWorkspace();
     try {
       expect(rendered.text).toContain('بازبینی محتوا');
-      expect(rendered.text).toContain('۲۰ کارت در انتظار بررسی');
-      expect(rendered.container.querySelectorAll('[data-review-item]')).toHaveLength(20);
+      expect(rendered.text).toContain('۳۵ کارت در انتظار بررسی');
+      expect(rendered.container.querySelectorAll('[data-review-item]')).toHaveLength(35);
       expect(
         rendered.container.querySelectorAll('[data-review-item="start-a1-haus"]'),
+      ).toHaveLength(1);
+      expect(
+        rendered.container.querySelectorAll('[data-review-item="start-a1-supermarkt"]'),
       ).toHaveLength(1);
       expect(rendered.text).toContain('انتشار مسدود است');
       expect(rendered.text).toContain('انتشار بسته هنوز ممکن نیست');
@@ -123,8 +126,8 @@ describe('ContentReviewWorkspace (local admin content preview)', () => {
       expect(
         rendered.container.querySelectorAll('.review-gate-list [data-outcome="passed"]'),
       ).toHaveLength(0);
-      expect(rendered.container.querySelectorAll('[data-review-item]')).toHaveLength(20);
-      expect(rendered.text).toContain('۲۰ کارت در انتظار بررسی');
+      expect(rendered.container.querySelectorAll('[data-review-item]')).toHaveLength(35);
+      expect(rendered.text).toContain('۳۵ کارت در انتظار بررسی');
     } finally {
       await rendered.unmount();
     }

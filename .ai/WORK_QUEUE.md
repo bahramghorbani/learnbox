@@ -17,7 +17,7 @@ start. Historical tasks remain for traceability and must not be duplicated.
 - **M1-C slice 1 — Mobile Today states:** accepted and merged in PR #155; local queue chip is truthful, sync coordinator remains dormant.
 - **M1-Q — Independent QA:** accepted and merged in PR #157; current server-wired follow-up QA accepted and merged in PR #175; report: `.ai/qa-reports/M1-Q3-CURRENT-WEB-SERVER-WIRED.md`. Functional checks are green; browser visual/AX/keyboard acceptance is not claimed — it can be verified only against a staging deployment running the current merged build (staging is not confirmed current; the Chrome permission dialog blocker also remains).
 - **M2 content-review safety gate:** accepted and merged in PR #177 at merge commit `ae54cee`; approval now requires all six `content_review_checks` dimensions to be `passed`; no publication or provider activation was included. Admin preview queue overview is accepted and merged in PR #181 at `a86c973`; authenticated persistence and reviewer actions remain gated.
-- **M2 Admin identity boundary:** ADR 0015 records that `admin_sessions.owner_singleton_id` cannot substitute for canonical `users.id`; migration `0016` adds the approved nullable unique `admin_owner.user_id → users(id)` binding, session lookup returns it fail-closed, and the one-shot server-side binding operation is implemented; the binding slices are merged (PRs #187–#188). Owner bootstrap, role assignment and staging verification remain gated before server-backed review reads/writes, so server-backed Admin content read/auth remains blocked by the missing owner-bootstrap/role-assignment contract.
+- **M2 Admin identity boundary:** ADR 0015 records that `admin_sessions.owner_singleton_id` cannot substitute for canonical `users.id`; migration `0016` adds the approved nullable unique `admin_owner.user_id → users(id)` binding, session lookup returns it fail-closed, and the one-shot server-side binding operation is implemented; the binding slices are merged (PRs #187–#188). Owner bootstrap, canonical-user binding, one `super_admin` role assignment and Passkey sign-in are now verified on isolated staging; bootstrap is disabled and its secret removed. Server-backed Admin content reads/writes remain a separate gated implementation/activation slice.
 - **Starter Catalog 35 slice (LB-DS-STARTER-CATALOG-35):** accepted and merged in PR #193 at merge commit `73adc02` (2026-09-04) per ADR 0016. Adds the reusable seed gate `apps/api/src/catalog/start-catalog-seed-gate.ts`, its tests, and the derived snapshot `content/packs/learnbox-start/validation/start-a1-35-catalog-slice.json` (fail-closed at merge: target 35, drafted 20, linguistically reviewed 20, release-approved 0, `seedable: false`). No migration, seed, approval or publication. The separately authorized missing-drafts task (LB-DS-STARTER-DRAFTS-15) merged in PR #200 at `2aa5931`: the snapshot now records 35/35 drafted, 20 linguistically reviewed, 0 release-approved, `seedable: false`, `publicationBlocked: true`; DB seed remains blocked — the 15 pending drafts still need product-owner linguistic review and all remaining review dimensions plus approved/published `card_versions` first.
 - **Next:** M1-D push reconciliation cursor/watermark **policy** is approved in ADR 0014
   (per-learner monotonic version, incremented only on newly applied events, same transaction
@@ -64,6 +64,22 @@ Accepted and merged through PR #205 at merge commit `a6b50b6`. Decision-ready pr
 - Merge allowed: yes
 
 Accepted and merged in PR #209 at `14ccaee`. The read-only reconciliation GET exists but remains fail-closed behind the unchanged disabled `MOBILE_REVIEW_SYNC_ENABLED` boundary. No flag enablement, migration, auth redesign, mobile composition, client sync activation, production route activation, deployment or production change is included. Independent API/security review and a separate activation/composition decision remain required.
+
+## LB-DS-030
+
+- Status: review_requested
+- Executor: supervisor (Admin authenticated-preview truthfulness)
+- Base: `origin/main` at `d81f7b5`
+- Branch: `fix/admin-authenticated-preview-truth`
+- Risk: low-risk-truthful-admin-ui
+- Specification: ADR 0015; ADR 0016; `docs/PRODUCT_STATUS.md`
+- Allowed paths: `apps/admin/app/components/AdminAuthGate.tsx`; `apps/admin/app/components/ContentReviewWorkspace.tsx`; `apps/admin/test/admin-auth-ui.test.tsx`; `apps/admin/test/content-review-workspace.test.tsx`; `CURRENT_WORK.md`; `docs/PRODUCT_STATUS.md`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-030.md`
+- Required checks: focused Admin auth/workspace tests; full Admin tests; Admin typecheck/build; format; queue/documentation/continuity/dashboard validators; `git diff --check`
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+
+Post-bootstrap truthfulness follow-up only. The workspace receives a server-authenticated context from the existing AuthGate, distinguishes it from local-prototype mode, and still labels review data/actions as local-only. It renders the complete 35-draft catalog union. Publication, review persistence, schema, migrations, content approvals, seed and Production remain unchanged.
 
 | ID   | Workstream                         | Worker role                | Allowed scope                                                 | Depends on                 | Parallel rule                                                                                |
 | ---- | ---------------------------------- | -------------------------- | ------------------------------------------------------------- | -------------------------- | -------------------------------------------------------------------------------------------- |
