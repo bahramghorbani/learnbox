@@ -83,10 +83,11 @@ Accepted and merged in PR #213 at merge commit `14eb8ef`. The authenticated work
 
 ## LB-DS-031
 
-- Status: review_requested
+- Status: accepted
 - Executor: supervisor (Admin Passkey Docker build contract)
 - Base: `origin/main` at `14eb8ef`
 - Branch: `fix/admin-passkey-build-contract`
+- Head commit: `2d5eb546db0b9a16a70587d3385d4c41228586da`; merge commit: `254276e0ed314f5a20a5d030a11c2f56bdb28560` (PR #214)
 - Risk: security-sensitive-deployment-contract
 - Specification: ADR 0015; `infrastructure/production/admin/Dockerfile`; `infrastructure/production/admin/compose.yaml`
 - Allowed paths: `infrastructure/production/admin/Dockerfile`; `infrastructure/production/admin/compose.yaml`; `apps/admin/test/deployment-contract.test.ts`; `docs/operations/ADMIN_PASSKEY_ACTIVATION.md`; `CURRENT_WORK.md`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-031.md`
@@ -95,7 +96,7 @@ Accepted and merged in PR #213 at merge commit `14eb8ef`. The authenticated work
 - Draft PR required: yes
 - Merge allowed: yes
 
-The public Passkey UI mode is resolved during the Next build. A candidate image built without the public build argument exposed the local workspace (`login_ui=false`, `workspace_ui=true`), so staging cutover was stopped before changing the running container. This slice passes only the non-secret public boolean through Docker/Compose build args; token keys, bootstrap secrets and all other credentials remain runtime-only. No production deployment or data change.
+Accepted and merged in PR #214 at `254276e`; the same merged source was built with the true public flag, verified in an isolated server candidate (`login_ui=true`, `workspace_ui=false`, root `200`, anonymous session `401`, bootstrap `404`) and deployed only to Admin staging. The running container is healthy and public checks stabilized at the same `200`/`401`/`404` contract after Caddy marked the recreated host healthy. The previous image remains available for rollback. Only the non-secret public boolean enters Docker build args; token keys, bootstrap secrets and all other credentials remain runtime-only. Production, seed, publication and data are unchanged.
 
 | ID   | Workstream                         | Worker role                | Allowed scope                                                 | Depends on                 | Parallel rule                                                                                |
 | ---- | ---------------------------------- | -------------------------- | ------------------------------------------------------------- | -------------------------- | -------------------------------------------------------------------------------------------- |

@@ -11,6 +11,11 @@ behind the exact `LEARNBOX_ADMIN_PASSKEY_ENABLED=true` runtime gate. The public 
 Next.js image because `NEXT_PUBLIC_*` values are compiled into the browser bundle; setting it only
 at container runtime does not enable the Passkey gate in the built UI.
 
+The staging deployment currently runs merged build `254276e` (PR #214). Post-cutover checks verify
+root `200`, anonymous session `401`, bootstrap `404`, a healthy container and Passkey login instead
+of the local workspace. The previous staging image is retained for rollback; this evidence does not
+authorize or imply Production activation.
+
 The boundary stores only keyed hashes: challenge hashes, browser-nonce hashes, session token
 hashes and CSRF hashes. Raw challenges, secrets, tokens, public keys, cookies, IP addresses and
 user agents never enter PostgreSQL or logs. Bootstrap additionally requires

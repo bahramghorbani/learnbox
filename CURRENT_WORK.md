@@ -4,16 +4,6 @@
 
 ## Active work
 
-### LB-DS-031 — Admin Passkey Docker build contract
-
-- **Status:** review requested on `fix/admin-passkey-build-contract`, based on `origin/main` at
-  `14eb8ef`. The change passes only the non-secret public Passkey UI boolean into the Next.js Docker
-  build while keeping server gates and credentials runtime-only.
-- **Trigger:** the first isolated candidate built from PR #213 omitted the build-time public flag and
-  exposed the local workspace instead of the Passkey login. Canonical Admin staging was not changed.
-- **Remaining gate:** full local/CI checks, a true-flag isolated candidate probe, staging-only cutover,
-  and post-cutover documentation reconciliation. Production, seed and publication remain unchanged.
-
 ### M1-D sync readiness boundary
 
 - Cursor/persistence foundations and the proposed wire contract are merged and documented. Owner decisions O-1/O-2 are now approved: conflicts remain pending and require a new event ID after resolution; M1 acknowledgement is strict one-step after atomic application. The reconciliation GET endpoint is now implemented in PR #209 but remains **dormant and fail-closed** because network sync is not enabled. Independent API/security review and a separate activation/composition decision remain required.
