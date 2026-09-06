@@ -217,11 +217,12 @@ changed.
 
 ## LB-DS-036
 
-- Status: review_requested
+- Status: accepted
 - Executor: supervisor (Android Words offline search and recovery)
 - Base: `origin/main` at `58a6590a872d94ccda9c02846a1c06a4fba37e01`
 - Branch: `feat/mobile-words-search`
 - Head commit: `2845ae128a9d620eb0d76a24b3ed714e8300f8fe`
+- Merge commit: `6efc2dfd0fb6cbc5cf7b5bd18dec9b33d3b1e97b` (PR #225)
 - Risk: routine-mobile-ui-accessibility
 - Specification: `docs/design/D1_LEARNER_UI_KIT.md` §7; `docs/PRODUCT_STATUS.md`
 - Allowed paths: `apps/mobile/lib/features/review/words_screen.dart`; `apps/mobile/test/mobile_visual_parity_test.dart`; `CURRENT_WORK.md`; `docs/PRODUCT_STATUS.md`; `docs/design/DESIGN_STATUS.md`; `docs/design/UI_QA.md`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-036.md`
@@ -234,6 +235,10 @@ Add offline German/Persian search to the bundled canonical Android Words list, a
 state and a clear-search action that restores focus. Keep the visible count explicitly official; do
 not invent personal vocabulary, synchronization or server state. No API, auth, sync flag, schema,
 migration, seed, payment, deployment, publication or Production change.
+
+Accepted and merged in PR #225 at `6efc2df` after all seven GitHub checks passed and independent
+review returned PASS with no blocking findings. Search remains local to bundled official content;
+personal vocabulary and every server/activation gate remain unchanged.
 
 | ID   | Workstream                         | Worker role                | Allowed scope                                                 | Depends on                 | Parallel rule                                                                                |
 | ---- | ---------------------------------- | -------------------------- | ------------------------------------------------------------- | -------------------------- | -------------------------------------------------------------------------------------------- |

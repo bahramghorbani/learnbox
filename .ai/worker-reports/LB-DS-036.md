@@ -1,9 +1,10 @@
 # LB-DS-036 — Android Words offline search and recovery
 
-- Status: review_requested
+- Status: accepted
 - Base: `58a6590a872d94ccda9c02846a1c06a4fba37e01`
 - Branch: `feat/mobile-words-search`
 - Head commit: `2845ae128a9d620eb0d76a24b3ed714e8300f8fe`
+- Merge commit: `6efc2dfd0fb6cbc5cf7b5bd18dec9b33d3b1e97b` (PR #225)
 - Risk: routine Android UI/accessibility
 
 ## Outcome
@@ -32,6 +33,12 @@
   labelled search, German/Persian results, no-result recovery and focus return are covered.
 - Queue/documentation/continuity validators, dashboard tests (21/21), Prettier and
   `git diff --check`: passed.
+- GitHub CI: 7/7 passed.
+- Independent review: PASS, no blocking findings.
+
+## Merge
+
+Merged in PR #225 at `6efc2df`.
 
 ## Unchanged gates
 
