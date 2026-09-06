@@ -98,6 +98,31 @@ Accepted and merged in PR #213 at merge commit `14eb8ef`. The authenticated work
 
 Accepted and merged in PR #214 at `254276e`; the same merged source was built with the true public flag, verified in an isolated server candidate (`login_ui=true`, `workspace_ui=false`, root `200`, anonymous session `401`, bootstrap `404`) and deployed only to Admin staging. The running container is healthy and public checks stabilized at the same `200`/`401`/`404` contract after Caddy marked the recreated host healthy. The previous image remains available for rollback. Only the non-secret public boolean enters Docker build args; token keys, bootstrap secrets and all other credentials remain runtime-only. Production, seed, publication and data are unchanged.
 
+## LB-DS-032
+
+- Status: review_requested
+- Executor: supervisor (Web Words truthfulness)
+- Base: `origin/main` at `900f43a`
+- Branch: `fix/web-words-truth`
+- Head commit: `f1794abead1aec93ffffffd5a7854a516e3d55ed`
+- Risk: routine-web-ui-truth
+- Specification: D1 learner UI kit; `docs/PRODUCT_STATUS.md`
+- Allowed paths: `apps/website/app/LearnerHome.tsx`; `apps/website/app/globals.css`; `apps/website/test/learner-core-flows.test.tsx`; `apps/website/test/screens.test.tsx`; `CURRENT_WORK.md`; `docs/PRODUCT_STATUS.md`; `docs/design/DESIGN_STATUS.md`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-032.md`
+- Required checks: focused/full Website tests; Website typecheck/build; format; queue/documentation/continuity/dashboard validators; `git diff --check`; browser RTL/accessibility smoke if the local build is available
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+
+Separate the three canonical Start words from device-local personal additions. Canonical words must not consume the personal-word quota; duplicate detection must still cover both groups; fabricated static mastery percentages must be removed; search and empty results must remain accessible and truthful. Use only existing device-local facts. No API, server snapshot, auth, database, migration, seed, content, payment, deployment, publication or Production change.
+
+Implementation is complete and locally verified: canonical and personal rows are separate, the
+30-word quota uses personal entries only, canonical duplicates remain blocked, static mastery
+percentages are gone and a no-result search exposes a semantic status. Focused flow tests pass
+9/9; the full Website suite passes 224/224 across 35 files; Website typecheck/build, formatting,
+queue/documentation/continuity/dashboard validators and `git diff --check` pass. Browser smoke at
+390×844 and 1440×900 confirmed RTL, no horizontal overflow, three official rows, zero fabricated
+rings and the truthful search-empty status. No server or release boundary changed.
+
 | ID   | Workstream                         | Worker role                | Allowed scope                                                 | Depends on                 | Parallel rule                                                                                |
 | ---- | ---------------------------------- | -------------------------- | ------------------------------------------------------------- | -------------------------- | -------------------------------------------------------------------------------------------- |
 | D0   | Visual language and token contract | W1 + design-capable worker | `docs/design/**`, shared visual token docs, design evidence   | M0                         | Can run alongside M1 contract audit; no overlapping implementation paths                     |
