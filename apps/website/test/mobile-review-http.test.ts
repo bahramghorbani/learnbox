@@ -108,6 +108,31 @@ describe('mobile review HTTP boundary', () => {
     expect(await response.json()).toEqual({ error: 'serverUnavailable' });
   });
 
+  it('rejects reconciliation cursors above PostgreSQL BIGINT before storage access', async () => {
+    const readReconciliation = vi.fn(async () => ({
+      cursor: '0',
+      nextCursor: '0',
+      hasMore: false,
+      events: [],
+    }));
+    const deps: MobileReviewReconciliationDependencies = {
+      verifyAccessToken: vi.fn(() => ({ status: 'valid' as const, claims: { sub: 'learner-1' } })),
+      readReconciliation,
+    };
+
+    const response = await handleMobileReviewGet(
+      new Request(
+        'https://learnbox.example/api/reviews/mobile/reconciliation?after=9223372036854775808',
+        { headers: { authorization: 'Bearer valid-token' } },
+      ),
+      deps,
+    );
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ error: 'validation' });
+    expect(readReconciliation).not.toHaveBeenCalled();
+  });
+
   it('derives learner identity from the verified bearer token and preserves ordered outcomes', async () => {
     const deps = dependencies();
     const response = await handleMobileReviewPost(request({ items: [validItem] }), deps);

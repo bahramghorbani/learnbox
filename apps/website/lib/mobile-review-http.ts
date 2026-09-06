@@ -36,6 +36,7 @@ export type MobileReviewReconciliationDependencies = {
 };
 
 const MAX_BODY_BYTES = 16_384;
+const MAX_POSTGRES_BIGINT = '9223372036854775807';
 const JSON_HEADERS = {
   'cache-control': 'no-store',
   'content-type': 'application/json; charset=utf-8',
@@ -94,7 +95,7 @@ export async function handleMobileReviewGet(
   if (verification.status !== 'valid') return error('invalidToken', 401);
 
   const after = new URL(request.url).searchParams.get('after') ?? '0';
-  if (!/^\d+$/.test(after)) return error('validation', 400);
+  if (!isNonNegativePostgresBigInt(after)) return error('validation', 400);
 
   try {
     return json(
@@ -109,6 +110,15 @@ export async function handleMobileReviewGet(
   } catch {
     return error('serverUnavailable', 503);
   }
+}
+
+function isNonNegativePostgresBigInt(value: string): boolean {
+  if (!/^\d+$/.test(value)) return false;
+  const normalized = value.replace(/^0+/, '') || '0';
+  return (
+    normalized.length < MAX_POSTGRES_BIGINT.length ||
+    (normalized.length === MAX_POSTGRES_BIGINT.length && normalized <= MAX_POSTGRES_BIGINT)
+  );
 }
 
 async function readJsonBody(request: Request): Promise<unknown> {

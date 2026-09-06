@@ -274,12 +274,8 @@ export class PostgresReviewEventStore implements ReviewEventStore {
       eventId: row.event_id,
       appliedAt: row.applied_at.toISOString(),
     }));
-    const cursor = await this.pool.query<ReconciliationCursorRow>(
-      `SELECT cursor::text AS cursor FROM learner_reconciliation_cursors WHERE user_id = $1`,
-      [userId],
-    );
-    const currentCursor = cursor.rows[0]?.cursor ?? '0';
-    const nextCursor = hasMore ? rows.rows[pageSize - 1].reconciliation_cursor : currentCursor;
+    const nextCursor =
+      events.length === 0 ? after : rows.rows[events.length - 1].reconciliation_cursor;
     return { cursor: after, nextCursor, hasMore, events };
   }
 }
