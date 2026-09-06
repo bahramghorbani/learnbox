@@ -12,6 +12,8 @@ RUN --mount=type=cache,id=pnpm-admin,target=/pnpm/store \
     pnpm install --frozen-lockfile --filter @learnbox/admin...
 
 FROM dependencies AS builder
+ARG NEXT_PUBLIC_LEARNBOX_ADMIN_PASSKEY_UI_ENABLED=false
+ENV NEXT_PUBLIC_LEARNBOX_ADMIN_PASSKEY_UI_ENABLED=$NEXT_PUBLIC_LEARNBOX_ADMIN_PASSKEY_UI_ENABLED
 COPY apps/admin apps/admin
 COPY packages/content-models packages/content-models
 COPY content content
