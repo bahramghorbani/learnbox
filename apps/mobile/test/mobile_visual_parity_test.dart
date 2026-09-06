@@ -73,6 +73,51 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('Words searches canonical German and recovers from no results',
+      (tester) async {
+    await _pumpApp(tester);
+
+    await tester.tap(find.text('واژه‌ها'));
+    await tester.pumpAndSettle();
+
+    final search = find.bySemanticsLabel('جست‌وجوی واژه‌های آلمانی و فارسی');
+    expect(search, findsOneWidget);
+    expect(tester.getSize(search).height, greaterThanOrEqualTo(44));
+    expect(find.text('۳ واژه رسمی'), findsOneWidget);
+
+    await tester.enterText(search, 'Tisch');
+    await tester.pump();
+    expect(tester.widget<TextField>(find.byType(TextField)).textDirection,
+        TextDirection.ltr);
+    expect(find.text('۱ واژه رسمی'), findsOneWidget);
+    expect(find.text('der Tisch'), findsOneWidget);
+    expect(find.text('das Haus'), findsNothing);
+    expect(find.text('die Tür'), findsNothing);
+
+    await tester.enterText(search, 'خانه');
+    await tester.pump();
+    expect(tester.widget<TextField>(find.byType(TextField)).textDirection,
+        TextDirection.rtl);
+    expect(find.text('das Haus'), findsOneWidget);
+    expect(find.text('der Tisch'), findsNothing);
+    expect(find.text('die Tür'), findsNothing);
+
+    await tester.enterText(search, 'ناموجود');
+    await tester.pump();
+    expect(find.text('واژه‌ای پیدا نشد.'), findsOneWidget);
+    expect(find.text('پاک کردن جست‌وجو'), findsOneWidget);
+
+    await tester.tap(find.text('پاک کردن جست‌وجو'));
+    await tester.pump();
+    expect(find.text('das Haus'), findsOneWidget);
+    expect(find.text('der Tisch'), findsOneWidget);
+    expect(find.text('die Tür'), findsOneWidget);
+    final searchField = tester.widget<TextField>(find.byType(TextField));
+    expect(searchField.controller?.text, '');
+    expect(searchField.focusNode?.hasFocus, isTrue);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('Progress shows only device-local pending answers',
       (tester) async {
     await _pumpApp(tester);
@@ -237,7 +282,16 @@ void main() {
     await tester.tap(find.text('واژه‌ها'));
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
-    await tester.scrollUntilVisible(find.text('die Tür'), 100);
+    await tester.scrollUntilVisible(
+      find.text('die Tür'),
+      100,
+      scrollable: find
+          .descendant(
+            of: find.byKey(const ValueKey('words-list')),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
     expect(find.text('die Tür'), findsOneWidget);
 
     await tester.tap(find.text('پیشرفت'));
@@ -255,7 +309,16 @@ void main() {
     await tester.tap(find.text('واژه‌ها'));
     await tester.pumpAndSettle();
     expect(find.text('das Haus'), findsOneWidget);
-    await tester.scrollUntilVisible(find.text('die Tür'), 100);
+    await tester.scrollUntilVisible(
+      find.text('die Tür'),
+      100,
+      scrollable: find
+          .descendant(
+            of: find.byKey(const ValueKey('words-list')),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
     expect(find.text('die Tür'), findsOneWidget);
     expect(tester.takeException(), isNull);
 
