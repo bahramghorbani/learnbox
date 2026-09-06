@@ -1,6 +1,6 @@
 # LearnBox stable project state
 
-**Last reviewed:** 2026-09-05
+**Last reviewed:** 2026-09-06
 
 ## Product
 
@@ -17,7 +17,7 @@ LearnBox is an online-first German vocabulary Leitner product for Persian-speaki
 ## Current implementation truth
 
 - Web and Flutter learner foundations include Today, Words, Progress, review scheduling, active recall, media/pronunciation foundations, recovery and local pending review events.
-- Admin foundations include protected authentication boundaries, content review workspace, pack readiness/release panel and owner-only splash replacement control.
+- Admin foundations include protected authentication boundaries, content review workspace, pack readiness/release panel and owner-only splash replacement control. The current merged Admin build (`254276e`, PR #214) is deployed to isolated staging with the Passkey UI compiled into the image; unauthenticated access shows the Passkey login, bootstrap remains closed, and local review actions remain non-persistent. Production is unchanged.
 - Web learner foundations include a fail-closed server-backed learner-state read (`GET /api/learner/state`, `WEB_LEARNER_STATE_ENABLED` defaults false, merged in PR #163); the actionable Today figure stays local until approved/published Start Pack catalog rows exist. M1-D cursor persistence, request validation and the dormant reconciliation read route are merged (PRs #169–#172, #184–#185 and #209); network sync and client composition remain disabled.
 - Content Factory includes schemas, normalization, batch validation, duplicate foundations, review gates and media-plan boundaries; AI generation and complete Admin job UX remain incomplete.
 - Native mobile auth client, UI, fail-closed runtime and local lifecycle harness exist; real native online auth is blocked until a non-SSO gateway is available.
