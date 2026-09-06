@@ -215,6 +215,26 @@ search composition, visible counts, pressed state and clear-search focus recover
 API, auth, sync flag, schema, migration, seed, payment, deployment, publication or Production state
 changed.
 
+## LB-DS-036
+
+- Status: review_requested
+- Executor: supervisor (Android Words offline search and recovery)
+- Base: `origin/main` at `58a6590a872d94ccda9c02846a1c06a4fba37e01`
+- Branch: `feat/mobile-words-search`
+- Head commit: `2845ae128a9d620eb0d76a24b3ed714e8300f8fe`
+- Risk: routine-mobile-ui-accessibility
+- Specification: `docs/design/D1_LEARNER_UI_KIT.md` §7; `docs/PRODUCT_STATUS.md`
+- Allowed paths: `apps/mobile/lib/features/review/words_screen.dart`; `apps/mobile/test/mobile_visual_parity_test.dart`; `CURRENT_WORK.md`; `docs/PRODUCT_STATUS.md`; `docs/design/DESIGN_STATUS.md`; `docs/design/UI_QA.md`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-036.md`
+- Required checks: focused/full Flutter tests; Dart format; Flutter analyze; Android debug build; queue/documentation/continuity/dashboard validators; `git diff --check`; Android-sized RTL/large-text smoke
+- Simulator required: no (widget tests and debug APK required)
+- Draft PR required: yes
+- Merge allowed: yes
+
+Add offline German/Persian search to the bundled canonical Android Words list, a truthful no-result
+state and a clear-search action that restores focus. Keep the visible count explicitly official; do
+not invent personal vocabulary, synchronization or server state. No API, auth, sync flag, schema,
+migration, seed, payment, deployment, publication or Production change.
+
 | ID   | Workstream                         | Worker role                | Allowed scope                                                 | Depends on                 | Parallel rule                                                                                |
 | ---- | ---------------------------------- | -------------------------- | ------------------------------------------------------------- | -------------------------- | -------------------------------------------------------------------------------------------- |
 | D0   | Visual language and token contract | W1 + design-capable worker | `docs/design/**`, shared visual token docs, design evidence   | M0                         | Can run alongside M1 contract audit; no overlapping implementation paths                     |
