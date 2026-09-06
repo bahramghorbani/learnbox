@@ -131,13 +131,58 @@ describe('learner core flows', () => {
     expect(rendered.text()).toContain('1 واژه برای همگام‌سازی امن آماده است.');
   });
 
+  it('separates canonical Start words from the personal quota without fabricated mastery', async () => {
+    rendered = await renderLearner();
+    await rendered.signInLocally();
+    await rendered.clickButton('ادامه');
+    await rendered.clickButton('واژه‌ها');
+
+    expect(rendered.text()).toContain('0 از 30 واژهٔ شخصی');
+    expect(rendered.text()).toContain('واژه‌های رسمی');
+    expect(rendered.text()).toContain('هنوز واژهٔ شخصی اضافه نکرده‌ای.');
+    expect(rendered.count('.word-ring')).toBe(0);
+  });
+
+  it('allows the twenty-eighth personal word because canonical words do not consume quota', async () => {
+    window.localStorage.setItem(
+      personalVocabularyKey,
+      JSON.stringify(
+        Array.from({ length: 27 }, (_, index) => ({
+          german: `Wort ${index + 1}`,
+          persian: `واژه ${index + 1}`,
+          progress: 0,
+        })),
+      ),
+    );
+    rendered = await renderLearner();
+    await rendered.signInLocally();
+    await rendered.clickButton('ادامه');
+    await rendered.clickButton('واژه‌ها');
+
+    await rendered.addPersonalWord('der Apfel', 'سیب');
+
+    expect(loadVocabulary()).toHaveLength(28);
+    expect(rendered.text()).toContain('28 از 30 واژهٔ شخصی');
+  });
+
+  it('shows a truthful empty result when a search matches no words', async () => {
+    rendered = await renderLearner();
+    await rendered.signInLocally();
+    await rendered.clickButton('ادامه');
+    await rendered.clickButton('واژه‌ها');
+
+    await rendered.searchWords('ناموجود');
+
+    expect(rendered.text()).toContain('واژه‌ای مطابق این جست‌وجو پیدا نشد.');
+  });
+
   it('refuses a duplicate personal word', async () => {
     rendered = await renderLearner();
     await rendered.signInLocally();
     await rendered.clickButton('ادامه');
     await rendered.clickButton('واژه‌ها');
 
-    // The first three Start cards are pre-seeded as personal words.
+    // Canonical Start words still participate in duplicate detection but are not personal words.
     await rendered.addPersonalWord('das Haus', 'خانه');
     expect(rendered.text()).toContain('این واژه از قبل در فهرست تو هست.');
   });
@@ -146,8 +191,10 @@ describe('learner core flows', () => {
 type RenderedLearner = {
   addPersonalWord(german: string, persian: string): Promise<void>;
   clickButton(label: string): Promise<void>;
+  count(selector: string): number;
   flipAndGrade(grade: string): Promise<void>;
   signInLocally(): Promise<void>;
+  searchWords(query: string): Promise<void>;
   startReview(): Promise<void>;
   text(): string;
   unmount(): Promise<void>;
@@ -193,11 +240,17 @@ async function renderLearner(): Promise<RenderedLearner> {
       await submitForm(container);
     },
     clickButton: async (label) => clickButtonStartingWith(container, label),
+    count: (selector) => container.querySelectorAll(selector).length,
     flipAndGrade: async (grade) => {
       await clickButtonStartingWith(container, 'برای دیدن معنی');
       await clickButtonStartingWith(container, grade);
     },
     signInLocally,
+    searchWords: async (query) => {
+      const input = container.querySelector<HTMLInputElement>('.word-search input');
+      if (!input) throw new Error('Word-search input not found.');
+      await setValue(input, query);
+    },
     startReview: async () => {
       const button = Array.from(container.querySelectorAll('button')).find(
         (candidate) =>

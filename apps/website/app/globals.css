@@ -1091,6 +1091,19 @@ button {
   border-radius: 25px;
   box-shadow: 0 12px 28px #34426f09;
 }
+.words-section-title {
+  margin: 26px 0 12px;
+  font-size: 19px;
+}
+.words-empty-result {
+  margin: 0;
+  border: 1px dashed #d9d7e8;
+  border-radius: 18px;
+  padding: 20px;
+  background: #fcfcff;
+  color: var(--muted);
+  line-height: 1.8;
+}
 .word-row {
   display: grid;
   grid-template-columns: 1fr 1.25fr auto;
@@ -1122,19 +1135,13 @@ button {
     sans-serif;
   text-align: center;
 }
-.word-ring {
-  position: relative;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: conic-gradient(var(--primary) var(--word-progress), #ebe9ff 0);
-}
-.word-ring::after {
-  position: absolute;
-  inset: 6px;
-  border-radius: inherit;
-  background: var(--surface);
-  content: '';
+.word-source {
+  border-radius: 999px;
+  padding: 6px 10px;
+  background: #f0f2ff;
+  color: #4054bf;
+  font-size: 13px;
+  font-weight: 700;
 }
 .sr-only {
   position: absolute;
