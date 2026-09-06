@@ -1,9 +1,10 @@
 # LB-DS-032 — Web Words truthfulness
 
-- Status: review_requested
+- Status: accepted
 - Base: `900f43aa2ac17a1ce701ddc64c8670d63f94019d`
 - Branch: `fix/web-words-truth`
 - Head commit: `f1794abead1aec93ffffffd5a7854a516e3d55ed`
+- Merge commit: `66e449d8b8487596ccd2ea83bfa15520939e9481` (PR #217)
 - Risk: routine Web UI truthfulness
 
 ## Trigger
@@ -45,6 +46,9 @@ Device-local Website UI only. No server snapshot, API, auth, database, migration
 - Prettier and `git diff --check`: passed.
 - `verify:ai-worker-queue`, `verify:documentation-governance`, `verify:ai-continuity` and
   `test:dashboard`: passed.
+- GitHub CI for PR #217: 7/7 passed (`quality`, `secrets`, `mobile`, `production-stack`, both
+  Vercel deployments and Preview comments); mergeability was clean before merge.
+- GPT-5.6 Sol supervisor diff/product-truth review: no blocker. Source-label contrast is 5.82:1.
 - Browser smoke:
   - 390×844: RTL, three official rows, zero personal rows, zero `.word-ring` elements and no
     horizontal overflow.
@@ -56,6 +60,10 @@ Device-local Website UI only. No server snapshot, API, auth, database, migration
 Only the Website Words component/style/flow-test paths and canonical task/status documentation
 changed. No API, auth, database, migration, seed, content, payment, deployment, publication or
 Production path changed.
+
+## Merge
+
+Merged to `main` through PR #217 at `66e449d8b8487596ccd2ea83bfa15520939e9481`.
 
 ## Rollback
 

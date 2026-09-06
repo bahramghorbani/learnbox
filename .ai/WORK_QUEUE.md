@@ -100,11 +100,12 @@ Accepted and merged in PR #214 at `254276e`; the same merged source was built wi
 
 ## LB-DS-032
 
-- Status: review_requested
+- Status: accepted
 - Executor: supervisor (Web Words truthfulness)
 - Base: `origin/main` at `900f43a`
 - Branch: `fix/web-words-truth`
 - Head commit: `f1794abead1aec93ffffffd5a7854a516e3d55ed`
+- Merge commit: `66e449d8b8487596ccd2ea83bfa15520939e9481` (PR #217)
 - Risk: routine-web-ui-truth
 - Specification: D1 learner UI kit; `docs/PRODUCT_STATUS.md`
 - Allowed paths: `apps/website/app/LearnerHome.tsx`; `apps/website/app/globals.css`; `apps/website/test/learner-core-flows.test.tsx`; `apps/website/test/screens.test.tsx`; `CURRENT_WORK.md`; `docs/PRODUCT_STATUS.md`; `docs/design/DESIGN_STATUS.md`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-032.md`
@@ -122,6 +123,10 @@ percentages are gone and a no-result search exposes a semantic status. Focused f
 queue/documentation/continuity/dashboard validators and `git diff --check` pass. Browser smoke at
 390×844 and 1440×900 confirmed RTL, no horizontal overflow, three official rows, zero fabricated
 rings and the truthful search-empty status. No server or release boundary changed.
+
+Accepted and merged in PR #217 at `66e449d` after all seven GitHub checks passed. The merge changed
+only the scoped Website Words UI/test paths and canonical documentation; API, auth, database,
+migration, seed, content, payment, deployment, publication and Production remained unchanged.
 
 | ID   | Workstream                         | Worker role                | Allowed scope                                                 | Depends on                 | Parallel rule                                                                                |
 | ---- | ---------------------------------- | -------------------------- | ------------------------------------------------------------- | -------------------------- | -------------------------------------------------------------------------------------------- |
