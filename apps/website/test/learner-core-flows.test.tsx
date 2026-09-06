@@ -169,6 +169,28 @@ describe('learner core flows', () => {
     expect(rendered.count('.word-ring')).toBe(0);
   });
 
+  it('filters the Words list by official and personal source', async () => {
+    rendered = await renderLearner();
+    await rendered.signInLocally();
+    await rendered.clickButton('ادامه');
+    await rendered.clickButton('واژه‌ها');
+
+    await rendered.clickButton('رسمی');
+    expect(rendered.count('.word-row')).toBe(3);
+    expect(rendered.text()).toContain('واژه‌های رسمی');
+    expect(rendered.text()).not.toContain('واژه‌های شخصی');
+
+    await rendered.clickButton('شخصی');
+    expect(rendered.count('.word-row')).toBe(0);
+    expect(rendered.text()).not.toContain('واژه‌های رسمی');
+    expect(rendered.text()).toContain('هنوز واژهٔ شخصی اضافه نکرده‌ای.');
+
+    await rendered.clickButton('همه');
+    expect(rendered.count('.word-row')).toBe(3);
+    expect(rendered.text()).toContain('واژه‌های رسمی');
+    expect(rendered.text()).toContain('واژه‌های شخصی');
+  });
+
   it('allows the twenty-eighth personal word because canonical words do not consume quota', async () => {
     window.localStorage.setItem(
       personalVocabularyKey,
@@ -202,6 +224,22 @@ describe('learner core flows', () => {
     expect(rendered.text()).toContain('واژه‌ای مطابق این جست‌وجو پیدا نشد.');
   });
 
+  it('clears an empty Words search and restores the filtered list', async () => {
+    rendered = await renderLearner();
+    await rendered.signInLocally();
+    await rendered.clickButton('ادامه');
+    await rendered.clickButton('واژه‌ها');
+    await rendered.clickButton('رسمی');
+
+    await rendered.searchWords('ناموجود');
+    expect(rendered.text()).toContain('واژه‌ای مطابق این جست‌وجو پیدا نشد.');
+
+    await rendered.clickButton('پاک کردن جست‌وجو');
+    expect(rendered.inputValue('.word-search input')).toBe('');
+    expect(rendered.count('.word-row')).toBe(3);
+    expect(rendered.text()).not.toContain('واژه‌ای مطابق این جست‌وجو پیدا نشد.');
+  });
+
   it('refuses a duplicate personal word', async () => {
     rendered = await renderLearner();
     await rendered.signInLocally();
@@ -220,6 +258,7 @@ type RenderedLearner = {
   clickButton(label: string): Promise<void>;
   count(selector: string): number;
   flipAndGrade(grade: string): Promise<void>;
+  inputValue(selector: string): string | null;
   signInLocally(): Promise<void>;
   searchWords(query: string): Promise<void>;
   startReview(): Promise<void>;
@@ -276,6 +315,7 @@ async function renderLearner(): Promise<RenderedLearner> {
       await clickButtonStartingWith(container, 'برای دیدن معنی');
       await clickButtonStartingWith(container, grade);
     },
+    inputValue: (selector) => container.querySelector<HTMLInputElement>(selector)?.value ?? null,
     signInLocally,
     searchWords: async (query) => {
       const input = container.querySelector<HTMLInputElement>('.word-search input');

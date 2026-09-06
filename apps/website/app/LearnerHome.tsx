@@ -44,6 +44,7 @@ import type { LearnerSyncState } from './learner-sync-state';
 
 type Grade = 'forgot' | 'hard' | 'remembered' | 'mastered';
 type LearningGoal = 'life' | 'career' | 'travel';
+type WordSourceFilter = 'all' | 'official' | 'personal';
 
 type QueuedReview = {
   cardId: string;
@@ -107,6 +108,7 @@ export function LearnerHome({
   const [onboarded, setOnboarded] = useState(false);
   const [learningGoal, setLearningGoal] = useState<LearningGoal>('life');
   const [wordQuery, setWordQuery] = useState('');
+  const [wordSourceFilter, setWordSourceFilter] = useState<WordSourceFilter>('all');
   const [personalWords, setPersonalWords] = useState<PersonalVocabularyEntry[]>([]);
   const [personalWordsLoaded, setPersonalWordsLoaded] = useState(false);
   const [pendingPersonalWordSyncCount, setPendingPersonalWordSyncCount] = useState(0);
@@ -135,6 +137,7 @@ export function LearnerHome({
   const flipAgainRef = useRef<HTMLButtonElement>(null);
   const completionHeadingRef = useRef<HTMLHeadingElement>(null);
   const startReviewRef = useRef<HTMLButtonElement>(null);
+  const wordSearchInputRef = useRef<HTMLInputElement>(null);
   const remainingTodayReviews = Math.max(0, studyItems.length - reviewedToday);
   const isServerOtp = authMode === 'server-otp';
 
@@ -432,9 +435,15 @@ export function LearnerHome({
     const normalizedQuery = wordQuery.toLocaleLowerCase();
     const matchesQuery = (word: { german: string; persian: string }) =>
       `${word.german} ${word.persian}`.toLocaleLowerCase().includes(normalizedQuery);
-    const visibleCanonicalWords = canonicalStartWords.filter(matchesQuery);
-    const visiblePersonalWords = personalWords.filter(matchesQuery);
+    const visibleCanonicalWords =
+      wordSourceFilter === 'personal' ? [] : canonicalStartWords.filter(matchesQuery);
+    const visiblePersonalWords =
+      wordSourceFilter === 'official' ? [] : personalWords.filter(matchesQuery);
     const visibleWordCount = visibleCanonicalWords.length + visiblePersonalWords.length;
+    const showCanonicalSection =
+      wordSourceFilter !== 'personal' && (visibleCanonicalWords.length > 0 || !wordQuery);
+    const showPersonalSection =
+      wordSourceFilter !== 'official' && (visiblePersonalWords.length > 0 || !wordQuery);
     return (
       <main className="app-shell words-shell" data-testid="learnbox-words">
         <header className="progress-brand">
@@ -486,47 +495,85 @@ export function LearnerHome({
           <label className="word-search">
             <span className="sr-only">جست‌وجوی واژه</span>
             <input
+              ref={wordSearchInputRef}
               value={wordQuery}
               onChange={(event) => setWordQuery(event.target.value)}
               placeholder="جست‌وجوی واژه"
             />
             <span aria-hidden="true">⌕</span>
           </label>
-          <p className="words-count">{visibleWordCount} واژه برای مرور</p>
-          {visibleWordCount === 0 ? (
-            <p className="words-empty-result" role="status">
-              واژه‌ای مطابق این جست‌وجو پیدا نشد.
-            </p>
-          ) : null}
-          <h2 className="words-section-title">واژه‌های رسمی</h2>
-          <div className="word-rows">
-            {visibleCanonicalWords.map((word) => (
-              <button className="word-row" key={word.german} type="button" onClick={begin}>
-                <span className="word-meaning">{word.persian}</span>
-                <strong lang="de" dir="ltr">
-                  {word.german}
-                </strong>
-                <span className="word-source">رسمی</span>
+          <div className="word-source-filters" role="group" aria-label="فیلتر منبع واژه">
+            {(
+              [
+                ['all', 'همه'],
+                ['official', 'رسمی'],
+                ['personal', 'شخصی'],
+              ] as const
+            ).map(([value, label]) => (
+              <button
+                key={value}
+                className="word-source-filter"
+                type="button"
+                aria-pressed={wordSourceFilter === value}
+                onClick={() => setWordSourceFilter(value)}
+              >
+                {label}
               </button>
             ))}
           </div>
-          <h2 className="words-section-title">واژه‌های شخصی</h2>
-          {visiblePersonalWords.length ? (
-            <div className="word-rows">
-              {visiblePersonalWords.map((word) => (
-                <button className="word-row" key={word.german} type="button" onClick={begin}>
-                  <span className="word-meaning">{word.persian}</span>
-                  <strong lang="de" dir="ltr">
-                    {word.german}
-                  </strong>
-                  <span className="word-source">شخصی</span>
-                </button>
-              ))}
+          <p className="words-count">{visibleWordCount} واژه برای مرور</p>
+          {visibleWordCount === 0 && wordQuery ? (
+            <div className="words-empty-result">
+              <p role="status">واژه‌ای مطابق این جست‌وجو پیدا نشد.</p>
+              <button
+                className="word-search-clear"
+                type="button"
+                onClick={() => {
+                  setWordQuery('');
+                  wordSearchInputRef.current?.focus();
+                }}
+              >
+                پاک کردن جست‌وجو
+              </button>
             </div>
-          ) : !wordQuery ? (
-            <p className="words-empty-result" role="status">
-              هنوز واژهٔ شخصی اضافه نکرده‌ای.
-            </p>
+          ) : null}
+          {showCanonicalSection ? (
+            <>
+              <h2 className="words-section-title">واژه‌های رسمی</h2>
+              <div className="word-rows">
+                {visibleCanonicalWords.map((word) => (
+                  <button className="word-row" key={word.german} type="button" onClick={begin}>
+                    <span className="word-meaning">{word.persian}</span>
+                    <strong lang="de" dir="ltr">
+                      {word.german}
+                    </strong>
+                    <span className="word-source">رسمی</span>
+                  </button>
+                ))}
+              </div>
+            </>
+          ) : null}
+          {showPersonalSection ? (
+            <>
+              <h2 className="words-section-title">واژه‌های شخصی</h2>
+              {visiblePersonalWords.length ? (
+                <div className="word-rows">
+                  {visiblePersonalWords.map((word) => (
+                    <button className="word-row" key={word.german} type="button" onClick={begin}>
+                      <span className="word-meaning">{word.persian}</span>
+                      <strong lang="de" dir="ltr">
+                        {word.german}
+                      </strong>
+                      <span className="word-source">شخصی</span>
+                    </button>
+                  ))}
+                </div>
+              ) : !wordQuery ? (
+                <p className="words-empty-result" role="status">
+                  هنوز واژهٔ شخصی اضافه نکرده‌ای.
+                </p>
+              ) : null}
+            </>
           ) : null}
         </section>
         <LearnerNav current="words" onNavigate={(destination) => setScreen(destination)} />
