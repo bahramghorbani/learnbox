@@ -4,14 +4,28 @@
 
 ## Active work
 
+### LB-DS-033 — dormant M1-D reconciliation GET security hardening
+
+- **Status:** review requested on `review/m1d-reconciliation-read-security`; implementation commit
+  `b719235`, based on `origin/main` at `fd81158`.
+- **Finding:** the read currently fetches events and the learner cursor in separate statements, so
+  a concurrent POST can advance `nextCursor` past an event absent from the response. The HTTP
+  parser also accepts decimal strings outside PostgreSQL BIGINT and converts the resulting DB fault
+  to 503 instead of contract-defined 400 validation.
+- **Boundary:** harden the dormant read and document the verified contract. Keep all sync/auth flags
+  false; no client composition, migration, deployment or Production change.
+- **Verification:** focused API 13/13 and Website 14/14; full API 133/133 and Website 225/225;
+  build/typecheck, migration, format, governance and secret checks pass.
+
 ### M1-D sync readiness boundary
 
-- Cursor/persistence foundations and the proposed wire contract are merged and documented. Owner decisions O-1/O-2 are now approved: conflicts remain pending and require a new event ID after resolution; M1 acknowledgement is strict one-step after atomic application. The reconciliation GET endpoint is now implemented in PR #209 but remains **dormant and fail-closed** because network sync is not enabled. Independent API/security review and a separate activation/composition decision remain required.
+- Cursor/persistence foundations and the wire contract are merged and documented. Owner decisions O-1/O-2 are approved: conflicts remain pending and require a new event ID after resolution; M1 acknowledgement is strict one-step after atomic application. The reconciliation GET from PR #209 remains **dormant and fail-closed**; LB-DS-033 completed its API/security review and hardened its pagination checkpoint and cursor input. A separate client-composition/activation decision remains required.
 
 ### LB-DS-029 — dormant reconciliation read implementation
 
 - **Status:** accepted and merged in PR #209 at `14ccaee` from `feature/m1d-reconciliation-read-direct`. The read-only GET handler, runtime boundary, route, and per-event cursor query are present and verified behind the existing disabled sync flag. No activation or migration is included.
-- **Dependency:** independent security/contract review and a separate activation/composition decision; client/network sync remains dormant.
+- **Dependency:** LB-DS-033 completes the security/contract review and hardening; a separate
+  activation/composition decision remains. Client/network sync is dormant.
 
 ### Active milestone
 

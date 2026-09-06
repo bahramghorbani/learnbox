@@ -128,6 +128,34 @@ Accepted and merged in PR #217 at `66e449d` after all seven GitHub checks passed
 only the scoped Website Words UI/test paths and canonical documentation; API, auth, database,
 migration, seed, content, payment, deployment, publication and Production remained unchanged.
 
+## LB-DS-033
+
+- Status: review_requested
+- Executor: supervisor (GPT-5.6 Sol security/contract review and hardening)
+- Base: `origin/main` at `fd81158`
+- Branch: `review/m1d-reconciliation-read-security`
+- Head commit: `b719235c5277f4d502eea68f69acc7eb59667e50`
+- Risk: security-sensitive-sync-read
+- Specification: ADR 0014; `docs/architecture/M1D_SYNC_WIRE_CONTRACT.md`
+- Allowed paths: `apps/api/src/reviews/postgres-review-event.store.ts`; `apps/api/test/postgres-review-event.store.test.ts`; `apps/website/lib/mobile-review-http.ts`; `apps/website/test/mobile-review-http.test.ts`; `docs/architecture/M1D_SYNC_WIRE_CONTRACT.md`; `docs/PRODUCT_STATUS.md`; `CURRENT_WORK.md`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-033.md`
+- Required checks: focused API/Website reconciliation tests; full API and Website tests; API build; Website typecheck/build; migration validation; formatting; queue/documentation/continuity/dashboard validators; `git diff --check`; secret scan
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+
+Review and harden the dormant reconciliation GET before any activation decision. Prevent a
+concurrent POST from advancing `nextCursor` beyond the last event represented in the response, and
+reject decimal cursors outside PostgreSQL's non-negative BIGINT range at the HTTP boundary. Preserve
+Bearer-subject learner scoping, HTTPS/no-store/generic errors and the disabled-by-default runtime.
+No flag activation, client composition, database migration, deployment or Production change.
+
+Implementation and Sol security review are complete. `nextCursor` is now derived only from the last
+event emitted in the page (or echoes `after` for an empty page), removing the two-statement race.
+The HTTP boundary rejects values above signed PostgreSQL BIGINT before storage access. Focused API
+store tests pass 13/13; focused Website review boundary tests pass 14/14; full API passes 133/133
+and full Website passes 225/225. Builds, typecheck, migration validation, formatting, governance
+validators, diff check and secret scan pass. Runtime flags remain false and no client is composed.
+
 | ID   | Workstream                         | Worker role                | Allowed scope                                                 | Depends on                 | Parallel rule                                                                                |
 | ---- | ---------------------------------- | -------------------------- | ------------------------------------------------------------- | -------------------------- | -------------------------------------------------------------------------------------------- |
 | D0   | Visual language and token contract | W1 + design-capable worker | `docs/design/**`, shared visual token docs, design evidence   | M0                         | Can run alongside M1 contract audit; no overlapping implementation paths                     |

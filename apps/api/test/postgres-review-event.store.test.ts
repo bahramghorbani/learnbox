@@ -488,6 +488,37 @@ describe('PostgresReviewEventStore learner-scoped idempotency', () => {
     expect(queries[0].sql).toMatch(/e\.reconciliation_cursor > \$2::bigint/i);
     expect(queries[0].sql).toMatch(/ORDER BY e\.reconciliation_cursor ASC/i);
     expect(queries[0].params).toEqual([input.userId, '41', 101]);
-    expect(queries[1].params).toEqual([input.userId]);
+    expect(queries).toHaveLength(1);
+  });
+
+  it('never advances nextCursor past the last event represented in the page', async () => {
+    const queries: string[] = [];
+    const pool = {
+      query: async (sql: string) => {
+        queries.push(sql);
+        if (sql.includes('FROM review_events')) {
+          return {
+            rows: [
+              {
+                client_event_id: 'evt-2',
+                event_id: 'event-2',
+                applied_at: new Date('2026-09-05T08:20:01Z'),
+                reconciliation_cursor: '42',
+              },
+            ],
+          };
+        }
+        // Simulate a concurrent POST advancing the learner cursor after the event-page read.
+        return { rows: [{ cursor: '43' }] };
+      },
+      connect: async () => {
+        throw new Error('reconciliation read must not open a transaction');
+      },
+    } as unknown as Pool;
+
+    const result = await new PostgresReviewEventStore(pool).readReconciliation(input.userId, '41');
+
+    expect(result.nextCursor).toBe('42');
+    expect(queries).toHaveLength(1);
   });
 });
