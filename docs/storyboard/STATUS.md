@@ -4,7 +4,7 @@ The original 30-stage storyboard remains historical planning context. Delivery i
 
 ## Current product stage
 
-**M1 and M2 active in controlled parallel — both partial and not production-ready**
+**Current stage:** 1 of 8 — M1 Online Learning Core; M2 is active in controlled parallel. Both are partial and not production-ready.
 
 ## Milestone map
 
