@@ -188,6 +188,26 @@ verified for start, both flip directions, next-card grade, completion and return
 No API, auth, sync flag, schema, migration, seed, payment, deployment, publication or Production
 state changed.
 
+## LB-DS-035
+
+- Status: review_requested
+- Executor: supervisor (Web Words source filters and search recovery)
+- Base: `origin/main` at `1634744a1929edd31f68c90af8d41228e3df4c27`
+- Branch: `feat/web-words-source-filters`
+- Risk: routine-web-ui-accessibility
+- Specification: `docs/design/D1_LEARNER_UI_KIT.md` §7; `docs/PRODUCT_STATUS.md`
+- Allowed paths: `apps/website/app/LearnerHome.tsx`; `apps/website/app/globals.css`; `apps/website/test/learner-core-flows.test.tsx`; `CURRENT_WORK.md`; `docs/PRODUCT_STATUS.md`; `docs/design/DESIGN_STATUS.md`; `docs/design/UI_QA.md`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-035.md`
+- Required checks: focused/full Website tests; Website typecheck/build; format; queue/documentation/continuity/dashboard validators; `git diff --check`; browser RTL/keyboard/responsive smoke
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+
+Implement the D1 Words source chips (`همه` / `رسمی` / `شخصی`) as keyboard-reachable pressed-state
+buttons. Search composes with the selected source; visible count and section headings reflect only
+displayed rows. A no-result query provides a clear-search recovery action that returns focus to the
+search input. Keep canonical/personal identity and quota truth unchanged. No API, auth, sync flag,
+schema, migration, seed, content, payment, deployment, publication or Production change.
+
 | ID   | Workstream                         | Worker role                | Allowed scope                                                 | Depends on                 | Parallel rule                                                                                |
 | ---- | ---------------------------------- | -------------------------- | ------------------------------------------------------------- | -------------------------- | -------------------------------------------------------------------------------------------- |
 | D0   | Visual language and token contract | W1 + design-capable worker | `docs/design/**`, shared visual token docs, design evidence   | M0                         | Can run alongside M1 contract audit; no overlapping implementation paths                     |

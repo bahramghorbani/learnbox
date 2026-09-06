@@ -4,6 +4,16 @@
 
 ## Active work
 
+### LB-DS-035 — Learner Web Words source filters
+
+- **Status:** review requested on `feat/web-words-source-filters`, based on `origin/main` at
+  `1634744`; focused/full Website tests (228/228), typecheck/build, validators and responsive browser
+  QA pass. GitHub CI remains.
+- **Outcome:** accessible `همه` / `رسمی` / `شخصی` filters compose with search and truthful visible
+  counts; empty search includes a clear action that restores focus to the search input.
+- **Boundary:** device-local/canonical Words state only. No API, auth, sync flag, schema, migration,
+  seed, content, payment, deployment, publication or Production change.
+
 ### M1-D sync readiness boundary
 
 - Cursor/persistence foundations and the wire contract are merged and documented. Owner decisions O-1/O-2 are approved: conflicts remain pending and require a new event ID after resolution; M1 acknowledgement is strict one-step after atomic application. The reconciliation GET from PR #209 remains **dormant and fail-closed**; LB-DS-033 completed its API/security review and hardening in PR #219 at `82afe3b`. A separate client-composition/activation decision remains required.
