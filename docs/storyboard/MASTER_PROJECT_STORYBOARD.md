@@ -19,4 +19,8 @@ Historical stages 1–30 describe how the repository evolved and should not be d
 
 ## Current status
 
-M0 is in progress. Product capability truth is in `docs/PRODUCT_STATUS.md`; release exit criteria are in `ROADMAP.md`; documentation update rules are in `docs/DOCUMENTATION_GOVERNANCE.md`.
+M0 is completed. M1 Online Learning Core and M2 Content Factory/Admin now have verified merged
+foundations and proceed in controlled parallel, but both remain partial and not production-ready.
+Product capability truth is in `docs/PRODUCT_STATUS.md`; active work and exact blockers are in
+`.ai/WORK_QUEUE.md` and `CURRENT_WORK.md`; release exit criteria are in `ROADMAP.md`; documentation
+update rules are in `docs/DOCUMENTATION_GOVERNANCE.md`.
