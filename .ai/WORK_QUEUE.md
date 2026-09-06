@@ -190,10 +190,12 @@ state changed.
 
 ## LB-DS-035
 
-- Status: review_requested
+- Status: accepted
 - Executor: supervisor (Web Words source filters and search recovery)
 - Base: `origin/main` at `1634744a1929edd31f68c90af8d41228e3df4c27`
 - Branch: `feat/web-words-source-filters`
+- Head commit: `0066af2749653246fff865aa91e2571de744946c`
+- Merge commit: `bd4491563a69fdc0aca44160889c41c6c2339488` (PR #223)
 - Risk: routine-web-ui-accessibility
 - Specification: `docs/design/D1_LEARNER_UI_KIT.md` §7; `docs/PRODUCT_STATUS.md`
 - Allowed paths: `apps/website/app/LearnerHome.tsx`; `apps/website/app/globals.css`; `apps/website/test/learner-core-flows.test.tsx`; `CURRENT_WORK.md`; `docs/PRODUCT_STATUS.md`; `docs/design/DESIGN_STATUS.md`; `docs/design/UI_QA.md`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-035.md`
@@ -207,6 +209,11 @@ buttons. Search composes with the selected source; visible count and section hea
 displayed rows. A no-result query provides a clear-search recovery action that returns focus to the
 search input. Keep canonical/personal identity and quota truth unchanged. No API, auth, sync flag,
 schema, migration, seed, content, payment, deployment, publication or Production change.
+
+Accepted and merged in PR #223 at `bd44915` after all seven GitHub checks passed. The source filter,
+search composition, visible counts, pressed state and clear-search focus recovery are verified. No
+API, auth, sync flag, schema, migration, seed, payment, deployment, publication or Production state
+changed.
 
 | ID   | Workstream                         | Worker role                | Allowed scope                                                 | Depends on                 | Parallel rule                                                                                |
 | ---- | ---------------------------------- | -------------------------- | ------------------------------------------------------------- | -------------------------- | -------------------------------------------------------------------------------------------- |
