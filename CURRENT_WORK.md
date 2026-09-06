@@ -69,14 +69,15 @@
   review-gated task.
 
 - **M2 Admin content-operations truthful review-preview slice:** completed in PR #195 at merge commit `229708a` (2026-09-04). The preview card, media
-  state, provenance and review queue are now derived from the committed Start Pack drafts
+  state, provenance and review queue are derived from the committed Start Pack drafts
   (`content/packs/learnbox-start`); fabricated review claims (passed validation list, media-ready
   checks, `۹۲٪` model confidence, demo example `Das Haus ist groß.`) were removed. Unreviewed
   drafts always show pending gates and absent media; approve/return buttons only flip a local
-  preview label; the six-dimensional gate, the 20-draft/0-release-approved queue and the release
-  panel remain publication-blocked, and the ADR 0016 seed gate stays untouched. No API route,
-  schema, migration, content file or publication path changed; server-backed review reads still
-  await the gated owner bootstrap/role assignment.
+  preview label; the six-dimensional gate, the 35-draft/0-release-approved queue and the release
+  panel remain publication-blocked, and the ADR 0016 seed gate stays untouched. Admin owner
+  bootstrap, canonical-user binding, `super_admin` role assignment and Passkey sign-in are now
+  verified on staging; the workspace still reads committed local drafts and performs no database
+  review writes. No seed or publication is enabled.
 - **Start Pack 35-target pending drafts (LB-DS-STARTER-DRAFTS-15):** merged in PR #200 at merge
   commit `2aa5931` (2026-09-04; branch `content/starter-drafts-15`). The 15 target drafts (Fenster,
   Zimmer, Uhr, Milch, Kaffee, Ei, Tee, Stadt, Supermarkt, gehen, essen, trinken, groß, kalt, neu)
@@ -92,7 +93,7 @@
 
 ## Immediate execution order
 
-1. Admin session → canonical `users.id` binding is merged (PRs #187–#188; migration `0016`, fail-closed session lookup and one-shot binding operation). Remaining work is owner bootstrap, role assignment and staging verification; ADR 0015 records the fail-closed boundary.
+1. Admin owner bootstrap, canonical `users.id` binding, `super_admin` role assignment and Passkey sign-in are verified on staging. The current follow-up keeps the workspace truthful: authenticated staging is distinguished from local-prototype mode, all 35 committed drafts appear, and review actions remain local-only. Server-backed review reads/writes require a separate reviewed route/activation slice.
 2. Start Pack ↔ canonical `contentId` contract is recorded in ADR 0013 and the bounded 35-item catalog/draft slice is merged (PRs #193 and #200); release-approved `card_versions` and all remaining review dimensions are required before seed/publication.
 3. Implement the authenticated server-wired learner path completion and any remaining D1 fetch states.
 4. Complete the separately review-gated M1-D push reconciliation activation/composition work. The cursor/watermark policy is approved in
