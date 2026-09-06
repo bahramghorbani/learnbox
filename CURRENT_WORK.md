@@ -4,6 +4,16 @@
 
 ## Active work
 
+### LB-DS-034 — Learner Web review-session focus recovery
+
+- **Status:** review requested on `fix/web-review-session-focus`, based on `origin/main` at
+  `2e2d7a3`.
+- **Boundary:** restore focus only when a review-stage transition removes the focused control. Keep
+  all product copy, routes, API/auth/sync flags, storage, seed, deployment and Production unchanged.
+- **Verification:** focused RED→GREEN focus-flow test, full Website suite (226/226), typecheck/build,
+  repository validators, secret scan and local browser keyboard smoke passed; GitHub CI remains required
+  before merge.
+
 ### M1-D sync readiness boundary
 
 - Cursor/persistence foundations and the wire contract are merged and documented. Owner decisions O-1/O-2 are approved: conflicts remain pending and require a new event ID after resolution; M1 acknowledgement is strict one-step after atomic application. The reconciliation GET from PR #209 remains **dormant and fail-closed**; LB-DS-033 completed its API/security review and hardening in PR #219 at `82afe3b`. A separate client-composition/activation decision remains required.

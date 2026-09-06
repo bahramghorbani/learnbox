@@ -82,6 +82,32 @@ describe('learner core flows', () => {
     expect(rendered.text()).toContain('3 پاسخ برای همگام‌سازی امن نگه‌داری شد.');
   });
 
+  it('keeps keyboard focus on the active review control across card transitions', async () => {
+    rendered = await renderLearner();
+    await rendered.signInLocally();
+    await rendered.clickButton('ادامه');
+
+    await rendered.startReview();
+    expect(rendered.activeButtonLabel()).toContain('برای دیدن معنی');
+
+    await rendered.clickButton('برای دیدن معنی');
+    expect(rendered.activeButtonLabel()).toContain('برگرداندن کارت');
+
+    await rendered.clickButton('برگرداندن کارت');
+    expect(rendered.activeButtonLabel()).toContain('برای دیدن معنی');
+
+    await rendered.clickButton('برای دیدن معنی');
+    await rendered.clickButton('یادم آمد');
+    expect(rendered.activeButtonLabel()).toContain('برای دیدن معنی');
+
+    await rendered.flipAndGrade('یادم آمد');
+    await rendered.flipAndGrade('یادم آمد');
+    expect(document.activeElement?.textContent).toContain('آفرین، ثبت شد.');
+
+    await rendered.clickButton('بازگشت به امروز');
+    expect(rendered.activeButtonLabel()).toContain('شروع مرور');
+  });
+
   it('resumes an interrupted review from the saved session index', async () => {
     // Simulate a partially completed session persisted before render.
     window.localStorage.setItem(reviewSessionKey, JSON.stringify({ nextCardIndex: 2, version: 1 }));
@@ -189,6 +215,7 @@ describe('learner core flows', () => {
 });
 
 type RenderedLearner = {
+  activeButtonLabel(): string | null;
   addPersonalWord(german: string, persian: string): Promise<void>;
   clickButton(label: string): Promise<void>;
   count(selector: string): number;
@@ -228,6 +255,10 @@ async function renderLearner(): Promise<RenderedLearner> {
   };
 
   return {
+    activeButtonLabel: () =>
+      document.activeElement instanceof HTMLButtonElement
+        ? document.activeElement.textContent
+        : null,
     addPersonalWord: async (german: string, persian: string) => {
       await clickButtonStartingWith(container, 'افزودن واژه');
       const inputs = Array.from(
@@ -258,7 +289,10 @@ async function renderLearner(): Promise<RenderedLearner> {
           candidate.textContent?.trim().startsWith('ادامهٔ مرور'),
       );
       if (!button) throw new Error('Start/resume review button not found.');
-      await act(async () => button.click());
+      await act(async () => {
+        button.focus();
+        button.click();
+      });
     },
     text: () => container.textContent ?? '',
     unmount: async () => {

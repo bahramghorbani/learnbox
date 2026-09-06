@@ -131,8 +131,29 @@ export function LearnerHome({
   const [serverSyncState, setServerSyncState] = useState<LearnerSyncState>('local-only');
   const [serverLastSyncedAt, setServerLastSyncedAt] = useState<string | null>(null);
   const gradeSubmissionRef = useRef(false);
+  const flipHintRef = useRef<HTMLButtonElement>(null);
+  const flipAgainRef = useRef<HTMLButtonElement>(null);
+  const completionHeadingRef = useRef<HTMLHeadingElement>(null);
+  const startReviewRef = useRef<HTMLButtonElement>(null);
   const remainingTodayReviews = Math.max(0, studyItems.length - reviewedToday);
   const isServerOtp = authMode === 'server-otp';
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const activeElement = document.activeElement;
+    if (activeElement && activeElement !== document.body && document.contains(activeElement))
+      return;
+
+    if (screen === 'card') {
+      (flipped ? flipAgainRef : flipHintRef).current?.focus();
+      return;
+    }
+    if (screen === 'complete') {
+      completionHeadingRef.current?.focus();
+      return;
+    }
+    if (screen === 'today') startReviewRef.current?.focus();
+  }, [flipped, screen, sessionIndex]);
 
   useEffect(() => {
     if (!authenticated || typeof window === 'undefined') return;
@@ -527,7 +548,9 @@ export function LearnerHome({
         <section className="completion" aria-live="polite">
           <Bobo expression="celebrate" className="bobo bobo-completion" priority />
           <p className="eyeline">یک قدم آرام و پیوسته</p>
-          <h1>آفرین، ثبت شد.</h1>
+          <h1 ref={completionHeadingRef} tabIndex={-1}>
+            آفرین، ثبت شد.
+          </h1>
           <p>{response?.detail}</p>
           {!plusOfferDismissed ? (
             <SupportivePlusOffer
@@ -579,13 +602,13 @@ export function LearnerHome({
               <p className="hint" lang="de" dir="ltr">
                 {currentItem.germanDefinition}
               </p>
-              <button className="flip-hint" onClick={() => setFlipped(true)}>
+              <button ref={flipHintRef} className="flip-hint" onClick={() => setFlipped(true)}>
                 برای دیدن معنی، کارت را برگردان
               </button>
             </div>
           ) : (
             <div className="card-face card-back">
-              <button className="flip-again" onClick={() => setFlipped(false)}>
+              <button ref={flipAgainRef} className="flip-again" onClick={() => setFlipped(false)}>
                 برگرداندن کارت
               </button>
               <h1>{currentItem.persian}</h1>
@@ -631,7 +654,7 @@ export function LearnerHome({
         lastSyncedAt={serverLastSyncedAt}
         onRetryServerRead={retryServerStateRead}
       />
-      <button className="primary-button" onClick={begin}>
+      <button ref={startReviewRef} className="primary-button" onClick={begin}>
         {resumableSessionIndex === null ? 'شروع مرور' : 'ادامهٔ مرور'}{' '}
         <span aria-hidden="true">←</span>
       </button>

@@ -162,6 +162,25 @@ blockers are resolved in the dormant server read; client composition and activat
 gates. No migration, database data, deployment, seed, publication, payment or Production state
 changed.
 
+## LB-DS-034
+
+- Status: review_requested
+- Executor: supervisor (Web review-session keyboard/SR accessibility)
+- Base: `origin/main` at `2e2d7a36e4f2abf6ab5ed4a04edadcfdda15c1a8`
+- Branch: `fix/web-review-session-focus`
+- Risk: routine-web-accessibility
+- Specification: `docs/design/D1_LEARNER_UI_KIT.md`; `docs/design/ACCESSIBILITY.md`; `docs/design/UI_QA.md`
+- Allowed paths: `apps/website/app/LearnerHome.tsx`; `apps/website/test/learner-core-flows.test.tsx`; `CURRENT_WORK.md`; `docs/PRODUCT_STATUS.md`; `docs/design/UI_QA.md`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-034.md`
+- Required checks: focused/full Website tests; Website typecheck/build; format; queue/documentation/continuity/dashboard validators; `git diff --check`; local browser keyboard smoke
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+
+Restore keyboard focus after review-session DOM transitions that remove the focused control. Focus
+only moves when the active element has been removed: start/next-card front → flip control; card back
+→ return control; completion → heading; exit/return → Today review CTA. No API, auth, flag, schema,
+migration, seed, content, payment, deployment, publication or Production change.
+
 | ID   | Workstream                         | Worker role                | Allowed scope                                                 | Depends on                 | Parallel rule                                                                                |
 | ---- | ---------------------------------- | -------------------------- | ------------------------------------------------------------- | -------------------------- | -------------------------------------------------------------------------------------------- |
 | D0   | Visual language and token contract | W1 + design-capable worker | `docs/design/**`, shared visual token docs, design evidence   | M0                         | Can run alongside M1 contract audit; no overlapping implementation paths                     |
