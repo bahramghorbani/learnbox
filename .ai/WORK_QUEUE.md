@@ -67,7 +67,7 @@ Accepted and merged in PR #209 at `14ccaee`. The read-only reconciliation GET ex
 
 ## LB-DS-030
 
-- Status: review_requested
+- Status: accepted
 - Executor: supervisor (Admin authenticated-preview truthfulness)
 - Base: `origin/main` at `d81f7b5`
 - Branch: `fix/admin-authenticated-preview-truth`
@@ -79,7 +79,23 @@ Accepted and merged in PR #209 at `14ccaee`. The read-only reconciliation GET ex
 - Draft PR required: yes
 - Merge allowed: yes
 
-Post-bootstrap truthfulness follow-up only. The workspace receives a server-authenticated context from the existing AuthGate, distinguishes it from local-prototype mode, and still labels review data/actions as local-only. It renders the complete 35-draft catalog union. Publication, review persistence, schema, migrations, content approvals, seed and Production remain unchanged.
+Accepted and merged in PR #213 at merge commit `14eb8ef`. The authenticated workspace label and complete 35-draft queue are merged; publication, review persistence, schema, migrations, content approvals, seed and Production remain unchanged. Staging cutover exposed a separate fail-closed Docker build-contract blocker and was stopped before the running service changed.
+
+## LB-DS-031
+
+- Status: review_requested
+- Executor: supervisor (Admin Passkey Docker build contract)
+- Base: `origin/main` at `14eb8ef`
+- Branch: `fix/admin-passkey-build-contract`
+- Risk: security-sensitive-deployment-contract
+- Specification: ADR 0015; `infrastructure/production/admin/Dockerfile`; `infrastructure/production/admin/compose.yaml`
+- Allowed paths: `infrastructure/production/admin/Dockerfile`; `infrastructure/production/admin/compose.yaml`; `apps/admin/test/deployment-contract.test.ts`; `docs/operations/ADMIN_PASSKEY_ACTIVATION.md`; `CURRENT_WORK.md`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-031.md`
+- Required checks: focused/full Admin tests; Admin typecheck/build; Docker build with the public flag; isolated candidate probe; compose config; format; queue/documentation/continuity/dashboard validators; `git diff --check`
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+
+The public Passkey UI mode is resolved during the Next build. A candidate image built without the public build argument exposed the local workspace (`login_ui=false`, `workspace_ui=true`), so staging cutover was stopped before changing the running container. This slice passes only the non-secret public boolean through Docker/Compose build args; token keys, bootstrap secrets and all other credentials remain runtime-only. No production deployment or data change.
 
 | ID   | Workstream                         | Worker role                | Allowed scope                                                 | Depends on                 | Parallel rule                                                                                |
 | ---- | ---------------------------------- | -------------------------- | ------------------------------------------------------------- | -------------------------- | -------------------------------------------------------------------------------------------- |
