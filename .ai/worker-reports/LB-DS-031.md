@@ -45,7 +45,8 @@ The isolated `learnbox-admin:14eb8ef-admin-staging` candidate built successfully
 - Secret-pattern scan of the tracked diff: passed (no assigned secret, private key or AWS-key pattern).
 - Independent security/deployment review: passed with no blocking findings; production, seed and
   publication were confirmed untouched.
-- GitHub CI, remote staging candidate and staging-only cutover: pending.
+- GitHub CI for head `6803c0c`: all 7 checks passed (`quality`, `secrets`, `mobile`, `production-stack`, both Vercel deployments and Preview comments).
+- Remote staging candidate and staging-only cutover: pending.
 
 ## Rollback
 
