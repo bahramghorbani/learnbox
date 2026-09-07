@@ -155,7 +155,9 @@ describe('learner core flows', () => {
     expect(rendered.text()).toContain(
       'این گزارش فقط از داده‌های ذخیره‌شده در همین مرورگر ساخته می‌شود.',
     );
-    expect(rendered.text()).toContain('3 پاسخ روی این دستگاه در انتظار تأیید سرور است.');
+    expect(rendered.text()).toContain(
+      '3 پاسخ فقط روی این دستگاه ذخیره شده و سرور آن‌ها را تأیید نکرده است.',
+    );
     expect(rendered.text()).toContain('گزارش هفتگی سرور هنوز فعال نیست.');
   });
 

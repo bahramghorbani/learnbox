@@ -29,7 +29,9 @@ describe('ProgressScreen', () => {
     expect(rendered.text()).toContain('امروز 3 کارت را ثبت کردی.');
     expect(rendered.text()).toContain('3 کارت در این دستگاه ثبت شد');
     expect(rendered.text()).toContain('1 روز همراه LearnBox در این دستگاه');
-    expect(rendered.text()).toContain('3 پاسخ روی این دستگاه در انتظار تأیید سرور است.');
+    expect(rendered.text()).toContain(
+      '3 پاسخ فقط روی این دستگاه ذخیره شده و سرور آن‌ها را تأیید نکرده است.',
+    );
     expect(rendered.text()).toContain('گزارش هفتگی سرور هنوز فعال نیست.');
   });
 
@@ -41,7 +43,7 @@ describe('ProgressScreen', () => {
     expect(rendered.text()).toContain(
       'این گزارش فقط از داده‌های ذخیره‌شده در همین مرورگر ساخته می‌شود.',
     );
-    expect(rendered.text()).not.toContain('در انتظار تأیید سرور');
+    expect(rendered.text()).not.toContain('سرور آن‌ها را تأیید نکرده است');
   });
 
   it('invokes the review action from the progress CTA', async () => {

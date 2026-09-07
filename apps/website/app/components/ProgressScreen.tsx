@@ -30,7 +30,7 @@ export function ProgressScreen({
         <p>این گزارش فقط از داده‌های ذخیره‌شده در همین مرورگر ساخته می‌شود.</p>
         {pendingReviewCount ? (
           <p className="sync-status" role="status">
-            {pendingReviewCount} پاسخ روی این دستگاه در انتظار تأیید سرور است.
+            {pendingReviewCount} پاسخ فقط روی این دستگاه ذخیره شده و سرور آن‌ها را تأیید نکرده است.
           </p>
         ) : null}
       </section>
