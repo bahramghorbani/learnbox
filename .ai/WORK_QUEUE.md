@@ -269,7 +269,7 @@ Implementation and hardening are merged through PR #227 at `eda7630`. Dart forma
 - Status: review_requested
 - Executor: Hermes web implementation worker (M3 Web P1)
 - Base: `origin/main` at `0f4feb71dc01b878519cae58765284a6028b5daf` (LB-DS-041 post-merge reconciliation)
-- Head commit: `742ebad` (implementation; status commit follows)
+- Head commit: `94a91e3` (implementation commit `742ebad`; status commit `94a91e3`)
 - Draft PR: https://github.com/bahramghorbani/learnbox/pull/238
 - Branch: `feature/m3-web-profile-settings`
 - Risk: learner-web-ui-and-device-local-state
