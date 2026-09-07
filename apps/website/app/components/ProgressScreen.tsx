@@ -5,6 +5,7 @@ interface ProgressScreenProps {
   onNavigate: (destination: 'today' | 'words' | 'progress') => void;
   reviewedToday: number;
   streakDays: number;
+  pendingReviewCount: number;
 }
 
 export function ProgressScreen({
@@ -12,6 +13,7 @@ export function ProgressScreen({
   onNavigate,
   reviewedToday,
   streakDays,
+  pendingReviewCount,
 }: ProgressScreenProps) {
   return (
     <main className="app-shell progress-shell" data-testid="learnbox-progress">
@@ -25,16 +27,22 @@ export function ProgressScreen({
             ? `امروز ${reviewedToday} کارت را ثبت کردی.`
             : 'با یک مرور کوتاه، گزارش واقعی‌ات از همین‌جا شکل می‌گیرد.'}
         </p>
+        <p>این گزارش فقط از داده‌های ذخیره‌شده در همین مرورگر ساخته می‌شود.</p>
+        {pendingReviewCount ? (
+          <p className="sync-status" role="status">
+            {pendingReviewCount} پاسخ روی این دستگاه در انتظار تأیید سرور است.
+          </p>
+        ) : null}
       </section>
       <section className="weekly-chart" aria-labelledby="weekly-chart-title">
         <div className="chart-heading">
           <h2 id="weekly-chart-title">مرورهای امروز</h2>
-          <span>{reviewedToday} کارت ثبت شد</span>
+          <span>{reviewedToday} کارت در این دستگاه ثبت شد</span>
         </div>
         <div className="chart-summary" role="status">
           <strong>{reviewedToday}</strong>
           <span>کارتِ ثبت‌شده در امروز</span>
-          <p>نمودار هفتگی پس از ثبت دادهٔ واقعی چند روز نمایش داده می‌شود.</p>
+          <p>گزارش هفتگی سرور هنوز فعال نیست.</p>
         </div>
       </section>
       <section className="time-insight" aria-labelledby="time-insight-title">
@@ -47,7 +55,11 @@ export function ProgressScreen({
       <section className="streak-insight" aria-label="زنجیرهٔ یادگیری">
         <span aria-hidden="true">✦</span>
         <div>
-          <h2>{streakDays ? `${streakDays} روز همراه LearnBox` : 'شروع تازه با LearnBox'}</h2>
+          <h2>
+            {streakDays
+              ? `${streakDays} روز همراه LearnBox در این دستگاه`
+              : 'شروع تازه در این دستگاه'}
+          </h2>
           <p>هر روزی که برگردی، زنجیره ادامه دارد.</p>
         </div>
       </section>
