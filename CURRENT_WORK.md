@@ -8,11 +8,18 @@
 
 - **Status:** accepted and merged in PR #235 at `213f2f1`. The owner approved the fourth Profile
   destination, omission of sign out until local learner data is account-scoped, and omission of an
-  alpha account-deletion entry. PDR-006 records those decisions. Web and Android P1/S1 implementation
-  remain separate, test-gated tasks; auth/session, provider and Production work remain out of scope.
-- **Next implementation:** LB-DS-042 (Web P1) and LB-DS-043 (Android P1) are registered as parallel,
-  path-separated tasks after this reconciliation merges. Both exclude sound persistence, sign out,
-  deletion, server profile data, reminders, commerce, activation and rollout.
+  alpha account-deletion entry. PDR-006 records those decisions. Auth/session, provider and
+  Production work remain out of scope.
+- **Android M3-P1 (LB-DS-043):** implemented on `feature/m3-android-profile-settings` and in
+  `review_requested` — Draft PR #237. Profile is the fourth persistent destination showing the
+  neutral `حساب LearnBox` label and the real device-local pending review count; Settings is a child
+  surface with approved informational rows and a focus-restoring labelled back action. No goal row
+  (Android has no goal store); no sign-out, deletion, identity, commerce, reminder or sync state.
+  Focused widget tests 9/9, full Flutter 201/201, analyze/format/debug-APK and repo validators
+  pass; emulator RTL visual evidence captured. See `.ai/worker-reports/LB-DS-043.md`.
+- **Web M3-P1 (LB-DS-042):** registered as a path-separated parallel task, still `ready` and
+  unassigned. Sound preference persistence (M3-S1), account-scoped storage before sign out, server
+  profile data, reminders and commerce remain separately gated.
 
 ### M1-D sync readiness boundary
 
