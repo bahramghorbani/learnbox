@@ -7,10 +7,12 @@
 ### M3 Profile and Settings interaction contract
 
 - **Status:** contract accepted and merged in PR #235 at `213f2f1`; PDR-006 records the owner
-  decisions. **LB-DS-042 (Web M3-P1)** is in progress on branch `feature/m3-web-profile-settings`
-  from base `0f4feb7`: adds Profile as the fourth persistent learner destination plus truthful
-  Profile and child Settings surfaces from device-local goal/pending-review facts and approved
-  informational rows only. LB-DS-043 (Android P1) remains a parallel path-separated task. Both
+  decisions. **LB-DS-042 (Web M3-P1)** is marked `review_requested` on `feature/m3-web-profile-settings`
+  from base `0f4feb7` with Draft PR #238 (implementation `742ebad` plus this status commit): Profile is the
+  fourth persistent learner destination and the truthful Profile/child Settings surfaces use only
+  device-local goal/pending-review facts and approved informational rows. The single type-only
+  widening of `ProgressScreen.onNavigate` to the shared `LearnerDestination` union is documented in
+  the queue. LB-DS-043 (Android P1) remains a parallel path-separated task. Both
   exclude sound persistence, sign out, deletion, server profile data, reminders, commerce,
   activation and rollout.
 
