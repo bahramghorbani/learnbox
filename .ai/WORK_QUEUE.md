@@ -272,7 +272,7 @@ Implementation and hardening are merged through PR #227 at `eda7630`. Dart forma
 - Base: `origin/main` at `a8354a58ebeb5eac3a3a6c2364dbcb3d81f70c6c`
 - Branch: `docs/learner-auth-preview-revalidation`
 - Worktree: `/Volumes/LearnBox-Dev/LearnBox-final/lb-learner-auth-preview-revalidation`
-- Head commit: pending
+- Head commit: `3c6fe9d0f6675d99dc21fb2fcc6ee517a565f6de`
 - Scope: record the bounded protected Preview validation of the real learner-facing OTP login flow, including authenticated post-login onboarding evidence and full rollback/removal.
 - Allowed paths: `docs/operations/OTP_PROVIDER_ACTIVATION.md`, `.ai/WORK_QUEUE.md`, `CURRENT_WORK.md`, `.ai/worker-reports/LB-DS-040.md`
 - Forbidden paths: runtime code; package manifests; database migrations; deployment configuration; unrelated docs
