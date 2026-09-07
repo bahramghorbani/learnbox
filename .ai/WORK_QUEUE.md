@@ -266,7 +266,7 @@ Implementation and hardening are merged through PR #227 at `eda7630`. Dart forma
 
 ## LB-DS-041
 
-- Status: in_progress
+- Status: review_requested
 - Executor: supervisor (M3 Profile/Settings design contract)
 - Base: `origin/main` at `e074ccfaa9b078609a9942398a79d37c5e79261c`
 - Branch: `design/m3-profile-settings-contract`
