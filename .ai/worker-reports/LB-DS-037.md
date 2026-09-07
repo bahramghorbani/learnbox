@@ -1,14 +1,14 @@
 # LB-DS-037 — Android device-local personal vocabulary parity
 
-- Status: hardening_verified_pending_rereview
+- Status: rereview_passed_ci_passed
 - Base: `388ff670479a4b943279d1e9cf6bde3e4d00a2e4`
 - Branch: `feat/mobile-personal-vocabulary`
-- Head commit: `9f23c72` (follow-up hardening pending commit)
+- Head commit: `36283a1ed70d5526dfad70732747401d62ffe06e`
 - Risk: routine Android UI with secure device-local persistence
 
 ## Outcome
 
-- Adds a typed personal-vocabulary store over the existing `flutter_secure_storage` dependency, using the separate `learnbox_personal_vocabulary_v1` namespace.
+- Adds a typed personal-vocabulary store over the existing `flutter_secure_storage` dependency, using separate key and Android namespace `learnbox.personalVocabulary.v1`.
 - Fails closed on corrupt top-level payloads, malformed records, oversized lists, duplicate IDs/German values and canonical-word collisions; it never rewrites a corrupt payload as a successful empty list.
 - Enforces the 30-record cap in the storage layer and the UI; canonical constraints are passed from the bundled Start cards.
 - Binds local-load completion to a generation and its own timer, so a stale read cannot overwrite or cancel a later retry.
@@ -31,8 +31,8 @@
 - Android debug APK: built successfully.
 - Personal-word UI responsive QA: 320×480 at 200% text and 844×390 landscape, including loaded personal row and add form, passed without overflow.
 - `git diff --check`: passed.
-- Independent re-review: pending.
-- GitHub CI: requires a new run after the follow-up commit.
+- Independent re-review: PASS; all prior P1 findings resolved. Reviewer found only stale documentation, corrected in the reconciliation commit.
+- GitHub CI: all 14 checks passed on `36283a1`.
 
 ## Unchanged gates
 

@@ -26,7 +26,7 @@
 - **Android Words offline search (LB-DS-036):** accepted and merged in PR #225 at `6efc2df`;
   German/Persian filtering, official visible counts, truthful no-result recovery and focus return
   are verified over bundled content.
-- **Android device-local personal vocabulary (LB-DS-037):** implementation committed at `9f23c72`; follow-up hardening is pending commit after independent review found corrupt-payload truthfulness, storage-invariant, overlapping-retry and responsive-coverage gaps. Secure storage now fails closed on corrupt/oversized/duplicate/canonical-colliding records, the 30-record cap is enforced in storage and UI, retry completions are generation-bound, and search keeps local errors/retry visible. Full Flutter `193/193`, analyze and debug APK pass locally. Server acknowledgement and cross-device sync are not claimed and remain separately gated.
+- **Android device-local personal vocabulary (LB-DS-037):** implementation and hardening committed at `36283a1`; independent re-review and all 14 GitHub CI checks passed. Secure storage fails closed on corrupt/oversized/duplicate/canonical-colliding records, the 30-record cap is enforced in storage and UI, retry completions are generation-bound, and search keeps local errors/retry visible. Full Flutter `193/193`, analyze and debug APK pass. Server acknowledgement and cross-device sync are not claimed and remain separately gated.
 - **D0/D1 design gates:** completed for current learner surfaces.
 - **M1-A contract audit:** completed in PR #151.
 - **M1-D slice 1:** completed in PR #152; server snapshot remains fail-closed and not Web-wired.
