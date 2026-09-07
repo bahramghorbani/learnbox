@@ -12,6 +12,15 @@ remained protected. Both Preview-only activation flags were then returned to `fa
 redeployed Ready, and an authenticated request verified the hidden route's `404` fail-closed state.
 The two earlier enabled Preview deployments from the first test and the 2026-09-07 revalidation
 deployment were removed by exact deployment ID or URL and verified absent.
+
+On 2026-09-07, the learner-facing OTP gate was also revalidated in a separate bounded Preview run.
+Only `NEXT_PUBLIC_LEARNBOX_OTP_UI_ENABLED` and `SMS_IR_ENABLED` were set to `true`; the SSO-protected
+learner login accepted an owner-operated real SMS verification and reached the post-auth onboarding
+question without exposing the phone number, OTP, session token, or secret values in evidence.
+`WEB_LEARNER_STATE_ENABLED`, mobile auth, review sync, and Production were not changed. Both temporary
+flags were restored to `false`; rollback deployment `dpl_AiN2QMmaXpawvtmzKL8MaomDaBmY` is Ready and
+remains SSO-protected (`302`), while temporarily enabled deployment
+`learnbox-d01ut5a92-learn-box.vercel.app` was removed and verified absent.
 Production delivery and learner access remain disabled. A separate same-server app stack is prepared for the final deployment
 target, but it has not received server secrets or public routing. The
 phone entry screen is therefore still a local

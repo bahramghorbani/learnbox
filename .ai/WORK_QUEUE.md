@@ -264,6 +264,32 @@ flag, schema, migration, seed, payment, deployment, publication or Production ch
 
 Implementation and hardening are merged through PR #227 at `eda7630`. Dart format, Flutter analyze, 193/193 Flutter tests, the Android debug APK, independent re-review and all seven GitHub PR checks passed. No sync, server acknowledgement, API, auth, migration, seed, deployment or Production change is included.
 
+## LB-DS-040
+
+- Status: review_requested
+- Executor: supervisor
+- Lane: O
+- Base: `origin/main` at `a8354a58ebeb5eac3a3a6c2364dbcb3d81f70c6c`
+- Branch: `docs/learner-auth-preview-revalidation`
+- Worktree: `/Volumes/LearnBox-Dev/LearnBox-final/lb-learner-auth-preview-revalidation`
+- Head commit: pending
+- Scope: record the bounded protected Preview validation of the real learner-facing OTP login flow, including authenticated post-login onboarding evidence and full rollback/removal.
+- Allowed paths: `docs/operations/OTP_PROVIDER_ACTIVATION.md`, `.ai/WORK_QUEUE.md`, `CURRENT_WORK.md`, `.ai/worker-reports/LB-DS-040.md`
+- Forbidden paths: runtime code; package manifests; database migrations; deployment configuration; unrelated docs
+- Risk: medium — security-sensitive operational evidence, with no runtime mutation in this branch
+- Specification: `docs/operations/OTP_PROVIDER_ACTIVATION.md`
+- TDD required: no (documentation-only operational evidence)
+- Simulator required: no
+- Draft PR required: no
+- Merge allowed: yes
+- Required checks: `pnpm exec prettier --check .ai/WORK_QUEUE.md .ai/worker-reports/LB-DS-040.md CURRENT_WORK.md docs/operations/OTP_PROVIDER_ACTIVATION.md`; `pnpm verify:ai-worker-queue`; `pnpm verify:documentation-governance`; `pnpm verify:ai-continuity`; `pnpm test:dashboard`; `git diff --check`
+- Review method: focused review of the bounded flag changes, authenticated browser outcome, SSO posture, rollback deployment, and removal of the temporarily enabled deployment; no phone number, OTP, session token, or secret value may enter evidence.
+- Acceptance contract: learner OTP request and verification reach onboarding in the SSO-protected Preview; `NEXT_PUBLIC_LEARNBOX_OTP_UI_ENABLED` and `SMS_IR_ENABLED` return to `false`; the rollback deployment is Ready and still SSO-protected; the enabled deployment is removed and verified absent; Production, `WEB_LEARNER_STATE_ENABLED`, mobile auth, and review sync remain unchanged.
+- Independent reviewer: required — Security Review Agent (isolated context; final evidence/rollback review)
+- Evidence destination: `.ai/worker-reports/LB-DS-040.md`
+- Dependencies: merged LB-DS-039 OTP provider revalidation; owner-operated phone/OTP entry; no dependency on device-debug access because this task validates the learner Web flow.
+- Follow-up: authenticated learner shell is now verified in bounded Preview; persistent server-backed learner-state activation still depends on canonical starter-catalog publication approval and a separate guarded rollout.
+
 ## LB-DS-039
 
 - Status: accepted
