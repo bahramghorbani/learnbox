@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../ui/learner_bottom_navigation.dart';
 import 'personal_vocabulary_store.dart';
+import 'profile_screen.dart';
 import 'pronunciation_player.dart';
 import 'progress_screen.dart';
 import 'review_queue.dart';
@@ -46,6 +47,9 @@ class _LearnerHomeShellState extends State<LearnerHomeShell> {
               reviewQueue: widget.reviewQueue,
               onStartReview: () =>
                   setState(() => _destination = LearnerDestination.today),
+            ),
+          LearnerDestination.profile => ProfileScreen(
+              reviewQueue: widget.reviewQueue,
             ),
         },
         bottomNavigationBar: SafeArea(

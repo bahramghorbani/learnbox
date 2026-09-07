@@ -33,4 +33,39 @@ void main() {
 
     expect(selected, LearnerDestination.words);
   });
+
+  testWidgets('exposes Profile as the fourth persistent destination',
+      (tester) async {
+    LearnerDestination? selected;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Directionality(
+          textDirection: TextDirection.rtl,
+          child: Scaffold(
+            bottomNavigationBar: LearnerBottomNavigation(
+              current: LearnerDestination.today,
+              onDestinationSelected: (destination) => selected = destination,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    final navigationBar =
+        tester.widget<NavigationBar>(find.byType(NavigationBar));
+    expect(navigationBar.destinations, hasLength(4));
+    expect(
+      navigationBar.destinations
+          .cast<NavigationDestination>()
+          .map((destination) => destination.label)
+          .toList(),
+      ['امروز', 'واژه‌ها', 'پیشرفت', 'پروفایل'],
+    );
+    expect(find.text('پروفایل'), findsOneWidget);
+
+    await tester.tap(find.text('پروفایل'));
+
+    expect(selected, LearnerDestination.profile);
+  });
 }
