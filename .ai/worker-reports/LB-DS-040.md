@@ -1,15 +1,16 @@
 # LB-DS-040 — Learner-facing OTP Preview revalidation
 
-- Status: review_requested
+- Status: accepted
 - Branch: `docs/learner-auth-preview-revalidation`
 - Base commit: `a8354a58ebeb5eac3a3a6c2364dbcb3d81f70c6c`
 - Head commit: `3c6fe9d0f6675d99dc21fb2fcc6ee517a565f6de`
+- Merge commit: `26525dad294a743ce42d48e0c28edbb3d445338b` (PR #233)
 - Draft PR: no
 - Scope completed: yes
 - Files changed: `.ai/WORK_QUEUE.md`, `.ai/worker-reports/LB-DS-040.md`, `CURRENT_WORK.md`, `docs/operations/OTP_PROVIDER_ACTIVATION.md`
 - Checks run: Prettier, queue validator, documentation governance, AI continuity, dashboard tests, and `git diff --check`
 - Checks unavailable: none
-- Remaining work: independent review, PR checks, merge, and post-merge reconciliation
+- Remaining work: persistent server-backed learner state still requires canonical starter-catalog publication approval and a separate guarded rollout
 - Risks: evidence precision and accidental disclosure of owner authentication data; mitigated by generic-only reporting and bounded Preview rollback
 - Secrets or production changes: none
 - Bobo canonical status: unchanged
