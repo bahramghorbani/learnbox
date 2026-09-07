@@ -270,7 +270,7 @@ Implementation and hardening are merged through PR #227 at `eda7630`. Dart forma
 - Executor: supervisor (protected Preview OTP revalidation)
 - Base: `origin/main` at `514ab09919307756dda576fa83c91e5ac0d7d9e5`
 - Branch: `docs/otp-preview-revalidation`
-- Head commit: `578fdface306b8e326c6938bdc5e82663086a60e`
+- Head commit: `2425498965aaf1eb38e3d2f39b679d84521d451b`
 - Risk: protected-preview-operations-security
 - Specification: `docs/operations/OTP_PROVIDER_ACTIVATION.md`; `docs/superpowers/specs/2026-08-08-owner-otp-preview-test-design.md`
 - Allowed paths: `docs/operations/OTP_PROVIDER_ACTIVATION.md`; `CURRENT_WORK.md`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-039.md`

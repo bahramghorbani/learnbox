@@ -3,7 +3,7 @@
 - Status: review_requested
 - Branch: `docs/otp-preview-revalidation`
 - Base commit: `514ab09919307756dda576fa83c91e5ac0d7d9e5`
-- Head commit: `578fdface306b8e326c6938bdc5e82663086a60e`
+- Head commit: `2425498965aaf1eb38e3d2f39b679d84521d451b`
 - Draft PR: no
 - Scope completed: bounded owner-only SMS.ir request/verify revalidation in Vercel Preview, followed by immediate rollback
 - Files changed: `docs/operations/OTP_PROVIDER_ACTIVATION.md`; `CURRENT_WORK.md`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-039.md`
@@ -24,3 +24,4 @@
 - The enabled deployment `dpl_DTX9gg1jyx3fzCRxnRthH1sa49qd` was removed by exact URL after rollback and an exact inspect verified it absent.
 - Negative boundaries: `MOBILE_AUTH_ENABLED`, `MOBILE_REVIEW_SYNC_ENABLED` and `WEB_LEARNER_STATE_ENABLED` remained absent; no review upload, private media, analytics, content publication, public release or Production change occurred.
 - Connected Android device was discovered but intentionally not used: native auth cannot be claimed from the browser-only owner route, and no mobile flag or build-time Preview origin was enabled.
+- Independent review: PASS after clarifying the exact enabled-deployment removal claim and binding the evidence commit; no blocking security, truthfulness or governance finding remained.
