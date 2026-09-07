@@ -264,6 +264,25 @@ flag, schema, migration, seed, payment, deployment, publication or Production ch
 
 Implementation and hardening are merged through PR #227 at `eda7630`. Dart format, Flutter analyze, 193/193 Flutter tests, the Android debug APK, independent re-review and all seven GitHub PR checks passed. No sync, server acknowledgement, API, auth, migration, seed, deployment or Production change is included.
 
+## LB-DS-038
+
+- Status: review_requested
+- Executor: supervisor (Learner Web Progress local-data truthfulness)
+- Base: `origin/main` at `b46867c57daf2d4657b2573411c50f015fc4d221`
+- Branch: `fix/web-progress-local-truth`
+- Head commit: `3f111ae4b5c05dbbec22a223cc9f195cf64c5376`
+- Risk: routine-web-ui-truth-accessibility
+- Specification: `docs/design/D1_LEARNER_UI_KIT.md` §8; `docs/PRODUCT_STATUS.md`
+- Allowed paths: `apps/website/app/LearnerHome.tsx`; `apps/website/app/components/ProgressScreen.tsx`; `apps/website/test/screens.test.tsx`; `apps/website/test/learner-core-flows.test.tsx`; `CURRENT_WORK.md`; `docs/PRODUCT_STATUS.md`; `docs/design/DESIGN_STATUS.md`; `docs/design/UI_QA.md`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-038.md`
+- Required checks: focused/full Website tests; Website typecheck/build; format; queue/documentation/continuity/dashboard validators; `git diff --check`; browser RTL/responsive/large-text smoke
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+
+Label every current Progress figure as device-local, expose the existing unacknowledged review-event count without claiming server acknowledgement, and state that server weekly history is not active. Preserve the calm empty state and hide the pending notice at zero. No API, route, auth, sync flag/client composition, schema, migration, seed, content, payment, deployment, publication or Production change.
+
+Implementation commit `3f111ae` is locally verified: the focused Progress/core-flow tests pass 18/18; full Website tests pass 229/229; Website typecheck and production build pass. Browser smoke confirms the empty Progress state at desktop and 390×844 with 200% root text scaling, RTL and no horizontal overflow. GitHub CI and independent review remain pending.
+
 | ID   | Workstream                         | Worker role                | Allowed scope                                                 | Depends on                 | Parallel rule                                                                                |
 | ---- | ---------------------------------- | -------------------------- | ------------------------------------------------------------- | -------------------------- | -------------------------------------------------------------------------------------------- |
 | D0   | Visual language and token contract | W1 + design-capable worker | `docs/design/**`, shared visual token docs, design evidence   | M0                         | Can run alongside M1 contract audit; no overlapping implementation paths                     |
