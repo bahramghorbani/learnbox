@@ -266,11 +266,11 @@ Implementation and hardening are merged through PR #227 at `eda7630`. Dart forma
 
 ## LB-DS-039
 
-- Status: review_requested
+- Status: accepted
 - Executor: supervisor (protected Preview OTP revalidation)
 - Base: `origin/main` at `514ab09919307756dda576fa83c91e5ac0d7d9e5`
 - Branch: `docs/otp-preview-revalidation`
-- Head commit: `2425498965aaf1eb38e3d2f39b679d84521d451b`
+- Head commit: `16668542514cec845c9ef7bb1979e373a96ca59f`; merge commit: `a7f2185043e8e95193d56a449770d032e6245a07` (PR #231)
 - Risk: protected-preview-operations-security
 - Specification: `docs/operations/OTP_PROVIDER_ACTIVATION.md`; `docs/superpowers/specs/2026-08-08-owner-otp-preview-test-design.md`
 - Allowed paths: `docs/operations/OTP_PROVIDER_ACTIVATION.md`; `CURRENT_WORK.md`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-039.md`
