@@ -21,5 +21,6 @@
 - Generic owner outcome: real SMS request succeeded and the received code verified successfully on the protected owner page.
 - Rollback deployment: `dpl_wH4Y6bT3XKiUtegDPs5sW86anKad`, Ready.
 - Rollback: `LEARNBOX_OTP_TEST_UI_ENABLED=false` and `SMS_IR_ENABLED=false`; authenticated `/owner/otp-test` returned `404`; unauthenticated access continued to redirect to Vercel SSO.
+- The enabled deployment `dpl_DTX9gg1jyx3fzCRxnRthH1sa49qd` was removed by exact URL after rollback and an exact inspect verified it absent.
 - Negative boundaries: `MOBILE_AUTH_ENABLED`, `MOBILE_REVIEW_SYNC_ENABLED` and `WEB_LEARNER_STATE_ENABLED` remained absent; no review upload, private media, analytics, content publication, public release or Production change occurred.
 - Connected Android device was discovered but intentionally not used: native auth cannot be claimed from the browser-only owner route, and no mobile flag or build-time Preview origin was enabled.

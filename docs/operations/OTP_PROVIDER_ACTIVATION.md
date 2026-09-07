@@ -10,7 +10,8 @@ and created the secure session successfully on 2026-08-08. A bounded revalidatio
 again completed the owner-only request and verification flow successfully while the deployment
 remained protected. Both Preview-only activation flags were then returned to `false`, Preview was
 redeployed Ready, and an authenticated request verified the hidden route's `404` fail-closed state.
-The earlier Preview deployments that contained temporary enabled flags are not active aliases.
+The revalidation deployment containing the temporary enabled flags was removed by exact deployment
+URL and verified absent; earlier enabled test deployments remain documented as removed as well.
 Production delivery and learner access remain disabled. A separate same-server app stack is prepared for the final deployment
 target, but it has not received server secrets or public routing. The
 phone entry screen is therefore still a local
