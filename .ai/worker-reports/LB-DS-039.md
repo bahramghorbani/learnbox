@@ -1,9 +1,10 @@
 # LB-DS-039 — Protected Preview OTP revalidation
 
-- Status: review_requested
+- Status: accepted
 - Branch: `docs/otp-preview-revalidation`
 - Base commit: `514ab09919307756dda576fa83c91e5ac0d7d9e5`
-- Head commit: `2425498965aaf1eb38e3d2f39b679d84521d451b`
+- Head commit: `16668542514cec845c9ef7bb1979e373a96ca59f`
+- Merge commit: `a7f2185043e8e95193d56a449770d032e6245a07` (PR #231)
 - Draft PR: no
 - Scope completed: bounded owner-only SMS.ir request/verify revalidation in Vercel Preview, followed by immediate rollback
 - Files changed: `docs/operations/OTP_PROVIDER_ACTIVATION.md`; `CURRENT_WORK.md`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-039.md`
