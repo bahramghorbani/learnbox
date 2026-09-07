@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'features/review/learner_home_shell.dart';
+import 'features/review/personal_vocabulary_store.dart';
 import 'features/review/pronunciation_player.dart';
 import 'features/review/review_queue.dart';
 import 'features/review/start_pack_repository.dart';
@@ -14,6 +15,7 @@ class LearnBoxApp extends StatelessWidget {
   const LearnBoxApp({
     required this.startPackRepository,
     required this.reviewQueue,
+    this.personalVocabularyStore,
     this.pronunciationPlayer = const MethodChannelPronunciationPlayer(),
     this.reviewSyncCoordinator,
     this.authEnabled = false,
@@ -24,6 +26,7 @@ class LearnBoxApp extends StatelessWidget {
 
   final StartPackRepository startPackRepository;
   final ReviewQueue reviewQueue;
+  final PersonalVocabularyStore? personalVocabularyStore;
   final PronunciationPlayer pronunciationPlayer;
 
   final ReviewSyncCoordinator? reviewSyncCoordinator;
@@ -44,6 +47,7 @@ class LearnBoxApp extends StatelessWidget {
           child: LearnBoxLaunchScreen(
             startPackRepository: startPackRepository,
             reviewQueue: reviewQueue,
+            personalVocabularyStore: personalVocabularyStore,
             pronunciationPlayer: pronunciationPlayer,
             authEnabled: authEnabled,
             authScreenBuilder: authScreenBuilder,
@@ -57,6 +61,7 @@ class LearnBoxLaunchScreen extends StatefulWidget {
   const LearnBoxLaunchScreen({
     required this.startPackRepository,
     required this.reviewQueue,
+    this.personalVocabularyStore,
     required this.pronunciationPlayer,
     this.authEnabled = false,
     this.authScreenBuilder,
@@ -66,6 +71,7 @@ class LearnBoxLaunchScreen extends StatefulWidget {
 
   final StartPackRepository startPackRepository;
   final ReviewQueue reviewQueue;
+  final PersonalVocabularyStore? personalVocabularyStore;
   final PronunciationPlayer pronunciationPlayer;
   final bool authEnabled;
   final WidgetBuilder? authScreenBuilder;
@@ -104,6 +110,7 @@ class _LearnBoxLaunchScreenState extends State<LearnBoxLaunchScreen> {
       return LearnerHomeShell(
         startPackRepository: widget.startPackRepository,
         reviewQueue: widget.reviewQueue,
+        personalVocabularyStore: widget.personalVocabularyStore,
         pronunciationPlayer: widget.pronunciationPlayer,
       );
     }

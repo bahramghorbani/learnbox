@@ -227,7 +227,7 @@ changed.
 - Specification: `docs/design/D1_LEARNER_UI_KIT.md` §7; `docs/PRODUCT_STATUS.md`
 - Allowed paths: `apps/mobile/lib/features/review/words_screen.dart`; `apps/mobile/test/mobile_visual_parity_test.dart`; `CURRENT_WORK.md`; `docs/PRODUCT_STATUS.md`; `docs/design/DESIGN_STATUS.md`; `docs/design/UI_QA.md`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-036.md`
 - Required checks: focused/full Flutter tests; Dart format; Flutter analyze; Android debug build; queue/documentation/continuity/dashboard validators; `git diff --check`; Android-sized RTL/large-text smoke
-- Simulator required: no (widget tests and debug APK required)
+- Simulator required: no
 - Draft PR required: yes
 - Merge allowed: yes
 
@@ -239,6 +239,29 @@ migration, seed, payment, deployment, publication or Production change.
 Accepted and merged in PR #225 at `6efc2df` after all seven GitHub checks passed and independent
 review returned PASS with no blocking findings. Search remains local to bundled official content;
 personal vocabulary and every server/activation gate remain unchanged.
+
+## LB-DS-037
+
+- Status: rereview_passed_ci_passed
+- Executor: supervisor (Android device-local personal vocabulary parity)
+- Base: `origin/main` at `388ff670479a4b943279d1e9cf6bde3e4d00a2e4`
+- Branch: `feat/mobile-personal-vocabulary`
+- Head commit: `36283a1ed70d5526dfad70732747401d62ffe06e`
+- Risk: routine-mobile-ui-secure-local-data
+- Specification: `docs/design/D1_LEARNER_UI_KIT.md` §7; `docs/PRODUCT_STATUS.md`
+- Allowed paths: `apps/mobile/lib/app.dart`; `apps/mobile/lib/features/review/learner_home_shell.dart`; `apps/mobile/lib/features/review/words_screen.dart`; `apps/mobile/lib/features/review/personal_vocabulary_store.dart`; `apps/mobile/test/mobile_visual_parity_test.dart`; `apps/mobile/test/personal_vocabulary_store_test.dart`; `CURRENT_WORK.md`; `docs/PRODUCT_STATUS.md`; `docs/design/DESIGN_STATUS.md`; `docs/design/UI_QA.md`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-037.md`
+- Required checks: focused/full Flutter tests; Dart format; Flutter analyze; Android debug build; queue/documentation/continuity/dashboard validators; `git diff --check`; Android-sized RTL/large-text smoke
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+
+Add secure device-local personal vocabulary to Android Words: separate official/personal groups,
+normalized duplicate prevention across both sources, a real 30-record local quota, combined
+German/Persian search and truthful load/save/empty/quota recovery states. Keep all personal entries
+explicitly device-local; do not claim synchronization or server acknowledgement. No API, auth, sync
+flag, schema, migration, seed, payment, deployment, publication or Production change.
+
+Implementation and hardening are committed at `36283a1`. Dart format, Flutter analyze, 193/193 Flutter tests, the Android debug APK, independent re-review and all 14 GitHub checks pass. The PR remains Draft only until it is marked ready and merged.
 
 | ID   | Workstream                         | Worker role                | Allowed scope                                                 | Depends on                 | Parallel rule                                                                                |
 | ---- | ---------------------------------- | -------------------------- | ------------------------------------------------------------- | -------------------------- | -------------------------------------------------------------------------------------------- |

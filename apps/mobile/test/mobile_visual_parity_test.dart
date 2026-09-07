@@ -4,10 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:learnbox/app.dart';
 import 'package:learnbox/features/review/completion_screen.dart';
+import 'package:learnbox/features/review/personal_vocabulary_store.dart';
 import 'package:learnbox/features/review/review_queue.dart';
 import 'package:learnbox/features/review/review_queue_store.dart';
 import 'package:learnbox/features/review/start_card.dart';
 import 'package:learnbox/features/review/start_pack_repository.dart';
+import 'package:learnbox/features/review/words_screen.dart';
 
 import 'mobile_learning_loop_test.dart'
     show ControlledReviewQueueStore, InMemoryStartPackRepository;
@@ -115,6 +117,425 @@ void main() {
     final searchField = tester.widget<TextField>(find.byType(TextField));
     expect(searchField.controller?.text, '');
     expect(searchField.focusNode?.hasFocus, isTrue);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets(
+      'Words separates device-local personal entries from official words',
+      (tester) async {
+    final storage = _MemoryPersonalVocabularyStorage();
+    final store = PersonalVocabularyStore(storage: storage);
+    await store.save(const [
+      PersonalVocabularyEntry(
+        id: 'personal-1',
+        german: 'der Apfel',
+        persian: 'سیب',
+      ),
+      PersonalVocabularyEntry(
+        id: 'personal-2',
+        german: 'die Schule',
+        persian: 'مدرسه',
+      ),
+    ]);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: WordsScreen(
+            startPackRepository: InMemoryStartPackRepository(),
+            personalVocabularyStore: store,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('واژه‌های رسمی'), findsOneWidget);
+    expect(find.text('۳ واژه رسمی'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('واژه‌های شخصی این دستگاه'),
+      120,
+      scrollable: find
+          .descendant(
+            of: find.byKey(const ValueKey('words-list')),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    expect(find.text('واژه‌های شخصی این دستگاه'), findsOneWidget);
+    expect(find.text('۲ از ۳۰ واژه شخصی'), findsOneWidget);
+    expect(find.text('der Apfel'), findsOneWidget);
+    expect(find.text('سیب'), findsOneWidget);
+    expect(find.text('شخصی'), findsOneWidget);
+
+    final search = find.bySemanticsLabel('جست‌وجوی واژه‌های آلمانی و فارسی');
+    await tester.ensureVisible(search);
+    await tester.enterText(search, 'Apfel');
+    await tester.pump();
+    expect(find.text('۰ واژه رسمی'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('der Apfel'),
+      120,
+      scrollable: find
+          .descendant(
+            of: find.byKey(const ValueKey('words-list')),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    expect(find.text('der Apfel'), findsOneWidget);
+    expect(find.text('۲ از ۳۰ واژه شخصی'), findsOneWidget);
+    expect(find.text('die Schule'), findsNothing);
+    expect(find.text('das Haus'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Words persists a valid personal word before showing it',
+      (tester) async {
+    final storage = _MemoryPersonalVocabularyStorage();
+    final store = PersonalVocabularyStore(storage: storage);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: WordsScreen(
+            startPackRepository: InMemoryStartPackRepository(),
+            personalVocabularyStore: store,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.scrollUntilVisible(
+      find.text('افزودن واژه شخصی'),
+      120,
+      scrollable: find
+          .descendant(
+            of: find.byKey(const ValueKey('words-list')),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    final addPersonalWord = find.text('افزودن واژه شخصی');
+    await tester.ensureVisible(addPersonalWord);
+    await tester.pumpAndSettle();
+    await tester.tap(addPersonalWord);
+    await tester.pump();
+    await tester.enterText(find.bySemanticsLabel('واژه آلمانی'), ' der Apfel ');
+    await tester.enterText(find.bySemanticsLabel('معنی فارسی'), ' سیب ');
+    final savePersonalWord = find.text('ذخیره روی این دستگاه');
+    await tester.ensureVisible(savePersonalWord);
+    await tester.pumpAndSettle();
+    await tester.tap(savePersonalWord);
+    await tester.pumpAndSettle();
+
+    expect(find.text('واژه روی این دستگاه ذخیره شد.'), findsOneWidget);
+    expect(find.text('der Apfel'), findsOneWidget);
+    expect(find.text('سیب'), findsOneWidget);
+    expect(await store.load(), hasLength(1));
+    expect((await store.load()).single.german, 'der Apfel');
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Words keeps a failed personal save out of the visible list',
+      (tester) async {
+    final storage = _MemoryPersonalVocabularyStorage()..failWrites = true;
+    final store = PersonalVocabularyStore(storage: storage);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: WordsScreen(
+            startPackRepository: InMemoryStartPackRepository(),
+            personalVocabularyStore: store,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final add = find.text('افزودن واژه شخصی');
+    await tester.scrollUntilVisible(
+      add,
+      120,
+      scrollable: find
+          .descendant(
+            of: find.byKey(const ValueKey('words-list')),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    await tester.ensureVisible(add);
+    await tester.pumpAndSettle();
+    await tester.tap(add);
+    await tester.pump();
+    await tester.enterText(find.bySemanticsLabel('واژه آلمانی'), 'der Apfel');
+    await tester.enterText(find.bySemanticsLabel('معنی فارسی'), 'سیب');
+    final save = find.text('ذخیره روی این دستگاه');
+    await tester.ensureVisible(save);
+    await tester.pumpAndSettle();
+    await tester.tap(save);
+    await tester.pumpAndSettle();
+
+    expect(find.text('ذخیرهٔ واژه انجام نشد؛ دوباره تلاش کن.'), findsOneWidget);
+    expect(await store.load(), isEmpty);
+    expect(find.text('۰ از ۳۰ واژه شخصی'), findsOneWidget);
+    expect(find.text('شخصی'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Words recovers from a device-local personal-word load failure',
+      (tester) async {
+    final storage = _MemoryPersonalVocabularyStorage()
+      ..readFailuresRemaining = 1;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: WordsScreen(
+            startPackRepository: InMemoryStartPackRepository(),
+            personalVocabularyStore: PersonalVocabularyStore(storage: storage),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('das Haus'), findsOneWidget);
+    final loadError =
+        find.textContaining('واژه‌های شخصی این دستگاه خوانده نشد');
+    await tester.scrollUntilVisible(
+      loadError,
+      120,
+      scrollable: find
+          .descendant(
+            of: find.byKey(const ValueKey('words-list')),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    expect(loadError, findsOneWidget);
+    final retry = find.text('تلاش دوباره برای واژه‌های شخصی');
+    await tester.ensureVisible(retry);
+    await tester.pumpAndSettle();
+    await tester.tap(retry);
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('واژه‌های شخصی این دستگاه خوانده نشد'),
+        findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets(
+      'Words keeps personal load failure and retry visible during search',
+      (tester) async {
+    final storage = _MemoryPersonalVocabularyStorage()
+      ..readFailuresRemaining = 1;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: WordsScreen(
+            startPackRepository: InMemoryStartPackRepository(),
+            personalVocabularyStore: PersonalVocabularyStore(storage: storage),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.bySemanticsLabel('جست‌وجوی واژه‌های آلمانی و فارسی'),
+      'ناموجود',
+    );
+    await tester.pump();
+
+    final retry = find.text('تلاش دوباره برای واژه‌های شخصی');
+    await tester.scrollUntilVisible(
+      retry,
+      120,
+      scrollable: find
+          .descendant(
+            of: find.byKey(const ValueKey('words-list')),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    expect(find.textContaining('واژه‌های شخصی این دستگاه خوانده نشد'),
+        findsOneWidget);
+    expect(retry, findsOneWidget);
+  });
+
+  testWidgets('Words ignores stale personal load completion after retry',
+      (tester) async {
+    final storage = _SequencedPersonalVocabularyStorage();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: WordsScreen(
+            startPackRepository: InMemoryStartPackRepository(),
+            personalVocabularyStore: PersonalVocabularyStore(storage: storage),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 5));
+
+    final retry = find.text('تلاش دوباره برای واژه‌های شخصی');
+    await tester.scrollUntilVisible(
+      retry,
+      120,
+      scrollable: find
+          .descendant(
+            of: find.byKey(const ValueKey('words-list')),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    await tester.ensureVisible(retry);
+    await tester.pumpAndSettle();
+    await tester.tap(retry);
+    await tester.pump();
+
+    expect(storage.reads, hasLength(2));
+    storage.reads[0].complete(
+      '[{"id":"old","german":"alt","persian":"قدیمی"}]',
+    );
+    await tester.pump();
+    storage.reads[1].complete(
+      '[{"id":"new","german":"neu","persian":"جدید"}]',
+    );
+    await tester.pumpAndSettle();
+
+    await tester.scrollUntilVisible(
+      find.text('neu'),
+      120,
+      scrollable: find
+          .descendant(
+            of: find.byKey(const ValueKey('words-list')),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    expect(find.text('neu'), findsOneWidget);
+    expect(find.text('alt'), findsNothing);
+  });
+
+  testWidgets(
+      'Words rejects normalized duplicates across official and personal lists',
+      (tester) async {
+    final storage = _MemoryPersonalVocabularyStorage();
+    final store = PersonalVocabularyStore(storage: storage);
+    await store.save(const [
+      PersonalVocabularyEntry(
+        id: 'personal-1',
+        german: 'der Apfel',
+        persian: 'سیب',
+      ),
+    ]);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: WordsScreen(
+            startPackRepository: InMemoryStartPackRepository(),
+            personalVocabularyStore: store,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final add = find.text('افزودن واژه شخصی');
+    await tester.scrollUntilVisible(
+      add,
+      120,
+      scrollable: find
+          .descendant(
+            of: find.byKey(const ValueKey('words-list')),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    await tester.ensureVisible(add);
+    await tester.pumpAndSettle();
+    await tester.tap(add);
+    await tester.pump();
+
+    final german = find.bySemanticsLabel('واژه آلمانی');
+    final persian = find.bySemanticsLabel('معنی فارسی');
+    final save = find.text('ذخیره روی این دستگاه');
+    await tester.enterText(german, '  DAS   HAUS ');
+    await tester.enterText(persian, 'خانه');
+    await tester.ensureVisible(save);
+    await tester.pumpAndSettle();
+    await tester.tap(save);
+    await tester.pumpAndSettle();
+    expect(find.text('این واژه از قبل در فهرست تو هست.'), findsOneWidget);
+    expect(await store.load(), hasLength(1));
+
+    await tester.enterText(german, ' Der  APFEL ');
+    await tester.ensureVisible(save);
+    await tester.pumpAndSettle();
+    await tester.tap(save);
+    await tester.pumpAndSettle();
+    expect(find.text('این واژه از قبل در فهرست تو هست.'), findsOneWidget);
+    expect(await store.load(), hasLength(1));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Words enforces the 30-word device-local personal quota',
+      (tester) async {
+    final storage = _MemoryPersonalVocabularyStorage();
+    final store = PersonalVocabularyStore(storage: storage);
+    await store.save(List.generate(
+      30,
+      (index) => PersonalVocabularyEntry(
+        id: 'personal-$index',
+        german: 'Wort $index',
+        persian: 'واژه $index',
+      ),
+    ));
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: WordsScreen(
+            startPackRepository: InMemoryStartPackRepository(),
+            personalVocabularyStore: store,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final personalCount = find.text('۳۰ از ۳۰ واژه شخصی');
+    await tester.scrollUntilVisible(
+      personalCount,
+      160,
+      scrollable: find
+          .descendant(
+            of: find.byKey(const ValueKey('words-list')),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    expect(personalCount, findsOneWidget);
+
+    final quotaNotice = find.text('سقف ۳۰ واژه شخصی این دستگاه پر شده است.');
+    await tester.scrollUntilVisible(
+      quotaNotice,
+      160,
+      scrollable: find
+          .descendant(
+            of: find.byKey(const ValueKey('words-list')),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    expect(quotaNotice, findsOneWidget);
+    expect(
+      tester
+          .widget<OutlinedButton>(
+            find.widgetWithText(OutlinedButton, 'افزودن واژه شخصی'),
+          )
+          .onPressed,
+      isNull,
+    );
     expect(tester.takeException(), isNull);
   });
 
@@ -273,10 +694,21 @@ void main() {
   testWidgets(
       'Words and Progress stay overflow-free on a narrow large-text view',
       (tester) async {
+    final personalStore = PersonalVocabularyStore(
+      storage: _MemoryPersonalVocabularyStorage(),
+    );
+    await personalStore.save(const [
+      PersonalVocabularyEntry(
+        id: 'personal-responsive',
+        german: 'die Universität',
+        persian: 'دانشگاه',
+      ),
+    ]);
     await _pumpApp(
       tester,
       size: const Size(320, 480),
       textScaleFactor: 2,
+      personalVocabularyStore: personalStore,
     );
 
     await tester.tap(find.text('واژه‌ها'));
@@ -293,6 +725,43 @@ void main() {
           .first,
     );
     expect(find.text('die Tür'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('die Universität'),
+      120,
+      scrollable: find
+          .descendant(
+            of: find.byKey(const ValueKey('words-list')),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    expect(find.text('die Universität'), findsOneWidget);
+    final addPersonal = find.text('افزودن واژه شخصی');
+    await tester.scrollUntilVisible(
+      addPersonal,
+      120,
+      scrollable: find
+          .descendant(
+            of: find.byKey(const ValueKey('words-list')),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    await tester.tap(addPersonal);
+    await tester.pump();
+    await tester.scrollUntilVisible(
+      find.text('ذخیره روی این دستگاه'),
+      120,
+      scrollable: find
+          .descendant(
+            of: find.byKey(const ValueKey('words-list')),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    expect(find.bySemanticsLabel('واژه آلمانی'), findsOneWidget);
+    expect(find.bySemanticsLabel('معنی فارسی'), findsOneWidget);
+    expect(tester.takeException(), isNull);
 
     await tester.tap(find.text('پیشرفت'));
     await tester.pumpAndSettle();
@@ -304,7 +773,21 @@ void main() {
 
   testWidgets('Words and Progress reflow without overflow in landscape',
       (tester) async {
-    await _pumpApp(tester, size: const Size(844, 390));
+    final personalStore = PersonalVocabularyStore(
+      storage: _MemoryPersonalVocabularyStorage(),
+    );
+    await personalStore.save(const [
+      PersonalVocabularyEntry(
+        id: 'personal-landscape',
+        german: 'die Universität',
+        persian: 'دانشگاه',
+      ),
+    ]);
+    await _pumpApp(
+      tester,
+      size: const Size(844, 390),
+      personalVocabularyStore: personalStore,
+    );
 
     await tester.tap(find.text('واژه‌ها'));
     await tester.pumpAndSettle();
@@ -320,6 +803,17 @@ void main() {
           .first,
     );
     expect(find.text('die Tür'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('die Universität'),
+      120,
+      scrollable: find
+          .descendant(
+            of: find.byKey(const ValueKey('words-list')),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    expect(find.text('die Universität'), findsOneWidget);
     expect(tester.takeException(), isNull);
 
     await tester.tap(find.text('پیشرفت'));
@@ -461,6 +955,7 @@ Future<void> _pumpApp(
   double textScaleFactor = 1,
   StartPackRepository? startPackRepository,
   ReviewQueue? reviewQueue,
+  PersonalVocabularyStore? personalVocabularyStore,
   bool settle = true,
 }) async {
   tester.view.devicePixelRatio = 1;
@@ -484,6 +979,10 @@ Future<void> _pumpApp(
       key: UniqueKey(),
       startPackRepository: startPackRepository ?? InMemoryStartPackRepository(),
       reviewQueue: queue,
+      personalVocabularyStore: personalVocabularyStore ??
+          PersonalVocabularyStore(
+            storage: _MemoryPersonalVocabularyStorage(),
+          ),
       splashDuration: Duration.zero,
     ),
   );
@@ -556,4 +1055,45 @@ class _RetryReviewQueueStore implements ReviewQueueStore {
   Future<void> write(String serializedEvents) async {
     value = serializedEvents;
   }
+}
+
+class _MemoryPersonalVocabularyStorage implements PersonalVocabularyStorage {
+  String? value;
+  bool failWrites = false;
+  int readFailuresRemaining = 0;
+
+  @override
+  Future<void> delete() async => value = null;
+
+  @override
+  Future<String?> read() async {
+    if (readFailuresRemaining > 0) {
+      readFailuresRemaining -= 1;
+      throw StateError('synthetic personal-word read failure');
+    }
+    return value;
+  }
+
+  @override
+  Future<void> write(String value) async {
+    if (failWrites) throw StateError('synthetic personal-word write failure');
+    this.value = value;
+  }
+}
+
+class _SequencedPersonalVocabularyStorage implements PersonalVocabularyStorage {
+  final reads = <Completer<String?>>[];
+
+  @override
+  Future<void> delete() async {}
+
+  @override
+  Future<String?> read() {
+    final read = Completer<String?>();
+    reads.add(read);
+    return read.future;
+  }
+
+  @override
+  Future<void> write(String value) async {}
 }
