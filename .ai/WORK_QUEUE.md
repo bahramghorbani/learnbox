@@ -264,6 +264,23 @@ flag, schema, migration, seed, payment, deployment, publication or Production ch
 
 Implementation and hardening are merged through PR #227 at `eda7630`. Dart format, Flutter analyze, 193/193 Flutter tests, the Android debug APK, independent re-review and all seven GitHub PR checks passed. No sync, server acknowledgement, API, auth, migration, seed, deployment or Production change is included.
 
+## LB-DS-039
+
+- Status: review_requested
+- Executor: supervisor (protected Preview OTP revalidation)
+- Base: `origin/main` at `514ab09919307756dda576fa83c91e5ac0d7d9e5`
+- Branch: `docs/otp-preview-revalidation`
+- Head commit: `2425498965aaf1eb38e3d2f39b679d84521d451b`
+- Risk: protected-preview-operations-security
+- Specification: `docs/operations/OTP_PROVIDER_ACTIVATION.md`; `docs/superpowers/specs/2026-08-08-owner-otp-preview-test-design.md`
+- Allowed paths: `docs/operations/OTP_PROVIDER_ACTIVATION.md`; `CURRENT_WORK.md`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-039.md`
+- Required checks: queue/documentation/continuity/dashboard validators; format; `git diff --check`; live Preview protection and fail-closed rollback probes
+- Simulator required: no
+- Draft PR required: no
+- Merge allowed: yes
+
+Revalidate the existing owner-only SMS.ir request/verification flow in Vercel Preview without exposing personal data or secret values. Enable only `LEARNBOX_OTP_TEST_UI_ENABLED` and `SMS_IR_ENABLED` for the bounded test, retain Vercel Authentication, accept only the owner's generic outcome, then immediately return both flags to `false`, redeploy, and verify the protected route returns authenticated `404`. Production, public learner auth, Web learner state, native auth, review sync, private media, analytics and content publication remain unchanged.
+
 ## LB-DS-038
 
 - Status: accepted
