@@ -17,7 +17,6 @@
 ### Active milestone
 
 - **M1 — Online Learning Core:** slice 1 QA complete; milestone remains **partial and not production-ready**.
-- **Learner-facing OTP Preview revalidation (LB-DS-040):** review requested after an owner-controlled real-SMS login reached post-auth onboarding in SSO-protected Preview; both temporary flags were restored to `false`, the rollback deployment is Ready and protected, and the enabled deployment was removed. This does not activate Production or persistent server-backed learner state.
 - **Learner Web review-session accessibility (LB-DS-034):** accepted and merged in PR #221 at
   `e7069b8`; keyboard focus is restored only when a review-stage transition removes the active
   control, covering start, flip, grade, completion and return. No server boundary changed.
