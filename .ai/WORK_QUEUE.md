@@ -242,11 +242,12 @@ personal vocabulary and every server/activation gate remain unchanged.
 
 ## LB-DS-037
 
-- Status: rereview_passed_ci_passed
+- Status: accepted
 - Executor: supervisor (Android device-local personal vocabulary parity)
 - Base: `origin/main` at `388ff670479a4b943279d1e9cf6bde3e4d00a2e4`
 - Branch: `feat/mobile-personal-vocabulary`
-- Head commit: `36283a1ed70d5526dfad70732747401d62ffe06e`
+- Head commit: `b51f5b4f9f36fc187ac47dc9992d8e2676c68008`
+- Merge commit: `eda763066bbe08c2931858898e68b4560d882c30` (PR #227)
 - Risk: routine-mobile-ui-secure-local-data
 - Specification: `docs/design/D1_LEARNER_UI_KIT.md` §7; `docs/PRODUCT_STATUS.md`
 - Allowed paths: `apps/mobile/lib/app.dart`; `apps/mobile/lib/features/review/learner_home_shell.dart`; `apps/mobile/lib/features/review/words_screen.dart`; `apps/mobile/lib/features/review/personal_vocabulary_store.dart`; `apps/mobile/test/mobile_visual_parity_test.dart`; `apps/mobile/test/personal_vocabulary_store_test.dart`; `CURRENT_WORK.md`; `docs/PRODUCT_STATUS.md`; `docs/design/DESIGN_STATUS.md`; `docs/design/UI_QA.md`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-037.md`
@@ -261,7 +262,7 @@ German/Persian search and truthful load/save/empty/quota recovery states. Keep a
 explicitly device-local; do not claim synchronization or server acknowledgement. No API, auth, sync
 flag, schema, migration, seed, payment, deployment, publication or Production change.
 
-Implementation and hardening are committed at `36283a1`. Dart format, Flutter analyze, 193/193 Flutter tests, the Android debug APK, independent re-review and all 14 GitHub checks pass. The PR remains Draft only until it is marked ready and merged.
+Implementation and hardening are merged through PR #227 at `eda7630`. Dart format, Flutter analyze, 193/193 Flutter tests, the Android debug APK, independent re-review and all seven GitHub PR checks passed. No sync, server acknowledgement, API, auth, migration, seed, deployment or Production change is included.
 
 | ID   | Workstream                         | Worker role                | Allowed scope                                                 | Depends on                 | Parallel rule                                                                                |
 | ---- | ---------------------------------- | -------------------------- | ------------------------------------------------------------- | -------------------------- | -------------------------------------------------------------------------------------------- |
