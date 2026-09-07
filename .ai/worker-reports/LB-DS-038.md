@@ -3,7 +3,7 @@
 - Status: review_requested
 - Base: `b46867c57daf2d4657b2573411c50f015fc4d221`
 - Branch: `fix/web-progress-local-truth`
-- Head commit: `3f111ae4b5c05dbbec22a223cc9f195cf64c5376`
+- Head commit: `8f462c955508e3f0026a337ebda6a7d74a3db267`
 - Risk: routine Web UI truthfulness and accessibility
 
 ## Outcome
