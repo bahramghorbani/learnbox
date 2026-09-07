@@ -27,9 +27,12 @@
 - Website production build: passed.
 - Prettier on changed implementation/tests: passed.
 - Browser smoke: desktop and 390×844 at 200% root text scaling; RTL; local-source and inactive-server-history text present; no horizontal overflow.
-- `git diff --check`: passed before documentation updates.
-- GitHub CI: pending.
-- Independent review: pending.
+- `git diff --check`: passed after the implementation and documentation updates.
+- GitHub CI: all seven checks passed at head `3d59e34` (`quality`, `secrets`, `mobile`,
+  `production-stack`, Vercel Preview Comments and both Vercel deployment checks).
+- Independent DeepSeek V4 Flash review: PASS at head `3d59e34`; no blocking findings. The
+  reviewer independently reran the focused 18/18 tests and verified the exact base, head, scope,
+  local/server truth boundary and accessibility semantics.
 
 ## Unchanged gates
 
