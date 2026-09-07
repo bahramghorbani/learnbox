@@ -264,9 +264,43 @@ flag, schema, migration, seed, payment, deployment, publication or Production ch
 
 Implementation and hardening are merged through PR #227 at `eda7630`. Dart format, Flutter analyze, 193/193 Flutter tests, the Android debug APK, independent re-review and all seven GitHub PR checks passed. No sync, server acknowledgement, API, auth, migration, seed, deployment or Production change is included.
 
+## LB-DS-042
+
+- Status: ready
+- Executor: unassigned (Web implementation worker)
+- Base: `origin/main` after LB-DS-041 post-merge reconciliation
+- Branch: `feature/m3-web-profile-settings`
+- Risk: learner-web-ui-and-device-local-state
+- Specification: `docs/design/M3_PROFILE_SETTINGS_CONTRACT.md` §§3-6, 8, 10 (M3-P1 only); `docs/product-decisions/PDR-006-PROFILE-SETTINGS-ALPHA-POLICIES.md`
+- Allowed paths: `apps/website/app/LearnerHome.tsx`; `apps/website/app/components/LearnerNav.tsx`; `apps/website/app/components/ProfileScreen.tsx`; `apps/website/app/components/SettingsScreen.tsx`; `apps/website/app/globals.css`; `apps/website/test/learner-profile-settings.test.tsx`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-042.md`; `CURRENT_WORK.md`; `docs/design/DESIGN_STATUS.md`; `docs/PRODUCT_STATUS.md`
+- Required checks: focused Web Profile/Settings test; full website test suite; website typecheck/build; Prettier; `pnpm verify:ai-worker-queue`; `pnpm verify:documentation-governance`; `pnpm verify:ai-continuity`; `pnpm test:dashboard`; `git diff --check`; responsive RTL/accessibility screenshot review; independent code/product review
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+- Blocked on: LB-DS-041 post-merge reconciliation on `origin/main`
+- Must not touch: sign out; account deletion; profile/server APIs; auth/session; review-sync activation; sound preference persistence (M3-S1); reminders; purchases/packs; provider/config; flags; deployment; Production; landing; Admin; Bobo assets
+- Acceptance: Web exposes Profile as the fourth persistent destination; Profile and child Settings show only real device-local goal/pending facts and truthful informational rows; no sign-out/deletion/fake account/commerce/reminder state; all relevant loading/offline/error/keyboard/focus/RTL/responsive states are tested and independently reviewed.
+
+## LB-DS-043
+
+- Status: ready
+- Executor: unassigned (Android implementation worker)
+- Base: `origin/main` after LB-DS-041 post-merge reconciliation
+- Branch: `feature/m3-android-profile-settings`
+- Risk: learner-android-ui-and-device-local-state
+- Specification: `docs/design/M3_PROFILE_SETTINGS_CONTRACT.md` §§3-6, 8, 10 (M3-P1 only); `docs/product-decisions/PDR-006-PROFILE-SETTINGS-ALPHA-POLICIES.md`
+- Allowed paths: `apps/mobile/lib/features/review/learner_home_shell.dart`; `apps/mobile/lib/features/review/profile_screen.dart`; `apps/mobile/lib/features/review/settings_screen.dart`; `apps/mobile/lib/ui/learner_bottom_navigation.dart`; `apps/mobile/test/learner_bottom_navigation_test.dart`; `apps/mobile/test/learner_profile_settings_test.dart`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-043.md`; `CURRENT_WORK.md`; `docs/design/DESIGN_STATUS.md`; `docs/PRODUCT_STATUS.md`
+- Required checks: focused Flutter Profile/Settings/navigation widget tests; full Flutter tests; Flutter analyze; debug APK build; format check; `pnpm verify:ai-worker-queue`; `pnpm verify:documentation-governance`; `pnpm verify:ai-continuity`; `pnpm test:dashboard`; `git diff --check`; Android emulator RTL/accessibility screenshot review; independent code/product review
+- Simulator required: yes
+- Draft PR required: yes
+- Merge allowed: yes
+- Blocked on: LB-DS-041 post-merge reconciliation on `origin/main`
+- Must not touch: sign out; account deletion; profile/server APIs; auth/session; review-sync activation; sound preference persistence (M3-S1); reminders; purchases/packs; provider/config; flags; deployment; Production; landing; Admin; Bobo assets
+- Acceptance: Android exposes Profile as the fourth persistent destination; Profile and child Settings show only real device-local pending facts and truthful informational rows; no sign-out/deletion/fake account/commerce/reminder state; navigation/focus/back/RTL/accessibility and target-device layout are verified without activating dormant native auth.
+
 ## LB-DS-041
 
-- Status: review_requested
+- Status: accepted
 - Executor: supervisor (M3 Profile/Settings design contract)
 - Base: `origin/main` at `e074ccfaa9b078609a9942398a79d37c5e79261c`
 - Branch: `design/m3-profile-settings-contract`

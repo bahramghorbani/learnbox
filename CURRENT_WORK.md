@@ -6,10 +6,13 @@
 
 ### M3 Profile and Settings interaction contract
 
-- **Status:** a design-only, decision-ready proposal is in progress as LB-DS-041. It records the
-  Profile navigation choice, truthful local/server state boundaries, accessibility behavior and the
-  unresolved cross-account pending-data policy for sign out. It is not owner-approved and does not
-  authorize implementation, auth/session work, provider activation or Production changes.
+- **Status:** accepted and merged in PR #235 at `213f2f1`. The owner approved the fourth Profile
+  destination, omission of sign out until local learner data is account-scoped, and omission of an
+  alpha account-deletion entry. PDR-006 records those decisions. Web and Android P1/S1 implementation
+  remain separate, test-gated tasks; auth/session, provider and Production work remain out of scope.
+- **Next implementation:** LB-DS-042 (Web P1) and LB-DS-043 (Android P1) are registered as parallel,
+  path-separated tasks after this reconciliation merges. Both exclude sound persistence, sign out,
+  deletion, server profile data, reminders, commerce, activation and rollout.
 
 ### M1-D sync readiness boundary
 
