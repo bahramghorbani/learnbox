@@ -3,7 +3,7 @@
 - Branch: `design/m3-profile-settings-contract`
 - Base commit: `e074ccfaa9b078609a9942398a79d37c5e79261c`
 - Head commit: `950614f79683eec5235c6aab484881758aa03027`
-- Draft PR: pending
+- Draft PR: [#235](https://github.com/bahramghorbani/learnbox/pull/235)
 - Scope completed: Decision-ready, design-only M3 Profile and Settings contract with explicit navigation, data-truth, state, accessibility, sign-out safety and owner-decision gates.
 - Files changed: `docs/design/M3_PROFILE_SETTINGS_CONTRACT.md`; `docs/design/DESIGN_STATUS.md`; `CURRENT_WORK.md`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-041.md`
 - Checks run: Prettier write/check on scoped Markdown; `pnpm verify:ai-worker-queue`; `pnpm verify:documentation-governance`; `pnpm verify:ai-continuity`; `pnpm test:dashboard`; `git diff --check` — all passed before review request.
