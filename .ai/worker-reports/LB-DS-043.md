@@ -2,7 +2,7 @@
 
 - Branch: `feature/m3-android-profile-settings`
 - Base commit: `0f4feb71dc01b878519cae58765284a6028b5daf`
-- Head commit: `ebbe8b15fa110cd9d5b4c548e235a1fa51b06da9` (implementation); status/docs commit follows on the same branch
+- Head commit: `0d7b17e0b292d92e80cedfb00adb55d916269161` (final branch head; implementation commit `ebbe8b15fa110cd9d5b4c548e235a1fa51b06da9`)
 - Draft PR: #237 (draft) — https://github.com/bahramghorbani/learnbox/pull/237
 - Scope completed: Profile as the fourth persistent learner destination (PDR-006); truthful Profile surface (neutral account label + real device-local pending review count with loading/error/retry) and child Settings surface with approved informational rows, labelled back action, system-back support and focus restoration; RTL/large-text/target-layout widget coverage; no goal, sign-out, deletion, identity, commerce, reminder or sync fabrication
 - Files changed: `apps/mobile/lib/ui/learner_bottom_navigation.dart`; `apps/mobile/lib/features/review/learner_home_shell.dart`; `apps/mobile/lib/features/review/profile_screen.dart`; `apps/mobile/lib/features/review/settings_screen.dart`; `apps/mobile/test/learner_bottom_navigation_test.dart`; `apps/mobile/test/learner_profile_settings_test.dart`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-043.md`; `CURRENT_WORK.md`; `docs/design/DESIGN_STATUS.md`; `docs/PRODUCT_STATUS.md`

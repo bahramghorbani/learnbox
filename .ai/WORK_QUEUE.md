@@ -288,7 +288,7 @@ Implementation and hardening are merged through PR #227 at `eda7630`. Dart forma
 - Base: `origin/main` at `0f4feb71dc01b878519cae58765284a6028b5daf`
 - Branch: `feature/m3-android-profile-settings`
 - Worktree: `/Volumes/LearnBox-Dev/LearnBox-final/lb-m3-android-profile-settings`
-- Head commit: `ebbe8b15fa110cd9d5b4c548e235a1fa51b06da9` (implementation); status/docs commit follows on the same branch
+- Head commit: `0d7b17e0b292d92e80cedfb00adb55d916269161` (final branch head; implementation at `ebbe8b15fa110cd9d5b4c548e235a1fa51b06da9`)
 - Draft PR: #237 (draft) — https://github.com/bahramghorbani/learnbox/pull/237
 - Risk: learner-android-ui-and-device-local-state
 - Specification: `docs/design/M3_PROFILE_SETTINGS_CONTRACT.md` §§3-6, 8, 10 (M3-P1 only); `docs/product-decisions/PDR-006-PROFILE-SETTINGS-ALPHA-POLICIES.md`
