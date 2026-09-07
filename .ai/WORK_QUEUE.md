@@ -266,11 +266,11 @@ Implementation and hardening are merged through PR #227 at `eda7630`. Dart forma
 
 ## LB-DS-038
 
-- Status: review_requested
+- Status: accepted
 - Executor: supervisor (Learner Web Progress local-data truthfulness)
 - Base: `origin/main` at `b46867c57daf2d4657b2573411c50f015fc4d221`
 - Branch: `fix/web-progress-local-truth`
-- Head commit: `8f462c955508e3f0026a337ebda6a7d74a3db267`
+- Head commit: `93bf1de970c18a1b0b696ed450d72231bda76e56`; merge commit: `506b334098cebc71e15537c6758882b8fe52527a` (PR #229)
 - Risk: routine-web-ui-truth-accessibility
 - Specification: `docs/design/D1_LEARNER_UI_KIT.md` §8; `docs/PRODUCT_STATUS.md`
 - Allowed paths: `apps/website/app/LearnerHome.tsx`; `apps/website/app/components/ProgressScreen.tsx`; `apps/website/test/screens.test.tsx`; `apps/website/test/learner-core-flows.test.tsx`; `CURRENT_WORK.md`; `docs/PRODUCT_STATUS.md`; `docs/design/DESIGN_STATUS.md`; `docs/design/UI_QA.md`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-038.md`
@@ -281,7 +281,7 @@ Implementation and hardening are merged through PR #227 at `eda7630`. Dart forma
 
 Label every current Progress figure as device-local, expose the existing unacknowledged review-event count without claiming server acknowledgement, and state that server weekly history is not active. Preserve the calm empty state and hide the pending notice at zero. No API, route, auth, sync flag/client composition, schema, migration, seed, content, payment, deployment, publication or Production change.
 
-Implementation head `8f462c9` is locally verified: the focused Progress/core-flow tests pass 18/18; full Website tests pass 229/229; Website typecheck and production build pass. Browser smoke confirms the empty Progress state at desktop and 390×844 with 200% root text scaling, RTL and no horizontal overflow. At documentation head `3d59e34`, all seven GitHub checks pass and an independent DeepSeek V4 Flash review returned PASS with no blocking findings; final merge validation remains.
+Accepted and merged in PR #229 at `506b334`. Focused Progress/core-flow tests pass 18/18; full Website tests pass 229/229; Website typecheck and production build pass. Browser smoke confirms the empty Progress state at desktop and 390×844 with 200% root text scaling, RTL and no horizontal overflow. All seven GitHub checks passed at final head `93bf1de`, and an independent DeepSeek V4 Flash review returned PASS with no blocking findings. No server history, acknowledgement, sync activation or Production state is claimed.
 
 | ID   | Workstream                         | Worker role                | Allowed scope                                                 | Depends on                 | Parallel rule                                                                                |
 | ---- | ---------------------------------- | -------------------------- | ------------------------------------------------------------- | -------------------------- | -------------------------------------------------------------------------------------------- |
