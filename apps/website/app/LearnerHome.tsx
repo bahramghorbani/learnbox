@@ -24,6 +24,8 @@ import {
 } from '@learnbox/learning-engine';
 
 import { LearnerNav } from './components/LearnerNav';
+import { ProfileScreen } from './components/ProfileScreen';
+import { SettingsScreen } from './components/SettingsScreen';
 import { TodayScreen } from './components/TodayScreen';
 import { AuthGate } from './components/AuthGate';
 import { InviteGate } from './components/InviteGate';
@@ -116,9 +118,9 @@ export function LearnerHome({
   const [newGerman, setNewGerman] = useState('');
   const [newPersian, setNewPersian] = useState('');
   const [personalWordNotice, setPersonalWordNotice] = useState('');
-  const [screen, setScreen] = useState<'today' | 'card' | 'complete' | 'progress' | 'words'>(
-    'today',
-  );
+  const [screen, setScreen] = useState<
+    'today' | 'card' | 'complete' | 'progress' | 'words' | 'profile' | 'settings'
+  >('today');
   const [flipped, setFlipped] = useState(false);
   const [grade, setGrade] = useState<Grade | null>(null);
   const [sessionIndex, setSessionIndex] = useState(0);
@@ -138,6 +140,10 @@ export function LearnerHome({
   const completionHeadingRef = useRef<HTMLHeadingElement>(null);
   const startReviewRef = useRef<HTMLButtonElement>(null);
   const wordSearchInputRef = useRef<HTMLInputElement>(null);
+  const profileHeadingRef = useRef<HTMLHeadingElement>(null);
+  const settingsHeadingRef = useRef<HTMLHeadingElement>(null);
+  const profileSettingsRowRef = useRef<HTMLButtonElement>(null);
+  const profileSettingsReturnRef = useRef(false);
   const remainingTodayReviews = Math.max(0, studyItems.length - reviewedToday);
   const isServerOtp = authMode === 'server-otp';
 
@@ -153,6 +159,20 @@ export function LearnerHome({
     }
     if (screen === 'complete') {
       completionHeadingRef.current?.focus();
+      return;
+    }
+    if (screen === 'profile') {
+      // Returning from Settings restores focus to the row that opened it.
+      if (profileSettingsReturnRef.current) {
+        profileSettingsRowRef.current?.focus();
+        profileSettingsReturnRef.current = false;
+        return;
+      }
+      profileHeadingRef.current?.focus();
+      return;
+    }
+    if (screen === 'settings') {
+      settingsHeadingRef.current?.focus();
       return;
     }
     if (screen === 'today') startReviewRef.current?.focus();
@@ -297,6 +317,12 @@ export function LearnerHome({
     getDeviceStorage().setItem(onboardingGoalStorageKey, learningGoal);
     setOnboarded(true);
   };
+  const editLearningGoal = () => setOnboarded(false);
+  const openSettings = () => {
+    profileSettingsReturnRef.current = true;
+    setScreen('settings');
+  };
+  const closeSettings = () => setScreen('profile');
   const queuePersonalVocabularySync = (entry: PersonalVocabularyEntry) => {
     if (typeof window === 'undefined') return;
     const storage = getDeviceStorage();
@@ -579,6 +605,31 @@ export function LearnerHome({
         </section>
         <LearnerNav current="words" onNavigate={(destination) => setScreen(destination)} />
       </main>
+    );
+  }
+
+  if (screen === 'profile') {
+    return (
+      <ProfileScreen
+        goal={learningGoal}
+        pendingReviewCount={pendingReviewCount}
+        headingRef={profileHeadingRef}
+        settingsRowRef={profileSettingsRowRef}
+        onChooseGoal={editLearningGoal}
+        onNavigate={(destination) => setScreen(destination)}
+        onOpenSettings={openSettings}
+      />
+    );
+  }
+
+  if (screen === 'settings') {
+    return (
+      <SettingsScreen
+        goal={learningGoal}
+        headingRef={settingsHeadingRef}
+        onBack={closeSettings}
+        onChooseGoal={editLearningGoal}
+      />
     );
   }
 

@@ -1,14 +1,15 @@
-type Destination = 'today' | 'words' | 'progress';
+export type LearnerDestination = 'today' | 'words' | 'progress' | 'profile';
 
 interface LearnerNavProps {
-  current: Destination;
-  onNavigate: (destination: Destination) => void;
+  current: LearnerDestination;
+  onNavigate: (destination: LearnerDestination) => void;
 }
 
-const destinations: Array<{ id: Destination; label: string }> = [
+const destinations: Array<{ id: LearnerDestination; label: string }> = [
   { id: 'today', label: 'امروز' },
   { id: 'words', label: 'واژه‌ها' },
   { id: 'progress', label: 'پیشرفت' },
+  { id: 'profile', label: 'پروفایل' },
 ];
 
 export function LearnerNav({ current, onNavigate }: LearnerNavProps) {

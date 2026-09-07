@@ -266,13 +266,13 @@ Implementation and hardening are merged through PR #227 at `eda7630`. Dart forma
 
 ## LB-DS-042
 
-- Status: ready
-- Executor: unassigned (Web implementation worker)
-- Base: `origin/main` after LB-DS-041 post-merge reconciliation
+- Status: in_progress
+- Executor: Hermes web implementation worker (M3 Web P1)
+- Base: `origin/main` at `0f4feb71dc01b878519cae58765284a6028b5daf` (LB-DS-041 post-merge reconciliation)
 - Branch: `feature/m3-web-profile-settings`
 - Risk: learner-web-ui-and-device-local-state
 - Specification: `docs/design/M3_PROFILE_SETTINGS_CONTRACT.md` §§3-6, 8, 10 (M3-P1 only); `docs/product-decisions/PDR-006-PROFILE-SETTINGS-ALPHA-POLICIES.md`
-- Allowed paths: `apps/website/app/LearnerHome.tsx`; `apps/website/app/components/LearnerNav.tsx`; `apps/website/app/components/ProfileScreen.tsx`; `apps/website/app/components/SettingsScreen.tsx`; `apps/website/app/globals.css`; `apps/website/test/learner-profile-settings.test.tsx`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-042.md`; `CURRENT_WORK.md`; `docs/design/DESIGN_STATUS.md`; `docs/PRODUCT_STATUS.md`
+- Allowed paths: `apps/website/app/LearnerHome.tsx`; `apps/website/app/components/LearnerNav.tsx`; `apps/website/app/components/ProgressScreen.tsx`; `apps/website/app/components/ProfileScreen.tsx`; `apps/website/app/components/SettingsScreen.tsx`; `apps/website/app/globals.css`; `apps/website/test/learner-profile-settings.test.tsx`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-042.md`; `CURRENT_WORK.md`; `docs/design/DESIGN_STATUS.md`; `docs/PRODUCT_STATUS.md`
 - Required checks: focused Web Profile/Settings test; full website test suite; website typecheck/build; Prettier; `pnpm verify:ai-worker-queue`; `pnpm verify:documentation-governance`; `pnpm verify:ai-continuity`; `pnpm test:dashboard`; `git diff --check`; responsive RTL/accessibility screenshot review; independent code/product review
 - Simulator required: no
 - Draft PR required: yes
@@ -280,6 +280,7 @@ Implementation and hardening are merged through PR #227 at `eda7630`. Dart forma
 - Blocked on: LB-DS-041 post-merge reconciliation on `origin/main`
 - Must not touch: sign out; account deletion; profile/server APIs; auth/session; review-sync activation; sound preference persistence (M3-S1); reminders; purchases/packs; provider/config; flags; deployment; Production; landing; Admin; Bobo assets
 - Acceptance: Web exposes Profile as the fourth persistent destination; Profile and child Settings show only real device-local goal/pending facts and truthful informational rows; no sign-out/deletion/fake account/commerce/reminder state; all relevant loading/offline/error/keyboard/focus/RTL/responsive states are tested and independently reviewed.
+- Note: the shared bottom `LearnerNav` is one component rendered on Today, Words, Progress and Profile, so `ProgressScreen.tsx` is included in the allowed paths for a single type-only widening of its `onNavigate` prop to the shared `LearnerDestination` union (no behavior change).
 
 ## LB-DS-043
 

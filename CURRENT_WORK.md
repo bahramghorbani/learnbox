@@ -6,13 +6,13 @@
 
 ### M3 Profile and Settings interaction contract
 
-- **Status:** accepted and merged in PR #235 at `213f2f1`. The owner approved the fourth Profile
-  destination, omission of sign out until local learner data is account-scoped, and omission of an
-  alpha account-deletion entry. PDR-006 records those decisions. Web and Android P1/S1 implementation
-  remain separate, test-gated tasks; auth/session, provider and Production work remain out of scope.
-- **Next implementation:** LB-DS-042 (Web P1) and LB-DS-043 (Android P1) are registered as parallel,
-  path-separated tasks after this reconciliation merges. Both exclude sound persistence, sign out,
-  deletion, server profile data, reminders, commerce, activation and rollout.
+- **Status:** contract accepted and merged in PR #235 at `213f2f1`; PDR-006 records the owner
+  decisions. **LB-DS-042 (Web M3-P1)** is in progress on branch `feature/m3-web-profile-settings`
+  from base `0f4feb7`: adds Profile as the fourth persistent learner destination plus truthful
+  Profile and child Settings surfaces from device-local goal/pending-review facts and approved
+  informational rows only. LB-DS-043 (Android P1) remains a parallel path-separated task. Both
+  exclude sound persistence, sign out, deletion, server profile data, reminders, commerce,
+  activation and rollout.
 
 ### M1-D sync readiness boundary
 
