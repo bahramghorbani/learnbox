@@ -3,7 +3,7 @@
 - Status: review_requested
 - Branch: `feature/m3-web-profile-settings`
 - Base commit: `0f4feb71dc01b878519cae58765284a6028b5daf` (`origin/main`)
-- Head commit: `94a91e3` (branch tip; implementation commit `742ebad`)
+- Head commit: `742ebad` (Profile/Settings implementation)
 - Draft PR: https://github.com/bahramghorbani/learnbox/pull/238
 - Scope completed: yes
 - Files changed: `apps/website/app/LearnerHome.tsx`, `apps/website/app/components/LearnerNav.tsx`, `apps/website/app/components/ProfileScreen.tsx` (new), `apps/website/app/components/SettingsScreen.tsx` (new), `apps/website/app/components/ProgressScreen.tsx` (type-only), `apps/website/app/globals.css`, `apps/website/test/learner-profile-settings.test.tsx` (new), `.ai/WORK_QUEUE.md`, `.ai/worker-reports/LB-DS-042.md`, `CURRENT_WORK.md`, `docs/design/DESIGN_STATUS.md`, `docs/PRODUCT_STATUS.md`
