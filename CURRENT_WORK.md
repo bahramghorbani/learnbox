@@ -27,6 +27,7 @@
   German/Persian filtering, official visible counts, truthful no-result recovery and focus return
   are verified over bundled content.
 - **Android device-local personal vocabulary (LB-DS-037):** accepted and merged in PR #227 at `eda7630`; independent re-review and all seven GitHub PR checks passed. Secure storage fails closed on corrupt/oversized/duplicate/canonical-colliding records, the 30-record cap is enforced in storage and UI, retry completions are generation-bound, and search keeps local errors/retry visible. Full Flutter `193/193`, analyze and debug APK passed. Server acknowledgement and cross-device sync are not claimed and remain separately gated.
+- **Learner Web Progress local truth (LB-DS-038):** implementation head `8f462c9` labels daily count and streak as browser/device-local, shows the existing unacknowledged review-answer count only when non-zero, and states that server weekly history is inactive. Focused tests pass 18/18, full Website tests 229/229, typecheck/build and desktop/mobile 200%-text browser smoke pass. Draft PR #229 is open; all seven CI checks and independent review pass at documentation head `3d59e34`, so the branch is ready for final merge validation.
 - **D0/D1 design gates:** completed for current learner surfaces.
 - **M1-A contract audit:** completed in PR #151.
 - **M1-D slice 1:** completed in PR #152; server snapshot remains fail-closed and not Web-wired.

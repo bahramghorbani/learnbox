@@ -427,6 +427,7 @@ export function LearnerHome({
         onNavigate={(destination) => setScreen(destination)}
         reviewedToday={reviewedToday}
         streakDays={streakDays}
+        pendingReviewCount={pendingReviewCount}
       />
     );
   }

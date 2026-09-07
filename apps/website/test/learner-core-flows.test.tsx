@@ -141,6 +141,26 @@ describe('learner core flows', () => {
     expect(daily).toMatchObject({ dateKey: '2026-08-08', reviewedCount: 3 });
   });
 
+  it('labels Progress as device-local and exposes unacknowledged review answers', async () => {
+    rendered = await renderLearner();
+    await rendered.signInLocally();
+    await rendered.clickButton('ادامه');
+    await rendered.startReview();
+    await rendered.flipAndGrade('یادم آمد');
+    await rendered.flipAndGrade('یادم آمد');
+    await rendered.flipAndGrade('یادم آمد');
+    await rendered.clickButton('بازگشت به امروز');
+    await rendered.clickButton('پیشرفت');
+
+    expect(rendered.text()).toContain(
+      'این گزارش فقط از داده‌های ذخیره‌شده در همین مرورگر ساخته می‌شود.',
+    );
+    expect(rendered.text()).toContain(
+      '3 پاسخ فقط روی این دستگاه ذخیره شده و سرور آن‌ها را تأیید نکرده است.',
+    );
+    expect(rendered.text()).toContain('گزارش هفتگی سرور هنوز فعال نیست.');
+  });
+
   it('adds a personal word and queues it for secure sync', async () => {
     rendered = await renderLearner();
     await rendered.signInLocally();
