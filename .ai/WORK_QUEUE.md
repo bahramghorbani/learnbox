@@ -264,6 +264,27 @@ flag, schema, migration, seed, payment, deployment, publication or Production ch
 
 Implementation and hardening are merged through PR #227 at `eda7630`. Dart format, Flutter analyze, 193/193 Flutter tests, the Android debug APK, independent re-review and all seven GitHub PR checks passed. No sync, server acknowledgement, API, auth, migration, seed, deployment or Production change is included.
 
+## LB-DS-041
+
+- Status: review_requested
+- Executor: supervisor (M3 Profile/Settings design contract)
+- Base: `origin/main` at `e074ccfaa9b078609a9942398a79d37c5e79261c`
+- Branch: `design/m3-profile-settings-contract`
+- Risk: product-and-privacy-sensitive-design-only
+- Specification: `docs/design/D1_LEARNER_UI_KIT.md` §9; `docs/design/INFORMATION_ARCHITECTURE.md`; `docs/product/PRD.md`; `docs/PRODUCT_STATUS.md`
+- Allowed paths: `docs/design/M3_PROFILE_SETTINGS_CONTRACT.md`; `docs/design/DESIGN_STATUS.md`; `docs/product-decisions/PDR-006-PROFILE-SETTINGS-ALPHA-POLICIES.md`; `CURRENT_WORK.md`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-041.md`
+- Required checks: Markdown/Prettier; `pnpm verify:ai-worker-queue`; `pnpm verify:documentation-governance`; `pnpm verify:ai-continuity`; `pnpm test:dashboard`; `git diff --check`; independent product/accessibility review
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+
+Produce a decision-ready, design-only Profile and Settings interaction contract before any new M3
+surface implementation. Resolve the existing navigation contradiction as an explicit owner decision;
+define truthful local/server data boundaries, complete states, accessibility, safe preference scope
+and the cross-account pending-data blocker for sign out. No product code, API, auth/session change,
+database, migration, notification provider, payment, deployment, publication or Production change.
+Merging the proposal must not claim owner approval or authorize implementation.
+
 ## LB-DS-040
 
 - Status: accepted

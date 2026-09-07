@@ -4,6 +4,13 @@
 
 ## Active work
 
+### M3 Profile and Settings interaction contract
+
+- **Status:** a design-only, decision-ready proposal is in progress as LB-DS-041. It records the
+  Profile navigation choice, truthful local/server state boundaries, accessibility behavior and the
+  unresolved cross-account pending-data policy for sign out. It is not owner-approved and does not
+  authorize implementation, auth/session work, provider activation or Production changes.
+
 ### M1-D sync readiness boundary
 
 - Cursor/persistence foundations and the wire contract are merged and documented. Owner decisions O-1/O-2 are approved: conflicts remain pending and require a new event ID after resolution; M1 acknowledgement is strict one-step after atomic application. The reconciliation GET from PR #209 remains **dormant and fail-closed**; LB-DS-033 completed its API/security review and hardening in PR #219 at `82afe3b`. A separate client-composition/activation decision remains required.
