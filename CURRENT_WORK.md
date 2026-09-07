@@ -25,7 +25,12 @@
   clear-search focus recovery. Android/server-backed parity remains incomplete.
 - **Android Words offline search (LB-DS-036):** accepted and merged in PR #225 at `6efc2df`;
   German/Persian filtering, official visible counts, truthful no-result recovery and focus return
-  are verified over bundled content. Personal-word and server-backed parity remain incomplete.
+  are verified over bundled content.
+- **Android device-local personal vocabulary (LB-DS-037):** implementation committed at `9f23c72`
+  and under review; secure local persistence, official/personal separation, normalized cross-source
+  duplicate prevention, the real 30-word local quota, combined search and truthful recovery states
+  pass 187/187 Flutter tests and the Android debug build. Server acknowledgement and cross-device
+  sync are not claimed and remain separately gated.
 - **D0/D1 design gates:** completed for current learner surfaces.
 - **M1-A contract audit:** completed in PR #151.
 - **M1-D slice 1:** completed in PR #152; server snapshot remains fail-closed and not Web-wired.
