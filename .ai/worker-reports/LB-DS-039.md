@@ -3,7 +3,7 @@
 - Status: review_requested
 - Branch: `docs/otp-preview-revalidation`
 - Base commit: `514ab09919307756dda576fa83c91e5ac0d7d9e5`
-- Head commit: pending documentation commit
+- Head commit: `578fdface306b8e326c6938bdc5e82663086a60e`
 - Draft PR: no
 - Scope completed: bounded owner-only SMS.ir request/verify revalidation in Vercel Preview, followed by immediate rollback
 - Files changed: `docs/operations/OTP_PROVIDER_ACTIVATION.md`; `CURRENT_WORK.md`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-039.md`
