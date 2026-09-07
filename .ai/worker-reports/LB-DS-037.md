@@ -1,42 +1,38 @@
 # LB-DS-037 — Android device-local personal vocabulary parity
 
-- Status: review_requested
+- Status: hardening_verified_pending_rereview
 - Base: `388ff670479a4b943279d1e9cf6bde3e4d00a2e4`
 - Branch: `feat/mobile-personal-vocabulary`
-- Head commit: `9f23c72`
+- Head commit: `9f23c72` (follow-up hardening pending commit)
 - Risk: routine Android UI with secure device-local persistence
 
 ## Outcome
 
 - Adds a typed personal-vocabulary store over the existing `flutter_secure_storage` dependency, using the separate `learnbox_personal_vocabulary_v1` namespace.
-- Treats malformed local payloads as an empty personal list instead of crashing or inventing data.
-- Separates official bundled cards from personal device-local cards and labels both sources explicitly.
-- Adds a Persian-first inline form for German and Persian text; storage succeeds before the new card becomes visible.
-- Normalizes German case and whitespace for duplicate checks across official and personal collections.
-- Enforces the real 30-record device-local personal quota from the persisted personal collection, independent of search filtering.
-- Searches official and personal German/Persian text together while keeping official visible counts and personal quota counts truthful.
-- Adds truthful loading, empty, load-error/retry, save-error/retry, duplicate, validation, success and quota states. No sync or server acknowledgement is claimed.
+- Fails closed on corrupt top-level payloads, malformed records, oversized lists, duplicate IDs/German values and canonical-word collisions; it never rewrites a corrupt payload as a successful empty list.
+- Enforces the 30-record cap in the storage layer and the UI; canonical constraints are passed from the bundled Start cards.
+- Binds local-load completion to a generation and its own timer, so a stale read cannot overwrite or cancel a later retry.
+- Keeps personal load failure/retry visible during no-result search, and distinguishes a true empty personal list from a search-miss.
+- Wires an injectable personal store through the app shell solely for deterministic runtime/widget tests; runtime default stays secure storage.
 
 ## TDD evidence
 
-1. Store tests were added first and failed because `personal_vocabulary_store.dart` did not exist; typed round-trip, malformed-data handling, delete-on-empty and normalization then passed.
-2. Personal/official separation test failed before the store seam was accepted by `WordsScreen`; it passed after local loading and grouped rendering were implemented.
-3. Valid add flow failed before the inline form existed; it passed after write-before-render persistence was implemented.
-4. Cross-source normalized duplicate and 30-word quota tests each failed before their guards existed, then passed after their focused implementation.
-5. Load-error recovery failed before a personal-store retry action existed, then passed after the retry state was implemented.
-6. A focused search assertion exposed that the personal quota label incorrectly used filtered results; the count was corrected to use the full persisted personal collection.
+1. Initial store/UI tests were written first and failed before the original implementation.
+2. Follow-up review regressions were added first and failed against the initial code: corrupt payloads, persisted 31st record, duplicate IDs/canonical Unicode German, hidden search error, stale overlapping retry, and personal responsive surface coverage.
+3. The smallest hardening change then made those regressions pass: strict validation before storage reads/writes, official-card constraints at the screen boundary, generation-owned load timers, truthful search composition and injected in-memory test storage.
+4. Existing official/personal separation, write-before-render, duplicate, quota, retry and focused search tests remain green.
 
 ## Verification
 
-- Personal store and Mobile visual parity focused suites: 27/27 passed.
-- Full Flutter suite: 187/187 passed.
+- Focused personal-vocabulary store and visual-parity suites: passed.
+- Full Flutter suite: 193/193 passed.
 - Dart strict format: passed.
 - Flutter analyze: passed with no issues.
 - Android debug APK: built successfully.
-- Existing responsive widget QA passed at 320×480 with 200% text and at 844×390 landscape with no overflow.
+- Personal-word UI responsive QA: 320×480 at 200% text and 844×390 landscape, including loaded personal row and add form, passed without overflow.
 - `git diff --check`: passed.
-- Independent review: pending.
-- GitHub CI: pending.
+- Independent re-review: pending.
+- GitHub CI: requires a new run after the follow-up commit.
 
 ## Unchanged gates
 

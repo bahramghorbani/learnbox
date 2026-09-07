@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../ui/learner_bottom_navigation.dart';
+import 'personal_vocabulary_store.dart';
 import 'pronunciation_player.dart';
 import 'progress_screen.dart';
 import 'review_queue.dart';
@@ -13,12 +14,14 @@ class LearnerHomeShell extends StatefulWidget {
     required this.startPackRepository,
     required this.reviewQueue,
     required this.pronunciationPlayer,
+    this.personalVocabularyStore,
     super.key,
   });
 
   final StartPackRepository startPackRepository;
   final ReviewQueue reviewQueue;
   final PronunciationPlayer pronunciationPlayer;
+  final PersonalVocabularyStore? personalVocabularyStore;
 
   @override
   State<LearnerHomeShell> createState() => _LearnerHomeShellState();
@@ -37,6 +40,7 @@ class _LearnerHomeShellState extends State<LearnerHomeShell> {
             ),
           LearnerDestination.words => WordsScreen(
               startPackRepository: widget.startPackRepository,
+              personalVocabularyStore: widget.personalVocabularyStore,
             ),
           LearnerDestination.progress => ProgressScreen(
               reviewQueue: widget.reviewQueue,

@@ -24,7 +24,7 @@ class WordsScreen extends StatefulWidget {
 }
 
 class _WordsScreenState extends State<WordsScreen> {
-  static const _personalWordLimit = 30;
+  static const _personalWordLimit = PersonalVocabularyStore.maxEntries;
   late Future<List<StartCard>> _session;
   final _searchController = TextEditingController();
   final _searchFocusNode = FocusNode();
@@ -37,6 +37,7 @@ class _WordsScreenState extends State<WordsScreen> {
   bool _savingPersonalWord = false;
   String? _personalWordsError;
   Timer? _personalLoadTimer;
+  int _personalLoadGeneration = 0;
   String? _personalWordNotice;
 
   @override
@@ -47,27 +48,37 @@ class _WordsScreenState extends State<WordsScreen> {
   }
 
   Future<void> _loadPersonalWords() async {
+    final generation = ++_personalLoadGeneration;
     _personalLoadTimer?.cancel();
-    _personalLoadTimer = Timer(const Duration(seconds: 5), () {
-      if (!mounted) return;
+    var settled = false;
+    final timer = Timer(const Duration(seconds: 5), () {
+      if (!mounted || generation != _personalLoadGeneration) return;
+      settled = true;
+      _personalLoadTimer = null;
       setState(() {
         _personalWordsLoading = false;
         _personalWordsError =
             'واژه‌های شخصی این دستگاه خوانده نشد؛ واژه‌های رسمی همچنان در دسترس‌اند.';
       });
     });
+    _personalLoadTimer = timer;
     try {
-      final words = await widget.personalVocabularyStore.load();
-      _personalLoadTimer?.cancel();
-      if (!mounted) return;
+      final officialCards = await _session;
+      final words = await widget.personalVocabularyStore.load(
+        reservedGerman: officialCards.map((card) => card.german),
+      );
+      if (settled || !mounted || generation != _personalLoadGeneration) return;
+      timer.cancel();
+      if (identical(_personalLoadTimer, timer)) _personalLoadTimer = null;
       setState(() {
         _personalWords = words;
         _personalWordsLoading = false;
         _personalWordsError = null;
       });
     } catch (_) {
-      _personalLoadTimer?.cancel();
-      if (!mounted) return;
+      if (settled || !mounted || generation != _personalLoadGeneration) return;
+      timer.cancel();
+      if (identical(_personalLoadTimer, timer)) _personalLoadTimer = null;
       setState(() {
         _personalWordsLoading = false;
         _personalWordsError =
@@ -86,6 +97,7 @@ class _WordsScreenState extends State<WordsScreen> {
 
   @override
   void dispose() {
+    _personalLoadGeneration += 1;
     _personalLoadTimer?.cancel();
     _searchController.dispose();
     _searchFocusNode.dispose();
@@ -173,7 +185,10 @@ class _WordsScreenState extends State<WordsScreen> {
     });
     try {
       final nextWords = [..._personalWords, entry];
-      await widget.personalVocabularyStore.save(nextWords);
+      await widget.personalVocabularyStore.save(
+        nextWords,
+        reservedGerman: officialCards.map((card) => card.german),
+      );
       if (!mounted) return;
       setState(() {
         _personalWords = nextWords;
@@ -233,8 +248,10 @@ class _WordsScreenState extends State<WordsScreen> {
             }
             final visibleCards = _filterCards(cards);
             final visiblePersonalWords = _filterPersonalWords();
-            final noResults =
-                visibleCards.isEmpty && visiblePersonalWords.isEmpty;
+            final noResults = !_personalWordsLoading &&
+                _personalWordsError == null &&
+                visibleCards.isEmpty &&
+                visiblePersonalWords.isEmpty;
             return ListView(
               key: const ValueKey('words-list'),
               padding: const EdgeInsets.all(24),
@@ -368,7 +385,11 @@ class _WordsScreenState extends State<WordsScreen> {
                       ],
                     )
                   else if (visiblePersonalWords.isEmpty)
-                    const Text('هنوز واژهٔ شخصی روی این دستگاه نداری.')
+                    Text(
+                      _query.trim().isEmpty
+                          ? 'هنوز واژهٔ شخصی روی این دستگاه نداری.'
+                          : 'واژهٔ شخصی مطابق این جست‌وجو پیدا نشد.',
+                    )
                   else
                     for (final word in visiblePersonalWords) ...[
                       Card(

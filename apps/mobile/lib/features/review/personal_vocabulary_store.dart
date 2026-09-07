@@ -42,29 +42,69 @@ class PersonalVocabularyStore {
 
   final PersonalVocabularyStorage _storage;
 
-  Future<List<PersonalVocabularyEntry>> load() async {
+  static const maxEntries = 30;
+
+  Future<List<PersonalVocabularyEntry>> load({
+    Iterable<String> reservedGerman = const [],
+  }) async {
     final serialized = await _storage.read();
     if (serialized == null || serialized.trim().isEmpty) return const [];
 
-    try {
-      final decoded = jsonDecode(serialized);
-      if (decoded is! List) return const [];
-      return decoded
-          .map(PersonalVocabularyEntry.fromJson)
-          .whereType<PersonalVocabularyEntry>()
-          .toList(growable: false);
-    } on FormatException {
-      return const [];
+    final decoded = jsonDecode(serialized);
+    if (decoded is! List) {
+      throw const FormatException('Personal vocabulary must be a JSON list.');
     }
+    final entries = <PersonalVocabularyEntry>[];
+    for (final value in decoded) {
+      final entry = PersonalVocabularyEntry.fromJson(value);
+      if (entry == null) {
+        throw const FormatException(
+            'Personal vocabulary contains a bad record.');
+      }
+      entries.add(entry);
+    }
+    validatePersonalVocabularyEntries(
+      entries,
+      reservedGerman: reservedGerman,
+    );
+    return List.unmodifiable(entries);
   }
 
-  Future<void> save(List<PersonalVocabularyEntry> entries) async {
+  Future<void> save(
+    List<PersonalVocabularyEntry> entries, {
+    Iterable<String> reservedGerman = const [],
+  }) async {
+    validatePersonalVocabularyEntries(
+      entries,
+      reservedGerman: reservedGerman,
+    );
     if (entries.isEmpty) {
       await _storage.delete();
       return;
     }
     await _storage
         .write(jsonEncode(entries.map((entry) => entry.toJson()).toList()));
+  }
+}
+
+void validatePersonalVocabularyEntries(
+  Iterable<PersonalVocabularyEntry> entries, {
+  Iterable<String> reservedGerman = const [],
+}) {
+  final entryList = entries.toList(growable: false);
+  if (entryList.length > PersonalVocabularyStore.maxEntries) {
+    throw const FormatException('Personal vocabulary exceeds 30 records.');
+  }
+  final ids = <String>{};
+  final germanValues = reservedGerman.map(normalizePersonalGerman).toSet();
+  for (final entry in entryList) {
+    if (entry.id.trim().isEmpty ||
+        entry.german.trim().isEmpty ||
+        entry.persian.trim().isEmpty ||
+        !ids.add(entry.id.trim()) ||
+        !germanValues.add(normalizePersonalGerman(entry.german))) {
+      throw const FormatException('Personal vocabulary violates invariants.');
+    }
   }
 }
 
@@ -123,5 +163,10 @@ class PersonalVocabularyEntry {
   int get hashCode => Object.hash(id, german, persian);
 }
 
-String normalizePersonalGerman(String value) =>
-    value.trim().replaceAll(RegExp(r'\s+'), ' ').toLowerCase();
+String normalizePersonalGerman(String value) => value
+    .trim()
+    .replaceAll(RegExp(r'\s+'), ' ')
+    .toLowerCase()
+    .replaceAll('a\u0308', 'ä')
+    .replaceAll('o\u0308', 'ö')
+    .replaceAll('u\u0308', 'ü');

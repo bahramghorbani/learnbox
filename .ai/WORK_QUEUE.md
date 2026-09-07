@@ -249,7 +249,7 @@ personal vocabulary and every server/activation gate remain unchanged.
 - Head commit: `9f23c72`
 - Risk: routine-mobile-ui-secure-local-data
 - Specification: `docs/design/D1_LEARNER_UI_KIT.md` §7; `docs/PRODUCT_STATUS.md`
-- Allowed paths: `apps/mobile/lib/features/review/words_screen.dart`; `apps/mobile/lib/features/review/personal_vocabulary_store.dart`; `apps/mobile/test/mobile_visual_parity_test.dart`; `apps/mobile/test/personal_vocabulary_store_test.dart`; `CURRENT_WORK.md`; `docs/PRODUCT_STATUS.md`; `docs/design/DESIGN_STATUS.md`; `docs/design/UI_QA.md`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-037.md`
+- Allowed paths: `apps/mobile/lib/app.dart`; `apps/mobile/lib/features/review/learner_home_shell.dart`; `apps/mobile/lib/features/review/words_screen.dart`; `apps/mobile/lib/features/review/personal_vocabulary_store.dart`; `apps/mobile/test/mobile_visual_parity_test.dart`; `apps/mobile/test/personal_vocabulary_store_test.dart`; `CURRENT_WORK.md`; `docs/PRODUCT_STATUS.md`; `docs/design/DESIGN_STATUS.md`; `docs/design/UI_QA.md`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-037.md`
 - Required checks: focused/full Flutter tests; Dart format; Flutter analyze; Android debug build; queue/documentation/continuity/dashboard validators; `git diff --check`; Android-sized RTL/large-text smoke
 - Simulator required: no
 - Draft PR required: yes
@@ -261,8 +261,7 @@ German/Persian search and truthful load/save/empty/quota recovery states. Keep a
 explicitly device-local; do not claim synchronization or server acknowledgement. No API, auth, sync
 flag, schema, migration, seed, payment, deployment, publication or Production change.
 
-Implementation is committed at `9f23c72`; Dart format, Flutter analyze, 187/187 Flutter tests and
-the Android debug APK pass. Independent review and GitHub CI remain pending.
+Implementation is committed at `9f23c72`; follow-up hardening is pending commit. It now fails closed on corrupt/oversized/duplicate local payloads, enforces storage invariants and canonical collisions, prevents stale retry completions, keeps personal load errors visible during search, and covers personal UI at narrow large-text and landscape sizes. Dart format, Flutter analyze, 193/193 Flutter tests and the Android debug APK pass locally. Independent re-review and a new GitHub CI run remain pending.
 
 | ID   | Workstream                         | Worker role                | Allowed scope                                                 | Depends on                 | Parallel rule                                                                                |
 | ---- | ---------------------------------- | -------------------------- | ------------------------------------------------------------- | -------------------------- | -------------------------------------------------------------------------------------------- |
