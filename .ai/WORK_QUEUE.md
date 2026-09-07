@@ -272,7 +272,7 @@ Implementation and hardening are merged through PR #227 at `eda7630`. Dart forma
 - Branch: `design/m3-profile-settings-contract`
 - Risk: product-and-privacy-sensitive-design-only
 - Specification: `docs/design/D1_LEARNER_UI_KIT.md` §9; `docs/design/INFORMATION_ARCHITECTURE.md`; `docs/product/PRD.md`; `docs/PRODUCT_STATUS.md`
-- Allowed paths: `docs/design/M3_PROFILE_SETTINGS_CONTRACT.md`; `docs/design/DESIGN_STATUS.md`; `CURRENT_WORK.md`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-041.md`
+- Allowed paths: `docs/design/M3_PROFILE_SETTINGS_CONTRACT.md`; `docs/design/DESIGN_STATUS.md`; `docs/product-decisions/PDR-006-PROFILE-SETTINGS-ALPHA-POLICIES.md`; `CURRENT_WORK.md`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-041.md`
 - Required checks: Markdown/Prettier; `pnpm verify:ai-worker-queue`; `pnpm verify:documentation-governance`; `pnpm verify:ai-continuity`; `pnpm test:dashboard`; `git diff --check`; independent product/accessibility review
 - Simulator required: no
 - Draft PR required: yes

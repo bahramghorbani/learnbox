@@ -1,6 +1,6 @@
 # M3 Profile and Settings interaction contract
 
-**Status:** decision-ready proposal; not owner-approved and not implementation authorization.
+**Status:** owner-approved bounded design direction; implementation remains task-scoped and test-gated.
 **Baseline:** `origin/main` at `e074ccfaa9b078609a9942398a79d37c5e79261c`.
 **Scope:** learner Profile and Settings on Web and Android. Store, Purchases, account deletion,
 notification delivery, server persistence, authentication changes and Production activation remain
@@ -12,8 +12,10 @@ Profile answers «حساب و وضعیت من چیست؟». Settings answers «�
 Both surfaces must be useful without fabricating identity, purchases, synchronization or preference
 state. They share the existing learner shell and D0/D1 visual language.
 
-This contract turns the direction-only D1 section into a decision-ready state and interaction model.
-It does not make either surface implemented or release-ready.
+This contract turns the direction-only D1 section into an approved state and interaction model for
+the bounded P1/S1 foundations. It does not make either surface implemented or release-ready. The
+owner selections are recorded in
+[`PDR-006`](../product-decisions/PDR-006-PROFILE-SETTINGS-ALPHA-POLICIES.md).
 
 ## 2. Current repository truth
 
@@ -51,8 +53,8 @@ item keeps account and sync visibility discoverable on Web and Android. Settings
 belongs one level below Profile. Four destinations remain within the mobile navigation capacity and
 avoid hiding account state in a Today-only header affordance.
 
-**Owner decision M3-D-1:** approve the recommended fourth destination, or retain the D1 §9
-Today-header/account entry. Implementation must not start until one is selected.
+**Owner decision M3-D-1 — approved 2026-09-08:** use the recommended fourth persistent Profile
+destination. Settings remains a child surface.
 
 ### 3.2 Profile hierarchy
 
@@ -158,8 +160,9 @@ phone or token values. The sign-out sheet then offers:
 A later explicitly approved policy may add «خروج و نگهداری امن روی این دستگاه» after account-scoped
 quarantine and re-authentication ownership checks are implemented.
 
-**Owner decision M3-D-2:** approve the fail-closed recommendation, or choose a different explicit
-pending-data policy. No learner sign-out implementation is authorized by this proposal.
+**Owner decision M3-D-2 — approved 2026-09-08:** use the fail-closed recommendation. Do not expose
+learner sign out until pending local learner data is account-scoped and cross-account isolation is
+verified. This decision does not authorize sign-out implementation.
 
 ## 8. Privacy, support and account deletion
 
@@ -171,10 +174,8 @@ Account deletion is not a sign-out variant. It requires a separately reviewed au
 operation, reauthentication, pending-event treatment, retention/deletion policy, audit evidence and
 recovery copy. Do not render a working deletion control in the first slice.
 
-**Owner decision M3-D-3:** confirm whether closed alpha should expose a non-destructive «درخواست حذف
-حساب» support handoff before self-service deletion exists, or omit deletion entry until the real flow
-is ready. The recommendation is to show a clearly labelled support handoff only after its operational
-owner and response process exist.
+**Owner decision M3-D-3 — approved 2026-09-08:** omit an account-deletion entry from the closed alpha
+until a real deletion flow or owner-approved support handoff and response process exists.
 
 ## 9. Analytics and privacy
 
@@ -201,14 +202,12 @@ providers or dormant review-sync flags.
 
 ## 11. Acceptance gate for implementation readiness
 
-Implementation remains blocked until:
+P1/S1 implementation readiness still requires:
 
-- M3-D-1 navigation/entry is selected;
-- M3-D-2 sign-out/pending-data policy is selected;
-- the first-slice rows and deferred rows are accepted;
-- final Persian copy is reviewed;
+- the first-slice rows and deferred rows remain within this approved contract;
+- final Persian copy is reviewed in each implementation PR;
 - Web and Android test paths and allowed files are recorded in separate queue tasks;
 - an independent product/accessibility review finds no data-truth or cross-account blocker.
 
-Owner approval of this contract authorizes only the bounded design direction. Every implementation,
-server, auth, storage and rollout slice still needs its own queue scope and green-check merge.
+The owner approval authorizes only the bounded design direction. Every implementation, server, auth,
+storage and rollout slice still needs its own queue scope and green-check merge.
