@@ -3,7 +3,9 @@
 - **Status:** accepted decision contract; the reusable seed gate and catalog snapshot are
   implemented. PDR-008 supersedes only the pre-approval row prohibition by authorizing all 35
   drafts as non-learner-visible `needs_review` candidates; publication and learner catalog seeding
-  remain blocked and separately review-gated.
+  remain blocked and separately review-gated. The PDR-008 persistence slice is implemented but
+  dormant in LB-DS-049 (draft PR #251): migration `0017` and the default-off Admin review
+  runtime; the migration is not executed and the runtime flag is not enabled anywhere.
 - **Date:** 2026-09-04
 - **Basis:** `feature/starter-catalog-35` at commit `94cb729` (official free starter target reduced
   to approximately 35 words). Read with ADR 0013, `docs/product-decisions/PDR-004`, and

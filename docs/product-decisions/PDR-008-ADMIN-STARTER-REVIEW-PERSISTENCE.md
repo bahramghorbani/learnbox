@@ -2,6 +2,9 @@
 
 - **Status:** approved
 - **Date:** 2026-09-09
+- **Implementation:** LB-DS-049 (draft PR #251) — migration `0017` plus the default-off Admin
+  queue/check/decision runtime and server-truthful workspace are implemented and awaiting
+  independent review; migration execution and runtime activation remain separate gates.
 
 ## Context
 
