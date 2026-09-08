@@ -293,11 +293,13 @@ approved/published `card_versions` row. Seed and publication remain blocked. See
 
 ## LB-DS-045
 
-- Status: review_requested
+- Status: accepted
 - Executor: supervisor (W4 content-evidence reconciliation)
 - Base: `origin/main` at `9771dde78a1cec60bdefb8ba05864e3b4a7ad699`
 - Branch: `docs/starter-catalog-evidence-reconcile`
-- Draft PR: #241 — https://github.com/bahramghorbani/learnbox/pull/241
+- Head commit: `ce9fb2aafe8536108999bc798cce639bba0e90e4`
+- Draft PR: #241 (merged) — https://github.com/bahramghorbani/learnbox/pull/241
+- Merge commit: `95c704b2258f85b943e6874da29ccf57b6e51e82`
 - Worktree: `/Volumes/LearnBox-Dev/LearnBox-final/lb-starter-evidence-reconcile`
 - Risk: fail-closed-content-evidence-and-validator-truth
 - Specification: LB-DS-044 audit; ADR 0013; ADR 0016; `content/packs/learnbox-start/README.md`
@@ -306,9 +308,14 @@ approved/published `card_versions` row. Seed and publication remain blocked. See
 - Simulator required: no
 - Draft PR required: yes
 - Merge allowed: yes
-- Blocked on: final-head independent review and live PR checks; the implementation/evidence head `1b9748b` passed GitHub CI 7/7, while paid candidate generation and all human media/app-flow/release approval remain outside scope and owner-gated
+- Blocked on: none for evidence reconciliation; paid candidate generation and all human media/app-flow/release approval remain outside scope and owner-gated
 - Must not touch: generated/private media blobs; media generation/upload/attachment; approval dimensions or approval events; `cards`/`card_versions`; migrations; seed runners; auth/session; providers/secrets; runtime flags; Preview/Production; invitations; publication
 - Acceptance: the two candidate and draft batches truthfully link the existing two-dimensional linguistic approvals while preserving overall `needs_review`; the 15-item provenance ledger stops listing those approved dimensions as pending; the Issue #59 gate deterministically derives 36 transcription matches, four regeneration failures, six listening approvals and 34 pending reviews from its ledger and stays non-releaseable; the catalog remains 0/35 release-approved, non-seedable and publication-blocked.
+
+Accepted and merged through PR #241 at `95c704b`. Independent review returned PASS on the full
+implementation/evidence diff and the final metadata-only delta. The exact final head `ce9fb2a` passed
+five GitHub check runs and both Vercel commit-status contexts. No media, seed, approval, activation,
+Preview/Production or publication state changed.
 
 ## LB-DS-042
 
