@@ -8,10 +8,11 @@
 
 - **Status:** contract accepted and merged in PR #235 at `213f2f1`; PDR-006 records the owner
   decisions. **LB-DS-042 (Web M3-P1)** is marked `review_requested` on `feature/m3-web-profile-settings`
-  from base `0f4feb7` with Draft PR #238 (implementation and review hardening through `38a6528` plus this status commit): Profile is the
+  from base `0f4feb7` with Draft PR #238 (implementation and review hardening through `7b58ff2` plus this status commit): Profile is the
   fourth persistent learner destination and the truthful Profile/child Settings surfaces use only
-  device-local goal/pending-review facts and approved informational rows. Review hardening adds shared
-  offline truth, goal-edit focus return, review-queue-specific idle copy and readable navigation at 200%
+  device-local goal/pending-review facts and approved informational rows. Review hardening verifies the
+  existing single shared offline truth without duplicate announcements, restores goal-edit focus, narrows
+  the idle copy to the pending-review queue and keeps navigation readable at 200%
   text while preserving four columns at normal 390 px sizing. The single type-only
   widening of `ProgressScreen.onNavigate` to the shared `LearnerDestination` union is documented in
   the queue. LB-DS-043 (Android P1) remains a parallel path-separated task. Both
