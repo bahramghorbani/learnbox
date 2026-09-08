@@ -120,9 +120,9 @@
 - Secret scan: added-line scan found no hardcoded credential values. `pnpm verify:security` passed inside `pnpm check`.
 - RTL/responsive accessibility smoke: local production build Profile at 1280 and 390×844 rendered RTL; `scrollWidth == clientWidth == 390` at mobile size. Device/local facts remained visible while identity was unavailable.
 
-## Unavailable checks
+## Independent review
 
-- Independent high-reasoning security/product re-review: required. Sol review returned BLOCK; all listed hardening changes and focused/full local checks are recorded above, but final re-review remains a merge blocker.
+- Independent high-reasoning review passed the hardened code/security/product behavior and blocked only stale evidence metadata. The original four metadata findings were corrected; final-head CI and metadata reconciliation verification remain before merge.
 
 ## Risks and remaining work
 
