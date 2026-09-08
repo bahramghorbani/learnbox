@@ -331,15 +331,16 @@ Preview/Production or publication state changed.
 - Simulator required: no
 - Draft PR required: yes
 - Merge allowed: yes
-- Blocked on: coordination PR merge and exact-base capture only
+- Blocked on: final-head CI and metadata-delta review after recording the independent PASS
 - Must not touch: Android/mobile; Profile sound rows; sign out; account deletion; profile/server APIs; auth/session; review-sync activation; reminders; purchases/packs; provider/config; flags; deployment; Production; landing; Admin; Bobo assets; learning-engine package
 - Acceptance: Web persists one versioned device-local pronunciation preference with default-on compatibility; malformed or unknown records recover to enabled without touching unrelated keys; denied durable storage remains usable through the existing memory fallback; Settings exposes an accessible labelled switch and save status; disabled sound prevents Audio and speech-synthesis calls; no server, sync, auth or release claim is introduced.
 
-Web M3-S1 was implemented locally on `feature/m3-web-sound-preference` with strict RED→GREEN tests
+Web M3-S1 is in Draft PR #244 on `feature/m3-web-sound-preference`. Strict RED→GREEN evidence
 (focused Profile/Settings suite 30/30, full Web suite 259/259, website typecheck and production
-build pass) and committed for review; no push, PR or merge was made in this task. The RED→GREEN
-evidence, exact check counts, commit SHA and remaining review items are recorded in the worker
-report `.ai/worker-reports/LB-DS-046.md`.
+build) was independently re-run on head `2dcf2ffbf5aeef9bfb4e5b6082a97cad8052215f`; the independent
+code/product review returned PASS with no blocking findings. All seven GitHub/Vercel contexts on
+that head completed successfully. Final-head CI and a limited metadata-delta review remain before
+merge; no merge has been made.
 
 ## LB-DS-047
 

@@ -3,13 +3,15 @@
 - Status: review_requested
 - Branch: `feature/m3-web-sound-preference`
 - Base commit: `7dba5adab77b0b90a228ac8c7aabab0bc54e3830` (`origin/main`, M3-S1 coordination merge)
-- Head commit: `0e9898691765f5000295cae858279adfdc912ff0` before final PR-link/evidence metadata commit
+- Head commit: `2dcf2ffbf5aeef9bfb4e5b6082a97cad8052215f` (reviewed code head before evidence-only metadata delta)
 - Draft PR: #244 — https://github.com/bahramghorbani/learnbox/pull/244
 - Scope completed: yes (implementation and local verification)
 - Files changed: `apps/website/app/LearnerHome.tsx`, `apps/website/app/components/SettingsScreen.tsx`, `apps/website/app/components/PronunciationButton.tsx`, `apps/website/app/globals.css`, `apps/website/app/sound-preference.ts` (new), `apps/website/test/learner-profile-settings.test.tsx`, `.ai/WORK_QUEUE.md`, `.ai/worker-reports/LB-DS-046.md`, `CURRENT_WORK.md`, `docs/design/DESIGN_STATUS.md`, `docs/PRODUCT_STATUS.md`
 - Checks run: RED→GREEN focused tests (7 module + 6 Settings + 12 ProfileScreen/LearnerNav + 9 shell = 30/30); full website test suite 259/259 (36 files); website `typecheck`; website production `build`; Prettier `format:check`; `verify:ai-worker-queue`; `verify:documentation-governance`; `verify:ai-continuity`; `test:dashboard`; `git diff --check`
-- Checks unavailable: independent code/product review and final-head GitHub CI remain pending
-- Remaining work: obtain independent review and final-head CI, then merge PR #244 if both pass; Android M3-S1 (LB-DS-047) remains a separate branch; server identity reads (M3-A1) remain unchanged
+- Independent review: PASS on `2dcf2ffbf5aeef9bfb4e5b6082a97cad8052215f`; no blocking findings; focused 30/30 and full 259/259 tests, typecheck, scope, persistence, playback gating, accessibility and documentation claims were independently checked
+- GitHub CI: seven terminal-success contexts on `2dcf2ffbf5aeef9bfb4e5b6082a97cad8052215f` (`quality`, `mobile`, `secrets`, `production-stack`, Vercel Preview Comments, `Vercel – learnbox`, `Vercel – learnbox-admin-preview`); Quality run `34240322845`
+- Checks unavailable: final-head CI and limited review of this evidence-only metadata delta
+- Remaining work: complete those two final gates, then merge PR #244 if both pass; Android M3-S1 (LB-DS-047) remains a separate branch; server identity reads (M3-A1) remain unchanged
 - Risks: default-on recovery of an unknown future record re-enables sound until that future version is understood (documented, matches default-on compatibility); save-error `role="alert"` branch is intentionally absent because the resilient memory fallback makes a failed write unreachable — denial is surfaced as a truthful non-durable label instead; audio-button disabled state is visual/real and removes the control from the tab order (keyboard users still toggle via Settings)
 - Secrets or production changes: none
 - Bobo canonical status: unchanged

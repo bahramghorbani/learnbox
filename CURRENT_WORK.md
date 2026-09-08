@@ -14,8 +14,10 @@
   preference is off both the Audio path and speechSynthesis are disabled. Focused Profile/Settings
   suite 30/30 and the full Web suite 259/259 pass with website typecheck/build. Real-browser QA at
   390 px confirmed no horizontal overflow, durable OFF persistence and a disabled pronunciation
-  control in the review flow. Independent review and final-head GitHub CI remain pending. Android
-  LB-DS-047 is in progress as the separate, non-overlapping Android slice with the same default-on
+  control in the review flow. Independent code/product review returned PASS on `2dcf2ff`, and all
+  seven GitHub/Vercel contexts on that reviewed head completed successfully. Final-head CI and a
+  limited review of the evidence-only metadata delta remain before merge. Android LB-DS-047 is in
+  progress as the separate, non-overlapping Android slice with the same default-on
   and fail-closed semantics. No server profile, sign out, deletion, reminders, commerce, auth/sync
   activation, deployment or Production change is included.
 
