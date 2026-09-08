@@ -264,6 +264,32 @@ flag, schema, migration, seed, payment, deployment, publication or Production ch
 
 Implementation and hardening are merged through PR #227 at `eda7630`. Dart format, Flutter analyze, 193/193 Flutter tests, the Android debug APK, independent re-review and all seven GitHub PR checks passed. No sync, server acknowledgement, API, auth, migration, seed, deployment or Production change is included.
 
+## LB-DS-044
+
+- Status: review_requested
+- Executor: supervisor (fail-closed business-readiness audit)
+- Base: `origin/main` at `bb6c6d6ca1b0af1b0a96a771c4f29a6aabe73d4e`
+- Branch: `docs/starter-catalog-release-readiness-audit`
+- Worktree: `/Volumes/LearnBox-Dev/LearnBox-final/lb-next-safe-checkpoint`
+- Head commit: pending
+- Draft PR: pending
+- Risk: content-release-truth-and-owner-gates
+- Specification: ADR 0013; ADR 0016; `content/packs/learnbox-start/README.md`; `docs/PRODUCT_STATUS.md`
+- Allowed paths: `docs/content/STARTER_CATALOG_35_RELEASE_READINESS.md`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-044.md`; `CURRENT_WORK.md`; `docs/PRODUCT_STATUS.md`
+- Required checks: structured audit of all 35 item IDs and gate artifacts; Prettier; queue/documentation/continuity validators; dashboard tests; `git diff --check`; independent truthfulness review
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+- Blocked on: none for the audit; candidate-media production requires separate cost authorization; attachment, seed, approval, invitation, activation and publication remain owner-gated
+- Must not touch: content drafts or review ledgers; media generation/upload/attachment; `cards`/`card_versions`; migrations; seed runners; auth/session; providers/secrets; runtime flags; Preview/Production; participant invitations; publication
+- Acceptance: repository contains a decision-ready 20/15 readiness matrix, exact missing gates, stale-evidence warnings and a safe next-workstream boundary without inferring approval or changing release state.
+
+Audit baseline: 35/35 drafted; 35/35 approved only for German linguistic and Persian translation;
+the original 20 have candidate-stage provenance/visual/audio/app-flow evidence and privately attested
+but unattached media; the remaining 15 have no media candidates or app-flow approval; no item has an
+approved/published `card_versions` row. Seed and publication remain blocked. See
+`docs/content/STARTER_CATALOG_35_RELEASE_READINESS.md`.
+
 ## LB-DS-042
 
 - Status: accepted
