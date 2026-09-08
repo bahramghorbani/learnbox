@@ -1,8 +1,9 @@
 # ADR 0016 — 35-word Start catalog slice and fail-closed seed gate (M1)
 
 - **Status:** accepted decision contract; the reusable seed gate and catalog snapshot are
-  implemented on `feature/starter-catalog-35`; DB seeding, migrations and publication remain
-  blocked and separately review-gated
+  implemented. PDR-008 supersedes only the pre-approval row prohibition by authorizing all 35
+  drafts as non-learner-visible `needs_review` candidates; publication and learner catalog seeding
+  remain blocked and separately review-gated.
 - **Date:** 2026-09-04
 - **Basis:** `feature/starter-catalog-35` at commit `94cb729` (official free starter target reduced
   to approximately 35 words). Read with ADR 0013, `docs/product-decisions/PDR-004`, and
@@ -11,22 +12,20 @@
 
 ## Context
 
-The owner-approved product decision (recorded in `CURRENT_WORK.md` owner decisions and commit
-`94cb729`) sets the free Start collection at approximately 35 complete A1 German words. The
-content factory owns exactly 20 structured linguistic drafts
-(`content/packs/learnbox-start/vocabulary/start-a1-vertical-slice-drafts.json`), all still
-`needs_review`. The editorial packet
-(`docs/content/START_A1_EDITORIAL_REVIEW_PACKET.md`) and the recorded
-`validation/start-a1-slice-linguistic-approval.json` confirm only the German linguistic and
-Persian translation dimensions for those 20 items (product owner, 2026-07-27); provenance,
-visual, audio and app-flow validation remain required before publication. ADR 0013 makes bundled
+The owner-approved product decision sets the free Start collection at approximately 35 complete
+A1 German words. The content factory now owns exactly 35 structured drafts across the original
+20-item vertical slice and the 15-item completion batch, all still `needs_review`. The editorial
+packet and `validation/start-a1-slice-linguistic-approval.json` confirm only the German linguistic
+and Persian translation dimensions for all 35 items (product-owner confirmations on 2026-07-27
+and 2026-09-04); provenance, visual, audio and app-flow validation remain required before
+publication. ADR 0013 makes bundled
 `start-a1-*` ids the canonical `cards.content_id` values, but a card becomes resolvable content
 only after an `approved`/`published` `card_versions` row exists — and none exists for any Start
 item.
 
-No DB seed system, catalog module or `cards`/`card_versions` row exists for the Start pack. A
-safe seed therefore has two preconditions that the repository does not meet: 35 released items
-(only 20 drafts exist) and approved/published card versions (zero).
+No `cards`/`card_versions` row exists for the Start pack. A learner-visible catalog still requires
+35 released items and approved/published card versions; all 35 drafts exist, but zero are
+release-approved.
 
 ## Decision
 
@@ -34,8 +33,8 @@ Implement the bounded Starter Catalog/seed slice for the 35-word target as a **f
 additive slice that cannot mark content approved or published**:
 
 - **Canonical derived snapshot.** `content/packs/learnbox-start/validation/start-a1-35-catalog-slice.json`
-  records the truth for the 35-item target: 20 drafted, 20 linguistically reviewed, 0
-  release-approved, 15 missing drafts, `seedable: false`, with the exact blockers and SHA-256
+  records the current truth for the 35-item target: 35 drafted, 35 linguistically reviewed, 0
+  release-approved, `seedable: false`, with the exact blockers and SHA-256
   integrity anchors over the draft and linguistic-approval files it is derived from. It is a
   snapshot, not an approval; it creates no migration and no `cards`/`card_versions` row.
 - **Reusable seed gate.** `apps/api/src/catalog/start-catalog-seed-gate.ts` exposes
@@ -51,19 +50,20 @@ additive slice that cannot mark content approved or published**:
 - **No schema change.** No migration is added. The seed gate is pure code with no route, flag,
   provider, database connection or runtime wiring.
 
-Seeding the DB (adding a migration or seed runner that inserts Start-pack rows into `cards` /
-`card_versions`) is NOT authorized by this record and remains blocked by ADR 0013's preserved
-gate until the repository holds at least 35 items that each pass every review dimension and reach
-`approved`/`published`.
+PDR-008 now authorizes a separately reviewed, default-off ingestion slice that inserts the 35
+committed drafts into `cards` / `card_versions` strictly as `needs_review` candidates so Admin can
+persist the six review dimensions. This does not make them learner-resolvable: existing learner
+paths continue selecting only `approved`/`published` versions. Pack membership, learner catalog
+seeding, schedule bootstrap and publication remain blocked until every release gate passes.
 
 ## Preserved gates (unchanged)
 
 - **Editorial content required:** no bundled or draft item becomes resolvable content until its
   `card_versions` row is `approved`/`published` (ADR 0013; enforced by
   `PostgresReviewEventStore.resolveCardId` and `bootstrap_approved_card_schedules`).
-- **No seed/release:** no migration, seed SQL, catalog membership, price, media attestation,
-  publication or server activation is added here. `releaseStatus` stays `"draft"` and all 20
-  draft items stay `needs_review`.
+- **No learner seed/release:** PDR-008 permits only deterministic `needs_review` review-candidate
+  rows and pending review checks. No catalog membership, price, publication, learner schedule
+  bootstrap or learner-route activation is authorized. `releaseStatus` stays `"draft"`.
 - **No production activation:** no route, flag, deployment or environment change is included.
 - **No fabrication:** the snapshot and tests contain only repository-recorded state; nothing is
   invented (no extra lemmas, approvals, media claims, prices or user data).
@@ -73,14 +73,14 @@ gate until the repository holds at least 35 items that each pass every review di
 - The 35-word target now has one canonical, integrity-anchored catalog snapshot and one
   fail-closed seed gate that the future, separately authorized seed task must satisfy before any
   DB write.
-- The documented limitation is exact: the repository cannot safely seed 35 items today because 15
-  target drafts are missing and none of the 20 existing drafts is release-approved.
+- The documented limitation is exact: all 35 target drafts exist, but none is release-approved;
+  provenance, visual, audio and app-flow gates remain open.
 
 ## Out of scope
 
-- Drafting the missing 15 items, further editorial review dimensions, media production or
-  attachment, DB migrations, seed runners, catalog APIs/routes, flags, deployments and content
-  publication. Those remain separate owner/review-gated tasks.
+- Further editorial review dimensions, media production or attachment, learner catalog
+  APIs/routes, flags, deployments and content publication. Those remain separate
+  owner/review-gated tasks; only the bounded PDR-008 review-candidate migration is now authorized.
 
 ## Reversal trigger
 
