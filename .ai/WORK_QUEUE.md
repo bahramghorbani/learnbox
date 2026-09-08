@@ -344,9 +344,12 @@ and all seven final-head CI/Vercel contexts completed successfully before merge.
 
 ## LB-DS-047
 
-- Status: review_requested
+- Status: accepted
 - Executor: Hermes Android implementation worker (M3-S1 Android)
 - Base: `origin/main` at `7dba5adab77b0b90a228ac8c7aabab0bc54e3830` (M3-S1 coordination PR #243 merge)
+- Head commit: `8ec12b598164d1caf8cabc43b2dc598e03a8f9a8`
+- Draft PR: #245 (merged) — https://github.com/bahramghorbani/learnbox/pull/245
+- Merge commit: `610441a18644616b79704ef40fd9349efc1a80ed`
 - Branch: `feature/m3-android-sound-preference`
 - Worktree: `/Volumes/LearnBox-Dev/LearnBox-final/lb-m3-android-sound-preference`
 - Risk: learner-android-device-local-preference-storage-and-audio-gating
@@ -356,11 +359,17 @@ and all seven final-head CI/Vercel contexts completed successfully before merge.
 - Simulator required: yes
 - Draft PR required: yes
 - Merge allowed: yes
-- Blocked on: final-head CI and merge for Draft PR #245 (independent code/product review completed against prior PR head `17561aa55af256670172f091d6cfe9909aa472bb`; no blocking code/product finding)
+- Blocked on: none; merged in PR #245 at `610441a18644616b79704ef40fd9349efc1a80ed`
 - Must not touch: Web; native Android host/manifest/Gradle; iOS; existing auth/sync/personal-vocabulary stores; sign out; account deletion; profile/server APIs; reminders; purchases/packs; provider/config; flags; deployment; Production; landing; Admin; Bobo assets
 - Acceptance: Android persists one versioned device-local pronunciation preference in a dedicated existing secure-storage-backed store with default-on compatibility; corrupt v1 data self-heals, unknown newer versions remain untouched, and storage failures never crash; Settings exposes an accessible labelled switch with save/revert status; disabled sound prevents `PronunciationPlayer.playAsset`; no new dependency, server, sync, auth or release claim is introduced.
 
 Supervisor allowlist amendment: the five additional `apps/mobile/test` helper/support paths are approved only for hermetic test-store injection after the required full suite exposed 39 pending-timer failures from the real secure-storage channel. They do not widen product scope or production code.
+
+Android M3-S1 merged in PR #245 at `610441a18644616b79704ef40fd9349efc1a80ed` after
+independent code/product review found no blocking implementation issue and requested only truthful
+metadata correction. The correction landed at final PR head
+`8ec12b598164d1caf8cabc43b2dc598e03a8f9a8`; all seven GitHub/Vercel contexts completed
+successfully on that exact head before merge.
 
 ## LB-DS-042
 
