@@ -288,7 +288,7 @@ Implementation and hardening are merged through PR #227 at `eda7630`. Dart forma
 - Base: `origin/main` at `0f4feb71dc01b878519cae58765284a6028b5daf`
 - Branch: `feature/m3-android-profile-settings`
 - Worktree: `/Volumes/LearnBox-Dev/LearnBox-final/lb-m3-android-profile-settings`
-- Head commit: `0d7b17e0b292d92e80cedfb00adb55d916269161` (final branch head; implementation at `ebbe8b15fa110cd9d5b4c548e235a1fa51b06da9`)
+- Head commit: `ebbe8b15fa110cd9d5b4c548e235a1fa51b06da9` (stable implementation commit; review-test and status hardening follow on the same branch)
 - Draft PR: #237 (draft) — https://github.com/bahramghorbani/learnbox/pull/237
 - Risk: learner-android-ui-and-device-local-state
 - Specification: `docs/design/M3_PROFILE_SETTINGS_CONTRACT.md` §§3-6, 8, 10 (M3-P1 only); `docs/product-decisions/PDR-006-PROFILE-SETTINGS-ALPHA-POLICIES.md`
@@ -308,11 +308,12 @@ device-local pending review count (zero, positive and failed-read/retry states, 
 phrases). Settings is a child surface opened from Profile with approved informational rows only
 (text size follows the device; language فارسی); no preference is persisted or toggled. No goal row
 is shown because Android has no device-local goal store. No sign-out, deletion, identity/avatar,
-phone, purchase, reminder or sync state is fabricated. Focused widget tests pass 9/9; the full
-Flutter suite passes 201/201; `flutter analyze`, `dart format`, the debug APK build, `git diff
+phone, purchase, reminder or sync state is fabricated. Focused widget tests pass 11/11; the full
+Flutter suite passes 203/203; `flutter analyze`, `dart format`, the debug APK build, `git diff
 --check` and the queue/documentation/continuity/dashboard validators pass. Emulator RTL visual
 evidence is recorded in the report. No flag, auth/session, API, migration, deployment, Production,
-commerce or Bobo change is included; native auth remains dormant and untouched.
+commerce or Bobo change is included; native auth remains dormant and untouched. Independent review
+returned PASS with no blocker; review hardening covers loading, retry recovery and initial child focus.
 
 ## LB-DS-041
 

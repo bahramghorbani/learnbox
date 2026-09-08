@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -76,6 +77,50 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('pending read exposes a truthful loading announcement',
+      (tester) async {
+    final store = ControlledReviewQueueStore();
+    final queue = ReviewQueue(store: store, idFactory: () => 'unused');
+    await _pumpApp(tester, queue: queue);
+
+    await _openProfile(tester, settle: false);
+
+    final progress = find.byType(CircularProgressIndicator);
+    expect(progress, findsOneWidget);
+    expect(
+      tester.getSemantics(progress).label,
+      contains('در حال خواندن وضعیت دستگاه'),
+    );
+    store.complete(const []);
+    await tester.pumpAndSettle();
+    expect(find.text('رویدادی در انتظار همگام‌سازی نیست.'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('retry recovers a failed pending read from the real local queue',
+      (tester) async {
+    final queue = ReviewQueue(
+      store: RecoveringReviewQueueStore(events: const ['e1']),
+      idFactory: () => 'unused',
+    );
+    await _pumpApp(tester, queue: queue);
+    await _openProfile(tester);
+
+    expect(
+      find.text('وضعیت دستگاه خوانده نشد؛ دوباره تلاش کن.'),
+      findsOneWidget,
+    );
+    await tester.tap(find.text('تلاش دوباره'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('۱ رویداد در انتظار همگام‌سازی'), findsOneWidget);
+    expect(
+      find.text('وضعیت دستگاه خوانده نشد؛ دوباره تلاش کن.'),
+      findsNothing,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets(
       'Settings is a child surface with a labelled back action that restores '
       'focus to the Settings row', (tester) async {
@@ -84,6 +129,9 @@ void main() {
 
     await _tapSettingsRow(tester);
     await tester.pumpAndSettle();
+
+    expect(_primaryFocusInsideBackAction(), isTrue,
+        reason: 'focus must land on the labelled back action');
 
     // Child surface covers the shell: no persistent navigation underneath.
     expect(find.text('امروز'), findsNothing);
@@ -197,9 +245,13 @@ Future<void> _pumpApp(
   await tester.pumpAndSettle();
 }
 
-Future<void> _openProfile(WidgetTester tester) async {
+Future<void> _openProfile(WidgetTester tester, {bool settle = true}) async {
   await tester.tap(find.text('پروفایل'));
-  await tester.pumpAndSettle();
+  if (settle) {
+    await tester.pumpAndSettle();
+  } else {
+    await tester.pump();
+  }
 }
 
 Future<void> _tapSettingsRow(WidgetTester tester) async {
@@ -222,6 +274,15 @@ bool _primaryFocusInsideSettingsRow() {
     return true;
   });
   return inside;
+}
+
+bool _primaryFocusInsideBackAction() {
+  final focus = FocusManager.instance.primaryFocus;
+  if (focus == null || focus.context == null) {
+    return false;
+  }
+  return focus.context!.widget is TextButton ||
+      focus.context!.findAncestorWidgetOfExactType<TextButton>() != null;
 }
 
 class SeededReviewQueueStore implements ReviewQueueStore {
@@ -261,6 +322,61 @@ class FailingReviewQueueStore implements ReviewQueueStore {
     throw StateError('synthetic local storage failure');
   }
 }
+
+class ControlledReviewQueueStore implements ReviewQueueStore {
+  final Completer<String?> _readCompleter = Completer<String?>();
+  var _reads = 0;
+
+  void complete(List<String> events) {
+    _readCompleter.complete(_serializedEvents(events));
+  }
+
+  @override
+  Future<String?> read() {
+    _reads += 1;
+    // Today reads once during app startup. Hold only Profile's second read.
+    return _reads == 1
+        ? Future.value(_serializedEvents(const []))
+        : _readCompleter.future;
+  }
+
+  @override
+  Future<void> write(String serializedEvents) async {}
+}
+
+class RecoveringReviewQueueStore implements ReviewQueueStore {
+  RecoveringReviewQueueStore({required this.events});
+
+  final List<String> events;
+  var _reads = 0;
+
+  @override
+  Future<String?> read() async {
+    _reads += 1;
+    // Today performs the first read during startup; Profile performs the
+    // second. Both fail before Profile's retry succeeds on the third read.
+    if (_reads <= 2) {
+      throw StateError('synthetic initial read failure');
+    }
+    return _serializedEvents(events);
+  }
+
+  @override
+  Future<void> write(String serializedEvents) async {}
+}
+
+String _serializedEvents(List<String> events) => jsonEncode({
+      'schemaVersion': 1,
+      'events': [
+        for (final id in events)
+          {
+            'clientEventId': id,
+            'cardId': 'start-a1-haus',
+            'grade': 'remembered',
+            'occurredAt': '2026-09-08T10:00:00.000Z',
+          },
+      ],
+    });
 
 class _InMemoryStartPackRepository implements StartPackRepository {
   @override
