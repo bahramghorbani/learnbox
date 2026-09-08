@@ -1,17 +1,25 @@
 import type { RefObject } from 'react';
 
 import { learnerGoalTitle, type LearnerLearningGoal } from './ProfileScreen';
+import { NetworkStatus } from './NetworkStatus';
 
 interface SettingsScreenProps {
   goal: LearnerLearningGoal;
   headingRef?: RefObject<HTMLHeadingElement | null>;
+  goalRowRef?: RefObject<HTMLButtonElement | null>;
   onBack: () => void;
   onChooseGoal: () => void;
 }
 
 // M3-P1 Settings foundation: only the real device-local goal plus truthful
 // informational rows. Sound preference (M3-S1), reminders and purchases stay absent.
-export function SettingsScreen({ goal, headingRef, onBack, onChooseGoal }: SettingsScreenProps) {
+export function SettingsScreen({
+  goal,
+  headingRef,
+  goalRowRef,
+  onBack,
+  onChooseGoal,
+}: SettingsScreenProps) {
   return (
     <main className="app-shell settings-shell" data-testid="learnbox-settings">
       <header className="settings-top">
@@ -26,8 +34,14 @@ export function SettingsScreen({ goal, headingRef, onBack, onChooseGoal }: Setti
         </h1>
         <p>تنظیمات این نسخه فقط روی همین دستگاه اعمال می‌شود.</p>
       </section>
+      <NetworkStatus />
       <div className="settings-rows">
-        <button className="settings-row settings-row-action" type="button" onClick={onChooseGoal}>
+        <button
+          className="settings-row settings-row-action"
+          type="button"
+          ref={goalRowRef}
+          onClick={onChooseGoal}
+        >
           <span className="settings-row-copy">
             <strong>هدف یادگیری</strong>
             <small>

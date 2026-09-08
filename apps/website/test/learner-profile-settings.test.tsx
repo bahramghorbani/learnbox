@@ -54,9 +54,17 @@ describe('ProfileScreen', () => {
     rendered = await renderProfile({ goal: 'career', pendingReviewCount: 0 });
 
     expect(rendered.text()).not.toContain('تأیید نشده است');
-    expect(rendered.text()).toContain('رویدادی در صف همگام‌سازی این دستگاه نیست.');
+    expect(rendered.text()).toContain('رویدادی در صف همگام‌سازی پاسخ‌های مرور نیست.');
     // The device-local truth note never claims a server-synced state.
     expect(rendered.text()).toContain('همگام‌سازی خودکار هنوز فعال نیست');
+  });
+
+  it('shows the shared offline banner while Profile remains locally usable', async () => {
+    Object.defineProperty(window.navigator, 'onLine', { configurable: true, value: false });
+    rendered = await renderProfile({ goal: 'life', pendingReviewCount: 0 });
+
+    expect(rendered.text()).toContain('اینترنت قطع است');
+    expect(rendered.text()).toContain('پاسخ‌ها روی همین دستگاه امن می‌مانند');
   });
 
   it('offers a goal picker when no device-local goal exists', async () => {
@@ -156,6 +164,14 @@ describe('SettingsScreen (Profile child)', () => {
     expect(choseGoal).toBe(true);
   });
 
+  it('shows the shared offline banner while Settings remains locally usable', async () => {
+    Object.defineProperty(window.navigator, 'onLine', { configurable: true, value: false });
+    rendered = await renderSettings({ goal: 'life' });
+
+    expect(rendered.text()).toContain('اینترنت قطع است');
+    expect(rendered.text()).toContain('هدف یادگیری');
+  });
+
   it('shows only informational accessibility/language rows and no fake controls', async () => {
     rendered = await renderSettings({ goal: 'travel' });
 
@@ -233,7 +249,7 @@ describe('learner Profile and Settings shell flows', () => {
     expect(rendered.text()).toContain('حساب LearnBox');
     expect(rendered.text()).toContain('زندگی در آلمان');
     expect(rendered.text()).toContain('فقط در این دستگاه');
-    expect(rendered.text()).toContain('رویدادی در صف همگام‌سازی این دستگاه نیست.');
+    expect(rendered.text()).toContain('رویدادی در صف همگام‌سازی پاسخ‌های مرور نیست.');
   });
 
   it('shows the real queued review count on Profile', async () => {
@@ -286,6 +302,21 @@ describe('learner Profile and Settings shell flows', () => {
     expect(rendered.container.querySelector('[data-testid="learnbox-profile"]')).not.toBeNull();
     // Back semantics restore keyboard focus to the row that opened Settings.
     expect(document.activeElement?.textContent?.trim().startsWith('تنظیمات')).toBe(true);
+  });
+
+  it('restores focus to the learning-goal row after editing from Settings', async () => {
+    window.localStorage.setItem(onboardingGoalKey, 'life');
+    rendered = await renderLearner();
+    await rendered.signInLocally();
+
+    await rendered.clickButton('پروفایل');
+    await rendered.clickButton('تنظیمات');
+    await rendered.clickButton('هدف یادگیری');
+    expect(rendered.text()).toContain('برای چه چیزی آلمانی می‌خوانی؟');
+
+    await rendered.clickButton('ادامه');
+    expect(rendered.container.querySelector('[data-testid="learnbox-settings"]')).not.toBeNull();
+    expect(document.activeElement?.textContent?.trim().startsWith('هدف یادگیری')).toBe(true);
   });
 
   it('keeps Profile truthful when device storage is denied', async () => {
@@ -460,10 +491,14 @@ async function clickButtonStartingWith(container: HTMLElement, label: string): P
       candidate.textContent?.trim().endsWith(label),
   );
   if (!button) throw new Error(`Button not found: ${label}`);
-  await act(async () => button.click());
+  await act(async () => {
+    button.focus();
+    button.click();
+  });
 }
 
 function installLocalStorage() {
+  Object.defineProperty(window.navigator, 'onLine', { configurable: true, value: true });
   const entries = new Map<string, string>();
   const storage: Storage = {
     get length() {

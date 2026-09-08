@@ -1,6 +1,7 @@
 import type { RefObject } from 'react';
 
 import { LearnerNav, type LearnerDestination } from './LearnerNav';
+import { NetworkStatus } from './NetworkStatus';
 import { toPersianDigits } from '../persian-digits';
 
 export type LearnerLearningGoal = 'life' | 'career' | 'travel';
@@ -17,6 +18,7 @@ interface ProfileScreenProps {
   goal: LearnerLearningGoal | null;
   pendingReviewCount: number;
   headingRef?: RefObject<HTMLHeadingElement | null>;
+  goalRowRef?: RefObject<HTMLButtonElement | null>;
   settingsRowRef?: RefObject<HTMLButtonElement | null>;
   onChooseGoal: () => void;
   onNavigate: (destination: LearnerDestination) => void;
@@ -32,6 +34,7 @@ export function ProfileScreen({
   goal,
   pendingReviewCount,
   headingRef,
+  goalRowRef,
   settingsRowRef,
   onChooseGoal,
   onNavigate,
@@ -48,6 +51,7 @@ export function ProfileScreen({
         </h1>
         <p>حساب و وضعیت یادگیری‌ات اینجا فقط از داده‌های همین دستگاه ساخته می‌شود.</p>
       </section>
+      <NetworkStatus />
       <section className="profile-section" aria-labelledby="profile-account-title">
         <h2 id="profile-account-title">حساب</h2>
         <div className="profile-card">
@@ -71,6 +75,7 @@ export function ProfileScreen({
             <button
               className="text-button profile-choose-goal"
               type="button"
+              ref={goalRowRef}
               onClick={onChooseGoal}
             >
               انتخاب هدف
@@ -89,7 +94,7 @@ export function ProfileScreen({
             </strong>
           ) : (
             <strong className="profile-fact-value profile-idle" role="status">
-              رویدادی در صف همگام‌سازی این دستگاه نیست.
+              رویدادی در صف همگام‌سازی پاسخ‌های مرور نیست.
             </strong>
           )}
           <p className="profile-card-note">

@@ -963,7 +963,7 @@ button {
 }
 .learner-nav {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(min(8ch, calc(50% - 1px)), 1fr));
   margin: auto -22px -42px;
   padding: 20px 18px 17px;
   border-radius: 28px 28px 0 0;
@@ -972,6 +972,7 @@ button {
 }
 .learner-nav button {
   position: relative;
+  min-width: 0;
   min-height: 44px;
   border: 0;
   background: transparent;
@@ -979,6 +980,7 @@ button {
   cursor: pointer;
   font-size: 16px;
   font-weight: 700;
+  overflow-wrap: anywhere;
 }
 .learner-nav-active {
   color: var(--primary) !important;
@@ -1934,9 +1936,12 @@ p {
 }
 .profile-row-url {
   direction: ltr;
+  max-width: 100%;
+  overflow-wrap: anywhere;
   text-align: right;
 }
 .profile-row-arrow {
+  flex: 0 0 auto;
   color: var(--primary);
   font-size: 20px;
   line-height: 1;

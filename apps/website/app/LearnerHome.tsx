@@ -142,6 +142,9 @@ export function LearnerHome({
   const wordSearchInputRef = useRef<HTMLInputElement>(null);
   const profileHeadingRef = useRef<HTMLHeadingElement>(null);
   const settingsHeadingRef = useRef<HTMLHeadingElement>(null);
+  const profileGoalRowRef = useRef<HTMLButtonElement>(null);
+  const settingsGoalRowRef = useRef<HTMLButtonElement>(null);
+  const learningGoalReturnTargetRef = useRef<'profile' | 'settings' | null>(null);
   const profileSettingsRowRef = useRef<HTMLButtonElement>(null);
   const profileSettingsReturnRef = useRef(false);
   const remainingTodayReviews = Math.max(0, studyItems.length - reviewedToday);
@@ -149,6 +152,16 @@ export function LearnerHome({
 
   useEffect(() => {
     if (typeof document === 'undefined') return;
+    if (onboarded && screen === 'profile' && learningGoalReturnTargetRef.current === 'profile') {
+      profileGoalRowRef.current?.focus();
+      learningGoalReturnTargetRef.current = null;
+      return;
+    }
+    if (onboarded && screen === 'settings' && learningGoalReturnTargetRef.current === 'settings') {
+      settingsGoalRowRef.current?.focus();
+      learningGoalReturnTargetRef.current = null;
+      return;
+    }
     const activeElement = document.activeElement;
     if (activeElement && activeElement !== document.body && document.contains(activeElement))
       return;
@@ -176,7 +189,7 @@ export function LearnerHome({
       return;
     }
     if (screen === 'today') startReviewRef.current?.focus();
-  }, [flipped, screen, sessionIndex]);
+  }, [flipped, onboarded, screen, sessionIndex]);
 
   useEffect(() => {
     if (!authenticated || typeof window === 'undefined') return;
@@ -317,7 +330,10 @@ export function LearnerHome({
     getDeviceStorage().setItem(onboardingGoalStorageKey, learningGoal);
     setOnboarded(true);
   };
-  const editLearningGoal = () => setOnboarded(false);
+  const editLearningGoal = () => {
+    if (screen === 'profile' || screen === 'settings') learningGoalReturnTargetRef.current = screen;
+    setOnboarded(false);
+  };
   const openSettings = () => {
     profileSettingsReturnRef.current = true;
     setScreen('settings');
@@ -614,6 +630,7 @@ export function LearnerHome({
         goal={learningGoal}
         pendingReviewCount={pendingReviewCount}
         headingRef={profileHeadingRef}
+        goalRowRef={profileGoalRowRef}
         settingsRowRef={profileSettingsRowRef}
         onChooseGoal={editLearningGoal}
         onNavigate={(destination) => setScreen(destination)}
@@ -627,6 +644,7 @@ export function LearnerHome({
       <SettingsScreen
         goal={learningGoal}
         headingRef={settingsHeadingRef}
+        goalRowRef={settingsGoalRowRef}
         onBack={closeSettings}
         onChooseGoal={editLearningGoal}
       />
