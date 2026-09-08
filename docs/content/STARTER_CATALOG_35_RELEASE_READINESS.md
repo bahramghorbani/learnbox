@@ -34,20 +34,20 @@ The canonical catalog snapshot is therefore truthful at its top-level release bo
    participant-invitation approval remain open.
 5. **Owner release approval is absent for all 35.** Existing owner confirmations cover only German
    linguistic and Persian translation dimensions; they do not authorize publication.
-6. **Evidence metadata has stale pre-approval and candidate-QA chronology that must be reconciled
-   before a release decision:**
-   - both draft batches still use top-level/item `needs_editorial_review` / `needs_review` wording
-     and source/provenance text saying German/Persian editorial review is pending, although later
-     approval events and the derived 35-item snapshot record those two dimensions as approved;
+6. **At the audit baseline, evidence metadata had stale pre-approval and candidate-QA chronology that
+   needed reconciliation before a release decision:**
+   - both draft batches used top-level/item `needs_editorial_review` / `needs_review` wording and
+     source/provenance text saying German/Persian editorial review was pending, although later approval
+     events and the derived 35-item snapshot recorded those two dimensions as approved;
    - both candidate-intake files (`start-a1-slice-candidates.json` and
-     `start-a1-catalog-35-pending-candidates.json`) still say their candidates require German and
-     Persian editorial review, although later approval events record those two dimensions;
-   - `start-a1-catalog-35-pending-provenance-ledger.json` still lists German/Persian review as
-     remaining for the 15-item batch, although those dimensions were later approved;
-   - Issue #59's V2 audio gate says 40/40 passed, but its ledger records only 6/40 listening-approved
-     V2 files, 34/40 pending/absent and four transcription mismatches. It is not evidence for the
-     V1 attested/transcription-QA set.
-     These are chronology drift, not permission to infer broader approval.
+     `start-a1-catalog-35-pending-candidates.json`) said their candidates required German and Persian
+     editorial review, although later approval events recorded those two dimensions;
+   - `start-a1-catalog-35-pending-provenance-ledger.json` listed German/Persian review as remaining for
+     the 15-item batch, although those dimensions were later approved;
+   - Issue #59's V2 audio gate said 40/40 passed, but its ledger recorded only 6/40 listening-approved
+     V2 files, 34/40 pending/absent and four transcription mismatches. It was not evidence for the V1
+     attested/transcription-QA set.
+     These were chronology drift, not permission to infer broader approval.
 
 ## Post-audit reconciliation — 2026-09-08
 
