@@ -266,11 +266,12 @@ Implementation and hardening are merged through PR #227 at `eda7630`. Dart forma
 
 ## LB-DS-042
 
-- Status: review_requested
+- Status: accepted
 - Executor: Hermes web implementation worker (M3 Web P1)
 - Base: `origin/main` at `0f4feb71dc01b878519cae58765284a6028b5daf` (LB-DS-041 post-merge reconciliation)
 - Head commit: `7b58ff2` (Profile/Settings implementation and review hardening)
-- Draft PR: https://github.com/bahramghorbani/learnbox/pull/238
+- Draft PR: #238 (merged) — https://github.com/bahramghorbani/learnbox/pull/238
+- Merge commit: `3f6db8ffc81c07afb5c576ce0469e8746a13110a`
 - Branch: `feature/m3-web-profile-settings`
 - Risk: learner-web-ui-and-device-local-state
 - Specification: `docs/design/M3_PROFILE_SETTINGS_CONTRACT.md` §§3-6, 8, 10 (M3-P1 only); `docs/product-decisions/PDR-006-PROFILE-SETTINGS-ALPHA-POLICIES.md`
@@ -279,10 +280,15 @@ Implementation and hardening are merged through PR #227 at `eda7630`. Dart forma
 - Simulator required: no
 - Draft PR required: yes
 - Merge allowed: yes
-- Blocked on: LB-DS-041 post-merge reconciliation on `origin/main`
+- Blocked on: none
 - Must not touch: sign out; account deletion; profile/server APIs; auth/session; review-sync activation; sound preference persistence (M3-S1); reminders; purchases/packs; provider/config; flags; deployment; Production; landing; Admin; Bobo assets
 - Acceptance: Web exposes Profile as the fourth persistent destination; Profile and child Settings show only real device-local goal/pending facts and truthful informational rows; no sign-out/deletion/fake account/commerce/reminder state; all relevant loading/offline/error/keyboard/focus/RTL/responsive states are tested and independently reviewed.
 - Note: the shared bottom `LearnerNav` is one component rendered on Today, Words, Progress and Profile, so `ProgressScreen.tsx` is included in the allowed paths for a single type-only widening of its `onNavigate` prop to the shared `LearnerDestination` union (no behavior change).
+
+Implementation and review hardening were accepted and merged in PR #238 at `3f6db8f`. Focused Web
+tests pass 16/16 and the full website suite passes 245/245; typecheck, production build, full Flutter
+203/203, Flutter analyze, formatting, governance validators and all seven GitHub checks passed after
+integrating Android PR #237. No activation, deployment, Production or server-boundary change was included.
 
 ## LB-DS-043
 

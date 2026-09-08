@@ -1,10 +1,11 @@
 # LB-DS-042 — Web M3-P1 Profile/Settings foundation
 
-- Status: review_requested
+- Status: accepted
 - Branch: `feature/m3-web-profile-settings`
 - Base commit: `0f4feb71dc01b878519cae58765284a6028b5daf` (`origin/main`)
 - Head commit: `7b58ff2` (Profile/Settings implementation and review hardening)
-- Draft PR: https://github.com/bahramghorbani/learnbox/pull/238
+- Draft PR: #238 (merged) — https://github.com/bahramghorbani/learnbox/pull/238
+- Merge commit: `3f6db8ffc81c07afb5c576ce0469e8746a13110a`
 - Scope completed: yes
 - Files changed: `apps/website/app/LearnerHome.tsx`, `apps/website/app/components/LearnerNav.tsx`, `apps/website/app/components/ProfileScreen.tsx` (new), `apps/website/app/components/SettingsScreen.tsx` (new), `apps/website/app/components/ProgressScreen.tsx` (type-only), `apps/website/app/globals.css`, `apps/website/test/learner-profile-settings.test.tsx` (new), `.ai/WORK_QUEUE.md`, `.ai/worker-reports/LB-DS-042.md`, `CURRENT_WORK.md`, `docs/design/DESIGN_STATUS.md`, `docs/PRODUCT_STATUS.md`
 - Checks run: focused RED-first test suite then GREEN 16/16; full website test suite 245/245 (36 files); website typecheck; `next build`; Prettier; `verify:ai-worker-queue`; `verify:documentation-governance`; `verify:ai-continuity`; `test:dashboard`; `git diff --check`; local Chrome responsive/focus/offline smoke
@@ -42,3 +43,4 @@
 ## Review
 
 - Independent re-review at `b1bb185` returned PASS with no blockers and confirmed all initial findings resolved. It identified duplicate surface-level offline banners as a non-blocking minor; `7b58ff2` removes them in favor of the existing global singleton and adds a regression test. The report also narrows the no-overflow claim to the corrected surfaces and records unchanged Today-shell debt. No secrets, credentials, phone numbers or production configuration touched.
+- After Android PR #237 merged, `origin/main` was integrated without history rewriting; conflicts in shared status documents were reconciled to retain both platforms. Web 245/245, mobile 203/203, website typecheck/build, Flutter analyze, repository validators and all seven GitHub checks passed on the integrated head before PR #238 merged at `3f6db8f`.
