@@ -1,24 +1,25 @@
 # LB-DS-048 — M3-A1 Web-only masked identity read
 
-- Status: review_requested
+- Status: accepted
 - Executor: high-reasoning Web/API identity worker (Hermes Agent, aval-ai/gpt-5.6-terra, custom provider)
 - Base commit: `5d7a71720522611e03e8e2cef7a9b16b2a16b4df`
 - Branch: `feature/m3-web-masked-identity`
-- Head commit: verify the final pushed head from PR #248 `headRefOid`; this report intentionally avoids a self-referential stale SHA.
-- Draft PR: #248 — https://github.com/bahramghorbani/learnbox/pull/248
+- Head commit: `f8563bdb4d42de8995eaef4d96f5f83b62f5d4d4` (final PR head)
+- Draft PR: #248 (merged) — https://github.com/bahramghorbani/learnbox/pull/248
+- Merge commit: `b580d599c2a2b90c5fb505b8c54245e3f582cf5c`
 - Files changed: see final scoped file list in this report.
 - Scope completed: yes
 - Bobo canonical status: unchanged
 - Product surface: Learner Web and API
 - Milestone/workstream: M3-A1 / Web learner plus backend identity read
-- Capability inventory: Profile and account center; unmerged, verified dormant implementation
-- Status change: planned/gated server identity read to unmerged verified dormant implementation; no activation
-- Documents updated: `.ai/WORK_QUEUE.md`, `CURRENT_WORK.md`, `docs/PRODUCT_STATUS.md`, `docs/design/DESIGN_STATUS.md`, this report. `PROJECT_STATE.md` intentionally unchanged because it records stable `main` facts only.
+- Capability inventory: Profile and account center; merged, verified dormant implementation
+- Status change: planned/gated server identity read to merged verified dormant implementation; no activation
+- Documents updated: `.ai/WORK_QUEUE.md`, `CURRENT_WORK.md`, `PROJECT_STATE.md`, `docs/PRODUCT_STATUS.md`, `docs/design/DESIGN_STATUS.md`, this report.
 - Rollback: leave `WEB_LEARNER_PROFILE_ENABLED` unset/false, or revert this branch. No session, data, schema or deployment state changes.
 - Secrets or production changes: none
 - Checks run: focused API repository/service 6/6; focused Web HTTP/route/client/Profile 41/41; full API 139/139; full Website 270/270; API/Website typecheck/build; `pnpm check`; `pnpm build`; migration, format, queue/documentation/continuity/dashboard validators; `git diff --check`.
-- Checks unavailable: none for the dormant implementation; fresh final-head CI follows this metadata-only correction.
-- Remaining work: fresh final-head CI and metadata verification; runtime activation and Android identity remain separately gated.
+- Checks unavailable: none for the dormant implementation.
+- Remaining work: runtime activation and Android identity remain separately gated.
 - Risks: default-off runtime only; future activation needs separate owner-approved deployment/configuration review. Route-level signed-cookie 200 test is non-blocking future hardening.
 
 ## Scope
@@ -122,7 +123,7 @@
 
 ## Independent review
 
-- Independent high-reasoning review passed the hardened code/security/product behavior and blocked only stale evidence metadata. The original four metadata findings were corrected; final-head CI and metadata reconciliation verification remain before merge.
+- Independent high-reasoning review passed the hardened code/security/product behavior. Both metadata reconciliation reviews passed after corrections, and all seven GitHub/Vercel contexts succeeded on final PR head `f8563bdb4d42de8995eaef4d96f5f83b62f5d4d4` before merge.
 
 ## Risks and remaining work
 
