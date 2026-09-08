@@ -271,7 +271,7 @@ Implementation and hardening are merged through PR #227 at `eda7630`. Dart forma
 - Base: `origin/main` at `bb6c6d6ca1b0af1b0a96a771c4f29a6aabe73d4e`
 - Branch: `docs/starter-catalog-release-readiness-audit`
 - Worktree: `/Volumes/LearnBox-Dev/LearnBox-final/lb-next-safe-checkpoint`
-- Head commit: `75bac3a` (stable audit artifact commit)
+- Head commit: PR head — verify remotely before merge (stable audit artifact commit: `75bac3a`)
 - Draft PR: #240 (draft) — https://github.com/bahramghorbani/learnbox/pull/240
 - Risk: content-release-truth-and-owner-gates
 - Specification: ADR 0013; ADR 0016; `content/packs/learnbox-start/README.md`; `docs/PRODUCT_STATUS.md`
