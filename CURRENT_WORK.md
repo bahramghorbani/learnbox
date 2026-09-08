@@ -4,6 +4,16 @@
 
 ## Active work
 
+### M3-S1 device-local pronunciation preference
+
+- **Status:** Web LB-DS-046 and Android LB-DS-047 are queued as separate, non-overlapping
+  implementation slices after the accepted M3-P1 Profile/Settings foundation. Both preserve current
+  pronunciation behavior by defaulting to enabled, store only one versioned device-local preference,
+  recover safely from denied or corrupt storage, and wire the setting to real playback rather than a
+  decorative control. Web and Android remain separate PRs and independent reviews. No server profile,
+  sign out, deletion, reminders, commerce, auth/sync activation, deployment or Production change is
+  included.
+
 ### Starter Catalog 35 release gates
 
 - **Status:** LB-DS-045 evidence reconciliation was accepted and merged in PR #241 at `95c704b`.
