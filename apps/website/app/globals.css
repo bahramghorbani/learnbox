@@ -1507,7 +1507,17 @@ p {
   color: var(--muted);
   font-size: 14px;
 }
-.text-button,
+.text-button {
+  border: 0;
+  background: transparent;
+  color: #5269d7;
+  cursor: pointer;
+  padding: 6px;
+}
+.profile-identity-retry {
+  min-width: 44px;
+  min-height: 44px;
+}
 .flip-again {
   border: 0;
   background: transparent;

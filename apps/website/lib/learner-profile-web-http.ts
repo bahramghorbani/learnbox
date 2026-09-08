@@ -28,12 +28,18 @@ export async function handleWebLearnerProfileGet(
 
   try {
     const profile = await dependencies.readLearnerProfile(subject);
-    return profile
+    return profile && isMaskedIranianPhone(profile.maskedPhone)
       ? json({ maskedPhone: profile.maskedPhone }, 200)
-      : error('identityUnavailable', 401);
+      : profile
+        ? error('serverUnavailable', 503)
+        : error('identityUnavailable', 401);
   } catch {
     return error('serverUnavailable', 503);
   }
+}
+
+function isMaskedIranianPhone(value: unknown): value is string {
+  return typeof value === 'string' && /^09\d{2}\*{3}\d{4}$/.test(value);
 }
 
 function isSecure(request: Request, development: boolean): boolean {

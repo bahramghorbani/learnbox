@@ -3,6 +3,17 @@ export type WebLearnerProfileResult =
 
 const maskedIranianPhone = /^09\d{2}\*{3}\d{4}$/;
 
+function isExactProfileResponse(value: unknown): value is { maskedPhone: string } {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    Object.keys(value).length === 1 &&
+    Object.hasOwn(value, 'maskedPhone') &&
+    typeof (value as { maskedPhone?: unknown }).maskedPhone === 'string' &&
+    maskedIranianPhone.test((value as { maskedPhone: string }).maskedPhone)
+  );
+}
+
 export async function fetchWebLearnerProfile(
   fetchFn: typeof fetch = fetch,
 ): Promise<WebLearnerProfileResult> {
@@ -20,13 +31,8 @@ export async function fetchWebLearnerProfile(
     return response.status === 401 ? { status: 'unauthorized' } : { status: 'unavailable' };
   try {
     const body = (await response.json()) as unknown;
-    if (
-      typeof body !== 'object' ||
-      body === null ||
-      !maskedIranianPhone.test((body as { maskedPhone?: unknown }).maskedPhone as string)
-    )
-      return { status: 'unavailable' };
-    return { status: 'ok', maskedPhone: (body as { maskedPhone: string }).maskedPhone };
+    if (!isExactProfileResponse(body)) return { status: 'unavailable' };
+    return { status: 'ok', maskedPhone: body.maskedPhone };
   } catch {
     return { status: 'unavailable' };
   }

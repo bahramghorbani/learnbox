@@ -17,7 +17,7 @@ describe('web learner profile client', () => {
     );
   });
 
-  it('fails closed for unauthorized, malformed, and network outcomes', async () => {
+  it('fails closed for unauthorized, malformed, non-string, extra-field, and network outcomes', async () => {
     expect(
       (
         await fetchWebLearnerProfile(
@@ -25,16 +25,21 @@ describe('web learner profile client', () => {
         )
       ).status,
     ).toBe('unauthorized');
-    expect(
-      (
-        await fetchWebLearnerProfile(
-          vi.fn(
-            async () =>
-              ({ status: 200, json: async () => ({ maskedPhone: '+989121234567' }) }) as Response,
-          ),
-        )
-      ).status,
-    ).toBe('unavailable');
+    for (const body of [
+      { maskedPhone: '+989****4567' },
+      { maskedPhone: ['0912***4567'] },
+      { maskedPhone: { value: '0912***4567' } },
+      { maskedPhone: 91234567 },
+      { maskedPhone: '0912***4567', rawPhone: '09121234567' },
+    ]) {
+      expect(
+        (
+          await fetchWebLearnerProfile(
+            vi.fn(async () => ({ status: 200, json: async () => body }) as Response),
+          )
+        ).status,
+      ).toBe('unavailable');
+    }
     expect(
       (
         await fetchWebLearnerProfile(

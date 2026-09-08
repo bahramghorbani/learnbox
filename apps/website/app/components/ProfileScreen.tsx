@@ -58,7 +58,10 @@ export function ProfileScreen({
         <h1 id="profile-title" tabIndex={-1} ref={headingRef}>
           پروفایل
         </h1>
-        <p>حساب و وضعیت یادگیری‌ات اینجا فقط از داده‌های همین دستگاه ساخته می‌شود.</p>
+        <p>
+          شناسهٔ حساب از سرور می‌آید؛ هدف یادگیری و وضعیت پاسخ‌های در انتظار بررسی فقط روی این
+          دستگاه نگه‌داری می‌شوند.
+        </p>
       </section>
       <section className="profile-section" aria-labelledby="profile-account-title">
         <h2 id="profile-account-title">حساب</h2>
@@ -67,13 +70,19 @@ export function ProfileScreen({
             {identity.status === 'ok' ? identity.maskedPhone : 'حساب LearnBox'}
           </strong>
           {identity.status === 'loading' ? (
-            <p className="profile-card-note">در حال بازیابی مشخصات حساب…</p>
+            <p className="profile-card-note" role="status">
+              در حال بازیابی مشخصات حساب…
+            </p>
           ) : null}
           {identity.status === 'error' ? (
             <p className="profile-card-note" role="alert">
               بازیابی مشخصات حساب ممکن نشد.
               {onRetryIdentity ? (
-                <button className="text-button" type="button" onClick={onRetryIdentity}>
+                <button
+                  className="text-button profile-identity-retry"
+                  type="button"
+                  onClick={onRetryIdentity}
+                >
                   تلاش دوباره
                 </button>
               ) : null}

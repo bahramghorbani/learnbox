@@ -4,7 +4,7 @@
 - Executor: high-reasoning Web/API identity worker (Hermes Agent, aval-ai/gpt-5.6-terra, custom provider)
 - Base commit: `5d7a71720522611e03e8e2cef7a9b16b2a16b4df`
 - Branch: `feature/m3-web-masked-identity`
-- Head commit: pending final documentation commit
+- Head commit: pending final hardening commit
 - Draft PR: #248 — https://github.com/bahramghorbani/learnbox/pull/248
 - Files changed: see final scoped file list in this report.
 - Scope completed: yes
@@ -16,7 +16,7 @@
 - Documents updated: `.ai/WORK_QUEUE.md`, `CURRENT_WORK.md`, `docs/PRODUCT_STATUS.md`, `docs/design/DESIGN_STATUS.md`, this report. `PROJECT_STATE.md` intentionally unchanged because it records stable `main` facts only.
 - Rollback: leave `WEB_LEARNER_PROFILE_ENABLED` unset/false, or revert this branch. No session, data, schema or deployment state changes.
 - Secrets or production changes: none
-- Checks run: focused API repository/service 6/6; focused Web HTTP/route/client/Profile 36/36; full API 139/139; full Website 265/265; API/Website typecheck/build; `pnpm check`; `pnpm build`; migration, format, queue/documentation/continuity/dashboard validators; `git diff --check`; RTL responsive smoke.
+- Checks run: focused API repository/service 6/6; focused Web HTTP/route/client/Profile 41/41; full API 139/139; full Website 270/270; API/Website typecheck/build; `pnpm check`; `pnpm build`; migration, format, queue/documentation/continuity/dashboard validators; `git diff --check`.
 - Checks unavailable: independent high-reasoning security/product review.
 - Remaining work: independent high-reasoning security/product review; runtime activation and Android identity remain separately gated.
 - Risks: default-off runtime only; future activation needs separate owner-approved deployment/configuration review. Route-level signed-cookie 200 test is non-blocking future hardening.
@@ -74,12 +74,41 @@
    - GREEN: same command after identity state rendering.
    - Evidence: `31 passed`.
 
+## Sol review hardening — BLOCK received, addressed; final re-review required
+
+1. HTTP output validation
+   - RED: `pnpm --filter @learnbox/website exec vitest run test/learner-profile-web-http.test.ts`
+   - Evidence: injected raw `09121234567` returned `200`; test expected generic no-store `503`.
+   - GREEN: same command after exact `/^09\d{2}\*{3}\d{4}$/` runtime boundary validation.
+   - Evidence: `3 passed`; raw, malformed, and array values return `{ error: 'serverUnavailable' }` with `cache-control: no-store`.
+
+2. Client response schema
+   - RED: `pnpm --filter @learnbox/website exec vitest run test/learner-profile-web-client.test.ts`
+   - Evidence: response with extra `rawPhone` returned `ok`; test expected `unavailable`.
+   - GREEN: same command after exact one-key `{ maskedPhone: string }` schema check and `typeof` guard.
+   - Evidence: `2 passed`; arrays, objects, numbers, malformed values, and extra fields fail closed.
+
+3. Identity composition and lifecycle
+   - RED: `pnpm --filter @learnbox/website exec vitest run test/learner-profile-settings.test.tsx -t 'keeps disabled identity composition neutral'`
+   - Evidence: disabled client composition still fetched `/api/learner/profile`.
+   - GREEN: same command after default-off `NEXT_PUBLIC_LEARNBOX_PROFILE_IDENTITY_ENABLED` client gate.
+   - Evidence: `1 passed`; disabled/unset stays neutral and exposes no retry.
+   - GREEN transition evidence: `pnpm --filter @learnbox/website exec vitest run test/learner-profile-settings.test.tsx -t 'clears identity offline'` → `1 passed`; offline clears identity, reconnect rereads only when Profile remains eligible.
+   - GREEN stale-read evidence: `pnpm --filter @learnbox/website exec vitest run test/learner-profile-settings.test.tsx -t 'ignores a deferred identity completion'` → `1 passed`; deferred completion after navigation cannot restore identity.
+
+4. Profile truthfulness and accessibility
+   - RED: `pnpm --filter @learnbox/website exec vitest run test/learner-profile-settings.test.tsx -t 'shows the neutral account label'`
+   - Evidence: missing required server-vs-device-local distinction.
+   - GREEN: same command after revised Persian intro copy.
+   - Evidence: `1 passed`.
+   - Loading status semantics: focused assertion initially failed because loading note had no `role="status"`; after adding scoped status semantics, `pnpm --filter @learnbox/website exec vitest run test/learner-profile-settings.test.tsx -t 'announces identity loading'` passed `1` test. Existing global NetworkStatus count remains one. Retry target has `min-width` and `min-height` `44px`.
+
 ## Final verification
 
 - Focused API repository/service: `6 passed`.
-- Focused Web HTTP/route/client/Profile: `36 passed`.
+- Focused Web HTTP/route/client/Profile: `41 passed`.
 - Full API: `31 files, 139 passed`; API build and typecheck passed.
-- Full Website: `39 files, 265 passed`; Website typecheck and production build passed.
+- Full Website: `39 files, 270 passed`; Website typecheck and production build passed.
 - `pnpm check`: passed.
 - `pnpm build`: passed.
 - `node scripts/validate-migrations.mjs`: `Validated 16 migration(s).`
@@ -93,7 +122,7 @@
 
 ## Unavailable checks
 
-- Independent high-reasoning security/product review: unavailable. Independent review ran on a lower tier, so it is not evidence for this required gate. Required merge-blocking review remains.
+- Independent high-reasoning security/product re-review: required. Sol review returned BLOCK; all listed hardening changes and focused/full local checks are recorded above, but final re-review remains a merge blocker.
 
 ## Risks and remaining work
 

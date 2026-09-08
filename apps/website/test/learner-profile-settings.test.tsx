@@ -64,6 +64,7 @@ describe('ProfileScreen', () => {
     // Goal comes from device-local storage only.
     expect(rendered.text()).toContain('سفر و ارتباط');
     expect(rendered.text()).toContain('فقط در این دستگاه');
+    expect(rendered.text()).toContain('شناسهٔ حساب از سرور می‌آید');
   });
 
   it('keeps local facts while identity loads or fails and exposes one bounded retry', async () => {
@@ -81,6 +82,18 @@ describe('ProfileScreen', () => {
     expect(rendered.text()).toContain('بازیابی مشخصات حساب ممکن نشد.');
     await rendered.clickButton('تلاش دوباره');
     expect(retry).toHaveBeenCalledTimes(1);
+  });
+
+  it('announces identity loading without adding a global live region', async () => {
+    rendered = await renderProfile({
+      goal: 'travel',
+      pendingReviewCount: 0,
+      identity: { status: 'loading' },
+    });
+
+    expect(rendered.container.querySelector('.profile-card-note')?.getAttribute('role')).toBe(
+      'status',
+    );
   });
 
   it('shows the pending review count only when the local queue is non-empty', async () => {
@@ -358,6 +371,125 @@ describe('learner Profile and Settings shell flows', () => {
     rendered = undefined;
     vi.unstubAllGlobals();
     vi.useRealTimers();
+  });
+
+  it('ignores a deferred identity completion after navigation', async () => {
+    window.localStorage.setItem(onboardingGoalKey, 'life');
+    let resolveProfile: ((response: Response) => void) | undefined;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
+        const url = String(input);
+        if (init?.method === 'POST' && url === '/api/auth/otp/request')
+          return Promise.resolve({
+            status: 201,
+            json: async () => ({
+              challengeId: 'profile-deferred-challenge',
+              expiresAt: '2026-08-08T12:05:00.000Z',
+              resendAvailableAt: '2026-08-08T12:01:00.000Z',
+            }),
+          } as Response);
+        if (init?.method === 'POST' && url === '/api/auth/otp/verify')
+          return Promise.resolve({ status: 204, json: async () => null } as Response);
+        if (url === '/api/learner/state')
+          return Promise.resolve({ status: 401, json: async () => ({}) } as Response);
+        if (url === '/api/learner/profile')
+          return new Promise<Response>((resolve) => {
+            resolveProfile = resolve;
+          });
+        return Promise.reject(new Error(`Unexpected fetch: ${init?.method} ${url}`));
+      }),
+    );
+    rendered = await renderLearner({ otpUiFlag: 'true', profileIdentityFlag: 'true' });
+    await rendered.signInLocally();
+    await rendered.clickButton('پروفایل');
+    await rendered.clickButton('امروز');
+    await act(async () => {
+      resolveProfile?.({
+        status: 200,
+        json: async () => ({ maskedPhone: '0912***4567' }),
+      } as Response);
+      await Promise.resolve();
+    });
+
+    expect(rendered.text()).not.toContain('0912***4567');
+  });
+
+  it('clears identity offline and rereads it only on reconnect while eligible', async () => {
+    window.localStorage.setItem(onboardingGoalKey, 'life');
+    let profileReads = 0;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+        const url = String(input);
+        if (init?.method === 'POST' && url === '/api/auth/otp/request')
+          return {
+            status: 201,
+            json: async () => ({
+              challengeId: 'profile-transition-challenge',
+              expiresAt: '2026-08-08T12:05:00.000Z',
+              resendAvailableAt: '2026-08-08T12:01:00.000Z',
+            }),
+          } as Response;
+        if (init?.method === 'POST' && url === '/api/auth/otp/verify')
+          return { status: 204, json: async () => null } as Response;
+        if (url === '/api/learner/state')
+          return { status: 401, json: async () => ({}) } as Response;
+        if (url === '/api/learner/profile') {
+          profileReads += 1;
+          return {
+            status: 200,
+            json: async () => ({ maskedPhone: profileReads === 1 ? '0912***4567' : '0913***4567' }),
+          } as Response;
+        }
+        throw new Error(`Unexpected fetch: ${init?.method} ${url}`);
+      }),
+    );
+    rendered = await renderLearner({ otpUiFlag: 'true', profileIdentityFlag: 'true' });
+    await rendered.signInLocally();
+    await rendered.clickButton('پروفایل');
+    expect(rendered.text()).toContain('0912***4567');
+
+    Object.defineProperty(window.navigator, 'onLine', { configurable: true, value: false });
+    await act(async () => window.dispatchEvent(new Event('offline')));
+    expect(rendered.text()).toContain('حساب LearnBox');
+    expect(rendered.text()).toContain('مشخصات حساب در دسترس نیست.');
+
+    Object.defineProperty(window.navigator, 'onLine', { configurable: true, value: true });
+    await act(async () => window.dispatchEvent(new Event('online')));
+    expect(profileReads).toBe(2);
+    expect(rendered.text()).toContain('0913***4567');
+  });
+
+  it('keeps disabled identity composition neutral without fetching', async () => {
+    window.localStorage.setItem(onboardingGoalKey, 'life');
+    const profileFetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      if (init?.method === 'POST' && url === '/api/auth/otp/request')
+        return {
+          status: 201,
+          json: async () => ({
+            challengeId: 'profile-test-challenge',
+            expiresAt: '2026-08-08T12:05:00.000Z',
+            resendAvailableAt: '2026-08-08T12:01:00.000Z',
+          }),
+        } as Response;
+      if (init?.method === 'POST' && url === '/api/auth/otp/verify')
+        return { status: 204, json: async () => null } as Response;
+      if (url === '/api/learner/profile')
+        return { status: 200, json: async () => ({ maskedPhone: '0912***4567' }) } as Response;
+      throw new Error(`Unexpected fetch: ${init?.method} ${url}`);
+    });
+    vi.stubGlobal('fetch', profileFetch);
+    rendered = await renderLearner({ otpUiFlag: 'true', profileIdentityFlag: 'false' });
+    await rendered.signInLocally();
+    await rendered.clickButton('پروفایل');
+
+    expect(profileFetch.mock.calls.filter(([url]) => url === '/api/learner/profile')).toHaveLength(
+      0,
+    );
+    expect(rendered.text()).toContain('مشخصات حساب در دسترس نیست.');
+    expect(rendered.text()).not.toContain('تلاش دوباره');
   });
 
   it('reaches Profile from the fourth nav destination with the real goal', async () => {
@@ -709,6 +841,7 @@ async function renderLearner(
     inviteFlag: string;
     otpUiFlag: string;
     privateMediaFlag: string;
+    profileIdentityFlag: string;
   }>,
 ): Promise<RenderedLearner> {
   const container = document.createElement('div');
@@ -724,6 +857,7 @@ async function renderLearner(
     hostname: 'localhost',
     otpUiFlag: 'false',
     privateMediaFlag: 'false',
+    profileIdentityFlag: 'false',
     inviteFlag: 'false',
     ...overrides,
   };

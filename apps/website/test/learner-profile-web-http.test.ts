@@ -28,6 +28,20 @@ describe('web learner profile HTTP boundary', () => {
     expect(deps.readLearnerProfile).toHaveBeenCalledWith(subject);
   });
 
+  it('fails closed when dependency injects raw, malformed, or non-string identity', async () => {
+    for (const maskedPhone of ['09121234567', '0912**4567', ['0912***4567']]) {
+      const response = await handleWebLearnerProfileGet(
+        new Request('https://learnbox.example/api/learner/profile'),
+        { readLearnerProfile: vi.fn(async () => ({ maskedPhone }) as never) },
+        () => subject,
+      );
+
+      expect(response.status).toBe(503);
+      expect(response.headers.get('cache-control')).toBe('no-store');
+      expect(await response.json()).toEqual({ error: 'serverUnavailable' });
+    }
+  });
+
   it('withholds identity for missing learner and server failure', async () => {
     const missing = await handleWebLearnerProfileGet(
       new Request('https://learnbox.example/api/learner/profile'),
