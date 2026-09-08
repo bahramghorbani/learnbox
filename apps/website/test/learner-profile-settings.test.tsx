@@ -1,5 +1,7 @@
 // @vitest-environment jsdom
 
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { act, createElement, Fragment, type FunctionComponent } from 'react';
 import { createRoot } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -10,6 +12,19 @@ import { SettingsScreen } from '../app/components/SettingsScreen';
 
 const reviewSyncKey = 'learnbox:review-sync:v1:local-prototype';
 const onboardingGoalKey = 'learnbox:onboarding-goal:v1:local-prototype';
+
+it('keeps one global NetworkStatus instead of duplicating fixed live regions on learner surfaces', () => {
+  const networkStatusRenderCount = [
+    resolve(process.cwd(), 'app/layout.tsx'),
+    resolve(process.cwd(), 'app/components/ProfileScreen.tsx'),
+    resolve(process.cwd(), 'app/components/SettingsScreen.tsx'),
+  ].reduce(
+    (count, file) => count + (readFileSync(file, 'utf8').match(/<NetworkStatus\b/g)?.length ?? 0),
+    0,
+  );
+
+  expect(networkStatusRenderCount).toBe(1);
+});
 
 describe('ProfileScreen', () => {
   let rendered: Rendered | undefined;
@@ -57,14 +72,6 @@ describe('ProfileScreen', () => {
     expect(rendered.text()).toContain('رویدادی در صف همگام‌سازی پاسخ‌های مرور نیست.');
     // The device-local truth note never claims a server-synced state.
     expect(rendered.text()).toContain('همگام‌سازی خودکار هنوز فعال نیست');
-  });
-
-  it('shows the shared offline banner while Profile remains locally usable', async () => {
-    Object.defineProperty(window.navigator, 'onLine', { configurable: true, value: false });
-    rendered = await renderProfile({ goal: 'life', pendingReviewCount: 0 });
-
-    expect(rendered.text()).toContain('اینترنت قطع است');
-    expect(rendered.text()).toContain('پاسخ‌ها روی همین دستگاه امن می‌مانند');
   });
 
   it('offers a goal picker when no device-local goal exists', async () => {
@@ -162,14 +169,6 @@ describe('SettingsScreen (Profile child)', () => {
     expect(rendered.text()).toContain('فقط در این دستگاه');
     await rendered.clickButton('هدف یادگیری');
     expect(choseGoal).toBe(true);
-  });
-
-  it('shows the shared offline banner while Settings remains locally usable', async () => {
-    Object.defineProperty(window.navigator, 'onLine', { configurable: true, value: false });
-    rendered = await renderSettings({ goal: 'life' });
-
-    expect(rendered.text()).toContain('اینترنت قطع است');
-    expect(rendered.text()).toContain('هدف یادگیری');
   });
 
   it('shows only informational accessibility/language rows and no fake controls', async () => {

@@ -1,7 +1,6 @@
 import type { RefObject } from 'react';
 
 import { learnerGoalTitle, type LearnerLearningGoal } from './ProfileScreen';
-import { NetworkStatus } from './NetworkStatus';
 
 interface SettingsScreenProps {
   goal: LearnerLearningGoal;
@@ -34,7 +33,6 @@ export function SettingsScreen({
         </h1>
         <p>تنظیمات این نسخه فقط روی همین دستگاه اعمال می‌شود.</p>
       </section>
-      <NetworkStatus />
       <div className="settings-rows">
         <button
           className="settings-row settings-row-action"

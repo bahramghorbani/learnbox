@@ -1,7 +1,6 @@
 import type { RefObject } from 'react';
 
 import { LearnerNav, type LearnerDestination } from './LearnerNav';
-import { NetworkStatus } from './NetworkStatus';
 import { toPersianDigits } from '../persian-digits';
 
 export type LearnerLearningGoal = 'life' | 'career' | 'travel';
@@ -51,7 +50,6 @@ export function ProfileScreen({
         </h1>
         <p>حساب و وضعیت یادگیری‌ات اینجا فقط از داده‌های همین دستگاه ساخته می‌شود.</p>
       </section>
-      <NetworkStatus />
       <section className="profile-section" aria-labelledby="profile-account-title">
         <h2 id="profile-account-title">حساب</h2>
         <div className="profile-card">
