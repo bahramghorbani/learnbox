@@ -190,7 +190,10 @@ OTP, token, free-text support content, vocabulary content or local queue payload
 2. **M3-S1 — local Settings foundation:** versioned sound preference and device/system information,
    storage-denial/corrupt-record recovery, Web/Android parity.
 3. **M3-A1 — account profile read:** separately reviewed authenticated endpoint and masked identity
-   presentation; no auth redesign.
+   presentation; no auth redesign. PDR-007 authorizes only a Web implementation: the signed HttpOnly
+   learner cookie supplies canonical `users.id`, masking happens on the server, and only the masked
+   phone may reach the browser after a successful read. Android remains deferred until its native
+   identity gateway exists.
 4. **M3-A2 — account-scoped local data and sign out:** security-sensitive storage partition,
    pending-event policy, session revocation and cross-account isolation tests.
 5. Reminder, account deletion, purchases/packs and server preference synchronization remain separate
@@ -199,6 +202,11 @@ OTP, token, free-text support content, vocabulary content or local queue payload
 P1 and S1 may proceed in parallel only if their shared navigation/theme paths do not overlap. A1 and
 A2 are serial security-sensitive work. No slice may activate Production, payments, notification
 providers or dormant review-sync flags.
+
+**Owner decision M3-D-4 — approved 2026-09-08:** implement M3-A1 as the fail-closed Web-only masked
+identity slice in PDR-007. Use a dedicated default-off runtime boundary; do not return raw phone,
+first name, internal IDs or session data, and do not broaden this approval to Android, profile edits,
+auth/session changes, deployment or activation.
 
 ## 11. Acceptance gate for implementation readiness
 
