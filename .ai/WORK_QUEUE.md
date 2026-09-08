@@ -319,9 +319,9 @@ Preview/Production or publication state changed.
 
 ## LB-DS-046
 
-- Status: ready
+- Status: accepted
 - Executor: Hermes Web implementation worker (M3-S1 Web)
-- Base: `origin/main` after the M3-S1 coordination PR; record the exact base SHA before implementation
+- Base: `origin/main` at `7dba5adab77b0b90a228ac8c7aabab0bc54e3830` (M3-S1 coordination merge)
 - Branch: `feature/m3-web-sound-preference`
 - Worktree: `/Volumes/LearnBox-Dev/LearnBox-final/lb-m3-web-sound-preference`
 - Risk: learner-web-device-local-preference-and-audio-gating
@@ -331,9 +331,16 @@ Preview/Production or publication state changed.
 - Simulator required: no
 - Draft PR required: yes
 - Merge allowed: yes
-- Blocked on: coordination PR merge and exact-base capture only
+- Blocked on: none; merged in PR #244 at `b5b07fca2fe102c0d8f68880d25154fc35df7d76`
 - Must not touch: Android/mobile; Profile sound rows; sign out; account deletion; profile/server APIs; auth/session; review-sync activation; reminders; purchases/packs; provider/config; flags; deployment; Production; landing; Admin; Bobo assets; learning-engine package
 - Acceptance: Web persists one versioned device-local pronunciation preference with default-on compatibility; malformed or unknown records recover to enabled without touching unrelated keys; denied durable storage remains usable through the existing memory fallback; Settings exposes an accessible labelled switch and save status; disabled sound prevents Audio and speech-synthesis calls; no server, sync, auth or release claim is introduced.
+
+Web M3-S1 merged in PR #244 at `b5b07fca2fe102c0d8f68880d25154fc35df7d76`. Strict RED→GREEN evidence
+(focused Profile/Settings suite 30/30, full Web suite 259/259, website typecheck and production
+build) was independently re-run on head `2dcf2ffbf5aeef9bfb4e5b6082a97cad8052215f`; the independent
+code/product review returned PASS with no blocking findings. All seven GitHub/Vercel contexts on
+that reviewed head completed successfully. The final metadata delta also passed independent review,
+and all seven final-head CI/Vercel contexts completed successfully before merge.
 
 ## LB-DS-047
 
@@ -344,14 +351,16 @@ Preview/Production or publication state changed.
 - Worktree: `/Volumes/LearnBox-Dev/LearnBox-final/lb-m3-android-sound-preference`
 - Risk: learner-android-device-local-preference-storage-and-audio-gating
 - Specification: `docs/design/M3_PROFILE_SETTINGS_CONTRACT.md` §§3-6, 8, 10 (M3-S1 only); `docs/product-decisions/PDR-006-PROFILE-SETTINGS-ALPHA-POLICIES.md`
-- Allowed paths: `apps/mobile/lib/app.dart`; `apps/mobile/lib/features/review/learner_home_shell.dart`; `apps/mobile/lib/features/review/today_screen.dart`; `apps/mobile/lib/features/review/review_screen.dart`; `apps/mobile/lib/features/review/settings_screen.dart`; `apps/mobile/lib/features/review/sound_preference_store.dart`; `apps/mobile/test/sound_preference_store_test.dart`; `apps/mobile/test/learner_profile_settings_test.dart`; `apps/mobile/test/mobile_learning_loop_test.dart`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-047.md`; `CURRENT_WORK.md`; `docs/design/DESIGN_STATUS.md`; `docs/PRODUCT_STATUS.md`
+- Allowed paths: `apps/mobile/lib/app.dart`; `apps/mobile/lib/features/review/learner_home_shell.dart`; `apps/mobile/lib/features/review/today_screen.dart`; `apps/mobile/lib/features/review/review_screen.dart`; `apps/mobile/lib/features/review/settings_screen.dart`; `apps/mobile/lib/features/review/sound_preference_store.dart`; `apps/mobile/test/sound_preference_store_test.dart`; `apps/mobile/test/learner_profile_settings_test.dart`; `apps/mobile/test/mobile_learning_loop_test.dart`; `apps/mobile/test/mobile_visual_parity_test.dart`; `apps/mobile/test/today_screen_states_test.dart`; `apps/mobile/test/mobile_auth_composition_test.dart`; `apps/mobile/test/support/mobile_test_app.dart`; `apps/mobile/test/support/sound_preference_test_storage.dart`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-047.md`; `CURRENT_WORK.md`; `docs/design/DESIGN_STATUS.md`; `docs/PRODUCT_STATUS.md`
 - Required checks: RED/GREEN sound-preference store and audio-gate tests; focused Flutter Settings/learning-loop tests; full Flutter tests; Flutter analyze; Dart format; debug APK build; queue/documentation/continuity/dashboard validators; `git diff --check`; Android emulator RTL/accessibility review; independent code/product review
 - Simulator required: yes
 - Draft PR required: yes
 - Merge allowed: yes
-- Blocked on: coordination PR merge and exact-base capture only
+- Blocked on: Draft PR, independent code/product review and final-head CI
 - Must not touch: Web; native Android host/manifest/Gradle; iOS; existing auth/sync/personal-vocabulary stores; sign out; account deletion; profile/server APIs; reminders; purchases/packs; provider/config; flags; deployment; Production; landing; Admin; Bobo assets
 - Acceptance: Android persists one versioned device-local pronunciation preference in a dedicated existing secure-storage-backed store with default-on compatibility; corrupt v1 data self-heals, unknown newer versions remain untouched, and storage failures never crash; Settings exposes an accessible labelled switch with save/revert status; disabled sound prevents `PronunciationPlayer.playAsset`; no new dependency, server, sync, auth or release claim is introduced.
+
+Supervisor allowlist amendment: the five additional `apps/mobile/test` helper/support paths are approved only for hermetic test-store injection after the required full suite exposed 39 pending-timer failures from the real secure-storage channel. They do not widen product scope or production code.
 
 ## LB-DS-042
 

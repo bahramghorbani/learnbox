@@ -26,6 +26,11 @@ import {
 import { LearnerNav } from './components/LearnerNav';
 import { ProfileScreen } from './components/ProfileScreen';
 import { SettingsScreen } from './components/SettingsScreen';
+import {
+  loadSoundPreference,
+  saveSoundPreference,
+  type SoundPreferenceDurability,
+} from './sound-preference';
 import { TodayScreen } from './components/TodayScreen';
 import { AuthGate } from './components/AuthGate';
 import { InviteGate } from './components/InviteGate';
@@ -109,6 +114,7 @@ export function LearnerHome({
   const [authenticated, setAuthenticated] = useState(false);
   const [onboarded, setOnboarded] = useState(false);
   const [learningGoal, setLearningGoal] = useState<LearningGoal>('life');
+  const [soundEnabled, setSoundEnabled] = useState(true);
   const [wordQuery, setWordQuery] = useState('');
   const [wordSourceFilter, setWordSourceFilter] = useState<WordSourceFilter>('all');
   const [personalWords, setPersonalWords] = useState<PersonalVocabularyEntry[]>([]);
@@ -241,6 +247,10 @@ export function LearnerHome({
   }, []);
 
   useEffect(() => {
+    setSoundEnabled(loadSoundPreference());
+  }, []);
+
+  useEffect(() => {
     if (!personalWordsLoaded) return;
     savePersonalVocabulary(getDeviceStorage(), personalVocabularyStorageKey, personalWords);
   }, [personalWords, personalWordsLoaded]);
@@ -339,6 +349,13 @@ export function LearnerHome({
     setScreen('settings');
   };
   const closeSettings = () => setScreen('profile');
+  const handleToggleSound = useCallback(
+    async (enabled: boolean): Promise<SoundPreferenceDurability> => {
+      setSoundEnabled(enabled);
+      return saveSoundPreference(enabled);
+    },
+    [],
+  );
   const queuePersonalVocabularySync = (entry: PersonalVocabularyEntry) => {
     if (typeof window === 'undefined') return;
     const storage = getDeviceStorage();
@@ -645,8 +662,10 @@ export function LearnerHome({
         goal={learningGoal}
         headingRef={settingsHeadingRef}
         goalRowRef={settingsGoalRowRef}
+        soundEnabled={soundEnabled}
         onBack={closeSettings}
         onChooseGoal={editLearningGoal}
+        onToggleSound={handleToggleSound}
       />
     );
   }
@@ -714,7 +733,11 @@ export function LearnerHome({
               <h1 lang="de" dir="ltr">
                 {currentItem.german}
               </h1>
-              <PronunciationButton text={currentItem.german} src={mediaSources.wordAudio} />
+              <PronunciationButton
+                text={currentItem.german}
+                src={mediaSources.wordAudio}
+                soundEnabled={soundEnabled}
+              />
               <StartMediaVisual contentId={currentItem.id} mode={startMediaMode} />
               <p className="hint" lang="de" dir="ltr">
                 {currentItem.germanDefinition}
@@ -736,6 +759,7 @@ export function LearnerHome({
               <PronunciationButton
                 text={currentItem.exampleGerman}
                 src={mediaSources.sentenceAudio}
+                soundEnabled={soundEnabled}
               />
               <p className="instruction">چقدر یادت آمد؟</p>
               <div

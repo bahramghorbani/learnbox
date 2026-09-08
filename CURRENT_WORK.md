@@ -6,18 +6,19 @@
 
 ### M3-S1 device-local pronunciation preference
 
-- **Status:** Web LB-DS-046 and Android LB-DS-047 cover M3-S1 as separate, non-overlapping
-  slices on top of the accepted M3-P1 Profile/Settings foundation. Both preserve current
-  pronunciation behavior by defaulting to enabled, store only one versioned device-local
-  preference, recover safely from denied or corrupt storage, and wire the setting to real
-  playback rather than a decorative control. Web and Android remain separate PRs and independent
-  reviews. No server profile, sign out, deletion, reminders, commerce, auth/sync activation,
-  deployment or Production change is included. Web LB-DS-046 remains queued (`ready`) in
-  `.ai/WORK_QUEUE.md`.
-- **Android LB-DS-047 (this branch):** implemented and local verification complete on
-  `feature/m3-android-sound-preference` at base `7dba5ad`; report in
-  `.ai/worker-reports/LB-DS-047.md`; task status `review_requested`. Awaiting independent review
-  before merge.
+- **Status:** Web LB-DS-046 merged in PR #244 at `b5b07fc`. Web persists one versioned device-local
+  pronunciation preference defaulting to enabled, recovers malformed or unknown records to enabled
+  without touching unrelated keys, keeps the Settings toggle usable through the open-session memory
+  fallback when durable storage is denied (labelled non-durable), and gates real playback: when the
+  preference is off both the Audio path and speechSynthesis are disabled. Focused Profile/Settings
+  suite 30/30 and the full Web suite 259/259 pass with website typecheck/build. Real-browser QA at
+  390 px confirmed no horizontal overflow, durable OFF persistence and a disabled pronunciation
+  control in the review flow. Independent code review and the final metadata-delta review returned
+  PASS; all seven final-head CI/Vercel contexts succeeded. Android LB-DS-047 is implemented on this
+  branch as the separate secure-storage-backed slice; its focused tests and full Flutter suite
+  (226/226), analyze, format, debug APK and emulator persistence QA pass. Independent Android review
+  remains before merge. No server profile, sign out, deletion, reminders, commerce, auth/sync
+  activation, deployment or Production change is included.
 
 ### Starter Catalog 35 release gates
 
