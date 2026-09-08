@@ -356,7 +356,7 @@ and all seven final-head CI/Vercel contexts completed successfully before merge.
 - Simulator required: yes
 - Draft PR required: yes
 - Merge allowed: yes
-- Blocked on: Draft PR, independent code/product review and final-head CI
+- Blocked on: independent code/product review and final-head CI for Draft PR #245
 - Must not touch: Web; native Android host/manifest/Gradle; iOS; existing auth/sync/personal-vocabulary stores; sign out; account deletion; profile/server APIs; reminders; purchases/packs; provider/config; flags; deployment; Production; landing; Admin; Bobo assets
 - Acceptance: Android persists one versioned device-local pronunciation preference in a dedicated existing secure-storage-backed store with default-on compatibility; corrupt v1 data self-heals, unknown newer versions remain untouched, and storage failures never crash; Settings exposes an accessible labelled switch with save/revert status; disabled sound prevents `PronunciationPlayer.playAsset`; no new dependency, server, sync, auth or release claim is introduced.
 
