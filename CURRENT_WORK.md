@@ -6,8 +6,9 @@
 
 ### LB-DS-049 — persisted Start Pack review (Admin, PDR-008)
 
-- **Status:** clean replacement implementation and validation in progress on
-  `feature/admin-starter-review-persistence-clean`; it replaces blocked draft PR #251. Migration
+- **Status:** implementation complete; **review_requested** in clean draft PR #252
+  (https://github.com/bahramghorbani/learnbox/pull/252) at implementation head `46f5115` on
+  `feature/admin-starter-review-persistence-clean`; it replaces closed, unmerged PR #251. Migration
   0017 ingests all 35 committed Start
   Pack drafts as canonical `cards` + immutable version-1 `card_versions` rows
   (`status='needs_review'`) with exactly six pending `content_review_checks` each, using fixed
