@@ -283,10 +283,13 @@ Implementation and hardening are merged through PR #227 at `eda7630`. Dart forma
 
 ## LB-DS-043
 
-- Status: ready
-- Executor: unassigned (Android implementation worker)
-- Base: `origin/main` after LB-DS-041 post-merge reconciliation
+- Status: review_requested
+- Executor: Android implementation worker
+- Base: `origin/main` at `0f4feb71dc01b878519cae58765284a6028b5daf`
 - Branch: `feature/m3-android-profile-settings`
+- Worktree: `/Volumes/LearnBox-Dev/LearnBox-final/lb-m3-android-profile-settings`
+- Head commit: `ebbe8b15fa110cd9d5b4c548e235a1fa51b06da9` (stable implementation commit; review-test and status hardening follow on the same branch)
+- Draft PR: #237 (draft) — https://github.com/bahramghorbani/learnbox/pull/237
 - Risk: learner-android-ui-and-device-local-state
 - Specification: `docs/design/M3_PROFILE_SETTINGS_CONTRACT.md` §§3-6, 8, 10 (M3-P1 only); `docs/product-decisions/PDR-006-PROFILE-SETTINGS-ALPHA-POLICIES.md`
 - Allowed paths: `apps/mobile/lib/features/review/learner_home_shell.dart`; `apps/mobile/lib/features/review/profile_screen.dart`; `apps/mobile/lib/features/review/settings_screen.dart`; `apps/mobile/lib/ui/learner_bottom_navigation.dart`; `apps/mobile/test/learner_bottom_navigation_test.dart`; `apps/mobile/test/learner_profile_settings_test.dart`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-043.md`; `CURRENT_WORK.md`; `docs/design/DESIGN_STATUS.md`; `docs/PRODUCT_STATUS.md`
@@ -297,6 +300,20 @@ Implementation and hardening are merged through PR #227 at `eda7630`. Dart forma
 - Blocked on: LB-DS-041 post-merge reconciliation on `origin/main`
 - Must not touch: sign out; account deletion; profile/server APIs; auth/session; review-sync activation; sound preference persistence (M3-S1); reminders; purchases/packs; provider/config; flags; deployment; Production; landing; Admin; Bobo assets
 - Acceptance: Android exposes Profile as the fourth persistent destination; Profile and child Settings show only real device-local pending facts and truthful informational rows; no sign-out/deletion/fake account/commerce/reminder state; navigation/focus/back/RTL/accessibility and target-device layout are verified without activating dormant native auth.
+
+Implementation is complete and locally verified in Draft PR #237 on
+`feature/m3-android-profile-settings`. Profile is the fourth persistent destination after Today,
+Words and Progress (PDR-006). Profile shows the neutral `حساب LearnBox` account label and the real
+device-local pending review count (zero, positive and failed-read/retry states, complete Persian
+phrases). Settings is a child surface opened from Profile with approved informational rows only
+(text size follows the device; language فارسی); no preference is persisted or toggled. No goal row
+is shown because Android has no device-local goal store. No sign-out, deletion, identity/avatar,
+phone, purchase, reminder or sync state is fabricated. Focused widget tests pass 11/11; the full
+Flutter suite passes 203/203; `flutter analyze`, `dart format`, the debug APK build, `git diff
+--check` and the queue/documentation/continuity/dashboard validators pass. Emulator RTL visual
+evidence is recorded in the report. No flag, auth/session, API, migration, deployment, Production,
+commerce or Bobo change is included; native auth remains dormant and untouched. Independent review
+returned PASS with no blocker; review hardening covers loading, retry recovery and initial child focus.
 
 ## LB-DS-041
 

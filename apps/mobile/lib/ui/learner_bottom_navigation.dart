@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'learnbox_theme.dart';
 
-enum LearnerDestination { today, words, progress }
+enum LearnerDestination { today, words, progress, profile }
 
 class LearnerBottomNavigation extends StatelessWidget {
   const LearnerBottomNavigation({
@@ -40,6 +40,11 @@ class LearnerBottomNavigation extends StatelessWidget {
               icon: Icon(Icons.insights_outlined),
               selectedIcon: Icon(Icons.insights),
               label: 'پیشرفت',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.person_outline),
+              selectedIcon: Icon(Icons.person),
+              label: 'پروفایل',
             ),
           ],
         ),
