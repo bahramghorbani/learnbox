@@ -371,6 +371,23 @@ metadata correction. The correction landed at final PR head
 `8ec12b598164d1caf8cabc43b2dc598e03a8f9a8`; all seven GitHub/Vercel contexts completed
 successfully on that exact head before merge.
 
+## LB-DS-048
+
+- Status: ready
+- Executor: high-reasoning Web/API identity worker (M3-A1)
+- Base: `origin/main` after the M3-A1 scope-coordination merge; record the exact merge commit before implementation
+- Branch: `feature/m3-web-masked-identity`
+- Risk: security-and-privacy-sensitive-authenticated-identity-read
+- Specification: `docs/design/M3_PROFILE_SETTINGS_CONTRACT.md` §§4-5, 6, 9-10 (M3-A1 only); `docs/product-decisions/PDR-007-WEB-MASKED-IDENTITY-READ.md`
+- Allowed paths: `apps/api/src/profile/learner-profile.service.ts`; `apps/api/src/profile/postgres-learner-profile.repository.ts`; `apps/api/test/learner-profile.service.test.ts`; `apps/api/test/postgres-learner-profile.repository.test.ts`; `apps/website/app/api/learner/profile/route.ts`; `apps/website/lib/learner-profile-web-http.ts`; `apps/website/lib/learner-profile-web-runtime.ts`; `apps/website/lib/learner-profile-web-client.ts`; `apps/website/app/LearnerHome.tsx`; `apps/website/app/components/ProfileScreen.tsx`; `apps/website/app/globals.css`; `apps/website/test/learner-profile-web-http.test.ts`; `apps/website/test/learner-profile-web-route.test.ts`; `apps/website/test/learner-profile-web-client.test.ts`; `apps/website/test/learner-profile-settings.test.tsx`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-048.md`; `CURRENT_WORK.md`; `PROJECT_STATE.md`; `docs/design/DESIGN_STATUS.md`; `docs/PRODUCT_STATUS.md`
+- Required checks: strict RED/GREEN API repository/service, HTTP boundary, route, client and Profile state tests; API build/typecheck and focused tests; full website tests, typecheck and production build; Prettier; `pnpm verify:ai-worker-queue`; `pnpm verify:documentation-governance`; `pnpm verify:ai-continuity`; `pnpm test:dashboard`; `git diff --check`; responsive RTL/accessibility review; independent high-reasoning security/product review
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+- Blocked on: coordination PR merge only; implementation must record its exact merged base before starting
+- Must not touch: Android/mobile/iOS; database migrations or schema; raw phone serialization; first-name/display-name/avatar presentation; auth, OTP, session or cookie behavior; sign out; account deletion; account-scoped local storage; review-sync activation; server preference sync; reminders; purchases/packs; analytics; providers/secrets; deployment; Preview/Production flags or activation; landing; Admin; Bobo assets
+- Acceptance: an authenticated Web-only `GET /api/learner/profile` derives canonical `users.id` solely from the existing signed HttpOnly learner cookie; reads the matching `users` row; returns only a strictly validated server-masked Iranian phone value with `cache-control: no-store`; never returns raw phone, first name, internal IDs or session data; dedicated runtime config defaults off and fails closed; invalid/expired session, missing learner, malformed data, offline and server failure expose no identity; Web Profile keeps local goal/pending facts usable through identity loading/error/offline states and offers bounded retry; no auth redesign, migration, Android path, deployment or activation is included.
+
 ## LB-DS-042
 
 - Status: accepted
