@@ -9,8 +9,11 @@ import 'package:learnbox/features/review/pronunciation_player.dart';
 import 'package:learnbox/features/review/review_queue.dart';
 import 'package:learnbox/features/review/review_queue_store.dart';
 import 'package:learnbox/features/review/secure_review_queue_store.dart';
+import 'package:learnbox/features/review/sound_preference_store.dart';
 import 'package:learnbox/features/review/start_card.dart';
 import 'package:learnbox/features/review/start_pack_repository.dart';
+
+import 'support/sound_preference_test_storage.dart';
 
 void main() {
   testWidgets('routes approved word and revealed sentence audio paths',
@@ -297,7 +300,15 @@ void main() {
       );
 
       final queue = ReviewQueue(store: SecureReviewQueueStore());
-      await _pumpApp(tester, queue: queue);
+      await _pumpApp(
+        tester,
+        queue: queue,
+        // Keep the sound-preference read off this channel so the queue's
+        // exact secure-storage call sequence stays isolated and truthful.
+        soundPreferenceStore: SoundPreferenceStore(
+          storage: SeededSoundPreferenceStorage(enabled: true),
+        ),
+      );
       await tester.tap(find.text('شروع مرور'));
       await tester.pumpAndSettle();
       await _tapVisibleText(tester, 'نمایش پاسخ');
@@ -466,12 +477,40 @@ void main() {
     expect(find.text('خانه'), findsNothing);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets(
+      'persisted sound OFF removes audio controls and blocks playAsset on '
+      'launch', (tester) async {
+    final player = RecordingPronunciationPlayer();
+    final queue = ReviewQueue(
+      store: ControlledReviewQueueStore(),
+      idFactory: () => 'event-a',
+    );
+    await _pumpApp(
+      tester,
+      queue: queue,
+      pronunciationPlayer: player,
+      soundPreferenceStore: SoundPreferenceStore(
+        storage: SeededSoundPreferenceStorage(enabled: false),
+      ),
+    );
+    await tester.tap(find.text('شروع مرور'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('پخش تلفظ واژه'), findsNothing);
+    await _tapVisibleText(tester, 'نمایش پاسخ');
+    await tester.pump();
+    expect(find.text('پخش جمله نمونه'), findsNothing);
+    expect(player.playedPaths, isEmpty);
+    expect(tester.takeException(), isNull);
+  });
 }
 
 Future<void> _pumpApp(
   WidgetTester tester, {
   required ReviewQueue queue,
   PronunciationPlayer? pronunciationPlayer,
+  SoundPreferenceStore? soundPreferenceStore,
   Size size = const Size(390, 844),
   double textScaleFactor = 1,
 }) async {
@@ -490,10 +529,27 @@ Future<void> _pumpApp(
       reviewQueue: queue,
       pronunciationPlayer:
           pronunciationPlayer ?? RecordingPronunciationPlayer(),
+      soundPreferenceStore: soundPreferenceStore ??
+          SoundPreferenceStore(storage: InMemorySoundPreferenceStorage()),
       splashDuration: Duration.zero,
     ),
   );
   await tester.pumpAndSettle();
+}
+
+class SeededSoundPreferenceStorage implements SoundPreferenceStorage {
+  SeededSoundPreferenceStorage({required bool enabled})
+      : value = jsonEncode({'version': 1, 'enabled': enabled});
+
+  String? value;
+
+  @override
+  Future<String?> read() async => value;
+
+  @override
+  Future<void> write(String value) async {
+    this.value = value;
+  }
 }
 
 class RecordingPronunciationPlayer implements PronunciationPlayer {

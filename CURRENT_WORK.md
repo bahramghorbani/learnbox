@@ -6,13 +6,18 @@
 
 ### M3-S1 device-local pronunciation preference
 
-- **Status:** Web LB-DS-046 and Android LB-DS-047 are queued as separate, non-overlapping
-  implementation slices after the accepted M3-P1 Profile/Settings foundation. Both preserve current
-  pronunciation behavior by defaulting to enabled, store only one versioned device-local preference,
-  recover safely from denied or corrupt storage, and wire the setting to real playback rather than a
-  decorative control. Web and Android remain separate PRs and independent reviews. No server profile,
-  sign out, deletion, reminders, commerce, auth/sync activation, deployment or Production change is
-  included.
+- **Status:** Web LB-DS-046 and Android LB-DS-047 cover M3-S1 as separate, non-overlapping
+  slices on top of the accepted M3-P1 Profile/Settings foundation. Both preserve current
+  pronunciation behavior by defaulting to enabled, store only one versioned device-local
+  preference, recover safely from denied or corrupt storage, and wire the setting to real
+  playback rather than a decorative control. Web and Android remain separate PRs and independent
+  reviews. No server profile, sign out, deletion, reminders, commerce, auth/sync activation,
+  deployment or Production change is included. Web LB-DS-046 remains queued (`ready`) in
+  `.ai/WORK_QUEUE.md`.
+- **Android LB-DS-047 (this branch):** implemented and local verification complete on
+  `feature/m3-android-sound-preference` at base `7dba5ad`; report in
+  `.ai/worker-reports/LB-DS-047.md`; task status `review_requested`. Awaiting independent review
+  before merge.
 
 ### Starter Catalog 35 release gates
 

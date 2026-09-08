@@ -6,6 +6,7 @@ import 'completion_screen.dart';
 import 'pronunciation_player.dart';
 import 'review_grade.dart';
 import 'review_queue.dart';
+import 'sound_preference_store.dart';
 import 'start_card.dart';
 import 'start_pack_audio_assets.dart';
 import '../../ui/learnbox_theme.dart';
@@ -40,6 +41,9 @@ class _ReviewScreenState extends State<ReviewScreen> {
 
   Future<void> _playAudio(String? assetPath) async {
     if (assetPath == null || _isStartingAudio) return;
+    // Sound OFF (device-local preference) prevents pronunciation playback at
+    // the call site; the play controls are also hidden while OFF.
+    if (SoundPreferenceScope.maybeOf(context)?.soundEnabled == false) return;
     setState(() {
       _isStartingAudio = true;
       _audioError = null;
@@ -135,6 +139,8 @@ class _ReviewScreenState extends State<ReviewScreen> {
     final card = _card;
     final wordAudioPath = StartPackAudioAssets.wordPath(card.id);
     final sentenceAudioPath = StartPackAudioAssets.sentencePath(card.id);
+    final soundEnabled =
+        SoundPreferenceScope.maybeOf(context)?.soundEnabled ?? true;
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -195,7 +201,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                 ),
               ),
               const SizedBox(height: 18),
-              if (wordAudioPath != null) ...[
+              if (soundEnabled && wordAudioPath != null) ...[
                 _AudioButton(
                   label: 'پخش تلفظ واژه',
                   enabled: !_isStartingAudio,
@@ -260,7 +266,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                             style: learnBoxGermanStyle(context),
                           ),
                         ),
-                        if (sentenceAudioPath != null) ...[
+                        if (soundEnabled && sentenceAudioPath != null) ...[
                           const SizedBox(height: 12),
                           _AudioButton(
                             label: 'پخش جمله نمونه',

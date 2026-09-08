@@ -337,9 +337,9 @@ Preview/Production or publication state changed.
 
 ## LB-DS-047
 
-- Status: ready
+- Status: review_requested
 - Executor: Hermes Android implementation worker (M3-S1 Android)
-- Base: `origin/main` after the M3-S1 coordination PR; record the exact base SHA before implementation
+- Base: `origin/main` at `7dba5adab77b0b90a228ac8c7aabab0bc54e3830` (M3-S1 coordination PR #243 merge)
 - Branch: `feature/m3-android-sound-preference`
 - Worktree: `/Volumes/LearnBox-Dev/LearnBox-final/lb-m3-android-sound-preference`
 - Risk: learner-android-device-local-preference-storage-and-audio-gating
