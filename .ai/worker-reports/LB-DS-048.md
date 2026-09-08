@@ -4,7 +4,7 @@
 - Executor: high-reasoning Web/API identity worker (Hermes Agent, aval-ai/gpt-5.6-terra, custom provider)
 - Base commit: `5d7a71720522611e03e8e2cef7a9b16b2a16b4df`
 - Branch: `feature/m3-web-masked-identity`
-- Head commit: pending final hardening commit
+- Head commit: `31ff556e59c6af7e1aba12bbad06fbc9a2432f32` hardening commit; final report update follows on this branch.
 - Draft PR: #248 — https://github.com/bahramghorbani/learnbox/pull/248
 - Files changed: see final scoped file list in this report.
 - Scope completed: yes
