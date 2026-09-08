@@ -1,24 +1,42 @@
-import type { RefObject } from 'react';
+import { useState, type RefObject } from 'react';
 
+import type { SoundPreferenceDurability } from '../sound-preference';
 import { learnerGoalTitle, type LearnerLearningGoal } from './ProfileScreen';
 
 interface SettingsScreenProps {
   goal: LearnerLearningGoal;
   headingRef?: RefObject<HTMLHeadingElement | null>;
   goalRowRef?: RefObject<HTMLButtonElement | null>;
+  soundEnabled: boolean;
   onBack: () => void;
   onChooseGoal: () => void;
+  onToggleSound: (enabled: boolean) => Promise<SoundPreferenceDurability>;
 }
 
-// M3-P1 Settings foundation: only the real device-local goal plus truthful
-// informational rows. Sound preference (M3-S1), reminders and purchases stay absent.
+const soundSwitchLabel = 'پخش تلفظ';
+const durableSaveStatus = 'تنظیم روی این دستگاه ذخیره شد.';
+const sessionOnlySaveStatus =
+  'این مرورگر ذخیرهٔ دائمی را اجازه نداد؛ این تنظیم تا پایان این نشست روی این دستگاه می‌ماند.';
+
+// M3-S1 Settings: the versioned device-local pronunciation preference joins the
+// existing goal row; text size and language stay truthful informational rows.
 export function SettingsScreen({
   goal,
   headingRef,
   goalRowRef,
+  soundEnabled,
   onBack,
   onChooseGoal,
+  onToggleSound,
 }: SettingsScreenProps) {
+  const [saveStatus, setSaveStatus] = useState('');
+
+  const handleToggleSound = (enabled: boolean) => {
+    void onToggleSound(enabled).then((durability) => {
+      setSaveStatus(durability === 'durable' ? durableSaveStatus : sessionOnlySaveStatus);
+    });
+  };
+
   return (
     <main className="app-shell settings-shell" data-testid="learnbox-settings">
       <header className="settings-top">
@@ -34,6 +52,27 @@ export function SettingsScreen({
         <p>تنظیمات این نسخه فقط روی همین دستگاه اعمال می‌شود.</p>
       </section>
       <div className="settings-rows">
+        <div className="settings-row settings-row-switch">
+          <label className="settings-switch-control">
+            <input
+              id="sound-preference-switch"
+              className="settings-switch-input"
+              type="checkbox"
+              role="switch"
+              checked={soundEnabled}
+              aria-checked={soundEnabled}
+              aria-label={soundSwitchLabel}
+              onChange={(event) => handleToggleSound(event.target.checked)}
+            />
+            <span className="settings-row-copy">
+              <strong>{soundSwitchLabel}</strong>
+              <small>
+                <span className="device-local-badge">روی این دستگاه</span>
+              </small>
+            </span>
+            <span className="settings-switch-track" aria-hidden="true" />
+          </label>
+        </div>
         <button
           className="settings-row settings-row-action"
           type="button"
@@ -66,7 +105,10 @@ export function SettingsScreen({
           </span>
         </div>
       </div>
-      <p className="settings-footnote" role="status">
+      <p className="settings-save-status" role="status">
+        {saveStatus}
+      </p>
+      <p className="settings-footnote">
         انتخاب زبان دیگری در این نسخه وجود ندارد؛ واژه‌های آلمانی همان‌طور که هستند نمایش داده
         می‌شوند.
       </p>
