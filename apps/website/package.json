@@ -13,7 +13,7 @@
     "@learnbox/billing-core": "workspace:*",
     "@learnbox/learning-engine": "workspace:*",
     "@vercel/blob": "^2.6.1",
-    "next": "^15.4.5",
+    "next": "^15.5.24",
     "pg": "^8.22.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
