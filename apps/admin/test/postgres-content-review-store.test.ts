@@ -81,6 +81,7 @@ describe('0017 Start Pack review-candidate migration contract', () => {
     expect(sql).not.toContain("outcome = 'failed'");
     expect(sql).toMatch(/'needs_review'/);
     expect(sql).toContain('reviewer_user_id IS NOT NULL');
+    expect(sql).toContain('notes IS NOT NULL');
   });
 
   it('reruns are idempotent only for identical rows and fail closed on divergent data', async () => {

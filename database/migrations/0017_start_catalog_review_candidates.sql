@@ -602,6 +602,7 @@ BEGIN
               OR rc.check_key IS DISTINCT FROM expected.check_key
               OR rc.outcome IS DISTINCT FROM 'pending'
               OR rc.reviewer_user_id IS NOT NULL
+              OR rc.notes IS NOT NULL
               OR rc.reviewed_at IS NOT NULL
               OR rc.idempotency_key IS NOT NULL)
     ) THEN

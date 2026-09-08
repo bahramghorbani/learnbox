@@ -72,7 +72,8 @@ export type ContentReviewDecisionWriteResult =
   | { currentStatus: string; status: 'not_reviewable' }
   | { pendingDimensions: ContentReviewDimension[]; status: 'review_incomplete' };
 
-const uuidNamespaceHex = '6ba7b8119dad11d180b400c04fd430c8';
+// RFC 4122 URL namespace; this is intentionally not the adjacent DNS namespace (`...b810...`).
+const uuidNamespaceUrlHex = '6ba7b8119dad11d180b400c04fd430c8';
 const canonicalUuidPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 const reviewableStatuses = new Set(['auto_validated', 'needs_review']);
@@ -86,9 +87,9 @@ type Queryable = {
 type TransactionClient = Queryable & { release(): void };
 type DatabasePool = Queryable & { connect(): Promise<TransactionClient> };
 
-/** Deterministic uuid5 (RFC 4122 version 5) over the fixed LearnBox namespace. */
+/** Deterministic uuid5 (RFC 4122 version 5) over the standard URL namespace. */
 export function deterministicUuid5(name: string): string {
-  const namespace = Buffer.from(uuidNamespaceHex, 'hex');
+  const namespace = Buffer.from(uuidNamespaceUrlHex, 'hex');
   const digest = createHash('sha1')
     .update(Buffer.concat([namespace, Buffer.from(name, 'utf8')]))
     .digest()
