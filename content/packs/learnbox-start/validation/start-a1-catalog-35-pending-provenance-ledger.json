@@ -26,8 +26,6 @@
     }
   },
   "remainingReleaseGates": [
-    "german_linguistic_review",
-    "persian_translation_review",
     "final_visual_qa",
     "final_audio_qa",
     "app_flow_approval",

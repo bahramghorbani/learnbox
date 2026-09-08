@@ -1,8 +1,22 @@
 {
   "batchId": "learnbox-start-a1-catalog-35-pending-drafts-v1",
-  "status": "needs_editorial_review",
+  "status": "linguistic_review_recorded_remaining_gates_pending",
   "purpose": "Structured linguistic drafts for the remaining 15 free-starter target items (catalog target 35). Pending intake only: no item is linguistically approved, published or has production media.",
   "sourceReference": "https://www.goethe.de/pro/relaunch/prf/de/A1_SD1_Wortliste_02.pdf",
+  "linguisticApproval": {
+    "reference": "../validation/start-a1-slice-linguistic-approval.json",
+    "approvalReference": "product-owner-confirmation-2026-09-04",
+    "approvedByRole": "product_owner",
+    "approvedDimensions": ["german_linguistic", "persian_translation"],
+    "approvedAt": "2026-09-04"
+  },
+  "remainingReviewDimensions": [
+    "provenance",
+    "visual",
+    "audio",
+    "app_flow",
+    "owner_release_approval"
+  ],
   "items": [
     {
       "id": "start-a1-fenster",
@@ -33,7 +47,7 @@
       "media": [],
       "source": {
         "provider": "ai_suggestion",
-        "reference": "Goethe A1 scope reference; editorial verification pending."
+        "reference": "Goethe A1 scope reference; German and Persian linguistic review recorded; remaining release gates pending."
       },
       "provenance": {
         "sourceType": "ai_assisted",
@@ -70,7 +84,7 @@
       "media": [],
       "source": {
         "provider": "ai_suggestion",
-        "reference": "Goethe A1 scope reference; editorial verification pending."
+        "reference": "Goethe A1 scope reference; German and Persian linguistic review recorded; remaining release gates pending."
       },
       "provenance": {
         "sourceType": "ai_assisted",
@@ -107,7 +121,7 @@
       "media": [],
       "source": {
         "provider": "ai_suggestion",
-        "reference": "Goethe A1 scope reference; editorial verification pending."
+        "reference": "Goethe A1 scope reference; German and Persian linguistic review recorded; remaining release gates pending."
       },
       "provenance": {
         "sourceType": "ai_assisted",
@@ -144,7 +158,7 @@
       "media": [],
       "source": {
         "provider": "ai_suggestion",
-        "reference": "Goethe A1 scope reference; editorial verification pending."
+        "reference": "Goethe A1 scope reference; German and Persian linguistic review recorded; remaining release gates pending."
       },
       "provenance": {
         "sourceType": "ai_assisted",
@@ -181,7 +195,7 @@
       "media": [],
       "source": {
         "provider": "ai_suggestion",
-        "reference": "Goethe A1 scope reference; editorial verification pending."
+        "reference": "Goethe A1 scope reference; German and Persian linguistic review recorded; remaining release gates pending."
       },
       "provenance": {
         "sourceType": "ai_assisted",
@@ -218,7 +232,7 @@
       "media": [],
       "source": {
         "provider": "ai_suggestion",
-        "reference": "Goethe A1 scope reference; editorial verification pending."
+        "reference": "Goethe A1 scope reference; German and Persian linguistic review recorded; remaining release gates pending."
       },
       "provenance": {
         "sourceType": "ai_assisted",
@@ -255,7 +269,7 @@
       "media": [],
       "source": {
         "provider": "ai_suggestion",
-        "reference": "Goethe A1 scope reference; editorial verification pending."
+        "reference": "Goethe A1 scope reference; German and Persian linguistic review recorded; remaining release gates pending."
       },
       "provenance": {
         "sourceType": "ai_assisted",
@@ -292,7 +306,7 @@
       "media": [],
       "source": {
         "provider": "ai_suggestion",
-        "reference": "Goethe A1 scope reference; editorial verification pending."
+        "reference": "Goethe A1 scope reference; German and Persian linguistic review recorded; remaining release gates pending."
       },
       "provenance": {
         "sourceType": "ai_assisted",
@@ -329,7 +343,7 @@
       "media": [],
       "source": {
         "provider": "ai_suggestion",
-        "reference": "Goethe A1 scope reference; editorial verification pending."
+        "reference": "Goethe A1 scope reference; German and Persian linguistic review recorded; remaining release gates pending."
       },
       "provenance": {
         "sourceType": "ai_assisted",
@@ -366,7 +380,7 @@
       "media": [],
       "source": {
         "provider": "ai_suggestion",
-        "reference": "Goethe A1 scope reference; editorial verification pending."
+        "reference": "Goethe A1 scope reference; German and Persian linguistic review recorded; remaining release gates pending."
       },
       "provenance": {
         "sourceType": "ai_assisted",
@@ -402,7 +416,7 @@
       "media": [],
       "source": {
         "provider": "ai_suggestion",
-        "reference": "Goethe A1 scope reference; editorial verification pending."
+        "reference": "Goethe A1 scope reference; German and Persian linguistic review recorded; remaining release gates pending."
       },
       "provenance": {
         "sourceType": "ai_assisted",
@@ -438,7 +452,7 @@
       "media": [],
       "source": {
         "provider": "ai_suggestion",
-        "reference": "Goethe A1 scope reference; editorial verification pending."
+        "reference": "Goethe A1 scope reference; German and Persian linguistic review recorded; remaining release gates pending."
       },
       "provenance": {
         "sourceType": "ai_assisted",
@@ -474,7 +488,7 @@
       "media": [],
       "source": {
         "provider": "ai_suggestion",
-        "reference": "Goethe A1 scope reference; editorial verification pending."
+        "reference": "Goethe A1 scope reference; German and Persian linguistic review recorded; remaining release gates pending."
       },
       "provenance": {
         "sourceType": "ai_assisted",
@@ -510,7 +524,7 @@
       "media": [],
       "source": {
         "provider": "ai_suggestion",
-        "reference": "Goethe A1 scope reference; editorial verification pending."
+        "reference": "Goethe A1 scope reference; German and Persian linguistic review recorded; remaining release gates pending."
       },
       "provenance": {
         "sourceType": "ai_assisted",
@@ -546,7 +560,7 @@
       "media": [],
       "source": {
         "provider": "ai_suggestion",
-        "reference": "Goethe A1 scope reference; editorial verification pending."
+        "reference": "Goethe A1 scope reference; German and Persian linguistic review recorded; remaining release gates pending."
       },
       "provenance": {
         "sourceType": "ai_assisted",

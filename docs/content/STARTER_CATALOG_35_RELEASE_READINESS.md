@@ -34,33 +34,46 @@ The canonical catalog snapshot is therefore truthful at its top-level release bo
    participant-invitation approval remain open.
 5. **Owner release approval is absent for all 35.** Existing owner confirmations cover only German
    linguistic and Persian translation dimensions; they do not authorize publication.
-6. **Evidence metadata has stale pre-approval and candidate-QA chronology that must be reconciled
-   before a release decision:**
-   - both draft batches still use top-level/item `needs_editorial_review` / `needs_review` wording
-     and source/provenance text saying German/Persian editorial review is pending, although later
-     approval events and the derived 35-item snapshot record those two dimensions as approved;
+6. **At the audit baseline, evidence metadata had stale pre-approval and candidate-QA chronology that
+   needed reconciliation before a release decision:**
+   - both draft batches used top-level/item `needs_editorial_review` / `needs_review` wording and
+     source/provenance text saying German/Persian editorial review was pending, although later approval
+     events and the derived 35-item snapshot recorded those two dimensions as approved;
    - both candidate-intake files (`start-a1-slice-candidates.json` and
-     `start-a1-catalog-35-pending-candidates.json`) still say their candidates require German and
-     Persian editorial review, although later approval events record those two dimensions;
-   - `start-a1-catalog-35-pending-provenance-ledger.json` still lists German/Persian review as
-     remaining for the 15-item batch, although those dimensions were later approved;
-   - Issue #59's V2 audio gate says 40/40 passed, but its ledger records only 6/40 listening-approved
-     V2 files, 34/40 pending/absent and four transcription mismatches. It is not evidence for the
-     V1 attested/transcription-QA set.
-     These are chronology drift, not permission to infer broader approval.
+     `start-a1-catalog-35-pending-candidates.json`) said their candidates required German and Persian
+     editorial review, although later approval events recorded those two dimensions;
+   - `start-a1-catalog-35-pending-provenance-ledger.json` listed German/Persian review as remaining for
+     the 15-item batch, although those dimensions were later approved;
+   - Issue #59's V2 audio gate said 40/40 passed, but its ledger recorded only 6/40 listening-approved
+     V2 files, 34/40 pending/absent and four transcription mismatches. It was not evidence for the V1
+     attested/transcription-QA set.
+     These were chronology drift, not permission to infer broader approval.
+
+## Post-audit reconciliation — 2026-09-08
+
+LB-DS-045 resolves the evidence-metadata drift identified above without expanding approval:
+
+- both candidate intakes now point to their exact product-owner linguistic approval event;
+- both draft batches record the two approved dimensions while every item remains `needs_review` and
+  every non-linguistic/release gate remains open;
+- the 15-item provenance ledger no longer lists German/Persian review as pending;
+- the derived Issue #59 gate is now validated from the committed V2 ledger and reports 36/40
+  transcription matches, four regeneration failures, 6/40 listening approvals and 34/40 pending
+  reviews; `releaseReady: false`, `attachmentAllowed: false` and `publicationBlocked: true`.
+
+The audit decision remains **BLOCKED** because this reconciliation corrects evidence truth only. It
+adds no media approval, app-flow approval, release-approved `card_versions`, seed permission or
+publication permission.
 
 ## Safe next workstream
 
-A bounded, owner-free preparation slice may:
+A bounded next preparation slice may:
 
-1. reconcile stale pre-approval and candidate-QA metadata across both draft batches, both candidate
-   intakes, the 15-item provenance ledger and the Issue #59 V2 audio gate/ledger without changing
-   approval scope;
-2. define and generate **candidate-only** image and audio assets for the remaining 15 under the
-   existing visual/media contracts, with immutable IDs and checksums;
-3. run provenance, visual, audio and local app-flow QA for those 15;
-4. produce a 35-item release ledger that remains `publicationBlocked: true`;
-5. stop before media attachment, DB seed, `card_versions` approval/publication, participant invitation,
+1. with separate cost authorization, define and generate **candidate-only** image and audio assets for
+   the remaining 15 under the existing visual/media contracts, with immutable IDs and checksums;
+2. run provenance, visual, audio and local app-flow QA for those 15;
+3. produce a 35-item release ledger that remains `publicationBlocked: true`;
+4. stop before media attachment, DB seed, `card_versions` approval/publication, participant invitation,
    runtime-flag enablement, deployment or Production.
 
 Candidate generation may incur provider cost and must be separately authorized before execution.
