@@ -4,7 +4,7 @@
 - Executor: high-reasoning Web/API identity worker (Hermes Agent, aval-ai/gpt-5.6-terra, custom provider)
 - Base commit: `5d7a71720522611e03e8e2cef7a9b16b2a16b4df`
 - Branch: `feature/m3-web-masked-identity`
-- Head commit: `31ff556e59c6af7e1aba12bbad06fbc9a2432f32` hardening commit; final report update follows on this branch.
+- Head commit: verify the final pushed head from PR #248 `headRefOid`; this report intentionally avoids a self-referential stale SHA.
 - Draft PR: #248 — https://github.com/bahramghorbani/learnbox/pull/248
 - Files changed: see final scoped file list in this report.
 - Scope completed: yes
@@ -17,8 +17,8 @@
 - Rollback: leave `WEB_LEARNER_PROFILE_ENABLED` unset/false, or revert this branch. No session, data, schema or deployment state changes.
 - Secrets or production changes: none
 - Checks run: focused API repository/service 6/6; focused Web HTTP/route/client/Profile 41/41; full API 139/139; full Website 270/270; API/Website typecheck/build; `pnpm check`; `pnpm build`; migration, format, queue/documentation/continuity/dashboard validators; `git diff --check`.
-- Checks unavailable: independent high-reasoning security/product review.
-- Remaining work: independent high-reasoning security/product review; runtime activation and Android identity remain separately gated.
+- Checks unavailable: none for the dormant implementation; fresh final-head CI follows this metadata-only correction.
+- Remaining work: fresh final-head CI and metadata verification; runtime activation and Android identity remain separately gated.
 - Risks: default-off runtime only; future activation needs separate owner-approved deployment/configuration review. Route-level signed-cookie 200 test is non-blocking future hardening.
 
 ## Scope

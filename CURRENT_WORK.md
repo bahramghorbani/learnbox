@@ -14,8 +14,9 @@
   Invalid/missing/expired session, missing learner, malformed DB phone, disabled/incomplete runtime,
   offline/parse failure and server failure expose no identity. Profile retains device-local goal and
   pending-review facts during identity loading/error/offline states and has bounded retry for a failed
-  server read. Full API (139) and Website (265) suites, builds/typechecks, root checks/build and
-  required validators pass. Independent high-reasoning security/product review remains merge-blocking.
+  server read. Full API (139) and Website (270) suites, builds/typechecks, root checks/build and
+  required validators pass. Independent review passed code/security/product behavior and requested
+  only this metadata correction; fresh final-head CI and metadata verification remain merge-blocking.
   Android, raw-phone serialization, auth/session changes, migrations, deployment and activation remain
   out of scope.
 
