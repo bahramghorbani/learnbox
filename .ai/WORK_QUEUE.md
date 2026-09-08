@@ -306,7 +306,7 @@ approved/published `card_versions` row. Seed and publication remain blocked. See
 - Simulator required: no
 - Draft PR required: yes
 - Merge allowed: yes
-- Blocked on: independent review and GitHub CI; paid candidate generation and all human media/app-flow/release approval remain outside scope and owner-gated
+- Blocked on: final-head independent review and live PR checks; the implementation/evidence head `1b9748b` passed GitHub CI 7/7, while paid candidate generation and all human media/app-flow/release approval remain outside scope and owner-gated
 - Must not touch: generated/private media blobs; media generation/upload/attachment; approval dimensions or approval events; `cards`/`card_versions`; migrations; seed runners; auth/session; providers/secrets; runtime flags; Preview/Production; invitations; publication
 - Acceptance: the two candidate and draft batches truthfully link the existing two-dimensional linguistic approvals while preserving overall `needs_review`; the 15-item provenance ledger stops listing those approved dimensions as pending; the Issue #59 gate deterministically derives 36 transcription matches, four regeneration failures, six listening approvals and 34 pending reviews from its ledger and stays non-releaseable; the catalog remains 0/35 release-approved, non-seedable and publication-blocked.
 
