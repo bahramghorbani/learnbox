@@ -66,6 +66,23 @@ describe('ProfileScreen', () => {
     expect(rendered.text()).toContain('فقط در این دستگاه');
   });
 
+  it('keeps local facts while identity loads or fails and exposes one bounded retry', async () => {
+    const retry = vi.fn();
+    rendered = await renderProfile({
+      goal: 'travel',
+      pendingReviewCount: 2,
+      identity: { status: 'error' },
+      onRetryIdentity: retry,
+    });
+
+    expect(rendered.text()).toContain('سفر و ارتباط');
+    expect(rendered.text()).toContain('۲ پاسخ');
+    expect(rendered.text()).toContain('حساب LearnBox');
+    expect(rendered.text()).toContain('بازیابی مشخصات حساب ممکن نشد.');
+    await rendered.clickButton('تلاش دوباره');
+    expect(retry).toHaveBeenCalledTimes(1);
+  });
+
   it('shows the pending review count only when the local queue is non-empty', async () => {
     rendered = await renderProfile({ goal: 'life', pendingReviewCount: 3 });
 
@@ -594,6 +611,12 @@ type ProfileScreenProps = {
   onNavigate?: () => void;
   onOpenSettings?: () => void;
   pendingReviewCount?: number;
+  identity?:
+    | { status: 'loading' }
+    | { status: 'ok'; maskedPhone: string }
+    | { status: 'error' }
+    | { status: 'unavailable' };
+  onRetryIdentity?: () => void;
 };
 
 type SettingsScreenProps = {

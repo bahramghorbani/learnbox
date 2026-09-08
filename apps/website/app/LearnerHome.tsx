@@ -47,6 +47,7 @@ import { resolveSupportivePlusOffer } from './paywall';
 import { buildStartMediaSources, resolveStartMediaMode, type StartMediaMode } from './start-media';
 import { selectTodayStartSession, stagedStartSlice } from './start-slice';
 import { fetchWebLearnerState } from '../lib/learner-state-web-client';
+import { fetchWebLearnerProfile } from '../lib/learner-profile-web-client';
 import type { LearnerSyncState } from './learner-sync-state';
 
 type Grade = 'forgot' | 'hard' | 'remembered' | 'mastered';
@@ -140,6 +141,12 @@ export function LearnerHome({
   const [isRecordingGrade, setIsRecordingGrade] = useState(false);
   const [serverSyncState, setServerSyncState] = useState<LearnerSyncState>('local-only');
   const [serverLastSyncedAt, setServerLastSyncedAt] = useState<string | null>(null);
+  const [profileIdentity, setProfileIdentity] = useState<
+    | { status: 'loading' }
+    | { status: 'ok'; maskedPhone: string }
+    | { status: 'error' }
+    | { status: 'unavailable' }
+  >({ status: 'unavailable' });
   const gradeSubmissionRef = useRef(false);
   const flipHintRef = useRef<HTMLButtonElement>(null);
   const flipAgainRef = useRef<HTMLButtonElement>(null);
@@ -326,6 +333,34 @@ export function LearnerHome({
       .then(applyServerStateResult)
       .catch(() => setServerSyncState('error'));
   }, [authenticated, isServerOtp, applyServerStateResult]);
+
+  const readProfileIdentity = useCallback(() => {
+    if (
+      !authenticated ||
+      !isServerOtp ||
+      typeof navigator === 'undefined' ||
+      navigator.onLine === false
+    ) {
+      setProfileIdentity({ status: 'unavailable' });
+      return;
+    }
+    setProfileIdentity({ status: 'loading' });
+    void fetchWebLearnerProfile()
+      .then((result) => {
+        setProfileIdentity(
+          result.status === 'ok'
+            ? result
+            : result.status === 'unavailable'
+              ? { status: 'error' }
+              : { status: 'unavailable' },
+        );
+      })
+      .catch(() => setProfileIdentity({ status: 'error' }));
+  }, [authenticated, isServerOtp]);
+
+  useEffect(() => {
+    if (screen === 'profile') readProfileIdentity();
+  }, [screen, readProfileIdentity]);
 
   const begin = () => {
     const nextIndex = resumableSessionIndex ?? 0;
@@ -646,6 +681,8 @@ export function LearnerHome({
       <ProfileScreen
         goal={learningGoal}
         pendingReviewCount={pendingReviewCount}
+        identity={profileIdentity}
+        onRetryIdentity={readProfileIdentity}
         headingRef={profileHeadingRef}
         goalRowRef={profileGoalRowRef}
         settingsRowRef={profileSettingsRowRef}

@@ -373,7 +373,7 @@ successfully on that exact head before merge.
 
 ## LB-DS-048
 
-- Status: in_progress
+- Status: review_requested
 - Executor: high-reasoning Web/API identity worker (M3-A1)
 - Base: `origin/main` at `5d7a71720522611e03e8e2cef7a9b16b2a16b4df` (M3-A1 scope-coordination merge)
 - Branch: `feature/m3-web-masked-identity`

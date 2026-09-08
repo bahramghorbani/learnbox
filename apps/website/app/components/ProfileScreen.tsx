@@ -13,9 +13,17 @@ export const learnerGoalTitle: Record<LearnerLearningGoal, string> = {
   travel: 'سفر و ارتباط',
 };
 
+type ProfileIdentity =
+  | { status: 'loading' }
+  | { status: 'ok'; maskedPhone: string }
+  | { status: 'error' }
+  | { status: 'unavailable' };
+
 interface ProfileScreenProps {
   goal: LearnerLearningGoal | null;
   pendingReviewCount: number;
+  identity?: ProfileIdentity;
+  onRetryIdentity?: () => void;
   headingRef?: RefObject<HTMLHeadingElement | null>;
   goalRowRef?: RefObject<HTMLButtonElement | null>;
   settingsRowRef?: RefObject<HTMLButtonElement | null>;
@@ -32,6 +40,8 @@ const supportEmail = 'mailto:hi@learnboxapp.com';
 export function ProfileScreen({
   goal,
   pendingReviewCount,
+  identity = { status: 'unavailable' },
+  onRetryIdentity,
   headingRef,
   goalRowRef,
   settingsRowRef,
@@ -53,11 +63,25 @@ export function ProfileScreen({
       <section className="profile-section" aria-labelledby="profile-account-title">
         <h2 id="profile-account-title">حساب</h2>
         <div className="profile-card">
-          <strong className="profile-account-name">حساب LearnBox</strong>
-          <p className="profile-card-note">
-            در این نسخهٔ آزمایشی، نام، شمارهٔ تلفن یا مشخصات شخصی از سرور خوانده نمی‌شود؛ این برچسب
-            عمومی جای آن‌هاست.
-          </p>
+          <strong className="profile-account-name">
+            {identity.status === 'ok' ? identity.maskedPhone : 'حساب LearnBox'}
+          </strong>
+          {identity.status === 'loading' ? (
+            <p className="profile-card-note">در حال بازیابی مشخصات حساب…</p>
+          ) : null}
+          {identity.status === 'error' ? (
+            <p className="profile-card-note" role="alert">
+              بازیابی مشخصات حساب ممکن نشد.
+              {onRetryIdentity ? (
+                <button className="text-button" type="button" onClick={onRetryIdentity}>
+                  تلاش دوباره
+                </button>
+              ) : null}
+            </p>
+          ) : null}
+          {identity.status === 'unavailable' ? (
+            <p className="profile-card-note">مشخصات حساب در دسترس نیست.</p>
+          ) : null}
         </div>
       </section>
       <section className="profile-section" aria-labelledby="profile-learning-title">
