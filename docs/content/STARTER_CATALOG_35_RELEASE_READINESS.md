@@ -34,18 +34,21 @@ The canonical catalog snapshot is therefore truthful at its top-level release bo
    participant-invitation approval remain open.
 5. **Owner release approval is absent for all 35.** Existing owner confirmations cover only German
    linguistic and Persian translation dimensions; they do not authorize publication.
-6. **Evidence metadata has two stale statements that must be reconciled before a release decision:**
-   - `start-a1-catalog-35-pending-drafts.json` still says the 15 drafts are not linguistically
-     approved, although the later approval ledger and derived 35-item snapshot record approval.
+6. **Evidence metadata retains pre-approval chronology that must be reconciled before a release
+   decision:**
+   - both draft batches still use top-level/item `needs_editorial_review` / `needs_review` wording
+     and source/provenance text saying German/Persian editorial review is pending, although later
+     approval events and the derived 35-item snapshot record those two dimensions as approved;
    - `start-a1-catalog-35-pending-provenance-ledger.json` still lists German/Persian review as
-     remaining, although those dimensions were later approved.
+     remaining for the 15-item batch, although those dimensions were later approved.
      These are chronology drift, not permission to infer broader approval.
 
 ## Safe next workstream
 
 A bounded, owner-free preparation slice may:
 
-1. reconcile the two stale metadata statements without changing approval scope;
+1. reconcile stale pre-approval metadata across both draft batches and the 15-item provenance ledger
+   without changing approval scope;
 2. define and generate **candidate-only** image and audio assets for the remaining 15 under the
    existing visual/media contracts, with immutable IDs and checksums;
 3. run provenance, visual, audio and local app-flow QA for those 15;

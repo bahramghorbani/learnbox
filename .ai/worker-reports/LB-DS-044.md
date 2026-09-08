@@ -9,7 +9,7 @@
 - Files changed: `docs/content/STARTER_CATALOG_35_RELEASE_READINESS.md`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-044.md`; `CURRENT_WORK.md`; `docs/PRODUCT_STATUS.md`
 - Checks run: structured 35-item/hash audit (`STARTER_CATALOG_35_AUDIT_OK`); Prettier; `format:check`; `verify:ai-worker-queue`; `verify:documentation-governance`; `verify:ai-continuity`; dashboard tests 21/21; `git diff --check`
 - Checks unavailable: human visual/audio/content release review is intentionally unavailable and cannot be replaced by repository validators
-- Remaining work: reconcile two stale metadata statements; with separate cost authorization, produce candidate-only media and QA for the remaining 15; then obtain per-item owner release decisions before any attachment, seed, flag enablement, participant invitation or publication
+- Remaining work: reconcile stale pre-approval wording across both draft batches and the 15-item provenance ledger; with separate cost authorization, produce candidate-only media and QA for the remaining 15; then obtain per-item owner release decisions before any attachment, seed, flag enablement, participant invitation or publication
 - Risks: candidate-stage evidence may be mistaken for release approval; mitigated by explicit 20/15 matrix, 0/35 approved count and fail-closed boundaries
 - Secrets or production changes: none
 - Bobo canonical status: unchanged
@@ -24,5 +24,6 @@
   no app-flow approval.
 - No item has an approved/published `card_versions` row. The derived catalog snapshot remains
   `seedable: false`, `publicationBlocked: true`, with 0/35 release-approved.
-- Two older 15-item source artifacts retain pre-approval wording for the later-approved linguistic
-  dimensions; the audit treats this as chronology drift and does not infer any additional approval.
+- Both draft batches retain pre-approval status/source wording for the later-approved linguistic
+  dimensions, and the 15-item provenance ledger still lists those dimensions as pending; the audit
+  treats this as chronology drift and does not infer any additional approval.
