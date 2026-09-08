@@ -7,17 +7,20 @@
 ### M3 Profile and Settings interaction contract
 
 - **Status:** contract accepted and merged in PR #235 at `213f2f1`; PDR-006 records the owner
-  decisions. **LB-DS-042 (Web M3-P1)** is marked `review_requested` on `feature/m3-web-profile-settings`
-  from base `0f4feb7` with Draft PR #238 (implementation and review hardening through `7b58ff2` plus this status commit): Profile is the
-  fourth persistent learner destination and the truthful Profile/child Settings surfaces use only
-  device-local goal/pending-review facts and approved informational rows. Review hardening verifies the
-  existing single shared offline truth without duplicate announcements, restores goal-edit focus, narrows
-  the idle copy to the pending-review queue and keeps navigation readable at 200%
-  text while preserving four columns at normal 390 px sizing. The single type-only
-  widening of `ProgressScreen.onNavigate` to the shared `LearnerDestination` union is documented in
-  the queue. LB-DS-043 (Android P1) remains a parallel path-separated task. Both
-  exclude sound persistence, sign out, deletion, server profile data, reminders, commerce,
-  activation and rollout.
+  decisions. **Android M3-P1 (LB-DS-043)** merged in PR #237 at `6c6f4b6`: Profile is the fourth
+  persistent destination with a truthful device-local pending-review count; child Settings uses
+  approved informational rows and verified focus/back behavior. Its focused widget tests pass
+  11/11 and the full Flutter suite passes 203/203; independent review returned PASS.
+  **LB-DS-042 (Web M3-P1)** is `review_requested` on `feature/m3-web-profile-settings` with Draft
+  PR #238 (implementation and review hardening through `7b58ff2` plus status commits): Profile is
+  the fourth persistent learner destination and the truthful Profile/child Settings surfaces use
+  only device-local goal/pending-review facts and approved informational rows. Review hardening
+  verifies the single shared offline truth without duplicate announcements, restores goal-edit
+  focus, narrows idle copy to the pending-review queue and keeps navigation readable at 200% text
+  while preserving four columns at normal 390 px sizing. The type-only widening of
+  `ProgressScreen.onNavigate` to the shared `LearnerDestination` union is documented in the queue.
+  Both surfaces exclude sound persistence, sign out, deletion, server profile data, reminders,
+  commerce, activation and rollout.
 
 ### M1-D sync readiness boundary
 
