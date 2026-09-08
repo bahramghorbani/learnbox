@@ -266,13 +266,15 @@ Implementation and hardening are merged through PR #227 at `eda7630`. Dart forma
 
 ## LB-DS-042
 
-- Status: ready
-- Executor: unassigned (Web implementation worker)
-- Base: `origin/main` after LB-DS-041 post-merge reconciliation
+- Status: review_requested
+- Executor: Hermes web implementation worker (M3 Web P1)
+- Base: `origin/main` at `0f4feb71dc01b878519cae58765284a6028b5daf` (LB-DS-041 post-merge reconciliation)
+- Head commit: `7b58ff2` (Profile/Settings implementation and review hardening)
+- Draft PR: https://github.com/bahramghorbani/learnbox/pull/238
 - Branch: `feature/m3-web-profile-settings`
 - Risk: learner-web-ui-and-device-local-state
 - Specification: `docs/design/M3_PROFILE_SETTINGS_CONTRACT.md` §§3-6, 8, 10 (M3-P1 only); `docs/product-decisions/PDR-006-PROFILE-SETTINGS-ALPHA-POLICIES.md`
-- Allowed paths: `apps/website/app/LearnerHome.tsx`; `apps/website/app/components/LearnerNav.tsx`; `apps/website/app/components/ProfileScreen.tsx`; `apps/website/app/components/SettingsScreen.tsx`; `apps/website/app/globals.css`; `apps/website/test/learner-profile-settings.test.tsx`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-042.md`; `CURRENT_WORK.md`; `docs/design/DESIGN_STATUS.md`; `docs/PRODUCT_STATUS.md`
+- Allowed paths: `apps/website/app/LearnerHome.tsx`; `apps/website/app/components/LearnerNav.tsx`; `apps/website/app/components/ProgressScreen.tsx`; `apps/website/app/components/ProfileScreen.tsx`; `apps/website/app/components/SettingsScreen.tsx`; `apps/website/app/globals.css`; `apps/website/test/learner-profile-settings.test.tsx`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-042.md`; `CURRENT_WORK.md`; `docs/design/DESIGN_STATUS.md`; `docs/PRODUCT_STATUS.md`
 - Required checks: focused Web Profile/Settings test; full website test suite; website typecheck/build; Prettier; `pnpm verify:ai-worker-queue`; `pnpm verify:documentation-governance`; `pnpm verify:ai-continuity`; `pnpm test:dashboard`; `git diff --check`; responsive RTL/accessibility screenshot review; independent code/product review
 - Simulator required: no
 - Draft PR required: yes
@@ -280,16 +282,18 @@ Implementation and hardening are merged through PR #227 at `eda7630`. Dart forma
 - Blocked on: LB-DS-041 post-merge reconciliation on `origin/main`
 - Must not touch: sign out; account deletion; profile/server APIs; auth/session; review-sync activation; sound preference persistence (M3-S1); reminders; purchases/packs; provider/config; flags; deployment; Production; landing; Admin; Bobo assets
 - Acceptance: Web exposes Profile as the fourth persistent destination; Profile and child Settings show only real device-local goal/pending facts and truthful informational rows; no sign-out/deletion/fake account/commerce/reminder state; all relevant loading/offline/error/keyboard/focus/RTL/responsive states are tested and independently reviewed.
+- Note: the shared bottom `LearnerNav` is one component rendered on Today, Words, Progress and Profile, so `ProgressScreen.tsx` is included in the allowed paths for a single type-only widening of its `onNavigate` prop to the shared `LearnerDestination` union (no behavior change).
 
 ## LB-DS-043
 
-- Status: review_requested
+- Status: accepted
 - Executor: Android implementation worker
 - Base: `origin/main` at `0f4feb71dc01b878519cae58765284a6028b5daf`
 - Branch: `feature/m3-android-profile-settings`
 - Worktree: `/Volumes/LearnBox-Dev/LearnBox-final/lb-m3-android-profile-settings`
 - Head commit: `ebbe8b15fa110cd9d5b4c548e235a1fa51b06da9` (stable implementation commit; review-test and status hardening follow on the same branch)
-- Draft PR: #237 (draft) — https://github.com/bahramghorbani/learnbox/pull/237
+- Draft PR: #237 (merged) — https://github.com/bahramghorbani/learnbox/pull/237
+- Merge commit: `6c6f4b6cd89ed7c4d668c75925c1e1145e2f6156`
 - Risk: learner-android-ui-and-device-local-state
 - Specification: `docs/design/M3_PROFILE_SETTINGS_CONTRACT.md` §§3-6, 8, 10 (M3-P1 only); `docs/product-decisions/PDR-006-PROFILE-SETTINGS-ALPHA-POLICIES.md`
 - Allowed paths: `apps/mobile/lib/features/review/learner_home_shell.dart`; `apps/mobile/lib/features/review/profile_screen.dart`; `apps/mobile/lib/features/review/settings_screen.dart`; `apps/mobile/lib/ui/learner_bottom_navigation.dart`; `apps/mobile/test/learner_bottom_navigation_test.dart`; `apps/mobile/test/learner_profile_settings_test.dart`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-043.md`; `CURRENT_WORK.md`; `docs/design/DESIGN_STATUS.md`; `docs/PRODUCT_STATUS.md`
@@ -297,11 +301,11 @@ Implementation and hardening are merged through PR #227 at `eda7630`. Dart forma
 - Simulator required: yes
 - Draft PR required: yes
 - Merge allowed: yes
-- Blocked on: LB-DS-041 post-merge reconciliation on `origin/main`
+- Blocked on: none
 - Must not touch: sign out; account deletion; profile/server APIs; auth/session; review-sync activation; sound preference persistence (M3-S1); reminders; purchases/packs; provider/config; flags; deployment; Production; landing; Admin; Bobo assets
 - Acceptance: Android exposes Profile as the fourth persistent destination; Profile and child Settings show only real device-local pending facts and truthful informational rows; no sign-out/deletion/fake account/commerce/reminder state; navigation/focus/back/RTL/accessibility and target-device layout are verified without activating dormant native auth.
 
-Implementation is complete and locally verified in Draft PR #237 on
+Implementation was accepted and merged in PR #237 at `6c6f4b6` from
 `feature/m3-android-profile-settings`. Profile is the fourth persistent destination after Today,
 Words and Progress (PDR-006). Profile shows the neutral `حساب LearnBox` account label and the real
 device-local pending review count (zero, positive and failed-read/retry states, complete Persian

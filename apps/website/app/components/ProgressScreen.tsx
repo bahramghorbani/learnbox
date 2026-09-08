@@ -1,8 +1,8 @@
-import { LearnerNav } from './LearnerNav';
+import { LearnerNav, type LearnerDestination } from './LearnerNav';
 
 interface ProgressScreenProps {
   onStartReview: () => void;
-  onNavigate: (destination: 'today' | 'words' | 'progress') => void;
+  onNavigate: (destination: LearnerDestination) => void;
   reviewedToday: number;
   streakDays: number;
   pendingReviewCount: number;

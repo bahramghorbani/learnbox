@@ -6,21 +6,21 @@
 
 ### M3 Profile and Settings interaction contract
 
-- **Status:** accepted and merged in PR #235 at `213f2f1`. The owner approved the fourth Profile
-  destination, omission of sign out until local learner data is account-scoped, and omission of an
-  alpha account-deletion entry. PDR-006 records those decisions. Auth/session, provider and
-  Production work remain out of scope.
-- **Android M3-P1 (LB-DS-043):** implemented on `feature/m3-android-profile-settings` and in
-  `review_requested` — Draft PR #237. Profile is the fourth persistent destination showing the
-  neutral `حساب LearnBox` label and the real device-local pending review count; Settings is a child
-  surface with approved informational rows and a focus-restoring labelled back action. No goal row
-  (Android has no goal store); no sign-out, deletion, identity, commerce, reminder or sync state.
-  Focused widget tests 11/11, full Flutter 203/203, analyze/format/debug-APK and repo validators
-  pass; independent review returned PASS and emulator RTL visual evidence was captured. See
-  `.ai/worker-reports/LB-DS-043.md`.
-- **Web M3-P1 (LB-DS-042):** registered as a path-separated parallel task, still `ready` and
-  unassigned. Sound preference persistence (M3-S1), account-scoped storage before sign out, server
-  profile data, reminders and commerce remain separately gated.
+- **Status:** contract accepted and merged in PR #235 at `213f2f1`; PDR-006 records the owner
+  decisions. **Android M3-P1 (LB-DS-043)** merged in PR #237 at `6c6f4b6`: Profile is the fourth
+  persistent destination with a truthful device-local pending-review count; child Settings uses
+  approved informational rows and verified focus/back behavior. Its focused widget tests pass
+  11/11 and the full Flutter suite passes 203/203; independent review returned PASS.
+  **LB-DS-042 (Web M3-P1)** is `review_requested` on `feature/m3-web-profile-settings` with Draft
+  PR #238 (implementation and review hardening through `7b58ff2` plus status commits): Profile is
+  the fourth persistent learner destination and the truthful Profile/child Settings surfaces use
+  only device-local goal/pending-review facts and approved informational rows. Review hardening
+  verifies the single shared offline truth without duplicate announcements, restores goal-edit
+  focus, narrows idle copy to the pending-review queue and keeps navigation readable at 200% text
+  while preserving four columns at normal 390 px sizing. The type-only widening of
+  `ProgressScreen.onNavigate` to the shared `LearnerDestination` union is documented in the queue.
+  Both surfaces exclude sound persistence, sign out, deletion, server profile data, reminders,
+  commerce, activation and rollout.
 
 ### M1-D sync readiness boundary
 
