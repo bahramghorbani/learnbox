@@ -16,9 +16,9 @@
 - Documents updated: `.ai/WORK_QUEUE.md`, `CURRENT_WORK.md`, `docs/PRODUCT_STATUS.md`, `docs/design/DESIGN_STATUS.md`, this report. `PROJECT_STATE.md` intentionally unchanged because it records stable `main` facts only.
 - Rollback: leave `WEB_LEARNER_PROFILE_ENABLED` unset/false, or revert this branch. No session, data, schema or deployment state changes.
 - Secrets or production changes: none
-- Checks run: focused API repository/service 6/6; focused Web HTTP/route/client/Profile 36/36; full API 139/139; full Website 265/265; API/Website typecheck/build; `pnpm check`; `pnpm build`; migration, format, queue/documentation/continuity/dashboard validators; `git diff --check`; RTL responsive smoke; independent review PASS.
-- Checks unavailable: none.
-- Remaining work: no implementation. Runtime activation and Android identity remain separately gated.
+- Checks run: focused API repository/service 6/6; focused Web HTTP/route/client/Profile 36/36; full API 139/139; full Website 265/265; API/Website typecheck/build; `pnpm check`; `pnpm build`; migration, format, queue/documentation/continuity/dashboard validators; `git diff --check`; RTL responsive smoke.
+- Checks unavailable: independent high-reasoning security/product review.
+- Remaining work: independent high-reasoning security/product review; runtime activation and Android identity remain separately gated.
 - Risks: default-off runtime only; future activation needs separate owner-approved deployment/configuration review. Route-level signed-cookie 200 test is non-blocking future hardening.
 
 ## Scope
@@ -93,7 +93,7 @@
 
 ## Unavailable checks
 
-- Independent high-reasoning security/product review: PASS. Review found no blocking issue; route-level signed-cookie 200 test is a non-blocking future hardening note.
+- Independent high-reasoning security/product review: unavailable. Independent review ran on a lower tier, so it is not evidence for this required gate. Required merge-blocking review remains.
 
 ## Risks and remaining work
 

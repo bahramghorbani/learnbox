@@ -15,7 +15,7 @@
   offline/parse failure and server failure expose no identity. Profile retains device-local goal and
   pending-review facts during identity loading/error/offline states and has bounded retry for a failed
   server read. Full API (139) and Website (265) suites, builds/typechecks, root checks/build and
-  required validators pass. Independent high-reasoning security/product review passed with no blocker.
+  required validators pass. Independent high-reasoning security/product review remains merge-blocking.
   Android, raw-phone serialization, auth/session changes, migrations, deployment and activation remain
   out of scope.
 
