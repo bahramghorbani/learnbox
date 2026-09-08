@@ -4,20 +4,20 @@
 
 ## Active work
 
-### Starter Catalog 35 evidence reconciliation
+### Starter Catalog 35 release gates
 
-- **Status:** LB-DS-045 is `review_requested` on `docs/starter-catalog-evidence-reconcile`, based on PR
-  #240's merged fail-closed audit. The branch reconciles only committed evidence metadata: both
+- **Status:** LB-DS-045 evidence reconciliation was accepted and merged in PR #241 at `95c704b`.
+  Both
   candidate/draft batches now link the existing product-owner approval for German linguistic and
   Persian translation while every item remains `needs_review`; the 15-item provenance ledger keeps
   only unresolved release gates; and the Issue #59 V2 audio gate is derived deterministically from
   its ledger (36/40 transcription matches, four regeneration failures, 6/40 listening approvals,
   34/40 pending). The catalog remains 0/35 release-approved, `seedable: false` and
   `publicationBlocked: true`. Focused validators, Admin/API tests, migration validation, `pnpm check`
-  and `pnpm build` pass. Draft PR #241 is open; its implementation/evidence head passed GitHub CI 7/7
-  and independent review returned PASS. Live checks and final-head identity must still be read before merge.
-  No media generation/attachment, app-flow approval, seed, runtime flag, Preview/Production or
-  publication is in scope. See
+  and `pnpm build` passed; independent review returned PASS and all seven final-head GitHub contexts
+  succeeded. No media generation/attachment, app-flow approval, seed, runtime flag,
+  Preview/Production or publication was included. Remaining content gates are intentionally human- or
+  cost-authorized; continue with a separate non-overlapping engineering workstream. See
   `docs/content/STARTER_CATALOG_35_RELEASE_READINESS.md`.
 
 ### M3 Profile and Settings interaction contract
