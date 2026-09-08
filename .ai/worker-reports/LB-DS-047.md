@@ -3,14 +3,14 @@
 - Status: review_requested
 - Branch: `feature/m3-android-sound-preference`
 - Base commit: `7dba5adab77b0b90a228ac8c7aabab0bc54e3830` (`origin/main`, M3-S1 coordination PR #243 merge)
-- Head commit: `d285a6b9e26e56d6295ca041e9ae4a81403018d8` (includes merge of Web M3-S1 main commit `b5b07fca2fe102c0d8f68880d25154fc35df7d76` without rewriting history)
+- Head commit: implementation `ce3942d42f83236d9461e5de36b3a7678b43a146`; integration merge `d285a6b9e26e56d6295ca041e9ae4a81403018d8` includes Web M3-S1 main commit `b5b07fca2fe102c0d8f68880d25154fc35df7d76` without rewriting history. Verify the current pushed PR head remotely before merge; metadata commits intentionally do not claim a self-referential SHA.
 - Draft PR: #245 — https://github.com/bahramghorbani/learnbox/pull/245
 - Scope completed: yes
 - Files changed: `apps/mobile/lib/app.dart`, `apps/mobile/lib/features/review/review_screen.dart`, `apps/mobile/lib/features/review/settings_screen.dart`, `apps/mobile/lib/features/review/sound_preference_store.dart` (new), `apps/mobile/test/sound_preference_store_test.dart` (new), `apps/mobile/test/learner_profile_settings_test.dart`, `apps/mobile/test/mobile_learning_loop_test.dart`, `.ai/WORK_QUEUE.md`, `.ai/worker-reports/LB-DS-047.md`, `CURRENT_WORK.md`, `docs/design/DESIGN_STATUS.md`, `docs/PRODUCT_STATUS.md`
 - Supervisor-amended test-only paths (absent from the original coordination allowlist; approved after the required full suite exposed the regression — see Regression): `apps/mobile/test/support/sound_preference_test_storage.dart` (new), `apps/mobile/test/support/mobile_test_app.dart`, `apps/mobile/test/mobile_visual_parity_test.dart`, `apps/mobile/test/today_screen_states_test.dart`, `apps/mobile/test/mobile_auth_composition_test.dart`
 - Checks run: RED-first store tests then GREEN 17/17 (15 original + 2 storage-timeout tests added after the on-device hang root cause); focused `learner_profile_settings_test.dart` 14/14; focused `mobile_learning_loop_test.dart` 14/14; full Flutter suite 226/226 (verified twice before integration and once after merging current main); post-integration `flutter analyze` clean, `dart format --set-exit-if-changed` clean and `flutter build apk --debug` success; `git diff --check` clean; queue/documentation-governance/AI-continuity validators, dashboard tests and repo Prettier all clean; Android emulator RTL/persistence re-verification on Pixel_7 AVD (see Evidence)
 - Checks unavailable: emulator TalkBack screen-reader pass (semantics verified by widget tests via `SemanticsData.flagsCollection` and live-region flags; no TalkBack service installed on the AVD)
-- Remaining work: independent code/product review, final-head CI and merge; Web M3-S1 (LB-DS-046) is accepted and merged in PR #244; M3-A1 server identity reads unchanged
+- Remaining work: final-head CI and merge; independent code/product review completed against prior PR head `17561aa55af256670172f091d6cfe9909aa472bb` with no blocking code/product finding and this metadata correction requested; Web M3-S1 (LB-DS-046) is accepted and merged in PR #244; M3-A1 server identity reads unchanged
 - Risks: none identified beyond scope: sound preference is device-local and un-synced by contract; no native host/manifest/Gradle/iOS/auth/sync/personal-vocabulary/commerce/flags/deployment change included; no new dependency (uses the pre-existing `flutter_secure_storage` 11.0.0)
 - Secrets or production changes: none
 - Bobo canonical status: unchanged
@@ -139,5 +139,8 @@
 
 ## Review
 
-- Awaiting independent review. Queue requires a Draft PR before merge; branch is local-only at this
-  stage (not pushed, not merged). No secrets, credentials or production configuration touched.
+- Independent code/product review completed against PR head
+  `17561aa55af256670172f091d6cfe9909aa472bb`: no blocking code/product finding; the reviewer
+  requested only correction of stale head and local-only metadata. The branch is pushed as Draft PR
+  #245; this correction creates a new final head whose own CI must complete successfully before
+  merge. No secrets, credentials or production configuration touched.
