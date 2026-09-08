@@ -317,6 +317,42 @@ implementation/evidence diff and the final metadata-only delta. The exact final 
 five GitHub check runs and both Vercel commit-status contexts. No media, seed, approval, activation,
 Preview/Production or publication state changed.
 
+## LB-DS-046
+
+- Status: ready
+- Executor: Hermes Web implementation worker (M3-S1 Web)
+- Base: `origin/main` after the M3-S1 coordination PR; record the exact base SHA before implementation
+- Branch: `feature/m3-web-sound-preference`
+- Worktree: `/Volumes/LearnBox-Dev/LearnBox-final/lb-m3-web-sound-preference`
+- Risk: learner-web-device-local-preference-and-audio-gating
+- Specification: `docs/design/M3_PROFILE_SETTINGS_CONTRACT.md` §§3-6, 8, 10 (M3-S1 only); `docs/product-decisions/PDR-006-PROFILE-SETTINGS-ALPHA-POLICIES.md`
+- Allowed paths: `apps/website/app/LearnerHome.tsx`; `apps/website/app/components/SettingsScreen.tsx`; `apps/website/app/components/PronunciationButton.tsx`; `apps/website/app/globals.css`; `apps/website/app/sound-preference.ts`; `apps/website/test/learner-profile-settings.test.tsx`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-046.md`; `CURRENT_WORK.md`; `docs/design/DESIGN_STATUS.md`; `docs/PRODUCT_STATUS.md`
+- Required checks: RED/GREEN sound-preference tests; focused Web Profile/Settings tests; full website tests; website typecheck/build; Prettier; `pnpm verify:ai-worker-queue`; `pnpm verify:documentation-governance`; `pnpm verify:ai-continuity`; `pnpm test:dashboard`; `git diff --check`; responsive RTL/accessibility review; independent code/product review
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+- Blocked on: coordination PR merge and exact-base capture only
+- Must not touch: Android/mobile; Profile sound rows; sign out; account deletion; profile/server APIs; auth/session; review-sync activation; reminders; purchases/packs; provider/config; flags; deployment; Production; landing; Admin; Bobo assets; learning-engine package
+- Acceptance: Web persists one versioned device-local pronunciation preference with default-on compatibility; malformed or unknown records recover to enabled without touching unrelated keys; denied durable storage remains usable through the existing memory fallback; Settings exposes an accessible labelled switch and save status; disabled sound prevents Audio and speech-synthesis calls; no server, sync, auth or release claim is introduced.
+
+## LB-DS-047
+
+- Status: ready
+- Executor: Hermes Android implementation worker (M3-S1 Android)
+- Base: `origin/main` after the M3-S1 coordination PR; record the exact base SHA before implementation
+- Branch: `feature/m3-android-sound-preference`
+- Worktree: `/Volumes/LearnBox-Dev/LearnBox-final/lb-m3-android-sound-preference`
+- Risk: learner-android-device-local-preference-storage-and-audio-gating
+- Specification: `docs/design/M3_PROFILE_SETTINGS_CONTRACT.md` §§3-6, 8, 10 (M3-S1 only); `docs/product-decisions/PDR-006-PROFILE-SETTINGS-ALPHA-POLICIES.md`
+- Allowed paths: `apps/mobile/lib/app.dart`; `apps/mobile/lib/features/review/learner_home_shell.dart`; `apps/mobile/lib/features/review/today_screen.dart`; `apps/mobile/lib/features/review/review_screen.dart`; `apps/mobile/lib/features/review/settings_screen.dart`; `apps/mobile/lib/features/review/sound_preference_store.dart`; `apps/mobile/test/sound_preference_store_test.dart`; `apps/mobile/test/learner_profile_settings_test.dart`; `apps/mobile/test/mobile_learning_loop_test.dart`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-047.md`; `CURRENT_WORK.md`; `docs/design/DESIGN_STATUS.md`; `docs/PRODUCT_STATUS.md`
+- Required checks: RED/GREEN sound-preference store and audio-gate tests; focused Flutter Settings/learning-loop tests; full Flutter tests; Flutter analyze; Dart format; debug APK build; queue/documentation/continuity/dashboard validators; `git diff --check`; Android emulator RTL/accessibility review; independent code/product review
+- Simulator required: yes
+- Draft PR required: yes
+- Merge allowed: yes
+- Blocked on: coordination PR merge and exact-base capture only
+- Must not touch: Web; native Android host/manifest/Gradle; iOS; existing auth/sync/personal-vocabulary stores; sign out; account deletion; profile/server APIs; reminders; purchases/packs; provider/config; flags; deployment; Production; landing; Admin; Bobo assets
+- Acceptance: Android persists one versioned device-local pronunciation preference in a dedicated existing secure-storage-backed store with default-on compatibility; corrupt v1 data self-heals, unknown newer versions remain untouched, and storage failures never crash; Settings exposes an accessible labelled switch with save/revert status; disabled sound prevents `PronunciationPlayer.playAsset`; no new dependency, server, sync, auth or release claim is introduced.
+
 ## LB-DS-042
 
 - Status: accepted
