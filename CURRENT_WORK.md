@@ -6,16 +6,18 @@
 
 ### M3-S1 device-local pronunciation preference
 
-- **Status:** Web slice (LB-DS-046) implemented locally on
-  `feature/m3-web-sound-preference` and requested for review; not merged. Web persists one
-  versioned device-local pronunciation preference defaulting to enabled, recovers malformed or
-  unknown records to enabled without touching unrelated keys, keeps the Settings toggle usable
-  through the open-session memory fallback when durable storage is denied (labelled non-durable),
-  and gates real playback: when the preference is off both the Audio path and speechSynthesis are
-  disabled. Focused Profile/Settings suite 30/30 and the full Web suite 259/259 pass with website
-  typecheck/build. Android LB-DS-047 remains queued as the separate, non-overlapping Android slice
-  with the same default-on and fail-closed semantics. No server profile, sign out, deletion,
-  reminders, commerce, auth/sync activation, deployment or Production change is included.
+- **Status:** Web slice (LB-DS-046) is `review_requested` in Draft PR #244 on
+  `feature/m3-web-sound-preference`; not merged. Web persists one versioned device-local
+  pronunciation preference defaulting to enabled, recovers malformed or unknown records to enabled
+  without touching unrelated keys, keeps the Settings toggle usable through the open-session memory
+  fallback when durable storage is denied (labelled non-durable), and gates real playback: when the
+  preference is off both the Audio path and speechSynthesis are disabled. Focused Profile/Settings
+  suite 30/30 and the full Web suite 259/259 pass with website typecheck/build. Real-browser QA at
+  390 px confirmed no horizontal overflow, durable OFF persistence and a disabled pronunciation
+  control in the review flow. Independent review and final-head GitHub CI remain pending. Android
+  LB-DS-047 is in progress as the separate, non-overlapping Android slice with the same default-on
+  and fail-closed semantics. No server profile, sign out, deletion, reminders, commerce, auth/sync
+  activation, deployment or Production change is included.
 
 ### Starter Catalog 35 release gates
 
