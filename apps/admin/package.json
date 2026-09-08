@@ -12,11 +12,11 @@
     "@simplewebauthn/browser": "13.3.0",
     "@simplewebauthn/server": "^13.3.2",
     "@vercel/blob": "^2.6.1",
-    "next": "^15.4.5",
+    "next": "^15.5.24",
     "pg": "^8.22.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "sharp": "^0.35.3"
+    "sharp": "^0.35.4"
   },
   "devDependencies": {
     "@types/node": "^24.1.0",
