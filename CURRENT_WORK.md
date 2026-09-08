@@ -4,6 +4,19 @@
 
 ## Active work
 
+### Starter Catalog 35 release-readiness audit
+
+- **Status:** LB-DS-044 is `review_requested` on
+  `docs/starter-catalog-release-readiness-audit`. The fail-closed audit confirms 35/35 drafts and
+  35/35 linguistic approvals for only the two approved dimensions, but 0/35 release-approved
+  `card_versions`. The original 20 have candidate-stage provenance, V2-image and local-app-flow
+  evidence plus unattached V1 media with transcription QA; Issue #59 V2 audio regeneration is
+  incomplete (6/40 listening-approved, 34/40 pending/absent, four transcription mismatches). The
+  remaining 15 have no media candidates or app-flow approval. Draft/candidate intake, provenance and
+  Issue #59 gate/ledger chronology must be reconciled before release review. Seed, attachment,
+  activation and publication remain blocked. See
+  `docs/content/STARTER_CATALOG_35_RELEASE_READINESS.md`.
+
 ### M3 Profile and Settings interaction contract
 
 - **Status:** contract accepted and merged in PR #235 at `213f2f1`; PDR-006 records the owner
