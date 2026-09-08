@@ -14,8 +14,8 @@
   its ledger (36/40 transcription matches, four regeneration failures, 6/40 listening approvals,
   34/40 pending). The catalog remains 0/35 release-approved, `seedable: false` and
   `publicationBlocked: true`. Focused validators, Admin/API tests, migration validation, `pnpm check`
-  and `pnpm build` pass. Draft PR creation, independent review and GitHub CI remain pending. No media
-  generation/attachment, app-flow approval, seed, runtime flag, Preview/Production or publication is
+  and `pnpm build` pass. Draft PR #241 is open; independent review and GitHub CI remain pending. No
+  media generation/attachment, app-flow approval, seed, runtime flag, Preview/Production or publication is
   in scope. See
   `docs/content/STARTER_CATALOG_35_RELEASE_READINESS.md`.
 
