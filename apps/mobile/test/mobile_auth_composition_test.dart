@@ -5,9 +5,12 @@ import 'package:learnbox/features/identity/mobile_auth_config.dart';
 import 'package:learnbox/features/review/bundled_start_pack_repository.dart';
 import 'package:learnbox/features/review/review_queue.dart';
 import 'package:learnbox/features/review/secure_review_queue_store.dart';
+import 'package:learnbox/features/review/sound_preference_store.dart';
 import 'package:learnbox/features/sync/disabled_review_sync_transport.dart';
 import 'package:learnbox/features/sync/mobile_identity_state.dart';
 import 'package:learnbox/features/sync/review_sync_coordinator.dart';
+
+import 'support/sound_preference_test_storage.dart';
 
 void main() {
   test('native auth and review sync remain disabled by default', () {
@@ -64,6 +67,8 @@ Widget _app({
   return LearnBoxApp(
     startPackRepository: repository,
     reviewQueue: queue,
+    soundPreferenceStore:
+        SoundPreferenceStore(storage: InMemorySoundPreferenceStorage()),
     splashDuration: Duration.zero,
     authEnabled: authEnabled,
     authScreenBuilder: authScreenBuilder,

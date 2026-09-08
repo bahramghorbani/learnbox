@@ -7,10 +7,12 @@ import 'package:learnbox/features/review/completion_screen.dart';
 import 'package:learnbox/features/review/personal_vocabulary_store.dart';
 import 'package:learnbox/features/review/review_queue.dart';
 import 'package:learnbox/features/review/review_queue_store.dart';
+import 'package:learnbox/features/review/sound_preference_store.dart';
 import 'package:learnbox/features/review/start_card.dart';
 import 'package:learnbox/features/review/start_pack_repository.dart';
 import 'package:learnbox/features/review/words_screen.dart';
 
+import 'support/sound_preference_test_storage.dart';
 import 'mobile_learning_loop_test.dart'
     show ControlledReviewQueueStore, InMemoryStartPackRepository;
 
@@ -956,6 +958,7 @@ Future<void> _pumpApp(
   StartPackRepository? startPackRepository,
   ReviewQueue? reviewQueue,
   PersonalVocabularyStore? personalVocabularyStore,
+  SoundPreferenceStore? soundPreferenceStore,
   bool settle = true,
 }) async {
   tester.view.devicePixelRatio = 1;
@@ -983,6 +986,8 @@ Future<void> _pumpApp(
           PersonalVocabularyStore(
             storage: _MemoryPersonalVocabularyStorage(),
           ),
+      soundPreferenceStore: soundPreferenceStore ??
+          SoundPreferenceStore(storage: InMemorySoundPreferenceStorage()),
       splashDuration: Duration.zero,
     ),
   );

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:ui' show Tristate;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -7,6 +8,7 @@ import 'package:learnbox/app.dart';
 import 'package:learnbox/features/review/pronunciation_player.dart';
 import 'package:learnbox/features/review/review_queue.dart';
 import 'package:learnbox/features/review/review_queue_store.dart';
+import 'package:learnbox/features/review/sound_preference_store.dart';
 import 'package:learnbox/features/review/start_card.dart';
 import 'package:learnbox/features/review/start_pack_repository.dart';
 
@@ -124,7 +126,7 @@ void main() {
   testWidgets(
       'Settings is a child surface with a labelled back action that restores '
       'focus to the Settings row', (tester) async {
-    await _pumpApp(tester);
+    await _pumpApp(tester, soundPreferenceStore: _testSoundStore());
     await _openProfile(tester);
 
     await _tapSettingsRow(tester);
@@ -141,11 +143,17 @@ void main() {
       Directionality.of(tester.element(find.text('تنظیمات'))),
       TextDirection.rtl,
     );
-    // Approved informational rows only: text size follows the device and the
-    // language is Persian. No fake pickers, toggles or sound persistence.
+    // Approved rows: the real device-local sound switch plus informational
+    // text-size and language rows. No fake pickers, sliders or extra toggles.
+    expect(find.text('پخش تلفظ'), findsOneWidget);
+    expect(find.byType(Switch), findsOneWidget);
+    expect(
+      tester.widget<Switch>(find.byType(Switch)).value,
+      isTrue,
+      reason: 'sound defaults to enabled (safe default)',
+    );
     expect(find.text('اندازهٔ متن'), findsOneWidget);
     expect(find.text('زبان'), findsOneWidget);
-    expect(find.byType(Switch), findsNothing);
     expect(find.byType(Slider), findsNothing);
     expect(find.textContaining('خروج'), findsNothing);
     expect(tester.takeException(), isNull);
@@ -167,6 +175,201 @@ void main() {
     expect(find.text('پروفایل'), findsNWidgets(2));
     expect(_primaryFocusInsideSettingsRow(), isTrue,
         reason: 'system back must restore focus to the Settings row');
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('sound switch persists its choice and announces the save',
+      (tester) async {
+    final storage = _TestSoundPreferenceStorage();
+    await _pumpApp(tester, soundPreferenceStore: _testSoundStore(storage));
+    await _openProfile(tester);
+    await _tapSettingsRow(tester);
+    await tester.pumpAndSettle();
+
+    final switchFinder = find.byType(SwitchListTile);
+    await tester.ensureVisible(switchFinder);
+    await tester.pump();
+    expect(find.text('پخش تلفظ'), findsOneWidget);
+    expect(tester.widget<Switch>(find.byType(Switch)).value, isTrue);
+
+    final switchSemanticsData =
+        tester.getSemantics(switchFinder).getSemanticsData();
+    expect(switchSemanticsData.label, contains('پخش تلفظ'));
+    expect(
+      switchSemanticsData.flagsCollection.isToggled != Tristate.none,
+      isTrue,
+      reason: 'switch must announce it can be toggled (a11y)',
+    );
+    expect(
+      switchSemanticsData.flagsCollection.isToggled == Tristate.isTrue,
+      isTrue,
+      reason: 'sound defaults to enabled, so the toggle is on',
+    );
+
+    await tester.tap(find.byType(Switch));
+    await tester.pumpAndSettle();
+
+    expect(tester.widget<Switch>(find.byType(Switch)).value, isFalse);
+    expect(
+      jsonDecode(storage.value!),
+      {'version': 1, 'enabled': false},
+      reason: 'the choice must persist as a versioned v1 record',
+    );
+    final savedStatus = find.text('تنظیم ذخیره شد.');
+    expect(savedStatus, findsOneWidget);
+    expect(
+      tester
+          .getSemantics(find.byKey(const ValueKey('sound-saved-live-region')))
+          .getSemanticsData()
+          .flagsCollection
+          .isLiveRegion,
+      isTrue,
+      reason: 'save feedback must announce itself to screen readers',
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('failed sound save reverts the switch and retry succeeds',
+      (tester) async {
+    final storage = _TestSoundPreferenceStorage(failNextWrites: 1);
+    await _pumpApp(tester, soundPreferenceStore: _testSoundStore(storage));
+    await _openProfile(tester);
+    await _tapSettingsRow(tester);
+    await tester.pumpAndSettle();
+
+    final switchFinder = find.byType(Switch);
+    expect(tester.widget<Switch>(switchFinder).value, isTrue);
+    await tester.tap(switchFinder);
+    await tester.pumpAndSettle();
+
+    // The failed save must revert: the switch never moved and the previous
+    // state stays usable with a truthful error and retry action.
+    expect(tester.widget<Switch>(switchFinder).value, isTrue);
+    expect(storage.value, isNull);
+    expect(
+      find.text('ذخیرهٔ تنظیم انجام نشد؛ دوباره تلاش کن.'),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
+
+    await tester.tap(find.text('تلاش دوباره'));
+    await tester.pumpAndSettle();
+
+    expect(tester.widget<Switch>(switchFinder).value, isFalse);
+    expect(jsonDecode(storage.value!), {'version': 1, 'enabled': false});
+    expect(
+      find.text('ذخیرهٔ تنظیم انجام نشد؛ دوباره تلاش کن.'),
+      findsNothing,
+    );
+    expect(find.text('تنظیم ذخیره شد.'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('sound read failure keeps the safe enabled default with retry',
+      (tester) async {
+    final storage = _TestSoundPreferenceStorage(
+      value: jsonEncode({'version': 1, 'enabled': false}),
+      failNextReads: 1,
+    );
+    await _pumpApp(tester, soundPreferenceStore: _testSoundStore(storage));
+    await _openProfile(tester);
+    await _tapSettingsRow(tester);
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('خواندن تنظیم صدا انجام نشد؛ پخش صدا روشن فرض شد.'),
+      findsOneWidget,
+    );
+    expect(tester.widget<Switch>(find.byType(Switch)).value, isTrue);
+
+    await tester.tap(find.text('تلاش دوباره'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('خواندن تنظیم صدا انجام نشد؛ پخش صدا روشن فرض شد.'),
+      findsNothing,
+    );
+    expect(tester.widget<Switch>(find.byType(Switch)).value, isFalse,
+        reason: 'retry must read the real persisted choice');
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets(
+      'sound OFF removes every review audio control and blocks playback',
+      (tester) async {
+    final storage = _TestSoundPreferenceStorage(
+      value: jsonEncode({'version': 1, 'enabled': true}),
+    );
+    final player = _RecordingPronunciationPlayer();
+    await _pumpApp(
+      tester,
+      soundPreferenceStore: _testSoundStore(storage),
+      pronunciationPlayer: player,
+    );
+    await _openProfile(tester);
+    await _tapSettingsRow(tester);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(Switch));
+    await tester.pumpAndSettle();
+    expect(tester.widget<Switch>(find.byType(Switch)).value, isFalse);
+
+    await tester.tap(find.text('بازگشت به پروفایل'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('امروز'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('شروع مرور'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('پخش تلفظ واژه'), findsNothing);
+    expect(find.text('پخش جمله نمونه'), findsNothing);
+    for (var card = 0; card < 3; card += 1) {
+      await _tapVisibleText(tester, 'نمایش پاسخ');
+      await tester.pumpAndSettle();
+      expect(find.text('پخش جمله نمونه'), findsNothing,
+          reason: 'card ${card + 1} must not offer audio while sound is off');
+      await _tapVisibleText(tester, 'بلد بودم');
+      await tester.pumpAndSettle();
+    }
+    expect(player.playedPaths, isEmpty,
+        reason: 'OFF must prevent PronunciationPlayer.playAsset entirely');
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('sound switch is a live control: ON restores working audio',
+      (tester) async {
+    final storage = _TestSoundPreferenceStorage(
+      value: jsonEncode({'version': 1, 'enabled': false}),
+    );
+    final player = _RecordingPronunciationPlayer();
+    await _pumpApp(
+      tester,
+      soundPreferenceStore: _testSoundStore(storage),
+      pronunciationPlayer: player,
+    );
+    await _openProfile(tester);
+    await _tapSettingsRow(tester);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(Switch));
+    await tester.pumpAndSettle();
+    expect(tester.widget<Switch>(find.byType(Switch)).value, isTrue);
+    expect(jsonDecode(storage.value!), {'version': 1, 'enabled': true});
+
+    await tester.tap(find.text('بازگشت به پروفایل'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('امروز'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('شروع مرور'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('پخش تلفظ واژه'));
+    await tester.pump();
+    expect(
+        player.playedPaths, ['assets/audio/start-a1-haus-word-audio-v2.mp3']);
+    await tester.tap(find.text('نمایش پاسخ'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('پخش جمله نمونه'));
+    await tester.pump();
+    expect(player.playedPaths, hasLength(2));
     expect(tester.takeException(), isNull);
   });
 
@@ -226,24 +429,32 @@ Future<void> _pumpApp(
   ReviewQueue? queue,
   Size size = const Size(390, 844),
   double textScaleFactor = 1,
+  SoundPreferenceStore? soundPreferenceStore,
+  PronunciationPlayer? pronunciationPlayer,
 }) async {
   tester.view.devicePixelRatio = 1;
   tester.view.physicalSize = size;
   tester.platformDispatcher.textScaleFactorTestValue = textScaleFactor;
   addTearDown(tester.view.resetDevicePixelRatio);
   addTearDown(tester.view.resetPhysicalSize);
-  addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+  addTearDown(
+    tester.platformDispatcher.clearTextScaleFactorTestValue,
+  );
   await tester.pumpWidget(
     LearnBoxApp(
       key: UniqueKey(),
       startPackRepository: _InMemoryStartPackRepository(),
       reviewQueue: queue ?? ReviewQueue(store: SeededReviewQueueStore()),
-      pronunciationPlayer: _SilentPronunciationPlayer(),
+      pronunciationPlayer: pronunciationPlayer ?? _SilentPronunciationPlayer(),
+      soundPreferenceStore: soundPreferenceStore ?? _testSoundStore(),
       splashDuration: Duration.zero,
     ),
   );
   await tester.pumpAndSettle();
 }
+
+SoundPreferenceStore _testSoundStore([_TestSoundPreferenceStorage? storage]) =>
+    SoundPreferenceStore(storage: storage ?? _TestSoundPreferenceStorage());
 
 Future<void> _openProfile(WidgetTester tester, {bool settle = true}) async {
   await tester.tap(find.text('پروفایل'));
@@ -274,6 +485,12 @@ bool _primaryFocusInsideSettingsRow() {
     return true;
   });
   return inside;
+}
+
+Future<void> _tapVisibleText(WidgetTester tester, String text) async {
+  final target = find.text(text);
+  await tester.ensureVisible(target);
+  await tester.tap(target);
 }
 
 bool _primaryFocusInsideBackAction() {
@@ -414,6 +631,48 @@ class _InMemoryStartPackRepository implements StartPackRepository {
 class _SilentPronunciationPlayer implements PronunciationPlayer {
   @override
   Future<void> playAsset(String assetPath) async {}
+
+  @override
+  Future<void> stop() async {}
+}
+
+class _TestSoundPreferenceStorage implements SoundPreferenceStorage {
+  _TestSoundPreferenceStorage({
+    this.value,
+    this.failNextReads = 0,
+    this.failNextWrites = 0,
+  });
+
+  String? value;
+  int failNextReads;
+  int failNextWrites;
+
+  @override
+  Future<String?> read() async {
+    if (failNextReads > 0) {
+      failNextReads -= 1;
+      throw StateError('synthetic sound storage read failure');
+    }
+    return value;
+  }
+
+  @override
+  Future<void> write(String value) async {
+    if (failNextWrites > 0) {
+      failNextWrites -= 1;
+      throw StateError('synthetic sound storage write failure');
+    }
+    this.value = value;
+  }
+}
+
+class _RecordingPronunciationPlayer implements PronunciationPlayer {
+  final playedPaths = <String>[];
+
+  @override
+  Future<void> playAsset(String assetPath) async {
+    playedPaths.add(assetPath);
+  }
 
   @override
   Future<void> stop() async {}

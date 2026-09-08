@@ -2,8 +2,11 @@ import 'package:flutter/widgets.dart';
 import 'package:learnbox/app.dart';
 import 'package:learnbox/features/review/review_queue.dart';
 import 'package:learnbox/features/review/review_queue_store.dart';
+import 'package:learnbox/features/review/sound_preference_store.dart';
 import 'package:learnbox/features/review/start_card.dart';
 import 'package:learnbox/features/review/start_pack_repository.dart';
+
+import 'sound_preference_test_storage.dart';
 
 Widget buildMobileTestApp({
   Duration splashDuration = const Duration(seconds: 3),
@@ -14,6 +17,8 @@ Widget buildMobileTestApp({
         store: _InMemoryReviewQueueStore(),
         idFactory: () => 'test-event',
       ),
+      soundPreferenceStore:
+          SoundPreferenceStore(storage: InMemorySoundPreferenceStorage()),
       splashDuration: splashDuration,
     );
 

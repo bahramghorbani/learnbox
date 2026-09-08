@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 
 import '../../ui/learnbox_theme.dart';
+import 'sound_preference_store.dart';
 
-/// Settings is a child surface opened from Profile (PDR-006). M3-P1 exposes
-/// only truthful informational rows: text size follows the device setting and
-/// the language is Persian. Nothing here persists, toggles a preference,
-/// signs out, deletes data or fabricates a control whose backing feature is
-/// not implemented (sound and goal preferences are M3-S1+).
+/// Settings is a child surface opened from Profile (PDR-006). M3-S1 adds the
+/// first real device-local preference: the pronunciation sound switch backed
+/// by the versioned secure `SoundPreferenceStore` (default enabled). The
+/// remaining rows stay truthful informational-only rows; nothing here signs
+/// out, deletes data or fabricates a control whose backing feature is not
+/// implemented.
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
@@ -67,13 +69,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'در این نسخه، گزینه‌های زیر فقط اطلاعاتی هستند و چیزی روی '
-                  'دستگاه تغییر یا ذخیره نمی‌کنند.',
+                  'تنظیمات صدا روی همین دستگاه ذخیره می‌شود؛ بقیهٔ گزینه‌ها در '
+                  'این نسخه فقط اطلاعاتی هستند.',
                   style: Theme.of(context)
                       .textTheme
                       .bodyMedium
                       ?.copyWith(color: learnBoxMuted),
                 ),
+                const SizedBox(height: 16),
+                const _SoundPreferenceCard(),
                 const SizedBox(height: 16),
                 const _InfoCard(
                   title: 'اندازهٔ متن',
@@ -92,6 +96,117 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ),
       );
+}
+
+class _SoundPreferenceCard extends StatelessWidget {
+  const _SoundPreferenceCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = SoundPreferenceScope.maybeOf(context);
+    if (controller == null) return const SizedBox.shrink();
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SwitchListTile(
+              key: const ValueKey('sound-preference-switch'),
+              value: controller.soundEnabled,
+              onChanged: controller.saving || controller.loading
+                  ? null
+                  : controller.setEnabled,
+              title: const Text('پخش تلفظ'),
+              subtitle: const Text('پخش صدای واژه‌ها هنگام مرور'),
+              contentPadding: EdgeInsets.zero,
+            ),
+            const SizedBox(height: 4),
+            if (controller.loading)
+              Semantics(
+                key: const ValueKey('sound-loading-live-region'),
+                liveRegion: true,
+                child: Row(
+                  children: [
+                    const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'در حال خواندن تنظیم صدا',
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyMedium
+                          ?.copyWith(color: learnBoxMuted),
+                    ),
+                  ],
+                ),
+              )
+            else if (controller.saveFailed) ...[
+              Semantics(
+                key: const ValueKey('sound-save-error-live-region'),
+                liveRegion: true,
+                child: Text(
+                  'ذخیرهٔ تنظیم انجام نشد؛ دوباره تلاش کن.',
+                  textAlign: TextAlign.start,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+                ),
+              ),
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: TextButton.icon(
+                  onPressed: controller.saving ? null : controller.retry,
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('تلاش دوباره'),
+                ),
+              ),
+            ] else if (controller.loadFailed)
+              Semantics(
+                key: const ValueKey('sound-read-error-live-region'),
+                liveRegion: true,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'خواندن تنظیم صدا انجام نشد؛ پخش صدا روشن فرض شد.',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+                    Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: TextButton.icon(
+                        onPressed:
+                            controller.loading ? null : controller.retryLoad,
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('تلاش دوباره'),
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            else if (controller.lastSaveSucceeded == true)
+              Semantics(
+                key: const ValueKey('sound-saved-live-region'),
+                liveRegion: true,
+                child: Text(
+                  'تنظیم ذخیره شد.',
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.copyWith(color: learnBoxPrimary),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _InfoCard extends StatelessWidget {

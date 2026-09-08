@@ -5,9 +5,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:learnbox/app.dart';
 import 'package:learnbox/features/review/review_queue.dart';
 import 'package:learnbox/features/review/review_queue_store.dart';
+import 'package:learnbox/features/review/sound_preference_store.dart';
 import 'package:learnbox/features/review/start_card.dart';
 import 'package:learnbox/features/review/start_pack_repository.dart';
 
+import 'support/sound_preference_test_storage.dart';
 import 'mobile_learning_loop_test.dart'
     show ControlledReviewQueueStore, InMemoryStartPackRepository;
 
@@ -133,6 +135,7 @@ Future<void> _pumpApp(
   double textScaleFactor = 1,
   StartPackRepository? startPackRepository,
   ReviewQueue? reviewQueue,
+  SoundPreferenceStore? soundPreferenceStore,
   bool settle = true,
 }) async {
   tester.view.devicePixelRatio = 1;
@@ -148,6 +151,8 @@ Future<void> _pumpApp(
       startPackRepository: startPackRepository ?? InMemoryStartPackRepository(),
       reviewQueue:
           reviewQueue ?? ReviewQueue(store: ControlledReviewQueueStore()),
+      soundPreferenceStore: soundPreferenceStore ??
+          SoundPreferenceStore(storage: InMemorySoundPreferenceStorage()),
       splashDuration: Duration.zero,
     ),
   );
