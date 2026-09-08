@@ -196,9 +196,7 @@ describe('SettingsScreen (Profile child)', () => {
   it('renders the pronunciation switch as a real toggle defaulting to enabled', async () => {
     rendered = await renderSettings({ goal: 'travel' });
 
-    const soundSwitch = rendered.container.querySelector<HTMLInputElement>(
-      'input[role="switch"]',
-    );
+    const soundSwitch = rendered.container.querySelector<HTMLInputElement>('input[role="switch"]');
     expect(soundSwitch).not.toBeNull();
     expect(soundSwitch?.getAttribute('aria-checked')).toBe('true');
     expect(soundSwitch?.getAttribute('aria-label')).toBe('پخش تلفظ');
@@ -479,9 +477,9 @@ describe('learner Profile and Settings shell flows', () => {
       version: 1,
       enabled: false,
     });
-    expect(rendered.container.querySelector('input[role="switch"]')?.getAttribute('aria-checked')).toBe(
-      'false',
-    );
+    expect(
+      rendered.container.querySelector('input[role="switch"]')?.getAttribute('aria-checked'),
+    ).toBe('false');
     expect(rendered.text()).toContain('تنظیم روی این دستگاه ذخیره شد.');
 
     // The disabled preference stops the Audio path in a later session.
@@ -546,9 +544,9 @@ describe('learner Profile and Settings shell flows', () => {
     await rendered.clickButton('پروفایل');
     await rendered.clickButton('تنظیمات');
     expect(rendered.text()).toContain('پخش تلفظ');
-    expect(rendered.container.querySelector('input[role="switch"]')?.getAttribute('aria-checked')).toBe(
-      'true',
-    );
+    expect(
+      rendered.container.querySelector('input[role="switch"]')?.getAttribute('aria-checked'),
+    ).toBe('true');
     // The goal row still reads its own key and the corrupt record is left intact.
     expect(rendered.text()).toContain('زندگی در آلمان');
     expect(window.localStorage.getItem(soundPreferenceStorageKey)).toBe('{not-json');
@@ -573,9 +571,9 @@ describe('learner Profile and Settings shell flows', () => {
 
     await toggleSoundSwitch(rendered.container);
 
-    expect(rendered.container.querySelector('input[role="switch"]')?.getAttribute('aria-checked')).toBe(
-      'false',
-    );
+    expect(
+      rendered.container.querySelector('input[role="switch"]')?.getAttribute('aria-checked'),
+    ).toBe('false');
     // Denied durable storage stays usable through the open-session memory
     // fallback and is labelled non-durable, never presented as saved forever.
     expect(rendered.text()).toContain('تا پایان این نشست');

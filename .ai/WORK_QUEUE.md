@@ -319,9 +319,9 @@ Preview/Production or publication state changed.
 
 ## LB-DS-046
 
-- Status: ready
+- Status: review_requested
 - Executor: Hermes Web implementation worker (M3-S1 Web)
-- Base: `origin/main` after the M3-S1 coordination PR; record the exact base SHA before implementation
+- Base: `origin/main` at `7dba5adab77b0b90a228ac8c7aabab0bc54e3830` (M3-S1 coordination merge)
 - Branch: `feature/m3-web-sound-preference`
 - Worktree: `/Volumes/LearnBox-Dev/LearnBox-final/lb-m3-web-sound-preference`
 - Risk: learner-web-device-local-preference-and-audio-gating
@@ -334,6 +334,12 @@ Preview/Production or publication state changed.
 - Blocked on: coordination PR merge and exact-base capture only
 - Must not touch: Android/mobile; Profile sound rows; sign out; account deletion; profile/server APIs; auth/session; review-sync activation; reminders; purchases/packs; provider/config; flags; deployment; Production; landing; Admin; Bobo assets; learning-engine package
 - Acceptance: Web persists one versioned device-local pronunciation preference with default-on compatibility; malformed or unknown records recover to enabled without touching unrelated keys; denied durable storage remains usable through the existing memory fallback; Settings exposes an accessible labelled switch and save status; disabled sound prevents Audio and speech-synthesis calls; no server, sync, auth or release claim is introduced.
+
+Web M3-S1 was implemented locally on `feature/m3-web-sound-preference` with strict RED→GREEN tests
+(focused Profile/Settings suite 30/30, full Web suite 259/259, website typecheck and production
+build pass) and committed for review; no push, PR or merge was made in this task. The RED→GREEN
+evidence, exact check counts, commit SHA and remaining review items are recorded in the worker
+report `.ai/worker-reports/LB-DS-046.md`.
 
 ## LB-DS-047
 
