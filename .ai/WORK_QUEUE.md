@@ -373,9 +373,9 @@ successfully on that exact head before merge.
 
 ## LB-DS-049
 
-- Status: ready
+- Status: in_progress
 - Executor: high-reasoning serial Admin/content-persistence worker (M2)
-- Base: `origin/main` at `4d548064cf3bf0cfadd6a9b964546fecf72e41d3` (PR #249 post-merge reconciliation)
+- Base: `origin/main` at `956bec3252a95f1e13b305f4416aa75e7504780b` (PR #250 scope authorization)
 - Branch: `feature/admin-starter-review-persistence`
 - Risk: security-sensitive-admin-write-and-content-data-migration
 - Specification: `docs/product-decisions/PDR-008-ADMIN-STARTER-REVIEW-PERSISTENCE.md`; ADR 0015; ADR 0016; `docs/product-decisions/PDR-005-LEARNING-CONTENT-FACTORY.md`
