@@ -5,12 +5,16 @@ import { useState } from 'react';
 interface PronunciationButtonProps {
   text: string;
   src?: string;
+  // Device-local pronunciation preference (M3-S1). When off, neither the Audio
+  // nor the speechSynthesis path may run; the button is a real disabled control.
+  soundEnabled?: boolean;
 }
 
-export function PronunciationButton({ text, src }: PronunciationButtonProps) {
+export function PronunciationButton({ text, src, soundEnabled = true }: PronunciationButtonProps) {
   const [status, setStatus] = useState<'idle' | 'playing' | 'unavailable'>('idle');
 
   const play = () => {
+    if (!soundEnabled) return;
     if (src) {
       const audio = new Audio(src);
       audio.onplay = () => setStatus('playing');
@@ -35,23 +39,31 @@ export function PronunciationButton({ text, src }: PronunciationButtonProps) {
     window.speechSynthesis.speak(utterance);
   };
 
-  const label =
-    status === 'playing'
+  const label = soundEnabled
+    ? status === 'playing'
       ? 'در حال پخش تلفظ'
       : status === 'unavailable'
         ? 'پخش تلفظ در این مرورگر در دسترس نیست'
-        : `پخش تلفظ ${text}`;
+        : `پخش تلفظ ${text}`
+    : 'پخش تلفظ خاموش است';
 
   return (
     <button
       className={`audio-button ${status === 'playing' ? 'audio-button-playing' : ''}`}
       type="button"
       onClick={play}
+      disabled={!soundEnabled}
       aria-label={label}
       title={label}
     >
       <SpeakerIcon />
-      <span>{status === 'unavailable' ? 'صدا در دسترس نیست' : 'شنیدن تلفظ'}</span>
+      <span>
+        {!soundEnabled
+          ? 'تلفظ خاموش است'
+          : status === 'unavailable'
+            ? 'صدا در دسترس نیست'
+            : 'شنیدن تلفظ'}
+      </span>
     </button>
   );
 }

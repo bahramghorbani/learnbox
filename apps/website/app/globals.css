@@ -1597,6 +1597,13 @@ p {
 .audio-button-playing {
   background: #e2deff;
 }
+.audio-button:disabled,
+.audio-button:disabled:hover {
+  background: #f0eeff;
+  color: #8b93c2;
+  cursor: default;
+  opacity: 0.7;
+}
 .card-face img {
   width: 100%;
   height: auto;
@@ -1951,6 +1958,70 @@ p {
   color: var(--muted);
   font-size: 12.5px;
   line-height: 1.9;
+}
+.settings-row-switch {
+  padding: 0;
+}
+.settings-switch-control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  width: 100%;
+  min-height: 78px;
+  padding: 16px 20px;
+  cursor: pointer;
+  text-align: right;
+}
+.settings-switch-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  opacity: 0;
+}
+.settings-switch-track {
+  position: relative;
+  flex: 0 0 auto;
+  width: 52px;
+  height: 30px;
+  border-radius: 999px;
+  background: #e4e0f2;
+  transition: background 0.18s ease;
+}
+.settings-switch-track::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  inset-inline-start: 3px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 6px #34426f33;
+  transition:
+    inset-inline-start 0.18s ease,
+    inset-inline-end 0.18s ease;
+}
+.settings-switch-input:checked ~ .settings-switch-track {
+  background: var(--primary);
+}
+.settings-switch-input:checked ~ .settings-switch-track::after {
+  inset-inline-start: auto;
+  inset-inline-end: 3px;
+}
+.settings-switch-input:focus-visible ~ .settings-switch-track {
+  outline: 3px solid #25213b;
+  outline-offset: 3px;
+}
+.settings-save-status {
+  margin: 12px 6px 0;
+  color: #4054bf;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.8;
 }
 @media (max-width: 420px) {
   .app-shell {

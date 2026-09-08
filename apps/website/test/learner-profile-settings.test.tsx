@@ -9,6 +9,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { LearnerNav } from '../app/components/LearnerNav';
 import { ProfileScreen } from '../app/components/ProfileScreen';
 import { SettingsScreen } from '../app/components/SettingsScreen';
+import {
+  loadSoundPreference,
+  parseSoundPreferenceRecord,
+  resetSoundPreferenceMemory,
+  saveSoundPreference,
+  soundPreferenceStorageKey,
+  type SoundPreferenceDurability,
+} from '../app/sound-preference';
 
 const reviewSyncKey = 'learnbox:review-sync:v1:local-prototype';
 const onboardingGoalKey = 'learnbox:onboarding-goal:v1:local-prototype';
@@ -171,18 +179,60 @@ describe('SettingsScreen (Profile child)', () => {
     expect(choseGoal).toBe(true);
   });
 
-  it('shows only informational accessibility/language rows and no fake controls', async () => {
+  it('shows the device-local pronunciation switch and only approved informational rows', async () => {
     rendered = await renderSettings({ goal: 'travel' });
 
+    expect(rendered.text()).toContain('پخش تلفظ');
     expect(rendered.text()).toContain('اندازهٔ متن');
     expect(rendered.text()).toContain('زبان برنامه');
     expect(rendered.text()).toContain('فارسی');
-    expect(rendered.text()).not.toContain('پخش تلفظ');
+    expect(rendered.container.querySelectorAll('[role="switch"]')).toHaveLength(1);
     expect(rendered.text()).not.toContain('یادآور');
     expect(rendered.text()).not.toContain('خروج');
     expect(rendered.text()).not.toContain('حذف حساب');
-    expect(rendered.container.querySelectorAll('[role="switch"]')).toHaveLength(0);
     expect(rendered.container.querySelectorAll('select')).toHaveLength(0);
+  });
+
+  it('renders the pronunciation switch as a real toggle defaulting to enabled', async () => {
+    rendered = await renderSettings({ goal: 'travel' });
+
+    const soundSwitch = rendered.container.querySelector<HTMLInputElement>(
+      'input[role="switch"]',
+    );
+    expect(soundSwitch).not.toBeNull();
+    expect(soundSwitch?.getAttribute('aria-checked')).toBe('true');
+    expect(soundSwitch?.getAttribute('aria-label')).toBe('پخش تلفظ');
+    expect(rendered.text()).toContain('روی این دستگاه');
+  });
+
+  it('toggles the pronunciation preference and announces the durable save politely', async () => {
+    let toggledTo: boolean | null = null;
+    rendered = await renderSettings({
+      goal: 'travel',
+      onToggleSound: async (enabled) => {
+        toggledTo = enabled;
+        return 'durable';
+      },
+    });
+
+    await toggleSoundSwitch(rendered.container);
+
+    expect(toggledTo).toBe(false);
+    const status = rendered.container.querySelector<HTMLElement>('.settings-save-status');
+    expect(status?.getAttribute('role')).toBe('status');
+    expect(rendered.text()).toContain('تنظیم روی این دستگاه ذخیره شد.');
+  });
+
+  it('labels a session-only save as non-durable when persistent storage is denied', async () => {
+    rendered = await renderSettings({
+      goal: 'travel',
+      onToggleSound: async (enabled) => (enabled ? 'durable' : 'session'),
+    });
+
+    await toggleSoundSwitch(rendered.container);
+
+    expect(rendered.text()).toContain('تا پایان این نشست');
+    expect(rendered.text()).not.toContain('تنظیم روی این دستگاه ذخیره شد.');
   });
 });
 
@@ -221,6 +271,63 @@ describe('LearnerNav', () => {
   });
 });
 
+describe('versioned sound preference record', () => {
+  beforeEach(() => {
+    resetSoundPreferenceMemory();
+    installLocalStorage();
+  });
+
+  it('defaults to enabled when no record exists', () => {
+    expect(parseSoundPreferenceRecord(null)).toBe(true);
+    expect(window.localStorage.getItem(soundPreferenceStorageKey)).toBeNull();
+  });
+
+  it('reads a stored version-1 enabled record', () => {
+    window.localStorage.setItem(soundPreferenceStorageKey, '{"version":1,"enabled":true}');
+    expect(loadSoundPreference()).toBe(true);
+  });
+
+  it('reads a stored version-1 disabled record', () => {
+    window.localStorage.setItem(soundPreferenceStorageKey, '{"version":1,"enabled":false}');
+    expect(loadSoundPreference()).toBe(false);
+  });
+
+  it('recovers to enabled for malformed records without touching unrelated keys', () => {
+    window.localStorage.setItem(soundPreferenceStorageKey, '{not-json');
+    window.localStorage.setItem(onboardingGoalKey, 'life');
+    expect(parseSoundPreferenceRecord('{not-json')).toBe(true);
+    expect(loadSoundPreference()).toBe(true);
+    // Recovery is read-only: unrelated device-local keys and the corrupt record stay untouched.
+    expect(window.localStorage.getItem(onboardingGoalKey)).toBe('life');
+    expect(window.localStorage.getItem(soundPreferenceStorageKey)).toBe('{not-json');
+  });
+
+  it('recovers to enabled for unknown future versions', () => {
+    expect(parseSoundPreferenceRecord('{"version":2,"enabled":false}')).toBe(true);
+    expect(parseSoundPreferenceRecord('{"version":1,"enabled":"false"}')).toBe(true);
+    expect(parseSoundPreferenceRecord('[]')).toBe(true);
+  });
+
+  it('saves an explicit version-1 record durably', () => {
+    expect(saveSoundPreference(false)).toBe('durable');
+    expect(JSON.parse(window.localStorage.getItem(soundPreferenceStorageKey) ?? 'null')).toEqual({
+      version: 1,
+      enabled: false,
+    });
+  });
+
+  it('keeps the preference usable for the open session when durable storage is denied', () => {
+    Object.defineProperty(window, 'localStorage', {
+      configurable: true,
+      get() {
+        throw new DOMException('denied', 'SecurityError');
+      },
+    });
+    expect(saveSoundPreference(false)).toBe('session');
+    expect(loadSoundPreference()).toBe(false);
+  });
+});
+
 describe('learner Profile and Settings shell flows', () => {
   let rendered: RenderedLearner | undefined;
 
@@ -228,6 +335,7 @@ describe('learner Profile and Settings shell flows', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-08-08T12:00:00.000Z'));
     installLocalStorage();
+    resetSoundPreferenceMemory();
   });
 
   afterEach(async () => {
@@ -336,6 +444,143 @@ describe('learner Profile and Settings shell flows', () => {
     // The onboarding goal still reads back from the in-memory session fallback.
     expect(rendered.text()).toContain('زندگی در آلمان');
   });
+
+  it('persists an off pronunciation preference and disables audio pronunciation in sessions', async () => {
+    window.localStorage.setItem(onboardingGoalKey, 'life');
+    const playMock = vi.fn(() => Promise.resolve());
+    vi.stubGlobal(
+      'Audio',
+      class {
+        onplay: (() => void) | null = null;
+        onended: (() => void) | null = null;
+        onerror: (() => void) | null = null;
+        play = playMock;
+      },
+    );
+    rendered = await renderLearner();
+    await rendered.signInLocally();
+
+    // The preference defaults to enabled, so the first session plays word audio.
+    await rendered.clickButton('شروع مرور');
+    await rendered.clickButton('شنیدن تلفظ');
+    expect(playMock).toHaveBeenCalledTimes(1);
+
+    await rendered.clickButton('خروج از جلسه');
+    await rendered.clickButton('پروفایل');
+    await rendered.clickButton('تنظیمات');
+    expect(
+      rendered.container.querySelector('input[role="switch"]')?.getAttribute('aria-checked'),
+    ).toBe('true');
+
+    await toggleSoundSwitch(rendered.container);
+
+    // The toggle persists an explicit version-1 record.
+    expect(JSON.parse(window.localStorage.getItem(soundPreferenceStorageKey) ?? 'null')).toEqual({
+      version: 1,
+      enabled: false,
+    });
+    expect(rendered.container.querySelector('input[role="switch"]')?.getAttribute('aria-checked')).toBe(
+      'false',
+    );
+    expect(rendered.text()).toContain('تنظیم روی این دستگاه ذخیره شد.');
+
+    // The disabled preference stops the Audio path in a later session.
+    await rendered.clickButton('بازگشت به پروفایل');
+    await rendered.clickButton('امروز');
+    await rendered.clickButton('ادامهٔ مرور');
+    const audioButton = rendered.container.querySelector<HTMLButtonElement>('button.audio-button');
+    expect(audioButton?.disabled).toBe(true);
+    expect(rendered.text()).toContain('تلفظ خاموش است');
+    await act(async () => {
+      audioButton?.click();
+    });
+    expect(playMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('blocks speech-synthesis pronunciation when the preference is off', async () => {
+    window.localStorage.setItem(onboardingGoalKey, 'life');
+    // No local-preview media route on a non-local host: the card button falls
+    // back to speech synthesis, which must stay blocked when pronunciation is off.
+    window.localStorage.setItem(
+      soundPreferenceStorageKey,
+      JSON.stringify({ version: 1, enabled: false }),
+    );
+    const speakMock = vi.fn();
+    const cancelMock = vi.fn();
+    vi.stubGlobal('speechSynthesis', { cancel: cancelMock, speak: speakMock });
+    vi.stubGlobal(
+      'SpeechSynthesisUtterance',
+      class {
+        lang = '';
+        rate = 0;
+        text: string;
+        onstart: (() => void) | null = null;
+        onend: (() => void) | null = null;
+        onerror: (() => void) | null = null;
+        constructor(text: string) {
+          this.text = text;
+        }
+      },
+    );
+
+    rendered = await renderLearner({ hostname: 'learnbox.app' });
+    await rendered.signInLocally();
+    await rendered.clickButton('شروع مرور');
+
+    const speechButton = rendered.container.querySelector<HTMLButtonElement>('button.audio-button');
+    expect(speechButton?.disabled).toBe(true);
+    expect(rendered.text()).toContain('تلفظ خاموش است');
+    await act(async () => {
+      speechButton?.click();
+    });
+    expect(speakMock).not.toHaveBeenCalled();
+    expect(cancelMock).not.toHaveBeenCalled();
+  });
+
+  it('recovers an enabled default from a malformed record without touching other keys', async () => {
+    window.localStorage.setItem(onboardingGoalKey, 'life');
+    window.localStorage.setItem(soundPreferenceStorageKey, '{not-json');
+    rendered = await renderLearner();
+    await rendered.signInLocally();
+
+    await rendered.clickButton('پروفایل');
+    await rendered.clickButton('تنظیمات');
+    expect(rendered.text()).toContain('پخش تلفظ');
+    expect(rendered.container.querySelector('input[role="switch"]')?.getAttribute('aria-checked')).toBe(
+      'true',
+    );
+    // The goal row still reads its own key and the corrupt record is left intact.
+    expect(rendered.text()).toContain('زندگی در آلمان');
+    expect(window.localStorage.getItem(soundPreferenceStorageKey)).toBe('{not-json');
+  });
+
+  it('keeps the pronunciation toggle usable and labels it non-durable when storage is denied', async () => {
+    Object.defineProperty(window, 'localStorage', {
+      configurable: true,
+      get() {
+        throw new DOMException('denied', 'SecurityError');
+      },
+    });
+    rendered = await renderLearner();
+    await rendered.signInLocally();
+    const onboardingContinue = Array.from(rendered.container.querySelectorAll('button')).some(
+      (button) => button.textContent?.trim().startsWith('ادامه'),
+    );
+    if (onboardingContinue) await rendered.clickButton('ادامه');
+    await rendered.clickButton('پروفایل');
+    await rendered.clickButton('تنظیمات');
+    expect(rendered.text()).toContain('پخش تلفظ');
+
+    await toggleSoundSwitch(rendered.container);
+
+    expect(rendered.container.querySelector('input[role="switch"]')?.getAttribute('aria-checked')).toBe(
+      'false',
+    );
+    // Denied durable storage stays usable through the open-session memory
+    // fallback and is labelled non-durable, never presented as saved forever.
+    expect(rendered.text()).toContain('تا پایان این نشست');
+    expect(rendered.text()).not.toContain('تنظیم روی این دستگاه ذخیره شد.');
+  });
 });
 
 type Rendered = {
@@ -357,6 +602,8 @@ type SettingsScreenProps = {
   goal?: 'life' | 'career' | 'travel';
   onBack?: () => void;
   onChooseGoal?: () => void;
+  onToggleSound?: (enabled: boolean) => Promise<SoundPreferenceDurability>;
+  soundEnabled?: boolean;
 };
 
 async function renderProfile(props: ProfileScreenProps): Promise<Rendered> {
@@ -399,12 +646,22 @@ async function renderSettings(props: SettingsScreenProps): Promise<Rendered> {
         goal: 'life',
         onBack: () => {},
         onChooseGoal: () => {},
+        onToggleSound: async (): Promise<SoundPreferenceDurability> => 'durable',
+        soundEnabled: true,
         ...props,
       }),
     );
   });
 
   return renderHelpers(container, root);
+}
+
+async function toggleSoundSwitch(container: HTMLElement): Promise<void> {
+  const input = container.querySelector<HTMLInputElement>('input[role="switch"]');
+  if (!input) throw new Error('Sound preference switch not found.');
+  await act(async () => {
+    input.click();
+  });
 }
 
 function renderHelpers(container: HTMLElement, root: ReturnType<typeof createRoot>): Rendered {
@@ -425,7 +682,14 @@ type RenderedLearner = Rendered & {
   signInLocally(): Promise<void>;
 };
 
-async function renderLearner(): Promise<RenderedLearner> {
+async function renderLearner(
+  overrides?: Partial<{
+    hostname: string;
+    inviteFlag: string;
+    otpUiFlag: string;
+    privateMediaFlag: string;
+  }>,
+): Promise<RenderedLearner> {
   const container = document.createElement('div');
   document.body.append(container);
   const root = createRoot(container);
@@ -440,6 +704,7 @@ async function renderLearner(): Promise<RenderedLearner> {
     otpUiFlag: 'false',
     privateMediaFlag: 'false',
     inviteFlag: 'false',
+    ...overrides,
   };
   await act(async () => {
     root.render(createElement(LearnerHome as FunctionComponent<typeof props>, props));
