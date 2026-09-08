@@ -4,6 +4,14 @@
 
 ## Active work
 
+### M3-A1 Web-only masked identity read
+
+- **Status:** LB-DS-048 is in progress on `feature/m3-web-masked-identity`, based exactly on the
+  owner-approved scope-coordination merge `5d7a717`. The slice is limited to a default-off,
+  authenticated Web read that masks the learner phone on the server and renders no identity on any
+  invalid, missing or failed result. Android, raw phone serialization, auth/session changes,
+  migrations, deployment and activation remain out of scope.
+
 ### Starter Catalog 35 release gates
 
 - **Status:** LB-DS-045 evidence reconciliation was accepted and merged in PR #241 at `95c704b`.

@@ -373,10 +373,11 @@ successfully on that exact head before merge.
 
 ## LB-DS-048
 
-- Status: ready
+- Status: in_progress
 - Executor: high-reasoning Web/API identity worker (M3-A1)
-- Base: `origin/main` after the M3-A1 scope-coordination merge; record the exact merge commit before implementation
+- Base: `origin/main` at `5d7a71720522611e03e8e2cef7a9b16b2a16b4df` (M3-A1 scope-coordination merge)
 - Branch: `feature/m3-web-masked-identity`
+- Worktree: `/Volumes/LearnBox-Dev/LearnBox-final/lb-m3-web-masked-identity`
 - Risk: security-and-privacy-sensitive-authenticated-identity-read
 - Specification: `docs/design/M3_PROFILE_SETTINGS_CONTRACT.md` §§4-5, 6, 9-10 (M3-A1 only); `docs/product-decisions/PDR-007-WEB-MASKED-IDENTITY-READ.md`
 - Allowed paths: `apps/api/src/profile/learner-profile.service.ts`; `apps/api/src/profile/postgres-learner-profile.repository.ts`; `apps/api/test/learner-profile.service.test.ts`; `apps/api/test/postgres-learner-profile.repository.test.ts`; `apps/website/app/api/learner/profile/route.ts`; `apps/website/lib/learner-profile-web-http.ts`; `apps/website/lib/learner-profile-web-runtime.ts`; `apps/website/lib/learner-profile-web-client.ts`; `apps/website/app/LearnerHome.tsx`; `apps/website/app/components/ProfileScreen.tsx`; `apps/website/app/globals.css`; `apps/website/test/learner-profile-web-http.test.ts`; `apps/website/test/learner-profile-web-route.test.ts`; `apps/website/test/learner-profile-web-client.test.ts`; `apps/website/test/learner-profile-settings.test.tsx`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-048.md`; `CURRENT_WORK.md`; `PROJECT_STATE.md`; `docs/design/DESIGN_STATUS.md`; `docs/PRODUCT_STATUS.md`
@@ -384,7 +385,7 @@ successfully on that exact head before merge.
 - Simulator required: no
 - Draft PR required: yes
 - Merge allowed: yes
-- Blocked on: coordination PR merge only; implementation must record its exact merged base before starting
+- Blocked on: none; scope coordination merged in PR #247 at `5d7a71720522611e03e8e2cef7a9b16b2a16b4df`
 - Must not touch: Android/mobile/iOS; database migrations or schema; raw phone serialization; first-name/display-name/avatar presentation; auth, OTP, session or cookie behavior; sign out; account deletion; account-scoped local storage; review-sync activation; server preference sync; reminders; purchases/packs; analytics; providers/secrets; deployment; Preview/Production flags or activation; landing; Admin; Bobo assets
 - Acceptance: an authenticated Web-only `GET /api/learner/profile` derives canonical `users.id` solely from the existing signed HttpOnly learner cookie; reads the matching `users` row; returns only a strictly validated server-masked Iranian phone value with `cache-control: no-store`; never returns raw phone, first name, internal IDs or session data; dedicated runtime config defaults off and fails closed; invalid/expired session, missing learner, malformed data, offline and server failure expose no identity; Web Profile keeps local goal/pending facts usable through identity loading/error/offline states and offers bounded retry; no auth redesign, migration, Android path, deployment or activation is included.
 
