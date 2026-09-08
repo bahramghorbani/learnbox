@@ -4,6 +4,22 @@
 
 ## Active work
 
+### M3-A1 Web-only masked identity read
+
+- **Status:** LB-DS-048 implementation is complete and review_requested on
+  `feature/m3-web-masked-identity`, based exactly on owner-approved scope coordination `5d7a717`.
+  It adds only default-off `WEB_LEARNER_PROFILE_ENABLED` Web `GET /api/learner/profile`: the existing
+  signed HttpOnly learner cookie supplies canonical `users.id`; the server reads only matching
+  `phone_e164`, strictly validates and masks it before returning `{ maskedPhone }` with no-store.
+  Invalid/missing/expired session, missing learner, malformed DB phone, disabled/incomplete runtime,
+  offline/parse failure and server failure expose no identity. Profile retains device-local goal and
+  pending-review facts during identity loading/error/offline states and has bounded retry for a failed
+  server read. Full API (139) and Website (270) suites, builds/typechecks, root checks/build and
+  required validators pass. Independent review passed code/security/product behavior and requested
+  only this metadata correction; fresh final-head CI and metadata verification remain merge-blocking.
+  Android, raw-phone serialization, auth/session changes, migrations, deployment and activation remain
+  out of scope.
+
 ### Starter Catalog 35 release gates
 
 - **Status:** LB-DS-045 evidence reconciliation was accepted and merged in PR #241 at `95c704b`.

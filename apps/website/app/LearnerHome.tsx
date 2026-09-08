@@ -47,6 +47,7 @@ import { resolveSupportivePlusOffer } from './paywall';
 import { buildStartMediaSources, resolveStartMediaMode, type StartMediaMode } from './start-media';
 import { selectTodayStartSession, stagedStartSlice } from './start-slice';
 import { fetchWebLearnerState } from '../lib/learner-state-web-client';
+import { fetchWebLearnerProfile } from '../lib/learner-profile-web-client';
 import type { LearnerSyncState } from './learner-sync-state';
 
 type Grade = 'forgot' | 'hard' | 'remembered' | 'mastered';
@@ -99,6 +100,7 @@ type LearnerHomeProps = {
   otpUiFlag?: string;
   privateMediaFlag?: string;
   inviteFlag?: string;
+  profileIdentityFlag?: string;
 };
 
 export function LearnerHome({
@@ -106,6 +108,7 @@ export function LearnerHome({
   otpUiFlag = process.env.NEXT_PUBLIC_LEARNBOX_OTP_UI_ENABLED,
   privateMediaFlag = process.env.NEXT_PUBLIC_LEARNBOX_PRIVATE_MEDIA_ENABLED,
   inviteFlag = process.env.NEXT_PUBLIC_LEARNBOX_ALPHA_INVITE_UI_ENABLED,
+  profileIdentityFlag = process.env.NEXT_PUBLIC_LEARNBOX_PROFILE_IDENTITY_ENABLED,
 }: LearnerHomeProps = {}) {
   const studyItems = selectTodayStartSession();
   const authMode = resolveLearnerAuthMode(otpUiFlag);
@@ -140,6 +143,13 @@ export function LearnerHome({
   const [isRecordingGrade, setIsRecordingGrade] = useState(false);
   const [serverSyncState, setServerSyncState] = useState<LearnerSyncState>('local-only');
   const [serverLastSyncedAt, setServerLastSyncedAt] = useState<string | null>(null);
+  const [profileIdentity, setProfileIdentity] = useState<
+    | { status: 'loading' }
+    | { status: 'ok'; maskedPhone: string }
+    | { status: 'error' }
+    | { status: 'unavailable' }
+  >({ status: 'unavailable' });
+  const profileIdentityReadGenerationRef = useRef(0);
   const gradeSubmissionRef = useRef(false);
   const flipHintRef = useRef<HTMLButtonElement>(null);
   const flipAgainRef = useRef<HTMLButtonElement>(null);
@@ -155,6 +165,7 @@ export function LearnerHome({
   const profileSettingsReturnRef = useRef(false);
   const remainingTodayReviews = Math.max(0, studyItems.length - reviewedToday);
   const isServerOtp = authMode === 'server-otp';
+  const profileIdentityEnabled = profileIdentityFlag === 'true';
 
   useEffect(() => {
     if (typeof document === 'undefined') return;
@@ -326,6 +337,56 @@ export function LearnerHome({
       .then(applyServerStateResult)
       .catch(() => setServerSyncState('error'));
   }, [authenticated, isServerOtp, applyServerStateResult]);
+
+  const readProfileIdentity = useCallback(() => {
+    const generation = ++profileIdentityReadGenerationRef.current;
+    if (
+      !profileIdentityEnabled ||
+      !authenticated ||
+      !isServerOtp ||
+      typeof navigator === 'undefined' ||
+      navigator.onLine === false
+    ) {
+      setProfileIdentity({ status: 'unavailable' });
+      return;
+    }
+    setProfileIdentity({ status: 'loading' });
+    void fetchWebLearnerProfile()
+      .then((result) => {
+        if (generation !== profileIdentityReadGenerationRef.current) return;
+        setProfileIdentity(
+          result.status === 'ok'
+            ? result
+            : result.status === 'unavailable'
+              ? { status: 'error' }
+              : { status: 'unavailable' },
+        );
+      })
+      .catch(() => {
+        if (generation === profileIdentityReadGenerationRef.current)
+          setProfileIdentity({ status: 'error' });
+      });
+  }, [authenticated, isServerOtp, profileIdentityEnabled]);
+
+  useEffect(() => {
+    if (screen !== 'profile') {
+      profileIdentityReadGenerationRef.current += 1;
+      return;
+    }
+    readProfileIdentity();
+    const goOffline = () => {
+      profileIdentityReadGenerationRef.current += 1;
+      setProfileIdentity({ status: 'unavailable' });
+    };
+    const goOnline = () => readProfileIdentity();
+    window.addEventListener('offline', goOffline);
+    window.addEventListener('online', goOnline);
+    return () => {
+      profileIdentityReadGenerationRef.current += 1;
+      window.removeEventListener('offline', goOffline);
+      window.removeEventListener('online', goOnline);
+    };
+  }, [screen, readProfileIdentity]);
 
   const begin = () => {
     const nextIndex = resumableSessionIndex ?? 0;
@@ -646,6 +707,8 @@ export function LearnerHome({
       <ProfileScreen
         goal={learningGoal}
         pendingReviewCount={pendingReviewCount}
+        identity={profileIdentity}
+        onRetryIdentity={readProfileIdentity}
         headingRef={profileHeadingRef}
         goalRowRef={profileGoalRowRef}
         settingsRowRef={profileSettingsRowRef}
