@@ -266,13 +266,14 @@ Implementation and hardening are merged through PR #227 at `eda7630`. Dart forma
 
 ## LB-DS-044
 
-- Status: review_requested
+- Status: accepted
 - Executor: supervisor (fail-closed business-readiness audit)
 - Base: `origin/main` at `bb6c6d6ca1b0af1b0a96a771c4f29a6aabe73d4e`
 - Branch: `docs/starter-catalog-release-readiness-audit`
 - Worktree: `/Volumes/LearnBox-Dev/LearnBox-final/lb-next-safe-checkpoint`
-- Head commit: PR head — verify remotely before merge (stable audit artifact commit: `75bac3a`)
-- Draft PR: #240 (draft) — https://github.com/bahramghorbani/learnbox/pull/240
+- Head commit: `d1841956132b814d2982790b67e6d88bdeeb2585`
+- Draft PR: #240 (merged) — https://github.com/bahramghorbani/learnbox/pull/240
+- Merge commit: `9771dde78a1cec60bdefb8ba05864e3b4a7ad699`
 - Risk: content-release-truth-and-owner-gates
 - Specification: ADR 0013; ADR 0016; `content/packs/learnbox-start/README.md`; `docs/PRODUCT_STATUS.md`
 - Allowed paths: `docs/content/STARTER_CATALOG_35_RELEASE_READINESS.md`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-044.md`; `CURRENT_WORK.md`; `docs/PRODUCT_STATUS.md`
@@ -289,6 +290,24 @@ the original 20 have candidate-stage provenance/visual/audio/app-flow evidence a
 but unattached media; the remaining 15 have no media candidates or app-flow approval; no item has an
 approved/published `card_versions` row. Seed and publication remain blocked. See
 `docs/content/STARTER_CATALOG_35_RELEASE_READINESS.md`.
+
+## LB-DS-045
+
+- Status: review_requested
+- Executor: supervisor (W4 content-evidence reconciliation)
+- Base: `origin/main` at `9771dde78a1cec60bdefb8ba05864e3b4a7ad699`
+- Branch: `docs/starter-catalog-evidence-reconcile`
+- Worktree: `/Volumes/LearnBox-Dev/LearnBox-final/lb-starter-evidence-reconcile`
+- Risk: fail-closed-content-evidence-and-validator-truth
+- Specification: LB-DS-044 audit; ADR 0013; ADR 0016; `content/packs/learnbox-start/README.md`
+- Allowed paths: `content/packs/learnbox-start/validation/start-a1-slice-candidates.json`; `content/packs/learnbox-start/validation/start-a1-catalog-35-pending-candidates.json`; `content/packs/learnbox-start/vocabulary/start-a1-vertical-slice-drafts.json`; `content/packs/learnbox-start/vocabulary/start-a1-catalog-35-pending-drafts.json`; `content/packs/learnbox-start/validation/start-a1-catalog-35-pending-provenance-ledger.json`; `content/packs/learnbox-start/validation/start-a1-35-catalog-slice.json`; `content/packs/learnbox-start/validation/start-a1-issue59-audio-gate.json`; `scripts/validate-start-slice-candidates.mjs`; `scripts/validate-start-slice-drafts.mjs`; `scripts/validate-issue59-audio-gate.mjs`; `scripts/validate-issue59-audio-gate.test.mjs`; `apps/admin/test/content-review-workspace.test.tsx`; `package.json`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-044.md`; `.ai/worker-reports/LB-DS-045.md`; `CURRENT_WORK.md`; `PROJECT_STATE.md`; `docs/PRODUCT_STATUS.md`; `docs/content/STARTER_CATALOG_35_RELEASE_READINESS.md`
+- Required checks: Issue #59 RED/GREEN tests; Start candidate/draft/linguistic/provenance/media validators; deterministic catalog/hash audit; `pnpm check`; `pnpm build`; migration validation; Prettier; queue/documentation/continuity validators; `git diff --check`; independent truthfulness/fail-closed review
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+- Blocked on: no blocker for metadata reconciliation; paid candidate generation and all human media/app-flow/release approval remain outside scope and owner-gated
+- Must not touch: generated/private media blobs; media generation/upload/attachment; approval dimensions or approval events; `cards`/`card_versions`; migrations; seed runners; auth/session; providers/secrets; runtime flags; Preview/Production; invitations; publication
+- Acceptance: the two candidate and draft batches truthfully link the existing two-dimensional linguistic approvals while preserving overall `needs_review`; the 15-item provenance ledger stops listing those approved dimensions as pending; the Issue #59 gate deterministically derives 36 transcription matches, four regeneration failures, six listening approvals and 34 pending reviews from its ledger and stays non-releaseable; the catalog remains 0/35 release-approved, non-seedable and publication-blocked.
 
 ## LB-DS-042
 

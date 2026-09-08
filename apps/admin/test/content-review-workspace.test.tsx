@@ -85,7 +85,9 @@ describe('ContentReviewWorkspace (local admin content preview)', () => {
       expect(rendered.text).toContain('اسم');
       expect(rendered.text).toContain('Das Haus ist klein.');
       expect(rendered.text).toContain('خانه کوچک است.');
-      expect(rendered.text).toContain('Goethe A1 scope reference; editorial verification pending.');
+      expect(rendered.text).toContain(
+        'Goethe A1 scope reference; German and Persian linguistic review recorded; remaining release gates pending.',
+      );
 
       // The draft has no attached media, so no media may be shown as ready.
       expect(rendered.text).toContain('رسانه‌ای برای این کارت ثبت نشده است');

@@ -49,18 +49,31 @@ The canonical catalog snapshot is therefore truthful at its top-level release bo
      V1 attested/transcription-QA set.
      These are chronology drift, not permission to infer broader approval.
 
+## Post-audit reconciliation — 2026-09-08
+
+LB-DS-045 resolves the evidence-metadata drift identified above without expanding approval:
+
+- both candidate intakes now point to their exact product-owner linguistic approval event;
+- both draft batches record the two approved dimensions while every item remains `needs_review` and
+  every non-linguistic/release gate remains open;
+- the 15-item provenance ledger no longer lists German/Persian review as pending;
+- the derived Issue #59 gate is now validated from the committed V2 ledger and reports 36/40
+  transcription matches, four regeneration failures, 6/40 listening approvals and 34/40 pending
+  reviews; `releaseReady: false`, `attachmentAllowed: false` and `publicationBlocked: true`.
+
+The audit decision remains **BLOCKED** because this reconciliation corrects evidence truth only. It
+adds no media approval, app-flow approval, release-approved `card_versions`, seed permission or
+publication permission.
+
 ## Safe next workstream
 
-A bounded, owner-free preparation slice may:
+A bounded next preparation slice may:
 
-1. reconcile stale pre-approval and candidate-QA metadata across both draft batches, both candidate
-   intakes, the 15-item provenance ledger and the Issue #59 V2 audio gate/ledger without changing
-   approval scope;
-2. define and generate **candidate-only** image and audio assets for the remaining 15 under the
-   existing visual/media contracts, with immutable IDs and checksums;
-3. run provenance, visual, audio and local app-flow QA for those 15;
-4. produce a 35-item release ledger that remains `publicationBlocked: true`;
-5. stop before media attachment, DB seed, `card_versions` approval/publication, participant invitation,
+1. with separate cost authorization, define and generate **candidate-only** image and audio assets for
+   the remaining 15 under the existing visual/media contracts, with immutable IDs and checksums;
+2. run provenance, visual, audio and local app-flow QA for those 15;
+3. produce a 35-item release ledger that remains `publicationBlocked: true`;
+4. stop before media attachment, DB seed, `card_versions` approval/publication, participant invitation,
    runtime-flag enablement, deployment or Production.
 
 Candidate generation may incur provider cost and must be separately authorized before execution.

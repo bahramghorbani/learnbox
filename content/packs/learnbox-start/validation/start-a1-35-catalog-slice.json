@@ -85,8 +85,8 @@
     "pendingDrafts": "content/packs/learnbox-start/vocabulary/start-a1-catalog-35-pending-drafts.json"
   },
   "integrity": {
-    "draftsSha256": "61ca53fc087fbc6957034e26dee7bf18116a42f31c0fae572013a8b08bde9152",
-    "pendingDraftsSha256": "766ed7aa0c7443dce1647089080f3b7ecfb020906734ef6c63644b68ac6b27eb",
+    "draftsSha256": "58a2610bf7d1d9fdcfbdd47af22442a9b57e492d145960f3b5afbeb2d5926bcf",
+    "pendingDraftsSha256": "eec6c0e5b9963e6113ad002670f52625f326869c089e03ea1e85feb0bd00492b",
     "linguisticApprovalSha256": "cecca1b3c4cb46ace34502461570cc9056a793fb270518befb5e9417fb325c71"
   },
   "catalogNote": "Derived snapshot, not an approval and not a DB seed. All 35 target items are drafted across two vocabulary sources and all 35 carry recorded product-owner linguistic approval (german_linguistic, persian_translation only: 2026-07-27 confirmation for the original 20 slice items, 2026-09-04 confirmation for the 15 pending drafts); no item is release-approved, drafts keep status needs_review with media [] and AI-assisted provenance, and every remaining review dimension (provenance, visual, audio, app_flow) plus an approved/published card_versions row (ADR 0013) is still required. Bundled start-a1-* ids are canonical cards.content_id only after that row exists; no migration or cards/card_versions row is created here.",

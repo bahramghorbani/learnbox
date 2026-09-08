@@ -1,12 +1,40 @@
 {
   "batchId": "learnbox-start-a1-vertical-slice-drafts-v1",
-  "checkedAt": "2026-08-15T14:25:01.416Z",
   "gate": "issue59-full-phrase-de-de",
-  "purpose": "Acceptance QA for Issue #59. Verifies article-bearing phrases, checksums and reviewer provenance. No publication or attachment.",
+  "purpose": "Derived fail-closed status for Issue #59 V2 audio evidence. This does not attach, approve or publish media.",
+  "evidenceSource": "content/packs/learnbox-start/validation/start-a1-issue59-audio-ledger.json",
+  "evidenceGeneratedAt": "2026-08-15T14:15:09.949Z",
+  "model": "eleven_flash_v2_5",
+  "voice": "coral",
+  "locale": "de-DE",
   "total": 40,
-  "passed": 40,
-  "needsRegeneration": 0,
-  "failures": [],
-  "listeningQaReviewRequired": false,
-  "listeningQa": []
+  "transcriptionMatched": 36,
+  "needsRegeneration": 4,
+  "listeningApproved": 6,
+  "listeningPending": 34,
+  "releaseReady": false,
+  "attachmentAllowed": false,
+  "publicationBlocked": true,
+  "blockers": [
+    "4 clips have transcription mismatches",
+    "34 clips still require de-DE listening review"
+  ],
+  "failures": [
+    {
+      "assetId": "start-a1-brot-word-audio-v2",
+      "reason": "transcription_mismatch"
+    },
+    {
+      "assetId": "start-a1-muede-word-audio-v2",
+      "reason": "transcription_mismatch"
+    },
+    {
+      "assetId": "start-a1-tuer-sentence-audio-v2",
+      "reason": "transcription_mismatch"
+    },
+    {
+      "assetId": "start-a1-tuer-word-audio-v2",
+      "reason": "transcription_mismatch"
+    }
+  ]
 }
