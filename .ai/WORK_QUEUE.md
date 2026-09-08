@@ -373,9 +373,12 @@ successfully on that exact head before merge.
 
 ## LB-DS-048
 
-- Status: review_requested
+- Status: accepted
 - Executor: high-reasoning Web/API identity worker (M3-A1)
 - Base: `origin/main` at `5d7a71720522611e03e8e2cef7a9b16b2a16b4df` (M3-A1 scope-coordination merge)
+- Head commit: `f8563bdb4d42de8995eaef4d96f5f83b62f5d4d4` (final PR head)
+- Draft PR: #248 (merged) — https://github.com/bahramghorbani/learnbox/pull/248
+- Merge commit: `b580d599c2a2b90c5fb505b8c54245e3f582cf5c`
 - Branch: `feature/m3-web-masked-identity`
 - Worktree: `/Volumes/LearnBox-Dev/LearnBox-final/lb-m3-web-masked-identity`
 - Risk: security-and-privacy-sensitive-authenticated-identity-read
@@ -385,7 +388,7 @@ successfully on that exact head before merge.
 - Simulator required: no
 - Draft PR required: yes
 - Merge allowed: yes
-- Blocked on: none; scope coordination merged in PR #247 at `5d7a71720522611e03e8e2cef7a9b16b2a16b4df`
+- Blocked on: none; implementation merged in PR #248 at `b580d599c2a2b90c5fb505b8c54245e3f582cf5c`
 - Must not touch: Android/mobile/iOS; database migrations or schema; raw phone serialization; first-name/display-name/avatar presentation; auth, OTP, session or cookie behavior; sign out; account deletion; account-scoped local storage; review-sync activation; server preference sync; reminders; purchases/packs; analytics; providers/secrets; deployment; Preview/Production flags or activation; landing; Admin; Bobo assets
 - Acceptance: an authenticated Web-only `GET /api/learner/profile` derives canonical `users.id` solely from the existing signed HttpOnly learner cookie; reads the matching `users` row; returns only a strictly validated server-masked Iranian phone value with `cache-control: no-store`; never returns raw phone, first name, internal IDs or session data; dedicated runtime config defaults off and fails closed; invalid/expired session, missing learner, malformed data, offline and server failure expose no identity; Web Profile keeps local goal/pending facts usable through identity loading/error/offline states and offers bounded retry; no auth redesign, migration, Android path, deployment or activation is included.
 
