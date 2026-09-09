@@ -25,7 +25,7 @@
   166/166, API tests 134/134, typechecks/builds, migration validation incl. ephemeral real
   Postgres 35/35/210 with idempotent rerun and fail-closed divergence, validators, Prettier,
   `git diff --check`) are in `.ai/worker-reports/LB-DS-049.md`. PR #251's lint/scanner blockers and
-  mislabeled MD5 UUID helper are corrected without a scanner bypass; independent re-review is pending;
+  mislabeled MD5 UUID helper are corrected without a scanner bypass; independent exact-head implementation re-review passed;
   migration execution, flag activation and staging/Preview/Production remain unauthorized and
   untouched.
 
