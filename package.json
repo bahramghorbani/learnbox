@@ -54,7 +54,7 @@
     "verify:start-v2-images-private-media-upload": "node scripts/upload-start-slice-private-media.mjs --v2-images",
     "verify:website-start-slice": "node scripts/validate-website-start-slice-staging.mjs",
     "verify:start-local-media-preview": "node scripts/validate-start-slice-local-media-preview.mjs",
-    "verify:production-service-boundaries": "node --test infrastructure/production/app/tests/deployment-boundary.test.mjs",
+    "verify:production-service-boundaries": "node --test infrastructure/production/app/tests/*.test.mjs infrastructure/production/admin/tests/*.test.mjs",
     "test:load": "node --test scripts/load/local-learner-load.test.mjs",
     "test:engine-load": "pnpm --filter @learnbox/learning-engine build && node --test scripts/load/learning-engine-synthetic-load.test.mjs && node scripts/load/learning-engine-synthetic-load.mjs --profile ci",
     "test:mobile-start-content": "node --test scripts/mobile-start-content.test.mjs",
