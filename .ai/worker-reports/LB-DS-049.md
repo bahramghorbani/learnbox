@@ -1,7 +1,7 @@
 # LB-DS-049 — Admin persisted Start Pack review (PDR-008 slice)
 
 - Branch: `feature/admin-starter-review-persistence-clean`
-- Base commit: `956bec3252a95f1e13b305f4416aa75e7504780b` (`origin/main`, PR #250 scope authorization)
+- Base commit: `dc92fe2fbf1381bb98dcf8a81f7f11079252d785` (`origin/main`; PR #250 scope authorization plus merged PR #253 dependency-security prerequisite)
 - Head commit: `46f51154d65c6288ef423a37b21294be84f37806` (implementation snapshot; report-only delta follows)
 - Draft PR: #252 — https://github.com/bahramghorbani/learnbox/pull/252 (draft; replaces closed, unmerged PR #251)
 - Scope completed: migration 0017 candidate ingestion; default-off Admin queue/check/decision runtime behind `LEARNBOX_ADMIN_CONTENT_REVIEW_ENABLED`; moved extended store into the Admin runtime; server-truthful workspace with labeled local-only mode; strict RED→GREEN tests; migration validation incl. real-Postgres apply/idempotency/fail-closed smoke; obsolete dormant API copy removed.
