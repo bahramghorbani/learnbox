@@ -4,6 +4,31 @@
 
 ## Active work
 
+### LB-DS-049 — persisted Start Pack review (Admin, PDR-008)
+
+- **Status:** implementation complete; **review_requested** in clean draft PR #252
+  (https://github.com/bahramghorbani/learnbox/pull/252) at implementation head `46f5115` on
+  `feature/admin-starter-review-persistence-clean`; it replaces closed, unmerged PR #251. Migration
+  0017 ingests all 35 committed Start
+  Pack drafts as canonical `cards` + immutable version-1 `card_versions` rows
+  (`status='needs_review'`) with exactly six pending `content_review_checks` each, using fixed
+  uuid5 identities and faithful draft content_json (source/provenance intact); reruns are
+  idempotent only for identical rows and raise fail-closed on divergent data. The Admin
+  queue/check/decision runtime is behind the dedicated default-off
+  `LEARNBOX_ADMIN_CONTENT_REVIEW_ENABLED` gate (404 before any DB review read when disabled;
+  session-only actor; DB role authorization before data access; no-store reads; trusted
+  origin + CSRF + recent auth; row locks; idempotency fail-closed; atomic audit; approval
+  needs all six checks passed and never publishes). The workspace is server-truthful when
+  enabled and keeps an explicitly labeled local-only mode when the runtime is off. The dormant
+  `apps/api` content-review store (no runtime consumer) was moved/deleted in favor of the
+  extended Admin runtime store. Strict RED→GREEN evidence and all final checks (Admin tests
+  166/166, API tests 134/134, typechecks/builds, migration validation incl. ephemeral real
+  Postgres 35/35/210 with idempotent rerun and fail-closed divergence, validators, Prettier,
+  `git diff --check`) are in `.ai/worker-reports/LB-DS-049.md`. PR #251's lint/scanner blockers and
+  mislabeled MD5 UUID helper are corrected without a scanner bypass; independent exact-head implementation re-review passed;
+  migration execution, flag activation and staging/Preview/Production remain unauthorized and
+  untouched.
+
 ### Starter Catalog 35 release gates
 
 - **Status:** LB-DS-045 evidence reconciliation was accepted and merged in PR #241 at `95c704b`.

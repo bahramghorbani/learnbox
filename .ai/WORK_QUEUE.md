@@ -373,10 +373,12 @@ successfully on that exact head before merge.
 
 ## LB-DS-049
 
-- Status: ready
+- Status: review_requested
 - Executor: high-reasoning serial Admin/content-persistence worker (M2)
-- Base: `origin/main` at `4d548064cf3bf0cfadd6a9b964546fecf72e41d3` (PR #249 post-merge reconciliation)
-- Branch: `feature/admin-starter-review-persistence`
+- Base: `origin/main` at `dc92fe2fbf1381bb98dcf8a81f7f11079252d785` (PR #250 scope authorization plus merged PR #253 dependency-security prerequisite)
+- Branch: `feature/admin-starter-review-persistence-clean`
+- Head commit: `bb2ee717a5e88481f36d1125b0ce6c151affcb09` (reviewed implementation and migration hardening; base merge and metadata-only delta follow)
+- Draft PR: #252 — https://github.com/bahramghorbani/learnbox/pull/252 (draft; replaces closed PR #251)
 - Risk: security-sensitive-admin-write-and-content-data-migration
 - Specification: `docs/product-decisions/PDR-008-ADMIN-STARTER-REVIEW-PERSISTENCE.md`; ADR 0015; ADR 0016; `docs/product-decisions/PDR-005-LEARNING-CONTENT-FACTORY.md`
 - Allowed paths: `database/migrations/0017_start_catalog_review_candidates.sql`; `scripts/validate-migrations.mjs`; `apps/api/src/admin/content-review.service.ts`; `apps/api/src/admin/postgres-content-review.store.ts`; `apps/api/test/postgres-content-review.store.test.ts`; `apps/admin/app/api/content/review/route.ts`; `apps/admin/app/api/content/review/check/route.ts`; `apps/admin/app/api/content/review/decision/route.ts`; `apps/admin/lib/server/admin-content-review-config.ts`; `apps/admin/lib/server/admin-content-review-routes.ts`; `apps/admin/lib/server/admin-content-review-server.ts`; `apps/admin/lib/server/postgres-content-review-store.ts`; `apps/admin/app/components/ContentReviewWorkspace.tsx`; `apps/admin/test/admin-content-review-routes.test.ts`; `apps/admin/test/postgres-content-review-store.test.ts`; `apps/admin/test/content-review-workspace.test.tsx`; `docs/architecture/ADR/0016-starter-catalog-35-seed-gate.md`; `docs/product-decisions/PDR-008-ADMIN-STARTER-REVIEW-PERSISTENCE.md`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-049.md`; `CURRENT_WORK.md`; `PROJECT_STATE.md`; `docs/PRODUCT_STATUS.md`; `docs/design/DESIGN_STATUS.md`
@@ -384,9 +386,19 @@ successfully on that exact head before merge.
 - Simulator required: no
 - Draft PR required: yes
 - Merge allowed: yes
-- Blocked on: none; implementation may merge dormant, but migration execution and any staging/Preview/Production flag activation require separate approval
+- Blocked on: fresh green required checks after final metadata reconciliation; independent exact-head implementation re-review passed at `ecaca80f1170614c9ac5d546a5cdafce899c43aa`; migration execution and any staging/Preview/Production flag activation require separate approval
 - Must not touch: learner Web/mobile/iOS or landing; learner auth/session/review-sync routes; pack membership; learner schedule bootstrap; status `published`; prices, purchases or entitlements; provider/media generation; secrets; deployment; staging/Preview/Production configuration or activation; Bobo assets
 - Acceptance: all 35 committed draft IDs are inserted idempotently as canonical `cards.content_id` values with deterministic identities and immutable version-1 `card_versions.status = 'needs_review'`; exactly six pending checks exist per candidate and repository evidence is not forged as a database-user attestation; enabled Admin reads derive actor identity only from the canonical Passkey session, authorize only through `admin_role_assignments`, return `no-store`, and strictly validate output; check and final-decision mutations require trusted origin, CSRF, recent authentication, target locking, idempotency and atomic audit attribution; final approval remains impossible until all six checks pass and never publishes; a dedicated default-off runtime boundary returns 404 without reading review data when disabled; UI state is server-truthful when enabled and never treats local preview state as persisted; candidate rows remain invisible to all learner paths; no migration execution, deployment or activation is included.
+
+The first draft PR #251 exposed two CI blockers (lint and generic-secret false positives) plus an
+incorrect MD5 implementation behind the runtime's uuid5 label. The clean replacement snapshot is
+review-complete: it removes scanner-triggering test/comment syntax without an allowlist or bypass, uses RFC
+uuid5 SHA-1 for future runtime check keys, resets all six attestations when a version is returned for
+revision, maps cross-target idempotency collisions to conflict and clears stale client keys after
+conflicts. Migration 0017 still ingests the same 35 committed drafts with six pending checks each and
+no decision/reviewer/release values. Learner resolution, schedule bootstrap, publication, migration
+execution and runtime/deployment state remain unchanged. Evidence is in
+`.ai/worker-reports/LB-DS-049.md`.
 
 ## LB-DS-048
 
