@@ -448,7 +448,7 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 
 - Status: ready
 - Executor: substantial Android/M1-D sync worker with independent high-reasoning review
-- Base: exact merge commit of LB-DS-052 (replace this dependency with its merged SHA before dispatch)
+- Base: current `origin/main` after PR #259 merges; the executor must fetch and record that exact SHA before creating the branch
 - Branch: `feature/m1d-mobile-reconciliation-client`
 - Risk: security-sensitive-no-data-loss-mobile-sync-client-composition
 - Specification: `docs/architecture/M1D_SYNC_WIRE_CONTRACT.md` §§3.2, 4-7, 9-11, 13, 15-17; ADR 0014; `docs/architecture/OFFLINE_SYNC.md`
@@ -461,7 +461,7 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 - Simulator required: no
 - Draft PR required: yes
 - Merge allowed: yes
-- Blocked on: LB-DS-052 coordination merge only
+- Blocked on: none once this task record reaches `main` through PR #259; never dispatch it from the unmerged coordination branch
 - Must not touch: API/server implementation or migrations; Web/Admin/landing/iOS; auth/session redesign; native gateway; runtime flag enablement; deployment; staging/Preview/Production; secrets/providers; content seed/publication; payments; Bobo assets
 - Acceptance: the mobile sync transport strictly parses the existing dormant reconciliation GET contract and the learner composition can invoke the documented reconnect sequence through the coordinator without deleting any local event from a cursor or GET result; malformed, partial, failed and paged responses preserve the queue and prior cursor; production composition remains fail-closed with signed-out identity and disabled transport, all sync flags remain false, and no network route is activated or deployed.
 

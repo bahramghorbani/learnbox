@@ -9,7 +9,7 @@
 - Checks run: Prettier on changed Markdown; AI worker queue validator; documentation governance tests; AI continuity validator; dashboard tests; `git diff --check`; all seven required GitHub/Vercel contexts succeeded on the current PR head before merge
 - Checks unavailable: none
 - Remaining work: independent exact-head re-review and merge; after merge dispatch LB-DS-053 from the exact merge commit
-- Risks: a future worker must replace LB-DS-053's dependency placeholder with the exact LB-DS-052 merge SHA before dispatch and preserve the default-off no-data-loss boundaries
+- Risks: the LB-DS-053 executor must fetch post-merge `origin/main`, record the exact dispatch SHA and preserve the default-off no-data-loss boundaries; the task must never dispatch from this unmerged branch
 - Secrets or production changes: none; no secret, provider, staging, Preview, Production, deployment, migration, flag, seed, payment, approval or publication state changed
 - Bobo canonical status: unchanged; Bobo assets are explicitly outside all registered task scopes
 
