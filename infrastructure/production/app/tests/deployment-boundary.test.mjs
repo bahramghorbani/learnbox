@@ -58,8 +58,10 @@ test('the server app environment file cannot enter source control', () => {
   );
 });
 
-test('the image exposes traced runtime dependencies to the API migration runner', () => {
+test('the Dockerfile guards and links the API migration runner dependencies', () => {
   const dockerfile = readFileSync(resolve(appInfrastructure, 'Dockerfile'), 'utf8');
 
-  assert.match(dockerfile, /RUN ln -s \.\.\/website\/node_modules apps\/api\/node_modules/);
+  assert.match(dockerfile, /test ! -e apps\/api\/node_modules/);
+  assert.match(dockerfile, /ln -s \.\.\/website\/node_modules apps\/api\/node_modules/);
+  assert.match(dockerfile, /test -e apps\/api\/node_modules\/pg\/package\.json/);
 });
