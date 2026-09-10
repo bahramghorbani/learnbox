@@ -446,7 +446,7 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 
 ## LB-DS-053
 
-- Status: in_progress
+- Status: review_requested
 - Dependencies: LB-DS-052 must merge; executor fetches the resulting exact `origin/main` merge SHA before any change.
 - Executor: substantial Android/M1-D sync worker with independent high-reasoning review
 - Base: current `origin/main` after PR #259 merges; the executor must fetch and record that exact SHA before creating the branch

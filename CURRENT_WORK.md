@@ -19,9 +19,8 @@
 
 ### LB-DS-053 — M1-D mobile reconciliation read client composition
 
-- **Status:** implemented and committed on `feature/m1d-mobile-reconciliation-client` from exact
-  `origin/main` `acc9a4c33ebef846ae1e7e66598e6427adcc40e8` (PR #259 merge). Commits: `d43e921`
-  (RED — failing tests) then the GREEN implementation commit. The dormant client can now strictly
+- **Status:** review requested in Draft PR #260 on `feature/m1d-mobile-reconciliation-client`, based on exact
+  `origin/main` `acc9a4c33ebef846ae1e7e66598e6427adcc40e8`. RED commit `d43e921`, GREEN implementation `f0f1217`, then final fail-closed hardening `e4e46c1`; independent review and seven exact-head CI contexts passed.
   consume the paged reconciliation GET and close the cursor gap from the coordinator without
   removing a single queued event: removal stays exclusive to an exact validated POST
   acknowledgement. Malformed, partial, failed and unbounded reads preserve the queue and the
