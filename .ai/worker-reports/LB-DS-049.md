@@ -3,7 +3,7 @@
 - Branch: `feature/admin-starter-review-persistence-clean`
 - Base commit: `dc92fe2fbf1381bb98dcf8a81f7f11079252d785` (`origin/main`; PR #250 scope authorization plus merged PR #253 dependency-security prerequisite)
 - Head commit: `bb2ee717a5e88481f36d1125b0ce6c151affcb09` (reviewed implementation and migration hardening; base merge and metadata-only delta follow)
-- Draft PR: #252 — https://github.com/bahramghorbani/learnbox/pull/252 (draft; replaces closed, unmerged PR #251)
+- PR: #252 — https://github.com/bahramghorbani/learnbox/pull/252 (merged at `a2a75e9789ebffffffe50e80067ccd0d23c5926a`; replaces closed, unmerged PR #251)
 - Scope completed: migration 0017 candidate ingestion; default-off Admin queue/check/decision runtime behind `LEARNBOX_ADMIN_CONTENT_REVIEW_ENABLED`; moved extended store into the Admin runtime; server-truthful workspace with labeled local-only mode; strict RED→GREEN tests; migration validation incl. real-Postgres apply/idempotency/fail-closed smoke; obsolete dormant API copy removed.
 - Files changed:
   - added `database/migrations/0017_start_catalog_review_candidates.sql`
@@ -16,7 +16,7 @@
   - docs/status: `.ai/WORK_QUEUE.md`, `CURRENT_WORK.md`, `PROJECT_STATE.md`, `docs/PRODUCT_STATUS.md`, `docs/design/DESIGN_STATUS.md`, `docs/architecture/ADR/0016-starter-catalog-35-seed-gate.md`, `docs/product-decisions/PDR-008-ADMIN-STARTER-REVIEW-PERSISTENCE.md`, `.ai/worker-reports/LB-DS-049.md`
 - Checks run: see "Final checks" below; every item executed locally with recorded output.
 - Checks unavailable: browser visual/AX keyboard acceptance (no staging deployment is current; out of scope by design); real Preview/Production execution (explicitly excluded). Independent exact-head implementation re-review passed at `ecaca80f1170614c9ac5d546a5cdafce899c43aa`; only this metadata reconciliation follows.
-- Remaining work: wait for fresh required GitHub checks after metadata reconciliation; owner decision to execute migration 0017 in an environment; owner decision to enable `LEARNBOX_ADMIN_CONTENT_REVIEW_ENABLED`; staging deployment of the merged build; a human reviewer attesting each dimension; separate seed/publication gate remains blocked per ADR 0016.
+- Remaining work: owner decision to execute migration 0017 in an environment; owner decision to enable `LEARNBOX_ADMIN_CONTENT_REVIEW_ENABLED`; staging deployment of the merged build; a human reviewer attesting each dimension; separate seed/publication gate remains blocked per ADR 0016. All seven final-head GitHub checks passed before merge.
 - Risks: security-sensitive Admin writes (mitigated: default-off flag, 404-before-read, session-only actor, DB role check before data access, trusted origin + CSRF + recent auth, row locks, idempotency fail-closed, atomic audit, no publication path); content-data migration (mitigated: deterministic uuid5 identities, faithful embedded draft content, fail-closed guards, additive schema only, validated against a real ephemeral Postgres).
 - Secrets or production changes: none. No secrets touched, no environment/deployment/staging/Preview/Production configuration changed, flag left off, migration not executed outside an ephemeral local container.
 - Bobo canonical status: unchanged. No Bobo assets, generation, prompts or visual content were added or modified; drafts embed their committed `visualConcept`/`imagePrompt` text only as immutable candidate content.
