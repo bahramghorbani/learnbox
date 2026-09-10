@@ -1,7 +1,7 @@
 # LearnBox Start 35 — release-readiness audit
 
-**Audit baseline:** `bb6c6d6ca1b0af1b0a96a771c4f29a6aabe73d4e` (`origin/main`)
-**Audited at:** 2026-09-08 11:53 +0330
+**Audit baseline:** `394fbd3275670f5777b47c3e99b600ac7cb44f30` (`origin/main`)
+**Audited at:** 2026-09-11
 **Decision:** **BLOCKED — do not seed, attach, publish or enable server-backed Today figures.**
 
 ## Purpose
@@ -36,20 +36,42 @@ The canonical catalog snapshot is therefore truthful at its top-level release bo
    participant-invitation approval remain open.
 5. **Owner release approval is absent for all 35.** Existing owner confirmations cover only German
    linguistic and Persian translation dimensions; they do not authorize publication.
-6. **At the audit baseline, evidence metadata had stale pre-approval and candidate-QA chronology that
-   needed reconciliation before a release decision:**
-   - both draft batches used top-level/item `needs_editorial_review` / `needs_review` wording and
-     source/provenance text saying German/Persian editorial review was pending, although later approval
-     events and the derived 35-item snapshot recorded those two dimensions as approved;
-   - both candidate-intake files (`start-a1-slice-candidates.json` and
-     `start-a1-catalog-35-pending-candidates.json`) said their candidates required German and Persian
-     editorial review, although later approval events recorded those two dimensions;
-   - `start-a1-catalog-35-pending-provenance-ledger.json` listed German/Persian review as remaining for
-     the 15-item batch, although those dimensions were later approved;
-   - Issue #59's V2 audio gate said 40/40 passed, but its ledger recorded only 6/40 listening-approved
-     V2 files, 34/40 pending/absent and four transcription mismatches. It was not evidence for the V1
-     attested/transcription-QA set.
-     These were chronology drift, not permission to infer broader approval.
+
+## LB-DS-055 evidence reconciliation — 2026-09-11
+
+The merged LB-DS-055 evidence package adds private, human-reviewed candidate media for the remaining
+15 items without changing this release decision:
+
+- 15 images and 30 audio clips were reviewed privately; the final review export records 45/45
+  approvals.
+- Automated transcription is 28/30 exact normalized matches. `start-a1-essen-sentence` and
+  `start-a1-gross-word` remain explicit discrepancies; human listening approval neither removes
+  them nor grants release approval.
+- The evidence ledger anchors the generation manifest, transcription QA and final human-review
+  export by SHA-256. Every recorded field remains candidate-only: `attachmentAllowed: false`,
+  `seedable: false`, `publicationBlocked: true`.
+
+The decision remains **BLOCKED**. LB-DS-055 did not attach media, write an Admin review check or
+review decision, create an approved/published `card_versions` row, seed a catalog, activate a
+runtime flag, deploy or invite participants.
+
+## Historical audit finding — 2026-09-08
+
+At the earlier audit baseline, evidence metadata had stale pre-approval and candidate-QA chronology
+that needed reconciliation before a release decision:
+
+- both draft batches used top-level/item `needs_editorial_review` / `needs_review` wording and
+  source/provenance text saying German/Persian editorial review was pending, although later approval
+  events and the derived 35-item snapshot recorded those two dimensions as approved;
+- both candidate-intake files (`start-a1-slice-candidates.json` and
+  `start-a1-catalog-35-pending-candidates.json`) said their candidates required German and Persian
+  editorial review, although later approval events recorded those two dimensions;
+- `start-a1-catalog-35-pending-provenance-ledger.json` listed German/Persian review as remaining for
+  the 15-item batch, although those dimensions were later approved;
+- Issue #59's V2 audio gate said 40/40 passed, but its ledger recorded only 6/40 listening-approved
+  V2 files, 34/40 pending/absent and four transcription mismatches. It was not evidence for the V1
+  attested/transcription-QA set.
+  These were chronology drift, not permission to infer broader approval.
 
 ## Post-audit reconciliation — 2026-09-08
 
@@ -113,5 +135,7 @@ invitation, Preview activation and Production remain separate owner gates.
 - `content/packs/learnbox-start/validation/start-a1-slice-review-queue.json`
 - `content/packs/learnbox-start/validation/start-a1-issue59-audio-ledger.json`
 - `content/packs/learnbox-start/validation/start-a1-avalai-audio-transcription-qa.json`
+- `content/packs/learnbox-start/validation/start-a1-catalog-35-pending-provenance-ledger.json` (LB-DS-055 evidence anchors)
+- `.ai/worker-reports/LB-DS-055.md`
 - `apps/api/src/catalog/start-catalog-seed-gate.ts`
 - ADR 0013 and ADR 0016
