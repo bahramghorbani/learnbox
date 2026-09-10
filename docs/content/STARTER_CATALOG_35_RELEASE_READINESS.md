@@ -12,19 +12,21 @@ participants, deploy, or publish anything.
 
 ## Verified inventory
 
-| Slice                    | Drafts |                                     Linguistic approval | Provenance                                                     | Visual                                                             | Audio                                                                                                                             | App flow                          | Release-approved card versions |
-| ------------------------ | -----: | ------------------------------------------------------: | -------------------------------------------------------------- | ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- | --------------------------------- | -----------------------------: |
-| Original vertical slice  |  20/20 | 20/20 for `german_linguistic` and `persian_translation` | candidate-stage evidence for 20/20                             | 20/20 V2 candidates inspected and privately attested, not attached | 40/40 V1 word/sentence candidates sha-attested and transcription-QA-passed, not attached; Issue #59 V2 regeneration is incomplete | candidate-stage local flow passed |                           0/20 |
-| Remaining catalog drafts |  15/15 | 15/15 for `german_linguistic` and `persian_translation` | lexical-scope ledger exists for 15/15; release gate not closed | no candidate media requested                                       | no candidate media requested                                                                                                      | not approved                      |                           0/15 |
-| Total catalog            |  35/35 |            35/35 for the two linguistic dimensions only | incomplete for release                                         | incomplete for release                                             | incomplete for release                                                                                                            | incomplete for release            |                           0/35 |
+| Slice                    | Drafts |                                          Linguistic approval | Provenance                                            | Visual                                                             | Audio                                                                                                                             | App flow                          | Release-approved card versions |
+| ------------------------ | -----: | -----------------------------------------------------------: | ----------------------------------------------------- | ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- | --------------------------------- | -----------------------------: |
+| Original vertical slice  |  20/20 |      20/20 for `german_linguistic` and `persian_translation` | candidate-stage evidence for 20/20                    | 20/20 V2 candidates inspected and privately attested, not attached | 40/40 V1 word/sentence candidates sha-attested and transcription-QA-passed, not attached; Issue #59 V2 regeneration is incomplete | candidate-stage local flow passed |                           0/20 |
+| Remaining catalog drafts |  15/15 | 15/15 for `german_linguistic` and `persian_translation` only | lexical-scope ledger exists for 15/15; candidate-only | 15/15 private candidates human-reviewed, not attached              | 30/30 private candidates human-reviewed; 28/30 exact transcription matches with two recorded exceptions, not attached             | not approved                      |                           0/15 |
+| Total catalog            |  35/35 |                 35/35 for the two linguistic dimensions only | incomplete for release                                | incomplete for release                                             | incomplete for release                                                                                                            | incomplete for release            |                           0/35 |
 
 The canonical catalog snapshot is therefore truthful at its top-level release boundary:
 `releaseStatus: draft`, `seedable: false`, `publicationBlocked: true`, and no seedable item IDs.
 
 ## Blocking gates
 
-1. **Remaining 15 items lack candidate and final media validation.** Their provenance ledger records
-   `candidateMedia.status: none_requested`; visual and audio release gates remain open.
+1. **Remaining 15 items still lack final media validation.** Private candidate-only media now exists:
+   all 15 images and 30 audio clips received human review, but the package remains unattached and
+   two automated transcription discrepancies (`start-a1-essen-sentence`, `start-a1-gross-word`) remain
+   recorded for a later release decision. Final visual/audio approval and release authorization are not granted here.
 2. **Remaining 15 items lack app-flow approval.** No artifact proves those items in the learner flow.
 3. **No item has an approved/published `card_versions` row.** ADR 0013 and
    `evaluateStartCatalogSeed` require a release-approved version for every target item; current count

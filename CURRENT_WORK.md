@@ -6,12 +6,7 @@
 
 ### LB-DS-055 — Start Pack 15 candidate media readiness
 
-- **Status:** candidate-only generation is complete under the owner-authorized `$1.25` ceiling.
-  Private output contains 15 images and 30 audio candidates; human review approved every image and
-  27 audio candidates. `start-a1-essen-word`, `start-a1-gross-word` and `start-a1-neu-word` were
-  rejected and remain pending replacement plus human re-review. Candidate media is not attached,
-  approved, seeded, published or learner-delivered; the catalog remains 0/35 release-approved,
-  `seedable: false` and `publicationBlocked: true`.
+- **Status:** the private candidate-only package is complete and awaiting independent fail-closed review. It contains 15 images and 30 audio clips; human visual/listening review approved all 45 decisions. Automated transcription records 28/30 exact normalized matches; the `essen-sentence` and `gross-word` discrepancies remain explicit evidence, not silently passed. No media is attached, approved, seeded, published or learner-delivered; the catalog remains 0/35 release-approved, `seedable: false` and `publicationBlocked: true`.
 
 ### Starter Catalog 35 release gates
 
@@ -146,7 +141,7 @@
 
 ## Immediate execution order
 
-1. Regenerate and independently review only the three rejected LB-DS-055 private word-audio candidates (`essen`, `groß`, `neu`); require exact-match transcription and a renewed human listening decision. This remains candidate-only: no attachment, check/decision write, seed, publication or learner delivery.
+1. Independently review LB-DS-055's private 15-item candidate package, including the recorded 28/30 automated transcription result and the renewed 45/45 human visual/listening decisions. This remains candidate-only: no attachment, check/decision write, seed, publication or learner delivery.
 2. Keep the merged M1-D client reconciliation path dormant. The cursor/watermark policy is approved in
    ADR 0014; server-core (PR #169), client-side cursor capture/persistence (PR #170),
    read-side cursor exposure (PR #171/LB-DS-024) and per-event cursor binding (PR #172/LB-DS-025)

@@ -10,12 +10,23 @@
     "verificationMethod": "Direct PDF extraction and manual contextual review"
   },
   "learnBoxEditorialText": {
-    "definitionExampleAndTranslationSource": "Original LearnBox editorial drafts; German and Persian dimensions are pending review for these 15 items.",
+    "definitionExampleAndTranslationSource": "Original LearnBox editorial drafts; German linguistic and Persian translation approval is recorded separately.",
     "licensedFromGoethe": false
   },
   "candidateMedia": {
-    "status": "none_requested",
+    "status": "private_candidate_package_human_reviewed",
     "generationProviders": ["AvalAI image and speech APIs"],
+    "evidence": {
+      "manifestSha256": "1a87f2072670026403f55af9d87624603134a3269a758c24983742cbbb23afa8",
+      "transcriptionQaSha256": "1c4bb9003fd22d8de204f43a3b2f6d67c4a2ec58742a286b077553279872b6c1",
+      "humanReviewSha256": "6c117338803fc4d1e830f27f4c6a0b873123b24c997a308d8d9a8404f92899d6"
+    },
+    "inventory": { "images": 15, "audio": 30, "humanReviewApproved": 45 },
+    "transcriptionQa": {
+      "exactMatches": 28,
+      "total": 30,
+      "recordedExceptions": ["start-a1-essen-sentence", "start-a1-gross-word"]
+    },
     "attachmentAllowed": false,
     "publicationAllowed": false,
     "licenseReview": {

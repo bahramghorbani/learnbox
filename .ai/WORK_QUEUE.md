@@ -498,8 +498,8 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 
 ## LB-DS-055
 
-- Status: in_progress
-- Dependencies: Starter-35 human QA plan identifies the exact unresolved items; a bounded `$1.25` provider budget was authorized and candidate-only generation plus human review began. Three rejected word-audio candidates remain pending replacement/review; no attachment or release gate is authorized.
+- Status: review_requested
+- Dependencies: Starter-35 human QA plan identifies the exact unresolved items; the bounded `$1.25` provider budget was authorized. Private candidate-only generation and renewed human review are complete; no attachment or release gate is authorized.
 - Executor: W4 content-factory worker plus mandatory human visual/audio/content reviewers
 - Base: exact current `origin/main` after LB-DS-054 only if staging review evidence is needed; otherwise a freshly recorded current main
 - Branch: `content/start-15-candidate-media-readiness`
