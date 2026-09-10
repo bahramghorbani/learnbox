@@ -373,9 +373,12 @@ successfully on that exact head before merge.
 
 ## LB-DS-050
 
-- Status: review_requested
+- Status: accepted
 - Executor: supervisor (M2 staging-preflight preparation; no activation)
 - Base: `origin/main` at `a3f472012d653dee26ad40c64258abd70065cef6` (PR #254 merged)
+- Head commit: `83b6c1bb4a7fcbb22612e211a20c06b692a8e367`
+- Draft PR: #255 (merged) — https://github.com/bahramghorbani/learnbox/pull/255
+- Merge commit: `7861354ebfd2eb63dfb4de4d5d2f655c16258fb8`
 - Branch: `ops/admin-content-review-staging-preflight`
 - Risk: security-sensitive-staging-preflight-and-migration-runner-packaging
 - Specification: `docs/operations/ADMIN_CONTENT_REVIEW_STAGING_ACTIVATION.md`; PDR-008; ADR 0016; `docs/DOCUMENTATION_GOVERNANCE.md`
@@ -384,13 +387,32 @@ successfully on that exact head before merge.
 - Simulator required: no
 - Draft PR required: yes
 - Merge allowed: yes
-- Blocked on: review, exact-head GitHub checks and a later explicit owner approval before any staging operation
+- Blocked on: none for preparation; a separate explicit owner approval remains required before any staging operation
 - Must not touch: migration content or execution; staging/Preview/Production deployment; runtime flag activation; secrets; database data; human review or approval; seed; pack membership; publication; learner delivery; invitations; billing or Vercel configuration; Bobo assets
 - Acceptance: Compose exposes `LEARNBOX_ADMIN_CONTENT_REVIEW_ENABLED` as a runtime-only default-false value; deployment-boundary tests prove the default-off/explicit-on mapping and migration-runner dependency resolution; the runbook defines exact-release, backup, checksum, fail-closed, activation-verification and rollback gates without performing them; no environment is changed and no migration, review, seed, publication or learner delivery occurs.
 
-This task prepares only a reviewed, reversible staging operation. It does not authorize the operator
+This task merged in PR #255 at `7861354`. Independent infrastructure/migration review and both
+reviewer-hardening deltas passed, and all seven final-head GitHub/Vercel contexts succeeded. The
+preflight only prepares a reviewed, reversible staging operation. It does not authorize the operator
 phases documented by the runbook. Migration `0017`, the Admin review flag, human attestations,
 deployment and all release paths remain unchanged and gated.
+
+## LB-DS-051
+
+- Status: ready
+- Executor: Hermes Web implementation worker (M1-B Today no-due state)
+- Base: `origin/main` at `7861354ebfd2eb63dfb4de4d5d2f655c16258fb8` (PR #255 merge commit)
+- Branch: `feature/web-today-no-due-state`
+- Risk: routine-web-ui-truth-accessibility
+- Specification: `docs/design/D1_LEARNER_UI_KIT.md` §5 Today empty/no-due state; `docs/PRODUCT_STATUS.md`
+- Allowed paths: `apps/website/app/components/TodayScreen.tsx`; `apps/website/app/LearnerHome.tsx`; `apps/website/app/globals.css`; `apps/website/test/learner-today-server-states.test.tsx`; `apps/website/test/learner-today-empty.test.tsx`; `apps/website/README-M1B-WEB-SLICE1.md`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-051.md`; `CURRENT_WORK.md`; `PROJECT_STATE.md`; `docs/PRODUCT_STATUS.md`; `docs/design/DESIGN_STATUS.md`; `docs/design/UI_QA.md`
+- Required checks: strict RED/GREEN focused Today no-due tests; full Website tests; Website typecheck and production build; Prettier; `pnpm verify:ai-worker-queue`; `pnpm verify:documentation-governance`; `pnpm verify:ai-continuity`; `pnpm test:dashboard`; `git diff --check`; responsive RTL/keyboard/large-text browser evidence; independent code/product/accessibility review
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+- Blocked on: none after this coordination change merges
+- Must not touch: Android/mobile/iOS; API, route, auth or session behavior; learner-state parsing; sync composition or activation; `WEB_LEARNER_STATE_ENABLED`; migration, seed, catalog membership, publication, deployment, Preview/Production, provider, secret, Admin, commerce or Bobo canonical assets
+- Acceptance: when the truthful device-local Today session has no remaining cards, Web renders the D1 no-due message `کارتی برای مرور نیست`, does not render the zero-card start prompt or `شروع مرور`, and exposes one accessible action to Words; non-empty sessions and existing loading/error/offline/server-backed labels remain unchanged; the state is verified in local-only, offline/error and server-backed label conditions without claiming server due counts, acknowledgement or catalog activation.
 
 ## LB-DS-049
 
