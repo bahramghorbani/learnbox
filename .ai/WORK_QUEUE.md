@@ -498,8 +498,8 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 
 ## LB-DS-055
 
-- Status: in_progress
-- Dependencies: Starter-35 human QA plan identifies the exact unresolved items; a bounded `$1.25` provider budget was authorized and candidate-only generation plus human review began. Three rejected word-audio candidates remain pending replacement/review; no attachment or release gate is authorized.
+- Status: review_requested
+- Dependencies: Starter-35 human QA plan identifies the exact unresolved items; the bounded `$1.25` provider budget was authorized. Private candidate-only generation and renewed human review are complete; no attachment or release gate is authorized.
 - Executor: W4 content-factory worker plus mandatory human visual/audio/content reviewers
 - Base: exact current `origin/main` after LB-DS-054 only if staging review evidence is needed; otherwise a freshly recorded current main
 - Branch: `content/start-15-candidate-media-readiness`
@@ -514,7 +514,7 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 - Simulator required: yes
 - Draft PR required: yes
 - Merge allowed: yes
-- Blocked on: replacement and human re-review of `start-a1-essen-word`, `start-a1-gross-word` and `start-a1-neu-word`; exact-match transcription must be rerun for every replacement. Existing private candidates and the `$1.25` authorized budget do not authorize attachment, approval, seed or publication.
+- Blocked on: final exact-head CI and merge review only. The renewed human review approves all 45 candidate decisions; `start-a1-essen-sentence` and `start-a1-gross-word` retain explicit automated transcription discrepancies for a later release decision. Existing private candidates and the `$1.25` authorized budget do not authorize attachment, approval, seed or publication.
 - Must not touch: existing approved canonical Bobo appearance; database migration/execution; media attachment; `card_versions` approval/publication; catalog seed; pack membership; runtime flags; invitations; staging/Preview/Production; payments; auth/session/sync; landing
 - Acceptance: candidate-only image/audio evidence for the remaining 15 items is complete, immutable and human-reviewed enough to produce a truthful 35-item decision package while `seedable: false`, `publicationBlocked: true`, and 0/35 release-approved versions remain unchanged; no asset is attached or delivered to learners.
 
