@@ -130,9 +130,13 @@ class ReviewSyncCoordinator {
 
     String? after;
     try {
-      // An unreadable cursor fails closed before any network call; a malformed
-      // stored cursor is treated as absent.
-      after = parseReconciliationCursor(await store.read());
+      // An unreadable or malformed persisted cursor fails closed before any
+      // network call. Absence is the only state that starts from server zero.
+      final storedCursor = await store.read();
+      after = parseReconciliationCursor(storedCursor);
+      if (storedCursor != null && after == null) {
+        return _retryable();
+      }
     } catch (_) {
       return _retryable();
     }

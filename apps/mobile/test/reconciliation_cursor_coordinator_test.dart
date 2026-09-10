@@ -422,6 +422,25 @@ void main() {
       expect(reconciliation.calls, 0);
     });
 
+    test('a malformed stored cursor fails closed before any network call',
+        () async {
+      final queue = await _queueWithEvents(_MemoryStore(), 0);
+      final cursorStore = _MemoryReconciliationCursorStore('not-a-cursor');
+      final reconciliation = _ScriptedReconciliationTransport([
+        _reconciliationPage(cursor: '0', nextCursor: '1'),
+      ]);
+      final coordinator = _authenticatedCoordinator(
+        queue,
+        _CursoredTransport(acknowledged: const [], cursor: '0'),
+        cursorStore: cursorStore,
+        reconciliationTransport: reconciliation,
+      );
+
+      expect(await coordinator.synchronize(), isA<RetryableFailure>());
+      expect(reconciliation.calls, 0);
+      expect(await cursorStore.read(), 'not-a-cursor');
+    });
+
     test('signed-out reconciliation performs no network call', () async {
       final reconciliation = _ScriptedReconciliationTransport([
         _reconciliationPage(cursor: '0', nextCursor: '0'),
