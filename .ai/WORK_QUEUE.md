@@ -423,6 +423,74 @@ PASS on `5968cbb` and all seven required GitHub/Vercel contexts succeeded. Focus
 production build, repository validators and 390×844/200% reflow browser probes passed. No server
 state, sync, catalog seed, publication, deployment, migration or runtime flag was activated.
 
+## LB-DS-052
+
+- Status: in_progress
+- Executor: supervisor (milestone execution coordination)
+- Base: `origin/main` at `0e36fb7466aa746cc0f322309fa399a81a005197` (PR #258 merge commit)
+- Branch: `docs/next-milestone-execution-queue`
+- Risk: documentation-only-milestone-sequencing
+- Specification: `ROADMAP.md`; `.ai/WORKSTREAMS.md`; `docs/architecture/M1D_SYNC_WIRE_CONTRACT.md`; `docs/operations/ADMIN_CONTENT_REVIEW_STAGING_ACTIVATION.md`; `docs/content/STARTER_CATALOG_35_RELEASE_READINESS.md`
+- Allowed paths: `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-052.md`; `CURRENT_WORK.md`
+- Required checks: Prettier on changed Markdown; `node scripts/validate-ai-worker-queue.mjs`; `node scripts/validate-documentation-governance.test.mjs`; `node scripts/validate-ai-continuity.mjs`; `git diff --check`; independent milestone/dependency/scope review
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+- Blocked on: none
+- Must not touch: product code; tests; content or generated media; migrations or database data; auth/session behavior; provider or secret configuration; runtime flags; staging/Preview/Production; deployment; seed; pack membership; human approval; publication; payments; landing; Bobo assets
+- Acceptance: the repository has one continuously executable next M1 task and records later owner/cost-gated M2 tasks without treating them as ready; scopes remain coherent milestone outcomes rather than microtasks; no product, environment, content-release or provider state changes.
+
+## LB-DS-053
+
+- Status: ready
+- Executor: substantial Android/M1-D sync worker with independent high-reasoning review
+- Base: exact merge commit of LB-DS-052 (replace this dependency with its merged SHA before dispatch)
+- Branch: `feature/m1d-mobile-reconciliation-client`
+- Risk: security-sensitive-no-data-loss-mobile-sync-client-composition
+- Specification: `docs/architecture/M1D_SYNC_WIRE_CONTRACT.md` §§3.2, 4-7, 9-11, 13, 15-17; ADR 0014; `docs/architecture/OFFLINE_SYNC.md`
+- Allowed paths: `apps/mobile/lib/features/sync/reconciliation_cursor_store.dart`; `apps/mobile/lib/features/sync/review_sync_result.dart`; `apps/mobile/lib/features/sync/review_sync_transport.dart`; `apps/mobile/lib/features/sync/http_review_sync_transport.dart`; `apps/mobile/lib/features/sync/review_sync_coordinator.dart`; `apps/mobile/lib/main.dart`; `apps/mobile/test/reconciliation_cursor_store_test.dart`; `apps/mobile/test/reconciliation_cursor_transport_test.dart`; `apps/mobile/test/reconciliation_cursor_coordinator_test.dart`; `apps/mobile/test/review_sync_coordinator_test.dart`; `apps/mobile/test/http_review_sync_transport_test.dart`; `apps/mobile/test/review_sync_contract_test.dart`; `apps/mobile/test/mobile_sync_composition_test.dart`; `docs/architecture/M1D_SYNC_WIRE_CONTRACT.md`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-053.md`; `CURRENT_WORK.md`; `PROJECT_STATE.md`; `docs/PRODUCT_STATUS.md`
+- Required checks: strict RED/GREEN tests for reconciliation response parsing, paging, lost POST response, malformed/partial response, cursor persistence and exact-POST-ack removal invariant; all focused sync tests; full Flutter test suite; `flutter analyze`; `dart format --output=none --set-exit-if-changed`; debug APK build; Prettier on changed docs; queue/documentation/continuity/dashboard validators; `git diff --check`; independent high-reasoning security/no-data-loss review
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+- Blocked on: LB-DS-052 coordination merge only
+- Must not touch: API/server implementation or migrations; Web/Admin/landing/iOS; auth/session redesign; native gateway; runtime flag enablement; deployment; staging/Preview/Production; secrets/providers; content seed/publication; payments; Bobo assets
+- Acceptance: the mobile sync transport strictly parses the existing dormant reconciliation GET contract and the coordinator can complete the documented reconnect sequence without deleting any local event from a cursor or GET result; malformed, partial, failed and paged responses preserve the queue and prior cursor; production composition remains fail-closed with signed-out identity and disabled transport, all sync flags remain false, and no network route is activated or deployed.
+
+## LB-DS-054
+
+- Status: blocked
+- Executor: high-reasoning serial staging operator plus independent security/data-integrity reviewer
+- Base: a separately approved exact `origin/main` release commit containing PRs #252 and #255
+- Branch: `ops/admin-content-review-staging-activation`
+- Risk: owner-gated-staging-backup-database-migration-and-runtime-activation
+- Specification: `docs/operations/ADMIN_CONTENT_REVIEW_STAGING_ACTIVATION.md`; PDR-008; ADR 0016
+- Allowed paths: `docs/operations/ADMIN_CONTENT_REVIEW_STAGING_ACTIVATION.md`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-054.md`; `CURRENT_WORK.md`; `PROJECT_STATE.md`; `docs/PRODUCT_STATUS.md`
+- Required checks: every runbook Phase 1 preflight; verified encrypted staging backup and restore readiness; migration checksum/ledger check; post-migration `35 / 210 / 210 / 0 / 0` assertion; protected Admin route/Passkey/bootstrap health probes; rollback evidence; queue/documentation/continuity validators; `git diff --check`; independent security/data-integrity review
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+- Blocked on: explicit owner authorization for the exact staging release commit, backup, migration `0017`, Admin image rollout and `LEARNBOX_ADMIN_CONTENT_REVIEW_ENABLED=true`; trusted secret entry must occur outside chat
+- Must not touch: Production; learner applications or sync flags; seed; pack membership; media attachment; human check outcomes or decisions; approval/publication; participant invitation; payment; DNS/TLS; landing; Bobo assets
+- Acceptance: only isolated Admin staging is backed up, migrated and activated exactly per the reviewed runbook; database truth is `35 / 210 / 210 / 0 / 0`, Passkey protection remains intact, rollback is proven, and Production, learner delivery, content decisions and publication remain unchanged.
+
+## LB-DS-055
+
+- Status: blocked
+- Executor: W4 content-factory worker plus mandatory human visual/audio/content reviewers
+- Base: exact current `origin/main` after LB-DS-054 only if staging review evidence is needed; otherwise a freshly recorded current main
+- Branch: `content/start-15-candidate-media-readiness`
+- Risk: cost-gated-generated-media-and-human-content-quality
+- Specification: `docs/content/STARTER_CATALOG_35_RELEASE_READINESS.md`; ADR 0013; ADR 0016; PDR-003; PDR-008
+- Allowed paths: remaining-15 Start Pack candidate media and validation ledgers under `content/packs/learnbox-start/`; bounded content/media validators and tests; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-055.md`; `CURRENT_WORK.md`; `docs/content/STARTER_CATALOG_35_RELEASE_READINESS.md`; `docs/PRODUCT_STATUS.md`; `docs/design/DESIGN_STATUS.md`; `docs/design/UI_QA.md`
+- Required checks: immutable ID/checksum and provenance validation; candidate visual QA; word/sentence audio transcription plus human listening QA; local learner app-flow QA; all Start Pack validators; `pnpm check`; `pnpm build`; migration validation; Prettier; queue/documentation/continuity/dashboard validators; `git diff --check`; independent fail-closed content/product review
+- Simulator required: yes
+- Draft PR required: yes
+- Merge allowed: yes
+- Blocked on: separate owner authorization for paid provider cost and confirmed human visual/audio/content review capacity
+- Must not touch: existing approved canonical Bobo appearance; database migration/execution; media attachment; `card_versions` approval/publication; catalog seed; pack membership; runtime flags; invitations; staging/Preview/Production; payments; auth/session/sync; landing
+- Acceptance: candidate-only image/audio evidence for the remaining 15 items is complete, immutable and human-reviewed enough to produce a truthful 35-item decision package while `seedable: false`, `publicationBlocked: true`, and 0/35 release-approved versions remain unchanged; no asset is attached or delivered to learners.
+
 ## LB-DS-049
 
 - Status: accepted

@@ -4,6 +4,19 @@
 
 ## Active work
 
+### LB-DS-052 — continuous milestone execution queue
+
+- **Status:** in progress on `docs/next-milestone-execution-queue`, based on exact `origin/main`
+  `0e36fb7466aa746cc0f322309fa399a81a005197`. This documentation-only coordination slice registers
+  the next coherent milestone work rather than leaving execution without a ready task.
+- **Next safe implementation:** LB-DS-053, M1-D mobile reconciliation client composition, becomes
+  dispatchable from the exact LB-DS-052 merge commit. It must remain default-off and may not activate
+  network sync, auth, a runtime flag, staging or Production.
+- **Later gated work:** LB-DS-054 records the owner-gated Admin staging backup/migration/runtime
+  activation; LB-DS-055 records the separately cost-authorized candidate-media and human-QA slice for
+  the remaining 15 Start items. Neither is ready and neither gate is inferred from this coordination
+  change.
+
 ### Starter Catalog 35 release gates
 
 - **Status:** LB-DS-045 evidence reconciliation was accepted and merged in PR #241 at `95c704b`.
