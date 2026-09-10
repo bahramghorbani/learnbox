@@ -2,7 +2,7 @@
 
 - Branch: `docs/next-milestone-execution-queue`
 - Base commit: `0e36fb7466aa746cc0f322309fa399a81a005197`
-- Head commit: `ba945ffbf874641c5a4e13a1a76c3d841a809f4f` (last committed PR metadata before corrective review updates; exact review binds to current GitHub head)
+- Head commit: current PR #259 `headRefOid`; every review must read it from GitHub and bind to that exact SHA because report-link metadata commits change the branch tip
 - Draft PR: #259 (`docs/next-milestone-execution-queue` → `main`)
 - Scope completed: Registered one ready, coherent M1-D client-composition task (LB-DS-053) and two explicit later M2 owner/cost-gated tasks (LB-DS-054 and LB-DS-055), without authorizing activation, migration, generated-media cost, approval or publication.
 - Files changed: `.ai/WORK_QUEUE.md`; `CURRENT_WORK.md`; this report
