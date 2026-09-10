@@ -51,6 +51,10 @@ COPY --from=builder --chown=nextjs:nodejs /workspace/apps/website/.next/static .
 COPY --from=builder --chown=nextjs:nodejs /workspace/apps/website/public ./apps/website/public
 COPY --from=builder --chown=nextjs:nodejs /workspace/apps/api/dist ./apps/api/dist
 COPY --from=builder --chown=nextjs:nodejs /workspace/database/migrations ./database/migrations
+# The one-shot API migration runner resolves pg through the traced Website runtime.
+RUN test ! -e apps/api/node_modules \
+    && ln -s ../website/node_modules apps/api/node_modules \
+    && test -e apps/api/node_modules/pg/package.json
 
 USER nextjs
 
