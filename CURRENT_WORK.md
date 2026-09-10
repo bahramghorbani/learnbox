@@ -4,15 +4,13 @@
 
 ## Active work
 
-### LB-DS-050 — Admin content-review staging preflight
+### LB-DS-051 — Learner Web Today no-due state
 
-- **Status:** review requested on `ops/admin-content-review-staging-preflight`, based on PR #254's
-  merge commit `a3f4720`. The branch adds only a default-false runtime Compose mapping, deployment-
-  boundary tests, migration-runner runtime packaging resolution and a guarded staging runbook.
-  Migration `0017` has not been executed; `LEARNBOX_ADMIN_CONTENT_REVIEW_ENABLED` has not been
-  enabled; no staging/Preview/Production deployment, database mutation, human review, seed,
-  publication, learner delivery or invitation has occurred. Exact-head independent review and CI
-  remain required, followed by a separate explicit owner approval before any runbook operation.
+- **Status:** ready after the coordination change merges. Implement the D1 §5 no-due state over the
+  existing truthful device-local remaining-card count: render `کارتی برای مرور نیست`, remove the
+  zero-card start affordance and provide one accessible path to Words. Preserve the existing
+  loading/error/offline/server-backed labels and all non-empty Today behavior. This slice must not
+  activate server state, sync, catalog seed, publication, deployment or any runtime flag.
 
 ### Starter Catalog 35 release gates
 
@@ -147,9 +145,9 @@
 
 ## Immediate execution order
 
-1. Review LB-DS-050's default-off staging preflight and runbook; do not execute migration `0017`, enable the Admin review flag or deploy without a separate explicit owner approval after merge.
-2. Complete the remaining provenance, visual, audio and app-flow review through a separately approved staging operation; approval still does not publish or create learner catalog membership.
-3. Implement the authenticated server-wired learner path completion and any remaining D1 fetch states.
+1. Implement LB-DS-051's bounded Learner Web Today no-due state without server, catalog, sync or flag activation.
+2. Keep LB-DS-050's merged staging preflight dormant; do not execute migration `0017`, enable the Admin review flag or deploy without a separate explicit owner approval.
+3. Complete the remaining provenance, visual, audio and app-flow review only through a separately approved staging operation; approval still does not publish or create learner catalog membership.
 4. Complete the separately review-gated M1-D push reconciliation activation/composition work. The cursor/watermark policy is approved in
    ADR 0014; server-core (PR #169), client-side cursor capture/persistence (PR #170),
    read-side cursor exposure (PR #171/LB-DS-024) and per-event cursor binding (PR #172/LB-DS-025)
