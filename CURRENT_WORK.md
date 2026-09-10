@@ -6,11 +6,14 @@
 
 ### LB-DS-051 — Learner Web Today no-due state
 
-- **Status:** ready after the coordination change merges. Implement the D1 §5 no-due state over the
-  existing truthful device-local remaining-card count: render `کارتی برای مرور نیست`, remove the
-  zero-card start affordance and provide one accessible path to Words. Preserve the existing
-  loading/error/offline/server-backed labels and all non-empty Today behavior. This slice must not
-  activate server state, sync, catalog seed, publication, deployment or any runtime flag.
+- **Status:** review requested on `feature/web-today-no-due-state`. The D1 §5 no-due state now renders
+  `کارتی برای مرور نیست`, removes the zero-card start/recovery affordances and provides one focused
+  path to Words while preserving loading/error/offline/server-backed labels, pending-sync truth and
+  the non-empty Today flow. Focused Today tests pass 17/17, the affected Today/core-flow set passes
+  30/30, the full Website suite passes 276/276, Website typecheck/build pass, and 390×844 plus 200%
+  reflow-equivalent browser checks have no horizontal overflow. Independent review and exact-head
+  remote checks remain required. No server state, sync, catalog seed, publication, deployment or
+  runtime flag is activated.
 
 ### Starter Catalog 35 release gates
 

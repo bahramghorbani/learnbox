@@ -399,13 +399,13 @@ deployment and all release paths remain unchanged and gated.
 
 ## LB-DS-051
 
-- Status: ready
+- Status: review_requested
 - Executor: Hermes Web implementation worker (M1-B Today no-due state)
-- Base: `origin/main` at `7861354ebfd2eb63dfb4de4d5d2f655c16258fb8` (PR #255 merge commit)
+- Base: `origin/main` at `05222eeab3b3c144bb6effb2d4d1a726cb6b99d6` (PR #256 merge commit)
 - Branch: `feature/web-today-no-due-state`
 - Risk: routine-web-ui-truth-accessibility
 - Specification: `docs/design/D1_LEARNER_UI_KIT.md` §5 Today empty/no-due state; `docs/PRODUCT_STATUS.md`
-- Allowed paths: `apps/website/app/components/TodayScreen.tsx`; `apps/website/app/LearnerHome.tsx`; `apps/website/app/globals.css`; `apps/website/test/learner-today-server-states.test.tsx`; `apps/website/test/learner-today-empty.test.tsx`; `apps/website/README-M1B-WEB-SLICE1.md`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-051.md`; `CURRENT_WORK.md`; `PROJECT_STATE.md`; `docs/PRODUCT_STATUS.md`; `docs/design/DESIGN_STATUS.md`; `docs/design/UI_QA.md`
+- Allowed paths: `apps/website/app/components/TodayScreen.tsx`; `apps/website/app/LearnerHome.tsx`; `apps/website/app/globals.css`; `apps/website/test/learner-core-flows.test.tsx`; `apps/website/test/learner-today-server-states.test.tsx`; `apps/website/test/learner-today-empty.test.tsx`; `apps/website/README-M1B-WEB-SLICE1.md`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-051.md`; `CURRENT_WORK.md`; `PROJECT_STATE.md`; `docs/PRODUCT_STATUS.md`; `docs/design/DESIGN_STATUS.md`; `docs/design/UI_QA.md`
 - Required checks: strict RED/GREEN focused Today no-due tests; full Website tests; Website typecheck and production build; Prettier; `pnpm verify:ai-worker-queue`; `pnpm verify:documentation-governance`; `pnpm verify:ai-continuity`; `pnpm test:dashboard`; `git diff --check`; responsive RTL/keyboard/large-text browser evidence; independent code/product/accessibility review
 - Simulator required: no
 - Draft PR required: yes

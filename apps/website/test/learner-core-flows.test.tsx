@@ -63,7 +63,8 @@ describe('learner core flows', () => {
     // 7. Completion screen records the session.
     expect(rendered.text()).toContain('آفرین، ثبت شد.');
     await rendered.clickButton('بازگشت به امروز');
-    expect(rendered.text()).toContain('مرورهای امروز');
+    expect(rendered.text()).toContain('کارتی برای مرور نیست');
+    expect(rendered.text()).toContain('رفتن به واژه‌ها');
   });
 
   it('keeps grade events in the offline review queue', async () => {
@@ -105,7 +106,7 @@ describe('learner core flows', () => {
     expect(document.activeElement?.textContent).toContain('آفرین، ثبت شد.');
 
     await rendered.clickButton('بازگشت به امروز');
-    expect(rendered.activeButtonLabel()).toContain('شروع مرور');
+    expect(rendered.activeButtonLabel()).toContain('رفتن به واژه‌ها');
   });
 
   it('resumes an interrupted review from the saved session index', async () => {
