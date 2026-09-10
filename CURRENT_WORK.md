@@ -4,6 +4,20 @@
 
 ## Active work
 
+### LB-DS-054 — Admin content-review staging activation
+
+- **Status:** the owner-approved staging-only operation is active on exact release
+  `801c532630d42042ebbd27b4fac158e294938075`. A restorable pre-migration backup was verified;
+  migration `0017` applied once with the reviewed checksum; database truth is
+  `35 / 210 / 210 / 0 / 0`; and the immutable Admin image is healthy with only
+  `LEARNBOX_ADMIN_CONTENT_REVIEW_ENABLED=true` newly enabled. Anonymous probes remain fail-closed
+  (`session=401`, `bootstrap=404`, `review=401`, `Cache-Control: no-store`). Application rollback to
+  the retained prior image restored `review=404`, and reactivation restored the protected `401`
+  boundary. Production, learner runtime, seed, decisions and publication remain unchanged.
+- **Remaining gate:** the owner must complete Passkey login outside chat and confirm the authenticated
+  queue read; then the evidence branch requires independent security/data-integrity review and green
+  final-head CI before acceptance.
+
 ### Starter Catalog 35 release gates
 
 - **Status:** LB-DS-045 evidence reconciliation was accepted and merged in PR #241 at `95c704b`.
@@ -137,8 +151,13 @@
 
 ## Immediate execution order
 
-1. Keep LB-DS-050's merged staging preflight dormant; do not execute migration `0017`, enable the Admin review flag or deploy without a separate explicit owner approval.
-2. Complete the remaining provenance, visual, audio and app-flow review only through a separately approved staging operation; approval still does not publish or create learner catalog membership.
+1. Complete LB-DS-054's owner-operated Passkey login and authenticated read-only queue verification,
+   then close the staging evidence through independent review and green final-head CI. Migration
+   `0017` and the Admin review runtime are active only in isolated staging; this does not authorize
+   human check writes, decisions, seed, publication or Production.
+2. Keep LB-DS-055 candidate-media generation blocked until the owner approves a bounded provider
+   budget and confirms human visual/audio/content review capacity. The no-spend estimate is complete;
+   no paid API has been called.
 3. Keep the merged M1-D client reconciliation path dormant. The cursor/watermark policy is approved in
    ADR 0014; server-core (PR #169), client-side cursor capture/persistence (PR #170),
    read-side cursor exposure (PR #171/LB-DS-024) and per-event cursor binding (PR #172/LB-DS-025)

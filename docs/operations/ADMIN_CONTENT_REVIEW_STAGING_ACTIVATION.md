@@ -269,3 +269,46 @@ The operation is complete only when all of these are recorded without sensitive 
 - healthy Admin staging, protected Passkey boundary, bootstrap closed, review route authenticated;
 - Production, seed, publication, learner delivery, and unrelated flags unchanged;
 - rollback image retained and rollback procedure verified.
+
+## Executed staging evidence — release `801c532630d42042ebbd27b4fac158e294938075`
+
+The owner separately authorized the exact staging-only backup, migration, immutable Admin rollout and
+runtime-flag activation. The operation preserved all Production, learner, seed, decision and
+publication boundaries.
+
+- Phase 1: `pnpm check`, the full production build, 17-migration validation, production dependency
+  audit and `git diff --check` passed from the clean exact-release worktree. The release archive was
+  transferred to the server and verified by SHA-256 before extraction.
+- Phase 2: encrypted backup `lb54-pre-0017-20260910T194227Z` was created in the isolated staging
+  backup directory as an AES-256 GPG artifact with mode `600`; its separately stored recovery key is
+  root-only with mode `600`, and the plaintext dump was deleted after encryption. A decrypt-and-full-
+  restore drill into a temporary database succeeded and reproduced the 16-entry `0001_initial`
+  through `0016_admin_owner_user_binding` migration ledger; decrypted material and the temporary
+  restore database were removed afterward. The encrypted artifact SHA-256 is
+  `e4a8174f30c5178e6c0a32b92c3022689916f5bc0da46ad32173a676074105a3`.
+- Phase 3: immutable Admin image
+  `sha256:fcb6595accd9a5019ddc5e90a5877601392af73858d88db36fc87fa134a5980e` and one-shot migration image
+  `sha256:4371d9b0e93216944de8299f53cf0ff11bfb5bf19ab23452b7807d81377a8127` were built from the approved
+  release. The runner image proved it contained `pg`, the compiled runner and migration `0017` before
+  receiving the restricted migration environment.
+- Phases 4-5: the runner reported exactly one applied migration. The ledger stores
+  `0017_start_catalog_review_candidates` with reviewed checksum
+  `f80f20d1d3b1843933d51dadacdddf61aa4464abf0e49fbc4c61fffd9764ff3c`. The post-migration assertion
+  returned exactly `35 / 210 / 210 / 0 / 0`.
+- Phase 6: only `LEARNBOX_ADMIN_CONTENT_REVIEW_ENABLED=true` was newly enabled. Passkey server/UI
+  flags remained true and bootstrap remained false. The Admin container is healthy on the immutable
+  release image; anonymous HTTPS probes returned root `200`, session `401` with `no-store`, bootstrap
+  `404` with `no-store`, and review `401` with `no-store`.
+- Rollback proof: staging was temporarily returned to retained image
+  `sha256:06ca4de56ded9622989ce2d21a389f41e2bb68423ec2a7d28e89e89a9235f62c`; the review and bootstrap
+  routes both returned `404`. Reactivation restored the approved immutable image and the protected
+  `review=401`, `bootstrap=404`, `session=401` boundary. The additive migration was intentionally
+  preserved.
+- Unchanged boundaries: the landing and staging learner routes remained healthy; the learner staging
+  image was not replaced; no human review check, decision, approval, media attachment, catalog seed,
+  learner delivery, DNS/TLS, payment or Production state changed.
+
+Final acceptance remains pending one owner-operated Passkey login and authenticated read-only queue
+verification, followed by independent security/data-integrity review and green final-head CI. No
+credential, Passkey material, cookie, CSRF value, database row content or secret belongs in that
+evidence.
