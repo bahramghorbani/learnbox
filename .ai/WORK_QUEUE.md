@@ -425,7 +425,7 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 
 ## LB-DS-052
 
-- Status: in_progress
+- Status: review_requested
 - Executor: supervisor (milestone execution coordination)
 - Base: `origin/main` at `0e36fb7466aa746cc0f322309fa399a81a005197` (PR #258 merge commit)
 - Branch: `docs/next-milestone-execution-queue`
