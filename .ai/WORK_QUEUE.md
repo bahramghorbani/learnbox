@@ -423,6 +423,93 @@ PASS on `5968cbb` and all seven required GitHub/Vercel contexts succeeded. Focus
 production build, repository validators and 390×844/200% reflow browser probes passed. No server
 state, sync, catalog seed, publication, deployment, migration or runtime flag was activated.
 
+## LB-DS-052
+
+- Status: review_requested
+- Executor: supervisor (milestone execution coordination)
+- Base: `origin/main` at `0e36fb7466aa746cc0f322309fa399a81a005197` (PR #258 merge commit)
+- Branch: `docs/next-milestone-execution-queue`
+- Risk: documentation-only-milestone-sequencing
+- Specification: `ROADMAP.md`; `.ai/WORKSTREAMS.md`; `docs/architecture/M1D_SYNC_WIRE_CONTRACT.md`; `docs/operations/ADMIN_CONTENT_REVIEW_STAGING_ACTIVATION.md`; `docs/content/STARTER_CATALOG_35_RELEASE_READINESS.md`
+- Outcome: one ready critical-path M1 task and later M2 owner/cost-gated tasks are committed as resumable queue records.
+- Allowed paths: `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-052.md`; `CURRENT_WORK.md`
+- Documentation updates: queue, worker report and active-work registry only.
+- Owner gates: none for this documentation-only task; it must record but cannot satisfy LB-DS-054 or LB-DS-055 gates.
+- Handoff evidence: exact base/head/PR, changed-file list, validator output, independent review and terminal CI in `.ai/worker-reports/LB-DS-052.md` and PR #259.
+- Required checks: Prettier on changed Markdown; `node scripts/validate-ai-worker-queue.mjs`; `node scripts/validate-documentation-governance.test.mjs`; `node scripts/validate-ai-continuity.mjs`; `git diff --check`; independent milestone/dependency/scope review
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+- Blocked on: none
+- Must not touch: product code; tests; content or generated media; migrations or database data; auth/session behavior; provider or secret configuration; runtime flags; staging/Preview/Production; deployment; seed; pack membership; human approval; publication; payments; landing; Bobo assets
+- Acceptance: the repository has one continuously executable next M1 task and records later owner/cost-gated M2 tasks without treating them as ready; scopes remain coherent milestone outcomes rather than microtasks; no product, environment, content-release or provider state changes.
+
+## LB-DS-053
+
+- Status: ready
+- Dependencies: LB-DS-052 must merge; executor fetches the resulting exact `origin/main` merge SHA before any change.
+- Executor: substantial Android/M1-D sync worker with independent high-reasoning review
+- Base: current `origin/main` after PR #259 merges; the executor must fetch and record that exact SHA before creating the branch
+- Branch: `feature/m1d-mobile-reconciliation-client`
+- Risk: security-sensitive-no-data-loss-mobile-sync-client-composition
+- Specification: `docs/architecture/M1D_SYNC_WIRE_CONTRACT.md` §§3.2, 4-7, 9-11, 13, 15-17; ADR 0014; `docs/architecture/OFFLINE_SYNC.md`
+- Outcome: the dormant mobile client can strictly consume paged reconciliation responses and invoke the reconnect sequence through learner composition without changing activation state or queue-removal authority.
+- Allowed paths: `apps/mobile/lib/features/sync/reconciliation_cursor_store.dart`; `apps/mobile/lib/features/sync/review_sync_result.dart`; `apps/mobile/lib/features/sync/review_sync_transport.dart`; `apps/mobile/lib/features/sync/http_review_sync_transport.dart`; `apps/mobile/lib/features/sync/review_sync_coordinator.dart`; `apps/mobile/lib/main.dart`; `apps/mobile/lib/app.dart`; `apps/mobile/lib/features/review/learner_home_shell.dart`; `apps/mobile/lib/features/review/today_screen.dart`; `apps/mobile/test/reconciliation_cursor_store_test.dart`; `apps/mobile/test/reconciliation_cursor_transport_test.dart`; `apps/mobile/test/reconciliation_cursor_coordinator_test.dart`; `apps/mobile/test/review_sync_coordinator_test.dart`; `apps/mobile/test/http_review_sync_transport_test.dart`; `apps/mobile/test/review_sync_contract_test.dart`; `apps/mobile/test/mobile_sync_composition_test.dart`; `apps/mobile/test/mobile_auth_composition_test.dart`; `apps/mobile/test/app_test.dart`; `apps/mobile/test/today_screen_states_test.dart`; `apps/mobile/test/mobile_learning_loop_test.dart`; `apps/mobile/test/support/mobile_test_app.dart`; `docs/architecture/M1D_SYNC_WIRE_CONTRACT.md`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-053.md`; `CURRENT_WORK.md`; `PROJECT_STATE.md`; `docs/PRODUCT_STATUS.md`
+- Documentation updates: reconcile the wire contract only if implementation clarifies it; update queue/report/current-work during review and stable project/product status only after merge.
+- Owner gates: none while all auth/network/sync flags remain disabled; any gateway, flag, staging or Production activation is a separate owner-gated task.
+- Handoff evidence: RED/GREEN commit sequence, exact response/queue invariants, focused/full Flutter command results, debug APK result, actual model/provider usage, independent high-reasoning verdict, PR checks and exact merge SHA.
+- Required checks: strict RED/GREEN tests for reconciliation response parsing, paging, lost POST response, malformed/partial response, cursor persistence and exact-POST-ack removal invariant; all focused sync tests; full Flutter test suite; `flutter analyze`; `dart format --output=none --set-exit-if-changed`; debug APK build; Prettier on changed docs; queue/documentation/continuity/dashboard validators; `git diff --check`; independent high-reasoning security/no-data-loss review
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+- Blocked on: none once this task record reaches `main` through PR #259; never dispatch it from the unmerged coordination branch
+- Must not touch: API/server implementation or migrations; Web/Admin/landing/iOS; auth/session redesign; native gateway; runtime flag enablement; deployment; staging/Preview/Production; secrets/providers; content seed/publication; payments; Bobo assets
+- Acceptance: the mobile sync transport strictly parses the existing dormant reconciliation GET contract and the learner composition can invoke the documented reconnect sequence through the coordinator without deleting any local event from a cursor or GET result; malformed, partial, failed and paged responses preserve the queue and prior cursor; production composition remains fail-closed with signed-out identity and disabled transport, all sync flags remain false, and no network route is activated or deployed.
+
+## LB-DS-054
+
+- Status: blocked
+- Dependencies: LB-DS-053 is accepted; owner explicitly authorizes this exact staging-only operation and release SHA.
+- Executor: high-reasoning serial staging operator plus independent security/data-integrity reviewer
+- Base: a separately approved exact `origin/main` release commit containing PRs #252 and #255
+- Branch: `ops/admin-content-review-staging-activation`
+- Risk: owner-gated-staging-backup-database-migration-and-runtime-activation
+- Specification: `docs/operations/ADMIN_CONTENT_REVIEW_STAGING_ACTIVATION.md`; PDR-008; ADR 0016
+- Outcome: isolated Admin staging has a verified backup, migration `0017`, exact candidate/check counts, protected review runtime and proven rollback while every release/publication boundary remains closed.
+- Allowed paths: `docs/operations/ADMIN_CONTENT_REVIEW_STAGING_ACTIVATION.md`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-054.md`; `CURRENT_WORK.md`; `PROJECT_STATE.md`; `docs/PRODUCT_STATUS.md`
+- Documentation updates: record each executed runbook phase and exact environment evidence in the runbook/report/current-work; update stable project/product state only after accepted completion.
+- Owner gates: explicit authorization of the exact release commit, staging backup, migration `0017`, Admin image rollout, runtime flag and trusted out-of-chat secret entry; no broader authority is implied.
+- Handoff evidence: backup identifier without secrets, restore-readiness proof, migration ledger/checksum, `35 / 210 / 210 / 0 / 0` query evidence, protected route/Passkey/bootstrap probes, rollback proof, independent review and terminal CI.
+- Required checks: every runbook Phase 1 preflight; verified encrypted staging backup and restore readiness; migration checksum/ledger check; post-migration `35 / 210 / 210 / 0 / 0` assertion; protected Admin route/Passkey/bootstrap health probes; rollback evidence; queue/documentation/continuity validators; `git diff --check`; independent security/data-integrity review
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+- Blocked on: explicit owner authorization for the exact staging release commit, backup, migration `0017`, Admin image rollout and `LEARNBOX_ADMIN_CONTENT_REVIEW_ENABLED=true`; trusted secret entry must occur outside chat
+- Must not touch: Production; learner applications or sync flags; seed; pack membership; media attachment; human check outcomes or decisions; approval/publication; participant invitation; payment; DNS/TLS; landing; Bobo assets
+- Acceptance: only isolated Admin staging is backed up, migrated and activated exactly per the reviewed runbook; database truth is `35 / 210 / 210 / 0 / 0`, Passkey protection remains intact, rollback is proven, and Production, learner delivery, content decisions and publication remain unchanged.
+
+## LB-DS-055
+
+- Status: blocked
+- Dependencies: Starter-35 human QA plan identifies the exact unresolved items; owner separately authorizes a bounded paid-provider budget and confirms review capacity.
+- Executor: W4 content-factory worker plus mandatory human visual/audio/content reviewers
+- Base: exact current `origin/main` after LB-DS-054 only if staging review evidence is needed; otherwise a freshly recorded current main
+- Branch: `content/start-15-candidate-media-readiness`
+- Risk: cost-gated-generated-media-and-human-content-quality
+- Specification: `docs/content/STARTER_CATALOG_35_RELEASE_READINESS.md`; ADR 0013; ADR 0016; PDR-003; PDR-008
+- Outcome: the remaining 15 Start items have immutable candidate-only media/provenance/QA evidence sufficient for a truthful 35-item release decision package, without attachment, approval, seed or publication.
+- Allowed paths: `content/packs/learnbox-start/prompts/start-a1-slice-media-production-spec.json`; `content/packs/learnbox-start/prompts/start-a1-v2-visual-contract.json`; `content/packs/learnbox-start/validation/start-a1-catalog-35-pending-candidates.json`; `content/packs/learnbox-start/validation/start-a1-catalog-35-pending-provenance-ledger.json`; `content/packs/learnbox-start/validation/start-a1-35-catalog-slice.json`; `content/packs/learnbox-start/validation/start-a1-candidate-qa.json`; `content/packs/learnbox-start/validation/start-a1-v2-candidate-qa.json`; `content/packs/learnbox-start/validation/start-a1-issue59-audio-ledger.json`; `content/packs/learnbox-start/validation/start-a1-issue59-audio-gate.json`; `scripts/build-issue59-audio-ledger.mjs`; `scripts/validate-issue59-audio-gate.mjs`; `scripts/validate-issue59-audio-gate.test.mjs`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-055.md`; `CURRENT_WORK.md`; `docs/content/STARTER_CATALOG_35_RELEASE_READINESS.md`; `docs/PRODUCT_STATUS.md`; `docs/design/DESIGN_STATUS.md`; `docs/design/UI_QA.md`
+- Documentation updates: update only the named candidate/provenance/QA ledgers, release-readiness/status documents, queue/report and current-work; generated binary candidates stay in a separately recorded local/private workspace and are not committed or attached.
+- Owner gates: separate authorization for the bounded paid generation budget and confirmed human visual/audio/content review capacity; attachment, approval, seed and publication require later independent gates.
+- Handoff evidence: provider usage/cost summary without secrets, immutable candidate IDs/checksums, provenance, visual/audio/app-flow human review records, validator/test/build output, independent fail-closed review, PR checks and exact merge SHA.
+- Required checks: immutable ID/checksum and provenance validation; candidate visual QA; word/sentence audio transcription plus human listening QA; local learner app-flow QA; all Start Pack validators; `pnpm check`; `pnpm build`; migration validation; Prettier; queue/documentation/continuity/dashboard validators; `git diff --check`; independent fail-closed content/product review
+- Simulator required: yes
+- Draft PR required: yes
+- Merge allowed: yes
+- Blocked on: separate owner authorization for paid provider cost and confirmed human visual/audio/content review capacity
+- Must not touch: existing approved canonical Bobo appearance; database migration/execution; media attachment; `card_versions` approval/publication; catalog seed; pack membership; runtime flags; invitations; staging/Preview/Production; payments; auth/session/sync; landing
+- Acceptance: candidate-only image/audio evidence for the remaining 15 items is complete, immutable and human-reviewed enough to produce a truthful 35-item decision package while `seedable: false`, `publicationBlocked: true`, and 0/35 release-approved versions remain unchanged; no asset is attached or delivered to learners.
+
 ## LB-DS-049
 
 - Status: accepted
