@@ -4,36 +4,6 @@
 
 ## Active work
 
-### LB-DS-052 — continuous milestone execution queue
-
-- **Status:** Draft PR #259 is review requested on `docs/next-milestone-execution-queue`, based on exact `origin/main`
-  `0e36fb7466aa746cc0f322309fa399a81a005197`. This documentation-only coordination slice registers
-  the next coherent milestone work rather than leaving execution without a ready task.
-- **Next safe implementation:** LB-DS-053, M1-D mobile reconciliation client composition, becomes
-  dispatchable from the exact LB-DS-052 merge commit. It must remain default-off and may not activate
-  network sync, auth, a runtime flag, staging or Production.
-- **Later gated work:** LB-DS-054 records the owner-gated Admin staging backup/migration/runtime
-  activation; LB-DS-055 records the separately cost-authorized candidate-media and human-QA slice for
-  the remaining 15 Start items. Neither is ready and neither gate is inferred from this coordination
-  change.
-
-### LB-DS-053 — M1-D mobile reconciliation read client composition
-
-- **Status:** review requested in Draft PR #260 on `feature/m1d-mobile-reconciliation-client`, based on exact
-  `origin/main` `acc9a4c33ebef846ae1e7e66598e6427adcc40e8`. RED commit `d43e921`, GREEN implementation `f0f1217`, then fail-closed hardening `e4e46c1`; that implementation head received independent review and seven successful CI contexts. Metadata-only commits followed, so current PR head and its evidence must be read live before readiness or merge.
-  The implementation consumes the paged reconciliation GET and closes the cursor gap from the
-  coordinator without removing a single queued event: removal stays exclusive to an exact
-  validated POST acknowledgement. Malformed, partial, failed and unbounded reads preserve the
-  queue and the previously stored cursor, and only a fully validated paging pass persists
-  `nextCursor`.
-- **Not activated:** `main.dart` is unchanged — production composition remains signed out with
-  `DisabledReviewSyncTransport()` and wires no reconciliation endpoint. No flag, auth, route,
-  server/API/migration, provider, deployment, staging or Production state changed.
-- **Scope note:** the §4 lost-`outcomes` GET matching is deliberately excluded; recovery for a lost
-  POST response remains the idempotent re-POST. Matching GET events into acknowledgement needs its
-  own reviewed task. See `docs/architecture/M1D_SYNC_WIRE_CONTRACT.md` §§6-7 and §17.
-- **Next:** Keep PR #260 Draft until required hosted CI and independent review are bound to its then-current exact head; then run the explicit readiness and merge gates.
-
 ### Starter Catalog 35 release gates
 
 - **Status:** LB-DS-045 evidence reconciliation was accepted and merged in PR #241 at `95c704b`.
@@ -70,13 +40,12 @@
 
 ### M1-D sync readiness boundary
 
-- Cursor/persistence foundations and the wire contract are merged and documented. Owner decisions O-1/O-2 are approved: conflicts remain pending and require a new event ID after resolution; M1 acknowledgement is strict one-step after atomic application. The reconciliation GET from PR #209 remains **dormant and fail-closed**; LB-DS-033 completed its API/security review and hardening in PR #219 at `82afe3b`. A separate client-composition/activation decision remains required.
+- Cursor/persistence foundations and the wire contract are merged and documented. Owner decisions O-1/O-2 are approved: conflicts remain pending and require a new event ID after resolution; M1 acknowledgement is strict one-step after atomic application. The reconciliation GET from PR #209 remains **dormant and fail-closed**; LB-DS-033 completed its API/security review and hardening in PR #219 at `82afe3b`. LB-DS-053 merged its strict, bounded Flutter reconciliation client/coordinator in PR #260 at `38e03bd` while retaining POST-only queue removal. Production composition, auth, all sync flags and deployment remain inactive and separately gated.
 
 ### LB-DS-029 — dormant reconciliation read implementation
 
 - **Status:** accepted and merged in PR #209 at `14ccaee` from `feature/m1d-reconciliation-read-direct`. The read-only GET handler, runtime boundary, route, and per-event cursor query are present and verified behind the existing disabled sync flag. No activation or migration is included.
-- **Dependency:** security/contract review and hardening completed in PR #219; a separate
-  activation/composition decision remains. Client/network sync is dormant.
+- **Dependency:** security/contract review and hardening completed in PR #219; dormant client consumption completed in PR #260. Activation, auth and deployment remain separate owner-gated operations. Client/network sync is dormant.
 
 ### Active milestone
 
@@ -129,7 +98,7 @@
 - **M1-C Mobile slice 1:** completed in PR #155; Today local queue state is truthful, sync coordinator remains dormant.
 - **M1-Q independent QA:** completed in PR #157; the current server-wired follow-up QA is recorded in `.ai/qa-reports/M1-Q3-CURRENT-WEB-SERVER-WIRED.md` and merged in PR #175. Functional checks are green; browser visual/AX/keyboard acceptance is not claimed — it can be verified only against a staging deployment running the current merged build (staging is not confirmed current; the Chrome permission dialog blocker also remains).
 - **Starter Catalog 35 slice (ADR 0016):** completed in PR #193 at merge commit `73adc02` (2026-09-04; official free starter target reduced to ~35 words); the missing 15 pending drafts merged in PR #200 at `2aa5931` (LB-DS-STARTER-DRAFTS-15). The derived snapshot records 35/35 drafted, 35 linguistically reviewed, 0 release-approved (`seedable: false`, `publicationBlocked: true`). PDR-008 resolves the circular review gate by authorizing all 35 as deterministic, non-learner-visible `needs_review` database candidates behind a default-off Admin persistence boundary (LB-DS-049). All six database checks begin pending; publication, learner catalog membership and rollout remain separately blocked.
-- **Next active work:** M1-D push reconciliation cursor/watermark policy is approved in
+- **M1-D merged foundation:** push reconciliation cursor/watermark policy is approved in
   ADR 0014 (per-learner monotonic version, incremented only on newly applied events,
   committed in the same transaction as event and schedule update); the server-core
   implementation merged in PR #169, the client-side cursor capture/persistence merged in
@@ -137,8 +106,9 @@
   (LB-DS-024, merge commit `0057419`), and the per-event cursor binding merged in PR #172
   (LB-DS-025, merge commit `caa3a39`); sending the
   stored cursor in a request merged in PR #184, the dormant reconciliation GET merged in PR #209,
-  and its cursor/page security hardening merged in PR #219; route/client flag enablement and client
-  composition remain a separate serial, review-gated M1-D queue task. The server request-boundary
+  and its cursor/page security hardening merged in PR #219. The strict, bounded Flutter read/coordinator
+  path merged in PR #260 and preserves POST-only queue removal; route/client flag enablement, native auth
+  and deployment remain separate owner-gated operations. The server request-boundary
   parser is covered by `apps/api/src/reviews/mobile-review-batch.request.ts`; seed/catalog
   implementation remains a separate review-gated task.
 
@@ -169,13 +139,14 @@
 
 1. Keep LB-DS-050's merged staging preflight dormant; do not execute migration `0017`, enable the Admin review flag or deploy without a separate explicit owner approval.
 2. Complete the remaining provenance, visual, audio and app-flow review only through a separately approved staging operation; approval still does not publish or create learner catalog membership.
-3. Complete the separately review-gated M1-D push reconciliation activation/composition work. The cursor/watermark policy is approved in
+3. Keep the merged M1-D client reconciliation path dormant. The cursor/watermark policy is approved in
    ADR 0014; server-core (PR #169), client-side cursor capture/persistence (PR #170),
    read-side cursor exposure (PR #171/LB-DS-024) and per-event cursor binding (PR #172/LB-DS-025)
    are merged, as are request serialization (PR #184) and the dormant review POST route
    request-boundary parser integration, Slice 1d (PR #192 at `9c6c5e0`); network sync remains
    dormant. The reconciliation GET and its hardened delta-response semantics are merged in PRs
-   #209 and #219; flag enablement and client composition remain separate review-gated tasks.
+   #209 and #219, and the strict Flutter client/coordinator merged in PR #260 at `38e03bd`; native
+   composition, auth, flag enablement and deployment remain separate owner-gated operations.
 4. Re-run browser visual and accessibility QA only against a staging deployment running the current merged build (staging is not confirmed current); the Chrome permission blocker must also be cleared. Do not treat the current functional QA as visual acceptance.
 
 ## Owner-approved product decisions captured in M0
