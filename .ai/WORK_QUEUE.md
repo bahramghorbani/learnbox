@@ -447,6 +447,7 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 ## LB-DS-053
 
 - Status: ready
+- Dependencies: LB-DS-052 must merge; executor fetches the resulting exact `origin/main` merge SHA before any change.
 - Executor: substantial Android/M1-D sync worker with independent high-reasoning review
 - Base: current `origin/main` after PR #259 merges; the executor must fetch and record that exact SHA before creating the branch
 - Branch: `feature/m1d-mobile-reconciliation-client`
@@ -468,6 +469,7 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 ## LB-DS-054
 
 - Status: blocked
+- Dependencies: LB-DS-053 is accepted; owner explicitly authorizes this exact staging-only operation and release SHA.
 - Executor: high-reasoning serial staging operator plus independent security/data-integrity reviewer
 - Base: a separately approved exact `origin/main` release commit containing PRs #252 and #255
 - Branch: `ops/admin-content-review-staging-activation`
@@ -489,6 +491,7 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 ## LB-DS-055
 
 - Status: blocked
+- Dependencies: Starter-35 human QA plan identifies the exact unresolved items; owner separately authorizes a bounded paid-provider budget and confirms review capacity.
 - Executor: W4 content-factory worker plus mandatory human visual/audio/content reviewers
 - Base: exact current `origin/main` after LB-DS-054 only if staging review evidence is needed; otherwise a freshly recorded current main
 - Branch: `content/start-15-candidate-media-readiness`

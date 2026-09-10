@@ -7,8 +7,9 @@
 - Scope completed: Registered one ready, coherent M1-D client-composition task (LB-DS-053) and two explicit later M2 owner/cost-gated tasks (LB-DS-054 and LB-DS-055), without authorizing activation, migration, generated-media cost, approval or publication.
 - Files changed: `.ai/WORK_QUEUE.md`; `CURRENT_WORK.md`; this report
 - Checks run: Prettier on changed Markdown; AI worker queue validator; documentation governance tests; AI continuity validator; dashboard tests; `git diff --check`
-- Checks unavailable: GitHub/Vercel contexts are PR-head-specific and must be read from the live PR only after its final commit; this report makes no CI-success claim
-- Remaining work: wait for the final PR-head CI state, independently re-review that exact SHA, then merge; after merge dispatch LB-DS-053 from the exact merge commit
+- Checks unavailable: none; live PR CI is intentionally not recorded statically here because the merge gate reads the current exact head and contexts
+- CI evidence rule: PR-head-specific; the merge gate must read and verify the live current head and all required contexts
+- Remaining work: independently re-review the final exact head with its live CI state, then merge; after merge dispatch LB-DS-053 from the exact merge commit
 - Risks: the LB-DS-053 executor must fetch post-merge `origin/main`, record the exact dispatch SHA and preserve the default-off no-data-loss boundaries; the task must never dispatch from this unmerged branch
 - Secrets or production changes: none; no secret, provider, staging, Preview, Production, deployment, migration, flag, seed, payment, approval or publication state changed
 - Bobo canonical status: unchanged; Bobo assets are explicitly outside all registered task scopes
