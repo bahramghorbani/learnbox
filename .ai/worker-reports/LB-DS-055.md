@@ -2,13 +2,13 @@
 
 - Branch: `content/start-15-candidate-media-readiness`
 - Base commit: `9913538e47a78dee52486f8f175d2e54dd746071`
-- Head commit: pending review
-- Draft PR: pending
-- Scope completed: candidate generation and human review complete; independent fail-closed content/product review remains.
+- Head commit: `394fbd3275670f5777b47c3e99b600ac7cb44f30` (PR #264 merge)
+- Draft PR: merged as PR #264
+- Scope completed: candidate generation, human review, exact-head independent fail-closed review, CI and merge.
 - Files changed: candidate-only evidence/status documents; no generated media binary is committed.
 - Checks run: provider-budget preflight; manifest/image/audio inventory; SHA-256 evidence capture; automated German transcription QA; human visual/listening review; private package HTTP probe.
 - Checks unavailable: no learner app-flow QA or release approval is attempted in this task.
-- Remaining work: independent review, PR checks and merge. Automated transcription remains 28/30 exact matches: `start-a1-essen-sentence` yielded `Ich esse zum Mittag.` for expected `Ich esse zu Mittag.` and `start-a1-gross-word` yielded `Gross.` for expected `groß`. The product owner listened to and approved all 30 clips; these transcript discrepancies remain recorded and do not imply an attachment or release decision.
+- Remaining work: none in this task. Automated transcription remains 28/30 exact matches: `start-a1-essen-sentence` yielded `Ich esse zum Mittag.` for expected `Ich esse zu Mittag.` and `start-a1-gross-word` yielded `Gross.` for expected `groß`. The product owner listened to and approved all 30 clips; these transcript discrepancies remain recorded and do not imply an attachment or release decision.
 - Risks: paid generation, generated-media quality, provenance and accidental release; mitigated by `$1.25` ceiling, immutable private evidence, human review, no repository binaries and fail-closed release fields.
 - Secrets or production changes: no secrets in evidence; no database, attachment, approval, seed, runtime, deployment or Production change.
 - Bobo canonical status: unchanged.
