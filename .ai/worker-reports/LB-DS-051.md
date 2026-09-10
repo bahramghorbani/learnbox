@@ -22,7 +22,7 @@ Website typecheck and the optimized Next.js production build pass. The loading s
 
 ## Visual and accessibility evidence
 
-A real local browser session completed the three-card review and returned to Today at a 390×844 mobile viewport. The settled page showed `کارتی برای مرور نیست`, the recovery Bobo, the truthful device-local and pending-sync labels, and one `رفتن به واژه‌ها` action. The action received keyboard focus after returning from completion. The viewport had no horizontal document overflow after constraining the small-screen shared navigation width. A 195 CSS-pixel viewport (390px at a 200% reflow equivalent) also retained the empty state and full-width action without horizontal overflow.
+A real local browser session completed the three-card review and returned to Today at a 390×844 mobile viewport. The settled page showed `کارتی برای مرور نیست`, the recovery Bobo, the truthful device-local and pending-sync labels, and one `رفتن به واژه‌ها` action. The action received keyboard focus after returning from completion. The viewport had no horizontal document overflow after constraining only the body-sibling Today navigation; Today, Words, Progress and Profile each measured `scrollWidth === clientWidth === 390`, while the nested navigation hosts remained unaffected. A 195 CSS-pixel viewport (390px at a 200% reflow equivalent) retained the empty state and full-width action with `scrollWidth === clientWidth === 195`.
 
 ## Remaining review gate
 
