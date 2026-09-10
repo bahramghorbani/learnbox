@@ -14,9 +14,11 @@
   (`session=401`, `bootstrap=404`, `review=401`, `Cache-Control: no-store`). Application rollback to
   the retained prior image restored `review=404`, and reactivation restored the protected `401`
   boundary. Production, learner runtime, seed, decisions and publication remain unchanged.
-- **Remaining gate:** the owner must complete Passkey login outside chat and confirm the authenticated
-  queue read; then the evidence branch requires independent security/data-integrity review and green
-  final-head CI before acceptance.
+- **Authenticated gate:** the owner completed Passkey login outside chat and confirmed that the
+  server-backed review queue displayed. No credential, Passkey material, cookie, CSRF value or row
+  content was recorded.
+- **Remaining gate:** independent security/data-integrity review and green final-head CI on Draft PR
+  #262 before acceptance.
 
 ### Starter Catalog 35 release gates
 
@@ -151,10 +153,10 @@
 
 ## Immediate execution order
 
-1. Complete LB-DS-054's owner-operated Passkey login and authenticated read-only queue verification,
-   then close the staging evidence through independent review and green final-head CI. Migration
-   `0017` and the Admin review runtime are active only in isolated staging; this does not authorize
-   human check writes, decisions, seed, publication or Production.
+1. Close LB-DS-054 Draft PR #262 through independent security/data-integrity review and green
+   final-head CI. The owner-operated Passkey login and authenticated read-only queue verification are
+   complete. Migration `0017` and the Admin review runtime are active only in isolated staging; this
+   does not authorize human check writes, decisions, seed, publication or Production.
 2. Keep LB-DS-055 candidate-media generation blocked until the owner approves a bounded provider
    budget and confirms human visual/audio/content review capacity. The no-spend estimate is complete;
    no paid API has been called.

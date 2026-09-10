@@ -4,11 +4,11 @@
 - Base commit: `801c532630d42042ebbd27b4fac158e294938075`
 - Head commit: resolve from the live Draft PR `headRefOid` during exact-head review
 - Draft PR: #262 — https://github.com/bahramghorbani/learnbox/pull/262
-- Scope completed: no; staging backup, migration, activation and rollback proof are complete, but owner-operated authenticated read-only queue verification remains
+- Scope completed: yes; staging backup, migration, activation, protected owner-authenticated read-only queue verification and rollback proof are complete
 - Files changed: `.ai/WORK_QUEUE.md`, `.ai/worker-reports/LB-DS-054.md`, `CURRENT_WORK.md`, `docs/operations/ADMIN_CONTENT_REVIEW_STAGING_ACTIVATION.md`
 - Checks run: exact-release `pnpm check`, full build, migration validation, production dependency audit, `git diff --check`; restorable-backup test; migration ledger/checksum and `35 / 210 / 210 / 0 / 0` assertions; anonymous HTTPS boundaries; application rollback/reactivation proof
-- Checks unavailable: authenticated queue read is waiting for the owner to complete Passkey authentication outside chat; independent review and final-head GitHub CI wait for the completed evidence commit
-- Remaining work: owner Passkey login and read-only queue confirmation; final documentation validation; independent security/data-integrity review; Draft PR checks and merge; post-merge status reconciliation
+- Checks unavailable: none
+- Remaining work: independent security/data-integrity review; Draft PR final-head checks and merge; post-merge status reconciliation
 - Risks: staging database integrity, authentication-boundary regression and accidental publication; mitigated by exact-release binding, restorable backup, reviewed checksum, immutable images, default-deny HTTP probes, retained rollback image and unchanged seed/publication/Production boundaries
 - Secrets or production changes: no secret value was read into evidence or chat and Production was unchanged; isolated Admin staging received the approved additive migration and runtime flag
 - Bobo canonical status: unchanged
@@ -31,6 +31,8 @@
   `sha256:4371d9b0e93216944de8299f53cf0ff11bfb5bf19ab23452b7807d81377a8127`.
 - Anonymous active boundary: root `200`; session `401` + `no-store`; bootstrap `404` + `no-store`;
   review `401` + `no-store`.
+- Owner-operated authentication: Passkey login completed outside chat and the authenticated,
+  server-backed review queue displayed; no authentication material or row content was recorded.
 - Rollback image:
   `sha256:06ca4de56ded9622989ce2d21a389f41e2bb68423ec2a7d28e89e89a9235f62c`.
   Rollback restored `review=404` and `bootstrap=404`; reactivation restored

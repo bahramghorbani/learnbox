@@ -308,7 +308,7 @@ publication boundaries.
   image was not replaced; no human review check, decision, approval, media attachment, catalog seed,
   learner delivery, DNS/TLS, payment or Production state changed.
 
-Final acceptance remains pending one owner-operated Passkey login and authenticated read-only queue
-verification, followed by independent security/data-integrity review and green final-head CI. No
-credential, Passkey material, cookie, CSRF value, database row content or secret belongs in that
-evidence.
+The owner completed Passkey login outside chat and confirmed that the authenticated, server-backed
+review queue displayed. No credential, Passkey material, cookie, CSRF value, database row content or
+secret was captured. Final acceptance now depends only on independent security/data-integrity review
+and green final-head CI.

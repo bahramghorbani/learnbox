@@ -474,7 +474,7 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 
 ## LB-DS-054
 
-- Status: in_progress
+- Status: review_requested
 - Dependencies: LB-DS-053 is accepted; owner explicitly authorizes this exact staging-only operation and release SHA.
 - Executor: high-reasoning serial staging operator plus independent security/data-integrity reviewer
 - Base: approved exact `origin/main` release `801c532630d42042ebbd27b4fac158e294938075`, containing PRs #252 and #255
@@ -491,7 +491,7 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 - Simulator required: no
 - Draft PR required: yes
 - Merge allowed: yes
-- Blocked on: owner-operated Passkey login and authenticated read-only queue verification, followed by independent security/data-integrity review and green final-head CI; the exact staging release, backup, migration `0017`, Admin image rollout and `LEARNBOX_ADMIN_CONTENT_REVIEW_ENABLED=true` were explicitly authorized and executed without exposing secrets
+- Blocked on: independent security/data-integrity review and green final-head CI; the exact staging release, backup, migration `0017`, Admin image rollout, runtime flag and owner-operated Passkey queue read are complete without exposing secrets or authentication material
 - Must not touch: Production; learner applications or sync flags; seed; pack membership; media attachment; human check outcomes or decisions; approval/publication; participant invitation; payment; DNS/TLS; landing; Bobo assets
 - Acceptance: only isolated Admin staging is backed up, migrated and activated exactly per the reviewed runbook; database truth is `35 / 210 / 210 / 0 / 0`, Passkey protection remains intact, rollback is proven, and Production, learner delivery, content decisions and publication remain unchanged.
 
