@@ -3,7 +3,7 @@
 - Branch: `ops/admin-content-review-staging-activation`
 - Base commit: `801c532630d42042ebbd27b4fac158e294938075`
 - Head commit: resolve from the live Draft PR `headRefOid` during exact-head review
-- Draft PR: pending
+- Draft PR: #262 — https://github.com/bahramghorbani/learnbox/pull/262
 - Scope completed: no; staging backup, migration, activation and rollback proof are complete, but owner-operated authenticated read-only queue verification remains
 - Files changed: `.ai/WORK_QUEUE.md`, `.ai/worker-reports/LB-DS-054.md`, `CURRENT_WORK.md`, `docs/operations/ADMIN_CONTENT_REVIEW_STAGING_ACTIVATION.md`
 - Checks run: exact-release `pnpm check`, full build, migration validation, production dependency audit, `git diff --check`; restorable-backup test; migration ledger/checksum and `35 / 210 / 210 / 0 / 0` assertions; anonymous HTTPS boundaries; application rollback/reactivation proof

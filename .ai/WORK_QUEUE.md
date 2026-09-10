@@ -479,6 +479,7 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 - Executor: high-reasoning serial staging operator plus independent security/data-integrity reviewer
 - Base: approved exact `origin/main` release `801c532630d42042ebbd27b4fac158e294938075`, containing PRs #252 and #255
 - Branch: `ops/admin-content-review-staging-activation`
+- Draft PR: #262 — https://github.com/bahramghorbani/learnbox/pull/262
 - Risk: owner-gated-staging-backup-database-migration-and-runtime-activation
 - Specification: `docs/operations/ADMIN_CONTENT_REVIEW_STAGING_ACTIVATION.md`; PDR-008; ADR 0016
 - Outcome: isolated Admin staging has a verified backup, migration `0017`, exact candidate/check counts, protected review runtime and proven rollback while every release/publication boundary remains closed.
