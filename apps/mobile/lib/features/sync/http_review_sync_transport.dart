@@ -11,6 +11,13 @@ abstract interface class MobileReviewHttpClient {
     required String accessToken,
     required Map<String, Object> body,
   });
+
+  /// Performs the authenticated read-only GET used by the reconciliation read.
+  Future<MobileReviewHttpResponse> getJson({
+    required Uri endpoint,
+    required String accessToken,
+    required Map<String, String> queryParameters,
+  });
 }
 
 class MobileReviewHttpResponse {
@@ -21,19 +28,30 @@ class MobileReviewHttpResponse {
   final String body;
 }
 
-class HttpReviewSyncTransport implements ReviewSyncTransport {
+class HttpReviewSyncTransport
+    implements ReviewSyncTransport, ReviewReconciliationTransport {
   HttpReviewSyncTransport({
     required MobileSessionStore sessionStore,
     required MobileReviewHttpClient client,
     required Uri endpoint,
+    Uri? reconciliationEndpoint,
     this.timeout = const Duration(seconds: 15),
   })  : _sessionStore = sessionStore,
         _client = client,
-        _endpoint = endpoint {
+        _endpoint = endpoint,
+        _reconciliationEndpoint = reconciliationEndpoint {
     if (!_isAllowedEndpoint(endpoint)) {
       throw ArgumentError.value(
         endpoint,
         'endpoint',
+        'must use HTTPS, or HTTP only on loopback during development',
+      );
+    }
+    if (reconciliationEndpoint != null &&
+        !_isAllowedEndpoint(reconciliationEndpoint)) {
+      throw ArgumentError.value(
+        reconciliationEndpoint,
+        'reconciliationEndpoint',
         'must use HTTPS, or HTTP only on loopback during development',
       );
     }
@@ -60,6 +78,7 @@ class HttpReviewSyncTransport implements ReviewSyncTransport {
   final MobileSessionStore _sessionStore;
   final MobileReviewHttpClient _client;
   final Uri _endpoint;
+  final Uri? _reconciliationEndpoint;
   final Duration timeout;
 
   @override
@@ -124,6 +143,101 @@ class HttpReviewSyncTransport implements ReviewSyncTransport {
       reconciliationCursor: acknowledgedCursor,
     );
   }
+
+  @override
+  Future<ReviewReconciliationPage> readReconciliation({String? after}) async {
+    // A transport without an explicit reconciliation endpoint performs no
+    // network call at all: the read fails closed instead of guessing a URL.
+    final endpoint = _reconciliationEndpoint;
+    if (endpoint == null) {
+      throw const MobileReviewTransportException('validation');
+    }
+    final session = await _sessionStore.read();
+    if (session == null) {
+      throw const MobileReviewTransportException('authenticationRequired');
+    }
+    final queryParameters = <String, String>{};
+    if (after != null) {
+      final parsedAfter = parseReconciliationCursor(after);
+      if (parsedAfter == null) {
+        throw const MobileReviewTransportException('validation');
+      }
+      queryParameters['after'] = parsedAfter;
+    }
+    final response = await _client
+        .getJson(
+          endpoint: endpoint,
+          accessToken: session.accessToken,
+          queryParameters: queryParameters,
+        )
+        .timeout(timeout);
+    if (response.statusCode != 200) {
+      throw const MobileReviewTransportException('serverUnavailable');
+    }
+    return _parseReconciliationPage(response.body);
+  }
+}
+
+/// Strictly parses one reconciliation page.
+///
+/// Any missing key, unknown key, wrong type, invalid cursor or `nextCursor`
+/// behind the echoed cursor is rejected as a whole document, so a partial or
+/// malformed response can never reach the cursor store.
+ReviewReconciliationPage _parseReconciliationPage(String body) {
+  final Object? decoded;
+  try {
+    decoded = jsonDecode(body);
+  } catch (_) {
+    throw const MobileReviewTransportException('validation');
+  }
+  if (decoded is! Map<String, dynamic> || decoded.length != 1) {
+    throw const MobileReviewTransportException('validation');
+  }
+  final reconciliation = decoded['reconciliation'];
+  if (reconciliation is! Map<String, dynamic> || reconciliation.length != 4) {
+    throw const MobileReviewTransportException('validation');
+  }
+  final cursor = parseReconciliationCursor(reconciliation['cursor']);
+  final nextCursor = parseReconciliationCursor(reconciliation['nextCursor']);
+  final hasMore = reconciliation['hasMore'];
+  final events = reconciliation['events'];
+  if (cursor == null ||
+      nextCursor == null ||
+      hasMore is! bool ||
+      events is! List) {
+    throw const MobileReviewTransportException('validation');
+  }
+  if (compareReconciliationCursors(nextCursor, cursor) < 0) {
+    throw const MobileReviewTransportException('validation');
+  }
+  final parsedEvents = <ReviewReconciliationEvent>[];
+  for (final event in events) {
+    if (event is! Map<String, dynamic> || event.length != 3) {
+      throw const MobileReviewTransportException('validation');
+    }
+    final clientEventId = event['clientEventId'];
+    final eventId = event['eventId'];
+    final appliedAt = event['appliedAt'];
+    if (clientEventId is! String ||
+        clientEventId.isEmpty ||
+        eventId is! String ||
+        eventId.isEmpty ||
+        appliedAt is! String ||
+        appliedAt.isEmpty) {
+      throw const MobileReviewTransportException('validation');
+    }
+    parsedEvents.add(ReviewReconciliationEvent(
+      clientEventId: clientEventId,
+      eventId: eventId,
+      appliedAt: appliedAt,
+    ));
+  }
+  return ReviewReconciliationPage(
+    cursor: cursor,
+    nextCursor: nextCursor,
+    hasMore: hasMore,
+    events: parsedEvents,
+  );
 }
 
 class MobileReviewTransportException implements Exception {

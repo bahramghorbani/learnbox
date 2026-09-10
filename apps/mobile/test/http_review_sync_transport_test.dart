@@ -105,4 +105,12 @@ class _FakeClient implements MobileReviewHttpClient {
     this.body = body;
     return response;
   }
+
+  @override
+  Future<MobileReviewHttpResponse> getJson({
+    required Uri endpoint,
+    required String accessToken,
+    required Map<String, String> queryParameters,
+  }) async =>
+      response;
 }

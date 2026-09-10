@@ -7,6 +7,7 @@ import 'package:learnbox/features/sync/review_sync_result.dart'
     show
         AuthenticationRequired,
         NothingPending,
+        Reconciled,
         ReviewSyncResult,
         RetryableFailure,
         Synchronized;
@@ -115,7 +116,10 @@ void main() {
         case Synchronized(:final acknowledgedCount, :final remainingCount):
           expect(acknowledgedCount, 2);
           expect(remainingCount, 1);
-        case AuthenticationRequired() || NothingPending() || RetryableFailure():
+        case AuthenticationRequired() ||
+              NothingPending() ||
+              RetryableFailure() ||
+              Reconciled():
           fail('Expected a Synchronized result.');
       }
     });
@@ -126,7 +130,10 @@ void main() {
       switch (result) {
         case RetryableFailure(:final remainingCount):
           expect(remainingCount, 3);
-        case AuthenticationRequired() || NothingPending() || Synchronized():
+        case AuthenticationRequired() ||
+              NothingPending() ||
+              Synchronized() ||
+              Reconciled():
           fail('Expected a RetryableFailure result.');
       }
     });
@@ -135,6 +142,22 @@ void main() {
       expect(
           ReviewSyncResult.authenticationRequired(), isA<ReviewSyncResult>());
       expect(ReviewSyncResult.nothingPending(), isA<ReviewSyncResult>());
+    });
+
+    test('Reconciled reports the validated cursor without acknowledging', () {
+      const result =
+          ReviewSyncResult.reconciled(remainingCount: 2, cursor: '47');
+      expect(result, isA<Reconciled>());
+      switch (result) {
+        case Reconciled(:final remainingCount, :final cursor):
+          expect(remainingCount, 2);
+          expect(cursor, '47');
+        case AuthenticationRequired() ||
+              NothingPending() ||
+              RetryableFailure() ||
+              Synchronized():
+          fail('Expected a Reconciled result.');
+      }
     });
   });
 }

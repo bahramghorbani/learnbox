@@ -1,12 +1,17 @@
 # M1-D Sync Wire Contract — Pull-Based Reconciliation Read
 
-**Status: SERVER READ IMPLEMENTED / DORMANT; CLIENT COMPOSITION NOT IMPLEMENTED.** The read-only
-GET handler, route, runtime dependency and per-event cursor query landed in PR #209 at `14ccaee`.
-LB-DS-033 then security-reviewed and hardened the dormant read so invalid out-of-range cursors fail
-before storage access and `nextCursor` never advances beyond the events represented in its page.
-All sync flags remain false (`MOBILE_REVIEW_SYNC_ENABLED`, `MOBILE_AUTH_ENABLED`,
-`LEARNER_STATE_ENABLED`, `WEB_LEARNER_STATE_ENABLED`); client composition, activation and
-deployment require separate authorization.
+**Status: SERVER READ IMPLEMENTED / DORMANT; CLIENT READ IMPLEMENTED / DORMANT; ACTIVATION NOT
+IMPLEMENTED.** The read-only GET handler, route, runtime dependency and per-event cursor query
+landed in PR #209 at `14ccaee`. LB-DS-033 then security-reviewed and hardened the dormant read so
+invalid out-of-range cursors fail before storage access and `nextCursor` never advances beyond the
+events represented in its page. LB-DS-053 (branch `feature/m1d-mobile-reconciliation-client`)
+added the strictly validated client read: a separate `ReviewReconciliationTransport` port, a strict
+paged-response parser, a numeric cursor comparison and the coordinator's bounded, read-only cursor
+gap-closing pass. That client read is **composed only in tests**: the default production
+composition still supplies `MobileIdentityState.signedOut` and `DisabledReviewSyncTransport()` and
+never wires a reconciliation endpoint, so no network route is active. All sync flags remain false
+(`MOBILE_REVIEW_SYNC_ENABLED`, `MOBILE_AUTH_ENABLED`, `LEARNER_STATE_ENABLED`,
+`WEB_LEARNER_STATE_ENABLED`); runtime activation and deployment require separate authorization.
 
 **Basis:** `origin/main` at `4718f93` (PR #204 merged). Read with
 `docs/architecture/M1_ONLINE_LEARNING_CONTRACT.md` (§3, §5, §6, §8, §9, §12),
@@ -246,12 +251,17 @@ The GET read never replaces per-item acknowledgement; it complements it.
   unacknowledged events (ADR 0014 §Response semantics; Slice 1c). `acknowledged` outcomes
   missing a valid decimal-string cursor are rejected as retryable `validation` with no
   acknowledgements (Slice 1c transport tests).
-- **GET (server implemented; client behavior proposed):** any non-200, failed parse, malformed `events[]` entry, or
+- **GET (server and strict client parsing implemented; activation not implemented):** any non-200,
+  failed parse, malformed `events[]` entry, or
   `nextCursor` that is not a valid non-negative decimal string (or is numerically less
   than the requested `after` — server fault signal) is retryable and changes no local
-  state: no queue removal, no cursor write. A `500`-class or `503` failure keeps the
-  stored cursor and the client retries with the same `after`; the read is side-effect
-  free, so retries are safe at any backoff (existing bounded exponential backoff,
+  state: no queue removal, no cursor write. The client enforces this in
+  `HttpReviewSyncTransport.readReconciliation`: the whole document is rejected unless it has
+  exactly one top-level `reconciliation` key holding exactly `cursor`, `nextCursor`, `hasMore` and
+  `events`, every cursor is a valid non-negative decimal string, `nextCursor >= cursor`, and every
+  event carries a non-empty `clientEventId`, `eventId` and `appliedAt`. A `500`-class or `503`
+  failure keeps the stored cursor and the client retries with the same `after`; the read is
+  side-effect free, so retries are safe at any backoff (existing bounded exponential backoff,
   `retryAfter`).
 - **Partial page:** if the client disconnects mid-page, the whole page is discarded
   (response is atomic in the sense that it is one JSON document); the client re-requests
@@ -263,20 +273,32 @@ The GET read never replaces per-item acknowledgement; it complements it.
 
 - Queue survives restart; corrupt queue fails closed to empty and never reaches the server
   (`OFFLINE_SYNC.md`; `offline-sync-storage.ts`).
-- **Reconnect sequence (proposed):** (1) POST pending queue events in persisted order,
-  batches of ≤20; (2) remove only exactly acknowledged `clientEventId`s; (3) persist the
-  last acknowledged `reconciliationCursor` only after a fully validated response and a
-  successful queue acknowledge (Slice 1c ordering); (4) when the queue reports
-  `nothingPending`, GET reconciliation with `after=<stored cursor>` to close the
-  gap of events whose POST response was lost; match `events[].clientEventId` against
-  local history; (5) update stored cursor to `nextCursor` only when the response was fully
-  validated. Steps 4–5 are the proposed use of the new endpoint; steps 1–3 exist today
-  (dormant).
+- **Reconnect sequence (client implemented / dormant; activation not implemented):** (1) POST
+  pending queue events in persisted order, batches of ≤20; (2) remove only exactly acknowledged
+  `clientEventId`s; (3) persist the last acknowledged `reconciliationCursor` only after a fully
+  validated response and a successful queue acknowledge (Slice 1c ordering); (4) when the queue
+  reports `nothingPending`, GET reconciliation with `after=<stored cursor>` to close the
+  gap of events whose POST response was lost; (5) update stored cursor to `nextCursor` only when the
+  response was fully validated. LB-DS-053 implements steps 4–5 in
+  `ReviewSyncCoordinator.reconcile()`: it runs when the pending queue is empty (it was empty, or a
+  POST attempt in the same call drained it), chains pages with `after=<nextCursor>` up to a bounded
+  `maxReconciliationPages`, and persists `nextCursor` only after the whole pass validates. The
+  sequence is composed only in tests: production composition still supplies a signed-out identity
+  and a disabled transport, so no attempt reaches the network.
+- **Exact scope of this slice (must not be widened silently):** the implemented client read is
+  **cursor-gap closing only**. It never acknowledges and never removes a queued event, and it does
+  **not** yet perform the §4 lost-`outcomes` matching: a `clientEventId` observed in
+  `reconciliation.events` is not treated as corroboration for removal. Recovery for a lost POST
+  response in this slice is the idempotent re-POST (server returns
+  `acknowledged`/`idempotent: true` with the stored per-event cursor) and removal continues to
+  happen **only** through that POST acknowledgement. Wiring GET `events` into acknowledgement —
+  even as corroboration — requires its own reviewed task, because §4 matching changes removal
+  corroboration and therefore sits on the no-data-loss boundary.
 - A GET response proving an event was applied must never cause the client to _delete_ the
-  local event unless the exact-acknowledgement invariant is honored — the proposed client
-  behavior is to re-POST the unmatched event (server returns `idempotent: true` +
-  per-event cursor) and let the POST acknowledgement perform removal. This keeps one
-  removal authority. (Alternative — direct removal on GET match — is listed in §12 as
+  local event unless the exact-acknowledgement invariant is honored — the implemented client
+  behavior is to leave the unmatched event queued and re-POST it (server returns
+  `idempotent: true` + per-event cursor) and let the POST acknowledgement perform removal. This keeps
+  one removal authority. (Alternative — direct removal on GET match — is listed in §12 as
   rejected: it would create a second, unvalidated removal path.)
 - UI truthfulness: the client reports "pending / synced" only from its own
   unacknowledged queue and validated responses; a GET match alone may update "server has
@@ -451,3 +473,11 @@ The eventual serial M1-D queue task is accepted when (each maps to this contract
 7. `scripts/validate-migrations.mjs` stays green; any new migration is contiguous,
    additive, learner-scoped, migration-test-covered, and its numbering follows 0015.
 8. Owner decisions O-1/O-2 recorded (even if "unchanged, still open") in the task report.
+
+**Client composition status.** Criteria 3 and 5+6 are now covered for the client read by LB-DS-053:
+`ReviewReconciliationTransport` + `HttpReviewSyncTransport.readReconciliation` strictly parse the
+§3.2 document, `ReviewSyncCoordinator.reconcile()` bounds and chains pages and persists only the
+validated final `nextCursor`, malformed/partial/failed/unbounded passes leave the queue and the
+stored cursor untouched, and the default production composition stays signed out with a disabled
+transport. GET-to-acknowledgement matching (§4) and every activation/flag/deployment step remain
+unimplemented and separately authorized.
