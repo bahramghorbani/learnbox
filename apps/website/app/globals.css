@@ -1396,6 +1396,25 @@ p {
 .summary div + div strong {
   color: #ef852e;
 }
+.today-empty {
+  margin-bottom: 22px;
+  padding: 26px 22px;
+  border: 1px solid #f0ecff;
+  border-radius: 26px;
+  background: var(--surface);
+  box-shadow: 0 12px 34px #34426f0d;
+  text-align: center;
+}
+.today-empty h2 {
+  margin-bottom: 8px;
+  color: var(--ink);
+  font-size: 22px;
+}
+.today-empty p {
+  margin-bottom: 0;
+  color: var(--muted);
+  line-height: 1.8;
+}
 .primary-button {
   width: 100%;
   border: 0;
@@ -2036,6 +2055,14 @@ p {
 @media (max-width: 420px) {
   .app-shell {
     padding: 22px 16px 36px;
+  }
+  .app-shell ~ .learner-nav {
+    position: relative;
+    left: 0;
+    width: 100%;
+    max-width: 100%;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin: auto 0 -36px;
   }
   .today-intro h1 {
     font-size: 36px;

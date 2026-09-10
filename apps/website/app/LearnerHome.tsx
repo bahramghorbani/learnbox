@@ -857,17 +857,23 @@ export function LearnerHome({
         pendingReviewCount={pendingReviewCount}
         lastSyncedAt={serverLastSyncedAt}
         onRetryServerRead={retryServerStateRead}
+        onBrowseWords={() => setScreen('words')}
+        primaryActionRef={startReviewRef}
       />
-      <button ref={startReviewRef} className="primary-button" onClick={begin}>
-        {resumableSessionIndex === null ? 'شروع مرور' : 'ادامهٔ مرور'}{' '}
-        <span aria-hidden="true">←</span>
-      </button>
-      <button className="recovery" onClick={begin}>
-        <Bobo expression="recovery" className="bobo bobo-recovery" />
-        <span>
-          <strong>چند روزی از دست رفته؟</strong>از آخرین مرور ادامه بده
-        </span>
-      </button>
+      {remainingTodayReviews > 0 ? (
+        <>
+          <button ref={startReviewRef} className="primary-button" onClick={begin}>
+            {resumableSessionIndex === null ? 'شروع مرور' : 'ادامهٔ مرور'}{' '}
+            <span aria-hidden="true">←</span>
+          </button>
+          <button className="recovery" onClick={begin}>
+            <Bobo expression="recovery" className="bobo bobo-recovery" />
+            <span>
+              <strong>چند روزی از دست رفته؟</strong>از آخرین مرور ادامه بده
+            </span>
+          </button>
+        </>
+      ) : null}
       <section className="progress-note">
         <div className="progress-icon streak-icon" aria-hidden="true">
           ✦
