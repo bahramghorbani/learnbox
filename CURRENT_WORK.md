@@ -6,7 +6,7 @@
 
 ### LB-DS-052 — continuous milestone execution queue
 
-- **Status:** review requested on `docs/next-milestone-execution-queue`, based on exact `origin/main`
+- **Status:** Draft PR #259 is review requested on `docs/next-milestone-execution-queue`, based on exact `origin/main`
   `0e36fb7466aa746cc0f322309fa399a81a005197`. This documentation-only coordination slice registers
   the next coherent milestone work rather than leaving execution without a ready task.
 - **Next safe implementation:** LB-DS-053, M1-D mobile reconciliation client composition, becomes
