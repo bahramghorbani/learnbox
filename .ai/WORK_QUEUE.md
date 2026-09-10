@@ -514,7 +514,7 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 - Simulator required: yes
 - Draft PR required: yes
 - Merge allowed: yes
-- Blocked on: replacement and human re-review of `start-a1-essen-word`, `start-a1-gross-word` and `start-a1-neu-word`; exact-match transcription must be rerun for every replacement. Existing private candidates and the `$1.25` authorized budget do not authorize attachment, approval, seed or publication.
+- Blocked on: final exact-head CI and merge review only. The renewed human review approves all 45 candidate decisions; `start-a1-essen-sentence` and `start-a1-gross-word` retain explicit automated transcription discrepancies for a later release decision. Existing private candidates and the `$1.25` authorized budget do not authorize attachment, approval, seed or publication.
 - Must not touch: existing approved canonical Bobo appearance; database migration/execution; media attachment; `card_versions` approval/publication; catalog seed; pack membership; runtime flags; invitations; staging/Preview/Production; payments; auth/session/sync; landing
 - Acceptance: candidate-only image/audio evidence for the remaining 15 items is complete, immutable and human-reviewed enough to produce a truthful 35-item decision package while `seedable: false`, `publicationBlocked: true`, and 0/35 release-approved versions remain unchanged; no asset is attached or delivered to learners.
 
