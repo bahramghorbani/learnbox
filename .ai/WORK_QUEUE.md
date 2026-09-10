@@ -425,10 +425,13 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 
 ## LB-DS-052
 
-- Status: review_requested
+- Status: accepted
 - Executor: supervisor (milestone execution coordination)
 - Base: `origin/main` at `0e36fb7466aa746cc0f322309fa399a81a005197` (PR #258 merge commit)
 - Branch: `docs/next-milestone-execution-queue`
+- Head commit: `7ca6ba7fea3b99ff25a6b63f5ccf54897bd0f381`
+- Draft PR: #259 — https://github.com/bahramghorbani/learnbox/pull/259 (merged)
+- Merge commit: `acc9a4c33ebef846ae1e7e66598e6427adcc40e8`
 - Risk: documentation-only-milestone-sequencing
 - Specification: `ROADMAP.md`; `.ai/WORKSTREAMS.md`; `docs/architecture/M1D_SYNC_WIRE_CONTRACT.md`; `docs/operations/ADMIN_CONTENT_REVIEW_STAGING_ACTIVATION.md`; `docs/content/STARTER_CATALOG_35_RELEASE_READINESS.md`
 - Outcome: one ready critical-path M1 task and later M2 owner/cost-gated tasks are committed as resumable queue records.
@@ -440,7 +443,7 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 - Simulator required: no
 - Draft PR required: yes
 - Merge allowed: yes
-- Blocked on: none
+- Blocked on: none; accepted in PR #259 after independent review and successful terminal CI
 - Must not touch: product code; tests; content or generated media; migrations or database data; auth/session behavior; provider or secret configuration; runtime flags; staging/Preview/Production; deployment; seed; pack membership; human approval; publication; payments; landing; Bobo assets
 - Acceptance: the repository has one continuously executable next M1 task and records later owner/cost-gated M2 tasks without treating them as ready; scopes remain coherent milestone outcomes rather than microtasks; no product, environment, content-release or provider state changes.
 
@@ -465,7 +468,7 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 - Simulator required: no
 - Draft PR required: yes
 - Merge allowed: yes
-- Blocked on: none; accepted in PR #260 after exact-head independent review and seven successful CI contexts
+- Blocked on: none; accepted in PR #260 after an independent read-only gate bound to final head `e97893a5d2ba2d11cdcfab7a1b01398e35adab58` and seven successful CI contexts on that head
 - Must not touch: API/server implementation or migrations; Web/Admin/landing/iOS; auth/session redesign; native gateway; runtime flag enablement; deployment; staging/Preview/Production; secrets/providers; content seed/publication; payments; Bobo assets
 - Acceptance: the mobile sync transport strictly parses the existing dormant reconciliation GET contract and the learner composition can invoke the documented reconnect sequence through the coordinator without deleting any local event from a cursor or GET result; malformed, partial, failed and paged responses preserve the queue and prior cursor; production composition remains fail-closed with signed-out identity and disabled transport, all sync flags remain false, and no network route is activated or deployed.
 
