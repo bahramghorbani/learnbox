@@ -6,9 +6,9 @@
 - Draft PR: #259 (`docs/next-milestone-execution-queue` → `main`)
 - Scope completed: Registered one ready, coherent M1-D client-composition task (LB-DS-053) and two explicit later M2 owner/cost-gated tasks (LB-DS-054 and LB-DS-055), without authorizing activation, migration, generated-media cost, approval or publication.
 - Files changed: `.ai/WORK_QUEUE.md`; `CURRENT_WORK.md`; this report
-- Checks run: Prettier on changed Markdown; AI worker queue validator; documentation governance tests; AI continuity validator; `git diff --check`
-- Checks unavailable: final independent re-review and terminal GitHub CI state pending
-- Remaining work: independent exact-head re-review, terminal required CI and merge; after merge dispatch LB-DS-053 from the exact merge commit
+- Checks run: Prettier on changed Markdown; AI worker queue validator; documentation governance tests; AI continuity validator; dashboard tests; `git diff --check`; all seven required GitHub/Vercel contexts succeeded on the current PR head before merge
+- Checks unavailable: none
+- Remaining work: independent exact-head re-review and merge; after merge dispatch LB-DS-053 from the exact merge commit
 - Risks: a future worker must replace LB-DS-053's dependency placeholder with the exact LB-DS-052 merge SHA before dispatch and preserve the default-off no-data-loss boundaries
 - Secrets or production changes: none; no secret, provider, staging, Preview, Production, deployment, migration, flag, seed, payment, approval or publication state changed
 - Bobo canonical status: unchanged; Bobo assets are explicitly outside all registered task scopes
