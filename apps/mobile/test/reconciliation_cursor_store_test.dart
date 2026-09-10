@@ -43,6 +43,26 @@ void main() {
       expect(await store.read(), '3');
     });
   });
+
+  group('compareReconciliationCursors', () {
+    test('orders valid cursors numerically, not lexicographically', () {
+      expect(compareReconciliationCursors('9', '10'), lessThan(0));
+      expect(compareReconciliationCursors('10', '9'), greaterThan(0));
+      expect(compareReconciliationCursors('100', '99'), greaterThan(0));
+      expect(compareReconciliationCursors('42', '42'), 0);
+      expect(compareReconciliationCursors('0', '0'), 0);
+      expect(compareReconciliationCursors('007', '7'), 0);
+      expect(compareReconciliationCursors('0', '1'), lessThan(0));
+    });
+
+    test('handles cursors beyond the 64-bit integer range', () {
+      expect(
+        compareReconciliationCursors(
+            '9223372036854775808', '9223372036854775807'),
+        greaterThan(0),
+      );
+    });
+  });
 }
 
 class _MemoryReconciliationCursorStore implements ReconciliationCursorStore {

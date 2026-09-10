@@ -211,6 +211,350 @@ void main() {
       ['event-1'],
     );
   });
+
+  group('ReviewSyncCoordinator reconciliation read', () {
+    test(
+        'empty queue reconciles from the stored cursor and persists nextCursor',
+        () async {
+      final queue = await _queueWithEvents(_MemoryStore(), 0);
+      final cursorStore = _MemoryReconciliationCursorStore('42');
+      final reconciliation = _ScriptedReconciliationTransport([
+        _reconciliationPage(
+          cursor: '42',
+          nextCursor: '47',
+          appliedEventIds: ['evt_a'],
+        ),
+      ]);
+      final coordinator = _authenticatedCoordinator(
+        queue,
+        _CursoredTransport(acknowledged: const [], cursor: '42'),
+        cursorStore: cursorStore,
+        reconciliationTransport: reconciliation,
+      );
+
+      final result = await coordinator.synchronize();
+
+      expect(
+        result,
+        isA<Reconciled>()
+            .having((value) => value.cursor, 'cursor', '47')
+            .having((value) => value.remainingCount, 'remaining', 0),
+      );
+      expect(reconciliation.requestedAfter, ['42']);
+      expect(await cursorStore.read(), '47');
+      expect(await queue.pendingCount(), 0);
+    });
+
+    test('paged reconciliation persists only the final cursor after every page',
+        () async {
+      final queue = await _queueWithEvents(_MemoryStore(), 0);
+      final cursorStore = _MemoryReconciliationCursorStore('42');
+      final reconciliation = _ScriptedReconciliationTransport([
+        _reconciliationPage(
+          cursor: '42',
+          nextCursor: '45',
+          hasMore: true,
+          appliedEventIds: ['evt_a'],
+        ),
+        _reconciliationPage(
+          cursor: '45',
+          nextCursor: '47',
+          appliedEventIds: ['evt_b'],
+        ),
+      ]);
+      final coordinator = _authenticatedCoordinator(
+        queue,
+        _CursoredTransport(acknowledged: const [], cursor: '42'),
+        cursorStore: cursorStore,
+        reconciliationTransport: reconciliation,
+      );
+
+      final result = await coordinator.synchronize();
+
+      expect(result, isA<Reconciled>().having((v) => v.cursor, 'cursor', '47'));
+      expect(reconciliation.requestedAfter, ['42', '45']);
+      expect(await cursorStore.read(), '47');
+    });
+
+    test('a failed read preserves the stored cursor and the queue', () async {
+      final queue = await _queueWithEvents(_MemoryStore(), 1);
+      final cursorStore = _MemoryReconciliationCursorStore('42');
+      final reconciliation = _ScriptedReconciliationTransport([
+        StateError('Malformed reconciliation response.'),
+      ]);
+      final coordinator = _authenticatedCoordinator(
+        queue,
+        _CursoredTransport(acknowledged: const [], cursor: '42'),
+        cursorStore: cursorStore,
+        reconciliationTransport: reconciliation,
+      );
+
+      final result = await coordinator.reconcile();
+
+      expect(result, isA<RetryableFailure>());
+      expect(await cursorStore.read(), '42');
+      expect(
+        (await queue.pendingEvents()).map((event) => event.clientEventId),
+        ['event-0'],
+      );
+    });
+
+    test('a failure on a later page persists nothing from earlier pages',
+        () async {
+      final queue = await _queueWithEvents(_MemoryStore(), 0);
+      final cursorStore = _MemoryReconciliationCursorStore('42');
+      final reconciliation = _ScriptedReconciliationTransport([
+        _reconciliationPage(cursor: '42', nextCursor: '45', hasMore: true),
+        StateError('Lost connection mid-page.'),
+      ]);
+      final coordinator = _authenticatedCoordinator(
+        queue,
+        _CursoredTransport(acknowledged: const [], cursor: '42'),
+        cursorStore: cursorStore,
+        reconciliationTransport: reconciliation,
+      );
+
+      final result = await coordinator.synchronize();
+
+      expect(result, isA<RetryableFailure>());
+      expect(await cursorStore.read(), '42');
+    });
+
+    test('bounded paging that never terminates fails closed', () async {
+      final queue = await _queueWithEvents(_MemoryStore(), 0);
+      final cursorStore = _MemoryReconciliationCursorStore('1');
+      final reconciliation = _EndlessReconciliationTransport();
+      final coordinator = _authenticatedCoordinator(
+        queue,
+        _CursoredTransport(acknowledged: const [], cursor: '1'),
+        cursorStore: cursorStore,
+        reconciliationTransport: reconciliation,
+      );
+
+      final result = await coordinator.synchronize();
+
+      expect(result, isA<RetryableFailure>());
+      expect(
+          reconciliation.calls, ReviewSyncCoordinator.maxReconciliationPages);
+      expect(await cursorStore.read(), '1');
+    });
+
+    test('never removes a queued event even when the server reports it applied',
+        () async {
+      final queue = await _queueWithEvents(_MemoryStore(), 1);
+      final cursorStore = _MemoryReconciliationCursorStore('1');
+      final reconciliation = _ScriptedReconciliationTransport([
+        _reconciliationPage(
+          cursor: '1',
+          nextCursor: '2',
+          appliedEventIds: ['event-0'],
+        ),
+      ]);
+      final coordinator = _authenticatedCoordinator(
+        queue,
+        _CursoredTransport(acknowledged: const [], cursor: '1'),
+        cursorStore: cursorStore,
+        reconciliationTransport: reconciliation,
+      );
+
+      final result = await coordinator.reconcile();
+
+      expect(result, isA<Reconciled>().having((v) => v.cursor, 'cursor', '2'));
+      expect(await queue.pendingCount(), 1);
+      expect(
+        (await queue.pendingEvents()).map((event) => event.clientEventId),
+        ['event-0'],
+      );
+      expect(await cursorStore.read(), '2');
+    });
+
+    test('a page that does not echo the requested cursor fails closed',
+        () async {
+      final queue = await _queueWithEvents(_MemoryStore(), 0);
+      final cursorStore = _MemoryReconciliationCursorStore('42');
+      final reconciliation = _ScriptedReconciliationTransport([
+        _reconciliationPage(cursor: '99', nextCursor: '100'),
+      ]);
+      final coordinator = _authenticatedCoordinator(
+        queue,
+        _CursoredTransport(acknowledged: const [], cursor: '42'),
+        cursorStore: cursorStore,
+        reconciliationTransport: reconciliation,
+      );
+
+      expect(await coordinator.synchronize(), isA<RetryableFailure>());
+      expect(await cursorStore.read(), '42');
+    });
+
+    test('a page that does not advance while hasMore is set fails closed',
+        () async {
+      final queue = await _queueWithEvents(_MemoryStore(), 0);
+      final cursorStore = _MemoryReconciliationCursorStore('42');
+      final reconciliation = _ScriptedReconciliationTransport([
+        _reconciliationPage(cursor: '42', nextCursor: '42', hasMore: true),
+      ]);
+      final coordinator = _authenticatedCoordinator(
+        queue,
+        _CursoredTransport(acknowledged: const [], cursor: '42'),
+        cursorStore: cursorStore,
+        reconciliationTransport: reconciliation,
+      );
+
+      expect(await coordinator.synchronize(), isA<RetryableFailure>());
+      expect(await cursorStore.read(), '42');
+    });
+
+    test('a cursor read failure fails closed before any network call',
+        () async {
+      final queue = await _queueWithEvents(_MemoryStore(), 0);
+      final cursorStore = _TrackingCursorStore('42')..failReads = true;
+      final reconciliation = _ScriptedReconciliationTransport([
+        _reconciliationPage(cursor: '42', nextCursor: '47'),
+      ]);
+      final coordinator = _authenticatedCoordinator(
+        queue,
+        _CursoredTransport(acknowledged: const [], cursor: '42'),
+        cursorStore: cursorStore,
+        reconciliationTransport: reconciliation,
+      );
+
+      expect(await coordinator.synchronize(), isA<RetryableFailure>());
+      expect(reconciliation.calls, 0);
+    });
+
+    test('signed-out reconciliation performs no network call', () async {
+      final reconciliation = _ScriptedReconciliationTransport([
+        _reconciliationPage(cursor: '0', nextCursor: '0'),
+      ]);
+      final coordinator = ReviewSyncCoordinator(
+        queue: ReviewQueue(store: _MemoryStore()),
+        identityState: () => MobileIdentityState.signedOut,
+        transport: _CursoredTransport(acknowledged: const [], cursor: '0'),
+        reconciliationCursorStore: _MemoryReconciliationCursorStore('0'),
+        reconciliationTransport: reconciliation,
+      );
+
+      expect(await coordinator.synchronize(), isA<AuthenticationRequired>());
+      expect(reconciliation.calls, 0);
+    });
+
+    test('reconciliation without a configured port reports nothingPending',
+        () async {
+      final queue = await _queueWithEvents(_MemoryStore(), 0);
+      final coordinator = _authenticatedCoordinator(
+        queue,
+        _CursoredTransport(acknowledged: const [], cursor: '0'),
+      );
+
+      expect(await coordinator.synchronize(), isA<NothingPending>());
+    });
+
+    test('a POST attempt that drains the queue closes the cursor gap',
+        () async {
+      final queue = await _queueWithEvents(_MemoryStore(), 1);
+      final cursorStore = _MemoryReconciliationCursorStore('3');
+      final reconciliation = _ScriptedReconciliationTransport([
+        _reconciliationPage(cursor: '7', nextCursor: '7'),
+      ]);
+      final coordinator = _authenticatedCoordinator(
+        queue,
+        _CursoredTransport(acknowledged: ['event-0'], cursor: '7'),
+        cursorStore: cursorStore,
+        reconciliationTransport: reconciliation,
+      );
+
+      final result = await coordinator.synchronize();
+
+      expect(
+        result,
+        isA<Synchronized>()
+            .having((v) => v.acknowledgedCount, 'acknowledged', 1)
+            .having((v) => v.remainingCount, 'remaining', 0),
+      );
+      expect(reconciliation.requestedAfter, ['7']);
+      expect(await cursorStore.read(), '7');
+      expect(await queue.pendingCount(), 0);
+    });
+
+    test(
+        'a failed post-drain reconciliation keeps the acknowledgement and the '
+        'stored cursor', () async {
+      final queue = await _queueWithEvents(_MemoryStore(), 1);
+      final cursorStore = _MemoryReconciliationCursorStore('3');
+      final reconciliation = _ScriptedReconciliationTransport([
+        StateError('Lost connection.'),
+      ]);
+      final coordinator = _authenticatedCoordinator(
+        queue,
+        _CursoredTransport(acknowledged: ['event-0'], cursor: '7'),
+        cursorStore: cursorStore,
+        reconciliationTransport: reconciliation,
+      );
+
+      final result = await coordinator.synchronize();
+
+      expect(
+          result, isA<Synchronized>().having((v) => v.cursor, 'cursor', '7'));
+      expect(await cursorStore.read(), '7');
+      expect(await queue.pendingCount(), 0);
+    });
+  });
+}
+
+ReviewReconciliationPage _reconciliationPage({
+  required String cursor,
+  required String nextCursor,
+  bool hasMore = false,
+  List<String> appliedEventIds = const [],
+}) =>
+    ReviewReconciliationPage(
+      cursor: cursor,
+      nextCursor: nextCursor,
+      hasMore: hasMore,
+      events: [
+        for (final id in appliedEventIds)
+          ReviewReconciliationEvent(
+            clientEventId: id,
+            eventId: 'server-$id',
+            appliedAt: '2026-09-05T08:20:01.000Z',
+          ),
+      ],
+    );
+
+class _ScriptedReconciliationTransport
+    implements ReviewReconciliationTransport {
+  _ScriptedReconciliationTransport(this._script);
+
+  final List<Object> _script;
+  final List<String?> requestedAfter = [];
+  var calls = 0;
+
+  @override
+  Future<ReviewReconciliationPage> readReconciliation({String? after}) async {
+    final step = _script[calls];
+    calls += 1;
+    requestedAfter.add(after);
+    if (step is Exception) {
+      throw step;
+    }
+    return step as ReviewReconciliationPage;
+  }
+}
+
+class _EndlessReconciliationTransport implements ReviewReconciliationTransport {
+  var calls = 0;
+
+  @override
+  Future<ReviewReconciliationPage> readReconciliation({String? after}) async {
+    calls += 1;
+    final cursor = int.parse(after ?? '0');
+    return ReviewReconciliationPage(
+      cursor: '$cursor',
+      nextCursor: '${cursor + 1}',
+      hasMore: true,
+      events: const [],
+    );
+  }
 }
 
 class _MemoryReconciliationCursorStore implements ReconciliationCursorStore {
@@ -308,6 +652,7 @@ ReviewSyncCoordinator _authenticatedCoordinator(
   ReviewQueue queue,
   ReviewSyncTransport transport, {
   ReconciliationCursorStore? cursorStore,
+  ReviewReconciliationTransport? reconciliationTransport,
 }) =>
     ReviewSyncCoordinator(
       queue: queue,
@@ -315,6 +660,7 @@ ReviewSyncCoordinator _authenticatedCoordinator(
       transport: transport,
       reconciliationCursorStore:
           cursorStore ?? _MemoryReconciliationCursorStore(null),
+      reconciliationTransport: reconciliationTransport,
     );
 
 Future<ReviewQueue> _queueWithEvents(_MemoryStore store, int count) async {

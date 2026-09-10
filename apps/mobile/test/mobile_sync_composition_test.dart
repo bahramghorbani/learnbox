@@ -20,4 +20,14 @@ void main() {
     expect(source, isNot(contains('http')));
     expect(source, isNot(contains('Timer(')));
   });
+
+  test('production composition never wires the reconciliation read', () async {
+    final source = await File('lib/main.dart').readAsString();
+
+    expect(source, isNot(contains('ReviewReconciliationTransport')));
+    expect(source, isNot(contains('readReconciliation')));
+    expect(source, isNot(contains('reconciliationEndpoint')));
+    expect(source, isNot(contains('HttpReviewSyncTransport')));
+    expect(source, isNot(contains('reconciliationTransport')));
+  });
 }

@@ -7,6 +7,7 @@ import 'package:learnbox/features/sync/review_sync_result.dart'
     show
         AuthenticationRequired,
         NothingPending,
+        Reconciled,
         ReviewSyncResult,
         RetryableFailure,
         Synchronized;
@@ -135,6 +136,22 @@ void main() {
       expect(
           ReviewSyncResult.authenticationRequired(), isA<ReviewSyncResult>());
       expect(ReviewSyncResult.nothingPending(), isA<ReviewSyncResult>());
+    });
+
+    test('Reconciled reports the validated cursor without acknowledging', () {
+      const result =
+          ReviewSyncResult.reconciled(remainingCount: 2, cursor: '47');
+      expect(result, isA<Reconciled>());
+      switch (result) {
+        case Reconciled(:final remainingCount, :final cursor):
+          expect(remainingCount, 2);
+          expect(cursor, '47');
+        case AuthenticationRequired() ||
+              NothingPending() ||
+              RetryableFailure() ||
+              Synchronized():
+          fail('Expected a Reconciled result.');
+      }
     });
   });
 }
