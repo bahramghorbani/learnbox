@@ -310,5 +310,6 @@ publication boundaries.
 
 The owner completed Passkey login outside chat and confirmed that the authenticated, server-backed
 review queue displayed. No credential, Passkey material, cookie, CSRF value, database row content or
-secret was captured. Final acceptance now depends only on independent security/data-integrity review
-and green final-head CI.
+secret was captured. Final acceptance was satisfied by the independent exact-head security/data-integrity review at
+`7407b30b3efb2e5f0d19a872d26bf31689e7c30b` (PASS) and seven terminal GitHub CI successes with no
+pending context. PR #262 then merged as `7d2d6151653c92634c6102d916e912ddfba8897d`.

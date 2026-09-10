@@ -4,21 +4,14 @@
 
 ## Active work
 
-### LB-DS-054 — Admin content-review staging activation
+### LB-DS-055 — Start Pack 15 candidate media readiness
 
-- **Status:** the owner-approved staging-only operation is active on exact release
-  `801c532630d42042ebbd27b4fac158e294938075`. A restorable pre-migration backup was verified;
-  migration `0017` applied once with the reviewed checksum; database truth is
-  `35 / 210 / 210 / 0 / 0`; and the immutable Admin image is healthy with only
-  `LEARNBOX_ADMIN_CONTENT_REVIEW_ENABLED=true` newly enabled. Anonymous probes remain fail-closed
-  (`session=401`, `bootstrap=404`, `review=401`, `Cache-Control: no-store`). Application rollback to
-  the retained prior image restored `review=404`, and reactivation restored the protected `401`
-  boundary. Production, learner runtime, seed, decisions and publication remain unchanged.
-- **Authenticated gate:** the owner completed Passkey login outside chat and confirmed that the
-  server-backed review queue displayed. No credential, Passkey material, cookie, CSRF value or row
-  content was recorded.
-- **Remaining gate:** independent security/data-integrity review and green final-head CI on Draft PR
-  #262 before acceptance.
+- **Status:** candidate-only generation is complete under the owner-authorized `$1.25` ceiling.
+  Private output contains 15 images and 30 audio candidates; human review approved every image and
+  27 audio candidates. `start-a1-essen-word`, `start-a1-gross-word` and `start-a1-neu-word` were
+  rejected and remain pending replacement plus human re-review. Candidate media is not attached,
+  approved, seeded, published or learner-delivered; the catalog remains 0/35 release-approved,
+  `seedable: false` and `publicationBlocked: true`.
 
 ### Starter Catalog 35 release gates
 
@@ -153,14 +146,8 @@
 
 ## Immediate execution order
 
-1. Close LB-DS-054 Draft PR #262 through independent security/data-integrity review and green
-   final-head CI. The owner-operated Passkey login and authenticated read-only queue verification are
-   complete. Migration `0017` and the Admin review runtime are active only in isolated staging; this
-   does not authorize human check writes, decisions, seed, publication or Production.
-2. Keep LB-DS-055 candidate-media generation blocked until the owner approves a bounded provider
-   budget and confirms human visual/audio/content review capacity. The no-spend estimate is complete;
-   no paid API has been called.
-3. Keep the merged M1-D client reconciliation path dormant. The cursor/watermark policy is approved in
+1. Regenerate and independently review only the three rejected LB-DS-055 private word-audio candidates (`essen`, `groß`, `neu`); require exact-match transcription and a renewed human listening decision. This remains candidate-only: no attachment, check/decision write, seed, publication or learner delivery.
+2. Keep the merged M1-D client reconciliation path dormant. The cursor/watermark policy is approved in
    ADR 0014; server-core (PR #169), client-side cursor capture/persistence (PR #170),
    read-side cursor exposure (PR #171/LB-DS-024) and per-event cursor binding (PR #172/LB-DS-025)
    are merged, as are request serialization (PR #184) and the dormant review POST route
@@ -168,7 +155,7 @@
    dormant. The reconciliation GET and its hardened delta-response semantics are merged in PRs
    #209 and #219, and the strict Flutter client/coordinator merged in PR #260 at `38e03bd`; native
    composition, auth, flag enablement and deployment remain separate owner-gated operations.
-4. Re-run browser visual and accessibility QA only against a staging deployment running the current merged build (staging is not confirmed current); the Chrome permission blocker must also be cleared. Do not treat the current functional QA as visual acceptance.
+3. Re-run browser visual and accessibility QA only against a staging deployment running the current merged build (staging is not confirmed current); the Chrome permission blocker must also be cleared. Do not treat the current functional QA as visual acceptance.
 
 ## Owner-approved product decisions captured in M0
 
