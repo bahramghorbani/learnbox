@@ -21,10 +21,11 @@
 
 - **Status:** review requested in Draft PR #260 on `feature/m1d-mobile-reconciliation-client`, based on exact
   `origin/main` `acc9a4c33ebef846ae1e7e66598e6427adcc40e8`. RED commit `d43e921`, GREEN implementation `f0f1217`, then fail-closed hardening `e4e46c1`; that implementation head received independent review and seven successful CI contexts. Metadata-only commits followed, so current PR head and its evidence must be read live before readiness or merge.
-  The implementation can
-  removing a single queued event: removal stays exclusive to an exact validated POST
-  acknowledgement. Malformed, partial, failed and unbounded reads preserve the queue and the
-  previously stored cursor, and only a fully validated paging pass persists `nextCursor`.
+  The implementation consumes the paged reconciliation GET and closes the cursor gap from the
+  coordinator without removing a single queued event: removal stays exclusive to an exact
+  validated POST acknowledgement. Malformed, partial, failed and unbounded reads preserve the
+  queue and the previously stored cursor, and only a fully validated paging pass persists
+  `nextCursor`.
 - **Not activated:** `main.dart` is unchanged — production composition remains signed out with
   `DisabledReviewSyncTransport()` and wires no reconciliation endpoint. No flag, auth, route,
   server/API/migration, provider, deployment, staging or Production state changed.
