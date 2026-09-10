@@ -20,8 +20,8 @@
 ### LB-DS-053 — M1-D mobile reconciliation read client composition
 
 - **Status:** review requested in Draft PR #260 on `feature/m1d-mobile-reconciliation-client`, based on exact
-  `origin/main` `acc9a4c33ebef846ae1e7e66598e6427adcc40e8`. RED commit `d43e921`, GREEN implementation `f0f1217`, then final fail-closed hardening `e4e46c1`; independent review and seven exact-head CI contexts passed.
-  consume the paged reconciliation GET and close the cursor gap from the coordinator without
+  `origin/main` `acc9a4c33ebef846ae1e7e66598e6427adcc40e8`. RED commit `d43e921`, GREEN implementation `f0f1217`, then fail-closed hardening `e4e46c1`; that implementation head received independent review and seven successful CI contexts. Metadata-only commits followed, so current PR head and its evidence must be read live before readiness or merge.
+  The implementation can
   removing a single queued event: removal stays exclusive to an exact validated POST
   acknowledgement. Malformed, partial, failed and unbounded reads preserve the queue and the
   previously stored cursor, and only a fully validated paging pass persists `nextCursor`.
@@ -31,8 +31,7 @@
 - **Scope note:** the §4 lost-`outcomes` GET matching is deliberately excluded; recovery for a lost
   POST response remains the idempotent re-POST. Matching GET events into acknowledgement needs its
   own reviewed task. See `docs/architecture/M1D_SYNC_WIRE_CONTRACT.md` §§6-7 and §17.
-- **Next:** open the draft PR for this branch (this executor run was explicitly not permitted to
-  push or open a PR), then independent high-reasoning review and merge.
+- **Next:** Keep PR #260 Draft until required hosted CI and independent review are bound to its then-current exact head; then run the explicit readiness and merge gates.
 
 ### Starter Catalog 35 release gates
 
