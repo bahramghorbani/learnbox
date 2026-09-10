@@ -474,31 +474,32 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 
 ## LB-DS-054
 
-- Status: review_requested
-- Dependencies: LB-DS-053 is accepted; owner explicitly authorizes this exact staging-only operation and release SHA.
+- Status: accepted
+- Dependencies: LB-DS-053 is accepted; the owner authorized the exact staging-only operation and release SHA.
 - Executor: high-reasoning serial staging operator plus independent security/data-integrity reviewer
 - Base: approved exact `origin/main` release `801c532630d42042ebbd27b4fac158e294938075`, containing PRs #252 and #255
-- Branch: `ops/admin-content-review-staging-activation`
-- Draft PR: #262 — https://github.com/bahramghorbani/learnbox/pull/262
+- Branch: `ops/admin-content-review-staging-activation` (deleted after merge)
+- Draft PR: #262 — https://github.com/bahramghorbani/learnbox/pull/262 (merged)
+- Merge commit: `7d2d6151653c92634c6102d916e912ddfba8897d`
 - Risk: owner-gated-staging-backup-database-migration-and-runtime-activation
 - Specification: `docs/operations/ADMIN_CONTENT_REVIEW_STAGING_ACTIVATION.md`; PDR-008; ADR 0016
 - Outcome: isolated Admin staging has a verified backup, migration `0017`, exact candidate/check counts, protected review runtime and proven rollback while every release/publication boundary remains closed.
 - Allowed paths: `docs/operations/ADMIN_CONTENT_REVIEW_STAGING_ACTIVATION.md`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-054.md`; `CURRENT_WORK.md`; `PROJECT_STATE.md`; `docs/PRODUCT_STATUS.md`
-- Documentation updates: record each executed runbook phase and exact environment evidence in the runbook/report/current-work; update stable project/product state only after accepted completion.
+- Documentation updates: executed runbook phases and post-merge truth are recorded in the runbook/report/current-work and stable product status.
 - Owner gates: explicit authorization of the exact release commit, staging backup, migration `0017`, Admin image rollout, runtime flag and trusted out-of-chat secret entry; no broader authority is implied.
-- Handoff evidence: backup identifier without secrets, restore-readiness proof, migration ledger/checksum, `35 / 210 / 210 / 0 / 0` query evidence, protected route/Passkey/bootstrap probes, rollback proof, independent review and terminal CI.
-- Required checks: every runbook Phase 1 preflight; verified encrypted staging backup and restore readiness; migration checksum/ledger check; post-migration `35 / 210 / 210 / 0 / 0` assertion; protected Admin route/Passkey/bootstrap health probes; rollback evidence; queue/documentation/continuity validators; `git diff --check`; independent security/data-integrity review
+- Handoff evidence: encrypted backup/restore proof, migration ledger/checksum, `35 / 210 / 210 / 0 / 0` query evidence, protected route/Passkey/bootstrap probes, rollback proof, independent review PASS and seven terminal-success CI contexts.
+- Required checks: complete.
 - Simulator required: no
 - Draft PR required: yes
 - Merge allowed: yes
-- Blocked on: independent security/data-integrity review and green final-head CI; the exact staging release, backup, migration `0017`, Admin image rollout, runtime flag and owner-operated Passkey queue read are complete without exposing secrets or authentication material
+- Blocked on: none
 - Must not touch: Production; learner applications or sync flags; seed; pack membership; media attachment; human check outcomes or decisions; approval/publication; participant invitation; payment; DNS/TLS; landing; Bobo assets
-- Acceptance: only isolated Admin staging is backed up, migrated and activated exactly per the reviewed runbook; database truth is `35 / 210 / 210 / 0 / 0`, Passkey protection remains intact, rollback is proven, and Production, learner delivery, content decisions and publication remain unchanged.
+- Acceptance: accepted in PR #262. Only isolated Admin staging was backed up, migrated and activated exactly per the reviewed runbook; database truth is `35 / 210 / 210 / 0 / 0`, Passkey protection remains intact, rollback is proven, and Production, learner delivery, content decisions and publication remain unchanged.
 
 ## LB-DS-055
 
-- Status: blocked
-- Dependencies: Starter-35 human QA plan identifies the exact unresolved items; owner separately authorizes a bounded paid-provider budget and confirms review capacity.
+- Status: in_progress
+- Dependencies: Starter-35 human QA plan identifies the exact unresolved items; a bounded `$1.25` provider budget was authorized and candidate-only generation plus human review began. Three rejected word-audio candidates remain pending replacement/review; no attachment or release gate is authorized.
 - Executor: W4 content-factory worker plus mandatory human visual/audio/content reviewers
 - Base: exact current `origin/main` after LB-DS-054 only if staging review evidence is needed; otherwise a freshly recorded current main
 - Branch: `content/start-15-candidate-media-readiness`
@@ -513,7 +514,7 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 - Simulator required: yes
 - Draft PR required: yes
 - Merge allowed: yes
-- Blocked on: separate owner authorization for paid provider cost and confirmed human visual/audio/content review capacity
+- Blocked on: replacement and human re-review of `start-a1-essen-word`, `start-a1-gross-word` and `start-a1-neu-word`; exact-match transcription must be rerun for every replacement. Existing private candidates and the `$1.25` authorized budget do not authorize attachment, approval, seed or publication.
 - Must not touch: existing approved canonical Bobo appearance; database migration/execution; media attachment; `card_versions` approval/publication; catalog seed; pack membership; runtime flags; invitations; staging/Preview/Production; payments; auth/session/sync; landing
 - Acceptance: candidate-only image/audio evidence for the remaining 15 items is complete, immutable and human-reviewed enough to produce a truthful 35-item decision package while `seedable: false`, `publicationBlocked: true`, and 0/35 release-approved versions remain unchanged; no asset is attached or delivered to learners.
 
