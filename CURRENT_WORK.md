@@ -4,17 +4,6 @@
 
 ## Active work
 
-### LB-DS-051 — Learner Web Today no-due state
-
-- **Status:** review requested on `feature/web-today-no-due-state`. The D1 §5 no-due state now renders
-  `کارتی برای مرور نیست`, removes the zero-card start/recovery affordances and provides one focused
-  path to Words while preserving loading/error/offline/server-backed labels, pending-sync truth and
-  the non-empty Today flow. Focused Today tests pass 17/17, the affected Today/core-flow set passes
-  30/30, the full Website suite passes 276/276, Website typecheck/build pass, and 390×844 plus 200%
-  reflow-equivalent browser checks have no horizontal overflow. Independent review and exact-head
-  remote checks remain required. No server state, sync, catalog seed, publication, deployment or
-  runtime flag is activated.
-
 ### Starter Catalog 35 release gates
 
 - **Status:** LB-DS-045 evidence reconciliation was accepted and merged in PR #241 at `95c704b`.
@@ -148,17 +137,16 @@
 
 ## Immediate execution order
 
-1. Implement LB-DS-051's bounded Learner Web Today no-due state without server, catalog, sync or flag activation.
-2. Keep LB-DS-050's merged staging preflight dormant; do not execute migration `0017`, enable the Admin review flag or deploy without a separate explicit owner approval.
-3. Complete the remaining provenance, visual, audio and app-flow review only through a separately approved staging operation; approval still does not publish or create learner catalog membership.
-4. Complete the separately review-gated M1-D push reconciliation activation/composition work. The cursor/watermark policy is approved in
+1. Keep LB-DS-050's merged staging preflight dormant; do not execute migration `0017`, enable the Admin review flag or deploy without a separate explicit owner approval.
+2. Complete the remaining provenance, visual, audio and app-flow review only through a separately approved staging operation; approval still does not publish or create learner catalog membership.
+3. Complete the separately review-gated M1-D push reconciliation activation/composition work. The cursor/watermark policy is approved in
    ADR 0014; server-core (PR #169), client-side cursor capture/persistence (PR #170),
    read-side cursor exposure (PR #171/LB-DS-024) and per-event cursor binding (PR #172/LB-DS-025)
    are merged, as are request serialization (PR #184) and the dormant review POST route
    request-boundary parser integration, Slice 1d (PR #192 at `9c6c5e0`); network sync remains
    dormant. The reconciliation GET and its hardened delta-response semantics are merged in PRs
    #209 and #219; flag enablement and client composition remain separate review-gated tasks.
-5. Re-run browser visual and accessibility QA only against a staging deployment running the current merged build (staging is not confirmed current); the Chrome permission blocker must also be cleared. Do not treat the current functional QA as visual acceptance.
+4. Re-run browser visual and accessibility QA only against a staging deployment running the current merged build (staging is not confirmed current); the Chrome permission blocker must also be cleared. Do not treat the current functional QA as visual acceptance.
 
 ## Owner-approved product decisions captured in M0
 

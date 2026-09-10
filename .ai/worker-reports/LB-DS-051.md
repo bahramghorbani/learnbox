@@ -2,13 +2,14 @@
 
 - Branch: `feature/web-today-no-due-state`
 - Base commit: `05222eeab3b3c144bb6effb2d4d1a726cb6b99d6` (`origin/main`; PR #256 merge commit)
-- Head commit: resolve from `origin/feature/web-today-no-due-state` after the single review-request push; the Draft PR body binds the exact pushed SHA
-- Draft PR: #257 (Draft) — https://github.com/bahramghorbani/learnbox/pull/257
+- Head commit: `5968cbb308b4f91fe4a965e3cc0c186b703df9d8`
+- PR: #257 (merged) — https://github.com/bahramghorbani/learnbox/pull/257
+- Merge commit: `d80c37ea05b796e947e9e97533a90a07c5a5ea28`
 - Scope completed: D1 §5 no-due Today state, truthful device-local copy, recovery Bobo, one Words action and focus recovery
 - Files changed: the bounded Website component/shell/style and focused/core-flow tests, plus `.ai/WORK_QUEUE.md`, this report, `CURRENT_WORK.md`, `docs/PRODUCT_STATUS.md`, `docs/design/DESIGN_STATUS.md`, and `docs/design/UI_QA.md`
 - Checks run: focused Today suites 17/17; affected Today/core-flow tests 30/30; full Website tests 276/276; Website typecheck and production build; exact-head final checks rerun after independent-review corrections
 - Checks unavailable: none
-- Remaining work: obtain an exact-head independent code/product/accessibility review, wait for all exact-head GitHub/Vercel contexts, then merge only if every required gate succeeds
+- Remaining work: none for LB-DS-051; server-backed due counts and catalog activation remain separate gated work
 - Risks: stale zero-card actions, misleading device-local copy and focus loss; mitigated by state-specific integration tests, preserved sync labels and focus assertions
 - Secrets or production changes: none. No credential, server state, database row, migration, seed, catalog membership, publication, deployment, Vercel setting or feature flag was changed
 - Bobo canonical status: unchanged asset set; the existing approved `recovery-v2.png` expression is reused for the no-due state
@@ -24,6 +25,8 @@ Website typecheck and the optimized Next.js production build pass. The loading s
 
 A real local browser session completed the three-card review and returned to Today at a 390×844 mobile viewport. The settled page showed `کارتی برای مرور نیست`, the recovery Bobo, the truthful device-local and pending-sync labels, and one `رفتن به واژه‌ها` action. The action received keyboard focus after returning from completion. The viewport had no horizontal document overflow after constraining only the body-sibling Today navigation; Today, Words, Progress and Profile each measured `scrollWidth === clientWidth === 390`, while the nested navigation hosts remained unaffected. A 195 CSS-pixel viewport (390px at a 200% reflow equivalent) retained the empty state and full-width action with `scrollWidth === clientWidth === 195`.
 
-## Remaining review gate
+## Accepted result
 
-Independent code/product/accessibility review and exact-head GitHub/Vercel checks remain required before merge. The Draft PR must not be merged while any required context is pending or failing.
+Independent code/product/accessibility review returned PASS on exact head `5968cbb`; all seven
+GitHub/Vercel contexts succeeded and PR #257 merged at `d80c37e`. No runtime or release boundary
+changed.

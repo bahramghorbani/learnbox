@@ -399,9 +399,12 @@ deployment and all release paths remain unchanged and gated.
 
 ## LB-DS-051
 
-- Status: review_requested
+- Status: accepted
 - Executor: Hermes Web implementation worker (M1-B Today no-due state)
 - Base: `origin/main` at `05222eeab3b3c144bb6effb2d4d1a726cb6b99d6` (PR #256 merge commit)
+- Head commit: `5968cbb308b4f91fe4a965e3cc0c186b703df9d8`
+- PR: #257 (merged) — https://github.com/bahramghorbani/learnbox/pull/257
+- Merge commit: `d80c37ea05b796e947e9e97533a90a07c5a5ea28`
 - Branch: `feature/web-today-no-due-state`
 - Risk: routine-web-ui-truth-accessibility
 - Specification: `docs/design/D1_LEARNER_UI_KIT.md` §5 Today empty/no-due state; `docs/PRODUCT_STATUS.md`
@@ -410,9 +413,15 @@ deployment and all release paths remain unchanged and gated.
 - Simulator required: no
 - Draft PR required: yes
 - Merge allowed: yes
-- Blocked on: none after this coordination change merges
+- Blocked on: none
 - Must not touch: Android/mobile/iOS; API, route, auth or session behavior; learner-state parsing; sync composition or activation; `WEB_LEARNER_STATE_ENABLED`; migration, seed, catalog membership, publication, deployment, Preview/Production, provider, secret, Admin, commerce or Bobo canonical assets
 - Acceptance: when the truthful device-local Today session has no remaining cards, Web renders the D1 no-due message `کارتی برای مرور نیست`, does not render the zero-card start prompt or `شروع مرور`, and exposes one accessible action to Words; non-empty sessions and existing loading/error/offline/server-backed labels remain unchanged; the state is verified in local-only, offline/error and server-backed label conditions without claiming server due counts, acknowledgement or catalog activation.
+
+This task merged in PR #257 at `d80c37e` after an exact-head independent code/product/accessibility
+PASS on `5968cbb` and all seven required GitHub/Vercel contexts succeeded. Focused Today tests passed
+17/17, the affected Today/core-flow set 30/30 and the full Website suite 276/276; Website typecheck,
+production build, repository validators and 390×844/200% reflow browser probes passed. No server
+state, sync, catalog seed, publication, deployment, migration or runtime flag was activated.
 
 ## LB-DS-049
 
