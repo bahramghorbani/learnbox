@@ -4,6 +4,16 @@
 
 ## Active work
 
+### LB-DS-050 — Admin content-review staging preflight
+
+- **Status:** review requested on `ops/admin-content-review-staging-preflight`, based on PR #254's
+  merge commit `a3f4720`. The branch adds only a default-false runtime Compose mapping, deployment-
+  boundary tests, migration-runner runtime packaging resolution and a guarded staging runbook.
+  Migration `0017` has not been executed; `LEARNBOX_ADMIN_CONTENT_REVIEW_ENABLED` has not been
+  enabled; no staging/Preview/Production deployment, database mutation, human review, seed,
+  publication, learner delivery or invitation has occurred. Exact-head independent review and CI
+  remain required, followed by a separate explicit owner approval before any runbook operation.
+
 ### Starter Catalog 35 release gates
 
 - **Status:** LB-DS-045 evidence reconciliation was accepted and merged in PR #241 at `95c704b`.
@@ -137,7 +147,7 @@
 
 ## Immediate execution order
 
-1. Prepare the separately approved staging operation for merged migration `0017` and the default-off Admin review runtime; do not execute the migration or enable the flag without that approval.
+1. Review LB-DS-050's default-off staging preflight and runbook; do not execute migration `0017`, enable the Admin review flag or deploy without a separate explicit owner approval after merge.
 2. Complete the remaining provenance, visual, audio and app-flow review through a separately approved staging operation; approval still does not publish or create learner catalog membership.
 3. Implement the authenticated server-wired learner path completion and any remaining D1 fetch states.
 4. Complete the separately review-gated M1-D push reconciliation activation/composition work. The cursor/watermark policy is approved in

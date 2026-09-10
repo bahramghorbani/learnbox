@@ -371,6 +371,27 @@ metadata correction. The correction landed at final PR head
 `8ec12b598164d1caf8cabc43b2dc598e03a8f9a8`; all seven GitHub/Vercel contexts completed
 successfully on that exact head before merge.
 
+## LB-DS-050
+
+- Status: review_requested
+- Executor: supervisor (M2 staging-preflight preparation; no activation)
+- Base: `origin/main` at `a3f472012d653dee26ad40c64258abd70065cef6` (PR #254 merged)
+- Branch: `ops/admin-content-review-staging-preflight`
+- Risk: security-sensitive-staging-preflight-and-migration-runner-packaging
+- Specification: `docs/operations/ADMIN_CONTENT_REVIEW_STAGING_ACTIVATION.md`; PDR-008; ADR 0016; `docs/DOCUMENTATION_GOVERNANCE.md`
+- Allowed paths: `docs/operations/ADMIN_CONTENT_REVIEW_STAGING_ACTIVATION.md`; `infrastructure/production/admin/compose.yaml`; `infrastructure/production/admin/tests/deployment-boundary.test.mjs`; `infrastructure/production/app/Dockerfile`; `infrastructure/production/app/tests/deployment-boundary.test.mjs`; `package.json`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-050.md`; `CURRENT_WORK.md`; `docs/PRODUCT_STATUS.md`
+- Required checks: both production deployment-boundary suites; `pnpm check`; `pnpm build`; `node scripts/validate-migrations.mjs`; `pnpm audit --prod --audit-level=high`; `pnpm verify:ai-worker-queue`; `pnpm verify:documentation-governance`; `pnpm verify:ai-continuity`; `pnpm test:dashboard`; `git diff --check`; secret scan; independent review
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+- Blocked on: review, exact-head GitHub checks and a later explicit owner approval before any staging operation
+- Must not touch: migration content or execution; staging/Preview/Production deployment; runtime flag activation; secrets; database data; human review or approval; seed; pack membership; publication; learner delivery; invitations; billing or Vercel configuration; Bobo assets
+- Acceptance: Compose exposes `LEARNBOX_ADMIN_CONTENT_REVIEW_ENABLED` as a runtime-only default-false value; deployment-boundary tests prove the default-off/explicit-on mapping and migration-runner dependency resolution; the runbook defines exact-release, backup, checksum, fail-closed, activation-verification and rollback gates without performing them; no environment is changed and no migration, review, seed, publication or learner delivery occurs.
+
+This task prepares only a reviewed, reversible staging operation. It does not authorize the operator
+phases documented by the runbook. Migration `0017`, the Admin review flag, human attestations,
+deployment and all release paths remain unchanged and gated.
+
 ## LB-DS-049
 
 - Status: accepted
