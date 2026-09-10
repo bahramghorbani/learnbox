@@ -20,6 +20,16 @@ sealed class ReviewSyncResult {
   const factory ReviewSyncResult.retryableFailure({
     required int remainingCount,
   }) = RetryableFailure;
+
+  /// The read-only reconciliation pass closed the cursor gap.
+  ///
+  /// This variant never reports acknowledged events: the reconciliation read
+  /// has no authority to remove a queued event. Only a validated POST
+  /// acknowledgement produces [Synchronized].
+  const factory ReviewSyncResult.reconciled({
+    required int remainingCount,
+    String? cursor,
+  }) = Reconciled;
 }
 
 class AuthenticationRequired extends ReviewSyncResult {
@@ -49,4 +59,15 @@ class RetryableFailure extends ReviewSyncResult {
   const RetryableFailure({required this.remainingCount});
 
   final int remainingCount;
+}
+
+class Reconciled extends ReviewSyncResult {
+  const Reconciled({required this.remainingCount, this.cursor});
+
+  /// Events still pending locally; the reconciliation read never changes this.
+  final int remainingCount;
+
+  /// Validated `nextCursor` persisted for the read (ADR 0014); null when the
+  /// read did not persist one.
+  final String? cursor;
 }

@@ -17,6 +17,24 @@
   the remaining 15 Start items. Neither is ready and neither gate is inferred from this coordination
   change.
 
+### LB-DS-053 — M1-D mobile reconciliation read client composition
+
+- **Status:** implemented and committed on `feature/m1d-mobile-reconciliation-client` from exact
+  `origin/main` `acc9a4c33ebef846ae1e7e66598e6427adcc40e8` (PR #259 merge). Commits: `d43e921`
+  (RED — failing tests) then the GREEN implementation commit. The dormant client can now strictly
+  consume the paged reconciliation GET and close the cursor gap from the coordinator without
+  removing a single queued event: removal stays exclusive to an exact validated POST
+  acknowledgement. Malformed, partial, failed and unbounded reads preserve the queue and the
+  previously stored cursor, and only a fully validated paging pass persists `nextCursor`.
+- **Not activated:** `main.dart` is unchanged — production composition remains signed out with
+  `DisabledReviewSyncTransport()` and wires no reconciliation endpoint. No flag, auth, route,
+  server/API/migration, provider, deployment, staging or Production state changed.
+- **Scope note:** the §4 lost-`outcomes` GET matching is deliberately excluded; recovery for a lost
+  POST response remains the idempotent re-POST. Matching GET events into acknowledgement needs its
+  own reviewed task. See `docs/architecture/M1D_SYNC_WIRE_CONTRACT.md` §§6-7 and §17.
+- **Next:** open the draft PR for this branch (this executor run was explicitly not permitted to
+  push or open a PR), then independent high-reasoning review and merge.
+
 ### Starter Catalog 35 release gates
 
 - **Status:** LB-DS-045 evidence reconciliation was accepted and merged in PR #241 at `95c704b`.

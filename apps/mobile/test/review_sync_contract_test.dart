@@ -116,7 +116,10 @@ void main() {
         case Synchronized(:final acknowledgedCount, :final remainingCount):
           expect(acknowledgedCount, 2);
           expect(remainingCount, 1);
-        case AuthenticationRequired() || NothingPending() || RetryableFailure():
+        case AuthenticationRequired() ||
+              NothingPending() ||
+              RetryableFailure() ||
+              Reconciled():
           fail('Expected a Synchronized result.');
       }
     });
@@ -127,7 +130,10 @@ void main() {
       switch (result) {
         case RetryableFailure(:final remainingCount):
           expect(remainingCount, 3);
-        case AuthenticationRequired() || NothingPending() || Synchronized():
+        case AuthenticationRequired() ||
+              NothingPending() ||
+              Synchronized() ||
+              Reconciled():
           fail('Expected a RetryableFailure result.');
       }
     });

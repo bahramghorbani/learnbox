@@ -28,3 +28,27 @@ String? parseReconciliationCursor(Object? value) {
   }
   return value;
 }
+
+/// Numerically compares two cursors that already satisfy
+/// [parseReconciliationCursor].
+///
+/// Returns a negative number when [a] is older/smaller, zero when the cursors
+/// are equal and a positive number when [a] is newer/greater. The comparison is
+/// digit-wise so it stays exact beyond the Dart/JS integer range; cursors must
+/// therefore never be parsed into an `int`.
+int compareReconciliationCursors(String a, String b) {
+  final left = _withoutLeadingZeros(a);
+  final right = _withoutLeadingZeros(b);
+  if (left.length != right.length) {
+    return left.length < right.length ? -1 : 1;
+  }
+  return left.compareTo(right);
+}
+
+String _withoutLeadingZeros(String value) {
+  var start = 0;
+  while (start < value.length - 1 && value.codeUnitAt(start) == 0x30) {
+    start += 1;
+  }
+  return value.substring(start);
+}
