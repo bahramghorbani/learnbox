@@ -496,6 +496,28 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 - Must not touch: Production; learner applications or sync flags; seed; pack membership; media attachment; human check outcomes or decisions; approval/publication; participant invitation; payment; DNS/TLS; landing; Bobo assets
 - Acceptance: accepted in PR #262. Only isolated Admin staging was backed up, migrated and activated exactly per the reviewed runbook; database truth is `35 / 210 / 210 / 0 / 0`, Passkey protection remains intact, rollback is proven, and Production, learner delivery, content decisions and publication remain unchanged.
 
+## LB-DS-056
+
+- Status: review_requested
+- Dependencies: LB-DS-049 (server-truthful review states) and LB-DS-054 (isolated Admin staging activation) are merged; both deliberately left the authenticated review interior as primitive sequential markup. No dependency on new content, media, migration, runtime-flag or deployment work.
+- Executor: W5 Admin UI worker (single serial worker) plus required independent exact-head fail-closed review
+- Base: exact `dd2200759cc0319f7429cc29e91fb20aa96aa5b6` (fresh `origin/main`, PR #265 merge)
+- Branch: `feature/admin-review-visual-completion`
+- Risk: admin-ui-product-accessibility
+- Specification: `docs/design/D0_VISUAL_LANGUAGE.md`; `docs/design/DESIGN_STATUS.md`; `docs/design/UI_QA.md`; `docs/design/concepts/admin-content-review-concept-v1.png`; PDR-008; ADR 0016
+- Outcome: the authenticated Admin content-review interior becomes a production-quality Persian-first RTL operations dashboard — server-connected, publication-disabled context, queue panel, selected-content panel and six-dimension review/decision panel — aligned to the D0 visual language, with every fetch, CSRF, idempotency, check, decision and server-state behaviour preserved exactly.
+- Allowed paths: `apps/admin/app/components/ContentReviewWorkspace.tsx`; `apps/admin/app/globals.css`; `apps/admin/test/content-review-workspace.test.tsx`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-056.md`; `CURRENT_WORK.md`; `docs/PRODUCT_STATUS.md`; `docs/design/DESIGN_STATUS.md`; `docs/design/UI_QA.md`
+- Documentation updates: record the unmerged, locally verified implementation in the queue/report, current-work, product status and design status/QA documents; describe it as not deployed, not browser-verified and not accepted.
+- Owner gates: none beyond the standing exact-head review, CI and deployment gate. The worker must not self-approve visual quality; browser/staging visual and accessibility acceptance remains a separate owner-reviewed gate.
+- Handoff evidence: recorded RED then GREEN focused test output, full Admin test/typecheck/build output, touched-file Prettier check, queue/documentation-governance/continuity/dashboard validator output and `git diff --check`, with the exact changed paths and the honest list of what was not verified.
+- Required checks: focused Admin content-review workspace test (RED then GREEN); full Admin tests; Admin typecheck and build; Prettier check on touched files; `pnpm verify:ai-worker-queue`; `pnpm verify:documentation-governance`; `pnpm verify:ai-continuity`; `pnpm test:dashboard`; `git diff --check`; independent fail-closed exact-head review of the unmerged branch
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+- Blocked on: exact-head independent review, CI on the pushed head and the deployment gate only. No content, media, evidence, check/decision, release or publication mutation is authorized.
+- Must not touch: API routes, auth/session, database/migrations, content/media/evidence JSON, package manifests/lockfile, deployment/infrastructure, flags/secrets, learner apps, landing, Bobo assets, Production/staging
+- Acceptance: the authenticated ready state renders a labeled queue/content/decision composition whose only figures derive from the current server `items`, the selected row's checks and its media count, with German IDs/text kept LTR, visible focus, ≥44px controls, reduced-motion support and no horizontal overflow at 390px; loading/disabled/unauthorized/error/empty states stay truthful and visually coherent; the six-dimension gate keeps its exact semantics and final approval stays disabled until all six dimensions pass; no fabricated metric, thumbnail, readiness claim, bulk approval or automatic check write is introduced.
+
 ## LB-DS-055
 
 - Status: review_requested

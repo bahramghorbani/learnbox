@@ -4,9 +4,9 @@
 
 ## Active work
 
-### LB-DS-055 — Start Pack 15 candidate media readiness
+### LB-DS-056 — Admin content-review visual completion
 
-- **Status:** the private candidate-only package is complete and awaiting independent fail-closed review. It contains 15 images and 30 audio clips; human visual/listening review approved all 45 decisions. Automated transcription records 28/30 exact normalized matches; the `essen-sentence` and `gross-word` discrepancies remain explicit evidence, not silently passed. No media is attached, approved, seeded, published or learner-delivered; the catalog remains 0/35 release-approved, `seedable: false` and `publicationBlocked: true`.
+- **Status:** implemented and locally verified in Draft PR #266 on `feature/admin-review-visual-completion` (base `dd220075`, fresh `origin/main`); **unmerged, not deployed and not accepted.** The authenticated `ServerBackedContentReview` ready state is now a labeled RTL operations dashboard — server-connected/publication-disabled context header, queue panel, selected-content panel and six-dimension review/decision panel — backed by focused RED-then-GREEN acceptance tests, the full Admin suite (28 files / 170 tests), Admin typecheck/build and repository validators. A first independent review blocked a shell-wide contrast regression; the follow-up removes that override and adds a regression test. Every fetch, CSRF, idempotency, check, decision and server-state path is unchanged. Final-head browser/staging acceptance, independent review, CI and deployment remain outstanding.
 
 ### Starter Catalog 35 release gates
 
