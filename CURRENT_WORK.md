@@ -4,13 +4,9 @@
 
 ## Active work
 
-### LB-DS-058 — Admin sidebar icon repair
-
-- **Status:** review_requested on local branch `fix/admin-sidebar-icons` from exact `origin/main` `6553de6`. Repository history confirms the sidebar has used Unicode/font-glyph placeholders since its first prototype commit; the approved concept showed consistent line icons, and font rendering could make the placeholders appear different across builds. The five menu glyphs and collapse glyph are now inline 24×24 `currentColor` SVGs matching the concept family, while labels, anchors, RTL placement, active state and responsive behavior remain unchanged. Focused TDD is 2/2, full Admin tests are 29 files/172 tests, typecheck/build and repository validators pass; browser evidence at 1536×960, 1280×800 and 390×844 shows zero document overflow. Independent exact-head review and PR/CI remain.
-
 ### LB-DS-056 — Admin content-review visual completion
 
-- **Status:** accepted. PR #266 passed independent exact-head review and seven terminal checks, merged at `e4e80dcc`, and that exact immutable Admin image is healthy on isolated staging. The deployed CSS contains the authenticated queue/content/decision composition; protected anonymous probes remain fail-closed/no-store; learner services and Production are unchanged. The owner hard-refreshed, entered the authenticated interior and accepted the corrected visual result. No content check, editorial decision, media attachment, seed or publication was written.
+- **Status:** accepted. PR #266 passed independent exact-head review and seven terminal checks, merged at `e4e80dcc`, and its immutable image is retained for rollback after PR #268 replaced it on isolated staging with `351f8e3`. The deployed PR #268 shell preserves the authenticated queue/content/decision composition and adds the accepted SVG sidebar icons; protected anonymous read probes remain fail-closed/no-store; learner services and Production are unchanged. The owner hard-refreshed, entered the authenticated interior, accepted the corrected content-review visual result, and later accepted all five deployed line icons plus the collapse chevron. No content check, editorial decision, attachment, approval, seed or publication occurred.
 
 ### Next owner-gated content-review operation
 
