@@ -149,10 +149,18 @@ button {
   font-size: 16px;
   border-radius: 12px;
 }
-.admin-nav-item span {
-  font-size: 20px;
-  width: 23px;
-  text-align: center;
+.admin-nav-icon {
+  display: grid;
+  flex: 0 0 24px;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+}
+.admin-nav-icon svg,
+.collapse-control svg {
+  display: block;
+  width: 24px;
+  height: 24px;
 }
 .admin-nav-item.is-current {
   color: var(--purple);
@@ -170,8 +178,10 @@ button {
   padding: 14px 17px;
 }
 .collapse-control span {
-  font-size: 28px;
-  line-height: 0;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
 }
 .admin-workspace {
   flex: 1;
@@ -978,7 +988,7 @@ button {
     padding: 9px 10px;
     white-space: nowrap;
   }
-  .admin-nav-item span,
+  .admin-nav-icon,
   .collapse-control {
     display: none;
   }
