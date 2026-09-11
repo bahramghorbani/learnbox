@@ -47,7 +47,7 @@
 
 ## رابط داخلی Admin — بازبینی محتوا (LB-DS-056)
 
-**وضعیت:** پیاده‌سازی و بررسی محلی انجام شده است؛ این کار **merge نشده، push نشده، منتشر نشده و پذیرفته نشده** است. هیچ بررسی مرورگر، تصویربرداری، axe، صفحه‌کلید واقعی، تضاد رنگ یا staging انجام نشده و ادعا نمی‌شود. تنها محیط اجراشده jsdom/Vitest است.
+**وضعیت:** پیاده‌سازی و بررسی محلی در Draft PR #266 انجام شده است؛ این کار **merge نشده، منتشر نشده و پذیرفته نشده** است. هیچ بررسی مرورگر، تصویربرداری، axe، صفحه‌کلید واقعی، تضاد رنگ یا staging انجام نشده و ادعا نمی‌شود. تنها محیط اجراشده jsdom/Vitest است.
 
 **مرجع مفهومی:** `docs/design/concepts/admin-content-review-concept-v1.png` — **قرارداد:** `docs/design/D0_VISUAL_LANGUAGE.md` — **پیاده‌سازی:** `apps/admin/app/components/ContentReviewWorkspace.tsx` و `apps/admin/app/globals.css`
 
