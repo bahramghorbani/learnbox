@@ -4,8 +4,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { resolve } from 'node:path';
 
-const websiteRequire = createRequire(resolve('apps/website/package.json'));
-const { head, list, put } = await import(websiteRequire.resolve('@vercel/blob'));
+import { createBlobCapabilityLoader } from './validate-private-media-upload-boundary.mjs';
 
 const contentRoot = new URL('../content/packs/learnbox-start/', import.meta.url);
 const v2Images = process.argv.includes('--v2-images');
@@ -26,6 +25,7 @@ const receiptPath = `${receiptDirectory}/${
 }.json`;
 const execute = process.argv.includes('--execute');
 const ownerApproved = process.argv.includes('--owner-approved');
+const attestationPath = resolve('.vercel/private-media-target-attestation.json');
 
 function localEnvironmentValue(key) {
   if (process.env[key]?.trim()) return process.env[key].trim();
@@ -48,25 +48,46 @@ function localEnvironmentValue(key) {
 }
 
 function blobCredentials() {
-  const token = localEnvironmentValue('BLOB_READ_WRITE_TOKEN');
-  if (token) return { mode: 'read-write-token', token };
-
   const oidcToken = localEnvironmentValue('VERCEL_OIDC_TOKEN');
   const storeId = localEnvironmentValue('BLOB_STORE_ID');
   if (oidcToken && storeId) return { mode: 'oidc', oidcToken, storeId };
 
   throw new Error(
-    'دسترسی خصوصی Vercel آماده نیست. ابتدا محیط توسعهٔ فروشگاه را با Vercel CLI روی همین دستگاه همگام‌سازی کنید.',
+    'برای بارگذاری محلی فقط OIDC مدیریت‌شدهٔ Vercel همراه با شناسهٔ فروشگاه پذیرفته می‌شود.',
   );
 }
+
+let attestation;
+if (execute) {
+  try {
+    attestation = JSON.parse(await readFile(attestationPath, 'utf8'));
+  } catch (error) {
+    throw new Error(`Local isolated-target attestation is required at ${attestationPath}.`, {
+      cause: error,
+    });
+  }
+}
+
+const websiteRequire = createRequire(resolve('apps/website/package.json'));
+const loadBlobCapabilities = createBlobCapabilityLoader(
+  {
+    execute,
+    ownerApprovedFlag: ownerApproved,
+    attestation,
+    resolvedStoreIdentity: execute ? localEnvironmentValue('BLOB_STORE_ID') : undefined,
+    expectedStoreIdentity: execute
+      ? localEnvironmentValue('LEARNBOX_PRIVATE_MEDIA_EXPECTED_STORE_ID')
+      : undefined,
+    knownSharedStoreIdentity: execute
+      ? localEnvironmentValue('LEARNBOX_PRIVATE_MEDIA_KNOWN_SHARED_STORE_ID')
+      : undefined,
+  },
+  async () => import(websiteRequire.resolve('@vercel/blob')),
+);
 
 const draft = JSON.parse(await readFile(draftFile, 'utf8'));
 if (draft.state !== 'ready_for_private_storage_not_attached' || !draft.publicationBlocked) {
   throw new Error('The local attachment draft must remain private-storage-ready and blocked.');
-}
-
-if (execute && !ownerApproved) {
-  throw new Error('بارگذاری واقعی فقط با تأیید صریح مالک اجرا می‌شود.');
 }
 
 const validatedAssets = await Promise.all(
@@ -90,10 +111,8 @@ if (!execute) {
 }
 
 const credentials = blobCredentials();
-const authentication =
-  credentials.mode === 'oidc'
-    ? { oidcToken: credentials.oidcToken, storeId: credentials.storeId }
-    : { token: credentials.token };
+const { head, list, put } = await loadBlobCapabilities();
+const authentication = { oidcToken: credentials.oidcToken, storeId: credentials.storeId };
 const existing = await list({
   prefix: 'learnbox-start/',
   limit: 1000,

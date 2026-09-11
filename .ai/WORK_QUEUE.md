@@ -571,7 +571,7 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 
 ## LB-DS-063
 
-- Status: review_requested
+- Status: accepted
 - Executor: orchestrator (docs-only post-merge reconciliation)
 - Base: exact `a13862f1c9ee7f57adcde7547c960038f1cbff75` (`origin/main`, PR #272 merge)
 - Branch: `docs/post272-reconcile`
@@ -589,6 +589,10 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 - Blocked on: final exact-head review and CI only; no external or runtime action is authorized.
 - Must not touch: application code; package manifests; content/media evidence; provider resources; credentials; uploads; database/migrations; auth/session; runtime flags; deployment; staging/Preview/Production; Bobo assets
 - Acceptance: LB-DS-061 records exact reviewed head `ac50c712604387c759560f25bf0c18bdcf31852e` and PR #272 merge `a13862f1c9ee7f57adcde7547c960038f1cbff75` as accepted; `CURRENT_WORK.md` no longer requests its completed review; LB-DS-060/LB-DS-062 remain fail-closed and point to this reconciliation as their final baseline dependency.
+- Head commit: `8aeb01b1d865b9e6e73fe5b1343641a03edd496d`
+- Draft PR: #273 — https://github.com/bahramghorbani/learnbox/pull/273 (merged)
+- Merge commit: `199791feb08d41f36979a476920f006ff54a1b7c`
+- Accepted evidence: exact head `8aeb01b1d865b9e6e73fe5b1343641a03edd496d` passed independent fail-closed review and all seven GitHub/Vercel contexts, then merged as PR #273 at `199791feb08d41f36979a476920f006ff54a1b7c`. No application, provider, credential, object, database, runtime, deployment, staging, Preview, Production, approval, attachment, seed, release or publication state changed.
 
 ## LB-DS-060
 
@@ -638,9 +642,9 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 
 ## LB-DS-062
 
-- Status: blocked
+- Status: review_requested
 - Executor: W4 content-factory worker with independent high-reasoning security review
-- Base: exact future `origin/main` after LB-DS-063 merges; replace this dependency with that merge SHA before execution
+- Base: exact `199791feb08d41f36979a476920f006ff54a1b7c` (`origin/main`, PR #273 merge)
 - Branch: `fix/private-media-store-identity-guard`
 - Risk: security-sensitive-private-object-write-boundary
 - Specification: LB-DS-061 isolated-storage contract; `docs/architecture/PRIVATE_MEDIA_DELIVERY.md`; `scripts/upload-start-slice-private-media.mjs`
@@ -653,7 +657,7 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 - Simulator required: no
 - Draft PR required: yes
 - Merge allowed: yes
-- Blocked on: LB-DS-063 must merge and supply the exact reconciled main baseline. Guard implementation then requires no owner gate; executing the upload remains blocked on a separately approved isolated target and owner-authenticated credentials.
+- Blocked on: final exact-head security review and CI only for the default-off guard. Executing the upload remains blocked on a separately approved isolated target, owner-authenticated OIDC credentials, exact local target identities and a distinct owner approval.
 - Must not touch: provider resources; real credentials/store IDs/object locators; candidate binaries; actual upload/list/head/delete calls in tests; existing shared store; database/migrations; delivery routes; card attachments; review decisions; runtime flags; deployments; DNS/TLS; staging/Preview/Production; Bobo assets
 - Acceptance: without every explicit isolated-target attestation the execute path exits before loading Blob write capabilities; mismatched or known-shared identity is rejected; tests prove zero write invocation; dry-run remains non-mutating; no real secret, provider call, object or environment change occurs.
 
