@@ -238,11 +238,15 @@ export function ServerBackedContentReview() {
   }, [loadQueue]);
 
   const selected = items.find((item) => item.cardVersionId === selectedId) ?? items[0];
-  const allChecksPassed =
-    selected !== undefined &&
-    dimensions.every((dimension) =>
-      selected.checks.some((check) => check.dimension === dimension && check.outcome === 'passed'),
-    );
+  // Single source of truth: the workspace counters and the approval gate read the same derived set.
+  const passedDimensions = selected
+    ? dimensions.filter((dimension) =>
+        selected.checks.some(
+          (check) => check.dimension === dimension && check.outcome === 'passed',
+        ),
+      )
+    : [];
+  const allChecksPassed = selected !== undefined && passedDimensions.length === dimensions.length;
 
   async function refreshAfterMutation() {
     await loadQueue(false);
@@ -422,7 +426,11 @@ export function ServerBackedContentReview() {
   }
 
   return (
-    <section className="server-review" aria-labelledby="server-review-title">
+    <section
+      className="server-review"
+      data-review-state={phase}
+      aria-labelledby="server-review-title"
+    >
       <h2 id="server-review-title">صف بررسی سرور</h2>
       {phase === 'disabled' ? (
         <>
@@ -469,133 +477,184 @@ export function ServerBackedContentReview() {
         </p>
       ) : null}
       {phase === 'ready' && selected ? (
-        <>
-          <div className="server-queue-list" role="group" aria-label="فهرست صف بررسی">
-            {items.map((item) => (
-              <button
-                key={item.cardVersionId}
-                type="button"
-                className="server-queue-row"
-                data-server-selected={item.cardVersionId === selected.cardVersionId}
-                aria-pressed={item.cardVersionId === selected.cardVersionId}
-                onClick={() => setSelectedId(item.cardVersionId)}
-              >
-                <span lang="de" dir="ltr">
-                  {item.article ? `${item.article} ${item.lemma}` : item.lemma}
-                </span>
-                <small lang="en" dir="ltr">
-                  {item.contentId}
-                </small>
-              </button>
-            ))}
-          </div>
+        <div className="review-workspace" data-review-workspace="ready">
+          <header className="review-context" data-publication="disabled">
+            <p className="review-context-line">
+              صف بررسی سرور خوانده شد؛ تصمیم این پنل فقط سردبیری است و انتشار بسته غیرفعال است.
+            </p>
+            <dl className="review-metrics" aria-label="شمارنده‌های صف بررسی">
+              <div>
+                <dt>کارت‌های صف</dt>
+                <dd data-review-metric="queue-total">{toPersianDigits(items.length)}</dd>
+              </div>
+              <div>
+                <dt>بُعدهای تأییدشدهٔ کارت انتخاب‌شده</dt>
+                <dd data-review-metric="checks-passed">
+                  {toPersianDigits(passedDimensions.length)} از {toPersianDigits(dimensions.length)}
+                </dd>
+              </div>
+              <div>
+                <dt>رسانهٔ ثبت‌شدهٔ سرور</dt>
+                <dd data-review-metric="media-count">{toPersianDigits(selected.mediaCount)}</dd>
+              </div>
+            </dl>
+          </header>
 
-          <div className="server-card-detail" lang="de" dir="ltr">
-            <h3>{selected.article ? `${selected.article} ${selected.lemma}` : selected.lemma}</h3>
-            {selected.essentialInflection ? <p>{selected.essentialInflection}</p> : null}
-            {selected.pronunciationIpa ? <p>/{selected.pronunciationIpa}/</p> : null}
-          </div>
-          <div className="server-card-meanings">
-            <p lang="fa">
-              {selected.persianMeanings.join('؛ ') || '—'}
-              <span className="word-kind">
-                {partOfSpeechLabels[
-                  selected.partOfSpeech as LearningVocabularyItem['partOfSpeech']
-                ] ?? 'سایر'}
-              </span>
-            </p>
-            {selected.examples[0] ? (
-              <p>
-                <span lang="de" dir="ltr">
-                  {selected.examples[0].german}
-                </span>{' '}
-                <span lang="fa">{selected.examples[0].persian}</span>
-              </p>
-            ) : null}
-            <p>
-              {selected.mediaCount > 0
-                ? `${toPersianDigits(selected.mediaCount)} رسانه در محتوای ثبت‌شدهٔ سرور`
-                : 'رسانه‌ای در محتوای ثبت‌شدهٔ سرور نیست.'}
-            </p>
-            <p className="provenance">
-              {providerLabels[
-                selected.sourceProvider as LearningVocabularyItem['source']['provider']
-              ] ?? selected.sourceProvider}
-              {selected.sourceReference ? (
-                <small lang="en" dir="ltr">
-                  {' '}
-                  {selected.sourceReference}
-                </small>
-              ) : null}
-            </p>
-          </div>
-
-          <section className="server-gate" aria-labelledby="server-gate-title">
-            <h3 id="server-gate-title">گیت شش‌بُعدی</h3>
-            <ul className="review-gate-list">
-              {dimensions.map((dimension) => {
-                const check = selected.checks.find((entry) => entry.dimension === dimension);
-                const outcome = check?.outcome ?? 'pending';
-                const isBusy = busy === 'check' && busyDimension === dimension;
-                return (
-                  <li key={dimension} data-dimension={dimension} data-outcome={outcome}>
-                    <span aria-hidden="true">
-                      {outcome === 'passed' ? '✓' : outcome === 'failed' ? '!' : '○'}
+          <div className="review-workspace-grid">
+            <div
+              className="review-panel review-queue-panel"
+              data-review-panel="queue"
+              role="group"
+              aria-labelledby="review-queue-panel-title"
+            >
+              <h3 id="review-queue-panel-title">کارت‌های صف</h3>
+              <div className="server-queue-list">
+                {items.map((item) => (
+                  <button
+                    key={item.cardVersionId}
+                    type="button"
+                    className="server-queue-row"
+                    data-server-selected={item.cardVersionId === selected.cardVersionId}
+                    aria-pressed={item.cardVersionId === selected.cardVersionId}
+                    onClick={() => setSelectedId(item.cardVersionId)}
+                  >
+                    <span lang="de" dir="ltr">
+                      {item.article ? `${item.article} ${item.lemma}` : item.lemma}
                     </span>
-                    <span>{dimensionLabels[dimension]}</span>
-                    <small>{outcomeLabels[outcome]}</small>
-                    {outcome === 'pending' ? (
-                      <span className="server-check-actions">
-                        <button
-                          type="button"
-                          disabled={busy !== 'none'}
-                          onClick={() => void submitCheck(dimension, 'passed')}
-                        >
-                          {isBusy ? 'در حال ثبت…' : 'تأیید'}
-                        </button>
-                        <button
-                          type="button"
-                          disabled={busy !== 'none'}
-                          onClick={() => void submitCheck(dimension, 'failed')}
-                        >
-                          ناموفق
-                        </button>
-                      </span>
-                    ) : (
-                      <small lang="en" dir="ltr">
-                        {check?.reviewedAt ?? ''}
-                      </small>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          </section>
+                    <small lang="en" dir="ltr">
+                      {item.contentId}
+                    </small>
+                  </button>
+                ))}
+              </div>
+            </div>
 
-          <div className="review-actions server-decisions">
-            <button
-              type="button"
-              className="approve-button"
-              disabled={busy !== 'none' || !allChecksPassed}
-              onClick={() => void submitDecision('approve')}
+            <article
+              className="review-panel review-content-panel"
+              data-review-panel="content"
+              aria-labelledby="review-content-panel-title"
             >
-              {busy === 'decision' ? 'در حال ثبت…' : 'تأیید نهایی سردبیری'}
-            </button>
-            <button
-              type="button"
-              className="return-button"
-              disabled={busy !== 'none'}
-              onClick={() => void submitDecision('return_for_revision')}
-            >
-              بازگرداندن برای اصلاح
-            </button>
-            {!allChecksPassed ? (
-              <p className="prototype-note" role="status">
-                تأیید نهایی فقط پس از تأیید هر شش بُعد در سرور ثبت می‌شود.
+              <h3 id="review-content-panel-title">کارت انتخاب‌شده</h3>
+              <p className="review-content-id" lang="en" dir="ltr">
+                {selected.contentId}
               </p>
-            ) : null}
+              <div className="server-card-detail" lang="de" dir="ltr">
+                <p className="review-word">
+                  {selected.article ? `${selected.article} ${selected.lemma}` : selected.lemma}
+                </p>
+                {selected.essentialInflection ? <p>{selected.essentialInflection}</p> : null}
+                {selected.pronunciationIpa ? <p>/{selected.pronunciationIpa}/</p> : null}
+              </div>
+              <div className="server-card-meanings">
+                <p lang="fa">
+                  {selected.persianMeanings.join('؛ ') || '—'}
+                  <span className="word-kind">
+                    {partOfSpeechLabels[
+                      selected.partOfSpeech as LearningVocabularyItem['partOfSpeech']
+                    ] ?? 'سایر'}
+                  </span>
+                </p>
+                {selected.examples[0] ? (
+                  <p>
+                    <span lang="de" dir="ltr">
+                      {selected.examples[0].german}
+                    </span>{' '}
+                    <span lang="fa">{selected.examples[0].persian}</span>
+                  </p>
+                ) : null}
+                <p>
+                  {selected.mediaCount > 0
+                    ? `${toPersianDigits(selected.mediaCount)} رسانه در محتوای ثبت‌شدهٔ سرور`
+                    : 'رسانه‌ای در محتوای ثبت‌شدهٔ سرور نیست.'}
+                </p>
+                <p className="provenance">
+                  {providerLabels[
+                    selected.sourceProvider as LearningVocabularyItem['source']['provider']
+                  ] ?? selected.sourceProvider}
+                  {selected.sourceReference ? (
+                    <small lang="en" dir="ltr">
+                      {' '}
+                      {selected.sourceReference}
+                    </small>
+                  ) : null}
+                </p>
+              </div>
+            </article>
+
+            <section
+              className="review-panel review-decision-panel"
+              data-review-panel="decision"
+              aria-labelledby="server-gate-title"
+            >
+              <h3 id="server-gate-title">گیت شش‌بُعدی</h3>
+              <p className="review-scope-note">
+                تصمیم این پنل فقط سردبیری است؛ انتشار در این نسخه غیرفعال می‌ماند.
+              </p>
+              <ul className="review-gate-list">
+                {dimensions.map((dimension) => {
+                  const check = selected.checks.find((entry) => entry.dimension === dimension);
+                  const outcome = check?.outcome ?? 'pending';
+                  const isBusy = busy === 'check' && busyDimension === dimension;
+                  return (
+                    <li key={dimension} data-dimension={dimension} data-outcome={outcome}>
+                      <span aria-hidden="true">
+                        {outcome === 'passed' ? '✓' : outcome === 'failed' ? '!' : '○'}
+                      </span>
+                      <span>{dimensionLabels[dimension]}</span>
+                      <small>{outcomeLabels[outcome]}</small>
+                      {outcome === 'pending' ? (
+                        <span className="server-check-actions">
+                          <button
+                            type="button"
+                            disabled={busy !== 'none'}
+                            onClick={() => void submitCheck(dimension, 'passed')}
+                          >
+                            {isBusy ? 'در حال ثبت…' : 'تأیید'}
+                          </button>
+                          <button
+                            type="button"
+                            disabled={busy !== 'none'}
+                            onClick={() => void submitCheck(dimension, 'failed')}
+                          >
+                            ناموفق
+                          </button>
+                        </span>
+                      ) : (
+                        <small lang="en" dir="ltr">
+                          {check?.reviewedAt ?? ''}
+                        </small>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+
+              <div className="review-actions server-decisions">
+                <button
+                  type="button"
+                  className="approve-button"
+                  disabled={busy !== 'none' || !allChecksPassed}
+                  onClick={() => void submitDecision('approve')}
+                >
+                  {busy === 'decision' ? 'در حال ثبت…' : 'تأیید نهایی سردبیری'}
+                </button>
+                <button
+                  type="button"
+                  className="return-button"
+                  disabled={busy !== 'none'}
+                  onClick={() => void submitDecision('return_for_revision')}
+                >
+                  بازگرداندن برای اصلاح
+                </button>
+                {!allChecksPassed ? (
+                  <p className="prototype-note" role="status">
+                    تأیید نهایی فقط پس از تأیید هر شش بُعد در سرور ثبت می‌شود.
+                  </p>
+                ) : null}
+              </div>
+            </section>
           </div>
-        </>
+        </div>
       ) : null}
 
       {notice.kind !== 'none' ? (

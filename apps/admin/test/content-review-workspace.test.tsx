@@ -550,3 +550,161 @@ describe('ServerBackedContentReview (authenticated server mode)', () => {
     }
   });
 });
+
+describe('ServerBackedContentReview (authenticated review composition)', () => {
+  beforeEach(() => {
+    Object.defineProperty(document, 'cookie', {
+      configurable: true,
+      get: () => '__Host-learnbox_admin_csrf=csrf-token-value',
+    });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    delete (document as unknown as { cookie?: string }).cookie;
+  });
+
+  it('composes the ready state as labeled queue, content and decision panels', async () => {
+    stubReviewFetch({
+      '/api/content/review': () => jsonResponse({ items: [itemHaus, itemTisch] }),
+    });
+    const rendered = await renderServer();
+    try {
+      expect(rendered.container.querySelector('[data-review-state="ready"]')).not.toBeNull();
+      expect(rendered.container.querySelector('[data-review-workspace="ready"]')).not.toBeNull();
+
+      const panels = ['queue', 'content', 'decision'].map((name) =>
+        rendered.container.querySelector(`[data-review-panel="${name}"]`),
+      );
+      for (const panel of panels) {
+        expect(panel).not.toBeNull();
+        const labelledBy = panel?.getAttribute('aria-labelledby');
+        expect(labelledBy).toBeTruthy();
+        expect(rendered.container.querySelector(`#${labelledBy}`)).not.toBeNull();
+      }
+      const [queuePanel, contentPanel, decisionPanel] = panels;
+
+      // The operational queue is the real control list over the server rows, with one selection.
+      expect(queuePanel?.querySelectorAll('.server-queue-row')).toHaveLength(2);
+      expect(queuePanel?.querySelectorAll('.server-queue-row[aria-pressed="true"]')).toHaveLength(
+        1,
+      );
+
+      // The selected content panel renders only server fields for the selected row.
+      expect(contentPanel?.textContent).toContain('das Haus');
+      expect(contentPanel?.textContent).toContain('start-a1-haus');
+
+      // The six-dimension gate and both decisions stay inside the decision panel.
+      expect(decisionPanel?.querySelectorAll('.review-gate-list li')).toHaveLength(6);
+      expect(decisionPanel?.textContent).toContain('گیت شش‌بُعدی');
+      expect(decisionPanel?.textContent).toContain('تأیید نهایی سردبیری');
+      expect(decisionPanel?.textContent).toContain('بازگرداندن برای اصلاح');
+
+      // Publication stays visibly disabled and approval is scoped to editorial review.
+      const context = rendered.container.querySelector('[data-publication="disabled"]');
+      expect(context).not.toBeNull();
+      expect(context?.textContent).toContain('انتشار بسته غیرفعال است');
+      expect(decisionPanel?.textContent).toContain('تصمیم این پنل فقط سردبیری است');
+      expect(decisionPanel?.textContent).toContain('انتشار در این نسخه غیرفعال می‌ماند');
+    } finally {
+      await rendered.unmount();
+    }
+  });
+
+  it('derives every workspace figure from the server rows, checks and media', async () => {
+    stubReviewFetch({
+      '/api/content/review': () =>
+        jsonResponse({ items: [{ ...itemHaus, mediaCount: 2 }, itemTisch, itemApproved] }),
+    });
+    const rendered = await renderServer();
+    const metric = (name: string) =>
+      rendered.container.querySelector(`[data-review-metric="${name}"]`)?.textContent?.trim();
+    try {
+      expect(rendered.container.querySelectorAll('[data-review-metric]')).toHaveLength(3);
+      expect(metric('queue-total')).toBe('۳');
+      expect(metric('checks-passed')).toBe('۰ از ۶');
+      expect(metric('media-count')).toBe('۲');
+
+      const queuePanel = rendered.container.querySelector(
+        '[data-review-panel="queue"]',
+      ) as HTMLElement;
+      await rendered.clickButton('Apfel', queuePanel);
+
+      // Selecting another server row re-derives the content panel and the check/media figures.
+      expect(
+        rendered.container.querySelector('[data-review-panel="content"]')?.textContent,
+      ).toContain('das Apfel');
+      expect(metric('checks-passed')).toBe('۶ از ۶');
+      expect(metric('media-count')).toBe('۰');
+
+      // No fabricated readiness or confidence figure is ever rendered.
+      expect(rendered.text).not.toContain('۹۲');
+      expect(rendered.text).not.toContain('آمادهٔ انتشار');
+      expect(rendered.text).not.toContain('اعتبار مدل');
+    } finally {
+      await rendered.unmount();
+    }
+  });
+
+  it('marks loading, unauthorized, error, empty and disabled states without review panels', async () => {
+    const gate = new Promise<Response>(() => {});
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => gate),
+    );
+    const loading = await renderServer();
+    try {
+      expect(loading.container.querySelector('[data-review-state="loading"]')).not.toBeNull();
+      expect(loading.text).toContain('در حال دریافت صف بررسی از سرور…');
+      expect(loading.container.querySelector('[data-review-panel]')).toBeNull();
+    } finally {
+      await loading.unmount();
+    }
+
+    stubReviewFetch({ '/api/content/review': () => jsonResponse({}, 401) });
+    const unauthorized = await renderServer();
+    try {
+      expect(
+        unauthorized.container.querySelector('[data-review-state="unauthorized"]'),
+      ).not.toBeNull();
+      expect(unauthorized.text).toContain('نشست امن معتبر نیست');
+      expect(unauthorized.container.querySelector('[data-review-panel]')).toBeNull();
+    } finally {
+      await unauthorized.unmount();
+    }
+
+    stubReviewFetch({
+      '/api/content/review': () => {
+        throw new Error('network down');
+      },
+    });
+    const failed = await renderServer();
+    try {
+      expect(failed.container.querySelector('[data-review-state="error"]')).not.toBeNull();
+      expect(failed.container.querySelector('button')?.textContent).toContain('تلاش دوباره');
+      expect(failed.container.querySelector('[data-review-panel]')).toBeNull();
+    } finally {
+      await failed.unmount();
+    }
+
+    stubReviewFetch({ '/api/content/review': () => jsonResponse({ items: [] }) });
+    const empty = await renderServer();
+    try {
+      expect(empty.container.querySelector('[data-review-state="empty"]')).not.toBeNull();
+      expect(empty.text).toContain('صف بررسی خالی است؛ هیچ کارتی در انتظار بررسی نیست.');
+      expect(empty.container.querySelector('[data-review-panel]')).toBeNull();
+    } finally {
+      await empty.unmount();
+    }
+
+    stubReviewFetch({ '/api/content/review': () => jsonResponse({}, 404) });
+    const disabled = await renderServer();
+    try {
+      expect(disabled.container.querySelector('[data-review-state="disabled"]')).not.toBeNull();
+      expect(disabled.text).toContain('پیش‌نمایش محلی');
+      expect(disabled.container.querySelector('[data-review-panel]')).toBeNull();
+    } finally {
+      await disabled.unmount();
+    }
+  });
+});
