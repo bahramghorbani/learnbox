@@ -4,10 +4,10 @@
 
 ## Active work
 
-### LB-DS-059 — Queue continuity and next-workstream registration
+### PR #270 post-merge queue reconciliation
 
-- **Status:** review requested on `docs/queue-next-workstreams` from exact `origin/main` `c39fd610bce0fa793aea77996f6c9b4a389c0442`.
-- **Outcome:** reconcile LB-DS-055 and LB-DS-017 with their verified merged history, remove the stale LB-DS-055 review step below, and register bounded follow-up work without authorizing uploads, database writes, activation, release or Production changes.
+- **Status:** in progress on `docs/post270-queue-reconcile` from verified PR #270 merge `b1ecb700db1ccfd1c6f7c3c039ec87887bfcc85c`.
+- **Outcome:** record LB-DS-059 as accepted with its independently reviewed head and seven successful final-head contexts, while preserving the exact-base and external-side-effect gates for LB-DS-060, LB-DS-061 and LB-DS-062.
 
 ### LB-DS-056 — Admin content-review visual completion
 
@@ -150,10 +150,10 @@
 
 ## Immediate execution order
 
-1. Merge the docs-only LB-DS-059 continuity correction after independent exact-head review and green CI.
-2. Extract LB-DS-057's deterministic offline attachment-preparation artifacts onto that exact main baseline, excluding all already-merged sidebar lineage and preserving `attachmentAllowed: false`, no private URLs and no upload.
-3. Produce a decision-ready isolated private-storage contract and read-only preflight. Do not upload or attach media until the target is proven isolated from Production and explicitly approved.
-4. After that contract fixes the attestation shape, implement LB-DS-062's default-off store-identity guard with RED→GREEN tests; do not execute its upload path.
+1. Merge this PR #270 post-merge reconciliation after independent exact-head review and green CI.
+2. Create LB-DS-060 from that exact new `origin/main`, extract only its nine authorized offline-preparation/status paths, and keep it local-only with no push or upload.
+3. In a separate worktree from the same exact baseline, begin LB-DS-061 documentation and read-only preflight; stop at the consequential owner decision for selecting or creating an isolated storage target.
+4. After LB-DS-061 fixes and merges the non-secret attestation shape, implement LB-DS-062's default-off store-identity guard with RED→GREEN tests; do not execute its upload path.
 5. Keep the merged M1-D client reconciliation path dormant; the bounded reconciliation GET exists, but native composition, auth, runtime flags and deployment remain separate owner-gated operations.
 
 ## Owner-approved product decisions captured in M0
