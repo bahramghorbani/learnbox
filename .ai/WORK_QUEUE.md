@@ -25,7 +25,7 @@ start. Historical tasks remain for traceability and must not be duplicated.
   cursor capture/persistence merged in PR #170; the read-side cursor exposure in
   `GET /api/learner/state` **merged** in PR #171 (LB-DS-024, merge commit `0057419`) and the
   per-event cursor binding **merged** in PR #172 (LB-DS-025, merge commit `caa3a39`); request serialization and server request-boundary parsing are merged; route/client flag enablement remain
-  separate serial, review-gated M1-D queue tasks; client transport serialization now accepts and sends the stored valid decimal-string cursor without enabling production sync; the dormant review POST route request-boundary parser integration (Slice 1d) is merged in PR #192 at merge commit `9c6c5e0` (report `.ai/worker-reports/LB-DS-M1D-ROUTE-INTEGRATION.md`, appendix Slice 1d in `docs/architecture/M1D_SYNC_PERSISTENCE_SLICE1.md`); network sync remains dormant — the documented wire contract is snapshot-only (no delta endpoint exists), so flag enablement and wire-contract/delta-endpoint work remain separate review-gated M1-D queue tasks; seed/catalog implementation remains a
+  separate serial, review-gated M1-D queue tasks; client transport serialization now accepts and sends the stored valid decimal-string cursor without enabling production sync; the dormant review POST route request-boundary parser integration (Slice 1d) is merged in PR #192 at merge commit `9c6c5e0` (report `.ai/worker-reports/LB-DS-M1D-ROUTE-INTEGRATION.md`, appendix Slice 1d in `docs/architecture/M1D_SYNC_PERSISTENCE_SLICE1.md`); network sync remains dormant — the bounded reconciliation GET and hardened response semantics are merged in PRs #209 and #219, while native composition and all route/client flag enablement remain separate review-gated M1-D tasks; seed/catalog implementation remains a
   separate owner/review-gated task; independent functional QA of the merged server-wired slice is accepted in PR #175;
   browser visual/AX/keyboard acceptance is not claimed — it can be verified only against a staging deployment running the current merged build (staging is not confirmed current; the Chrome permission dialog blocker also remains).
 
@@ -521,11 +521,14 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 
 ## LB-DS-055
 
-- Status: review_requested
-- Dependencies: Starter-35 human QA plan identifies the exact unresolved items; the bounded `$1.25` provider budget was authorized. Private candidate-only generation and renewed human review are complete; no attachment or release gate is authorized.
+- Status: accepted
+- Dependencies: completed. The bounded `$1.25` provider budget was authorized; private candidate generation and renewed human review are complete. Attachment, release, seed and publication remain separate gates.
 - Executor: W4 content-factory worker plus mandatory human visual/audio/content reviewers
-- Base: exact current `origin/main` after LB-DS-054 only if staging review evidence is needed; otherwise a freshly recorded current main
+- Base: `9913538e47a78dee52486f8f175d2e54dd746071`
 - Branch: `content/start-15-candidate-media-readiness`
+- Head commit: `d33007caac5b8d6dbd8a2d7e44fa8a5fdf9ff419`
+- Draft PR: #264 — https://github.com/bahramghorbani/learnbox/pull/264 (merged)
+- Merge commit: `394fbd3275670f5777b47c3e99b600ac7cb44f30`
 - Risk: cost-gated-generated-media-and-human-content-quality
 - Specification: `docs/content/STARTER_CATALOG_35_RELEASE_READINESS.md`; ADR 0013; ADR 0016; PDR-003; PDR-008
 - Outcome: the remaining 15 Start items have immutable candidate-only media/provenance/QA evidence sufficient for a truthful 35-item release decision package, without attachment, approval, seed or publication.
@@ -537,9 +540,93 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 - Simulator required: yes
 - Draft PR required: yes
 - Merge allowed: yes
-- Blocked on: final exact-head CI and merge review only. The renewed human review approves all 45 candidate decisions; `start-a1-essen-sentence` and `start-a1-gross-word` retain explicit automated transcription discrepancies for a later release decision. Existing private candidates and the `$1.25` authorized budget do not authorize attachment, approval, seed or publication.
+- Blocked on: none in LB-DS-055. PR #264 merged after exact-head review and seven successful GitHub/Vercel contexts. Existing candidates remain private and unattached; attachment, approval, seed and publication still require their separate gates.
 - Must not touch: existing approved canonical Bobo appearance; database migration/execution; media attachment; `card_versions` approval/publication; catalog seed; pack membership; runtime flags; invitations; staging/Preview/Production; payments; auth/session/sync; landing
 - Acceptance: candidate-only image/audio evidence for the remaining 15 items is complete, immutable and human-reviewed enough to produce a truthful 35-item decision package while `seedable: false`, `publicationBlocked: true`, and 0/35 release-approved versions remain unchanged; no asset is attached or delivered to learners.
+
+## LB-DS-059
+
+- Status: review_requested
+- Executor: orchestrator (docs-only coordination)
+- Base: exact `c39fd610bce0fa793aea77996f6c9b4a389c0442` (`origin/main`, PR #269 merge)
+- Branch: `docs/queue-next-workstreams`
+- Risk: low — coordination truth only; no code, content, infrastructure or runtime mutation
+- Specification: `AI_BOOTSTRAP.md`; `.ai/WORKER_PROTOCOL.md`; `.ai/ORCHESTRATION_POLICY.md`; `.ai/WORKSTREAMS.md`; `docs/PRODUCT_STATUS.md`; `ROADMAP.md`
+- Outcome: reconcile stale LB-DS-055 and LB-DS-017 statuses against verified merged history and register the next bounded offline-media and isolated-storage workstreams without authorizing upload, attachment, database writes, activation, release or Production changes.
+- Allowed paths: `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-059.md`; `CURRENT_WORK.md`
+- Documentation updates: queue, worker report and current-work execution order only
+- Owner gates: none for this documentation-only reconciliation; private-media upload, attachment, approval, seed, release, publication, credentials and Production remain separately owner-gated
+- Handoff evidence: live PR #130/#264 merge identity and checks; task-status enumeration; exact diff; queue/documentation/continuity/security validators; Prettier; dashboard tests; `git diff --check`; independent exact-head review
+- Required checks: `pnpm verify:ai-worker-queue`; `pnpm verify:documentation-governance`; `pnpm verify:ai-continuity`; `pnpm verify:security`; `pnpm test:dashboard`; Prettier on touched files; `git diff --check`; independent fail-closed exact-head review
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+- Blocked on: none
+- Must not touch: application code; content/media evidence; private candidates; database/migrations; auth/session; provider configuration; credentials; runtime flags; deployments; staging/Preview/Production; Bobo assets
+- Acceptance: LB-DS-055 records exact PR #264 head/merge evidence and becomes accepted; LB-DS-017 records exact PR #130 merge evidence and becomes accepted/superseded by its accepted implementation chain; `CURRENT_WORK.md` no longer requests an already-completed LB-DS-055 review; the stale M1-D no-delta claim is corrected; LB-DS-060, LB-DS-061 and LB-DS-062 are bounded with explicit dependencies and closed external side effects.
+
+## LB-DS-060
+
+- Status: blocked
+- Executor: orchestrator plus W4 content-factory worker
+- Base: exact future `origin/main` after LB-DS-059 merges; replace this dependency with the merge SHA before execution
+- Branch: `feature/start15-media-attachment-clean`
+- Risk: content-media-preparation-boundary
+- Specification: `docs/content/STARTER_CATALOG_35_RELEASE_READINESS.md`; `docs/architecture/PRIVATE_MEDIA_DELIVERY.md`; ADR 0013; ADR 0016; PDR-003; PDR-008; `.ai/worker-reports/LB-DS-055.md`
+- Outcome: extract the already-reviewed LB-DS-057 deterministic offline attachment-preparation snapshot onto current main without inherited sidebar lineage, upload, attachment, private locator data or learner exposure.
+- Allowed paths: `scripts/build-start-15-candidate-media-attachment-draft.mjs`; `scripts/validate-start-15-candidate-media-attachment.mjs`; `scripts/validate-start-15-candidate-media-attachment.test.mjs`; `content/packs/learnbox-start/validation/start-a1-15-candidate-media-attachment-draft.json`; `package.json`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-057.md`; `CURRENT_WORK.md`; `docs/PRODUCT_STATUS.md`
+- Documentation updates: update only the queue, LB-DS-057 report, current-work and product-status records to identify the clean baseline and preserve the offline-only boundary
+- Owner gates: no gate for clean local extraction and deterministic verification. Push and merge remain unauthorized for this task; upload is prohibited until an isolated owner-approved private-storage target exists. Attachment, approval, seed, release and publication remain separate owner gates.
+- Handoff evidence: exact current-main base; parent-to-head changed paths; recorded focused RED/GREEN lineage; deterministic record regeneration; queue/documentation/continuity/security validators; Prettier/ESLint; `git diff --check`; independent exact-head review
+- Required checks: `pnpm test:start-15-candidate-attachment`; `pnpm verify:start-15-candidate-attachment`; `pnpm verify:ai-worker-queue`; `pnpm verify:documentation-governance`; `pnpm verify:security`; `pnpm verify:ai-continuity`; Prettier and ESLint on touched files; `git diff --check`; independent fail-closed exact-head review
+- Simulator required: no
+- Draft PR required: no
+- Merge allowed: no
+- Blocked on: LB-DS-059 must merge so the clean extraction uses its exact queue baseline. The real upload remains blocked on LB-DS-061 plus explicit approval of an isolated target.
+- Must not touch: private package files or manifest; delivery routes; private-media attestation imports; database/migrations; Admin review stores/routes; card attachments; review checks/decisions; catalog seed; runtime flags/secrets; deployment or any staging/Preview/Production configuration; learner apps; Bobo assets
+- Acceptance: the clean local branch differs from its exact current-main base only by the nine listed preparation/status paths; the generated record describes 15 items/45 expected assets with `prepared_awaiting_private_upload`, `attachmentAllowed: false`, `uploadPerformed: false`, zero attached assets and no private URL/path/checksum/size; all focused and governance checks pass; no push, upload or external mutation occurs.
+
+## LB-DS-061
+
+- Status: blocked
+- Executor: W7 infrastructure/release worker with high-reasoning security review
+- Base: exact future `origin/main` after LB-DS-059 merges; replace this dependency with the merge SHA before execution
+- Branch: `docs/isolated-private-media-storage-contract`
+- Risk: security-sensitive-production-adjacent-object-storage-boundary
+- Specification: `docs/architecture/PRIVATE_MEDIA_DELIVERY.md`; `docs/content/STARTER_CATALOG_35_RELEASE_READINESS.md`; infrastructure deployment contracts
+- Outcome: produce a decision-ready isolated private-storage contract and read-only preflight that proves namespace/account/project separation, least-privilege credentials, retention, rollback and no Production reach before any media upload is authorized.
+- Allowed paths: `docs/architecture/PRIVATE_MEDIA_DELIVERY.md`; `docs/operations/ISOLATED_PRIVATE_MEDIA_STORAGE.md`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-061.md`; `CURRENT_WORK.md`; `docs/PRODUCT_STATUS.md`
+- Documentation updates: record only verified current-state findings, proposed isolation options, explicit unknowns and the exact later owner decision; do not record secrets, provider tokens, object locators or private URLs
+- Owner gates: selecting/creating the isolated provider target, entering credentials, any paid plan, upload, attachment, runtime activation, deployment and Production-adjacent mutation require later explicit owner approval
+- Handoff evidence: live read-only inventory of repository and server configuration without secret values; shared-store risk proof; option matrix; failure/rollback criteria; validators; Prettier; `git diff --check`; independent security review
+- Required checks: secret-free repository scan; `pnpm verify:documentation-governance`; `pnpm verify:ai-worker-queue`; `pnpm verify:security`; `pnpm verify:ai-continuity`; Prettier on touched files; `git diff --check`; independent high-reasoning security/architecture review
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+- Blocked on: LB-DS-059 must merge and establish the exact base. Contract drafting and read-only preflight may then proceed; provider selection, credentials and external creation remain owner-gated.
+- Must not touch: provider resources; credentials; object uploads/deletes; existing shared Blob store; database/migrations; delivery routes; attachment records; review decisions; runtime flags; deployments; DNS/TLS; staging/Preview/Production; Bobo assets
+- Acceptance: the contract distinguishes provider target creation, private upload, receipt/attestation, persisted attachment, guarded delivery, review approval, seed and publication as separate transitions; proves how isolation will be verified before upload; exposes no secret or object locator; ends with one minimum consequential owner decision and a rollback-safe execution checklist.
+
+## LB-DS-062
+
+- Status: blocked
+- Executor: W4 content-factory worker with independent high-reasoning security review
+- Base: exact future `origin/main` after LB-DS-061 merges; replace this dependency with the merge SHA before execution
+- Branch: `fix/private-media-store-identity-guard`
+- Risk: security-sensitive-private-object-write-boundary
+- Specification: LB-DS-061 isolated-storage contract; `docs/architecture/PRIVATE_MEDIA_DELIVERY.md`; `scripts/upload-start-slice-private-media.mjs`
+- Outcome: make the private-media upload command fail closed before importing or invoking Blob write APIs unless explicit local-only isolated-store identity and owner-approval attestations match the resolved runtime store identity and reject the known shared Production-attached target.
+- Allowed paths: `scripts/upload-start-slice-private-media.mjs`; `scripts/upload-start-slice-private-media.test.mjs`; `scripts/validate-private-media-upload-boundary.mjs`; `.env.example`; `package.json`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-062.md`; `CURRENT_WORK.md`; `docs/PRODUCT_STATUS.md`
+- Documentation updates: record the default-off guard, exact tested failure modes and unexecuted upload path; do not record any store ID, token, object locator or private URL
+- Owner gates: no gate for test-first fail-closed implementation. Any provider target creation, credentials, paid plan, upload execution, attachment, activation, deployment, approval, seed, release or publication remains separately owner-gated.
+- Handoff evidence: RED then GREEN missing/mismatched/shared-target tests proving exit before Blob import/write; dry-run inventory check; existing private-media delivery validator; queue/documentation/continuity/security validators; Prettier/ESLint; `git diff --check`; independent security review
+- Required checks: focused RED/GREEN Node tests; `pnpm verify:private-media-upload-boundary`; `pnpm verify:private-media-delivery`; `pnpm verify:ai-worker-queue`; `pnpm verify:documentation-governance`; `pnpm verify:security`; `pnpm verify:ai-continuity`; Prettier/ESLint on touched files; `git diff --check`; independent fail-closed security review
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+- Blocked on: LB-DS-061 must define the non-secret attestation shape and merge first. Execution of the guarded upload remains blocked on a separately approved isolated target and owner-authenticated credentials.
+- Must not touch: provider resources; real credentials/store IDs/object locators; candidate binaries; actual upload/list/head/delete calls in tests; existing shared store; database/migrations; delivery routes; card attachments; review decisions; runtime flags; deployments; DNS/TLS; staging/Preview/Production; Bobo assets
+- Acceptance: without every explicit isolated-target attestation the execute path exits before loading Blob write capabilities; mismatched or known-shared identity is rejected; tests prove zero write invocation; dry-run remains non-mutating; no real secret, provider call, object or environment change occurs.
 
 ## LB-DS-058
 
@@ -1029,10 +1116,11 @@ Implement the dormant Persian-first native auth UI surface only: phone entry and
 
 ## LB-DS-017
 
-- Status: blocked
-- Executor: high-reasoning design review, then dedicated UI worker
+- Status: accepted
+- Executor: high-reasoning design review, followed by the separately accepted LB-DS-018 through LB-DS-020 implementation chain
 - Base: main at `d6bacdf`
 - Branch: `docs/lb-ds-017-native-auth-ui-brief`
+- Merge commit: `fd141cc981459a8ff740faf684f98e1011dd087d` (PR #130 merged)
 - Risk: critical-mobile-ui-ux
 - Specification: `docs/superpowers/specs/2026-08-26-native-auth-ui-design-brief.md`
 - Allowed paths: `docs/superpowers/specs/2026-08-26-native-auth-ui-design-brief.md`; `CURRENT_WORK.md`
