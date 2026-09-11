@@ -592,9 +592,9 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 
 ## LB-DS-061
 
-- Status: blocked
+- Status: review_requested
 - Executor: W7 infrastructure/release worker with high-reasoning security review
-- Base: exact future `origin/main` after the PR #270 post-merge reconciliation lands; replace this dependency with that merge SHA before execution
+- Base: exact `24eafe7b5eb12ff7786546e97a30dd95137a1bac` (`origin/main`, PR #271 merge)
 - Branch: `docs/isolated-private-media-storage-contract`
 - Risk: security-sensitive-production-adjacent-object-storage-boundary
 - Specification: `docs/architecture/PRIVATE_MEDIA_DELIVERY.md`; `docs/content/STARTER_CATALOG_35_RELEASE_READINESS.md`; infrastructure deployment contracts
@@ -607,7 +607,7 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 - Simulator required: no
 - Draft PR required: yes
 - Merge allowed: yes
-- Blocked on: PR #270 is merged at `b1ecb700db1ccfd1c6f7c3c039ec87887bfcc85c`; this post-merge reconciliation must land before contract drafting starts from its exact merge. Provider selection, credentials and external creation remain owner-gated.
+- Blocked on: independent exact-head security/architecture review. Provider selection, target creation, credentials and external mutation remain owner-gated after this docs-only contract is reviewed.
 - Must not touch: provider resources; credentials; object uploads/deletes; existing shared Blob store; database/migrations; delivery routes; attachment records; review decisions; runtime flags; deployments; DNS/TLS; staging/Preview/Production; Bobo assets
 - Acceptance: the contract distinguishes provider target creation, private upload, receipt/attestation, persisted attachment, guarded delivery, review approval, seed and publication as separate transitions; proves how isolation will be verified before upload; exposes no secret or object locator; ends with one minimum consequential owner decision and a rollback-safe execution checklist.
 
