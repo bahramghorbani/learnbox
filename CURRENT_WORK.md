@@ -4,10 +4,10 @@
 
 ## Active work
 
-### LB-DS-062 — Private-media store identity guard (review requested)
+### LB-DS-060 — Offline media attachment preparation (local-only)
 
-- **Status:** review requested on `fix/private-media-store-identity-guard` from exact PR #273 merge `199791feb08d41f36979a476920f006ff54a1b7c`.
-- **Outcome:** the execute path now requires the exact local attestation shape, explicit owner flag, matching isolated runtime/expected identities, rejection of the known shared target and OIDC credentials before Blob capabilities load. Dry-run remains non-mutating. No provider target, credential, upload, attachment, delivery, review, seed, release or deployment action is authorized.
+- **Status:** local-only extraction must be rebuilt from exact PR #274 merge `63898012741335bb33f3ab4a8ad2fafe796c767b`; no push, PR, merge, provider access or upload is authorized.
+- **Outcome:** retain only deterministic candidate-attachment preparation for 15 items / 45 expected assets, with zero attachments, private locators, upload, review decision, seed, delivery or release change.
 
 ### LB-DS-056 — Admin content-review visual completion
 
@@ -150,9 +150,8 @@
 
 ## Immediate execution order
 
-1. Complete LB-DS-062's independent exact-head security review and CI; do not execute its upload path.
-2. Rebuild and verify LB-DS-060's offline-only extraction from the exact PR #273 merge baseline; do not push, merge or upload.
-3. Keep the merged M1-D client reconciliation path dormant; the bounded reconciliation GET exists, but native composition, auth, runtime flags and deployment remain separate owner-gated operations.
+1. Rebuild and verify LB-DS-060's offline-only extraction from exact PR #274 merge `63898012741335bb33f3ab4a8ad2fafe796c767b`; do not push, merge or upload.
+2. Keep the merged M1-D client reconciliation path dormant; the bounded reconciliation GET exists, but native composition, auth, runtime flags and deployment remain separate owner-gated operations.
 
 ## Owner-approved product decisions captured in M0
 
