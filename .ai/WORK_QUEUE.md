@@ -498,7 +498,7 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 
 ## LB-DS-056
 
-- Status: review_requested
+- Status: accepted
 - Dependencies: LB-DS-049 (server-truthful review states) and LB-DS-054 (isolated Admin staging activation) are merged; both deliberately left the authenticated review interior as primitive sequential markup. No dependency on new content, media, migration, runtime-flag or deployment work.
 - Executor: W5 Admin UI worker (single serial worker) plus required independent exact-head fail-closed review
 - Base: exact `dd2200759cc0319f7429cc29e91fb20aa96aa5b6` (fresh `origin/main`, PR #265 merge)
@@ -507,16 +507,17 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 - Specification: `docs/design/D0_VISUAL_LANGUAGE.md`; `docs/design/DESIGN_STATUS.md`; `docs/design/UI_QA.md`; `docs/design/concepts/admin-content-review-concept-v1.png`; PDR-008; ADR 0016
 - Outcome: the authenticated Admin content-review interior becomes a production-quality Persian-first RTL operations dashboard — server-connected, publication-disabled context, queue panel, selected-content panel and six-dimension review/decision panel — aligned to the D0 visual language, with every fetch, CSRF, idempotency, check, decision and server-state behaviour preserved exactly.
 - Allowed paths: `apps/admin/app/components/ContentReviewWorkspace.tsx`; `apps/admin/app/globals.css`; `apps/admin/test/content-review-workspace.test.tsx`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-056.md`; `CURRENT_WORK.md`; `docs/PRODUCT_STATUS.md`; `docs/design/DESIGN_STATUS.md`; `docs/design/UI_QA.md`
-- Documentation updates: record the unmerged, locally verified implementation in the queue/report, current-work, product status and design status/QA documents; describe it as not deployed, not browser-verified and not accepted.
+- Documentation updates: record the merged implementation, exact staging image/probes and owner visual acceptance without elevating that acceptance into any content check, decision, attachment, seed or publication approval.
 - Owner gates: none beyond the standing exact-head review, CI and deployment gate. The worker must not self-approve visual quality; browser/staging visual and accessibility acceptance remains a separate owner-reviewed gate.
 - Handoff evidence: recorded RED then GREEN focused test output, full Admin test/typecheck/build output, touched-file Prettier check, queue/documentation-governance/continuity/dashboard validator output and `git diff --check`, with the exact changed paths and the honest list of what was not verified.
 - Required checks: focused Admin content-review workspace test (RED then GREEN); full Admin tests; Admin typecheck and build; Prettier check on touched files; `pnpm verify:ai-worker-queue`; `pnpm verify:documentation-governance`; `pnpm verify:ai-continuity`; `pnpm test:dashboard`; `git diff --check`; independent fail-closed exact-head review of the unmerged branch
 - Simulator required: no
 - Draft PR required: yes
 - Merge allowed: yes
-- Blocked on: exact-head independent review, CI on the pushed head and the deployment gate only. No content, media, evidence, check/decision, release or publication mutation is authorized.
+- Blocked on: none for LB-DS-056. Any content/media check, editorial decision, attachment, seed, release or publication mutation remains separately unauthorized.
 - Must not touch: API routes, auth/session, database/migrations, content/media/evidence JSON, package manifests/lockfile, deployment/infrastructure, flags/secrets, learner apps, landing, Bobo assets, Production/staging
 - Acceptance: the authenticated ready state renders a labeled queue/content/decision composition whose only figures derive from the current server `items`, the selected row's checks and its media count, with German IDs/text kept LTR, visible focus, ≥44px controls, reduced-motion support and no horizontal overflow at 390px; loading/disabled/unauthorized/error/empty states stay truthful and visually coherent; the six-dimension gate keeps its exact semantics and final approval stays disabled until all six dimensions pass; no fabricated metric, thumbnail, readiness claim, bulk approval or automatic check write is introduced.
+- Accepted evidence: final PR head `1632ead2fcbf3d12b1b451e3f6af2c8c8574a8de` passed independent fail-closed review and seven terminal GitHub/Vercel checks, then merged as PR #266 at `e4e80dcc74794f66312993853c4545bb678b8bd9`. That exact merge was built as immutable image `learnbox-admin:e4e80dcc74794f66312993853c4545bb678b8bd9` and deployed only to isolated Admin staging; the container is healthy, the served stylesheet contains the authenticated interior rules, protected anonymous probes remain fail-closed/no-store, learner services retain their previous images, and the owner accepted the authenticated interior visually after a hard refresh. No check, decision, media attachment, seed or publication was written.
 
 ## LB-DS-055
 

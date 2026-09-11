@@ -6,7 +6,11 @@
 
 ### LB-DS-056 — Admin content-review visual completion
 
-- **Status:** implemented and locally verified in Draft PR #266 on `feature/admin-review-visual-completion` (base `dd220075`, fresh `origin/main`); **unmerged, not deployed and not accepted.** The authenticated `ServerBackedContentReview` ready state is now a labeled RTL operations dashboard — server-connected/publication-disabled context header, queue panel, selected-content panel and six-dimension review/decision panel — backed by focused RED-then-GREEN acceptance tests, the full Admin suite (28 files / 170 tests), Admin typecheck/build and repository validators. A first independent review blocked a shell-wide contrast regression; the follow-up removes that override and adds a regression test. Every fetch, CSRF, idempotency, check, decision and server-state path is unchanged. Final-head browser/staging acceptance, independent review, CI and deployment remain outstanding.
+- **Status:** accepted. PR #266 passed independent exact-head review and seven terminal checks, merged at `e4e80dcc`, and that exact immutable Admin image is healthy on isolated staging. The deployed CSS contains the authenticated queue/content/decision composition; protected anonymous probes remain fail-closed/no-store; learner services and Production are unchanged. The owner hard-refreshed, entered the authenticated interior and accepted the corrected visual result. No content check, editorial decision, media attachment, seed or publication was written.
+
+### Next owner-gated content-review operation
+
+- **Status:** blocked on an explicit content decision, not engineering readiness. The next milestone-critical operation would record human checks/editorial decisions for the reviewed candidate subset in Admin staging. Visual acceptance of LB-DS-056 does not authorize those writes. Media attachment, catalog seed, release and publication remain separate later gates.
 
 ### Starter Catalog 35 release gates
 
