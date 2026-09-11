@@ -541,6 +541,23 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 - Must not touch: existing approved canonical Bobo appearance; database migration/execution; media attachment; `card_versions` approval/publication; catalog seed; pack membership; runtime flags; invitations; staging/Preview/Production; payments; auth/session/sync; landing
 - Acceptance: candidate-only image/audio evidence for the remaining 15 items is complete, immutable and human-reviewed enough to produce a truthful 35-item decision package while `seedable: false`, `publicationBlocked: true`, and 0/35 release-approved versions remain unchanged; no asset is attached or delivered to learners.
 
+## LB-DS-058
+
+- Status: review_requested
+- Executor: orchestrator
+- Base: exact `6553de6112c042471866439b09aa2161bcfa8f6c` (`origin/main`, PR #267 merge)
+- Branch: `fix/admin-sidebar-icons`
+- Risk: low — authenticated Admin shell iconography and semantics only; no auth, data, review, release, media, learner or deployment behavior
+- Specification: replace the five Unicode/font-glyph Admin navigation placeholders and collapse glyph with consistent inline line SVGs derived from the approved Admin concept; preserve labels, destinations, RTL placement, active treatment, responsive behavior and default-off operational boundaries.
+- Allowed paths: `apps/admin/app/components/AdminSidebar.tsx`; `apps/admin/app/globals.css`; `apps/admin/test/admin-sidebar-icons.test.tsx`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-058.md`; `CURRENT_WORK.md`; `docs/PRODUCT_STATUS.md`; `docs/design/UI_QA.md`
+- Required checks: recorded focused RED then GREEN `pnpm --filter @learnbox/admin exec vitest run test/admin-sidebar-icons.test.tsx`; full Admin tests; Admin typecheck and build; `pnpm verify:ai-worker-queue`; `pnpm verify:documentation-governance`; `pnpm verify:security`; `pnpm verify:ai-continuity`; Prettier/ESLint; desktop 1536×960, compact 1280×800 and mobile 390×844 browser evidence; independent exact-head review
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+- Blocked on: none
+- Must not touch: Admin authentication/session/passkey logic; review APIs/stores; cards/media/data; database/migrations; runtime flags/secrets; deployment; learner surfaces; Bobo assets
+- Acceptance: each of the five Admin menu items renders a stable 24×24 inline SVG using `currentColor`, the active item exposes `aria-current="page"`, the collapse action uses a vector chevron, no Unicode menu/collapse placeholder remains, desktop/compact/mobile layouts have zero document overflow, and all required checks plus independent review pass.
+
 ## LB-DS-049
 
 - Status: accepted
