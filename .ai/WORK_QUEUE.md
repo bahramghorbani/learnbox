@@ -595,7 +595,7 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 - Status: review_requested
 - Executor: W7 infrastructure/release worker with high-reasoning security review
 - Base: exact `24eafe7b5eb12ff7786546e97a30dd95137a1bac` (`origin/main`, PR #271 merge)
-- Branch: `docs/isolated-...[truncated]
+- Branch: `docs/isolated-private-media-storage-contract`
 - Risk: security-sensitive-production-adjacent-object-storage-boundary
 - Specification: `docs/architecture/PRIVATE_MEDIA_DELIVERY.md`; `docs/content/STARTER_CATALOG_35_RELEASE_READINESS.md`; infrastructure deployment contracts
 - Outcome: produce a decision-ready isolated private-storage contract and read-only preflight that proves namespace/account/project separation, least-privilege credentials, retention, rollback and no Production reach before any media upload is authorized.
