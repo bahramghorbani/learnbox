@@ -4,6 +4,11 @@
 
 ## Active work
 
+### LB-DS-059 — Queue continuity and next-workstream registration
+
+- **Status:** review requested on `docs/queue-next-workstreams` from exact `origin/main` `c39fd610bce0fa793aea77996f6c9b4a389c0442`.
+- **Outcome:** reconcile LB-DS-055 and LB-DS-017 with their verified merged history, remove the stale LB-DS-055 review step below, and register bounded follow-up work without authorizing uploads, database writes, activation, release or Production changes.
+
 ### LB-DS-056 — Admin content-review visual completion
 
 - **Status:** accepted. PR #266 passed independent exact-head review and seven terminal checks, merged at `e4e80dcc`, and its immutable image is retained for rollback after PR #268 replaced it on isolated staging with `351f8e3`. The deployed PR #268 shell preserves the authenticated queue/content/decision composition and adds the accepted SVG sidebar icons; protected anonymous read probes remain fail-closed/no-store; learner services and Production are unchanged. The owner hard-refreshed, entered the authenticated interior, accepted the corrected content-review visual result, and later accepted all five deployed line icons plus the collapse chevron. No content check, editorial decision, attachment, approval, seed or publication occurred.
@@ -145,16 +150,11 @@
 
 ## Immediate execution order
 
-1. Independently review LB-DS-055's private 15-item candidate package, including the recorded 28/30 automated transcription result and the renewed 45/45 human visual/listening decisions. This remains candidate-only: no attachment, check/decision write, seed, publication or learner delivery.
-2. Keep the merged M1-D client reconciliation path dormant. The cursor/watermark policy is approved in
-   ADR 0014; server-core (PR #169), client-side cursor capture/persistence (PR #170),
-   read-side cursor exposure (PR #171/LB-DS-024) and per-event cursor binding (PR #172/LB-DS-025)
-   are merged, as are request serialization (PR #184) and the dormant review POST route
-   request-boundary parser integration, Slice 1d (PR #192 at `9c6c5e0`); network sync remains
-   dormant. The reconciliation GET and its hardened delta-response semantics are merged in PRs
-   #209 and #219, and the strict Flutter client/coordinator merged in PR #260 at `38e03bd`; native
-   composition, auth, flag enablement and deployment remain separate owner-gated operations.
-3. Re-run browser visual and accessibility QA only against a staging deployment running the current merged build (staging is not confirmed current); the Chrome permission blocker must also be cleared. Do not treat the current functional QA as visual acceptance.
+1. Merge the docs-only LB-DS-059 continuity correction after independent exact-head review and green CI.
+2. Extract LB-DS-057's deterministic offline attachment-preparation artifacts onto that exact main baseline, excluding all already-merged sidebar lineage and preserving `attachmentAllowed: false`, no private URLs and no upload.
+3. Produce a decision-ready isolated private-storage contract and read-only preflight. Do not upload or attach media until the target is proven isolated from Production and explicitly approved.
+4. After that contract fixes the attestation shape, implement LB-DS-062's default-off store-identity guard with RED→GREEN tests; do not execute its upload path.
+5. Keep the merged M1-D client reconciliation path dormant; the bounded reconciliation GET exists, but native composition, auth, runtime flags and deployment remain separate owner-gated operations.
 
 ## Owner-approved product decisions captured in M0
 
