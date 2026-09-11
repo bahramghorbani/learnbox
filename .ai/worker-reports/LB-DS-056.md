@@ -48,7 +48,7 @@ pnpm --filter @learnbox/admin exec vitest run test/content-review-workspace.test
 | #   | Check                                       | Result                                                                 |
 | --- | ------------------------------------------- | ---------------------------------------------------------------------- |
 | 1   | focused Admin content-review workspace test | PASS after RED — 15/15, single file                                    |
-| 2   | full Admin tests                            | PASS — 28 files, 169 tests                                             |
+| 2   | full Admin tests                            | PASS — 28 files, 170 tests                                             |
 | 3   | Admin typecheck and build                   | PASS — `tsc --noEmit` clean; `next build` emitted the full route table |
 | 4   | Prettier check on touched files             | PASS — all touched files use Prettier code style                       |
 | 5   | `pnpm verify:ai-worker-queue`               | PASS                                                                   |
