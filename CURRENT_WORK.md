@@ -4,9 +4,9 @@
 
 ## Active work
 
-### LB-DS-063 — Post-PR #272 reconciliation
+### LB-DS-063 — Post-PR #272 reconciliation (review requested)
 
-- **Status:** in progress from exact PR #272 merge `a13862f1c9ee7f57adcde7547c960038f1cbff75`.
+- **Status:** review requested on `docs/post272-reconcile` from exact PR #272 merge `a13862f1c9ee7f57adcde7547c960038f1cbff75`.
 - **Outcome:** record LB-DS-061 as accepted, remove its stale review request and establish the exact post-reconciliation baseline for LB-DS-060/LB-DS-062. No provider, credential, upload, attachment, delivery, review, seed, release or deployment action is authorized.
 
 ### LB-DS-056 — Admin content-review visual completion
