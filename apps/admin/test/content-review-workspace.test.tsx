@@ -2,6 +2,8 @@
 
 import { act, createElement, Fragment, type FunctionComponent } from 'react';
 import { createRoot } from 'react-dom/client';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ServerBackedContentReview } from '../app/components/ContentReviewWorkspace.js';
@@ -706,5 +708,16 @@ describe('ServerBackedContentReview (authenticated review composition)', () => {
     } finally {
       await disabled.unmount();
     }
+  });
+
+  it('keeps the authenticated shell true-white without weakening legacy control contrast', () => {
+    const css = readFileSync(resolve(process.cwd(), 'app/globals.css'), 'utf8');
+    const shellTokens = css.match(/\.admin-shell\s*\{([^}]*)\}/)?.[1] ?? '';
+
+    expect(shellTokens).toContain('--canvas: #fff;');
+    expect(shellTokens).not.toContain('--purple:');
+    expect(css).toContain(".server-queue-row[aria-pressed='true']");
+    expect(css).toContain('border-color: var(--primary);');
+    expect(css).toContain('outline: 3px solid var(--focus-ring);');
   });
 });

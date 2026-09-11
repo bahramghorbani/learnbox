@@ -94,9 +94,10 @@ button {
   font-size: 13px;
 }
 .admin-shell {
-  /* Authenticated interior tokens. The sign-in surface keeps the untouched :root palette. */
-  --purple: #4d6bfe;
-  --canvas: #fffaf4;
+  /* Keep the approved true-white Admin canvas and the legacy AA action colour. */
+  --primary: #4d6bfe;
+  --focus-ring: #25213b;
+  --canvas: #fff;
   --surface: #fff;
   --ink-strong: #1e293b;
   --ink-muted: #64748b;
@@ -652,7 +653,7 @@ button {
   border-radius: 12px;
 }
 .review-metrics dt {
-  color: var(--ink-muted);
+  color: var(--ink-strong);
   font-size: 12px;
 }
 .review-metrics dd {
@@ -711,9 +712,12 @@ button {
   font-size: 12px;
 }
 .server-queue-row[aria-pressed='true'] {
-  border-color: var(--purple);
+  border-color: var(--primary);
   background: var(--lavender-soft);
-  box-shadow: inset -3px 0 0 0 var(--purple);
+  box-shadow: inset -3px 0 0 0 var(--primary);
+}
+.server-queue-row[aria-pressed='true'] small {
+  color: var(--ink-strong);
 }
 .server-queue-row:hover {
   border-color: #c9cddb;
@@ -799,6 +803,14 @@ button {
   cursor: not-allowed;
   opacity: 0.6;
 }
+.server-review .retry-button {
+  padding: 10px 18px;
+  color: #fff;
+  background: var(--purple);
+  border: 1px solid var(--purple);
+  border-radius: 11px;
+  font-weight: 700;
+}
 .review-decision-panel .review-actions {
   padding: 0;
 }
@@ -809,8 +821,8 @@ button {
 }
 .review-workspace button:focus-visible,
 .server-review .retry-button:focus-visible {
-  outline: 3px solid var(--purple);
-  outline-offset: 2px;
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 3px;
 }
 @media (max-width: 1420px) {
   .review-workspace-grid {
@@ -862,14 +874,7 @@ button {
     font-size: 34px;
   }
 }
-@media (prefers-reduced-motion: reduce) {
-  .review-workspace,
-  .review-workspace * {
-    transition: none;
-    animation: none;
-    scroll-behavior: auto;
-  }
-}
+
 @media (max-width: 1420px) {
   .admin-sidebar {
     width: 86px;
