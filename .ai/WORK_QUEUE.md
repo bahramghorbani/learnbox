@@ -569,11 +569,32 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 - Acceptance: LB-DS-055 records exact PR #264 head/merge evidence and becomes accepted; LB-DS-017 records exact PR #130 merge evidence and becomes accepted/superseded by its accepted implementation chain; `CURRENT_WORK.md` no longer requests an already-completed LB-DS-055 review; the stale M1-D no-delta claim is corrected; LB-DS-060, LB-DS-061 and LB-DS-062 are bounded with explicit dependencies and closed external side effects.
 - Accepted evidence: exact head `f234baf5695e4cd9a3cbe566ac2902b28dfa0126` passed independent fail-closed review and all seven GitHub/Vercel contexts in Actions run `34628258415`, then merged as PR #270 at `b1ecb700db1ccfd1c6f7c3c039ec87887bfcc85c`. No application, content, provider, credential, upload, database, runtime, deployment, staging, Preview, Production, approval, seed, release or publication state changed.
 
+## LB-DS-063
+
+- Status: review_requested
+- Executor: orchestrator (docs-only post-merge reconciliation)
+- Base: exact `a13862f1c9ee7f57adcde7547c960038f1cbff75` (`origin/main`, PR #272 merge)
+- Branch: `docs/post272-reconcile`
+- Risk: low — coordination truth only; no application, provider, content or runtime mutation
+- Specification: LB-DS-061; `docs/operations/ISOLATED_PRIVATE_MEDIA_STORAGE.md`; `.ai/WORKER_PROTOCOL.md`; `.ai/ORCHESTRATION_POLICY.md`
+- Outcome: record PR #272's reviewed merge truth, close LB-DS-061, remove stale active-review prose, and keep LB-DS-060/LB-DS-062 blocked until this reconciliation supplies their exact new-main execution baseline.
+- Allowed paths: `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-061.md`; `.ai/worker-reports/LB-DS-063.md`; `CURRENT_WORK.md`
+- Documentation updates: queue, LB-DS-061/063 reports and current-work execution order only
+- Owner gates: none for this docs-only reconciliation. Provider target creation/cost acceptance, credentials, upload, attachment, runtime activation, review writes, seed, release and publication remain separate owner gates.
+- Handoff evidence: exact PR #272 head/merge identity; seven terminal-success checks; independent exact-head reviews; task-status enumeration; validators; Prettier; `git diff --check`
+- Required checks: `pnpm verify:ai-worker-queue`; `pnpm verify:documentation-governance`; `pnpm verify:security`; `pnpm verify:ai-continuity`; `pnpm test:dashboard`; Prettier on touched files; `git diff --check`; independent exact-head review
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+- Blocked on: final exact-head review and CI only; no external or runtime action is authorized.
+- Must not touch: application code; package manifests; content/media evidence; provider resources; credentials; uploads; database/migrations; auth/session; runtime flags; deployment; staging/Preview/Production; Bobo assets
+- Acceptance: LB-DS-061 records exact reviewed head `ac50c712604387c759560f25bf0c18bdcf31852e` and PR #272 merge `a13862f1c9ee7f57adcde7547c960038f1cbff75` as accepted; `CURRENT_WORK.md` no longer requests its completed review; LB-DS-060/LB-DS-062 remain fail-closed and point to this reconciliation as their final baseline dependency.
+
 ## LB-DS-060
 
 - Status: blocked
 - Executor: orchestrator plus W4 content-factory worker
-- Base: exact future `origin/main` after the PR #270 post-merge reconciliation lands; replace this dependency with that merge SHA before execution
+- Base: exact future `origin/main` after LB-DS-063 merges; replace this dependency with that merge SHA before resuming the local-only extraction
 - Branch: `feature/start15-media-attachment-clean`
 - Risk: content-media-preparation-boundary
 - Specification: `docs/content/STARTER_CATALOG_35_RELEASE_READINESS.md`; `docs/architecture/PRIVATE_MEDIA_DELIVERY.md`; ADR 0013; ADR 0016; PDR-003; PDR-008; `.ai/worker-reports/LB-DS-055.md`
@@ -586,13 +607,13 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 - Simulator required: no
 - Draft PR required: no
 - Merge allowed: no
-- Blocked on: PR #270 is merged at `b1ecb700db1ccfd1c6f7c3c039ec87887bfcc85c`; this post-merge reconciliation must land before the clean local extraction records its exact new-main base. The real upload remains blocked on LB-DS-061 plus explicit approval of an isolated target.
+- Blocked on: LB-DS-063 must merge so the clean local extraction can be rebuilt from an exact reconciled main baseline. The real upload remains blocked on a separately approved isolated target, owner-authenticated credentials and an accepted LB-DS-062 guard.
 - Must not touch: private package files or manifest; delivery routes; private-media attestation imports; database/migrations; Admin review stores/routes; card attachments; review checks/decisions; catalog seed; runtime flags/secrets; deployment or any staging/Preview/Production configuration; learner apps; Bobo assets
 - Acceptance: the clean local branch differs from its exact current-main base only by the nine listed preparation/status paths; the generated record describes 15 items/45 expected assets with `prepared_awaiting_private_upload`, `attachmentAllowed: false`, `uploadPerformed: false`, zero attached assets and no private URL/path/checksum/size; all focused and governance checks pass; no push, upload or external mutation occurs.
 
 ## LB-DS-061
 
-- Status: review_requested
+- Status: accepted
 - Executor: W7 infrastructure/release worker with high-reasoning security review
 - Base: exact `24eafe7b5eb12ff7786546e97a30dd95137a1bac` (`origin/main`, PR #271 merge)
 - Branch: `docs/isolated-private-media-storage-contract`
@@ -607,15 +628,19 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 - Simulator required: no
 - Draft PR required: yes
 - Merge allowed: yes
-- Blocked on: independent exact-head security/architecture review. Provider selection, target creation, credentials and external mutation remain owner-gated after this docs-only contract is reviewed.
+- Head commit: `ac50c712604387c759560f25bf0c18bdcf31852e`
+- Draft PR: #272 — https://github.com/bahramghorbani/learnbox/pull/272 (merged)
+- Merge commit: `a13862f1c9ee7f57adcde7547c960038f1cbff75`
+- Blocked on: none for the contract. Provider selection/creation, plan or cost acceptance, credentials and every external mutation remain separately owner-gated.
 - Must not touch: provider resources; credentials; object uploads/deletes; existing shared Blob store; database/migrations; delivery routes; attachment records; review decisions; runtime flags; deployments; DNS/TLS; staging/Preview/Production; Bobo assets
 - Acceptance: the contract distinguishes provider target creation, private upload, receipt/attestation, persisted attachment, guarded delivery, review approval, seed and publication as separate transitions; proves how isolation will be verified before upload; exposes no secret or object locator; ends with one minimum consequential owner decision and a rollback-safe execution checklist.
+- Accepted evidence: exact head `ac50c712604387c759560f25bf0c18bdcf31852e` passed a bounded independent review and a high-reasoning supervisor security/architecture review, plus all seven GitHub/Vercel contexts, then merged as PR #272 at `a13862f1c9ee7f57adcde7547c960038f1cbff75`. The PR was docs-only; no provider, credential, object, database, runtime, deployment, staging, Preview, Production, attachment, review, seed, release or publication state changed.
 
 ## LB-DS-062
 
 - Status: blocked
 - Executor: W4 content-factory worker with independent high-reasoning security review
-- Base: exact future `origin/main` after LB-DS-061 merges; replace this dependency with the merge SHA before execution
+- Base: exact future `origin/main` after LB-DS-063 merges; replace this dependency with that merge SHA before execution
 - Branch: `fix/private-media-store-identity-guard`
 - Risk: security-sensitive-private-object-write-boundary
 - Specification: LB-DS-061 isolated-storage contract; `docs/architecture/PRIVATE_MEDIA_DELIVERY.md`; `scripts/upload-start-slice-private-media.mjs`
@@ -628,7 +653,7 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 - Simulator required: no
 - Draft PR required: yes
 - Merge allowed: yes
-- Blocked on: LB-DS-061 must define the non-secret attestation shape and merge first. Execution of the guarded upload remains blocked on a separately approved isolated target and owner-authenticated credentials.
+- Blocked on: LB-DS-063 must merge and supply the exact reconciled main baseline. Guard implementation then requires no owner gate; executing the upload remains blocked on a separately approved isolated target and owner-authenticated credentials.
 - Must not touch: provider resources; real credentials/store IDs/object locators; candidate binaries; actual upload/list/head/delete calls in tests; existing shared store; database/migrations; delivery routes; card attachments; review decisions; runtime flags; deployments; DNS/TLS; staging/Preview/Production; Bobo assets
 - Acceptance: without every explicit isolated-target attestation the execute path exits before loading Blob write capabilities; mismatched or known-shared identity is rejected; tests prove zero write invocation; dry-run remains non-mutating; no real secret, provider call, object or environment change occurs.
 

@@ -4,10 +4,10 @@
 
 ## Active work
 
-### LB-DS-061 — Isolated private-media storage contract
+### LB-DS-063 — Post-PR #272 reconciliation (review requested)
 
-- **Status:** review requested on `docs/isolated-private-media-storage-contract` from exact PR #271 merge `24eafe7b5eb12ff7786546e97a30dd95137a1bac`.
-- **Outcome:** record the shared-store blocker, explicit unknowns, target isolation contract, non-secret attestation shape and a single owner decision. No provider, credential, upload, attachment, delivery, review, seed, release or deployment action is authorized.
+- **Status:** review requested on `docs/post272-reconcile` from exact PR #272 merge `a13862f1c9ee7f57adcde7547c960038f1cbff75`.
+- **Outcome:** record LB-DS-061 as accepted, remove its stale review request and establish the exact post-reconciliation baseline for LB-DS-060/LB-DS-062. No provider, credential, upload, attachment, delivery, review, seed, release or deployment action is authorized.
 
 ### LB-DS-056 — Admin content-review visual completion
 
@@ -150,9 +150,9 @@
 
 ## Immediate execution order
 
-1. Obtain independent security/architecture review of LB-DS-061; do not create a provider target or pull credentials.
-2. Finish LB-DS-060's independent exact-head review on its local-only branch; do not push, merge or upload.
-3. After LB-DS-061 merges, implement LB-DS-062's default-off store-identity guard with RED→GREEN tests; do not execute its upload path.
+1. Review and merge LB-DS-063's docs-only post-PR #272 reconciliation.
+2. From that exact merged baseline, implement LB-DS-062's default-off store-identity guard with RED→GREEN tests; do not execute its upload path.
+3. Rebuild and verify LB-DS-060's offline-only extraction from the reconciled baseline; do not push, merge or upload.
 4. Keep the merged M1-D client reconciliation path dormant; the bounded reconciliation GET exists, but native composition, auth, runtime flags and deployment remain separate owner-gated operations.
 
 ## Owner-approved product decisions captured in M0
