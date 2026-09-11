@@ -4,10 +4,10 @@
 
 ## Active work
 
-### PR #270 post-merge queue reconciliation
+### LB-DS-061 — Isolated private-media storage contract
 
-- **Status:** in progress on `docs/post270-queue-reconcile` from verified PR #270 merge `b1ecb700db1ccfd1c6f7c3c039ec87887bfcc85c`.
-- **Outcome:** record LB-DS-059 as accepted with its independently reviewed head and seven successful final-head contexts, while preserving the exact-base and external-side-effect gates for LB-DS-060, LB-DS-061 and LB-DS-062.
+- **Status:** review requested on `docs/isolated-private-media-storage-contract` from exact PR #271 merge `24eafe7b5eb12ff7786546e97a30dd95137a1bac`.
+- **Outcome:** record the shared-store blocker, explicit unknowns, target isolation contract, non-secret attestation shape and a single owner decision. No provider, credential, upload, attachment, delivery, review, seed, release or deployment action is authorized.
 
 ### LB-DS-056 — Admin content-review visual completion
 
@@ -150,11 +150,10 @@
 
 ## Immediate execution order
 
-1. Merge this PR #270 post-merge reconciliation after independent exact-head review and green CI.
-2. Create LB-DS-060 from that exact new `origin/main`, extract only its nine authorized offline-preparation/status paths, and keep it local-only with no push or upload.
-3. In a separate worktree from the same exact baseline, begin LB-DS-061 documentation and read-only preflight; stop at the consequential owner decision for selecting or creating an isolated storage target.
-4. After LB-DS-061 fixes and merges the non-secret attestation shape, implement LB-DS-062's default-off store-identity guard with RED→GREEN tests; do not execute its upload path.
-5. Keep the merged M1-D client reconciliation path dormant; the bounded reconciliation GET exists, but native composition, auth, runtime flags and deployment remain separate owner-gated operations.
+1. Obtain independent security/architecture review of LB-DS-061; do not create a provider target or pull credentials.
+2. Finish LB-DS-060's independent exact-head review on its local-only branch; do not push, merge or upload.
+3. After LB-DS-061 merges, implement LB-DS-062's default-off store-identity guard with RED→GREEN tests; do not execute its upload path.
+4. Keep the merged M1-D client reconciliation path dormant; the bounded reconciliation GET exists, but native composition, auth, runtime flags and deployment remain separate owner-gated operations.
 
 ## Owner-approved product decisions captured in M0
 
