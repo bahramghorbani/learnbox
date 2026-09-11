@@ -100,9 +100,9 @@ button {
   --surface: #fff;
   --ink-strong: #1e293b;
   --ink-muted: #64748b;
-  --line-soft: #e9e5df;
+  --line-soft: #e7e3ff;
   --apricot-soft: #fff1e3;
-  --lavender-soft: #f1f0ff;
+  --lavender-soft: #f3ecff;
   min-height: 100vh;
   display: flex;
   background: var(--canvas);
@@ -686,6 +686,10 @@ button {
 .server-queue-list {
   display: grid;
   gap: 8px;
+  max-height: min(70vh, 720px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
 }
 .server-queue-row {
   display: grid;
@@ -846,6 +850,9 @@ button {
   }
   .review-metrics > div {
     min-width: 0;
+  }
+  .server-queue-list {
+    max-height: 320px;
   }
   .review-panel,
   .server-card-detail {
