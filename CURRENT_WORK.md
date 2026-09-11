@@ -4,10 +4,10 @@
 
 ## Active work
 
-### LB-DS-063 — Post-PR #272 reconciliation (review requested)
+### LB-DS-062 — Private-media store identity guard (review requested)
 
-- **Status:** review requested on `docs/post272-reconcile` from exact PR #272 merge `a13862f1c9ee7f57adcde7547c960038f1cbff75`.
-- **Outcome:** record LB-DS-061 as accepted, remove its stale review request and establish the exact post-reconciliation baseline for LB-DS-060/LB-DS-062. No provider, credential, upload, attachment, delivery, review, seed, release or deployment action is authorized.
+- **Status:** review requested on `fix/private-media-store-identity-guard` from exact PR #273 merge `199791feb08d41f36979a476920f006ff54a1b7c`.
+- **Outcome:** the execute path now requires the exact local attestation shape, explicit owner flag, matching isolated runtime/expected identities, rejection of the known shared target and OIDC credentials before Blob capabilities load. Dry-run remains non-mutating. No provider target, credential, upload, attachment, delivery, review, seed, release or deployment action is authorized.
 
 ### LB-DS-056 — Admin content-review visual completion
 
@@ -150,10 +150,9 @@
 
 ## Immediate execution order
 
-1. Review and merge LB-DS-063's docs-only post-PR #272 reconciliation.
-2. From that exact merged baseline, implement LB-DS-062's default-off store-identity guard with RED→GREEN tests; do not execute its upload path.
-3. Rebuild and verify LB-DS-060's offline-only extraction from the reconciled baseline; do not push, merge or upload.
-4. Keep the merged M1-D client reconciliation path dormant; the bounded reconciliation GET exists, but native composition, auth, runtime flags and deployment remain separate owner-gated operations.
+1. Complete LB-DS-062's independent exact-head security review and CI; do not execute its upload path.
+2. Rebuild and verify LB-DS-060's offline-only extraction from the exact PR #273 merge baseline; do not push, merge or upload.
+3. Keep the merged M1-D client reconciliation path dormant; the bounded reconciliation GET exists, but native composition, auth, runtime flags and deployment remain separate owner-gated operations.
 
 ## Owner-approved product decisions captured in M0
 
