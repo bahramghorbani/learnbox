@@ -517,7 +517,7 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 - Blocked on: none for LB-DS-056. Any content/media check, editorial decision, attachment, seed, release or publication mutation remains separately unauthorized.
 - Must not touch: API routes, auth/session, database/migrations, content/media/evidence JSON, package manifests/lockfile, deployment/infrastructure, flags/secrets, learner apps, landing, Bobo assets, Production/staging
 - Acceptance: the authenticated ready state renders a labeled queue/content/decision composition whose only figures derive from the current server `items`, the selected row's checks and its media count, with German IDs/text kept LTR, visible focus, ≥44px controls, reduced-motion support and no horizontal overflow at 390px; loading/disabled/unauthorized/error/empty states stay truthful and visually coherent; the six-dimension gate keeps its exact semantics and final approval stays disabled until all six dimensions pass; no fabricated metric, thumbnail, readiness claim, bulk approval or automatic check write is introduced.
-- Accepted evidence: final PR head `1632ead2fcbf3d12b1b451e3f6af2c8c8574a8de` passed independent fail-closed review and seven terminal GitHub/Vercel checks, then merged as PR #266 at `e4e80dcc74794f66312993853c4545bb678b8bd9`. That exact merge was built as immutable image `learnbox-admin:e4e80dcc74794f66312993853c4545bb678b8bd9` and deployed only to isolated Admin staging; the container is healthy, the served stylesheet contains the authenticated interior rules, protected anonymous probes remain fail-closed/no-store, learner services retain their previous images, and the owner accepted the authenticated interior visually after a hard refresh. No check, decision, media attachment, seed or publication was written.
+- Accepted evidence: final PR head `1632ead2fcbf3d12b1b451e3f6af2c8c8574a8de` passed independent fail-closed review and seven terminal GitHub/Vercel checks, then merged as PR #266 at `e4e80dcc74794f66312993853c4545bb678b8bd9`. That exact merge was built as immutable image `learnbox-admin:e4e80dcc74794f66312993853c4545bb678b8bd9` and deployed only to isolated Admin staging, where it was healthy and served the authenticated interior rules; PR #268 later replaced it with `351f8e3`, and `e4e80dcc` is retained for rollback. No check, decision, media attachment, seed or publication was written.
 
 ## LB-DS-055
 
@@ -543,10 +543,13 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 
 ## LB-DS-058
 
-- Status: review_requested
+- Status: accepted
 - Executor: orchestrator
 - Base: exact `6553de6112c042471866439b09aa2161bcfa8f6c` (`origin/main`, PR #267 merge)
 - Branch: `fix/admin-sidebar-icons`
+- Head commit: `e446daaad19766c059b3a61cdd85bb147d46c964`
+- Draft PR: #268 — https://github.com/bahramghorbani/learnbox/pull/268 (merged)
+- Merge commit: `351f8e3bfbb512bd36c3b43346f496ce0003200e`
 - Risk: low — authenticated Admin shell iconography and semantics only; no auth, data, review, release, media, learner or deployment behavior
 - Specification: replace the five Unicode/font-glyph Admin navigation placeholders and collapse glyph with consistent inline line SVGs derived from the approved Admin concept; preserve labels, destinations, RTL placement, active treatment, responsive behavior and default-off operational boundaries.
 - Allowed paths: `apps/admin/app/components/AdminSidebar.tsx`; `apps/admin/app/globals.css`; `apps/admin/test/admin-sidebar-icons.test.tsx`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-058.md`; `CURRENT_WORK.md`; `docs/PRODUCT_STATUS.md`; `docs/design/UI_QA.md`
@@ -554,9 +557,10 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 - Simulator required: no
 - Draft PR required: yes
 - Merge allowed: yes
-- Blocked on: none
-- Must not touch: Admin authentication/session/passkey logic; review APIs/stores; cards/media/data; database/migrations; runtime flags/secrets; deployment; learner surfaces; Bobo assets
+- Blocked on: none; authenticated owner visual confirmation on isolated staging is complete.
+- Must not touch: Admin authentication/session/passkey logic; review APIs/stores; cards/media/data; database/migrations; runtime flags/secrets; learner surfaces; Bobo assets
 - Acceptance: each of the five Admin menu items renders a stable 24×24 inline SVG using `currentColor`, the active item exposes `aria-current="page"`, the collapse action uses a vector chevron, no Unicode menu/collapse placeholder remains, desktop/compact/mobile layouts have zero document overflow, and all required checks plus independent review pass.
+- Accepted evidence: exact head `e446daaad19766c059b3a61cdd85bb147d46c964` passed independent fail-closed review and all seven GitHub/Vercel contexts, then merged as PR #268 at `351f8e3bfbb512bd36c3b43346f496ce0003200e`. That exact merge was built as immutable image `learnbox-admin:351f8e3bfbb512bd36c3b43346f496ce0003200e` (`sha256:2f4f772318370753bab81065a64cabdf9631c9f9a63cbbb9bc9ecd420f1bb435`) and deployed only to isolated Admin staging. The container is healthy; anonymous session and review read probes remain `401` with `no-store`, bootstrap options remain `404`, landing and learner staging return `200`, the prior `e4e80dcc` image is retained for rollback, and Production is unchanged. The owner authenticated with Passkey, visually confirmed all five line icons and the collapse chevron, and accepted the deployed result. Axe and the full assistive-technology matrix remain unclaimed.
 
 ## LB-DS-049
 
