@@ -48,19 +48,27 @@ Independently checks acceptance criteria, user journey, security boundaries, acc
 - Keep worker fallbacks isolated; a cheap worker must not silently fall back to the supervisor tier.
 - Parallel work is allowed only when worktrees and allowed paths are disjoint and no contract dependency is unresolved.
 
-## Workstream map
+## Release-season workstream map
 
-| Workstream               | Primary role               | Can overlap                                         | Must wait for                          |
-| ------------------------ | -------------------------- | --------------------------------------------------- | -------------------------------------- |
-| D0 visual language       | W1 + design-capable worker | M1 contract audit                                   | M0                                     |
-| D1 learner UI kit        | design-capable worker + W8 | M1 contract audit                                   | D0                                     |
-| M1 online learning core  | W2 + W6                    | D0/D1 design, M2 content contracts, M3 UI if stable | M0                                     |
-| M2 content factory/admin | W4 + W5                    | M1 only on stable contracts                         | M0, content schema decisions           |
-| M3 profile/account       | W2 + W3                    | M1/M2 on disjoint paths                             | account/status contracts               |
-| M4 commerce              | W5 + W6                    | limited                                             | pack/catalog and entitlement contracts |
-| M5 native online         | W3 + W6 + W7               | none with payment activation                        | secure server gateway                  |
-| M6 beta hardening        | W7 + W8                    | content cadence                                     | M1–M5 release criteria                 |
-| M7/M8 store release      | W3/W5/W7/W8                | platform-specific work may overlap                  | beta evidence and owner approval       |
+The former M0–M8 map remains historical implementation provenance. Active delivery follows the bounded seasons in `ROADMAP.md`:
+
+| Season                             | Primary roles              | Safe overlap                                                 | Must wait for                                                  |
+| ---------------------------------- | -------------------------- | ------------------------------------------------------------ | -------------------------------------------------------------- |
+| S0 scope/canon freeze              | supervisor + W1 + W8       | none needed                                                  | current repository audit                                       |
+| S1 starter + Web alpha             | W4, then W2/W6, then W7/W8 | content review may overlap non-mutating Web test preparation | isolated media decision; 35/35 approval before seed/activation |
+| S2 operable product + premium pack | W4/W5 + W2/W6/W7           | premium content and disjoint account/ops paths               | stable S1 content/account contracts                            |
+| S3 Cafe Bazaar commerce            | W5/W6 + W8                 | limited UI work after contract lock                          | merchant/provider readiness and S2 pack                        |
+| S4 Android online candidate        | W3/W6/W7 + W8              | S3 only after auth/entitlement contracts stabilize           | non-SSO gateway and S1 server truth                            |
+| S5 beta/public release             | W7/W8 + owner              | defect fixes on disjoint paths                               | S1–S4 exit evidence                                            |
+
+Native iOS, direct Web payment and general AI-generation UX are post-v1 workstreams and must not consume v1 critical-path capacity.
+
+## Flow limits
+
+- Keep one active security-sensitive serial chain and at most two disjoint implementation workstreams.
+- Put status changes in the feature PR; a separate post-merge docs PR is exceptional.
+- Track delivery by season exit evidence, not merged-PR count.
+- Target at least 70% functional PRs and no more than 15% docs-only maintenance PRs over a rolling 30 days.
 
 ## Work item contract
 

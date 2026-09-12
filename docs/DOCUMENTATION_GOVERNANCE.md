@@ -6,6 +6,7 @@
 - `PRODUCT.md` — product definition and boundaries.
 - `docs/product/PRD.md` — release requirements.
 - `ROADMAP.md` — milestones and exit criteria.
+- `docs/product/MASTER_SPEC.md` — long-horizon vision only; lower precedence than current status, roadmap and PRD.
 - `docs/architecture/SYSTEM_CONTEXT.md` — system boundaries.
 - `.ai/WORK_QUEUE.md` — active milestone/workstream assignments.
 - `CURRENT_WORK.md` — only unmerged work.
@@ -54,6 +55,8 @@ At every merged milestone, the supervisor must:
 3. close or redirect the queue record;
 4. refresh `PROJECT_STATE.md` and `CURRENT_WORK.md`;
 5. confirm no active record points to a merged/deleted branch.
+
+Normal status reconciliation belongs in the feature PR. A separate post-merge documentation PR is exceptional and is justified only when the merge result or external state cannot be known before merge; routine reconciliation must not become a serial delivery stage.
 
 ## Validation
 

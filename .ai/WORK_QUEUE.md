@@ -5,6 +5,17 @@ start. Historical tasks remain for traceability and must not be duplicated.
 
 ## Active work registry
 
+### Current release execution
+
+- **S0 — Finish-line freeze:** in progress through LB-DS-065. It replaces the former milestone list as the active delivery model.
+- **S1 — Starter + Web closed alpha:** blocked on an owner-selected isolated private-media target, separate upload/attachment authorization, 35/35 human release approval, seed and controlled activation.
+- **S2 — Operable product + one premium pack:** partial foundations; starts after stable S1 contracts.
+- **S3 — Cafe Bazaar commerce MVP:** planned; provider account/product/terms are unmeasured external inputs.
+- **S4 — Android online candidate:** blocked on a non-SSO gateway and stable S1/S3 contracts.
+- **S5 — Closed beta + public v1.0:** planned. Planning target 2027-04-03; best 2027-01-30; outer case 2027-06-19 under `ROADMAP.md` assumptions.
+
+The M0–M8 records below retain implementation provenance only; they do not override the active season exit gates.
+
 - **M0 — Product truth and delivery reset:** accepted and merged in PR #146.
 - **D0 — Visual language:** accepted and merged in PR #150. Contract: `docs/design/D0_VISUAL_LANGUAGE.md`.
 - **D1 — Learner UI kit:** accepted and merged in PR #153. State board: `docs/design/D1_LEARNER_UI_KIT.md`.
@@ -30,6 +41,27 @@ start. Historical tasks remain for traceability and must not be duplicated.
   browser visual/AX/keyboard acceptance is not claimed — it can be verified only against a staging deployment running the current merged build (staging is not confirmed current; the Chrome permission dialog blocker also remains).
 
 ### Active grouped workstreams
+
+## LB-DS-065
+
+- Status: review_requested
+- Executor: supervisor plus independent product/architecture and release-estimation reviewers
+- Base: exact `dfede397a9f2ffdccdd7e7fe916688f9fdc6685e` (`origin/main`, PR #275 merge)
+- Branch: `docs/release-seasons-finish-line`
+- Risk: product-architecture-scope-and-release-forecast
+- Specification: `docs/PRODUCT_STATUS.md`; `ROADMAP.md`; `docs/product/PRD.md`; `docs/DOCUMENTATION_GOVERNANCE.md`; `docs/product/MASTER_SPEC.md`; `.ai/WORKSTREAMS.md`
+- Outcome: replace contradictory milestone/storyboard/release definitions with one bounded S0–S5 critical path, a measurable public-v1.0 finish line, explicit post-v1 exclusions and an evidence-based forecast that exposes owner/provider uncertainty.
+- Allowed paths: `AGENTS.md`; `ROADMAP.md`; `BACKLOG.md`; `CURRENT_WORK.md`; `.ai/WORKSTREAMS.md`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-065.md`; `docs/PRODUCT_STATUS.md`; `docs/DOCUMENTATION_GOVERNANCE.md`; `docs/storyboard/STATUS.md`; `docs/product/PRD.md`; `docs/product/MASTER_SPEC.md`; `docs/website/08_ROADMAP_AND_DEFINITION_OF_DONE.md`; `docs/operations/ISOLATED_PRIVATE_MEDIA_STORAGE.md`
+- Documentation updates: make the named canonical and historical-scope documents agree; do not alter product code, flags, providers or runtime state.
+- Owner gates: none for documentation architecture. Production, provider, payment, upload, content approval and publication remain separately gated.
+- Handoff evidence: live origin/PR baseline; independent architecture and critical-path audits; contradiction checklist; deterministic forecast dates; documentation/queue/security/continuity validators; Prettier; dashboard tests; `git diff --check`; independent exact-head review.
+- Required checks: `pnpm verify:ai-worker-queue`; `pnpm verify:documentation-governance`; `pnpm verify:security`; `pnpm verify:ai-continuity`; `pnpm test:dashboard`; Prettier on all changed files; `git diff --check`; independent exact-head product/architecture review; seven terminal GitHub/Vercel contexts before merge.
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+- Blocked on: none for drafting and review. Merge requires exact-head review and all required CI checks.
+- Must not touch: application code; package manifests/lockfiles; content/media records; database/migrations; auth/session; provider configuration; credentials; runtime flags; deployment; staging/Preview/Production; Bobo assets.
+- Acceptance: one canonical public-v1.0 definition names included/excluded scope, S0–S5 tasks, dependency order, measurable exit gates, owner/provider blockers, best/target/outer forecast and a reforecast method; the 30-stage, payment-in-alpha, iOS-in-v1 and 300–500-word authority contradictions no longer govern delivery; current LB-DS-060/064 status is reconciled without external side effects.
 
 ## LB-DS-026
 
@@ -596,7 +628,7 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 
 ## LB-DS-064
 
-- Status: review_requested
+- Status: accepted
 - Executor: orchestrator (docs-only post-merge reconciliation)
 - Base: exact `63898012741335bb33f3ab4a8ad2fafe796c767b` (`origin/main`, PR #274 merge)
 - Branch: `docs/post274-reconcile`
@@ -611,16 +643,20 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 - Simulator required: no
 - Draft PR required: yes
 - Merge allowed: yes
-- Blocked on: final exact-head review and CI only; no external or runtime action is authorized.
+- Head commit: `8f73398e30a69a1c0d082c39f53455e1df105231`
+- Draft PR: #275 — https://github.com/bahramghorbani/learnbox/pull/275 (merged)
+- Merge commit: `dfede397a9f2ffdccdd7e7fe916688f9fdc6685e`
+- Blocked on: none; PR #275 merged after exact-head review and seven successful checks. No external or runtime action was authorized.
 - Must not touch: application code; package manifests; content/media evidence; provider resources; credentials; uploads; database/migrations; auth/session; runtime flags; deployment; staging/Preview/Production; Bobo assets
 - Acceptance: LB-DS-062 records exact reviewed head `2c900da9641c990d89bd25c2a0c7c8804110ca05` and PR #274 merge `63898012741335bb33f3ab4a8ad2fafe796c767b` as accepted; `CURRENT_WORK.md` no longer requests its completed review; LB-DS-060 receives the exact merged baseline and remains local-only.
+- Accepted evidence: exact head `8f73398e30a69a1c0d082c39f53455e1df105231` passed independent exact-head review and all seven GitHub/Vercel checks, then merged as PR #275 at `dfede397a9f2ffdccdd7e7fe916688f9fdc6685e` on 2026-09-11T22:38:00Z.
 
 ## LB-DS-060
 
-- Status: blocked
+- Status: in_progress
 - Executor: orchestrator plus W4 content-factory worker
-- Base: exact future `origin/main` after LB-DS-064 merges; replace this dependency with that merge SHA before resuming the local-only extraction
-- Branch: `feature/start15-media-attachment-clean`
+- Base: exact `dfede397a9f2ffdccdd7e7fe916688f9fdc6685e` (`origin/main`, PR #275 merge)
+- Branch: local-only `local/start15-media-attachment-rebased` at reviewed head `aec94daf678322430cfe3ab34db44cd24b65d3b9`; no upstream, push or PR
 - Risk: content-media-preparation-boundary
 - Specification: `docs/content/STARTER_CATALOG_35_RELEASE_READINESS.md`; `docs/architecture/PRIVATE_MEDIA_DELIVERY.md`; ADR 0013; ADR 0016; PDR-003; PDR-008; `.ai/worker-reports/LB-DS-055.md`
 - Outcome: extract the already-reviewed LB-DS-057 deterministic offline attachment-preparation snapshot onto current main without inherited sidebar lineage, upload, attachment, private locator data or learner exposure.
@@ -632,7 +668,7 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 - Simulator required: no
 - Draft PR required: no
 - Merge allowed: no
-- Blocked on: LB-DS-064 must merge so the clean local extraction can be rebuilt from an exact reconciled main baseline. The real upload remains blocked on a separately approved isolated target, owner-authenticated credentials and an accepted LB-DS-062 guard.
+- Blocked on: none for the deterministic local extraction, which passed independent exact-head fail-closed review. The real upload remains blocked on a separately approved isolated target, owner-authenticated credentials and a distinct owner upload approval.
 - Must not touch: private package files or manifest; delivery routes; private-media attestation imports; database/migrations; Admin review stores/routes; card attachments; review checks/decisions; catalog seed; runtime flags/secrets; deployment or any staging/Preview/Production configuration; learner apps; Bobo assets
 - Acceptance: the clean local branch differs from its exact current-main base only by the nine listed preparation/status paths; the generated record describes 15 items/45 expected assets with `prepared_awaiting_private_upload`, `attachmentAllowed: false`, `uploadPerformed: false`, zero attached assets and no private URL/path/checksum/size; all focused and governance checks pass; no push, upload or external mutation occurs.
 

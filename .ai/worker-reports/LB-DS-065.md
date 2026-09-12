@@ -1,0 +1,22 @@
+# LB-DS-065 handoff
+
+- Task: LB-DS-065
+- Status: review requested
+- Branch: `docs/release-seasons-finish-line`
+- Base commit: `dfede397a9f2ffdccdd7e7fe916688f9fdc6685e` (PR #275 merge)
+- Head commit: read live from `gh pr view` after push; do not self-attest a stale SHA here
+- Draft PR: pending creation after the local commit
+- Scope completed: audited the live roadmap, PRD, capability status, storyboard, backlog, master specification, work queue, release operations and observed delivery history; replaced conflicting milestone models with a bounded S0–S5 dependency graph and one measurable Public v1.0 finish line.
+- Files changed: `AGENTS.md`; `ROADMAP.md`; `BACKLOG.md`; `CURRENT_WORK.md`; `.ai/WORKSTREAMS.md`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-065.md`; `docs/PRODUCT_STATUS.md`; `docs/DOCUMENTATION_GOVERNANCE.md`; `docs/storyboard/STATUS.md`; `docs/product/PRD.md`; `docs/product/MASTER_SPEC.md`; `docs/website/08_ROADMAP_AND_DEFINITION_OF_DONE.md`; `docs/operations/ISOLATED_PRIVATE_MEDIA_STORAGE.md`.
+- Public v1.0: learner Web/PWA plus Android/Cafe Bazaar, human-approved 35-item starter, one premium pack, one server-verified Cafe Bazaar entitlement path, operable Admin release/rollback, account/privacy/support and exercised release operations.
+- Explicit post-v1 scope: native iOS/StoreKit, direct Web bank payment, subscriptions, notifications, social/gamification, general AI-generation UX, personal-word server sync, broader catalog and non-critical Bobo/theme expansion.
+- Forecast: baseline 2026-09-12; closed-alpha best/target/outer 2026-10-10 / 2026-10-31 / 2026-12-05; public-v1.0 best/target/outer 2027-01-30 / 2027-04-03 / 2027-06-19. Forecast is conditional on owner response within five working days and will be recomputed from measured gate/provider lead times.
+- Independent pre-implementation review: two read-only reviewers confirmed roadmap contradictions, 0/35 release approval, media/owner gates, dormant runtime flags, absent provider adapter, excessive documentation churn and the need for a smaller v1.0 critical path. One proposed calling the Web alpha “v1.0”; the supervisor rejected that naming and retained the user's requested official-release endpoint as Android/Cafe Bazaar plus Web/PWA.
+- Reconciled truth: LB-DS-064/PR #275 is merged at `dfede397a9f2ffdccdd7e7fe916688f9fdc6685e`; LB-DS-060's deterministic preparation is independently reviewed at local-only `aec94daf678322430cfe3ab34db44cd24b65d3b9` and still authorizes no upload, push or merge.
+- Security/external effects: documentation only. No application code, package manifest, content/media record, provider, credential, database, runtime flag, deployment, Preview, Production, payment, upload, attachment, publication or release state changed.
+- Risks: forecast confidence remains low until owner review latency, isolated media setup, native gateway and Cafe Bazaar onboarding are measured; dates are conditional ranges, not release promises.
+- Secrets or production changes: none.
+- Bobo canonical status: unchanged; expansion and non-critical motion are explicitly post-v1.
+- Checks run: `pnpm check` passed (format, lint, typecheck, all workspace tests, dashboard/load tests and the full validator chain, including 9/9 private-media guard tests); queue reports `AI_WORKER_QUEUE_OK tasks=61`; documentation governance reports `DOCUMENTATION_GOVERNANCE_OK documents=6`; a custom ten-assertion canonical audit reports `RELEASE_CANONICAL_CONSISTENCY_OK`; `git diff --check` and an added-line secret-assignment scan passed.
+- Checks unavailable: GitHub CI and final exact-head review require the Draft PR.
+- Remaining work: commit, push a Draft PR, obtain independent exact-head review, wait for all required checks, then merge only if clean.
