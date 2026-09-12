@@ -19,11 +19,10 @@ The historical 30-stage storyboard no longer controls execution. Work is admitte
 
 ## Immediate next actions
 
-1. Merge the S0 canonical roadmap update after independent review and green CI.
-2. Present the owner with one decision: create/select an isolated private-media target and accept its cost; no upload is implied.
-3. Once selected, execute the already-guarded upload and attachment as separately approved operations.
-4. Batch the 35-item human release decision so each item receives one approve/return outcome while all six check dimensions remain auditable.
-5. Keep Web learner activation downstream of 35/35 release approval.
+1. Present the owner with one decision: create/select an isolated private-media target and accept its cost; no upload is implied.
+2. Once selected, execute the already-guarded upload and attachment as separately approved operations.
+3. Batch the 35-item human release decision so each item receives one approve/return outcome while all six check dimensions remain auditable.
+4. Keep Web learner activation downstream of 35/35 release approval.
 
 ## Delivery limits
 
