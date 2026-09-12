@@ -8,7 +8,7 @@ start. Historical tasks remain for traceability and must not be duplicated.
 ### Current release execution
 
 - **S0 — 30-day finish-line reset:** accepted in PR #278 at `34d0d6dbd85bb42c07a8aaee1576505b0eb8db72`. Official Web/PWA-first v1.0 is targeted for 2026-10-12; Android, commerce and premium packs are v1.1+.
-- **S1 — Private media + 35-item release batch:** in progress. The owner attests the isolated private target is private, dedicated, empty, deployment-free and disconnected from Production/Preview; repository evidence contains no provider identifier or live-state proof, and no upload is authorized. LB-DS-067 promotes the final 15-item deterministic preparation while the distinct upload approval remains blocked.
+- **S1 — Private media + 35-item release batch:** in progress. The owner attests the isolated private target is private, dedicated, empty, deployment-free and disconnected from Production/Preview; repository evidence contains no provider identifier or live-state proof, and no upload is authorized. LB-DS-067 merged the final 15-item deterministic preparation; LB-DS-068 now reconciles that merge and authorizes LB-DS-069 as the next upload-free manifest task.
 - **S2 — Server-authoritative Web loop:** ready after S1's canonical content identifiers are stable; implementation and default-off integration can overlap S1 after interfaces are fixed.
 - **S3 — Web release essentials:** partial foundations; account/privacy/support/operations work may overlap S2 with disjoint paths.
 - **S4 — Closed alpha:** planned for 2026-10-04 through 2026-10-08 after S1–S3 integration evidence.
@@ -702,7 +702,7 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 
 ## LB-DS-067
 
-- Status: review_requested
+- Status: accepted
 - Executor: orchestrator plus W4 content-factory worker
 - Base: exact `34d0d6dbd85bb42c07a8aaee1576505b0eb8db72` (`origin/main`, PR #278 merge)
 - Branch: `feat/s1-final15-media-prep`
@@ -720,6 +720,52 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 - Blocked on: none for offline preparation. The first upload is separately blocked on an exact final-asset manifest, owner-authenticated short-lived OIDC and distinct owner approval.
 - Must not touch: media binaries; provider credentials/IDs/URLs; upload receipt; delivery routes; database/migrations; Admin review stores/routes; card attachments; review decisions; catalog seed; runtime flags; deployment; Preview/Production; learner app; Bobo assets.
 - Acceptance: exactly the ten allowed paths differ from the base; the generated record describes 15 canonical items and 45 expected local assets with `prepared_awaiting_private_upload`, `attachmentAllowed: false`, `uploadPerformed: false`, no locator/size/hash copied into release docs, deterministic regeneration and all required checks green.
+- Head commit: `d2e39d0f34cf35a992bd8feb11c4703a992d1ad2`
+- Draft PR: #279 — https://github.com/bahramghorbani/learnbox/pull/279 (merged)
+- Merge commit: `7e987219a278316b25816dd883b76888c269ba29`
+- Accepted evidence: exact head `d2e39d0f34cf35a992bd8feb11c4703a992d1ad2` passed replacement independent exact-head review, all seven GitHub/Vercel contexts and full local `pnpm check`, then merged as PR #279 at `7e987219a278316b25816dd883b76888c269ba29` on 2026-09-12T12:56:50Z. No upload, attachment, review decision, seed, runtime activation, deployment or publication occurred.
+
+## LB-DS-068
+
+- Status: review_requested
+- Executor: orchestrator
+- Base: exact `7e987219a278316b25816dd883b76888c269ba29` (`origin/main`, PR #279 merge)
+- Branch: `docs/post279-s1-prep-reconcile`
+- Risk: documentation-truth-and-task-authorization
+- Specification: repository PR lifecycle; `.ai/WORKER_PROTOCOL.md`; `ROADMAP.md`; LB-DS-067
+- Outcome: reconcile PR #279's accepted exact-head/merge evidence and authorize the next upload-free final-manifest slice from the eventual reconciliation merge baseline.
+- Allowed paths: `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-067.md`; `.ai/worker-reports/LB-DS-068.md`; `CURRENT_WORK.md`; `docs/PRODUCT_STATUS.md`
+- Documentation updates: accept LB-DS-067 with exact PR evidence, remove stale active lifecycle prose, and register LB-DS-069 without changing product runtime or external state.
+- Owner gates: none for truthful reconciliation and repository-only task authorization. Upload, attachment, human approval, seed, runtime activation, deployment and publication remain separately owner-gated and prohibited.
+- Handoff evidence: exact PR #279 merge base; docs-only changed-path equality; live PR/CI evidence; queue/documentation/continuity/security validators; Prettier; `git diff --check`; independent exact-head review; seven terminal GitHub/Vercel contexts.
+- Required checks: `pnpm verify:ai-worker-queue`; `pnpm verify:documentation-governance`; `pnpm verify:security`; `pnpm verify:ai-continuity`; Prettier; `git diff --check`; independent exact-head review; seven terminal GitHub/Vercel contexts.
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+- Blocked on: independent exact-head review and terminal CI after the Draft PR exists.
+- Must not touch: application code; package manifests/lockfiles; generated content/media records; provider configuration/credentials/IDs/URLs; upload/attachment/review/seed/runtime/deployment/Preview/Production state; Bobo assets.
+- Acceptance: PR #279 is recorded accepted at exact head `d2e39d0f34cf35a992bd8feb11c4703a992d1ad2` and merge `7e987219a278316b25816dd883b76888c269ba29`; no stale LB-DS-067 active prose remains; LB-DS-069 is ready but explicitly blocked on this reconciliation merge for its exact base; all required checks pass with no external mutation.
+
+## LB-DS-069
+
+- Status: ready
+- Executor: orchestrator plus W4 content-factory worker
+- Base: exact post-LB-DS-068 reconciliation `origin/main`; replace with the reconciliation merge SHA before implementation
+- Branch: `feat/s1-final35-media-manifest`
+- Risk: content-media-manifest-boundary
+- Specification: `ROADMAP.md`; `docs/content/STARTER_CATALOG_35_RELEASE_READINESS.md`; ADR 0013; ADR 0016; PDR-008; LB-DS-055; LB-DS-067
+- Outcome: build one deterministic, upload-free final manifest for exactly 35 starter items and 105 selected assets, choosing the current V2 image for each original 20-item entry and excluding superseded images while preserving the final 15-item package and every publication block.
+- Allowed paths: `scripts/build-start-35-final-media-manifest.mjs`; `scripts/validate-start-35-final-media-manifest.mjs`; `scripts/validate-start-35-final-media-manifest.test.mjs`; `content/packs/learnbox-start/validation/start-a1-35-final-media-manifest.json`; `package.json`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-069.md`; `CURRENT_WORK.md`; `docs/PRODUCT_STATUS.md`
+- Documentation updates: record the exact selected counts, source generations, retained transcription exceptions and offline-only/default-off boundary without provider identifiers or release approval claims.
+- Owner gates: none for deterministic repository-only manifest preparation. OIDC-token pull, upload, attachment, human approval, seed, runtime activation, deployment and publication remain separately owner-gated and prohibited.
+- Handoff evidence: exact merged base; complete changed-path equality; TDD RED/GREEN; deterministic byte-identical regeneration; independent source-to-manifest cardinality and superseded-image exclusion checks; queue/documentation/continuity/security validators; full `pnpm check`; Prettier; `git diff --check`; independent exact-head review.
+- Required checks: `pnpm test:start-35-final-media-manifest`; `pnpm verify:start-35-final-media-manifest`; deterministic double-build; `pnpm verify:ai-worker-queue`; `pnpm verify:documentation-governance`; `pnpm verify:security`; `pnpm verify:ai-continuity`; `pnpm check`; Prettier; `git diff --check`; independent exact-head review; seven terminal GitHub/Vercel contexts.
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+- Blocked on: LB-DS-068 must merge so its exact merge SHA and accepted LB-DS-067 truth are on `main`; implementation starts only from that merge SHA.
+- Must not touch: media binaries; provider credentials/IDs/URLs; upload receipts; delivery routes; database/migrations; Admin review stores/routes; card attachments; review checks/decisions; catalog seed; runtime flags; deployment; Preview/Production; learner apps; Bobo assets.
+- Acceptance: one generated record contains exactly 35 canonical content IDs and exactly 105 selected assets (35 current images, 35 word-audio and 35 sentence-audio), excludes every superseded original image, retains both known transcription exceptions as explicit review inputs, remains deterministic and carries only local candidate references plus fail-closed default-off state; no provider or runtime mutation occurs.
 
 ## LB-DS-061
 

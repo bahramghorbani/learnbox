@@ -4,11 +4,12 @@
 
 ## Active work
 
-### LB-DS-067 — Final 15-item media preparation
+### LB-DS-068 — Post-PR-#279 reconciliation
 
-- **Status:** deterministic 15-item/45-asset offline preparation is being promoted on `feat/s1-final15-media-prep` from PR #278 merge `34d0d6dbd85bb42c07a8aaee1576505b0eb8db72`.
+- **Status:** Draft PR #280 reconciles LB-DS-067, which merged in PR #279 at `7e987219a278316b25816dd883b76888c269ba29`, and authorizes LB-DS-069 from the eventual reconciliation merge baseline.
 - **Provider boundary:** the owner attests the isolated target is private, dedicated, empty, disconnected from Production/Preview and attached to a project with no deployments. It remains unused; repository evidence contains no provider identifier or live-state proof.
-- **Hard stop:** no credential pull, upload, attachment, review decision, seed, runtime activation, deployment or publication is authorized by LB-DS-067.
+- **Next task:** after LB-DS-068 merges, LB-DS-069 may build only an offline generated manifest and validator/tests selecting exactly 105 assets for all 35 starter items.
+- **Hard stop:** no credential pull, upload, attachment, review decision, seed, runtime activation, deployment or publication is authorized.
 
 ### Active release objective
 
@@ -26,7 +27,7 @@ A missed owner gate moves the 2026-10-12 target one-for-one unless a safe, expli
 
 ## Immediate execution order
 
-1. Merge LB-DS-067 only after replacement independent review and current CI evidence pass.
-2. Design the complete 35-item asset manifest without upload or attachment.
+1. Merge LB-DS-068 reconciliation and start LB-DS-069 from its exact merge SHA.
+2. Build and verify the complete 35-item/105-asset manifest without upload or attachment.
 3. Keep seed, activation and learner exposure downstream of human content approval.
 4. Admit no Android, payment, premium or generalized AI-factory work into v1.0.
