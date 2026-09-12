@@ -1,6 +1,6 @@
 # LearnBox execution rules
 
-- Treat `docs/product/MASTER_SPEC.md` as authoritative; choose safe reversible defaults and record material choices in an ADR.
+- Treat `docs/PRODUCT_STATUS.md` as current capability truth, `ROADMAP.md` as release scope/sequence, and `docs/product/PRD.md` as release requirements. `docs/product/MASTER_SPEC.md` is long-horizon product context and cannot expand the current release without an explicit decision record. Choose safe reversible defaults and record material choices in an ADR.
 - Persian is RTL-first. Isolate German, code, URLs, and identifiers as LTR and test RTL, accessibility, empty, loading, error, and offline states.
 - Do not commit secrets, production credentials, real personal data, or generated content without QA. Use synthetic test data only.
 - Prefer privacy, offline resilience, measurable learning value, and rollback capability. Production, payment, legal, public-release, and destructive actions require owner approval.

@@ -1,4 +1,6 @@
-# Roadmap and Definition of Done
+# Historical landing-website roadmap and definition of done
+
+This document applies only to the independent informational landing website. Its “v1.0 COMPLETE” statement does not describe the LearnBox learner product, Android release, backend, Admin, content, commerce or public-product readiness. Current product delivery is governed by the root `ROADMAP.md`.
 
 ## Phase 0 — Repository audit
 
@@ -199,7 +201,7 @@ Deliverables:
 Final state:
 
 ```text
-LearnBox Website v1.0
+LearnBox informational landing website v1.0
 Status: COMPLETE
 Production: VERIFIED
 ```

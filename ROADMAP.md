@@ -1,80 +1,221 @@
 # LearnBox release roadmap
 
-**Canonical roadmap:** milestones describe product outcomes, not a list of micro-commits. Dates are estimates from a confirmed baseline and exclude provider approval, owner credentials, store review and major scope changes.
+**Baseline:** 2026-09-12 at `dfede397a9f2ffdccdd7e7fe916688f9fdc6685e`
 
-## Product strategy
+**Forecast class:** planning envelope, not a commitment; recalculate at every season exit
 
-LearnBox is an online-first German vocabulary Leitner product. The free app includes approximately 35 complete A1 words. Premium vocabulary packs are sold through platform-appropriate payment adapters: direct bank gateway on Web, Cafe Bazaar in-app billing on Android, and Apple In-App Purchase on iOS. All verified purchases produce shared backend entitlements. Temporary connectivity loss is tolerated through a local pending queue and idempotent sync.
+**Canonical finish line:** Public v1.0 is the supported Android/Cafe Bazaar release plus the public learner Web/PWA, sharing server-authoritative accounts, learning state, content and entitlements.
 
-The landing site at `learnboxapp.com` is informational only and remains independent from learner, admin, API and private-media surfaces.
+## 1. Scope lock
+
+### Public v1.0 must include
+
+1. **Learner journey:** a Persian-speaking learner can authenticate, use Today, complete active-recall reviews, browse Words, see truthful Progress/Profile/Settings and resume after a temporary disconnect without lost or duplicate review events.
+2. **Starter content:** all 35 A1 starter items are human release-approved, have approved image and `de-DE` audio, are attached to private storage, published through versioned catalog data and available on Web and Android.
+3. **One commercial slice:** one human-reviewed premium pack, one Cafe Bazaar offer, server-side purchase verification, a shared entitlement, restore, refund/revoke reconciliation and audit evidence. Web can consume the entitlement; direct Web payment is deferred to v1.1.
+4. **Operable content release:** Admin can review, approve, release and roll back a pack version without AI publishing directly.
+5. **Account and operations:** support, privacy notice, account-deletion request/fulfilment, observability, alerting, backup/restore, incident handling and production rollback are exercised.
+6. **Release evidence:** a closed alpha and closed beta complete without an unresolved severity-0/1 defect, security incident, learning-data loss or inaccessible critical journey; Cafe Bazaar submission and production activation receive explicit owner approval.
+
+### Explicitly outside v1.0
+
+- native iOS and StoreKit;
+- direct Web bank payment;
+- subscriptions, social features, leaderboards, leagues and notifications;
+- AI pack-request/generation UI and autonomous content publishing;
+- personal-vocabulary server sync or AI suggestions;
+- catalog expansion beyond the free starter and one premium pack;
+- Bobo asset expansion, seasonal themes and non-critical motion;
+- growth experiments that do not close a v1.0 exit gate.
+
+These remain valid later possibilities, not hidden prerequisites. Adding one to v1.0 requires a product decision record with schedule impact and an equal-sized scope removal or explicit date reforecast.
+
+## 2. Current truth
+
+- M0 product truth and current D0/D1 foundations are completed.
+- M1 online-learning and M2 Admin/content foundations are partial. Server routes, idempotent reconciliation seams, protected Admin review persistence and client flows exist, but learner production flags remain off.
+- M3 Profile/Settings foundations are partial on Web and Android; they are no longer “planned”.
+- The starter catalog is 35/35 drafted and linguistically reviewed but 0/35 release-approved; publication and seed remain blocked. Media candidates exist, but real private attachment requires an owner-selected isolated target and separate authorization.
+- Commerce has provider-neutral foundations only. No Cafe Bazaar adapter or live entitlement path exists.
+- Native Android online identity/sync is blocked on a non-SSO gateway and activation evidence.
+- There is no public release tag. Passing tests or a dormant flag is not a released capability.
 
 ## Milestones
 
-| Milestone                      | Outcome                                    | Scope                                                                                                                                                    | Exit criteria                                                                           |                                          Estimate |
-| ------------------------------ | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------: |
-| M0 Product truth               | One current product model                  | inventory, boundaries, docs governance, decisions, architecture                                                                                          | status matrix reviewed; stale docs marked; queue aligned                                |                                          3–5 days |
-| M1 Online learning core        | A learner can use the product online       | account/auth, 35-word A1 free pack, Today, review scheduling, progress, server persistence, offline pending queue and reconnect sync                     | complete learner journey tested on Web and Android; no lost or duplicate review events  |                                         3–5 weeks |
-| M2 Admin/content operations    | Team can produce and release quality packs | AI request-to-draft, batch generation, duplicate scan, human review, media QA, pack versioning, release/rollback                                         | one approved pack released through Admin with evidence and rollback                     | 3–4 weeks; overlaps M1 only on disjoint contracts |
-| M3 Profile and learner account | User can manage their account and learning | profile, settings, purchases, packs, sync status, support, privacy, personal vocabulary and duplicate checks                                             | account center works on Web/Android with truthful loading/error/offline states          |                         2–3 weeks; overlaps M1/M2 |
-| M4 Commerce MVP                | Real premium pack purchases work           | catalog, platform offers, Web bank gateway, Cafe Bazaar adapter, iOS StoreKit contract, receipt verification, entitlement, restore, refund/revoke, audit | one controlled real purchase per enabled platform is reconciled to a shared entitlement |         4–6 weeks after provider/server readiness |
-| M5 Native mobile alpha         | Android is an online-first real app        | native gateway, auth/session, online sync, premium access, device QA, release build discipline                                                           | owner device completes auth, sync and premium access; rollback proven                   |                  2–3 weeks after server readiness |
-| M6 Closed beta                 | Limited invited users can use it safely    | cohort operations, support, observability, abuse limits, backups, load/recovery, content cadence                                                         | agreed cohort completes learning and purchase journeys with incident runbook            |                                         3–4 weeks |
-| M7 Android public release      | Android commercial release                 | Cafe Bazaar listing, signing, store compliance, support, production release and rollback                                                                 | approved production release with monitoring and rollback evidence                       |                                         3–5 weeks |
-| M8 Native iOS release          | iOS App Store product                      | native iOS shell, StoreKit, account/entitlement handling, privacy/deletion, device QA, App Store submission                                              | App Store review-ready build and operational support                                    |                                4–7 weeks after M4 |
-
-## Design gates
-
-Visual design is a delivery track, not polish after engineering. It runs alongside M0–M3 and gates implementation of new surfaces:
-
-- **D0 Visual language:** tokens, typography, RTL/LTR rules, iconography, Bobo/brand usage and responsive grid.
-- **D1 Learner UI kit:** Splash, Onboarding, Today, Review, Words, Progress, Profile and Settings with loading, empty, error, offline and sync states.
-- **D2 Commerce/Admin UI:** Store, Pack detail, offers, checkout result, Purchases, My Packs and Content Factory/review.
-- **D3 Visual verification:** target-size screenshots, Web responsive checks, accessibility, reduced motion and implementation parity.
-
-The current evidence and readiness matrix live in [`docs/design/DESIGN_STATUS.md`](docs/design/DESIGN_STATUS.md). Existing concept images may be shown for review, but a concept is not a release approval. A new surface may enter production implementation only after its design states, copy, accessibility behavior and acceptance criteria are recorded.
-
 ```text
-M0
- ↓
-M1 ─────┐
-M2 ─────┼──> M3 ──> M4 ──> M5 ──> M6 ──> M7
-Landing boundary remains independent                 └──> M8
+S0 Scope/canon freeze
+  ↓
+S1 Starter + Web closed alpha
+  ↓
+S2 Operable product + one premium pack
+  ├───────────────┐
+  ↓               ↓
+S3 Commerce     S4 Android online
+  └───────┬───────┘
+          ↓
+S5 Closed beta + public v1.0
 ```
 
-M1, M2 and M3 can overlap only where their contracts and allowed paths are disjoint. M4–M8 are dependency-heavy and should not be split into unrelated micro-tasks.
+Only disjoint work may overlap. Identity, database, payment, infrastructure and release activation remain serial and high-reasoning reviewed.
 
-## Release definitions
+### S0 — Finish-line freeze and delivery control
 
-### Closed alpha
+**Outcome:** one release definition, one milestone model and a bounded backlog.
 
-- Independent landing remains unchanged.
-- Web learner completes sign-in, daily review, progress and recovery.
-- 35-word A1 free collection is usable and editorially approved.
-- Admin can create/review/release a pack or controlled content update.
-- Real purchases are enabled only for the explicitly approved provider/platform path.
-- Web gateway, Android Cafe Bazaar and iOS StoreKit are separate adapters.
-- Sync is online-first and lossless under temporary disconnect.
-- Support, refund and rollback procedures exist.
+**Tasks**
 
-### Private beta
+- Reconcile `ROADMAP.md`, PRD, storyboard and backlog.
+- Mark the long-horizon master specification and landing-only roadmap with correct authority/scope.
+- Record v1.0 inclusions/exclusions and season ownership.
+- Track functional delivery separately from documentation maintenance; fold normal status updates into the feature PR.
+- Capture four delivery metrics: functional-vs-doc PR ratio, migration-bearing CI duration, owner-gate latency and unresolved blocker age.
 
-- Invited users can use Web and Android without operator intervention for normal flows.
-- Premium purchase and entitlement reconciliation are verified.
-- Profile, settings, purchases and personal vocabulary are usable.
-- Observability, backups, abuse controls and incident response are exercised.
+**Exit gate**
 
-### Public v1
+- Canonical documents contain no conflicting alpha/v1/payment/iOS definition.
+- One ordered critical path and one public-v1.0 definition are named.
+- No obsolete 20-item or 30-stage gate controls new work.
+- Roadmap-only reconciliation PRs are exceptional, not an automatic post-merge step.
 
-- Android store release is stable and supported.
-- Native iOS release is separately reviewed and compliant.
-- Content factory can sustain a quality release cadence.
-- Payment, restore, refund, account deletion and support are operational.
-- Production flags and deployment rollback are owner-approved and evidenced.
+**Forecast:** 2–5 working days.
 
-## What is deliberately not on the critical path
+### S1 — Release-approved starter and Web closed alpha
 
-- Social network, leaderboard and complex gamification.
-- Subscription before one-time vocabulary-pack commerce is stable.
-- AI-generated content publishing without human review.
-- Making the informational landing site depend on the product backend.
-- Native iOS before the Web/PWA and entitlement model are proven.
+**Outcome:** invited learners can complete the real free learning loop on Web/PWA.
+
+**Tasks**
+
+1. Owner selects an isolated private-media target and accepts any cost; engineering verifies the merged fail-closed store-identity guard.
+2. Upload and attach the 35-item approved image/audio set under separate owner gates; preserve private receipts outside Git.
+3. Complete provenance, visual, audio and app-flow review; reach 35/35 release-approved versions.
+4. Execute the idempotent starter seed/release path; verify exactly 35 learner-visible rows and rollback.
+5. Activate Web identity, learner-state read and approved sync boundaries in a controlled environment; verify `401`, `no-store`, CSRF/origin and rollback behavior.
+6. Run owner pilot, then 2–3 invited users through sign-in → Today → review → progress → reconnect.
+
+**Exit gate**
+
+- 35/35 starter items release-approved; `seedable: true`; `publicationBlocked: false` only after human evidence.
+- Learner catalog returns exactly 35 current starter items with approved media.
+- Disconnect/reconnect test produces zero lost and zero duplicate review events.
+- Closed-alpha evidence records version, participants, issues, stop/go decision and rollback.
+- Payment and public invitation remain off.
+
+**Forecast from baseline:** best 2026-10-10; planning target 2026-10-31; outer case 2026-12-05. The window slips one-for-one with owner/media approval latency.
+
+### S2 — Operable content and account release slice
+
+**Outcome:** the team can operate the product and prepare exactly one premium pack without engineering-only database edits.
+
+**Tasks**
+
+- Complete Admin review, pack version, release/retire/rollback and audit workflows needed for two packs only.
+- Produce, validate and human-review one bounded premium pack; no general AI-generation UI is required.
+- Complete release-critical account/support/privacy/deletion flows and truthful entitlement placeholders.
+- Activate minimal privacy-safe operational analytics, error reporting, health checks and support evidence.
+- Prove backup restore on non-production data and record recovery time.
+
+**Exit gate**
+
+- One premium pack is release-ready but not yet publicly sold.
+- Admin releases and rolls back both starter and premium versions from the protected workflow.
+- A deletion request, support investigation and backup restore are exercised end-to-end.
+- No unresolved severity-0/1 issue; release-critical accessibility states pass.
+
+**Forecast:** 4–7 weeks after S1; bounded premium content review can overlap non-sensitive account/ops work.
+
+### S3 — Cafe Bazaar commerce MVP
+
+**Outcome:** one verified Android purchase grants one shared premium-pack entitlement.
+
+**Tasks**
+
+- Confirm merchant/developer account, product ID, pricing, terms and refund responsibilities.
+- Implement Cafe Bazaar billing adapter and server-side receipt verification.
+- Persist purchase, entitlement, restore, refund/revoke and reconciliation audit states.
+- Expose truthful Store, pack detail, purchase result, Purchases/My Packs and support states.
+- Exercise sandbox/provider tests, replay/idempotency, forged receipt rejection and operational rollback.
+
+**Exit gate**
+
+- One controlled provider transaction grants the correct server entitlement exactly once.
+- Restore works; refund/revoke removes access according to policy; audit explains every transition.
+- Clients never grant entitlement without server verification; secrets remain server-side.
+- Provider/legal/cost acceptance is recorded by the owner.
+
+**Forecast:** 6–10 engineering weeks after provider readiness; external onboarding is not bounded until account status is measured.
+
+### S4 — Native Android online and closed beta candidate
+
+**Outcome:** Android uses the real online account, content, learning and entitlement contracts.
+
+**Tasks**
+
+- Provision the non-SSO native gateway with TLS, rate limits, secret isolation and rollback.
+- Activate native auth/session, catalog/media, review sync and entitlement composition.
+- Verify offline queue/reconnect behavior and account switching on physical devices.
+- Complete low-end performance, RTL/LTR, screen-reader, keyboard/switch where applicable and interruption testing.
+- Prepare signed release candidate and Cafe Bazaar listing assets without publishing.
+
+**Exit gate**
+
+- Owner device and the supported device matrix complete auth → starter review → reconnect → premium entitlement.
+- Zero known learning-data loss/duplication; critical security and accessibility findings are closed.
+- Signed candidate, rollback build, support runbook and store draft are ready.
+
+**Forecast:** best/target/outer 5/7/8 weeks. Gateway and native-client work starts 2/3/4 weeks after S3 begins, only after the entitlement contract checkpoint; S4 cannot exit before S3 exits.
+
+### S5 — Closed beta, release gate and public v1.0
+
+**Outcome:** evidence supports a controlled public Android/Web release.
+
+**Tasks**
+
+- Run staged closed beta cohorts with stop thresholds, privacy-safe telemetry and support coverage.
+- Exercise production monitoring, alerting, backup/restore, incident response and rollback.
+- Complete Cafe Bazaar compliance, privacy, data-deletion, screenshots, signing and release notes.
+- Resolve all severity-0/1 and release-blocking severity-2 defects.
+- Obtain explicit owner approval for Production and marketplace publication; use a phased rollout.
+
+**Exit gate / definition of done**
+
+- The six Public v1.0 requirements in §1 are evidenced on one immutable release candidate.
+- Required CI, security, migration, Web and Flutter checks are green.
+- Closed-beta go decision is recorded; no open release blocker remains.
+- Production rollback is proven and on-call/support ownership is named.
+- A signed tag and changelog entry exist; the public route and Cafe Bazaar release are verified after activation.
+
+**Duration:** best/target/outer 5/6/9 weeks from S4 exit. The outer case reserves additional store-review and release-defect time.
+
+**Forecast:** best 2027-01-30; planning target 2027-04-03; outer case 2027-06-19. Confidence is low until the media target, owner review pace, native gateway and Cafe Bazaar onboarding are measured.
+
+## 4. Forecast assumptions and controls
+
+The forecast assumes one AI-supervised engineering lane, independent high-risk review, bounded parallelism only for disjoint paths, owner responses within five working days and no redesign of the release scope. Dates exclude an unmeasured provider/store queue only where explicitly stated.
+
+### Forecast arithmetic
+
+The dates use a declared series/parallel model rather than summing every season serially. S1 and S2 are serial. S3 starts after S2. S4 starts only after the S3 entitlement-contract checkpoint, then proceeds in parallel; S5 starts after **both** S3 and S4 exit.
+
+| Scenario | S1 exit    | S2 duration / exit | S3 duration / exit | S4 start, duration / exit     | S5 duration / Public v1.0 |
+| -------- | ---------- | ------------------ | ------------------ | ----------------------------- | ------------------------- |
+| Best     | 2026-10-10 | 4 wk / 2026-11-07  | 6 wk / 2026-12-19  | 2026-11-21, 5 wk / 2026-12-26 | 5 wk / 2027-01-30         |
+| Target   | 2026-10-31 | 6 wk / 2026-12-12  | 8 wk / 2027-02-06  | 2027-01-02, 7 wk / 2027-02-20 | 6 wk / 2027-04-03         |
+| Outer    | 2026-12-05 | 7 wk / 2027-01-23  | 10 wk / 2027-04-03 | 2027-02-20, 8 wk / 2027-04-17 | 9 wk / 2027-06-19         |
+
+If the S3 contract checkpoint does not occur by its 2/3/4-week assumption, S4 and Public v1.0 slip day-for-day. Unstarted merchant/store onboarding can also move the outer date; it is not hidden inside engineering estimates.
+
+Update the forecast at every season exit using:
+
+- median owner decision latency over the latest five gates;
+- functional PR share (target ≥70%; docs-only maintenance target ≤15%);
+- median CI wall time for code/migration PRs;
+- human media/content QA minutes per item;
+- native gateway provisioning lead time;
+- Cafe Bazaar account, billing and review lead time;
+- open release blockers by severity and age.
+
+If an input is unknown, preserve a range rather than inventing a point date. A season cannot be called complete from merged foundations alone; every exit gate needs current executable or human evidence.
+
+## 5. Scope-change rule
+
+New ideas enter a post-v1 backlog. They enter the v1.0 critical path only if they fix a security/legal blocker or replace an existing scoped item through an explicit decision record. This is the main control against indefinite project growth.

@@ -80,7 +80,7 @@ LearnBox is an online-first German vocabulary Leitner application for Persian-sp
 | Capability                       | Status             | Target                                                                   |
 | -------------------------------- | ------------------ | ------------------------------------------------------------------------ |
 | Free app and free A1 entitlement | Approved direction | Launch baseline                                                          |
-| Web direct bank gateway          | Planned            | Real closed-alpha purchases after provider/server readiness              |
+| Web direct bank gateway          | Deferred post-v1.0 | Direct Web purchase is not enabled in alpha and is not on the v1.0 path  |
 | Android Cafe Bazaar billing      | Planned            | Native in-app purchase with server-side verification                     |
 | iOS Apple In-App Purchase        | Planned            | StoreKit with server-side verification                                   |
 | Platform-specific pricing        | Approved direction | Separate offers/prices/product IDs per platform; shared pack entitlement |
@@ -106,7 +106,7 @@ The current design direction is credible and reviewed, but the complete applicat
 
 ## Current release position
 
-The repository is a tested foundation, not a finished commercial application. The next release target is a real closed alpha of the online learner web product plus operational admin/content tooling. Android remains a real learner app with offline tolerance, not an offline-only product. Native iOS is a later store release. Premium commerce is part of the product plan and must be designed now, but provider activation remains a separate controlled milestone.
+The repository is a tested foundation, not a finished commercial application. The immediate checkpoint is an invited Web/PWA closed alpha with the human-approved 35-item starter and lossless reconnect behavior. Public v1.0 is the supported learner Web/PWA plus Android/Cafe Bazaar release, one premium pack and one server-verified Cafe Bazaar entitlement path. Native iOS, Apple StoreKit and direct Web bank payment are post-v1.0. The planning target for public v1.0 is 2027-04-03, with a 2027-01-30 best case and 2027-06-19 outer case until owner/provider lead times are measured; `ROADMAP.md` owns the assumptions and exit gates.
 
 ## Source-of-truth order
 
@@ -114,7 +114,8 @@ The repository is a tested foundation, not a finished commercial application. Th
 2. `ROADMAP.md` for milestones and exit criteria.
 3. `docs/architecture/SYSTEM_CONTEXT.md` and `ARCHITECTURE.md` for boundaries.
 4. `docs/product/FEATURE_CATALOG.md`, `docs/product/PRD.md` and `docs/product/MONETIZATION.md` for product contracts.
-5. Feature-specific design, operation and evidence documents.
-6. Historical storyboard/evidence documents, which retain history but cannot override current status without an explicit decision record.
+5. `docs/product/MASTER_SPEC.md` for long-horizon vision only; it cannot expand current release scope.
+6. Feature-specific design, operation and evidence documents.
+7. Historical storyboard/evidence documents, which retain history but cannot override current status without an explicit decision record.
 
 Do not interpret a test, prototype, dormant flag or design document as a released feature unless this inventory says so.

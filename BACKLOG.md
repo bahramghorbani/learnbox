@@ -1,23 +1,43 @@
-# Product backlog
+# LearnBox release backlog
 
-Current storyboard position is **24 of 30 — Beta and load testing**. Completed stages are not reopened; the entries below are compatibility and hardening work in dependency order.
+The historical 30-stage storyboard no longer controls execution. Work is admitted only when it closes a `ROADMAP.md` season exit gate. Completed implementation history remains in Git, the queue and evidence documents; this file lists only release-critical outcomes.
 
-| Priority | Work                                                                                   | Dependency                                         | Status                                                                                                                                                                | Classification              |
-| -------- | -------------------------------------------------------------------------------------- | -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- |
-| P0       | Versioned Start/Plus config contract and entitlement protections                       | none                                               | client adapter implemented; payment remains disabled                                                                                                                  | minor_implementation_change |
-| P0       | Start pack schema, manifest and 20-item vertical-slice review gate                     | content model                                      | implemented; real slice next                                                                                                                                          | minor_implementation_change |
-| P0       | Validate 20 real items in web/mobile: media, scheduling, offline, progress and Bobo QA | owner linguistic approval and media/app validation | source, schedule, mobile-web flow and media/app QA complete; private objects checksum-attested                                                                        | complete                    |
-| P0       | Activate real mobile OTP identity issuer                                               | owner-controlled delivery test                     | owner Preview test passed; authenticated media client seam ready; learner, SMS.ir and both media flags remain false                                                   | blocked_by_owner            |
-| P0       | Co-host landing and learner app without release or secret coupling                     | restricted app secrets, DNS and owner approval     | isolated app is healthy on the shared server with no public port or Caddy host; fail-closed smoke and rollback documented                                             | blocked_by_owner            |
-| P1       | Admin controls for configuration versions and pack release                             | authenticated session and audit UI                 | disabled-by-default owner passkey boundary implemented (routes, store, UI gate, source validator); enrollment and authenticated UI remain owner-gated                 | minor_implementation_change |
-| P1       | Single-owner current splash replacement                                                | admin authentication, audit and private upload     | protected replacement/UI plus learner same-origin delivery and bundled fallback implemented; both flags remain off; app icon changes only with an application release | minor_implementation_change |
-| P1       | Privacy-safe analytics adapter and event delivery                                      | event contract                                     | consent-gated, allowlisted delivery seam implemented; provider off                                                                                                    | minor_implementation_change |
-| P1       | Closed-alpha learning continuity: resilient storage, daily progress and review resume  | browser storage                                    | implemented with malformed-data recovery, duplicate-grade protection and unit coverage                                                                                | minor_implementation_change |
-| P1       | Supportive paywall UI behind a disabled feature flag                                   | config + analytics                                 | disabled component and eligibility guard implemented                                                                                                                  | minor_implementation_change |
-| P1       | Factory job adapters: normalization, duplicate, linguistic/CEFR and asset QA           | schema + admin                                     | CEFR mismatch and media-plan completeness guards implemented                                                                                                          | minor_implementation_change |
-| P1       | Native offline pronunciation for the mobile Start flow                                 | approved de-DE canonical audio plus listening QA   | blocked: physical Android QA found the candidate `Haus` word media English-like and without the displayed article; continuation and acceptance contract: GitHub #59   | blocked_by_content_qa       |
-| P2       | Produce reviewed, versioned batches of up to 35 Start items                            | 20-item acceptance                                 | blocked                                                                                                                                                               | blocked_by_owner            |
-| P2       | Transparent canonical Bobo asset set                                                   | image-generation billing credit                    | deferred                                                                                                                                                              | blocked_by_owner            |
-| P2       | Activate real pricing/payment provider                                                 | provider account, terms, legal and owner approval  | blocked                                                                                                                                                               | blocked_by_owner            |
+## Ordered critical path
 
-No bulk image/audio generation occurs before the 20-item slice passes all review gates.
+| Order | Season | Outcome                                                        | Current state | Blocking input                                                   | Completion evidence                                        |
+| ----- | ------ | -------------------------------------------------------------- | ------------- | ---------------------------------------------------------------- | ---------------------------------------------------------- |
+| 1     | S0     | Freeze one public-v1.0 definition and bounded season plan      | in progress   | none                                                             | canonical docs agree; scope exclusions recorded            |
+| 2     | S1     | Attach and human-approve all starter media/content             | blocked       | owner-selected isolated private store, owner upload/review gates | 35/35 release-approved; approved media attached            |
+| 3     | S1     | Seed/release the 35-item starter and activate Web server truth | blocked       | order 2                                                          | exactly 35 learner rows; rollback; lossless reconnect test |
+| 4     | S1     | Run owner pilot and 2–3-user Web closed alpha                  | blocked       | order 3 and owner invitations                                    | closed-alpha evidence and go/stop decision                 |
+| 5     | S2     | Complete release/rollback Admin flow for two packs             | partial       | stable published starter contract                                | operator exercise without direct DB edit                   |
+| 6     | S2     | Prepare and approve exactly one premium pack                   | blocked       | bounded content brief and owner review capacity                  | one release-ready premium pack                             |
+| 7     | S2     | Complete release-critical support/privacy/deletion and ops     | partial       | approved policy copy and non-production environment              | exercised deletion, support, alert and restore evidence    |
+| 8     | S3     | Implement one Cafe Bazaar verified entitlement path            | planned       | merchant account/product/terms, owner approval                   | purchase/restore/refund/revoke audit evidence              |
+| 9     | S4     | Activate native Android auth, catalog, sync and entitlement    | blocked       | non-SSO gateway and stable S1/S3 contracts                       | physical-device critical journey and rollback build        |
+| 10    | S5     | Closed beta, compliance and phased public release              | planned       | orders 4–9                                                       | beta go decision, signed tag, store/public verification    |
+
+## Immediate next actions
+
+1. Merge the S0 canonical roadmap update after independent review and green CI.
+2. Present the owner with one decision: create/select an isolated private-media target and accept its cost; no upload is implied.
+3. Once selected, execute the already-guarded upload and attachment as separately approved operations.
+4. Batch the 35-item human release decision so each item receives one approve/return outcome while all six check dimensions remain auditable.
+5. Keep Web learner activation downstream of 35/35 release approval.
+
+## Delivery limits
+
+- At most one status-only reconciliation PR per functional release slice; normal status updates belong in the feature PR.
+- Target ≥70% functional PRs and ≤15% docs-only maintenance PRs over a rolling 30 days.
+- Do not create a queue task unless it maps to one season outcome and names measurable exit evidence.
+- Non-critical design/brand work, extra providers, extra packs and speculative platform work stay outside the critical path.
+- Owner/provider latency is reported as a blocker, not hidden inside engineering estimates.
+
+## Post-v1 backlog
+
+- direct Web bank payment;
+- native iOS and StoreKit;
+- additional premium packs and general AI pack-generation UX;
+- personal-vocabulary server sync and AI suggestions;
+- subscriptions, notifications, leagues, social/gamification;
+- Bobo expansion, seasonal themes and non-critical motion.

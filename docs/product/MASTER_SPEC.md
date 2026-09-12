@@ -1,6 +1,6 @@
 # LearnBox — Master Product, Design & Execution Specification for Codex
 
-> **Document status:** Authoritative execution specification  
+> **Document status:** Long-horizon product and design specification; not authoritative for current release scope  
 > **Project codename:** LearnBox  
 > **Probable public domain:** `learnboxapp.com`  
 > **Primary market:** Persian-speaking learners of German  
@@ -16,9 +16,9 @@
 
 ## 0. Authority and operating principle
 
-This document is the main source of truth for the first implementation of LearnBox.
+This document preserves the long-horizon product vision and original implementation context. Current capability truth is governed by `docs/PRODUCT_STATUS.md`; current release scope, sequencing and exclusions are governed by `ROADMAP.md` and `docs/product/PRD.md`. If this document conflicts with those current canonical documents, the current documents win. A long-horizon feature enters the active release only through an explicit product decision record and reforecast.
 
-Codex must treat it as an executable product specification, not as brainstorming notes. It must create the repository, initialize the project, make ordinary reversible technical decisions, implement features incrementally, test its own work, document decisions, and keep the project runnable.
+Treat the still-relevant product and design constraints as implementation context, not as permission to expand the active release. Implement current `ROADMAP.md` outcomes incrementally, test them, document material decisions and keep the repository runnable.
 
 The product owner has no technical background. Therefore:
 

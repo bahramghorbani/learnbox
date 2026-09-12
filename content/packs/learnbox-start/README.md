@@ -1,8 +1,10 @@
 # LearnBox Start content pack
 
-This is the controlled source location for `learnbox_start_a1_essentials`. No learner-facing
-content is committed here until the 20-item vertical slice passes linguistic, visual, audio and
-in-app validation. Stable content IDs name all derived media and preserve rollback links.
+This is the controlled source location for `learnbox_start_a1_essentials`. The historical 20-item
+slice supplied evidence but no longer gates delivery. Public release requires all 35 canonical
+items to pass the current human linguistic, provenance, visual, audio and app-flow gates in
+`docs/content/STARTER_CATALOG_35_RELEASE_READINESS.md`. Stable content IDs name all derived media
+and preserve rollback links.
 
 Expected directories: `vocabulary/`, `examples/`, `grammar/`, `prompts/`, `images/`, `audio/`,
 `validation/`, and `versions/`. Empty directories are intentionally not tracked until the first
