@@ -10,15 +10,15 @@ export default function ErrorPage({
   return (
     <main className="offline-shell error-shell">
       <section className="offline-content" aria-labelledby="error-title">
-        <div className="offline-illustration">
-          <span className="offline-spark offline-spark-one" aria-hidden="true" />
-          <span className="offline-spark offline-spark-two" aria-hidden="true" />
-          <span className="offline-spark offline-spark-three" aria-hidden="true" />
+        <div className="offline-illustration" aria-hidden="true">
+          <span className="offline-spark offline-spark-one" />
+          <span className="offline-spark offline-spark-two" />
+          <span className="offline-spark offline-spark-three" />
           <Bobo expression="recovery" className="bobo bobo-offline" priority />
         </div>
         <p className="offline-kicker">بوبو کنار تو است</p>
         <h1 id="error-title">این بخش فعلاً آماده نیست</h1>
-        <p className="offline-message">
+        <p className="offline-message" role="alert">
           اشکالی ندارد؛ یک‌بار دیگر تلاش کن یا به صفحهٔ اصلی برگرد تا از همان‌جا ادامه بدهیم.
         </p>
         <div className="error-actions">
