@@ -8,7 +8,7 @@ start. Historical tasks remain for traceability and must not be duplicated.
 ### Current release execution
 
 - **S0 — 30-day finish-line reset:** accepted in PR #278 at `34d0d6dbd85bb42c07a8aaee1576505b0eb8db72`. Official Web/PWA-first v1.0 is targeted for 2026-10-12; Android, commerce and premium packs are v1.1+.
-- **S1 — Private media + 35-item release batch:** in progress. The owner attests the isolated private target is private, dedicated, empty, deployment-free and disconnected from Production/Preview; repository evidence contains no provider identifier or live-state proof, and no upload is authorized. LB-DS-067 merged the final 15-item deterministic preparation; LB-DS-068 now reconciles that merge and authorizes LB-DS-069 as the next upload-free manifest task.
+- **S1 — Private media + 35-item release batch:** in progress. The owner attests the isolated private target is private, dedicated, empty, deployment-free and disconnected from Production/Preview; repository evidence contains no provider identifier or live-state proof, and no upload is authorized. LB-DS-068 merged the post-PR-#279 reconciliation; LB-DS-069 now prepares the upload-free final 35-item/105-asset manifest.
 - **S2 — Server-authoritative Web loop:** ready after S1's canonical content identifiers are stable; implementation and default-off integration can overlap S1 after interfaces are fixed.
 - **S3 — Web release essentials:** partial foundations; account/privacy/support/operations work may overlap S2 with disjoint paths.
 - **S4 — Closed alpha:** planned for 2026-10-04 through 2026-10-08 after S1–S3 integration evidence.
@@ -727,7 +727,7 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 
 ## LB-DS-068
 
-- Status: review_requested
+- Status: accepted
 - Executor: orchestrator
 - Base: exact `7e987219a278316b25816dd883b76888c269ba29` (`origin/main`, PR #279 merge)
 - Branch: `docs/post279-s1-prep-reconcile`
@@ -742,15 +742,19 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 - Simulator required: no
 - Draft PR required: yes
 - Merge allowed: yes
-- Blocked on: independent exact-head review and terminal CI after the Draft PR exists.
+- Blocked on: none; PR #280 passed replacement exact-head review and all seven GitHub/Vercel contexts after the sole `quality` flake was rerun successfully on the unchanged head.
 - Must not touch: application code; package manifests/lockfiles; generated content/media records; provider configuration/credentials/IDs/URLs; upload/attachment/review/seed/runtime/deployment/Preview/Production state; Bobo assets.
-- Acceptance: PR #279 is recorded accepted at exact head `d2e39d0f34cf35a992bd8feb11c4703a992d1ad2` and merge `7e987219a278316b25816dd883b76888c269ba29`; no stale LB-DS-067 active prose remains; LB-DS-069 is ready but explicitly blocked on this reconciliation merge for its exact base; all required checks pass with no external mutation.
+- Acceptance: PR #279 is recorded accepted at exact head `d2e39d0f34cf35a992bd8feb11c4703a992d1ad2` and merge `7e987219a278316b25816dd883b76888c269ba29`; no stale LB-DS-067 active prose remains; LB-DS-069 is authorized from the exact reconciliation merge baseline; all required checks pass with no external mutation.
+- Head commit: `2844ba5f1c460931bc2d6dd2c84d96287b6d2fbc`
+- Draft PR: #280 — https://github.com/bahramghorbani/learnbox/pull/280 (merged)
+- Merge commit: `d594cc557886de44a5a9fbb9a4163ea1c1b0952b`
+- Accepted evidence: exact head `2844ba5f1c460931bc2d6dd2c84d96287b6d2fbc` passed replacement independent exact-head review after its sole same-head `quality` flake was rerun successfully; all seven GitHub/Vercel contexts were terminal-success before PR #280 merged at `d594cc557886de44a5a9fbb9a4163ea1c1b0952b` on 2026-09-12T18:23:58Z. No application, provider, credential, upload, attachment, review, seed, runtime, deployment, Preview, Production or publication state changed.
 
 ## LB-DS-069
 
-- Status: ready
+- Status: review_requested
 - Executor: orchestrator plus W4 content-factory worker
-- Base: exact post-LB-DS-068 reconciliation `origin/main`; replace with the reconciliation merge SHA before implementation
+- Base: exact `d594cc557886de44a5a9fbb9a4163ea1c1b0952b` (`origin/main`, PR #280 merge)
 - Branch: `feat/s1-final35-media-manifest`
 - Risk: content-media-manifest-boundary
 - Specification: `ROADMAP.md`; `docs/content/STARTER_CATALOG_35_RELEASE_READINESS.md`; ADR 0013; ADR 0016; PDR-008; LB-DS-055; LB-DS-067
@@ -763,9 +767,12 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 - Simulator required: no
 - Draft PR required: yes
 - Merge allowed: yes
-- Blocked on: LB-DS-068 must merge so its exact merge SHA and accepted LB-DS-067 truth are on `main`; implementation starts only from that merge SHA.
+- Blocked on: replacement independent review and seven terminal-success contexts for the lifecycle-corrected Draft PR #281 head. The preceding head `38d9d8c10445ea52b0e5b902be91ab9977ed6980` passed every technical/content gate and 7/7 CI but was blocked on stale lifecycle prose.
 - Must not touch: media binaries; provider credentials/IDs/URLs; upload receipts; delivery routes; database/migrations; Admin review stores/routes; card attachments; review checks/decisions; catalog seed; runtime flags; deployment; Preview/Production; learner apps; Bobo assets.
 - Acceptance: one generated record contains exactly 35 canonical content IDs and exactly 105 selected assets (35 current images, 35 word-audio and 35 sentence-audio), excludes every superseded original image, retains both known transcription exceptions as explicit review inputs, remains deterministic and carries only local candidate references plus fail-closed default-off state; no provider or runtime mutation occurs.
+- Head commit: read live from Draft PR #281 before readiness or merge; do not self-attest a stale SHA here
+- Draft PR: #281 — https://github.com/bahramghorbani/learnbox/pull/281
+- Local evidence: `pnpm test:start-35-final-media-manifest` passed 14/14 after a genuine RED run and source-lifecycle hardening; `pnpm verify:start-35-final-media-manifest` reported `items=35 assets=105 images=35 word_audio=35 sentence_audio=35 superseded_images_excluded=20 uploaded=0`; three consecutive builds produced identical manifest bytes; queue, documentation, security, continuity validators, Prettier, `git diff --check` and full `pnpm check` passed. The preceding head had 7/7 terminal-success CI; current-head replacement evidence remains required.
 
 ## LB-DS-061
 
