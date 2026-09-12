@@ -1,0 +1,1041 @@
+{
+  "batchId": "learnbox-start-a1-35-final-media-v1",
+  "state": "prepared_awaiting_private_upload",
+  "publicationBlocked": true,
+  "attachmentAllowed": false,
+  "uploadPerformed": false,
+  "urlsIncluded": false,
+  "privatePackageInRepo": false,
+  "learnerExposure": false,
+  "purpose": "Default-off final selection record for all 35 starter items and 105 assets: the current V2 image for each original 20-item entry, the unchanged V1 word and sentence audio, and the complete 45-asset final 15-item package. It declares expected kinds and MIME types only: no provider identifier, private locator, relative path, byte count, checksum or delivery URL is copied into the repository, and nothing is uploaded, attached, seeded or exposed.",
+  "sourceReferences": {
+    "originalV2Images": "validation/start-a1-v2-image-attachment-draft.json",
+    "originalV1Audio": "validation/start-a1-media-attachment-draft.json",
+    "finalCandidatePackage": "validation/start-a1-15-candidate-media-attachment-draft.json",
+    "catalogSlice": "validation/start-a1-35-catalog-slice.json"
+  },
+  "selection": {
+    "itemCount": 35,
+    "assetCount": 105,
+    "originalItemCount": 20,
+    "finalItemCount": 15,
+    "supersededImagesExcluded": 20,
+    "supersededImageAssetIds": [
+      "start-a1-apfel-image-v1",
+      "start-a1-bahnhof-image-v1",
+      "start-a1-bett-image-v1",
+      "start-a1-brot-image-v1",
+      "start-a1-danke-image-v1",
+      "start-a1-entschuldigung-image-v1",
+      "start-a1-gluecklich-image-v1",
+      "start-a1-guten-tag-image-v1",
+      "start-a1-haus-image-v1",
+      "start-a1-kaufen-image-v1",
+      "start-a1-klein-image-v1",
+      "start-a1-lernen-image-v1",
+      "start-a1-muede-image-v1",
+      "start-a1-schule-image-v1",
+      "start-a1-tisch-image-v1",
+      "start-a1-tuer-image-v1",
+      "start-a1-warten-image-v1",
+      "start-a1-wasser-image-v1",
+      "start-a1-wie-geht-es-ihnen-image-v1",
+      "start-a1-wohnen-image-v1"
+    ],
+    "countsByKind": { "image": 35, "word_audio": 35, "sentence_audio": 35 },
+    "versionsByKind": {
+      "image": { "v2": 20, "v1": 15 },
+      "word_audio": { "v1": 35 },
+      "sentence_audio": { "v1": 35 }
+    }
+  },
+  "requiredBeforeUpload": [
+    "owner-approved-isolated-private-storage-target",
+    "private_package_checksum_match"
+  ],
+  "recordedTranscriptionExceptions": ["start-a1-essen-sentence", "start-a1-gross-word"],
+  "contentIds": [
+    "start-a1-apfel",
+    "start-a1-bahnhof",
+    "start-a1-bett",
+    "start-a1-brot",
+    "start-a1-danke",
+    "start-a1-ei",
+    "start-a1-entschuldigung",
+    "start-a1-essen",
+    "start-a1-fenster",
+    "start-a1-gehen",
+    "start-a1-gluecklich",
+    "start-a1-gross",
+    "start-a1-guten-tag",
+    "start-a1-haus",
+    "start-a1-kaffee",
+    "start-a1-kalt",
+    "start-a1-kaufen",
+    "start-a1-klein",
+    "start-a1-lernen",
+    "start-a1-milch",
+    "start-a1-muede",
+    "start-a1-neu",
+    "start-a1-schule",
+    "start-a1-stadt",
+    "start-a1-supermarkt",
+    "start-a1-tee",
+    "start-a1-tisch",
+    "start-a1-trinken",
+    "start-a1-tuer",
+    "start-a1-uhr",
+    "start-a1-warten",
+    "start-a1-wasser",
+    "start-a1-wie-geht-es-ihnen",
+    "start-a1-wohnen",
+    "start-a1-zimmer"
+  ],
+  "assets": [
+    {
+      "assetId": "start-a1-apfel-image-v2",
+      "contentId": "start-a1-apfel",
+      "kind": "image",
+      "assetVersion": "v2",
+      "storageKey": "start-a1-apfel/image/v2",
+      "expectedMimeType": "image/png",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-apfel-word-audio-v1",
+      "contentId": "start-a1-apfel",
+      "kind": "word_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-apfel/word_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-apfel-sentence-audio-v1",
+      "contentId": "start-a1-apfel",
+      "kind": "sentence_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-apfel/sentence_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-bahnhof-image-v2",
+      "contentId": "start-a1-bahnhof",
+      "kind": "image",
+      "assetVersion": "v2",
+      "storageKey": "start-a1-bahnhof/image/v2",
+      "expectedMimeType": "image/png",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-bahnhof-word-audio-v1",
+      "contentId": "start-a1-bahnhof",
+      "kind": "word_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-bahnhof/word_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-bahnhof-sentence-audio-v1",
+      "contentId": "start-a1-bahnhof",
+      "kind": "sentence_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-bahnhof/sentence_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-bett-image-v2",
+      "contentId": "start-a1-bett",
+      "kind": "image",
+      "assetVersion": "v2",
+      "storageKey": "start-a1-bett/image/v2",
+      "expectedMimeType": "image/png",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-bett-word-audio-v1",
+      "contentId": "start-a1-bett",
+      "kind": "word_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-bett/word_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-bett-sentence-audio-v1",
+      "contentId": "start-a1-bett",
+      "kind": "sentence_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-bett/sentence_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-brot-image-v2",
+      "contentId": "start-a1-brot",
+      "kind": "image",
+      "assetVersion": "v2",
+      "storageKey": "start-a1-brot/image/v2",
+      "expectedMimeType": "image/png",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-brot-word-audio-v1",
+      "contentId": "start-a1-brot",
+      "kind": "word_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-brot/word_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-brot-sentence-audio-v1",
+      "contentId": "start-a1-brot",
+      "kind": "sentence_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-brot/sentence_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-danke-image-v2",
+      "contentId": "start-a1-danke",
+      "kind": "image",
+      "assetVersion": "v2",
+      "storageKey": "start-a1-danke/image/v2",
+      "expectedMimeType": "image/png",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-danke-word-audio-v1",
+      "contentId": "start-a1-danke",
+      "kind": "word_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-danke/word_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-danke-sentence-audio-v1",
+      "contentId": "start-a1-danke",
+      "kind": "sentence_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-danke/sentence_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-ei-image-v1",
+      "contentId": "start-a1-ei",
+      "kind": "image",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-ei/image/v1",
+      "expectedMimeType": "image/jpeg",
+      "attachmentStatus": "awaiting_private_upload"
+    },
+    {
+      "assetId": "start-a1-ei-word-audio-v1",
+      "contentId": "start-a1-ei",
+      "kind": "word_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-ei/word_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_upload"
+    },
+    {
+      "assetId": "start-a1-ei-sentence-audio-v1",
+      "contentId": "start-a1-ei",
+      "kind": "sentence_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-ei/sentence_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_upload"
+    },
+    {
+      "assetId": "start-a1-entschuldigung-image-v2",
+      "contentId": "start-a1-entschuldigung",
+      "kind": "image",
+      "assetVersion": "v2",
+      "storageKey": "start-a1-entschuldigung/image/v2",
+      "expectedMimeType": "image/png",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-entschuldigung-word-audio-v1",
+      "contentId": "start-a1-entschuldigung",
+      "kind": "word_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-entschuldigung/word_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-entschuldigung-sentence-audio-v1",
+      "contentId": "start-a1-entschuldigung",
+      "kind": "sentence_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-entschuldigung/sentence_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-essen-image-v1",
+      "contentId": "start-a1-essen",
+      "kind": "image",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-essen/image/v1",
+      "expectedMimeType": "image/jpeg",
+      "attachmentStatus": "awaiting_private_upload"
+    },
+    {
+      "assetId": "start-a1-essen-word-audio-v1",
+      "contentId": "start-a1-essen",
+      "kind": "word_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-essen/word_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_upload"
+    },
+    {
+      "assetId": "start-a1-essen-sentence-audio-v1",
+      "contentId": "start-a1-essen",
+      "kind": "sentence_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-essen/sentence_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_upload"
+    },
+    {
+      "assetId": "start-a1-fenster-image-v1",
+      "contentId": "start-a1-fenster",
+      "kind": "image",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-fenster/image/v1",
+      "expectedMimeType": "image/jpeg",
+      "attachmentStatus": "awaiting_private_upload"
+    },
+    {
+      "assetId": "start-a1-fenster-word-audio-v1",
+      "contentId": "start-a1-fenster",
+      "kind": "word_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-fenster/word_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_upload"
+    },
+    {
+      "assetId": "start-a1-fenster-sentence-audio-v1",
+      "contentId": "start-a1-fenster",
+      "kind": "sentence_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-fenster/sentence_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_upload"
+    },
+    {
+      "assetId": "start-a1-gehen-image-v1",
+      "contentId": "start-a1-gehen",
+      "kind": "image",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-gehen/image/v1",
+      "expectedMimeType": "image/jpeg",
+      "attachmentStatus": "awaiting_private_upload"
+    },
+    {
+      "assetId": "start-a1-gehen-word-audio-v1",
+      "contentId": "start-a1-gehen",
+      "kind": "word_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-gehen/word_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_upload"
+    },
+    {
+      "assetId": "start-a1-gehen-sentence-audio-v1",
+      "contentId": "start-a1-gehen",
+      "kind": "sentence_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-gehen/sentence_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_upload"
+    },
+    {
+      "assetId": "start-a1-gluecklich-image-v2",
+      "contentId": "start-a1-gluecklich",
+      "kind": "image",
+      "assetVersion": "v2",
+      "storageKey": "start-a1-gluecklich/image/v2",
+      "expectedMimeType": "image/png",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-gluecklich-word-audio-v1",
+      "contentId": "start-a1-gluecklich",
+      "kind": "word_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-gluecklich/word_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-gluecklich-sentence-audio-v1",
+      "contentId": "start-a1-gluecklich",
+      "kind": "sentence_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-gluecklich/sentence_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-gross-image-v1",
+      "contentId": "start-a1-gross",
+      "kind": "image",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-gross/image/v1",
+      "expectedMimeType": "image/jpeg",
+      "attachmentStatus": "awaiting_private_upload"
+    },
+    {
+      "assetId": "start-a1-gross-word-audio-v1",
+      "contentId": "start-a1-gross",
+      "kind": "word_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-gross/word_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_upload"
+    },
+    {
+      "assetId": "start-a1-gross-sentence-audio-v1",
+      "contentId": "start-a1-gross",
+      "kind": "sentence_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-gross/sentence_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_upload"
+    },
+    {
+      "assetId": "start-a1-guten-tag-image-v2",
+      "contentId": "start-a1-guten-tag",
+      "kind": "image",
+      "assetVersion": "v2",
+      "storageKey": "start-a1-guten-tag/image/v2",
+      "expectedMimeType": "image/png",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-guten-tag-word-audio-v1",
+      "contentId": "start-a1-guten-tag",
+      "kind": "word_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-guten-tag/word_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-guten-tag-sentence-audio-v1",
+      "contentId": "start-a1-guten-tag",
+      "kind": "sentence_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-guten-tag/sentence_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-haus-image-v2",
+      "contentId": "start-a1-haus",
+      "kind": "image",
+      "assetVersion": "v2",
+      "storageKey": "start-a1-haus/image/v2",
+      "expectedMimeType": "image/png",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-haus-word-audio-v1",
+      "contentId": "start-a1-haus",
+      "kind": "word_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-haus/word_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-haus-sentence-audio-v1",
+      "contentId": "start-a1-haus",
+      "kind": "sentence_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-haus/sentence_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-kaffee-image-v1",
+      "contentId": "start-a1-kaffee",
+      "kind": "image",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-kaffee/image/v1",
+      "expectedMimeType": "image/jpeg",
+      "attachmentStatus": "awaiting_private_upload"
+    },
+    {
+      "assetId": "start-a1-kaffee-word-audio-v1",
+      "contentId": "start-a1-kaffee",
+      "kind": "word_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-kaffee/word_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_upload"
+    },
+    {
+      "assetId": "start-a1-kaffee-sentence-audio-v1",
+      "contentId": "start-a1-kaffee",
+      "kind": "sentence_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-kaffee/sentence_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_upload"
+    },
+    {
+      "assetId": "start-a1-kalt-image-v1",
+      "contentId": "start-a1-kalt",
+      "kind": "image",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-kalt/image/v1",
+      "expectedMimeType": "image/jpeg",
+      "attachmentStatus": "awaiting_private_upload"
+    },
+    {
+      "assetId": "start-a1-kalt-word-audio-v1",
+      "contentId": "start-a1-kalt",
+      "kind": "word_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-kalt/word_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_upload"
+    },
+    {
+      "assetId": "start-a1-kalt-sentence-audio-v1",
+      "contentId": "start-a1-kalt",
+      "kind": "sentence_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-kalt/sentence_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_upload"
+    },
+    {
+      "assetId": "start-a1-kaufen-image-v2",
+      "contentId": "start-a1-kaufen",
+      "kind": "image",
+      "assetVersion": "v2",
+      "storageKey": "start-a1-kaufen/image/v2",
+      "expectedMimeType": "image/png",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-kaufen-word-audio-v1",
+      "contentId": "start-a1-kaufen",
+      "kind": "word_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-kaufen/word_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-kaufen-sentence-audio-v1",
+      "contentId": "start-a1-kaufen",
+      "kind": "sentence_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-kaufen/sentence_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-klein-image-v2",
+      "contentId": "start-a1-klein",
+      "kind": "image",
+      "assetVersion": "v2",
+      "storageKey": "start-a1-klein/image/v2",
+      "expectedMimeType": "image/png",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-klein-word-audio-v1",
+      "contentId": "start-a1-klein",
+      "kind": "word_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-klein/word_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-klein-sentence-audio-v1",
+      "contentId": "start-a1-klein",
+      "kind": "sentence_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-klein/sentence_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-lernen-image-v2",
+      "contentId": "start-a1-lernen",
+      "kind": "image",
+      "assetVersion": "v2",
+      "storageKey": "start-a1-lernen/image/v2",
+      "expectedMimeType": "image/png",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-lernen-word-audio-v1",
+      "contentId": "start-a1-lernen",
+      "kind": "word_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-lernen/word_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-lernen-sentence-audio-v1",
+      "contentId": "start-a1-lernen",
+      "kind": "sentence_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-lernen/sentence_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-milch-image-v1",
+      "contentId": "start-a1-milch",
+      "kind": "image",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-milch/image/v1",
+      "expectedMimeType": "image/jpeg",
+      "attachmentStatus": "awaiting_private_upload"
+    },
+    {
+      "assetId": "start-a1-milch-word-audio-v1",
+      "contentId": "start-a1-milch",
+      "kind": "word_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-milch/word_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_upload"
+    },
+    {
+      "assetId": "start-a1-milch-sentence-audio-v1",
+      "contentId": "start-a1-milch",
+      "kind": "sentence_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-milch/sentence_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_upload"
+    },
+    {
+      "assetId": "start-a1-muede-image-v2",
+      "contentId": "start-a1-muede",
+      "kind": "image",
+      "assetVersion": "v2",
+      "storageKey": "start-a1-muede/image/v2",
+      "expectedMimeType": "image/png",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-muede-word-audio-v1",
+      "contentId": "start-a1-muede",
+      "kind": "word_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-muede/word_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-muede-sentence-audio-v1",
+      "contentId": "start-a1-muede",
+      "kind": "sentence_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-muede/sentence_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-neu-image-v1",
+      "contentId": "start-a1-neu",
+      "kind": "image",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-neu/image/v1",
+      "expectedMimeType": "image/jpeg",
+      "attachmentStatus": "awaiting_private_upload"
+    },
+    {
+      "assetId": "start-a1-neu-word-audio-v1",
+      "contentId": "start-a1-neu",
+      "kind": "word_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-neu/word_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_upload"
+    },
+    {
+      "assetId": "start-a1-neu-sentence-audio-v1",
+      "contentId": "start-a1-neu",
+      "kind": "sentence_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-neu/sentence_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_upload"
+    },
+    {
+      "assetId": "start-a1-schule-image-v2",
+      "contentId": "start-a1-schule",
+      "kind": "image",
+      "assetVersion": "v2",
+      "storageKey": "start-a1-schule/image/v2",
+      "expectedMimeType": "image/png",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-schule-word-audio-v1",
+      "contentId": "start-a1-schule",
+      "kind": "word_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-schule/word_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-schule-sentence-audio-v1",
+      "contentId": "start-a1-schule",
+      "kind": "sentence_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-schule/sentence_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-stadt-image-v1",
+      "contentId": "start-a1-stadt",
+      "kind": "image",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-stadt/image/v1",
+      "expectedMimeType": "image/jpeg",
+      "attachmentStatus": "awaiting_private_upload"
+    },
+    {
+      "assetId": "start-a1-stadt-word-audio-v1",
+      "contentId": "start-a1-stadt",
+      "kind": "word_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-stadt/word_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_upload"
+    },
+    {
+      "assetId": "start-a1-stadt-sentence-audio-v1",
+      "contentId": "start-a1-stadt",
+      "kind": "sentence_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-stadt/sentence_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_upload"
+    },
+    {
+      "assetId": "start-a1-supermarkt-image-v1",
+      "contentId": "start-a1-supermarkt",
+      "kind": "image",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-supermarkt/image/v1",
+      "expectedMimeType": "image/jpeg",
+      "attachmentStatus": "awaiting_private_upload"
+    },
+    {
+      "assetId": "start-a1-supermarkt-word-audio-v1",
+      "contentId": "start-a1-supermarkt",
+      "kind": "word_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-supermarkt/word_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_upload"
+    },
+    {
+      "assetId": "start-a1-supermarkt-sentence-audio-v1",
+      "contentId": "start-a1-supermarkt",
+      "kind": "sentence_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-supermarkt/sentence_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_upload"
+    },
+    {
+      "assetId": "start-a1-tee-image-v1",
+      "contentId": "start-a1-tee",
+      "kind": "image",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-tee/image/v1",
+      "expectedMimeType": "image/jpeg",
+      "attachmentStatus": "awaiting_private_upload"
+    },
+    {
+      "assetId": "start-a1-tee-word-audio-v1",
+      "contentId": "start-a1-tee",
+      "kind": "word_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-tee/word_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_upload"
+    },
+    {
+      "assetId": "start-a1-tee-sentence-audio-v1",
+      "contentId": "start-a1-tee",
+      "kind": "sentence_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-tee/sentence_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_upload"
+    },
+    {
+      "assetId": "start-a1-tisch-image-v2",
+      "contentId": "start-a1-tisch",
+      "kind": "image",
+      "assetVersion": "v2",
+      "storageKey": "start-a1-tisch/image/v2",
+      "expectedMimeType": "image/png",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-tisch-word-audio-v1",
+      "contentId": "start-a1-tisch",
+      "kind": "word_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-tisch/word_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-tisch-sentence-audio-v1",
+      "contentId": "start-a1-tisch",
+      "kind": "sentence_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-tisch/sentence_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-trinken-image-v1",
+      "contentId": "start-a1-trinken",
+      "kind": "image",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-trinken/image/v1",
+      "expectedMimeType": "image/jpeg",
+      "attachmentStatus": "awaiting_private_upload"
+    },
+    {
+      "assetId": "start-a1-trinken-word-audio-v1",
+      "contentId": "start-a1-trinken",
+      "kind": "word_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-trinken/word_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_upload"
+    },
+    {
+      "assetId": "start-a1-trinken-sentence-audio-v1",
+      "contentId": "start-a1-trinken",
+      "kind": "sentence_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-trinken/sentence_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_upload"
+    },
+    {
+      "assetId": "start-a1-tuer-image-v2",
+      "contentId": "start-a1-tuer",
+      "kind": "image",
+      "assetVersion": "v2",
+      "storageKey": "start-a1-tuer/image/v2",
+      "expectedMimeType": "image/png",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-tuer-word-audio-v1",
+      "contentId": "start-a1-tuer",
+      "kind": "word_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-tuer/word_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-tuer-sentence-audio-v1",
+      "contentId": "start-a1-tuer",
+      "kind": "sentence_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-tuer/sentence_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-uhr-image-v1",
+      "contentId": "start-a1-uhr",
+      "kind": "image",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-uhr/image/v1",
+      "expectedMimeType": "image/jpeg",
+      "attachmentStatus": "awaiting_private_upload"
+    },
+    {
+      "assetId": "start-a1-uhr-word-audio-v1",
+      "contentId": "start-a1-uhr",
+      "kind": "word_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-uhr/word_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_upload"
+    },
+    {
+      "assetId": "start-a1-uhr-sentence-audio-v1",
+      "contentId": "start-a1-uhr",
+      "kind": "sentence_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-uhr/sentence_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_upload"
+    },
+    {
+      "assetId": "start-a1-warten-image-v2",
+      "contentId": "start-a1-warten",
+      "kind": "image",
+      "assetVersion": "v2",
+      "storageKey": "start-a1-warten/image/v2",
+      "expectedMimeType": "image/png",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-warten-word-audio-v1",
+      "contentId": "start-a1-warten",
+      "kind": "word_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-warten/word_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-warten-sentence-audio-v1",
+      "contentId": "start-a1-warten",
+      "kind": "sentence_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-warten/sentence_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-wasser-image-v2",
+      "contentId": "start-a1-wasser",
+      "kind": "image",
+      "assetVersion": "v2",
+      "storageKey": "start-a1-wasser/image/v2",
+      "expectedMimeType": "image/png",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-wasser-word-audio-v1",
+      "contentId": "start-a1-wasser",
+      "kind": "word_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-wasser/word_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-wasser-sentence-audio-v1",
+      "contentId": "start-a1-wasser",
+      "kind": "sentence_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-wasser/sentence_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-wie-geht-es-ihnen-image-v2",
+      "contentId": "start-a1-wie-geht-es-ihnen",
+      "kind": "image",
+      "assetVersion": "v2",
+      "storageKey": "start-a1-wie-geht-es-ihnen/image/v2",
+      "expectedMimeType": "image/png",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-wie-geht-es-ihnen-word-audio-v1",
+      "contentId": "start-a1-wie-geht-es-ihnen",
+      "kind": "word_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-wie-geht-es-ihnen/word_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-wie-geht-es-ihnen-sentence-audio-v1",
+      "contentId": "start-a1-wie-geht-es-ihnen",
+      "kind": "sentence_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-wie-geht-es-ihnen/sentence_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-wohnen-image-v2",
+      "contentId": "start-a1-wohnen",
+      "kind": "image",
+      "assetVersion": "v2",
+      "storageKey": "start-a1-wohnen/image/v2",
+      "expectedMimeType": "image/png",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-wohnen-word-audio-v1",
+      "contentId": "start-a1-wohnen",
+      "kind": "word_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-wohnen/word_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-wohnen-sentence-audio-v1",
+      "contentId": "start-a1-wohnen",
+      "kind": "sentence_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-wohnen/sentence_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_storage_url"
+    },
+    {
+      "assetId": "start-a1-zimmer-image-v1",
+      "contentId": "start-a1-zimmer",
+      "kind": "image",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-zimmer/image/v1",
+      "expectedMimeType": "image/jpeg",
+      "attachmentStatus": "awaiting_private_upload"
+    },
+    {
+      "assetId": "start-a1-zimmer-word-audio-v1",
+      "contentId": "start-a1-zimmer",
+      "kind": "word_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-zimmer/word_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_upload"
+    },
+    {
+      "assetId": "start-a1-zimmer-sentence-audio-v1",
+      "contentId": "start-a1-zimmer",
+      "kind": "sentence_audio",
+      "assetVersion": "v1",
+      "storageKey": "start-a1-zimmer/sentence_audio/v1",
+      "expectedMimeType": "audio/mpeg",
+      "attachmentStatus": "awaiting_private_upload"
+    }
+  ]
+}

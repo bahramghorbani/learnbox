@@ -4,11 +4,13 @@
 
 ## Active work
 
-### LB-DS-068 — Post-PR-#279 reconciliation
+### LB-DS-069 — Final 35-item/105-asset media manifest
 
-- **Status:** Draft PR #280 reconciles LB-DS-067, which merged in PR #279 at `7e987219a278316b25816dd883b76888c269ba29`, and authorizes LB-DS-069 from the eventual reconciliation merge baseline.
+- **Status:** implemented and locally verified on `feat/s1-final35-media-manifest` from the exact PR #280 merge baseline `d594cc557886de44a5a9fbb9a4163ea1c1b0952b`. One deterministic, upload-free record selects exactly 35 canonical contentIds and 105 assets: the current V2 image for each original 20-item entry, the unchanged V1 word and sentence audio for those items, and all 45 prepared assets of the final 15-item package, with every superseded V1 image excluded. It stays `prepared_awaiting_private_upload` with `publicationBlocked: true` and 0 attached assets.
+- **Lifecycle truth:** Draft PR #281 is open. The preceding head `38d9d8c` passed all technical/content gates and 7/7 CI but was correctly blocked on stale lifecycle prose; the corrected head requires replacement exact-head review and CI.
+- **Boundary:** the record declares expected kinds and MIME types only; it carries no provider identifier, private locator, relative path, byte count, checksum, delivery URL or release approval, and 0/35 items are release-approved.
 - **Provider boundary:** the owner attests the isolated target is private, dedicated, empty, disconnected from Production/Preview and attached to a project with no deployments. It remains unused; repository evidence contains no provider identifier or live-state proof.
-- **Next task:** after LB-DS-068 merges, LB-DS-069 may build only an offline generated manifest and validator/tests selecting exactly 105 assets for all 35 starter items.
+- **Next task:** obtain independent exact-head review and seven terminal-success CI contexts for Draft PR #281; the first upload remains separately owner-gated.
 - **Hard stop:** no credential pull, upload, attachment, review decision, seed, runtime activation, deployment or publication is authorized.
 
 ### Active release objective
@@ -27,7 +29,7 @@ A missed owner gate moves the 2026-10-12 target one-for-one unless a safe, expli
 
 ## Immediate execution order
 
-1. Merge LB-DS-068 reconciliation and start LB-DS-069 from its exact merge SHA.
-2. Build and verify the complete 35-item/105-asset manifest without upload or attachment.
+1. Merge LB-DS-069 only after independent exact-head PASS and seven terminal-success contexts on the unchanged head.
+2. Keep the complete 35-item/105-asset manifest upload-free and unattached until the owner authorizes private upload.
 3. Keep seed, activation and learner exposure downstream of human content approval.
 4. Admit no Android, payment, premium or generalized AI-factory work into v1.0.
