@@ -6,6 +6,8 @@ import { Bobo } from '../components/Bobo';
 
 const offlineMessage = 'اشکالی ندارد؛ وقتی دوباره آنلاین شدی، از همین‌جا ادامه می‌دهیم.';
 const reconnectMessage = 'دوباره آنلاین شدی؛ برای ادامه دوباره تلاش کن.';
+const offlineHeading = 'فعلاً به اینترنت وصل نیستی';
+const reconnectHeading = 'دوباره آنلاین شدی';
 
 export default function OfflinePage() {
   const [isOnline, setIsOnline] = useState(false);
@@ -14,6 +16,7 @@ export default function OfflinePage() {
     const goOnline = () => setIsOnline(true);
     const goOffline = () => setIsOnline(false);
 
+    setIsOnline(window.navigator.onLine);
     window.addEventListener('online', goOnline);
     window.addEventListener('offline', goOffline);
 
@@ -33,9 +36,10 @@ export default function OfflinePage() {
           <Bobo expression="recovery" className="bobo bobo-offline" priority />
         </div>
         <p className="offline-kicker">LearnBox کنار تو می‌ماند</p>
-        <h1 id="offline-title">فعلاً به اینترنت وصل نیستی</h1>
-        <p className="offline-message" role="status">
-          {isOnline ? reconnectMessage : offlineMessage}
+        <h1 id="offline-title">{isOnline ? reconnectHeading : offlineHeading}</h1>
+        <p className="offline-message">{isOnline ? reconnectMessage : offlineMessage}</p>
+        <p className="sr-only" role="status" aria-atomic="true">
+          {isOnline ? reconnectMessage : ''}
         </p>
         <p className="offline-reassurance">پاسخ‌های قبلی‌ات با خیال راحت روی دستگاهت می‌مانند.</p>
         <button className="offline-retry" type="button" onClick={() => window.location.reload()}>

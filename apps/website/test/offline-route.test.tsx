@@ -4,6 +4,7 @@ import { act, createElement, Fragment } from 'react';
 import { createRoot } from 'react-dom/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { NetworkStatus } from '../app/components/NetworkStatus';
 import OfflinePage from '../app/offline/page';
 
 const offlineMessage = 'اشکالی ندارد؛ وقتی دوباره آنلاین شدی، از همین‌جا ادامه می‌دهیم.';
@@ -16,10 +17,12 @@ describe('OfflinePage', () => {
   afterEach(async () => {
     await rendered?.unmount();
     rendered = undefined;
+    vi.restoreAllMocks();
     vi.unstubAllGlobals();
   });
 
   it('exposes an accessible name by pointing aria-labelledby at the offline heading', async () => {
+    vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
     rendered = await renderOfflinePage();
 
     const section = rendered.container.querySelector('section');
@@ -38,17 +41,30 @@ describe('OfflinePage', () => {
     expect(illustration?.getAttribute('aria-hidden')).toBe('true');
   });
 
-  it('announces the offline state politely and claims no sync or recovery', async () => {
+  it('shows the offline state without duplicating the root connection live region', async () => {
+    vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
     rendered = await renderOfflinePage();
 
-    const status = rendered.container.querySelector('.offline-message');
-    // role="status" is an implicit polite live region, so no extra aria-live is needed.
-    expect(status?.getAttribute('role')).toBe('status');
-    expect(status?.textContent).toBe(offlineMessage);
+    const message = rendered.container.querySelector('.offline-message');
+    expect(message?.getAttribute('role')).toBeNull();
+    expect(message?.textContent).toBe(offlineMessage);
+    expect(rendered.container.querySelector('[role="status"]')?.textContent).toBe('');
     expect(rendered.text()).not.toMatch(syncClaimPattern);
   });
 
+  it('reports an already-online browser truthfully after hydration', async () => {
+    vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(true);
+    rendered = await renderOfflinePage();
+
+    expect(rendered.container.querySelector('h1')?.textContent).toBe('دوباره آنلاین شدی');
+    expect(rendered.container.querySelector('.offline-message')?.textContent).toBe(
+      reconnectMessage,
+    );
+    expect(rendered.container.querySelector('[role="status"]')?.textContent).toBe(reconnectMessage);
+  });
+
   it('announces a truthful reconnect state once the browser reports online again', async () => {
+    vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
     rendered = await renderOfflinePage();
 
     await act(async () => {
@@ -56,13 +72,37 @@ describe('OfflinePage', () => {
     });
 
     const announce = () => rendered?.container.querySelector('.offline-message')?.textContent ?? '';
+    expect(rendered.container.querySelector('h1')?.textContent).toBe('دوباره آنلاین شدی');
     expect(announce()).toBe(reconnectMessage);
+    expect(rendered.container.querySelector('[role="status"]')?.textContent).toBe(reconnectMessage);
     expect(announce()).not.toMatch(syncClaimPattern);
 
     await act(async () => {
       window.dispatchEvent(new Event('offline'));
     });
+    expect(rendered.container.querySelector('h1')?.textContent).toBe('فعلاً به اینترنت وصل نیستی');
     expect(announce()).toBe(offlineMessage);
+    expect(rendered.container.querySelector('[role="status"]')?.textContent).toBe('');
+  });
+
+  it('keeps one non-empty connection announcement in the composed layout', async () => {
+    vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
+    rendered = await renderOfflinePage(true);
+
+    const activeStatuses = () =>
+      [...rendered!.container.querySelectorAll('[role="status"]')].filter((status) =>
+        status.textContent?.trim(),
+      );
+
+    expect(activeStatuses()).toHaveLength(1);
+    expect(activeStatuses()[0]?.textContent).toContain('اینترنت قطع است');
+
+    await act(async () => {
+      window.dispatchEvent(new Event('online'));
+    });
+
+    expect(activeStatuses()).toHaveLength(1);
+    expect(activeStatuses()[0]?.textContent).toBe(reconnectMessage);
   });
 
   it('keeps the retry action a native, keyboard-focusable button', async () => {
@@ -85,7 +125,7 @@ type Rendered = {
   unmount(): Promise<void>;
 };
 
-async function renderOfflinePage(): Promise<Rendered> {
+async function renderOfflinePage(withNetworkStatus = false): Promise<Rendered> {
   const container = document.createElement('div');
   document.body.append(container);
   const root = createRoot(container);
@@ -95,7 +135,11 @@ async function renderOfflinePage(): Promise<Rendered> {
   ).IS_REACT_ACT_ENVIRONMENT = true;
 
   await act(async () => {
-    root.render(createElement(OfflinePage));
+    root.render(
+      withNetworkStatus
+        ? createElement(Fragment, null, createElement(NetworkStatus), createElement(OfflinePage))
+        : createElement(OfflinePage),
+    );
   });
 
   return {
