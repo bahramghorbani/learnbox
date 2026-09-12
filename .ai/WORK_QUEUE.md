@@ -7,8 +7,8 @@ start. Historical tasks remain for traceability and must not be duplicated.
 
 ### Current release execution
 
-- **S0 — 30-day finish-line reset:** review requested in LB-DS-066. Owner scope decision: official Web/PWA-first v1.0 targeted for 2026-10-12; Android, commerce and premium packs move to v1.1+.
-- **S1 — Private media + 35-item release batch:** blocked only on the owner-selected isolated private-media target and distinct upload/attachment authorization; all deterministic local preparation may continue.
+- **S0 — 30-day finish-line reset:** accepted in PR #278 at `34d0d6dbd85bb42c07a8aaee1576505b0eb8db72`. Official Web/PWA-first v1.0 is targeted for 2026-10-12; Android, commerce and premium packs are v1.1+.
+- **S1 — Private media + 35-item release batch:** in progress. The owner attests the isolated private target is private, dedicated, empty, deployment-free and disconnected from Production/Preview; repository evidence contains no provider identifier or live-state proof, and no upload is authorized. LB-DS-067 promotes the final 15-item deterministic preparation while the distinct upload approval remains blocked.
 - **S2 — Server-authoritative Web loop:** ready after S1's canonical content identifiers are stable; implementation and default-off integration can overlap S1 after interfaces are fixed.
 - **S3 — Web release essentials:** partial foundations; account/privacy/support/operations work may overlap S2 with disjoint paths.
 - **S4 — Closed alpha:** planned for 2026-10-04 through 2026-10-08 after S1–S3 integration evidence.
@@ -681,13 +681,13 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 
 ## LB-DS-060
 
-- Status: in_progress
+- Status: accepted
 - Executor: orchestrator plus W4 content-factory worker
 - Base: exact `dfede397a9f2ffdccdd7e7fe916688f9fdc6685e` (`origin/main`, PR #275 merge)
 - Branch: local-only `local/start15-media-attachment-rebased` at reviewed head `aec94daf678322430cfe3ab34db44cd24b65d3b9`; no upstream, push or PR
 - Risk: content-media-preparation-boundary
 - Specification: `docs/content/STARTER_CATALOG_35_RELEASE_READINESS.md`; `docs/architecture/PRIVATE_MEDIA_DELIVERY.md`; ADR 0013; ADR 0016; PDR-003; PDR-008; `.ai/worker-reports/LB-DS-055.md`
-- Outcome: extract the already-reviewed LB-DS-057 deterministic offline attachment-preparation snapshot onto current main without inherited sidebar lineage, upload, attachment, private locator data or learner exposure.
+- Outcome: extract the already-reviewed LB-DS-057 deterministic offline attachment-preparation snapshot onto a clean local main-based branch without inherited sidebar lineage, upload, attachment, private locator data or learner exposure.
 - Allowed paths: `scripts/build-start-15-candidate-media-attachment-draft.mjs`; `scripts/validate-start-15-candidate-media-attachment.mjs`; `scripts/validate-start-15-candidate-media-attachment.test.mjs`; `content/packs/learnbox-start/validation/start-a1-15-candidate-media-attachment-draft.json`; `package.json`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-057.md`; `CURRENT_WORK.md`; `docs/PRODUCT_STATUS.md`
 - Documentation updates: update only the queue, LB-DS-057 report, current-work and product-status records to identify the clean baseline and preserve the offline-only boundary
 - Owner gates: no gate for clean local extraction and deterministic verification. Push and merge remain unauthorized for this task; upload is prohibited until an isolated owner-approved private-storage target exists. Attachment, approval, seed, release and publication remain separate owner gates.
@@ -696,9 +696,30 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 - Simulator required: no
 - Draft PR required: no
 - Merge allowed: no
-- Blocked on: none for the deterministic local extraction, which passed independent exact-head fail-closed review. The real upload remains blocked on a separately approved isolated target, owner-authenticated credentials and a distinct owner upload approval.
+- Blocked on: none for the deterministic local extraction, which passed independent exact-head fail-closed review. LB-DS-067 supersedes its no-upstream boundary after the separately owner-authorized isolated target was created; the owner attests its boundary and repository evidence contains no provider identifier or live-state proof. Upload still requires a distinct owner approval.
 - Must not touch: private package files or manifest; delivery routes; private-media attestation imports; database/migrations; Admin review stores/routes; card attachments; review checks/decisions; catalog seed; runtime flags/secrets; deployment or any staging/Preview/Production configuration; learner apps; Bobo assets
 - Acceptance: the clean local branch differs from its exact current-main base only by the nine listed preparation/status paths; the generated record describes 15 items/45 expected assets with `prepared_awaiting_private_upload`, `attachmentAllowed: false`, `uploadPerformed: false`, zero attached assets and no private URL/path/checksum/size; all focused and governance checks pass; no push, upload or external mutation occurs.
+
+## LB-DS-067
+
+- Status: review_requested
+- Executor: orchestrator plus W4 content-factory worker
+- Base: exact `34d0d6dbd85bb42c07a8aaee1576505b0eb8db72` (`origin/main`, PR #278 merge)
+- Branch: `feat/s1-final15-media-prep`
+- Risk: content-media-preparation-boundary
+- Specification: `ROADMAP.md`; `docs/content/STARTER_CATALOG_35_RELEASE_READINESS.md`; `docs/operations/ISOLATED_PRIVATE_MEDIA_STORAGE.md`; ADR 0013; ADR 0016; PDR-008; LB-DS-060
+- Outcome: promote the independently reviewed, deterministic 15-item/45-asset offline preparation onto the Web-v1 current main so the complete 35-item release batch can proceed without uploading, attaching or exposing private media.
+- Allowed paths: `scripts/build-start-15-candidate-media-attachment-draft.mjs`; `scripts/validate-start-15-candidate-media-attachment.mjs`; `scripts/validate-start-15-candidate-media-attachment.test.mjs`; `content/packs/learnbox-start/validation/start-a1-15-candidate-media-attachment-draft.json`; `package.json`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-057.md`; `.ai/worker-reports/LB-DS-067.md`; `CURRENT_WORK.md`; `docs/PRODUCT_STATUS.md`
+- Documentation updates: accept LB-DS-060 as preserved local provenance; identify the current branch/base; record only non-secret target-shape evidence and retain every downstream owner gate.
+- Owner gates: target creation only was authorized and completed within the existing plan. This task grants no OIDC-token pull, upload, attachment, review decision, seed, runtime activation, deployment or publication.
+- Handoff evidence: exact PR #278 base; parent-to-head changed paths; source-head provenance; deterministic double-build; focused tests; queue/documentation/continuity/security validators; full `pnpm check`; Prettier; `git diff --check`; independent exact-head fail-closed review.
+- Required checks: `pnpm test:start-15-candidate-attachment`; `pnpm verify:start-15-candidate-attachment`; deterministic double-build; `pnpm verify:ai-worker-queue`; `pnpm verify:documentation-governance`; `pnpm verify:security`; `pnpm verify:ai-continuity`; `pnpm check`; Prettier; `git diff --check`; independent exact-head review; seven terminal GitHub/Vercel contexts.
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+- Blocked on: none for offline preparation. The first upload is separately blocked on an exact final-asset manifest, owner-authenticated short-lived OIDC and distinct owner approval.
+- Must not touch: media binaries; provider credentials/IDs/URLs; upload receipt; delivery routes; database/migrations; Admin review stores/routes; card attachments; review decisions; catalog seed; runtime flags; deployment; Preview/Production; learner app; Bobo assets.
+- Acceptance: exactly the ten allowed paths differ from the base; the generated record describes 15 canonical items and 45 expected local assets with `prepared_awaiting_private_upload`, `attachmentAllowed: false`, `uploadPerformed: false`, no locator/size/hash copied into release docs, deterministic regeneration and all required checks green.
 
 ## LB-DS-061
 
