@@ -52,23 +52,23 @@ Independently checks acceptance criteria, user journey, security boundaries, acc
 
 The former M0–M8 map remains historical implementation provenance. Active delivery follows the bounded seasons in `ROADMAP.md`:
 
-| Season                             | Primary roles              | Safe overlap                                                 | Must wait for                                                  |
-| ---------------------------------- | -------------------------- | ------------------------------------------------------------ | -------------------------------------------------------------- |
-| S0 scope/canon freeze              | supervisor + W1 + W8       | none needed                                                  | current repository audit                                       |
-| S1 starter + Web alpha             | W4, then W2/W6, then W7/W8 | content review may overlap non-mutating Web test preparation | isolated media decision; 35/35 approval before seed/activation |
-| S2 operable product + premium pack | W4/W5 + W2/W6/W7           | premium content and disjoint account/ops paths               | stable S1 content/account contracts                            |
-| S3 Cafe Bazaar commerce            | W5/W6 + W8                 | limited UI work after contract lock                          | merchant/provider readiness and S2 pack                        |
-| S4 Android online candidate        | W3/W6/W7 + W8              | S3 only after auth/entitlement contracts stabilize           | non-SSO gateway and S1 server truth                            |
-| S5 beta/public release             | W7/W8 + owner              | defect fixes on disjoint paths                               | S1–S4 exit evidence                                            |
+| Season                           | Primary roles        | Safe overlap                      | Must wait for                                                  |
+| -------------------------------- | -------------------- | --------------------------------- | -------------------------------------------------------------- |
+| S0 Web-first scope freeze        | supervisor + W1 + W8 | none needed                       | current repository audit                                       |
+| S1 starter content/private media | W4 + W8 + owner      | non-mutating S2 preparation       | isolated media decision; 35/35 approval before seed/activation |
+| S2 Web server truth and sync     | W2 + W6 + W8         | S1 until seed/activation boundary | 35/35 approved content for seed                                |
+| S3 account/ops hardening         | W2 + W6 + W7 + W8    | disjoint S1/S2 paths              | stable Web/content contracts                                   |
+| S4 Web closed alpha              | W7 + W8 + owner      | release-blocker fixes only        | integrated S1–S3 candidate                                     |
+| S5 public Web/PWA release        | W7 + W8 + owner      | phased rollout only               | S4 go decision and release approval                            |
 
-Native iOS, direct Web payment and general AI-generation UX are post-v1 workstreams and must not consume v1 critical-path capacity.
+Android/Cafe Bazaar, every payment path, native iOS and general AI-generation UX are v1.1+ workstreams and must not consume Web v1.0 critical-path capacity.
 
 ## Flow limits
 
 - Keep one active security-sensitive serial chain and at most two disjoint implementation workstreams.
 - Put status changes in the feature PR; a separate post-merge docs PR is exceptional.
 - Track delivery by season exit evidence, not merged-PR count.
-- Target at least 70% functional PRs and no more than 15% docs-only maintenance PRs over a rolling 30 days.
+- During the 30-day release window, target at least 85% functional PRs and no more than 10% docs-only maintenance PRs.
 
 ## Work item contract
 

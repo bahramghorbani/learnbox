@@ -1,6 +1,7 @@
 # LearnBox — Master Product, Design & Execution Specification for Codex
 
 > **Document status:** Long-horizon product and design specification; not authoritative for current release scope  
+> **Current release note:** Web/PWA-first v1.0 is targeted for 2026-10-12; Android, commerce and premium packs are v1.1+ under `ROADMAP.md`.  
 > **Project codename:** LearnBox  
 > **Probable public domain:** `learnboxapp.com`  
 > **Primary market:** Persian-speaking learners of German  

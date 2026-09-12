@@ -5,11 +5,11 @@ Use this brief after `AGENTS.md` and `AI_BOOTSTRAP.md`. The canonical product st
 ## Current product truth
 
 - LearnBox is an online-first German vocabulary Leitner product, not an offline-only app and not a prototype.
-- The free app includes approximately 35 complete A1 words; premium vocabulary packs are purchased separately.
+- Web/PWA v1.0 targets 2026-10-12 with 35 complete A1 words; Android, premium packs and payment are v1.1+.
 - Temporary connectivity loss is tolerated by a durable local queue and idempotent reconnect sync.
 - `learnboxapp.com` is an independent informational landing site and must not be coupled to learner, admin, API or private media.
 - Web is the current learner/iOS interim surface; Android is native; native iOS is a later App Store milestone.
-- Payments: Web direct bank gateway, Android Cafe Bazaar, iOS Apple IAP; prices/product IDs differ, entitlement is shared server-side.
+- Future payments remain platform-specific (Web bank, Cafe Bazaar, Apple IAP) with shared server entitlement, but none is a Web v1.0 requirement.
 - AI can generate pack drafts and media candidates; human review is required before publication.
 
 ## Read order
@@ -25,7 +25,7 @@ Use this brief after `AGENTS.md` and `AI_BOOTSTRAP.md`. The canonical product st
 
 ## Delivery model
 
-Work by milestone and grouped workstream, not serial micro-tasks. Use independent worktrees only for genuinely independent paths. Auth/session, database, payments, infrastructure, release and legal/store work remain serial with high-reasoning review.
+Work by the S0–S5 dates and exit gates in `ROADMAP.md`, not serial micro-tasks. Use at most two independent worktrees for genuinely disjoint paths. Auth/session, database, infrastructure and release remain serial with high-reasoning review.
 
 ## Safety
 

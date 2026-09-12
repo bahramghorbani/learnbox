@@ -1,6 +1,6 @@
 # LearnBox feature catalog
 
-This is the compact product catalog. The detailed status of every item is in [`docs/PRODUCT_STATUS.md`](../PRODUCT_STATUS.md). A feature is not a release feature merely because a component, test, flag or design exists.
+This is the compact long-horizon product catalog. The detailed status of every item is in [`docs/PRODUCT_STATUS.md`](../PRODUCT_STATUS.md). Web/PWA v1.0 scope is defined only by `ROADMAP.md` and `docs/product/PRD.md`; a listed feature is not necessarily a v1.0 feature.
 
 ## Learner app
 
@@ -42,6 +42,8 @@ This is the compact product catalog. The detailed status of every item is in [`d
 - Provider, job and service health visibility.
 
 ## Commerce
+
+Commerce is v1.1+ and cannot delay Web/PWA v1.0.
 
 - Free app and free A1 entitlement.
 - Web direct bank gateway.

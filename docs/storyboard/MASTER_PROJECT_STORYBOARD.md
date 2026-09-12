@@ -4,16 +4,16 @@
 
 ## Active release mapping
 
-| Season                      | Delivery outcome                                                         | Main surfaces                        |
-| --------------------------- | ------------------------------------------------------------------------ | ------------------------------------ |
-| S0 finish-line freeze       | One canonical scope, dependency path, forecast and change rule           | Documentation/governance             |
-| S1 starter + Web alpha      | Human-approved 35-item starter and lossless invited Web learning         | Content, Admin, Web, API, operations |
-| S2 operable product         | Release-critical Admin/account/ops plus one premium pack                 | Admin, Web, Android, API, content    |
-| S3 Cafe Bazaar commerce     | One server-verified Android purchase and shared entitlement              | Android, Admin, API                  |
-| S4 Android online candidate | Native account/content/learning/sync/entitlement release candidate       | Android, API, infrastructure         |
-| S5 beta + public v1.0       | Closed-beta evidence and supported Android/Cafe Bazaar + Web/PWA release | All release-critical surfaces        |
+| Season                    | Delivery outcome                                                     | Main surfaces               |
+| ------------------------- | -------------------------------------------------------------------- | --------------------------- |
+| S0 30-day reset           | Web/PWA-only v1.0 scope, dependency path and 2026-10-12 target       | Documentation/governance    |
+| S1 content/media          | Isolated private media and human-approved 35-item starter            | Content, Admin, operations  |
+| S2 Web learning truth     | Server-authoritative learning and lossless reconnect                 | Web, API, data              |
+| S3 release essentials     | Account/privacy/support and exercised release/rollback/observability | Web, Admin, API, operations |
+| S4 closed alpha           | Five-day invited cohort with blocker closure                         | Web, API, operations        |
+| S5 public Web/PWA release | Phased public rollout with rollback readiness                        | Web, API, operations        |
 
-Native iOS/StoreKit, direct Web payment and general AI-generation UX are post-v1.0. They are not active release milestones.
+Native Android/Cafe Bazaar, every payment path, premium packs/shared paid entitlements, native iOS/StoreKit and general AI-generation UX are v1.1+ and are not active release milestones.
 
 ## Relationship to former milestones and stages
 
