@@ -7,7 +7,7 @@ start. Historical tasks remain for traceability and must not be duplicated.
 
 ### Current release execution
 
-- **S0 — Finish-line freeze:** in progress through LB-DS-065. It replaces the former milestone list as the active delivery model.
+- **S0 — Finish-line freeze:** accepted in PR #276 at `4742a1c06d5ee5fcb0b45721cd95341463a414e6`. The S0 release model is now active.
 - **S1 — Starter + Web closed alpha:** blocked on an owner-selected isolated private-media target, separate upload/attachment authorization, 35/35 human release approval, seed and controlled activation.
 - **S2 — Operable product + one premium pack:** partial foundations; starts after stable S1 contracts.
 - **S3 — Cafe Bazaar commerce MVP:** planned; provider account/product/terms are unmeasured external inputs.
@@ -44,7 +44,7 @@ The M0–M8 records below retain implementation provenance only; they do not ove
 
 ## LB-DS-065
 
-- Status: review_requested
+- Status: accepted
 - Executor: supervisor plus independent product/architecture and release-estimation reviewers
 - Base: exact `dfede397a9f2ffdccdd7e7fe916688f9fdc6685e` (`origin/main`, PR #275 merge)
 - Branch: `docs/release-seasons-finish-line`
@@ -59,9 +59,13 @@ The M0–M8 records below retain implementation provenance only; they do not ove
 - Simulator required: no
 - Draft PR required: yes
 - Merge allowed: yes
-- Blocked on: none for drafting and review. Merge requires exact-head review and all required CI checks.
+- Head commit: `e0b8d61c6c49a28ac8255f6f377a4fb408b8d0c8`
+- Draft PR: #276 — https://github.com/bahramghorbani/learnbox/pull/276 (merged)
+- Merge commit: `4742a1c06d5ee5fcb0b45721cd95341463a414e6`
+- Blocked on: none; exact-head independent review passed and all seven GitHub/Vercel checks passed before PR #276 merged.
 - Must not touch: application code; package manifests/lockfiles; content/media records; database/migrations; auth/session; provider configuration; credentials; runtime flags; deployment; staging/Preview/Production; Bobo assets.
 - Acceptance: one canonical public-v1.0 definition names included/excluded scope, S0–S5 tasks, dependency order, measurable exit gates, owner/provider blockers, best/target/outer forecast and a reforecast method; the 30-stage, payment-in-alpha, iOS-in-v1 and 300–500-word authority contradictions no longer govern delivery; current LB-DS-060/064 status is reconciled without external side effects.
+- Accepted evidence: PR #276 merged at `4742a1c06d5ee5fcb0b45721cd95341463a414e6` on 2026-09-12T09:17:29Z after replacement independent exact-head PASS for `e0b8d61c6c49a28ac8255f6f377a4fb408b8d0c8`, seven terminal-success checks and a full local `pnpm check`.
 
 ## LB-DS-026
 
