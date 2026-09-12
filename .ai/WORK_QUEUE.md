@@ -774,6 +774,27 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 - Draft PR: #281 — https://github.com/bahramghorbani/learnbox/pull/281
 - Local evidence: `pnpm test:start-35-final-media-manifest` passed 14/14 after a genuine RED run and source-lifecycle hardening; `pnpm verify:start-35-final-media-manifest` reported `items=35 assets=105 images=35 word_audio=35 sentence_audio=35 superseded_images_excluded=20 uploaded=0`; three consecutive builds produced identical manifest bytes; queue, documentation, security, continuity validators, Prettier, `git diff --check` and full `pnpm check` passed. The preceding head had 7/7 terminal-success CI; current-head replacement evidence remains required.
 
+## LB-DS-071
+
+- Status: in_progress
+- Executor: isolated Web accessibility worker plus independent reviewer
+- Base: exact `b49f325c0fa328a90b7e1da0f53e0e509d69cc5a` (`origin/main`, PR #281 merge)
+- Branch: `fix/web-offline-error-recovery-a11y`
+- Risk: routine-web-error-state-accessibility
+- Specification: `ROADMAP.md` S3; `docs/design/DESIGN_STATUS.md`; `docs/design/ACCESSIBILITY.md`; `AGENTS.md`
+- Outcome: make the Next `/offline` route, global error boundary and service-worker static offline fallback accessible, Persian-RTL correct and truthful about reconnect state, without touching learning, sync, identity or any server boundary.
+- Allowed paths: `apps/website/app/offline/page.tsx`; `apps/website/app/error.tsx`; `apps/website/public/offline.html`; `apps/website/public/sw.js` (cache-version literal only); `apps/website/test/offline-route.test.tsx`; `apps/website/test/error-state.test.tsx`; `apps/website/test/offline-fallback.test.tsx`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-071.md`
+- Documentation updates: only this task record and handoff report until LB-DS-070 status documents settle; shared current/product status will be reconciled after rebase, not overwritten.
+- Owner gates: none for repository-only default behavior and accessibility tests. Deployment, Preview/Production activation, provider state and public claims remain prohibited.
+- Handoff evidence: exact merged base; genuine RED before production edits; accessible-name, announcement, keyboard, reconnect and reduced-motion tests; service-worker cache bump proof; website tests/typecheck/build; security validator; full check; Prettier; `git diff --check`; independent exact-head review.
+- Required checks: focused offline/error/fallback tests; `pnpm --filter @learnbox/website test`; `pnpm --filter @learnbox/website typecheck`; `pnpm --filter @learnbox/website build`; `pnpm verify:security`; `pnpm check`; Prettier; `git diff --check`; independent exact-head review; seven terminal GitHub/Vercel contexts.
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+- Blocked on: implementation, exact-head review and CI; it may proceed in parallel because its production/test paths are disjoint from LB-DS-070.
+- Must not touch: `apps/website/app/globals.css`; `package.json`; components; API routes; `apps/website/lib/**`; learner/auth/sync/server state; database/migrations; mobile/Admin/content/infrastructure; env files; Bobo assets; providers; credentials; flags; deployments; Preview/Production; legal or release decisions.
+- Acceptance: the three Web failure surfaces have valid accessible names, decorative imagery is hidden from assistive technology, failure/reconnect status is announced truthfully, retry remains keyboard-operable, Persian RTL and reduced-motion behavior remain intact, and the static fallback update is delivered by a single cache-version increment with no caching-strategy change.
+
 ## LB-DS-061
 
 - Status: accepted
