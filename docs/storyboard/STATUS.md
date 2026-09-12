@@ -8,14 +8,14 @@ The original 30-stage storyboard is historical design context. Current delivery 
 
 ## Release-season map
 
-| Season | Outcome                                                        | Status      | Primary unresolved gate                                     |
-| ------ | -------------------------------------------------------------- | ----------- | ----------------------------------------------------------- |
-| S0     | One canonical finish line, bounded scope and forecast controls | in progress | merge reviewed canonical update                             |
-| S1     | 35-item starter live in a lossless Web closed alpha            | blocked     | isolated private media, human approval, seed and activation |
-| S2     | Operable Admin/account/ops and one release-ready premium pack  | partial     | complete only release-critical workflows and content        |
-| S3     | One Cafe Bazaar purchase produces a shared entitlement         | planned     | merchant/provider readiness and server adapter              |
-| S4     | Native Android online release candidate                        | blocked     | non-SSO gateway and stable content/commerce contracts       |
-| S5     | Closed-beta evidence and supported public v1.0                 | planned     | S1–S4 and owner/store release gates                         |
+| Season | Outcome                                                        | Status   | Primary unresolved gate                                     |
+| ------ | -------------------------------------------------------------- | -------- | ----------------------------------------------------------- |
+| S0     | One canonical finish line, bounded scope and forecast controls | accepted | none; PR #276 merged                                        |
+| S1     | 35-item starter live in a lossless Web closed alpha            | blocked  | isolated private media, human approval, seed and activation |
+| S2     | Operable Admin/account/ops and one release-ready premium pack  | partial  | complete only release-critical workflows and content        |
+| S3     | One Cafe Bazaar purchase produces a shared entitlement         | planned  | merchant/provider readiness and server adapter              |
+| S4     | Native Android online release candidate                        | blocked  | non-SSO gateway and stable content/commerce contracts       |
+| S5     | Closed-beta evidence and supported public v1.0                 | planned  | S1–S4 and owner/store release gates                         |
 
 ## Foundation-to-season mapping
 
