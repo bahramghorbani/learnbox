@@ -77,15 +77,15 @@ LearnBox is an online-first German vocabulary Leitner application for Persian-sp
 
 ### Commerce
 
-| Capability                       | Status             | Target                                                                   |
-| -------------------------------- | ------------------ | ------------------------------------------------------------------------ |
-| Free app and free A1 entitlement | Approved direction | Launch baseline                                                          |
-| Web direct bank gateway          | Deferred post-v1.0 | Direct Web purchase is not enabled in alpha and is not on the v1.0 path  |
-| Android Cafe Bazaar billing      | Planned            | Native in-app purchase with server-side verification                     |
-| iOS Apple In-App Purchase        | Planned            | StoreKit with server-side verification                                   |
-| Platform-specific pricing        | Approved direction | Separate offers/prices/product IDs per platform; shared pack entitlement |
-| Restore/refund/revoke            | Planned            | Required in commerce MVP                                                 |
-| Subscription                     | Deferred           | Do not mix with one-time vocabulary packs until explicitly approved      |
+| Capability                       | Status             | Target                                                                    |
+| -------------------------------- | ------------------ | ------------------------------------------------------------------------- |
+| Free app and free A1 entitlement | Approved direction | Launch baseline                                                           |
+| Web direct bank gateway          | Deferred post-v1.0 | Direct Web purchase is not enabled in alpha and is not on the v1.0 path   |
+| Android Cafe Bazaar billing      | Deferred to v1.1   | Native in-app purchase with server-side verification; not a Web v1.0 gate |
+| iOS Apple In-App Purchase        | Planned            | StoreKit with server-side verification                                    |
+| Platform-specific pricing        | Approved direction | Separate offers/prices/product IDs per platform; shared pack entitlement  |
+| Restore/refund/revoke            | Planned            | Required in commerce MVP                                                  |
+| Subscription                     | Deferred           | Do not mix with one-time vocabulary packs until explicitly approved       |
 
 ### Infrastructure and release
 
@@ -98,7 +98,7 @@ LearnBox is an online-first German vocabulary Leitner application for Persian-sp
 | CI quality/security gates      | Verified           | Existing checks are required at milestone boundaries                                                                                                                                                                                                                                                                                                                                                                                                        |
 | Isolated Admin staging         | Verified           | `admin-staging.learnboxapp.com` runs the reviewed LB-DS-058 Admin image `351f8e3` with healthy Docker/Caddy routing, Passkey login visible, bootstrap options closed, migration `0017` recorded and the protected content-review runtime enabled. The prior LB-DS-056 image `e4e80dcc` is retained and was exercised for application rollback; the additive migration intentionally persists. Production is untouched and this is not Production readiness. |
 | Public production              | Not enabled        | No production activation without owner-approved release gate                                                                                                                                                                                                                                                                                                                                                                                                |
-| Store release                  | Planned            | Android/Cafe Bazaar first; native iOS/App Store later                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Store release                  | Deferred to v1.1   | Web/PWA v1.0 releases first; Android/Cafe Bazaar and native iOS follow later                                                                                                                                                                                                                                                                                                                                                                                |
 
 ## Design and visual readiness
 
@@ -106,7 +106,7 @@ The current design direction is credible and reviewed, but the complete applicat
 
 ## Current release position
 
-The repository is a tested foundation, not a finished commercial application. The immediate checkpoint is an invited Web/PWA closed alpha with the human-approved 35-item starter and lossless reconnect behavior. Public v1.0 is the supported learner Web/PWA plus Android/Cafe Bazaar release, one premium pack and one server-verified Cafe Bazaar entitlement path. Native iOS, Apple StoreKit and direct Web bank payment are post-v1.0. The planning target for public v1.0 is 2027-04-03, with a 2027-01-30 best case and 2027-06-19 outer case until owner/provider lead times are measured; `ROADMAP.md` owns the assumptions and exit gates.
+The repository is a tested foundation, not yet a finished public application. The owner selected a Web/PWA-first official v1.0 targeted for 2026-10-12: 35 human-approved starter items, server-authoritative learning and lossless reconnect, release-critical account/privacy/support and exercised operations. Android/Cafe Bazaar, every payment path, premium packs and native iOS are v1.1 or later and cannot delay Web v1.0. `ROADMAP.md` owns the 30-day gates and deadline assumptions.
 
 ## Source-of-truth order
 

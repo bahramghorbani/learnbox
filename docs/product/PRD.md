@@ -3,84 +3,93 @@
 ## Release hierarchy
 
 - `docs/PRODUCT_STATUS.md` states current capability truth.
-- `ROADMAP.md` defines release scope, seasons, exit gates and forecast.
-- This PRD defines required outcomes; the long-horizon `MASTER_SPEC.md` cannot expand the current release without an explicit decision record.
+- `ROADMAP.md` defines the active 30-day scope, schedule, dependencies and exit gates.
+- This PRD defines required behavior for Web/PWA v1.0.
+- `docs/product/MASTER_SPEC.md` is long-horizon product context and cannot expand v1.0 without an explicit decision record.
 
-## Public v1.0 outcome
+## Web/PWA v1.0 outcome
 
-Deliver a supported online-first German vocabulary product for Persian-speaking learners on Android/Cafe Bazaar and learner Web/PWA. Users receive 35 complete A1 words free, retain server-authoritative learning progress across temporary disconnects and can unlock one premium pack through one server-verified Cafe Bazaar purchase. Native iOS and direct Web payment follow after v1.0.
+By 2026-10-12, release a real online-first German vocabulary Web/PWA for Persian-speaking learners. It includes 35 complete A1 starter items, server-authoritative learning state, temporary-offline review tolerance and the minimum account/operations capabilities required for a supported public release.
 
-## Release 0: controlled Web closed alpha
+This is an official Web/PWA release. It is not a prototype, private Preview, Android release or commercial payment release.
 
-### Required learner outcome
+## Required learner journey
 
-- Sign in through the approved Web flow.
-- Reach Today and complete an active-recall session over the 35-item starter.
-- Browse Words and see truthful Progress, Profile, Settings and sync states.
-- Continue through a temporary disconnect and reconnect with no lost or duplicate review event.
+An approved user can:
 
-### Required content and operations outcome
+1. create or enter an account through the approved Web flow;
+2. reach Today from the launch experience;
+3. study the human-approved 35-item A1 starter;
+4. see an approved image and de-DE pronunciation for required cards;
+5. complete active-recall reviews with Leitner scheduling;
+6. see truthful Words, Progress, Profile, Settings and sync status;
+7. continue briefly while disconnected and synchronize without losing or duplicating answers;
+8. find privacy, support and account-data deletion-request paths.
 
-- All 35 starter items pass human linguistic, translation, provenance, visual, audio and app-flow review.
-- Approved media is attached through the isolated private-storage boundary.
-- Starter seed/release is idempotent and reversible.
-- Admin can inspect the released version and its review evidence.
-- Owner pilot and 2–3 invited users complete the critical journey under the closed-alpha checklist.
+## Required content/Admin journey
 
-### Explicit exclusions
+An authorized operator can:
 
-Payment, public invitation, native-store publication and autonomous AI publishing remain off.
+- review all six required dimensions for every starter item;
+- attach approved private media without exposing credentials or private locators;
+- approve or return an item, with no AI auto-publication;
+- seed/release exactly the approved 35-item version idempotently;
+- inspect release readiness and roll back the released pack version.
 
-## Public v1.0 requirements
+General natural-language AI pack generation, premium-pack operations and broad factory UX are not v1.0 requirements.
 
-### Learner
+## Required operations
 
-- Android and Web use the same canonical account, content and reconciled learning state.
-- Today, review scheduling, Words, Progress, Profile and Settings expose truthful loading, empty, error, offline and sync behavior.
-- Temporary offline review is bounded and lossless after reconnect.
-- The free starter and one entitled premium pack have approved private media and versioned rollback.
+- HTTPS public route and secure account/session boundaries.
+- Monitoring and actionable alerts for the critical journey.
+- Exercised backup/restore, incident response and application rollback.
+- Privacy-safe diagnostics with no OTP, phone, token, credential or personal free text in release evidence.
+- Supported-browser and mobile-Web checks, RTL/LTR isolation and baseline accessibility evidence.
+- Closed-alpha evidence from the owner and 2–3 invited users before public activation.
+- Explicit owner approval for phased public release.
 
-### Admin/content
+## Non-functional requirements
 
-- Human reviewers can record all release checks, approve/return items and audit decisions.
-- An operator can release, retire and roll back a pack version without direct database editing.
-- Exactly one premium pack is prepared for v1.0; a general AI pack-generation UX is not required.
-- AI output can never publish without human approval.
+- No secret or provider credential in a client or repository evidence.
+- Review-event synchronization is learner-scoped, idempotent and lossless under retry.
+- AI output remains publication-blocked until human approval.
+- User-visible states cover loading, empty, error and temporary offline behavior.
+- Persian is RTL-first; German, phone numbers, OTPs, URLs and identifiers use LTR isolation.
+- Content seed/release and operational rollback are deterministic and auditable.
+- Production activation and public release remain owner-gated.
 
-### Commerce
+## Explicit v1.0 exclusions
 
-- Android shows one Cafe Bazaar offer for the v1.0 premium pack.
-- Receipt verification is server-side and idempotent.
-- Verified purchase maps to one shared backend entitlement consumable on Web and Android.
-- Restore, refund/revoke and support reconciliation are exercised and auditable.
-- Web direct bank payment and Apple StoreKit are post-v1.0.
+These move to v1.1 or later:
 
-### Account, privacy and operations
+- native Android online release and Cafe Bazaar publication;
+- all payments, premium packs and paid entitlements;
+- direct Web bank payment;
+- native iOS and StoreKit;
+- subscriptions and notifications;
+- general AI-generation UX and broader catalog;
+- personal-vocabulary server sync and AI suggestions;
+- leagues, social/gamification and non-critical visual expansion.
 
-- Support, privacy notice, account-deletion request/fulfilment and purchase recovery are explicit flows.
-- Observability, alerting, backup/restore, incident response and production rollback are exercised.
-- Secrets remain server-side; auth, review and payment routes preserve authorization, CSRF/origin, rate-limit and no-store boundaries.
-- Persian is RTL-first; German, phone numbers, identifiers and technical strings are isolated LTR.
+Existing Android, commerce and content-factory foundations may remain dormant but cannot block Web/PWA v1.0.
 
-## Public v1.0 release gate
+## Release gates
 
-Release requires:
+Public v1.0 requires all of the following on one immutable candidate:
 
-1. one immutable candidate satisfying every current `ROADMAP.md` S5 exit criterion;
-2. no unresolved severity-0/1 or release-blocking severity-2 defect;
-3. current CI, security, migration, Web and Flutter evidence;
-4. closed-alpha and closed-beta go decisions;
-5. verified rollback, backup restore, support ownership and incident path;
-6. explicit owner approval for production activation and Cafe Bazaar publication.
+- 35/35 items release-approved with required media attached;
+- exactly 35 learner-visible catalog rows after idempotent seed/release;
+- end-to-end authenticated Today/review/progress journey;
+- zero lost or duplicate review events in disconnect/retry evidence;
+- no open severity-0/1 or release-blocking severity-2 issue;
+- exercised monitoring, backup/restore, incident response and rollback;
+- closed-alpha go decision and explicit owner public-release approval;
+- green CI/security checks, public smoke verification, tag and changelog entry.
 
-## Success signals
+## Success signals after release
 
-- Invited learners complete meaningful sessions repeatedly without operator assistance.
-- Reconnect produces zero lost or duplicated review events in the release evidence.
-- A content operator releases and rolls back the starter and one premium pack from Admin.
-- A verified Cafe Bazaar purchase grants the correct entitlement exactly once; restore and revoke behave correctly.
-- Support can explain account, sync, purchase and content states from audit evidence.
-
-## Scope control
-
-Native iOS, StoreKit, Web bank payment, subscriptions, notifications, social/gamification, personal-word server sync, broad catalog expansion and a general AI-generation UI are not v1.0 requirements. Adding any item requires a decision record, an explicit schedule impact and either an equal scope removal or a reforecast.
+- Learners complete the starter journey without technical help.
+- Review answers survive disconnect and reconnect exactly once.
+- Support can explain account, sync and content state from audit evidence.
+- Rollback can be invoked without content or learning-state corruption.
+- Android/payment work begins as v1.1 without reopening the Web v1.0 finish line.

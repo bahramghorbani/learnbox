@@ -1,16 +1,16 @@
 # LearnBox stable project state
 
-**Last reviewed:** 2026-09-10
+**Last reviewed:** 2026-09-12
 
 ## Product
 
-LearnBox is an online-first German vocabulary Leitner product for Persian-speaking learners. The free app includes approximately 35 complete A1 words. Premium vocabulary packs are purchased separately. Temporary connectivity loss is tolerated with a durable local queue and idempotent reconnect sync.
+LearnBox is an online-first German vocabulary Leitner product for Persian-speaking learners. Official Web/PWA v1.0 targets 2026-10-12 with 35 free A1 words and no payment requirement. Premium packs and their payment/entitlement paths begin in v1.1. Temporary connectivity loss is tolerated with a durable local queue and idempotent reconnect sync.
 
 ## Boundaries
 
 - `learnboxapp.com` is an independent informational landing site only.
 - Learner Web is the current online learner surface and interim iOS route.
-- Android is a native learner surface; native iOS is a later App Store milestone.
+- Native Android/Cafe Bazaar is a v1.1 learner surface; native iOS is a later App Store milestone.
 - Admin manages content, AI drafts, media QA, packs, catalog, commerce and operations.
 - API/backend owns identity, learning state, sync, content, purchases and entitlements.
 
@@ -27,7 +27,7 @@ LearnBox is an online-first German vocabulary Leitner product for Persian-speaki
 
 ## Release position
 
-The repository is a tested product foundation, not a released commercial application. M1/M2 foundations and controlled Preview slices exist; the next release target remains a real closed alpha, with production activation, payment and public release gated.
+The repository is a tested product foundation, not a released application. The active target is official public Web/PWA v1.0 by 2026-10-12 after a real closed alpha; production activation and public release remain gated. Android/Cafe Bazaar and every payment path are post-v1.0.
 
 ## Canonical references
 

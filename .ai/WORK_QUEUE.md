@@ -7,12 +7,13 @@ start. Historical tasks remain for traceability and must not be duplicated.
 
 ### Current release execution
 
-- **S0 — Finish-line freeze:** accepted in PR #276 at `4742a1c06d5ee5fcb0b45721cd95341463a414e6`. The S0 release model is now active.
-- **S1 — Starter + Web closed alpha:** blocked on an owner-selected isolated private-media target, separate upload/attachment authorization, 35/35 human release approval, seed and controlled activation.
-- **S2 — Operable product + one premium pack:** partial foundations; starts after stable S1 contracts.
-- **S3 — Cafe Bazaar commerce MVP:** planned; provider account/product/terms are unmeasured external inputs.
-- **S4 — Android online candidate:** blocked on a non-SSO gateway and stable S1/S3 contracts.
-- **S5 — Closed beta + public v1.0:** planned. Planning target 2027-04-03; best 2027-01-30; outer case 2027-06-19 under `ROADMAP.md` assumptions.
+- **S0 — 30-day finish-line reset:** review requested in LB-DS-066. Owner scope decision: official Web/PWA-first v1.0 targeted for 2026-10-12; Android, commerce and premium packs move to v1.1+.
+- **S1 — Private media + 35-item release batch:** blocked only on the owner-selected isolated private-media target and distinct upload/attachment authorization; all deterministic local preparation may continue.
+- **S2 — Server-authoritative Web loop:** ready after S1's canonical content identifiers are stable; implementation and default-off integration can overlap S1 after interfaces are fixed.
+- **S3 — Web release essentials:** partial foundations; account/privacy/support/operations work may overlap S2 with disjoint paths.
+- **S4 — Closed alpha:** planned for 2026-10-04 through 2026-10-08 after S1–S3 integration evidence.
+- **S5 — Public Web/PWA v1.0:** planned for 2026-10-09 through 2026-10-12; production/public activation remains owner-gated.
+- **v1.1+:** native Android/Cafe Bazaar, every payment path, premium packs/shared paid entitlements, native iOS and the general AI factory. These are not v1.0 tasks.
 
 The M0–M8 records below retain implementation provenance only; they do not override the active season exit gates.
 
@@ -66,6 +67,29 @@ The M0–M8 records below retain implementation provenance only; they do not ove
 - Must not touch: application code; package manifests/lockfiles; content/media records; database/migrations; auth/session; provider configuration; credentials; runtime flags; deployment; staging/Preview/Production; Bobo assets.
 - Acceptance: one canonical public-v1.0 definition names included/excluded scope, S0–S5 tasks, dependency order, measurable exit gates, owner/provider blockers, best/target/outer forecast and a reforecast method; the 30-stage, payment-in-alpha, iOS-in-v1 and 300–500-word authority contradictions no longer govern delivery; current LB-DS-060/064 status is reconciled without external side effects.
 - Accepted evidence: PR #276 merged at `4742a1c06d5ee5fcb0b45721cd95341463a414e6` on 2026-09-12T09:17:29Z after replacement independent exact-head PASS for `e0b8d61c6c49a28ac8255f6f377a4fb408b8d0c8`, seven terminal-success checks and a full local `pnpm check`.
+
+## LB-DS-066
+
+- Status: review_requested
+- Executor: supervisor plus independent release-architecture reviewer
+- Base: exact `32aad4c4cffdbdd6211263d9fe5f7ed2d9f191ee` (`origin/main`, PR #277 merge)
+- Branch: `docs/web-first-30-day-release`
+- Risk: product-scope-and-aggressive-release-forecast
+- Specification: `ROADMAP.md`; `docs/product/PRD.md`; `docs/PRODUCT_STATUS.md`; `BACKLOG.md`; `CURRENT_WORK.md`; `.ai/WORKSTREAMS.md`
+- Outcome: replace the multi-surface commercial v1.0 finish line with the owner-selected official Web/PWA-first release by 2026-10-12, define daily owner gates and measurable S0–S5 exits, and move Android, payments and premium packs to v1.1+.
+- Allowed paths: `ROADMAP.md`; `BACKLOG.md`; `CURRENT_WORK.md`; `PROJECT_STATE.md`; `PRODUCT.md`; `.ai/WORKSTREAMS.md`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-066.md`; `docs/PRODUCT_STATUS.md`; `docs/product/PRD.md`; `docs/product/MASTER_SPEC.md`; `docs/product/FEATURE_CATALOG.md`; `docs/product/MONETIZATION.md`; `docs/storyboard/STATUS.md`; `docs/storyboard/MASTER_PROJECT_STORYBOARD.md`; `docs/operations/AGENT_ACTIVE_BRIEF.md`
+- Documentation updates: make every current release view agree on the Web/PWA-only v1.0 deadline and v1.1 deferrals; preserve long-horizon product vision as non-authoritative context.
+- Owner gates: isolated storage target by 2026-09-14; distinct upload/attachment authorization by 2026-09-16; 35-item human approval by 2026-09-22; staging/seed activation by 2026-09-26; public rollout approval by 2026-10-11.
+- Handoff evidence: owner scope choice; exact main baseline; deterministic calendar; canonical contradiction scan; documentation/queue/security/continuity validators; Prettier; dashboard tests; `git diff --check`; independent exact-head review.
+- Required checks: `pnpm verify:ai-worker-queue`; `pnpm verify:documentation-governance`; `pnpm verify:security`; `pnpm verify:ai-continuity`; `pnpm test:dashboard`; Prettier on all changed files; `git diff --check`; independent exact-head review; seven terminal GitHub/Vercel contexts before merge.
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+- Head commit: read live with `gh pr view <PR> --json headRefOid` before readiness or merge
+- Draft PR: #278 — https://github.com/bahramghorbani/learnbox/pull/278
+- Blocked on: independent exact-head review and terminal CI; no product implementation is authorized by this documentation task.
+- Must not touch: application code; tests; package manifests/lockfiles; content/media records; database/migrations; auth/session; provider configuration; credentials; runtime flags; deployment; staging/Preview/Production; Bobo assets.
+- Acceptance: all canonical release documents define official Web/PWA v1.0 by 2026-10-12 with 35/35 human-approved starter items, server-authoritative learning/lossless reconnect, account/privacy/support, exercised operations, explicit owner-gate deadlines and no Android/payment/premium dependency; arithmetic and overlap rules reconstruct the deadline.
 
 ## LB-DS-026
 

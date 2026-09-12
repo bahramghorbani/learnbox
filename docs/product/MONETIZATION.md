@@ -1,5 +1,7 @@
 # LearnBox monetization
 
+> **Release status:** this is the v1.1+ commercial model. Official Web/PWA v1.0 has no payment, premium-pack or paid-entitlement requirement.
+
 ## Model
 
 LearnBox is a free-to-download app with a permanent free A1 starter collection of approximately 35 words. Premium products are complete vocabulary packs sold as one-time purchases initially. Subscription is deferred until pack commerce and retention are proven.

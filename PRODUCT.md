@@ -1,5 +1,7 @@
 # LearnBox product definition
 
+> **Release scope:** `ROADMAP.md` and `docs/product/PRD.md` govern active releases. Web/PWA v1.0 targets 2026-10-12 with the free 35-word starter; Android and the commercial model below begin in v1.1.
+
 LearnBox is an online-first German vocabulary Leitner application for Persian-speaking learners. The free app gives every user an approximately 35-word A1 starter collection. Learners can buy additional complete vocabulary packs, review them daily, track progress and keep their learning state across Web and mobile.
 
 ## User promise

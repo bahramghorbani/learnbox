@@ -1,42 +1,40 @@
 # LearnBox storyboard and delivery status
 
-The original 30-stage storyboard is historical design context. Current delivery uses the six seasons in `ROADMAP.md`; season numbers are release gates, not a count of commits or UI scenes.
+Historical M0–M8 and the original 30-stage storyboard remain provenance only. Active delivery uses the six 30-day seasons in `ROADMAP.md`.
 
 ## Current season
 
-**S0 of S5 — Finish-line freeze and delivery control.** Merged foundations exist across M1–M3, but the product is not production-ready. The first external product checkpoint is the Web closed alpha at S1; the endpoint is public v1.0 at S5.
+**S0 of S5 — Web-first scope freeze.** Public Web/PWA v1.0 is targeted for 2026-10-12. Android and payment move to v1.1.
 
 ## Release-season map
 
-| Season | Outcome                                                        | Status   | Primary unresolved gate                                     |
-| ------ | -------------------------------------------------------------- | -------- | ----------------------------------------------------------- |
-| S0     | One canonical finish line, bounded scope and forecast controls | accepted | none; PR #276 merged                                        |
-| S1     | 35-item starter live in a lossless Web closed alpha            | blocked  | isolated private media, human approval, seed and activation |
-| S2     | Operable Admin/account/ops and one release-ready premium pack  | partial  | complete only release-critical workflows and content        |
-| S3     | One Cafe Bazaar purchase produces a shared entitlement         | planned  | merchant/provider readiness and server adapter              |
-| S4     | Native Android online release candidate                        | blocked  | non-SSO gateway and stable content/commerce contracts       |
-| S5     | Closed-beta evidence and supported public v1.0                 | planned  | S1–S4 and owner/store release gates                         |
+| Season | Dates        | Outcome                                           | Status      | Primary gate                                 |
+| ------ | ------------ | ------------------------------------------------- | ----------- | -------------------------------------------- |
+| S0     | Sep 12–13    | one Web-first v1.0 definition                     | in progress | merge reviewed canonical update              |
+| S1     | Sep 12–23    | 35-item content/media release truth               | blocked     | isolated private media and owner approvals   |
+| S2     | Sep 17–26    | Web server truth and lossless sync                | partial     | S1 approval before seed/activation           |
+| S3     | Sep 22–Oct 3 | operable account/privacy/support/release controls | partial     | finish release-critical gaps only            |
+| S4     | Oct 4–8      | owner pilot plus 2–3-user closed alpha            | blocked     | integrated release candidate and invitations |
+| S5     | Oct 9–12     | blocker fixes and phased public release           | planned     | alpha go decision and owner release approval |
 
-## Foundation-to-season mapping
+## Former milestone mapping
 
-| Former milestone    | Current truth                                   | Season contribution                           |
-| ------------------- | ----------------------------------------------- | --------------------------------------------- |
-| M0 Product truth    | completed                                       | S0 governance foundation                      |
-| M1 Online learning  | partial                                         | S1 Web activation and S4 Android activation   |
-| M2 Admin/content    | partial                                         | S1 starter approval and S2 release operations |
-| M3 Profile/Settings | partial, implemented foundations on Web/Android | S2 release-critical account completion        |
-| M4 Commerce         | provider-neutral foundation only                | S3 one-provider MVP                           |
-| M5 Native online    | dormant client/sync foundations                 | S4 Android candidate                          |
-| M6 Beta hardening   | planned                                         | S5                                            |
-| M7 Android release  | planned                                         | S5                                            |
-| M8 native iOS       | deferred beyond v1.0                            | post-v1                                       |
+| Former milestone    | Current disposition                                              |
+| ------------------- | ---------------------------------------------------------------- |
+| M0 product truth    | S0 governance foundation                                         |
+| M1 online learning  | S1/S2 Web v1.0 critical path                                     |
+| M2 Admin/content    | only S1 approval/release operations; general AI factory deferred |
+| M3 profile/settings | only release-critical Web account/privacy/support in S3          |
+| M4 commerce         | v1.1+                                                            |
+| M5 native online    | v1.1+ Android                                                    |
+| M6 beta hardening   | bounded S4/S5 Web evidence                                       |
+| M7 Android release  | v1.1+                                                            |
+| M8 iOS release      | later post-v1.1                                                  |
 
-`partial` means verified foundations exist but the applicable `ROADMAP.md` exit gate is incomplete. No dormant flag, test fixture, concept or Preview slice is a released feature.
+A dormant flag, test fixture, Preview slice or Android foundation is not a v1.0 release feature.
 
-## Forecast checkpoints
+## Forecast
 
-- Web closed alpha: best 2026-10-10; planning target 2026-10-31; outer case 2026-12-05.
-- Closed beta entry after S3 and S4: best 2026-12-26; planning target 2027-02-20; outer case 2027-04-17.
-- Public v1.0: best 2027-01-30; planning target 2027-04-03; outer case 2027-06-19.
-
-These are planning envelopes from the 2026-09-12 baseline. They are recalculated at every season exit and move with measured owner/provider latency.
+- Public Web/PWA v1.0 target: **2026-10-12**.
+- Target is achievable only if storage/cost is decided by Sep 14, upload is authorized by Sep 16 and completes by Sep 21, 35/35 review completes by Sep 22 and activation is authorized by Sep 26.
+- Missed owner/external gates move the release date one-for-one; safety gates are not bypassed to preserve the date.
