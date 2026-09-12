@@ -6,7 +6,7 @@
 
 ### LB-DS-065 — Public-v1.0 finish line and release seasons
 
-- **Status:** review requested on `docs/release-seasons-finish-line` from exact `origin/main` `dfede397a9f2ffdccdd7e7fe916688f9fdc6685e`.
+- **Status:** review requested in Draft PR #276 on `docs/release-seasons-finish-line` from exact `origin/main` `dfede397a9f2ffdccdd7e7fe916688f9fdc6685e`.
 - **Outcome:** replace contradictory milestone, alpha, payment, iOS, storyboard and long-horizon scope claims with one S0–S5 critical path, measurable exit gates and a best/target/outer public-release forecast.
 - **Boundary:** documentation architecture only. No application code, content/media data, provider, credential, database, flag, deployment, staging, Production or release state changes.
 - **Next gate:** independent exact-head product/architecture review and all required CI checks before merge.
