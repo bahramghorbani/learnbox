@@ -36,7 +36,7 @@ The original 30-stage storyboard is historical design context. Current delivery 
 ## Forecast checkpoints
 
 - Web closed alpha: best 2026-10-10; planning target 2026-10-31; outer case 2026-12-05.
-- Closed beta entry: best 2026-12-05; planning target 2027-01-16; outer case 2027-03-27.
+- Closed beta entry after S3 and S4: best 2026-12-26; planning target 2027-02-20; outer case 2027-04-17.
 - Public v1.0: best 2027-01-30; planning target 2027-04-03; outer case 2027-06-19.
 
 These are planning envelopes from the 2026-09-12 baseline. They are recalculated at every season exit and move with measured owner/provider latency.

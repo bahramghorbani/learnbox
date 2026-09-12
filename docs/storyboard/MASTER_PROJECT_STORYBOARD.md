@@ -1,26 +1,22 @@
 # LearnBox delivery storyboard
 
-The former 30-stage storyboard is retained as historical design context. The active execution plan uses eight outcome-based milestones so the team can ship a real product without treating every technical slice as a separate project phase.
+**Status:** historical mapping only. Active execution uses S0–S5 in `ROADMAP.md`; this file cannot add a release requirement or change a forecast.
 
-| Milestone                | Delivery outcome                                                          | Main surfaces                          |
-| ------------------------ | ------------------------------------------------------------------------- | -------------------------------------- |
-| M0 Product truth         | One canonical status, architecture, roadmap and worker model              | All documentation                      |
-| M1 Online learning core  | Online learner loop, free A1 content, progress and reconnect sync         | Web, Android, API                      |
-| M2 Content factory/Admin | AI-assisted complete packs with QA, review, release and rollback          | Admin, workers, API                    |
-| M3 Account center        | Profile, settings, purchases, pack access, sync status and personal words | Web, Android, API                      |
-| M4 Commerce              | Platform-specific real purchase adapters and shared entitlements          | Web, Android, iOS contract, Admin, API |
-| M5 Native online         | Secure native gateway, Android online auth/sync and iOS preparation       | Infrastructure, API, mobile            |
-| M6 Private beta          | Reliability, observability, abuse, backup, support and limited cohort     | All                                    |
-| M7/M8 public platforms   | Android release followed by native iOS App Store release                  | Mobile, commerce, operations           |
+## Active release mapping
 
-## Relationship to historical stages
+| Season                      | Delivery outcome                                                         | Main surfaces                        |
+| --------------------------- | ------------------------------------------------------------------------ | ------------------------------------ |
+| S0 finish-line freeze       | One canonical scope, dependency path, forecast and change rule           | Documentation/governance             |
+| S1 starter + Web alpha      | Human-approved 35-item starter and lossless invited Web learning         | Content, Admin, Web, API, operations |
+| S2 operable product         | Release-critical Admin/account/ops plus one premium pack                 | Admin, Web, Android, API, content    |
+| S3 Cafe Bazaar commerce     | One server-verified Android purchase and shared entitlement              | Android, Admin, API                  |
+| S4 Android online candidate | Native account/content/learning/sync/entitlement release candidate       | Android, API, infrastructure         |
+| S5 beta + public v1.0       | Closed-beta evidence and supported Android/Cafe Bazaar + Web/PWA release | All release-critical surfaces        |
 
-Historical stages 1–30 describe how the repository evolved and should not be deleted because they contain evidence and design decisions. They are not the active backlog. New work must reference an active milestone and workstream in `.ai/WORK_QUEUE.md` and `.ai/WORKSTREAMS.md`.
+Native iOS/StoreKit, direct Web payment and general AI-generation UX are post-v1.0. They are not active release milestones.
 
-## Current status
+## Relationship to former milestones and stages
 
-M0 is completed. M1 Online Learning Core and M2 Content Factory/Admin now have verified merged
-foundations and proceed in controlled parallel, but both remain partial and not production-ready.
-Product capability truth is in `docs/PRODUCT_STATUS.md`; active work and exact blockers are in
-`.ai/WORK_QUEUE.md` and `CURRENT_WORK.md`; release exit criteria are in `ROADMAP.md`; documentation
-update rules are in `docs/DOCUMENTATION_GOVERNANCE.md`.
+Historical stages 1–30 and M0–M8 describe how the repository evolved. They are retained for evidence and design provenance, not as an active backlog. Their useful foundations map into the current seasons in `docs/storyboard/STATUS.md`.
+
+New work must close a current season exit gate and use an authorized item in `.ai/WORK_QUEUE.md`. Current capability truth is in `docs/PRODUCT_STATUS.md`; exact release scope, dates and definition of done are only in `ROADMAP.md`; documentation update rules are in `docs/DOCUMENTATION_GOVERNANCE.md`.

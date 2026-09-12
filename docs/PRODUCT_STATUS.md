@@ -80,7 +80,7 @@ LearnBox is an online-first German vocabulary Leitner application for Persian-sp
 | Capability                       | Status             | Target                                                                   |
 | -------------------------------- | ------------------ | ------------------------------------------------------------------------ |
 | Free app and free A1 entitlement | Approved direction | Launch baseline                                                          |
-| Web direct bank gateway          | Planned            | Real closed-alpha purchases after provider/server readiness              |
+| Web direct bank gateway          | Deferred post-v1.0 | Direct Web purchase is not enabled in alpha and is not on the v1.0 path  |
 | Android Cafe Bazaar billing      | Planned            | Native in-app purchase with server-side verification                     |
 | iOS Apple In-App Purchase        | Planned            | StoreKit with server-side verification                                   |
 | Platform-specific pricing        | Approved direction | Separate offers/prices/product IDs per platform; shared pack entitlement |

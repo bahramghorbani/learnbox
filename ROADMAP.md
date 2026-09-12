@@ -162,7 +162,7 @@ Only disjoint work may overlap. Identity, database, payment, infrastructure and 
 - Zero known learning-data loss/duplication; critical security and accessibility findings are closed.
 - Signed candidate, rollback build, support runbook and store draft are ready.
 
-**Forecast:** 5–8 weeks; gateway work may overlap S3 only after contracts stabilize.
+**Forecast:** best/target/outer 5/7/8 weeks. Gateway and native-client work starts 2/3/4 weeks after S3 begins, only after the entitlement contract checkpoint; S4 cannot exit before S3 exits.
 
 ### S5 — Closed beta, release gate and public v1.0
 
@@ -184,11 +184,25 @@ Only disjoint work may overlap. Identity, database, payment, infrastructure and 
 - Production rollback is proven and on-call/support ownership is named.
 - A signed tag and changelog entry exist; the public route and Cafe Bazaar release are verified after activation.
 
+**Duration:** best/target/outer 5/6/9 weeks from S4 exit. The outer case reserves additional store-review and release-defect time.
+
 **Forecast:** best 2027-01-30; planning target 2027-04-03; outer case 2027-06-19. Confidence is low until the media target, owner review pace, native gateway and Cafe Bazaar onboarding are measured.
 
 ## 4. Forecast assumptions and controls
 
 The forecast assumes one AI-supervised engineering lane, independent high-risk review, bounded parallelism only for disjoint paths, owner responses within five working days and no redesign of the release scope. Dates exclude an unmeasured provider/store queue only where explicitly stated.
+
+### Forecast arithmetic
+
+The dates use a declared series/parallel model rather than summing every season serially. S1 and S2 are serial. S3 starts after S2. S4 starts only after the S3 entitlement-contract checkpoint, then proceeds in parallel; S5 starts after **both** S3 and S4 exit.
+
+| Scenario | S1 exit    | S2 duration / exit | S3 duration / exit | S4 start, duration / exit     | S5 duration / Public v1.0 |
+| -------- | ---------- | ------------------ | ------------------ | ----------------------------- | ------------------------- |
+| Best     | 2026-10-10 | 4 wk / 2026-11-07  | 6 wk / 2026-12-19  | 2026-11-21, 5 wk / 2026-12-26 | 5 wk / 2027-01-30         |
+| Target   | 2026-10-31 | 6 wk / 2026-12-12  | 8 wk / 2027-02-06  | 2027-01-02, 7 wk / 2027-02-20 | 6 wk / 2027-04-03         |
+| Outer    | 2026-12-05 | 7 wk / 2027-01-23  | 10 wk / 2027-04-03 | 2027-02-20, 8 wk / 2027-04-17 | 9 wk / 2027-06-19         |
+
+If the S3 contract checkpoint does not occur by its 2/3/4-week assumption, S4 and Public v1.0 slip day-for-day. Unstarted merchant/store onboarding can also move the outer date; it is not hidden inside engineering estimates.
 
 Update the forecast at every season exit using:
 
