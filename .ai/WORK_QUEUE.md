@@ -8,7 +8,7 @@ start. Historical tasks remain for traceability and must not be duplicated.
 ### Current release execution
 
 - **S0 — 30-day finish-line reset:** accepted in PR #278 at `34d0d6dbd85bb42c07a8aaee1576505b0eb8db72`. Official Web/PWA-first v1.0 is targeted for 2026-10-12; Android, commerce and premium packs are v1.1+.
-- **S1 — Private media + 35-item release batch:** in progress. The owner attests the isolated private target is private, dedicated, empty, deployment-free and disconnected from Production/Preview; repository evidence contains no provider identifier or live-state proof. PR #281 merged the upload-free final 35-item/105-asset manifest; private upload/attachment is the next explicit owner gate, and no upload is authorized.
+- **S1 — Private media + 35-item release batch:** in progress. Live read-only verification confirmed the owner-selected target `learnbox-media-staging-isolated` is private, dedicated, empty and connected only to the deployment-free `learnbox-private-media-staging` project. The owner separately authorized guarded upload plus integrity verification for the 105 selected assets, but not attachment, review decisions, seed, runtime activation, deployment or publication. LB-DS-073 adds and reviews the missing exact-105 upload path before provider mutation.
 - **S2 — Server-authoritative Web loop:** ready after S1's canonical content identifiers are stable; implementation and default-off integration can overlap S1 after interfaces are fixed.
 - **S3 — Web release essentials:** partial foundations; account/privacy/support/operations work may overlap S2 with disjoint paths.
 - **S4 — Closed alpha:** planned for 2026-10-04 through 2026-10-08 after S1–S3 integration evidence.
@@ -776,6 +776,27 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 - Draft PR: #281 — https://github.com/bahramghorbani/learnbox/pull/281 (merged)
 - Merge commit: `b49f325c0fa328a90b7e1da0f53e0e509d69cc5a`
 - Accepted evidence: exact head `08b9384f0679a54d147c59a34db1b0e926956c4a` passed replacement independent exact-head review and all seven terminal-success GitHub/Vercel contexts before PR #281 merged at `b49f325c0fa328a90b7e1da0f53e0e509d69cc5a` on 2026-09-12T19:21:41Z. `pnpm test:start-35-final-media-manifest` passed 14/14; validation reported `items=35 assets=105 images=35 word_audio=35 sentence_audio=35 superseded_images_excluded=20 uploaded=0`; no upload, attachment, human approval, seed, runtime activation, deployment or publication occurred.
+
+## LB-DS-073
+
+- Status: review_requested
+- Executor: isolated storage-boundary implementation worker plus independent security reviewer
+- Base: exact `399cba37742e548d172623773fc2bc025b5567cc` (`origin/main`, PR #284 merge)
+- Branch: `feat/start35-private-upload-command`
+- Risk: security-sensitive-provider-upload-tooling
+- Specification: `content/packs/learnbox-start/validation/start-a1-35-final-media-manifest.json`; `docs/operations/ISOLATED_PRIVATE_MEDIA_STORAGE.md`; `scripts/upload-start-slice-private-media.mjs`; `.ai/WORKER_PROTOCOL.md`
+- Outcome: add a deterministic, fail-closed uploader mode for exactly the final 35-item/105-asset selection, prove every selected source file and MIME/checksum before mutation, and preserve receipt-only output outside Git. No upload occurs until the implementation passes independent exact-head review and required CI.
+- Allowed paths: `scripts/upload-start-slice-private-media.mjs`; `scripts/upload-start-slice-private-media.test.mjs`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-073.md`; `CURRENT_WORK.md`
+- Documentation updates: register LB-DS-073, record real RED/GREEN and exact-head evidence, and state the bounded owner authorization without provider identifiers, private URLs, credentials or receipt payloads in Git.
+- Owner gates: guarded private upload plus integrity verification is authorized for exactly 105 selected assets after target verification. Attachment, content approval/return decisions, seed, runtime activation, deployment, Preview/Production and publication remain prohibited.
+- Handoff evidence: exact merged base; genuine RED before implementation; deterministic 105-asset selection tests; wrong/missing/superseded-file rejection; MIME/checksum validation; dry-run receipt schema; upload-boundary validator; final-manifest validator; security/queue/documentation/continuity checks; Prettier; `git diff --check`; independent exact-head security review; seven terminal GitHub/Vercel contexts.
+- Required checks: `node --test scripts/upload-start-slice-private-media.test.mjs`; `pnpm verify:private-media-upload-boundary`; `pnpm test:start-35-final-media-manifest`; `pnpm verify:start-35-final-media-manifest`; `pnpm verify:security`; `pnpm verify:ai-worker-queue`; `pnpm verify:documentation-governance`; `pnpm verify:ai-continuity`; Prettier; `git diff --check`; independent exact-head review; seven terminal GitHub/Vercel contexts.
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+- Blocked on: exact-head review and terminal CI before any provider upload. The exact-105 dry run currently fails closed because all 20 selected V2 image files declare PNG but contain JPEG bytes; a separately scoped source-truth correction and regenerated final manifest are required before upload. The verified target is empty and no upload has started.
+- Must not touch: media binaries; final manifest; provider configuration; credentials/tokens; tracked provider IDs/URLs/receipts; delivery routes; database/migrations; Admin review stores/routes; card attachments; review checks/decisions; catalog seed; runtime flags; deployment; Preview/Production; learner apps; Bobo assets.
+- Acceptance: the uploader resolves exactly the final manifest's 105 storage keys to the intended 35 current images, 35 word-audio and 35 sentence-audio files; excludes all superseded V1 images for the original 20; rejects any source, MIME, count, key or checksum mismatch before the first write; remains dry-run by default; and writes a complete receipt only to an explicitly ignored external path when `--execute` is supplied. No attachment or runtime action occurs.
 
 ## LB-DS-072
 
