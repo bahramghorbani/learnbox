@@ -4,7 +4,7 @@
 
 ## Active work
 
-No application implementation PR is open. LB-DS-069 and LB-DS-071 are merged and are being reconciled into stable repository truth through documentation-only Draft PR #283 (LB-DS-072).
+No application implementation PR is open. LB-DS-069, LB-DS-071 and LB-DS-072 are merged and accepted; this branch is their final documentation-only lifecycle closure in PR #284 (`docs/post283-close`). While it is unmerged, its review and CI state must be read live from GitHub; after it merges, no further reconciliation task is required.
 
 ### Active release objective
 
@@ -22,8 +22,7 @@ A missed owner gate moves the 2026-10-12 target one-for-one unless a safe, expli
 
 ## Immediate execution order
 
-1. Merge the documentation-only LB-DS-072 reconciliation after independent review and seven terminal-success CI contexts.
-2. Ask the owner for the separate guarded private-upload/attachment decision; do not access credentials or upload before explicit approval.
-3. After any authorized upload and integrity verification, present all 35 items for one batched six-dimension human review by 2026-09-22.
-4. Keep seed, activation and learner exposure downstream of 35/35 release approval.
-5. Admit no Android, payment, premium or generalized AI-factory work into v1.0.
+1. Ask the owner for the separate guarded private-upload/attachment decision; do not access credentials or upload before explicit approval.
+2. After any authorized upload and integrity verification, present all 35 items for one batched six-dimension human review by 2026-09-22.
+3. Keep seed, activation and learner exposure downstream of 35/35 release approval.
+4. Admit no Android, payment, premium or generalized AI-factory work into v1.0.
