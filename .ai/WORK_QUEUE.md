@@ -777,7 +777,7 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 
 ## LB-DS-072
 
-- Status: in_progress
+- Status: review_requested
 - Executor: orchestrator plus independent documentation reviewer
 - Base: exact `c67433c1867cb8eac720a73b469ca6d42fdd8cf0` (`origin/main`, PR #282 merge)
 - Branch: `docs/post282-reconcile`
@@ -792,7 +792,7 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 - Simulator required: no
 - Draft PR required: yes
 - Merge allowed: yes
-- Blocked on: implementation, independent exact-head review and CI.
+- Blocked on: independent exact-head review and seven terminal-success GitHub/Vercel contexts on Draft PR #283.
 - Must not touch: application code; tests; package manifests/lockfiles; generated content/media records; provider configuration/credentials/IDs/URLs; upload/attachment/review/seed/runtime/deployment/Preview/Production state; Bobo assets.
 - Acceptance: stable documents agree that PR #281 and PR #282 are merged and accepted with exact evidence; no stale active-PR prose remains; the next step is the explicit owner-gated private upload/attachment decision; all required checks pass without runtime or external provider mutation.
 

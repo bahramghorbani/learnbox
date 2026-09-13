@@ -4,7 +4,7 @@
 
 ## Active work
 
-No application implementation PR is open. LB-DS-069 and LB-DS-071 are merged and are being reconciled into stable repository truth through the documentation-only LB-DS-072 branch.
+No application implementation PR is open. LB-DS-069 and LB-DS-071 are merged and are being reconciled into stable repository truth through documentation-only Draft PR #283 (LB-DS-072).
 
 ### Active release objective
 
