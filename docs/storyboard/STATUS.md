@@ -4,18 +4,18 @@ Historical M0–M8 and the original 30-stage storyboard remain provenance only. 
 
 ## Current season
 
-**S0 of S5 — Web-first scope freeze.** Public Web/PWA v1.0 is targeted for 2026-10-12. Android and payment move to v1.1.
+**S1 of S5 — Content/media release truth.** The Web-first v1.0 scope is frozen; the 35-item/105-asset manifest is merged, while private upload/attachment and human approval remain explicit owner gates. Public Web/PWA v1.0 is targeted for 2026-10-12. Android and payment remain v1.1+.
 
 ## Release-season map
 
-| Season | Dates        | Outcome                                           | Status      | Primary gate                                 |
-| ------ | ------------ | ------------------------------------------------- | ----------- | -------------------------------------------- |
-| S0     | Sep 12–13    | one Web-first v1.0 definition                     | in progress | merge reviewed canonical update              |
-| S1     | Sep 12–23    | 35-item content/media release truth               | blocked     | isolated private media and owner approvals   |
-| S2     | Sep 17–26    | Web server truth and lossless sync                | partial     | S1 approval before seed/activation           |
-| S3     | Sep 22–Oct 3 | operable account/privacy/support/release controls | partial     | finish release-critical gaps only            |
-| S4     | Oct 4–8      | owner pilot plus 2–3-user closed alpha            | blocked     | integrated release candidate and invitations |
-| S5     | Oct 9–12     | blocker fixes and phased public release           | planned     | alpha go decision and owner release approval |
+| Season | Dates        | Outcome                                           | Status      | Primary gate                                  |
+| ------ | ------------ | ------------------------------------------------- | ----------- | --------------------------------------------- |
+| S0     | Sep 12–13    | one Web-first v1.0 definition                     | complete    | merged canonical Web-first scope              |
+| S1     | Sep 12–23    | 35-item content/media release truth               | in progress | private upload/attachment and owner approvals |
+| S2     | Sep 17–26    | Web server truth and lossless sync                | partial     | S1 approval before seed/activation            |
+| S3     | Sep 22–Oct 3 | operable account/privacy/support/release controls | partial     | finish release-critical gaps only             |
+| S4     | Oct 4–8      | owner pilot plus 2–3-user closed alpha            | blocked     | integrated release candidate and invitations  |
+| S5     | Oct 9–12     | blocker fixes and phased public release           | planned     | alpha go decision and owner release approval  |
 
 ## Former milestone mapping
 

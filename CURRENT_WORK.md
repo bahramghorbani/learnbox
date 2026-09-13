@@ -4,13 +4,7 @@
 
 ## Active work
 
-### LB-DS-071 — Web offline/error recovery accessibility
-
-- **Status:** Draft PR #282 is open from exact merged base `b49f325c0fa328a90b7e1da0f53e0e509d69cc5a`. Focused tests pass 18/18, Website tests pass 43 files/294 tests, typecheck/build/security/full check pass, and independent exact-code-head review passed at `fde9272` after remediating the two grounded findings from `3034715`.
-- **Outcome:** the Next `/offline` route, global error boundary and static service-worker fallback have valid accessible names and decorative-image semantics; reconnect state reads `navigator.onLine` after hydration, keeps visible heading/message consistent and preserves one non-empty composed connection announcement.
-- **Boundary:** no learning, sync, identity, API, database, provider, flag, deployment, Preview or Production behavior changed; `public/sw.js` changes only the owned cache version from `v8` to `v9`.
-- **Next task:** obtain final independent review and seven terminal-success GitHub/Vercel contexts on the unchanged live PR head, then merge and reconcile stable status.
-- **Hard stop:** no deployment, Preview/Production activation, provider mutation or public release is authorized.
+No application implementation PR is open. LB-DS-069 and LB-DS-071 are merged and are being reconciled into stable repository truth through documentation-only Draft PR #283 (LB-DS-072).
 
 ### Active release objective
 
@@ -28,7 +22,8 @@ A missed owner gate moves the 2026-10-12 target one-for-one unless a safe, expli
 
 ## Immediate execution order
 
-1. Merge LB-DS-071 only after final independent exact-head PASS and seven terminal-success contexts on the unchanged Draft PR #282 head.
-2. Keep the complete 35-item/105-asset manifest upload-free and unattached until the owner authorizes private upload.
-3. Keep seed, activation and learner exposure downstream of human content approval.
-4. Admit no Android, payment, premium or generalized AI-factory work into v1.0.
+1. Merge the documentation-only LB-DS-072 reconciliation after independent review and seven terminal-success CI contexts.
+2. Ask the owner for the separate guarded private-upload/attachment decision; do not access credentials or upload before explicit approval.
+3. After any authorized upload and integrity verification, present all 35 items for one batched six-dimension human review by 2026-09-22.
+4. Keep seed, activation and learner exposure downstream of 35/35 release approval.
+5. Admit no Android, payment, premium or generalized AI-factory work into v1.0.
