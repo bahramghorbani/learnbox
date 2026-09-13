@@ -4,7 +4,7 @@
 
 ## Active work
 
-No application implementation or documentation reconciliation PR is open. LB-DS-069, LB-DS-071 and LB-DS-072 are merged and accepted.
+No application implementation PR is open. LB-DS-069, LB-DS-071 and LB-DS-072 are merged and accepted; this branch is their final documentation-only lifecycle closure in PR #284 (`docs/post283-close`). While it is unmerged, its review and CI state must be read live from GitHub; after it merges, no further reconciliation task is required.
 
 ### Active release objective
 
