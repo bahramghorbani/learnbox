@@ -648,7 +648,7 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 - Simulator required: no
 - Draft PR required: yes
 - Merge allowed: yes
-- Blocked on: final exact-head review and CI only; no external or runtime action is authorized.
+- Blocked on: none; exact head `8aeb01b1d865b9e6e73fe5b1343641a03edd496d` passed independent review and all seven GitHub/Vercel contexts before PR #273 merged.
 - Must not touch: application code; package manifests; content/media evidence; provider resources; credentials; uploads; database/migrations; auth/session; runtime flags; deployment; staging/Preview/Production; Bobo assets
 - Acceptance: LB-DS-061 records exact reviewed head `ac50c712604387c759560f25bf0c18bdcf31852e` and PR #272 merge `a13862f1c9ee7f57adcde7547c960038f1cbff75` as accepted; `CURRENT_WORK.md` no longer requests its completed review; LB-DS-060/LB-DS-062 remain fail-closed and point to this reconciliation as their final baseline dependency.
 - Head commit: `8aeb01b1d865b9e6e73fe5b1343641a03edd496d`
@@ -786,7 +786,7 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 - Risk: documentation-truth-and-release-sequencing
 - Specification: repository PR lifecycle; `.ai/WORKER_PROTOCOL.md`; `ROADMAP.md`; LB-DS-069; LB-DS-071
 - Outcome: reconcile the accepted PR #281 final media manifest and PR #282 Web failure-state accessibility evidence into stable queue, product, design and active-work truth without changing runtime or crossing the private-upload owner gate.
-- Allowed paths: `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-066.md`; `.ai/worker-reports/LB-DS-067.md`; `.ai/worker-reports/LB-DS-068.md`; `.ai/worker-reports/LB-DS-069.md`; `.ai/worker-reports/LB-DS-071.md`; `.ai/worker-reports/LB-DS-072.md`; `CURRENT_WORK.md`; `PROJECT_STATE.md`; `docs/PRODUCT_STATUS.md`; `docs/design/DESIGN_STATUS.md`; `docs/storyboard/STATUS.md`
+- Allowed paths: `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-061.md`; `.ai/worker-reports/LB-DS-063.md`; `.ai/worker-reports/LB-DS-064.md`; `.ai/worker-reports/LB-DS-066.md`; `.ai/worker-reports/LB-DS-067.md`; `.ai/worker-reports/LB-DS-068.md`; `.ai/worker-reports/LB-DS-069.md`; `.ai/worker-reports/LB-DS-071.md`; `.ai/worker-reports/LB-DS-072.md`; `CURRENT_WORK.md`; `PROJECT_STATE.md`; `docs/PRODUCT_STATUS.md`; `docs/design/DESIGN_STATUS.md`; `docs/storyboard/STATUS.md`
 - Documentation updates: accept LB-DS-069 and LB-DS-071 with exact PR evidence, remove stale active lifecycle prose, record merged offline/error accessibility and current 35-item/105-asset preparation truth, and expose the private-upload authorization as the next genuine owner gate.
 - Owner gates: none for truthful repository-only reconciliation. Credential access, private upload, attachment, human review decisions, seed, runtime activation, deployment, Preview/Production and publication remain separately owner-gated and prohibited.
 - Handoff evidence: exact PR #281/#282 heads, merge commits and seven-context terminal-success evidence; changed-path equality; queue/documentation/continuity/security validators; Prettier; `git diff --check`; independent exact-head review.
