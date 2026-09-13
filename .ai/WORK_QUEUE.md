@@ -8,7 +8,7 @@ start. Historical tasks remain for traceability and must not be duplicated.
 ### Current release execution
 
 - **S0 — 30-day finish-line reset:** accepted in PR #278 at `34d0d6dbd85bb42c07a8aaee1576505b0eb8db72`. Official Web/PWA-first v1.0 is targeted for 2026-10-12; Android, commerce and premium packs are v1.1+.
-- **S1 — Private media + 35-item release batch:** in progress. The owner attests the isolated private target is private, dedicated, empty, deployment-free and disconnected from Production/Preview; repository evidence contains no provider identifier or live-state proof, and no upload is authorized. LB-DS-068 merged the post-PR-#279 reconciliation; LB-DS-069 now prepares the upload-free final 35-item/105-asset manifest.
+- **S1 — Private media + 35-item release batch:** in progress. The owner attests the isolated private target is private, dedicated, empty, deployment-free and disconnected from Production/Preview; repository evidence contains no provider identifier or live-state proof. PR #281 merged the upload-free final 35-item/105-asset manifest; private upload/attachment is the next explicit owner gate, and no upload is authorized.
 - **S2 — Server-authoritative Web loop:** ready after S1's canonical content identifiers are stable; implementation and default-off integration can overlap S1 after interfaces are fixed.
 - **S3 — Web release essentials:** partial foundations; account/privacy/support/operations work may overlap S2 with disjoint paths.
 - **S4 — Closed alpha:** planned for 2026-10-04 through 2026-10-08 after S1–S3 integration evidence.
@@ -70,7 +70,7 @@ The M0–M8 records below retain implementation provenance only; they do not ove
 
 ## LB-DS-066
 
-- Status: review_requested
+- Status: accepted
 - Executor: supervisor plus independent release-architecture reviewer
 - Base: exact `32aad4c4cffdbdd6211263d9fe5f7ed2d9f191ee` (`origin/main`, PR #277 merge)
 - Branch: `docs/web-first-30-day-release`
@@ -85,11 +85,13 @@ The M0–M8 records below retain implementation provenance only; they do not ove
 - Simulator required: no
 - Draft PR required: yes
 - Merge allowed: yes
-- Head commit: read live with `gh pr view <PR> --json headRefOid` before readiness or merge
-- Draft PR: #278 — https://github.com/bahramghorbani/learnbox/pull/278
-- Blocked on: independent exact-head review and terminal CI; no product implementation is authorized by this documentation task.
+- Head commit: `7384a53493f699994a4278e5d5f95a281e6d4988`
+- Draft PR: #278 — https://github.com/bahramghorbani/learnbox/pull/278 (merged)
+- Merge commit: `34d0d6dbd85bb42c07a8aaee1576505b0eb8db72`
+- Blocked on: none; accepted and merged through PR #278 after independent exact-head review and seven terminal-success contexts.
 - Must not touch: application code; tests; package manifests/lockfiles; content/media records; database/migrations; auth/session; provider configuration; credentials; runtime flags; deployment; staging/Preview/Production; Bobo assets.
 - Acceptance: all canonical release documents define official Web/PWA v1.0 by 2026-10-12 with 35/35 human-approved starter items, server-authoritative learning/lossless reconnect, account/privacy/support, exercised operations, explicit owner-gate deadlines and no Android/payment/premium dependency; arithmetic and overlap rules reconstruct the deadline.
+- Accepted evidence: exact head `7384a53493f699994a4278e5d5f95a281e6d4988` passed independent exact-head review and all seven GitHub/Vercel contexts, then PR #278 merged at `34d0d6dbd85bb42c07a8aaee1576505b0eb8db72` on 2026-09-12T11:33:50Z.
 
 ## LB-DS-026
 
@@ -784,7 +786,7 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 - Risk: documentation-truth-and-release-sequencing
 - Specification: repository PR lifecycle; `.ai/WORKER_PROTOCOL.md`; `ROADMAP.md`; LB-DS-069; LB-DS-071
 - Outcome: reconcile the accepted PR #281 final media manifest and PR #282 Web failure-state accessibility evidence into stable queue, product, design and active-work truth without changing runtime or crossing the private-upload owner gate.
-- Allowed paths: `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-069.md`; `.ai/worker-reports/LB-DS-071.md`; `.ai/worker-reports/LB-DS-072.md`; `CURRENT_WORK.md`; `PROJECT_STATE.md`; `docs/PRODUCT_STATUS.md`; `docs/design/DESIGN_STATUS.md`; `docs/storyboard/STATUS.md`
+- Allowed paths: `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-066.md`; `.ai/worker-reports/LB-DS-067.md`; `.ai/worker-reports/LB-DS-068.md`; `.ai/worker-reports/LB-DS-069.md`; `.ai/worker-reports/LB-DS-071.md`; `.ai/worker-reports/LB-DS-072.md`; `CURRENT_WORK.md`; `PROJECT_STATE.md`; `docs/PRODUCT_STATUS.md`; `docs/design/DESIGN_STATUS.md`; `docs/storyboard/STATUS.md`
 - Documentation updates: accept LB-DS-069 and LB-DS-071 with exact PR evidence, remove stale active lifecycle prose, record merged offline/error accessibility and current 35-item/105-asset preparation truth, and expose the private-upload authorization as the next genuine owner gate.
 - Owner gates: none for truthful repository-only reconciliation. Credential access, private upload, attachment, human review decisions, seed, runtime activation, deployment, Preview/Production and publication remain separately owner-gated and prohibited.
 - Handoff evidence: exact PR #281/#282 heads, merge commits and seven-context terminal-success evidence; changed-path equality; queue/documentation/continuity/security validators; Prettier; `git diff --check`; independent exact-head review.
