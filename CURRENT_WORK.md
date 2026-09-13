@@ -22,8 +22,7 @@ A missed owner gate moves the 2026-10-12 target one-for-one unless a safe, expli
 
 ## Immediate execution order
 
-1. Merge the documentation-only LB-DS-072 reconciliation after independent review and seven terminal-success CI contexts.
-2. Ask the owner for the separate guarded private-upload/attachment decision; do not access credentials or upload before explicit approval.
-3. After any authorized upload and integrity verification, present all 35 items for one batched six-dimension human review by 2026-09-22.
-4. Keep seed, activation and learner exposure downstream of 35/35 release approval.
-5. Admit no Android, payment, premium or generalized AI-factory work into v1.0.
+1. Ask the owner for the separate guarded private-upload/attachment decision; do not access credentials or upload before explicit approval.
+2. After any authorized upload and integrity verification, present all 35 items for one batched six-dimension human review by 2026-09-22.
+3. Keep seed, activation and learner exposure downstream of 35/35 release approval.
+4. Admit no Android, payment, premium or generalized AI-factory work into v1.0.
