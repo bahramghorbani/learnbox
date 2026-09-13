@@ -1,7 +1,7 @@
 /* global caches, self */
 
 const CACHE_PREFIX = 'learnbox-public-shell-';
-const CACHE_NAME = `${CACHE_PREFIX}v8`;
+const CACHE_NAME = `${CACHE_PREFIX}v9`;
 const OFFLINE_URL = '/offline.html';
 const OFFLINE_ASSETS = [
   OFFLINE_URL,

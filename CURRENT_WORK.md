@@ -4,14 +4,13 @@
 
 ## Active work
 
-### LB-DS-069 — Final 35-item/105-asset media manifest
+### LB-DS-071 — Web offline/error recovery accessibility
 
-- **Status:** implemented and locally verified on `feat/s1-final35-media-manifest` from the exact PR #280 merge baseline `d594cc557886de44a5a9fbb9a4163ea1c1b0952b`. One deterministic, upload-free record selects exactly 35 canonical contentIds and 105 assets: the current V2 image for each original 20-item entry, the unchanged V1 word and sentence audio for those items, and all 45 prepared assets of the final 15-item package, with every superseded V1 image excluded. It stays `prepared_awaiting_private_upload` with `publicationBlocked: true` and 0 attached assets.
-- **Lifecycle truth:** Draft PR #281 is open. The preceding head `38d9d8c` passed all technical/content gates and 7/7 CI but was correctly blocked on stale lifecycle prose; the corrected head requires replacement exact-head review and CI.
-- **Boundary:** the record declares expected kinds and MIME types only; it carries no provider identifier, private locator, relative path, byte count, checksum, delivery URL or release approval, and 0/35 items are release-approved.
-- **Provider boundary:** the owner attests the isolated target is private, dedicated, empty, disconnected from Production/Preview and attached to a project with no deployments. It remains unused; repository evidence contains no provider identifier or live-state proof.
-- **Next task:** obtain independent exact-head review and seven terminal-success CI contexts for Draft PR #281; the first upload remains separately owner-gated.
-- **Hard stop:** no credential pull, upload, attachment, review decision, seed, runtime activation, deployment or publication is authorized.
+- **Status:** Draft PR #282 is open from exact merged base `b49f325c0fa328a90b7e1da0f53e0e509d69cc5a`. Focused tests pass 18/18, Website tests pass 43 files/294 tests, typecheck/build/security/full check pass, and independent exact-code-head review passed at `fde9272` after remediating the two grounded findings from `3034715`.
+- **Outcome:** the Next `/offline` route, global error boundary and static service-worker fallback have valid accessible names and decorative-image semantics; reconnect state reads `navigator.onLine` after hydration, keeps visible heading/message consistent and preserves one non-empty composed connection announcement.
+- **Boundary:** no learning, sync, identity, API, database, provider, flag, deployment, Preview or Production behavior changed; `public/sw.js` changes only the owned cache version from `v8` to `v9`.
+- **Next task:** obtain final independent review and seven terminal-success GitHub/Vercel contexts on the unchanged live PR head, then merge and reconcile stable status.
+- **Hard stop:** no deployment, Preview/Production activation, provider mutation or public release is authorized.
 
 ### Active release objective
 
@@ -29,7 +28,7 @@ A missed owner gate moves the 2026-10-12 target one-for-one unless a safe, expli
 
 ## Immediate execution order
 
-1. Merge LB-DS-069 only after independent exact-head PASS and seven terminal-success contexts on the unchanged head.
+1. Merge LB-DS-071 only after final independent exact-head PASS and seven terminal-success contexts on the unchanged Draft PR #282 head.
 2. Keep the complete 35-item/105-asset manifest upload-free and unattached until the owner authorizes private upload.
 3. Keep seed, activation and learner exposure downstream of human content approval.
 4. Admit no Android, payment, premium or generalized AI-factory work into v1.0.
