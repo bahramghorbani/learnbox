@@ -779,7 +779,7 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 
 ## LB-DS-072
 
-- Status: review_requested
+- Status: accepted
 - Executor: orchestrator plus independent documentation reviewer
 - Base: exact `c67433c1867cb8eac720a73b469ca6d42fdd8cf0` (`origin/main`, PR #282 merge)
 - Branch: `docs/post282-reconcile`
@@ -794,9 +794,13 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 - Simulator required: no
 - Draft PR required: yes
 - Merge allowed: yes
-- Blocked on: independent exact-head review and seven terminal-success GitHub/Vercel contexts on Draft PR #283.
+- Blocked on: none; accepted and merged through PR #283.
 - Must not touch: application code; tests; package manifests/lockfiles; generated content/media records; provider configuration/credentials/IDs/URLs; upload/attachment/review/seed/runtime/deployment/Preview/Production state; Bobo assets.
 - Acceptance: stable documents agree that PR #281 and PR #282 are merged and accepted with exact evidence; no stale active-PR prose remains; the next step is the explicit owner-gated private upload/attachment decision; all required checks pass without runtime or external provider mutation.
+- Head commit: `e6fb96e352eb0d78134ca3af593b2ddf090c0825`
+- Draft PR: #283 — https://github.com/bahramghorbani/learnbox/pull/283 (merged)
+- Merge commit: `b9efa8a3b06fecc25bb63aa96e2c544519d568ee`
+- Accepted evidence: replacement independent exact-head review passed after lifecycle cleanup; all seven GitHub/Vercel contexts were terminal-success on unchanged head `e6fb96e352eb0d78134ca3af593b2ddf090c0825`; PR #283 merged at `b9efa8a3b06fecc25bb63aa96e2c544519d568ee` on 2026-09-13T20:49:10Z with no runtime/provider mutation.
 
 ## LB-DS-071
 
