@@ -8,7 +8,7 @@ start. Historical tasks remain for traceability and must not be duplicated.
 ### Current release execution
 
 - **S0 — 30-day finish-line reset:** accepted in PR #278 at `34d0d6dbd85bb42c07a8aaee1576505b0eb8db72`. Official Web/PWA-first v1.0 is targeted for 2026-10-12; Android, commerce and premium packs are v1.1+.
-- **S1 — Private media + 35-item release batch:** in progress. Live read-only verification confirmed the owner-selected target `learnbox-media-staging-isolated` is private, dedicated, empty and connected only to the deployment-free `learnbox-private-media-staging` project. The owner separately authorized guarded upload plus integrity verification for the 105 selected assets, but not attachment, review decisions, seed, runtime activation, deployment or publication. LB-DS-073's exact-105 upload path is merged; LB-DS-074's byte-identical JPEG source-truth correction is awaiting independent review before provider mutation.
+- **S1 — Private media + 35-item release batch:** in progress. PR #286 merged the reviewed JPEG source-truth correction, after which the owner-authorized guarded upload placed exactly 105 private assets in the isolated target. Every fresh object and a complete resume pass were verified by cache-disabled private download, exact byte count and SHA-256; the URL-free receipt remains outside Git. Nothing is attached, approved, seeded, activated, deployed or published. The next repository task prepares one batched 35-item/six-dimension human-review packet without making review decisions.
 - **S2 — Server-authoritative Web loop:** ready after S1's canonical content identifiers are stable; implementation and default-off integration can overlap S1 after interfaces are fixed.
 - **S3 — Web release essentials:** partial foundations; account/privacy/support/operations work may overlap S2 with disjoint paths.
 - **S4 — Closed alpha:** planned for 2026-10-04 through 2026-10-08 after S1–S3 integration evidence.
@@ -794,17 +794,17 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 - Simulator required: no
 - Draft PR required: yes
 - Merge allowed: yes
-- Blocked on: none; accepted and merged through PR #285. Provider upload remained blocked until LB-DS-074 corrected V2 JPEG source truth; that successor correction is now independently reviewed and CI-green in PR #286. The verified target remains empty and no upload has started.
+- Blocked on: none; accepted and merged through PR #285. LB-DS-074 subsequently corrected V2 JPEG source truth and merged through PR #286. The bounded owner-authorized exact-105 upload then completed with initial and complete resume cache-disabled private-download byte-count/SHA-256 verification; attachment and downstream gates remain closed.
 - Must not touch: media binaries; final manifest; provider configuration; credentials/tokens; tracked provider IDs/URLs/receipts; delivery routes; database/migrations; Admin review stores/routes; card attachments; review checks/decisions; catalog seed; runtime flags; deployment; Preview/Production; learner apps; Bobo assets.
 - Acceptance: the uploader resolves exactly the final manifest's 105 storage keys to the intended 35 current images, 35 word-audio and 35 sentence-audio files; excludes all superseded V1 images for the original 20; rejects any source, MIME, count, key or checksum mismatch before the first write; remains dry-run by default; and, when `--execute` is supplied, streams every fresh or resumed private object back with caching disabled, requires exact byte count and SHA-256, and writes a URL-free complete receipt only to an explicitly ignored external path after all 105 pass. No attachment or runtime action occurs.
 - Head commit: `2e3b49e437db9f57273aaa8cf4bcce851ca8db06`
 - Draft PR: #285 — https://github.com/bahramghorbani/learnbox/pull/285 (merged)
 - Merge commit: `ba9454de8d13a482a59acbb77f9006aa34e65735`
-- Accepted evidence: exact head `2e3b49e437db9f57273aaa8cf4bcce851ca8db06` passed independent security/correctness review and all seven GitHub/Vercel contexts completed successfully; PR #285 merged at `ba9454de8d13a482a59acbb77f9006aa34e65735` on 2026-09-14T08:53:45Z. No upload, attachment, seed, runtime activation, deployment or publication occurred.
+- Accepted evidence: exact head `2e3b49e437db9f57273aaa8cf4bcce851ca8db06` passed independent security/correctness review and all seven GitHub/Vercel contexts completed successfully; PR #285 merged at `ba9454de8d13a482a59acbb77f9006aa34e65735` on 2026-09-14T08:53:45Z. At task acceptance no upload had occurred; the later bounded owner-authorized exact-105 operation completed only after LB-DS-074 merged, without attachment, seed, runtime activation, deployment or publication.
 
 ## LB-DS-074
 
-- Status: review_requested
+- Status: accepted
 - Executor: deepseek-flash
 - Base: exact `ba9454de8d13a482a59acbb77f9006aa34e65735` (`origin/main`, PR #285 merge)
 - Branch: `fix/start-v2-jpeg-source-truth`
@@ -818,9 +818,11 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 - Merge allowed: yes
 - Head commit: read the exact live final head from the draft PR; replacement review must bind to that pushed SHA
 - Reviewed implementation head: `2f6da82bd9ebfc124b860e50d54596a57c985847` passed replacement independent security/correctness review and all seven terminal-success GitHub/Vercel contexts before this documentation-only lifecycle reconciliation.
-- Draft PR: #286 — https://github.com/bahramghorbani/learnbox/pull/286
-- Blocked on: final documentation-aware exact-head review and seven terminal-success GitHub contexts after this lifecycle reconciliation; no provider upload may run from an unmerged branch.
+- Draft PR: #286 — https://github.com/bahramghorbani/learnbox/pull/286 (merged)
+- Merge commit: `da51c9ecb28f3e731590f3be3991fb128ff3ac25`
+- Blocked on: none; accepted and merged through PR #286.
 - Acceptance: all 20 canonical V2 images and three mobile copies retain identical bytes and SHA-256 values while using truthful `.jpg` paths and `image/jpeg`; generated contracts, mobile sync and private Web delivery agree; the exact-105 dry run passes; unknown Web media extensions fail closed before Blob access; full repository and clean Flutter checks pass without provider mutation.
+- Accepted evidence: exact head `16ebe46b07169689d2fd4c87bc69bb6b33bb7c01` passed independent exact-head review and all seven GitHub/Vercel contexts completed successfully before PR #286 merged at `da51c9ecb28f3e731590f3be3991fb128ff3ac25` on 2026-09-14. The subsequent bounded owner-authorized operation uploaded exactly 105 private assets to the verified isolated target; all 105 passed cache-disabled private-download size and SHA-256 verification on both the initial run and a complete resume run. The URL-free complete receipt remains outside Git. No attachment, content decision, seed, runtime activation, deployment or publication occurred.
 
 After PR #285 merges, correct the 20 selected V2 images from false PNG metadata/pathnames to their
 actual JPEG MIME and `.jpg` extension without changing a byte, regenerate the deterministic drafts,
@@ -829,6 +831,50 @@ byte-identical mobile copies and make the authenticated website delivery route d
 asset MIME instead of hardcoding PNG. Use TDD: first prove the real 105-asset preflight and route
 contract fail on the current tree, then make them pass. No provider call, upload, attachment, seed,
 flag, deployment or publication is authorized by this task.
+
+## LB-DS-075
+
+- Status: review_requested
+- Executor: orchestrator plus independent documentation reviewer
+- Base: exact `da51c9ecb28f3e731590f3be3991fb128ff3ac25` (`origin/main`, PR #286 merge)
+- Branch: `docs/post286-private-upload-reconcile`
+- Risk: documentation-truth-and-release-gate-sequencing
+- Specification: repository PR lifecycle; `.ai/WORKER_PROTOCOL.md`; `ROADMAP.md`; LB-DS-073; LB-DS-074
+- Outcome: reconcile PR #286 and the completed owner-authorized exact-105 private upload into stable release truth, while keeping attachment and all downstream gates closed, then authorize repository-only preparation of the batched 35-item/six-dimension human-review packet.
+- Allowed paths: `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-074.md`; `.ai/worker-reports/LB-DS-075.md`; `CURRENT_WORK.md`; `PROJECT_STATE.md`; `docs/PRODUCT_STATUS.md`; `ROADMAP.md`; `BACKLOG.md`
+- Documentation updates: record exact PR #286 head/merge evidence and exact-105 upload/integrity evidence without provider identifiers, private URLs, credentials or receipt payloads; remove stale no-upload prose; register LB-DS-076 as repository-only review-packet preparation.
+- Owner gates: none for truthful reconciliation or repository-only preparation authorization. Attachment, review approve/return decisions, seed, runtime activation, deployment, Preview/Production and publication remain separately owner-gated and prohibited.
+- Handoff evidence: exact PR #286 head and merge; seven terminal-success contexts; external URL-free receipt schema/count evidence; cache-disabled private-download size/SHA-256 initial and resume verification; docs-only changed-path equality; queue/documentation/continuity/security validators; Prettier; `git diff --check`; independent exact-head review.
+- Required checks: `pnpm verify:ai-worker-queue`; `pnpm verify:documentation-governance`; `pnpm verify:security`; `pnpm verify:ai-continuity`; Prettier on touched files; `git diff --check`; independent exact-head review; seven terminal GitHub/Vercel contexts.
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+- Blocked on: none.
+- Must not touch: application code; tests; package manifests/lockfiles; generated content/media records; provider configuration/credentials/IDs/URLs; receipt payloads; object stores; card attachments; review checks/decisions; catalog seed; runtime flags; deployment; Preview/Production; publication; Bobo assets.
+- Acceptance: stable documents agree that PR #286 is merged and accepted and exactly 105 private assets passed initial plus resume download/SHA-256 integrity verification; they also agree that attachment and all later gates remain closed and LB-DS-076 is the next authorized repository-only task.
+- Head commit: read the exact live final head from draft PR #287; independent review must bind to that pushed SHA
+- Draft PR: #287 — https://github.com/bahramghorbani/learnbox/pull/287
+
+## LB-DS-076
+
+- Status: blocked
+- Executor: W4 content-review worker plus independent product/content reviewer
+- Base: exact eventual merge commit of LB-DS-075 from `origin/main`; do not start from the unmerged reconciliation branch
+- Branch: `feat/start35-human-review-packet`
+- Risk: substantial-content-review-evidence-composition
+- Specification: `docs/content/STARTER_CATALOG_35_RELEASE_READINESS.md`; PDR-008; `content/packs/learnbox-start/validation/start-a1-35-catalog-slice.json`; `content/packs/learnbox-start/vocabulary/start-a1-vertical-slice-drafts.json`; `content/packs/learnbox-start/vocabulary/start-a1-catalog-35-pending-drafts.json`; `content/packs/learnbox-start/validation/start-a1-35-final-media-manifest.json`; `content/packs/learnbox-start/validation/start-a1-slice-linguistic-approval.json`; `content/packs/learnbox-start/validation/start-a1-provenance-ledger.json`; `content/packs/learnbox-start/validation/start-a1-catalog-35-pending-provenance-ledger.json`; `content/packs/learnbox-start/validation/start-a1-candidate-qa.json`; `content/packs/learnbox-start/validation/start-a1-v2-candidate-qa.json`; `content/packs/learnbox-start/validation/start-a1-15-candidate-media-attachment-draft.json`; `database/migrations/0006_content_review_quality_gates.sql`; `database/migrations/0017_start_catalog_review_candidates.sql`; `apps/admin/lib/server/postgres-content-review-store.ts`; `apps/admin/lib/server/admin-content-review-routes.ts`
+- Outcome: generate one deterministic, human-readable batched review packet for exactly 35 canonical starter items and the canonical dimension IDs `german_linguistic`, `persian_translation`, `provenance`, `visual`, `audio`, `app_flow`. Preserve candidate-stage evidence where present, but represent release-level `app_flow` as pending/unproven for all 35 rather than fabricating evidence. Include selected-image alt text, rollback/version linkage, check outcomes `passed | failed` and decision inputs `approve | reject | return_for_revision` without making or persisting any human decision.
+- Allowed paths: `scripts/build-start-35-human-review-packet.mjs`; `scripts/validate-start-35-human-review-packet.mjs`; `scripts/validate-start-35-human-review-packet.test.mjs`; `content/packs/learnbox-start/validation/start-a1-35-human-review-packet.json`; `docs/content/STARTER_CATALOG_35_RELEASE_READINESS.md`; `package.json`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-076.md`; `CURRENT_WORK.md`; `docs/PRODUCT_STATUS.md`
+- Documentation updates: refresh the release-readiness audit to the post-upload baseline; record evidence completeness, known exceptions, selected-image alt text, rollback/version linkage and the exact manual check/decision vocabulary; do not claim approval before the owner completes the review and do not copy the final manifest's pre-upload lifecycle state as current truth.
+- Owner gates: none for deterministic repository-only packet preparation. Every approve/return decision, attachment, database mutation, seed, runtime activation, deployment and publication remains separately owner-gated and prohibited.
+- Handoff evidence: exact merged base; genuine RED/GREEN; packet IDs set-equal to `start-a1-35-catalog-slice.json` `draftedItemIds`; dimension IDs set-equal to migration `0006`/`contentReviewDimensions`; deterministic byte-identical regeneration; build writes only allowed paths; explicit exception and pending-app-flow coverage; no provider locator/credential leakage; queue/documentation/continuity/security validators; full `pnpm check`; Prettier; `git diff --check`; independent exact-head product/content review; seven terminal GitHub/Vercel contexts.
+- Required checks: focused packet tests and validator; wire `test:start-35-human-review-packet` and `verify:start-35-human-review-packet` into `pnpm check`; assert exact item-ID set equality with the catalog slice and exact dimension-ID equality with the canonical Admin/migration enum; run two builds and prove byte-identical output plus allowed-path-only writes; `pnpm verify:start-35-final-media-manifest`; `pnpm verify:ai-worker-queue`; `pnpm verify:documentation-governance`; `pnpm verify:security`; `pnpm verify:ai-continuity`; `pnpm check`; Prettier; `git diff --check`; independent exact-head review; seven terminal GitHub/Vercel contexts.
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+- Blocked on: LB-DS-075 merge; this record authorizes work only from that exact merged baseline.
+- Must not touch: draft/media bytes; provider configuration/credentials/IDs/URLs; receipts; object stores; attachment records; database/migrations; Admin runtime/routes; review decisions; catalog seed; flags; deployment; Preview/Production; publication; learner apps; Bobo assets.
+- Acceptance: one deterministic packet contains exactly 35 canonical items and exactly the six canonical review dimensions for each; includes final German/Persian text, provenance, selected image and alt text, visual/audio evidence, explicit pending release-level app-flow status, decision vocabulary and rollback/version linkage; points only to repository-local evidence; preserves publication blocking; represents known exceptions explicitly; and offers no automatic approval or provider/runtime mutation path.
 
 ## LB-DS-072
 
