@@ -17,7 +17,18 @@ const recordKind = 'repository_owner_review_decision_record';
 const recordState = 'owner_decisions_recorded_repository_evidence_only';
 const reviewerRole = 'owner';
 const evidenceScope = 'repository_owner_evidence_only';
+// Identity wording: the reviewer role is the owner's own assertion inside the
+// submitted review artifact. No cryptographic, session or external proof of
+// who submitted it is recorded here, and no reviewer identity is independently
+// verified; the external artifact digest stays in the work queue and handoff
+// report only.
+const reviewerRoleBasis = 'owner_asserted_through_submitted_review_artifact';
 const seedDecision = 'blocked_until_admin_persistence_attachment_and_owner_release_gate';
+const priorExceptionOwnerDisposition = 'accepted_as_presented_unpersisted_to_admin';
+// The reviewed packet must itself keep release-level app flow unproven; the
+// owner-decision record repeats that status rather than upgrading it.
+const appFlowSourcePacketStatus = 'pending_unproven';
+const appFlowSourcePacketEvidenceScope = 'unproven_at_release_level';
 const isoInstant = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
 
 // The canonical dimension and decision vocabulary is the migration enum and the
@@ -32,6 +43,29 @@ const reviewDimensionIds = [
 ];
 const checkOutcomeIds = ['passed', 'failed'];
 const reviewDecisionIds = ['approve', 'reject', 'return_for_revision'];
+// What the owner was actually shown and accepted: one self-contained offline
+// 35-card review artifact. Its content and card flow were accepted; no
+// Production/runtime behavior, activation, Admin persistence or live database
+// state was verified by this review.
+const expectedReviewPresentation = {
+  artifactKind: 'self_contained_offline_35_card_owner_review_artifact',
+  presentationScope: 'content_and_card_flow_acceptance_only',
+  productionRuntimeVerification: false,
+  runtimeActivationVerification: false,
+  adminReviewOutcomePersistence: false,
+  liveDatabaseVerification: false,
+};
+// The content dimensions are the owner's reading of that artifact; app flow is
+// the owner's acceptance of the isolated artifact's card flow, which is a
+// different and weaker claim than verified Production learner-flow behavior.
+const ownerEvidenceBasisByDimension = Object.fromEntries(
+  reviewDimensionIds.map((dimension) => [
+    dimension,
+    dimension === 'app_flow'
+      ? 'owner_accepted_isolated_review_artifact_card_flow'
+      : 'owner_reviewed_review_artifact',
+  ]),
+);
 
 const recordKeys = [
   'recordId',
@@ -40,15 +74,20 @@ const recordKeys = [
   'sourceBatchId',
   'sourceMergeCommit',
   'reviewerRole',
+  'reviewerRoleBasis',
+  'reviewerIdentityIndependentlyVerified',
+  'identityOrSessionProofClaimed',
   'reviewedAt',
   'evidenceScope',
+  'reviewPresentation',
   'reviewDimensions',
   'decisionVocabulary',
-  'checkOutcomeVocabulary',
+  'ownerSubmittedOutcomeVocabulary',
   'reviewScope',
-  'outcomeCounts',
-  'decisionCounts',
+  'ownerSubmittedOutcomeCounts',
+  'ownerDecisionCounts',
   'releasePosition',
+  'priorEvidenceExceptions',
   'transparencyLimits',
   'adminPersistencePerformed',
   'databaseMutationPerformed',
@@ -62,6 +101,14 @@ const recordKeys = [
   'publicationApproved',
   'items',
 ];
+const reviewPresentationKeys = [
+  'artifactKind',
+  'presentationScope',
+  'productionRuntimeVerification',
+  'runtimeActivationVerification',
+  'adminReviewOutcomePersistence',
+  'liveDatabaseVerification',
+];
 const reviewScopeKeys = [
   'itemCount',
   'dimensionCount',
@@ -71,6 +118,17 @@ const reviewScopeKeys = [
 ];
 const outcomeCountKeys = ['passed', 'failed'];
 const decisionCountKeys = ['approve', 'reject', 'return_for_revision'];
+const priorEvidenceExceptionKeys = [
+  'exceptionId',
+  'itemId',
+  'dimension',
+  'kind',
+  'state',
+  'detail',
+  'ownerDisposition',
+  'adminOutcomeRecorded',
+  'resolved',
+];
 const releasePositionKeys = [
   'ownerApprovedItemCount',
   'adminReviewOutcomesRecorded',
@@ -86,7 +144,16 @@ const transparencyLimitKeys = [
   'contentTruthIndependentlyVerified',
 ];
 const itemKeys = ['contentId', 'order', 'checks', 'decision', 'decisionNote'];
-const checkKeys = ['outcome'];
+// Every check is explicit owner-submitted evidence: an ambiguous bare
+// `outcome` could be misread as a persisted Admin or release-level outcome.
+const checkKeys = [
+  'ownerSubmittedOutcome',
+  'adminOutcomeRecorded',
+  'ownerEvidenceBasis',
+  'productionRuntimeVerified',
+  'sourcePacketStatus',
+  'sourcePacketEvidenceScope',
+];
 
 // A recorded owner decision must never carry a locator, provider identity,
 // credential, receipt or media digest into Git.
@@ -160,15 +227,22 @@ export function normalizeStart35OwnerReviewDecisions(record) {
     sourceBatchId: record?.sourceBatchId,
     sourceMergeCommit: record?.sourceMergeCommit,
     reviewerRole: record?.reviewerRole,
+    reviewerRoleBasis: record?.reviewerRoleBasis,
+    reviewerIdentityIndependentlyVerified: record?.reviewerIdentityIndependentlyVerified,
+    identityOrSessionProofClaimed: record?.identityOrSessionProofClaimed,
     reviewedAt: record?.reviewedAt,
     evidenceScope: record?.evidenceScope,
+    reviewPresentation: pick(record?.reviewPresentation, reviewPresentationKeys),
     reviewDimensions: [...(record?.reviewDimensions ?? [])],
     decisionVocabulary: [...(record?.decisionVocabulary ?? [])],
-    checkOutcomeVocabulary: [...(record?.checkOutcomeVocabulary ?? [])],
+    ownerSubmittedOutcomeVocabulary: [...(record?.ownerSubmittedOutcomeVocabulary ?? [])],
     reviewScope: pick(record?.reviewScope, reviewScopeKeys),
-    outcomeCounts: pick(record?.outcomeCounts, outcomeCountKeys),
-    decisionCounts: pick(record?.decisionCounts, decisionCountKeys),
+    ownerSubmittedOutcomeCounts: pick(record?.ownerSubmittedOutcomeCounts, outcomeCountKeys),
+    ownerDecisionCounts: pick(record?.ownerDecisionCounts, decisionCountKeys),
     releasePosition: pick(record?.releasePosition, releasePositionKeys),
+    priorEvidenceExceptions: (record?.priorEvidenceExceptions ?? []).map((exception) =>
+      pick(exception, priorEvidenceExceptionKeys),
+    ),
     transparencyLimits: pick(record?.transparencyLimits, transparencyLimitKeys),
     adminPersistencePerformed: record?.adminPersistencePerformed,
     databaseMutationPerformed: record?.databaseMutationPerformed,
@@ -186,7 +260,7 @@ export function normalizeStart35OwnerReviewDecisions(record) {
       checks: Object.fromEntries(
         reviewDimensionIds.map((dimension) => [
           dimension,
-          { outcome: entry?.checks?.[dimension]?.outcome },
+          pick(entry?.checks?.[dimension], checkKeys),
         ]),
       ),
       decision: entry?.decision,
@@ -282,6 +356,15 @@ export async function assertStart35OwnerReviewDecisions(record, sources) {
   if (record.reviewerRole !== reviewerRole) {
     throw new Error(`The owner-decision record reviewer role must be ${reviewerRole}.`);
   }
+  if (
+    record.reviewerRoleBasis !== reviewerRoleBasis ||
+    record.reviewerIdentityIndependentlyVerified !== false ||
+    record.identityOrSessionProofClaimed !== false
+  ) {
+    throw new Error(
+      `The owner-decision record must state reviewerRoleBasis=${reviewerRoleBasis} with reviewerIdentityIndependentlyVerified=false and identityOrSessionProofClaimed=false; the owner role is asserted by the submitted artifact and carries no cryptographic, session or external identity proof.`,
+    );
+  }
   const reviewedAt = Date.parse(record.reviewedAt);
   if (
     typeof record.reviewedAt !== 'string' ||
@@ -312,16 +395,38 @@ export async function assertStart35OwnerReviewDecisions(record, sources) {
   if (
     !sameOrdered(record.decisionVocabulary, reviewDecisionIds) ||
     !sameSet(record.decisionVocabulary, vocabulary.reviewDecisions) ||
-    !sameOrdered(record.checkOutcomeVocabulary, checkOutcomeIds) ||
-    !sameSet(record.checkOutcomeVocabulary, vocabulary.outcomes)
+    !sameOrdered(record.ownerSubmittedOutcomeVocabulary, checkOutcomeIds) ||
+    !sameSet(record.ownerSubmittedOutcomeVocabulary, vocabulary.outcomes)
   ) {
     throw new Error(
-      'The owner-decision record must restate the canonical approve/reject/return_for_revision decisions and passed/failed outcomes.',
+      'The owner-decision record must restate the canonical approve/reject/return_for_revision decisions and the passed/failed owner-submitted outcome vocabulary.',
     );
   }
   if (record.evidenceScope !== evidenceScope) {
     throw new Error(
       `The owner-decision record must state ${evidenceScope}; it never proves persisted or released state.`,
+    );
+  }
+
+  assertExactKeys(record.reviewPresentation, reviewPresentationKeys, 'reviewPresentation');
+  for (const [key, expected] of Object.entries(expectedReviewPresentation)) {
+    if (record.reviewPresentation[key] !== expected) {
+      throw new Error(
+        `reviewPresentation.${key} must be ${expected}; the owner accepted one self-contained offline review artifact, which is not Production/runtime verification, activation, Admin persistence or live database state.`,
+      );
+    }
+  }
+
+  const appFlowSourceChecks = sources.packet.items.map((entry) => entry?.checks?.app_flow);
+  if (
+    appFlowSourceChecks.some(
+      (check) =>
+        check?.status !== appFlowSourcePacketStatus ||
+        check?.evidenceScope !== appFlowSourcePacketEvidenceScope,
+    )
+  ) {
+    throw new Error(
+      `The reviewed packet must keep release-level app_flow unproven (${appFlowSourcePacketStatus} / ${appFlowSourcePacketEvidenceScope}); a recorded owner acceptance of the review artifact is not a verified learner-flow result.`,
     );
   }
 
@@ -397,9 +502,34 @@ export async function assertStart35OwnerReviewDecisions(record, sources) {
     }
     for (const dimension of reviewDimensionIds) {
       assertExactKeys(entry.checks[dimension], checkKeys, `${label} ${dimension}`);
-      if (entry.checks[dimension].outcome !== 'passed') {
+      const check = entry.checks[dimension];
+      const sourceCheck = sourceItem.checks[dimension];
+      if (check.ownerSubmittedOutcome !== 'passed') {
         throw new Error(
-          `${label} ${dimension} must record the owner's passed outcome, not ${entry.checks[dimension].outcome}.`,
+          `${label} ${dimension} must record the owner's submitted passed outcome, not ${check.ownerSubmittedOutcome}.`,
+        );
+      }
+      if (check.adminOutcomeRecorded !== false) {
+        throw new Error(
+          `${label} ${dimension} must state adminOutcomeRecorded=false; a submitted owner outcome is not a persisted Admin review outcome.`,
+        );
+      }
+      if (check.ownerEvidenceBasis !== ownerEvidenceBasisByDimension[dimension]) {
+        throw new Error(
+          `${label} ${dimension} ownerEvidenceBasis must be ${ownerEvidenceBasisByDimension[dimension]}, not ${check.ownerEvidenceBasis}.`,
+        );
+      }
+      if (check.productionRuntimeVerified !== false) {
+        throw new Error(
+          `${label} ${dimension} must state productionRuntimeVerified=false; this owner review never verified Production or runtime behavior.`,
+        );
+      }
+      if (
+        check.sourcePacketStatus !== sourceCheck?.status ||
+        check.sourcePacketEvidenceScope !== sourceCheck?.evidenceScope
+      ) {
+        throw new Error(
+          `${label} ${dimension} must repeat the reviewed packet's prior evidence status and scope unchanged.`,
         );
       }
     }
@@ -411,10 +541,14 @@ export async function assertStart35OwnerReviewDecisions(record, sources) {
     }
   }
 
-  assertExactKeys(record.outcomeCounts, outcomeCountKeys, 'outcomeCounts');
-  assertExactKeys(record.decisionCounts, decisionCountKeys, 'decisionCounts');
+  assertExactKeys(
+    record.ownerSubmittedOutcomeCounts,
+    outcomeCountKeys,
+    'ownerSubmittedOutcomeCounts',
+  );
+  assertExactKeys(record.ownerDecisionCounts, decisionCountKeys, 'ownerDecisionCounts');
   const outcomes = record.items.flatMap((entry) =>
-    reviewDimensionIds.map((dimension) => entry.checks[dimension].outcome),
+    reviewDimensionIds.map((dimension) => entry.checks[dimension].ownerSubmittedOutcome),
   );
   const countBy = (values) =>
     values.reduce((counts, value) => {
@@ -427,20 +561,20 @@ export async function assertStart35OwnerReviewDecisions(record, sources) {
     outcomes.length !== 210 ||
     outcomeTotals.passed !== 210 ||
     (outcomeTotals.failed ?? 0) !== 0 ||
-    record.outcomeCounts.passed !== 210 ||
-    record.outcomeCounts.failed !== 0
+    record.ownerSubmittedOutcomeCounts.passed !== 210 ||
+    record.ownerSubmittedOutcomeCounts.failed !== 0
   ) {
     throw new Error(
-      'The owner-decision record must contain exactly 210 passed and no failed checks.',
+      'The owner-decision record must contain exactly 210 owner-submitted passed and no failed checks.',
     );
   }
   if (
     decisionTotals.approve !== 35 ||
     (decisionTotals.reject ?? 0) !== 0 ||
     (decisionTotals.return_for_revision ?? 0) !== 0 ||
-    record.decisionCounts.approve !== 35 ||
-    record.decisionCounts.reject !== 0 ||
-    record.decisionCounts.return_for_revision !== 0
+    record.ownerDecisionCounts.approve !== 35 ||
+    record.ownerDecisionCounts.reject !== 0 ||
+    record.ownerDecisionCounts.return_for_revision !== 0
   ) {
     throw new Error(
       'The owner-decision record must contain exactly 35 approve decisions and no reject or return_for_revision decisions.',
@@ -470,6 +604,50 @@ export async function assertStart35OwnerReviewDecisions(record, sources) {
     throw new Error('The reviewed packet must stay decision-free; owner decisions live only here.');
   }
 
+  // The two prior transcription discrepancies are derived from the reviewed
+  // packet, not restated from memory: they must survive the owner's acceptance
+  // of the audio, keep their exact packet identity, and stay unresolved and
+  // unpersisted to Admin.
+  const expectedExceptions = sources.packet.knownExceptions.map((exception) => ({
+    exceptionId: exception.exceptionId,
+    itemId: exception.itemId,
+    dimension: exception.dimension,
+    kind: exception.kind,
+    state: exception.state,
+    detail: exception.detail,
+    ownerDisposition: priorExceptionOwnerDisposition,
+    adminOutcomeRecorded: false,
+    resolved: false,
+  }));
+  if (
+    !Array.isArray(record.priorEvidenceExceptions) ||
+    record.priorEvidenceExceptions.length !== expectedExceptions.length
+  ) {
+    throw new Error(
+      'The owner-decision record must preserve every prior transcription exception from the reviewed packet; owner acceptance of the audio neither removes nor resolves them.',
+    );
+  }
+  record.priorEvidenceExceptions.forEach((exception, index) => {
+    assertExactKeys(exception, priorEvidenceExceptionKeys, `priorEvidenceExceptions[${index}]`);
+    for (const key of priorEvidenceExceptionKeys) {
+      if (exception[key] !== expectedExceptions[index][key]) {
+        throw new Error(
+          `priorEvidenceExceptions[${index}].${key} must stay exactly as the reviewed packet recorded it (${expectedExceptions[index].exceptionId}) with resolved=false and no Admin outcome.`,
+        );
+      }
+    }
+  });
+  if (
+    !sameSet(
+      record.priorEvidenceExceptions.map((exception) => exception.itemId),
+      sources.packet.unresolvedItemExceptions,
+    )
+  ) {
+    throw new Error(
+      'The prior transcription exceptions must cover exactly the packet unresolved item exceptions.',
+    );
+  }
+
   return record;
 }
 
@@ -491,7 +669,9 @@ export async function validateStart35OwnerReviewDecisions(root = process.cwd()) 
       'The committed owner-decision record must be its deterministic canonical serialization.',
     );
   }
-  console.info('START_35_OWNER_REVIEW_DECISIONS_OK items=35 dimensions=6 passed=210 approve=35');
+  console.info(
+    'START_35_OWNER_REVIEW_DECISIONS_OK items=35 dimensions=6 ownerSubmittedPassed=210 approve=35 adminOutcomesRecorded=0 releaseApproved=0 priorExceptionsPreserved=2',
+  );
   return record;
 }
 
