@@ -38,7 +38,7 @@ function projectCard(item, id) {
     persian: persianMeanings[0],
     definition: simpleGermanDefinition,
     example: { german: example.german, persian: example.persian },
-    imageAsset: `assets/cards/${id}.png`,
+    imageAsset: `assets/cards/${id}.jpg`,
   };
 }
 

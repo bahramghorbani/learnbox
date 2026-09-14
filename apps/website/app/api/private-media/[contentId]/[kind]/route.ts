@@ -24,6 +24,22 @@ const privateMediaByKey = new Map(
   ]),
 );
 
+// LB-DS-074: the pending JPEG Start candidates attest `image/jpeg`, so the
+// delivered content type follows the attested pathname extension (explicit
+// allowlist) instead of a hardcoded `image/png`. Request input and provider
+// headers are never trusted, and an unknown extension fails closed.
+const contentTypeByExtension: Record<string, string | undefined> = {
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+  mp3: 'audio/mpeg',
+};
+
+function contentTypeForPathname(pathname: string) {
+  const extension = /\.([a-z0-9]+)$/.exec(pathname.toLowerCase())?.[1];
+  return extension ? (contentTypeByExtension[extension] ?? null) : null;
+}
+
 export async function GET(request: Request, context: RouteContext) {
   if (process.env.LEARNBOX_PRIVATE_MEDIA_ATTACHMENT_ENABLED !== 'true') {
     return new Response('Not found', { status: 404 });
@@ -45,13 +61,16 @@ export async function GET(request: Request, context: RouteContext) {
   const asset = privateMediaByKey.get(`${contentId}:${assetKind}`);
   if (!asset) return new Response('Not found', { status: 404 });
 
+  const contentType = contentTypeForPathname(asset.pathname);
+  if (!contentType) return new Response('Not found', { status: 404 });
+
   try {
     const media = await get(asset.pathname, { access: 'private' });
     if (!media) return new Response('Not found', { status: 404 });
 
     return new Response(media.stream, {
       headers: {
-        'Content-Type': asset.kind === 'image' ? 'image/png' : 'audio/mpeg',
+        'Content-Type': contentType,
         'Cache-Control': 'private, no-store',
         'Cross-Origin-Resource-Policy': 'same-origin',
         'X-Content-Type-Options': 'nosniff',

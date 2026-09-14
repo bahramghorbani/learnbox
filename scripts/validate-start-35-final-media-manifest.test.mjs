@@ -83,11 +83,35 @@ test('every original item uses the V2 image and every superseded V1 image stays 
     assert.equal(image.assetVersion, 'v2');
     assert.equal(image.assetId, `${contentId}-image-v2`);
     assert.equal(image.storageKey, `${contentId}/image/v2`);
-    assert.equal(image.expectedMimeType, 'image/png');
+    assert.equal(image.expectedMimeType, 'image/jpeg');
     assert.ok(
       !committed.assets.some((asset) => asset.assetId === `${contentId}-image-v1`),
       `${contentId} must not carry its superseded V1 image`,
     );
+  }
+});
+
+test('the current V2 image source truth is JPEG, not the superseded PNG declaration', () => {
+  // The 20 canonical V2 files are JPEG bytes and were falsely named .png; the
+  // source truth must declare the real container, while the superseded V1
+  // image records stay PNG and untouched.
+  assert.equal(v2Images.assets.length, 20);
+  for (const asset of v2Images.assets) {
+    assert.equal(asset.localCandidate.mimeType, 'image/jpeg');
+    assert.match(asset.localCandidate.relativePath, /-image-v2\.jpg$/);
+  }
+
+  const v2ImageAssets = committed.assets.filter(
+    (asset) => asset.kind === 'image' && asset.assetVersion === 'v2',
+  );
+  assert.equal(v2ImageAssets.length, 20);
+  for (const asset of v2ImageAssets) {
+    assert.equal(asset.expectedMimeType, 'image/jpeg');
+  }
+
+  for (const asset of v1Media.assets.filter((candidate) => candidate.kind === 'image')) {
+    assert.equal(asset.localCandidate.mimeType, 'image/png');
+    assert.match(asset.localCandidate.relativePath, /-image-v1\.png$/);
   }
 });
 

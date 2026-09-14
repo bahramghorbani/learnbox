@@ -9,7 +9,7 @@
         "german": "Das Haus ist klein.",
         "persian": "خانه کوچک است."
       },
-      "imageAsset": "assets/cards/start-a1-haus.png"
+      "imageAsset": "assets/cards/start-a1-haus.jpg"
     },
     {
       "id": "start-a1-tisch",
@@ -20,7 +20,7 @@
         "german": "Der Tisch ist groß.",
         "persian": "میز بزرگ است."
       },
-      "imageAsset": "assets/cards/start-a1-tisch.png"
+      "imageAsset": "assets/cards/start-a1-tisch.jpg"
     },
     {
       "id": "start-a1-tuer",
@@ -31,7 +31,7 @@
         "german": "Die Tür ist offen.",
         "persian": "در باز است."
       },
-      "imageAsset": "assets/cards/start-a1-tuer.png"
+      "imageAsset": "assets/cards/start-a1-tuer.jpg"
     }
   ]
 }

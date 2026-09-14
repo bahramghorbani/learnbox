@@ -21,7 +21,7 @@ const kindOrder = ['image', 'word_audio', 'sentence_audio'];
 // Expected kinds and MIME types only. No private path, byte count, checksum or
 // delivery URL is copied into the repository from the source drafts.
 const expectedMimeTypes = {
-  image: { v2: 'image/png', v1: 'image/jpeg' },
+  image: { v2: 'image/jpeg', v1: 'image/jpeg' },
   word_audio: { v1: 'audio/mpeg' },
   sentence_audio: { v1: 'audio/mpeg' },
 };

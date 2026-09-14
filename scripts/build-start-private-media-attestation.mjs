@@ -21,8 +21,23 @@ if (draft.state !== 'ready_for_private_storage_not_attached' || !draft.publicati
   throw new Error('A blocked private-storage attachment draft is required.');
 }
 
+const verificationMethod = 'download-sha256';
+const extensionByMimeType = { 'image/jpeg': 'jpg', 'image/png': 'png', 'audio/mpeg': 'mp3' };
+const mimeTypeByExtension = {
+  jpg: 'image/jpeg',
+  png: 'image/png',
+  mp3: 'audio/mpeg',
+};
+
+function extensionOf(pathname) {
+  return pathname.slice(pathname.lastIndexOf('.') + 1);
+}
+
 function expectedAsset(asset) {
-  const extension = asset.localCandidate.mimeType === 'image/png' ? 'png' : 'mp3';
+  const extension = extensionByMimeType[asset.localCandidate.mimeType];
+  if (!extension) {
+    throw new Error(`Unsupported private-media MIME type ${asset.localCandidate.mimeType}.`);
+  }
   return {
     assetId: asset.assetId,
     contentId: asset.contentId,
@@ -64,6 +79,7 @@ if (shouldWrite) {
     receipt.state !== 'private_upload_complete_not_attached' ||
     !receipt.publicationBlocked ||
     receipt.authentication !== 'oidc' ||
+    receipt.verification?.method !== verificationMethod ||
     receipt.batchId !== draft.batchId
   ) {
     throw new Error('رسید بارگذاری خصوصی با مرز انتشار LearnBox سازگار نیست.');
@@ -77,14 +93,19 @@ if (shouldWrite) {
     throw new Error(`رسید بارگذاری خصوصی باید دقیقاً ${expected.assets.length} رسانه را پوشش دهد.`);
   }
 
+  // The receipt is the downloaded-byte verification record: the pathname, MIME
+  // type, byte count and SHA-256 of every object as re-read from private storage,
+  // plus the verification method. It deliberately carries no storage URL, so this
+  // builder never depends on one and never touches the provider or a card.
   for (const asset of expected.assets) {
     const uploaded = receiptById.get(asset.assetId);
     if (
       !uploaded ||
       uploaded.pathname !== asset.pathname ||
+      uploaded.mimeType !== mimeTypeByExtension[extensionOf(asset.pathname)] ||
+      uploaded.size !== asset.bytes ||
       uploaded.sha256 !== asset.sha256 ||
-      uploaded.mimeType !== (asset.kind === 'image' ? 'image/png' : 'audio/mpeg') ||
-      !/^https:\/\/[^/]+\.private\.blob\.vercel-storage\.com\//.test(uploaded.url)
+      uploaded.verifiedBy !== verificationMethod
     ) {
       throw new Error(`رسید خصوصی ${asset.assetId} با اثرانگشت یا مسیر مورد انتظار مطابقت ندارد.`);
     }
