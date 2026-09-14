@@ -16,7 +16,7 @@ if (qa.status !== 'candidate_qa_complete_not_released' || !qa.publicationBlocked
 
 const assets = await Promise.all(
   contract.cards.map(async ({ contentId }) => {
-    const relativePath = `images/${contentId}-image-v2.png`;
+    const relativePath = `images/${contentId}-image-v2.jpg`;
     const file = new URL(relativePath, contentRoot);
     const bytes = await readFile(file);
     const metadata = await stat(file);
@@ -27,7 +27,7 @@ const assets = await Promise.all(
       storageKey: `${contentId}/image/v2`,
       localCandidate: {
         relativePath,
-        mimeType: 'image/png',
+        mimeType: 'image/jpeg',
         bytes: metadata.size,
         sha256: createHash('sha256').update(bytes).digest('hex'),
       },

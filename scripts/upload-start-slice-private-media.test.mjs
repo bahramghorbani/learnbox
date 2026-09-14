@@ -278,7 +278,7 @@ async function buildStagedContentRoot() {
   const ledger = await read('start-a1-catalog-35-pending-provenance-ledger.json');
 
   for (const asset of v2Draft.assets) {
-    const bytes = pngBytes(asset.assetId);
+    const bytes = jpegBytes(asset.assetId);
     await writeFile(join(root, asset.localCandidate.relativePath), bytes);
     asset.localCandidate.bytes = bytes.byteLength;
     asset.localCandidate.sha256 = sha256(bytes);
@@ -788,18 +788,22 @@ test('preflight fails closed on a private-package MIME magic spoof', async () =>
   );
 });
 
-test('preflight fails closed on the real repository byte-level MIME mismatch', async () => {
-  await assert.rejects(
-    () =>
-      preflightFinal35Assets(selection, {
-        contentRoot: repoMediaRoot,
-        packageRoot: fixturePackage.root,
-      }),
-    (error) =>
-      error instanceof Error &&
-      /declares image\/png but its content bytes are image\/jpeg/i.test(error.message) &&
-      error.message.includes('start-a1-apfel-image-v2'),
-  );
+test('preflight accepts the real repository selection as exactly 105 JPEG-real assets', async () => {
+  const prepared = await preflightFinal35Assets(selection, {
+    contentRoot: repoMediaRoot,
+    packageRoot: fixturePackage.root,
+  });
+  assert.equal(prepared.length, 105);
+
+  const v2Images = prepared.filter((asset) => asset.sourceGeneration === 'v2-image');
+  assert.equal(v2Images.length, 20);
+  for (const asset of v2Images) {
+    // The corrected source truth: declared JPEG, stored as .jpg, real JPEG bytes.
+    assert.equal(asset.expectedMimeType, 'image/jpeg');
+    assert.match(asset.relativePath, /^images\/start-a1-[\w-]+-image-v2\.jpg$/);
+    assert.match(asset.destinationPathname, /\/image\/v2\.jpg$/);
+    assert.equal(detectMediaSignature(asset.bytes), 'image/jpeg');
+  }
 });
 
 test('the final-35 mode refuses to run without an external private package root', async () => {
@@ -1154,4 +1158,145 @@ test('a stored object with the right pathname but wrong bytes fails the run', as
     () => uploadVerifiedSelection(runOptions(fakePrivateStore({ objects }), prepared)),
     /sha256/i,
   );
+});
+
+// ---------------------------------------------------------------------------
+// Attestation write mode against the receipt contract
+// ---------------------------------------------------------------------------
+
+const attestationPath = validationFile('start-a1-v2-images-private-media-attestation.json');
+const attestationBuilderPath = fileURLToPath(
+  new URL('./build-start-private-media-attestation.mjs', import.meta.url),
+);
+
+// The LB-DS-073 receipt contract: one record per verified object describing the
+// downloaded pathname, MIME type, byte count, checksum and verification method.
+// It carries no URL at all, so the attestation builder must not depend on one.
+function downloadedShaReceipt(draft, mutateReceipt = () => {}) {
+  return {
+    batchId: draft.batchId,
+    state: 'private_upload_complete_not_attached',
+    publicationBlocked: true,
+    authentication: 'oidc',
+    verification: {
+      method: 'download-sha256',
+      verifiedAssetCount: draft.assets.length,
+      cacheDisabled: true,
+    },
+    assets: draft.assets.map((asset) => {
+      const record = {
+        assetId: asset.assetId,
+        contentId: asset.contentId,
+        kind: asset.kind,
+        storageKey: asset.storageKey,
+        pathname: destinationPathname(asset.storageKey, asset.localCandidate.mimeType),
+        mimeType: asset.localCandidate.mimeType,
+        size: asset.localCandidate.bytes,
+        sha256: asset.localCandidate.sha256,
+        etag: `"etag-${asset.localCandidate.sha256.slice(0, 12)}"`,
+        verifiedBy: 'download-sha256',
+        qaStatus: 'approved',
+        resumed: false,
+      };
+      mutateReceipt(record);
+      return record;
+    }),
+  };
+}
+
+const readV2Draft = () =>
+  readFile(validationFile('start-a1-v2-image-attachment-draft.json'), 'utf8').then(JSON.parse);
+
+async function writeReceipt(receipt) {
+  const path = join(await temporaryDirectory(), 'receipt.json');
+  await writeFile(path, `${JSON.stringify(receipt, null, 2)}\n`);
+  return path;
+}
+
+function runAttestationBuilder(receiptPath) {
+  return new Promise((resolveRun) => {
+    const child = spawn(process.execPath, [attestationBuilderPath, '--v2-images', '--write'], {
+      cwd: repoRoot,
+      env: {
+        ...process.env,
+        VERCEL_OIDC_TOKEN: '',
+        BLOB_STORE_ID: '',
+        LEARNBOX_PRIVATE_MEDIA_RECEIPT_PATH: receiptPath ?? '',
+      },
+    });
+    let output = '';
+    child.stdout.on('data', (chunk) => (output += chunk));
+    child.stderr.on('data', (chunk) => (output += chunk));
+    child.on('close', (code) => resolveRun({ code, output }));
+  });
+}
+
+test('attestation write mode accepts the URL-free downloaded-SHA receipt', async () => {
+  const receipt = downloadedShaReceipt(await readV2Draft());
+  assert.doesNotMatch(JSON.stringify(receipt), /https?:\/\/|"url"|blob\.vercel-storage/i);
+
+  const before = await readFile(attestationPath, 'utf8');
+  const { code, output } = await runAttestationBuilder(await writeReceipt(receipt));
+  assert.equal(code, 0, output);
+  assert.doesNotMatch(output, /OIDC|@vercel\/blob|Uploaded private candidate|receipt written/i);
+
+  const written = await readFile(attestationPath, 'utf8');
+  try {
+    assert.equal(written, before, 'write mode must reproduce the committed attestation exactly');
+    const attestation = JSON.parse(written);
+    assert.equal(attestation.state, 'private_storage_verified_not_attached');
+    assert.equal(attestation.publicationBlocked, true);
+    assert.equal(attestation.storage.receiptContainsNoUrls, true);
+    assert.deepEqual(attestation.requiredBeforeAttachment, [
+      'server_session_authorization',
+      'owner_release_approval',
+      'participant_invitation_approval',
+    ]);
+    assert.equal(attestation.assets.length, 20);
+    for (const asset of attestation.assets) {
+      const uploaded = receipt.assets.find((entry) => entry.assetId === asset.assetId);
+      assert.equal(asset.pathname, `learnbox-start/${asset.storageKey}.jpg`);
+      assert.equal(asset.bytes, uploaded.size);
+      assert.equal(asset.sha256, uploaded.sha256);
+      assert.equal(asset.attachmentStatus, 'verified_private_storage_not_attached');
+    }
+    assert.doesNotMatch(written, /https?:\/\/|"url"|"attached"|learnerExposure/);
+  } finally {
+    await writeFile(attestationPath, before);
+  }
+});
+
+test('attestation write mode rejects a legacy URL-only receipt', async () => {
+  const urlOnly = downloadedShaReceipt(await readV2Draft(), (record) => {
+    record.url = `https://store.private.blob.vercel-storage.com/${record.pathname}`;
+    delete record.verifiedBy;
+    delete record.size;
+    delete record.sha256;
+  });
+
+  const before = await readFile(attestationPath, 'utf8');
+  const { code, output } = await runAttestationBuilder(await writeReceipt(urlOnly));
+  assert.notEqual(code, 0, 'a URL-only receipt must never produce a verified attestation');
+  assert.doesNotMatch(output, /Uploaded private candidate|attestation written/i);
+  assert.equal(await readFile(attestationPath, 'utf8'), before);
+});
+
+test('attestation write mode rejects a receipt whose download verification does not match', async () => {
+  const v2Draft = await readV2Draft();
+  const cases = [
+    ['a missing verification method', (record) => delete record.verifiedBy],
+    ['an unverified size', (record) => delete record.size],
+    ['a mismatched checksum', (record) => (record.sha256 = 'f'.repeat(64))],
+    ['a stale pathname', (record) => (record.pathname = record.pathname.replace(/\.jpg$/, '.png'))],
+    ['a PNG MIME type', (record) => (record.mimeType = 'image/png')],
+  ];
+
+  const before = await readFile(attestationPath, 'utf8');
+  for (const [label, mutate] of cases) {
+    const receipt = downloadedShaReceipt(v2Draft);
+    mutate(receipt.assets[0]);
+    const { code } = await runAttestationBuilder(await writeReceipt(receipt));
+    assert.notEqual(code, 0, `${label} must be rejected`);
+  }
+  assert.equal(await readFile(attestationPath, 'utf8'), before);
 });
