@@ -26,7 +26,7 @@ test('projects the canonical daily session as the three approved mobile cards', 
         persian: 'خانه',
         definition: 'Ein Gebäude, in dem Menschen wohnen.',
         example: { german: 'Das Haus ist klein.', persian: 'خانه کوچک است.' },
-        imageAsset: 'assets/cards/start-a1-haus.png',
+        imageAsset: 'assets/cards/start-a1-haus.jpg',
       },
       {
         id: 'start-a1-tisch',
@@ -34,7 +34,7 @@ test('projects the canonical daily session as the three approved mobile cards', 
         persian: 'میز',
         definition: 'Ein Möbelstück mit einer flachen Fläche.',
         example: { german: 'Der Tisch ist groß.', persian: 'میز بزرگ است.' },
-        imageAsset: 'assets/cards/start-a1-tisch.png',
+        imageAsset: 'assets/cards/start-a1-tisch.jpg',
       },
       {
         id: 'start-a1-tuer',
@@ -42,7 +42,7 @@ test('projects the canonical daily session as the three approved mobile cards', 
         persian: 'در',
         definition: 'Man öffnet und schließt sie, um in einen Raum zu gehen.',
         example: { german: 'Die Tür ist offen.', persian: 'در باز است.' },
-        imageAsset: 'assets/cards/start-a1-tuer.png',
+        imageAsset: 'assets/cards/start-a1-tuer.jpg',
       },
     ],
   });
@@ -57,7 +57,7 @@ test('rejects a canonical source without every required daily-session card', () 
   assert.throws(() => buildMobileStartContent(sourceWithoutTuer), /start-a1-tuer/);
 });
 
-test('byte-for-byte verifier rejects a mismatched packaged card PNG', () => {
+test('byte-for-byte verifier rejects a mismatched packaged card JPEG', () => {
   const canonicalImages = {
     'start-a1-haus': Buffer.from([1, 2, 3]),
     'start-a1-tisch': Buffer.from([4, 5, 6]),

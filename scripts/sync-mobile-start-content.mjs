@@ -50,11 +50,10 @@ async function run() {
   if (process.argv.includes('--check')) {
     const [committed, canonicalImages, packagedImages] = await Promise.all([
       readFile(outputFile, 'utf8'),
-      readImages(
-        (cardId) =>
-          new URL(`../content/packs/learnbox-start/images/${cardId}-image-v2.png`, import.meta.url),
+      readImages(readCanonicalImage),
+      readImages((cardId) =>
+        readFile(new URL(`../apps/mobile/assets/cards/${cardId}.jpg`, import.meta.url)),
       ),
-      readImages((cardId) => new URL(`../apps/mobile/assets/cards/${cardId}.png`, import.meta.url)),
     ]);
     verifyMobileStartContentArtifacts({
       generatedJson: generated,
@@ -63,7 +62,7 @@ async function run() {
       packagedImages,
     });
     console.log(
-      'Mobile Start JSON and three packaged PNGs match their canonical sources byte-for-byte.',
+      'Mobile Start JSON and three packaged JPEGs match their canonical sources byte-for-byte.',
     );
     return;
   }
@@ -72,10 +71,26 @@ async function run() {
   console.log('Mobile Start content synchronized.');
 }
 
-async function readImages(resolveUrl) {
+async function readImages(load) {
   return Object.fromEntries(
-    await Promise.all(cardIds.map(async (cardId) => [cardId, await readFile(resolveUrl(cardId))])),
+    await Promise.all(cardIds.map(async (cardId) => [cardId, await load(cardId)])),
   );
+}
+
+async function readCanonicalImage(cardId) {
+  for (const extension of ['.jpg', '.png']) {
+    try {
+      return await readFile(
+        new URL(
+          `../content/packs/learnbox-start/images/${cardId}-image-v2${extension}`,
+          import.meta.url,
+        ),
+      );
+    } catch (error) {
+      if (error.code !== 'ENOENT') throw error;
+    }
+  }
+  throw new Error(`Canonical Start image is missing for ${cardId}.`);
 }
 
 function sha256(value) {
