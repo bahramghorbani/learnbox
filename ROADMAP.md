@@ -40,7 +40,7 @@ Existing foundations remain in the repository but are not release requirements.
 At the baseline:
 
 - 35 starter drafts exist, but 0/35 are release-approved, `seedable` is false and publication remains blocked.
-- Private-media guard code is merged, but no owner-selected isolated target, authorized upload or attachment exists.
+- Private-media guard code and corrected media source truth are merged. The owner-authorized exact-105 upload to the verified isolated target completed with cache-disabled private-download size/SHA-256 verification on both initial and resume runs; no attachment exists.
 - Web learning, server-read and reconciliation foundations exist behind disabled boundaries; production composition is not active.
 - Admin review and release foundations exist, but human review, content publication and production release have not occurred.
 - No payment provider is needed for this Web-first v1.0.
@@ -86,10 +86,10 @@ Only disjoint preparation may overlap. Upload, attachment, approval, seed, activ
 
 **Tasks**
 
-- By Sep 14, owner selects or creates an isolated private-media target and accepts its cost. This does not authorize upload.
-- Independently verify target isolation with the merged fail-closed guard.
-- By Sep 16, owner separately authorizes the exact guarded upload/attachment operation.
-- By Sep 21, execute separately authorized guarded upload and attachment for all starter media; retain out-of-repo receipts.
+- Completed Sep 12: owner selected/created the isolated private-media target and accepted its cost; this did not itself authorize upload.
+- Completed Sep 14: independently verified target isolation with the merged fail-closed guard.
+- Completed Sep 14: owner separately authorized the exact guarded upload plus integrity verification; attachment remained separately prohibited.
+- By Sep 21, complete the separately authorized guarded upload for all starter media and retain its URL-free receipt outside Git. Upload completed Sep 14 with 105/105 initial and resume integrity verification; attachment remains a separate closed gate.
 - Present one batched 35-item approve/return review while preserving six auditable review dimensions.
 - Close returned defects and reach 35/35 release approval by Sep 22.
 
@@ -187,8 +187,8 @@ Only disjoint preparation may overlap. Upload, attachment, approval, seed, activ
 
 The 2026-10-12 target assumes:
 
-- storage/cost decision by Sep 14;
-- separate upload/attachment approval by Sep 16 and completion by Sep 21;
+- storage/cost decision completed Sep 12;
+- separate bounded upload authorization and exact-105 integrity-verified execution completed Sep 14; attachment remains a separate open gate;
 - batched 35/35 human review by Sep 22;
 - seed/controlled activation approval by Sep 26;
 - owner pilot and invitations available Oct 4–8;
