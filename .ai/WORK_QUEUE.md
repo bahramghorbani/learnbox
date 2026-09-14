@@ -779,7 +779,7 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 
 ## LB-DS-073
 
-- Status: review_requested
+- Status: accepted
 - Executor: isolated storage-boundary implementation worker plus independent security reviewer
 - Base: exact `399cba37742e548d172623773fc2bc025b5567cc` (`origin/main`, PR #284 merge)
 - Branch: `feat/start35-private-upload-command`
@@ -794,9 +794,13 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 - Simulator required: no
 - Draft PR required: yes
 - Merge allowed: yes
-- Blocked on: replacement exact-head review and terminal CI after integrity hardening, then acceptance/merge of LB-DS-074 before any provider upload. The exact-105 dry run currently fails closed because all 20 selected V2 image files declare PNG but contain JPEG bytes; LB-DS-074 must correct source truth and regenerate the final manifest. The verified target is empty and no upload has started.
+- Blocked on: none; accepted and merged through PR #285. Provider upload remained blocked until LB-DS-074 corrected V2 JPEG source truth; that successor correction is now independently reviewed and CI-green in PR #286. The verified target remains empty and no upload has started.
 - Must not touch: media binaries; final manifest; provider configuration; credentials/tokens; tracked provider IDs/URLs/receipts; delivery routes; database/migrations; Admin review stores/routes; card attachments; review checks/decisions; catalog seed; runtime flags; deployment; Preview/Production; learner apps; Bobo assets.
 - Acceptance: the uploader resolves exactly the final manifest's 105 storage keys to the intended 35 current images, 35 word-audio and 35 sentence-audio files; excludes all superseded V1 images for the original 20; rejects any source, MIME, count, key or checksum mismatch before the first write; remains dry-run by default; and, when `--execute` is supplied, streams every fresh or resumed private object back with caching disabled, requires exact byte count and SHA-256, and writes a URL-free complete receipt only to an explicitly ignored external path after all 105 pass. No attachment or runtime action occurs.
+- Head commit: `2e3b49e437db9f57273aaa8cf4bcce851ca8db06`
+- Draft PR: #285 — https://github.com/bahramghorbani/learnbox/pull/285 (merged)
+- Merge commit: `ba9454de8d13a482a59acbb77f9006aa34e65735`
+- Accepted evidence: exact head `2e3b49e437db9f57273aaa8cf4bcce851ca8db06` passed independent security/correctness review and all seven GitHub/Vercel contexts completed successfully; PR #285 merged at `ba9454de8d13a482a59acbb77f9006aa34e65735` on 2026-09-14T08:53:45Z. No upload, attachment, seed, runtime activation, deployment or publication occurred.
 
 ## LB-DS-074
 
@@ -813,8 +817,9 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 - Draft PR required: yes
 - Merge allowed: yes
 - Head commit: read the exact live final head from the draft PR; replacement review must bind to that pushed SHA
+- Reviewed implementation head: `2f6da82bd9ebfc124b860e50d54596a57c985847` passed replacement independent security/correctness review and all seven terminal-success GitHub/Vercel contexts before this documentation-only lifecycle reconciliation.
 - Draft PR: #286 — https://github.com/bahramghorbani/learnbox/pull/286
-- Blocked on: replacement independent exact-head review and seven terminal-success GitHub contexts after correcting the invalid Next.js route export; no provider upload may run from this unreviewed branch.
+- Blocked on: final documentation-aware exact-head review and seven terminal-success GitHub contexts after this lifecycle reconciliation; no provider upload may run from an unmerged branch.
 - Acceptance: all 20 canonical V2 images and three mobile copies retain identical bytes and SHA-256 values while using truthful `.jpg` paths and `image/jpeg`; generated contracts, mobile sync and private Web delivery agree; the exact-105 dry run passes; unknown Web media extensions fail closed before Blob access; full repository and clean Flutter checks pass without provider mutation.
 
 After PR #285 merges, correct the 20 selected V2 images from false PNG metadata/pathnames to their
