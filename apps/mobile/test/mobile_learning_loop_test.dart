@@ -614,7 +614,7 @@ class InMemoryStartPackRepository implements StartPackRepository {
           definition: 'Ein Gebäude, in dem Menschen wohnen.',
           exampleGerman: 'Das Haus ist klein.',
           examplePersian: 'خانه کوچک است.',
-          imageAsset: 'assets/cards/start-a1-haus.png',
+          imageAsset: 'assets/cards/start-a1-haus.jpg',
         ),
         StartCard(
           id: 'start-a1-tisch',
@@ -623,7 +623,7 @@ class InMemoryStartPackRepository implements StartPackRepository {
           definition: 'Ein Möbelstück mit einer flachen Fläche.',
           exampleGerman: 'Der Tisch ist groß.',
           examplePersian: 'میز بزرگ است.',
-          imageAsset: 'assets/cards/start-a1-tisch.png',
+          imageAsset: 'assets/cards/start-a1-tisch.jpg',
         ),
         StartCard(
           id: 'start-a1-tuer',
@@ -632,7 +632,7 @@ class InMemoryStartPackRepository implements StartPackRepository {
           definition: 'Man öffnet und schließt sie, um in einen Raum zu gehen.',
           exampleGerman: 'Die Tür ist offen.',
           examplePersian: 'در باز است.',
-          imageAsset: 'assets/cards/start-a1-tuer.png',
+          imageAsset: 'assets/cards/start-a1-tuer.jpg',
         ),
       ];
 }

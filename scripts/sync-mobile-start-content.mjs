@@ -78,19 +78,16 @@ async function readImages(load) {
 }
 
 async function readCanonicalImage(cardId) {
-  for (const extension of ['.jpg', '.png']) {
-    try {
-      return await readFile(
-        new URL(
-          `../content/packs/learnbox-start/images/${cardId}-image-v2${extension}`,
-          import.meta.url,
-        ),
-      );
-    } catch (error) {
-      if (error.code !== 'ENOENT') throw error;
-    }
+  const file = new URL(
+    `../content/packs/learnbox-start/images/${cardId}-image-v2.jpg`,
+    import.meta.url,
+  );
+  try {
+    return await readFile(file);
+  } catch (error) {
+    if (error.code !== 'ENOENT') throw error;
+    throw new Error(`Canonical Start image is missing for ${cardId}.`);
   }
-  throw new Error(`Canonical Start image is missing for ${cardId}.`);
 }
 
 function sha256(value) {
