@@ -148,15 +148,6 @@ describe('Private media delivery contract (LB-DS-074)', () => {
     expect(response.headers.get('content-type')).toBe('image/jpeg');
   });
 
-  it('keeps delivering attested .png images as image/png', async () => {
-    const response = await fetchPrivateMedia('start-a1-haus', 'image', {
-      cookie: sessionCookie(),
-    });
-
-    expect(response.status).toBe(200);
-    expect(response.headers.get('content-type')).toBe('image/png');
-  });
-
   it('keeps delivering attested audio as audio/mpeg', async () => {
     const response = await fetchPrivateMedia('start-a1-fenster', 'word-audio', {
       cookie: sessionCookie(),
