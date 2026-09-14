@@ -4,7 +4,7 @@
 
 ## Active work
 
-LB-DS-073 is awaiting exact-head review on `feat/start35-private-upload-command`. It adds the missing fail-closed uploader path for exactly the final 35-item/105-asset selection. The intact external final-15 package passes its repository-anchored evidence hashes and 45/45 human approvals, while byte-level MIME validation correctly blocks all 20 selected V2 images because they declare PNG but contain JPEG bytes. Live verification found the selected store private, empty and connected only to the deployment-free isolated project; no upload has started.
+LB-DS-073 merged through PR #285 at `ba9454de8d13a482a59acbb77f9006aa34e65735` with downloaded-byte SHA-256 verification for every fresh or resumed object. LB-DS-074 is active on `fix/start-v2-jpeg-source-truth` to correct 20 canonical and three mobile JPEG files that were falsely named and declared as PNG. Live verification found the selected store private, empty and connected only to the deployment-free isolated project; no upload has started.
 
 ### Active release objective
 
@@ -22,8 +22,8 @@ A missed owner gate moves the 2026-10-12 target one-for-one unless a safe, expli
 
 ## Immediate execution order
 
-1. Harden LB-DS-073's reviewed uploader so every fresh or resumed object is downloaded and SHA-256 verified, then obtain replacement exact-head review and seven terminal-success CI contexts; do not upload from unreviewed code.
-2. After PR #285 merges, execute queued LB-DS-074: rename the 20 byte-level JPEG V2 sources and three mobile copies from false `.png` metadata to `.jpg`, regenerate dependent records and prove the real exact-105 dry run passes without loading provider capabilities.
+1. Complete LB-DS-074 with byte-identical JPEG renames, regenerated contracts, route/mobile corrections, full checks, independent exact-head review and seven terminal-success CI contexts.
+2. Prove the real exact-105 dry run passes against the ledger-anchored external package without loading provider capabilities.
 3. On unchanged reviewed tooling and corrected media truth, execute the owner-authorized upload to the verified isolated target and verify all 105 receipts/checksums outside Git; do not attach.
 4. Present all 35 items for one batched six-dimension human review by 2026-09-22.
 5. Keep attachment, seed, activation and learner exposure downstream of their separate gates and 35/35 release approval.
