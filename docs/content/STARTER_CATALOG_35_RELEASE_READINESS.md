@@ -209,9 +209,10 @@ results. The actual media still requires human viewing and listening before any 
 The bounded preparation slice described by earlier audits is complete: all 35 items have private
 candidate-only media, the final 105-asset selection passed initial and complete-resume private
 integrity verification, the batched review packet presents the whole set, and the owner has returned
-the batched six-dimension decision now recorded as repository evidence by LB-DS-077. The next
-authorized step is executing that recorded decision through the reviewed Admin persistence path and
-the separately gated media attachment; it requires no provider cost or candidate generation. Human
+the batched six-dimension decision now recorded as repository evidence by LB-DS-077. Executing that
+recorded decision through the reviewed Admin persistence path and attaching media are possible only
+after separate owner authorization; neither action is authorized by the recorded review artifact.
+Once separately authorized, that work requires no provider cost or candidate generation. Human
 visual/audio/content judgment remains mandatory — validators and AI output cannot grant it.
 
 ## Release decision package — prepared 2026-09-14
