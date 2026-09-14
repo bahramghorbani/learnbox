@@ -279,6 +279,10 @@ const mutations = [
   ['an altered dimension list', (record) => record.reviewDimensions.reverse()],
   ['a future-only timestamp format', (record) => (record.reviewedAt = '2026-09-14 17:31')],
   [
+    'an impossible calendar timestamp',
+    (record) => (record.reviewedAt = '2026-09-31T17:31:26.517Z'),
+  ],
+  [
     'a timestamp that precedes the source merge',
     (record) => (record.reviewedAt = '2026-09-14T16:46:50.000Z'),
   ],

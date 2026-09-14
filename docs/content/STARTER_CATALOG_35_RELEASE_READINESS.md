@@ -78,8 +78,8 @@ The owner returned the batched six-dimension review of all 35 items, and LB-DS-0
   (`reviewerRoleBasis: 'owner_asserted_through_submitted_review_artifact'`): reviewer identity is not
   independently verified and no cryptographic, session or external identity proof is claimed.
 - The submitted artifact's SHA-256 is retained outside the canonical record — in `.ai/WORK_QUEUE.md`
-  and the LB-DS-077 handoff report only: no digest, checksum, media byte count, provider identifier,
-  credential, receipt or remote locator enters this repository.
+  and the LB-DS-077 handoff report only. No private-media or provider digest, media byte count,
+  provider identifier, credential, receipt payload or remote locator enters this repository.
 
 This record is repository evidence of owner intent only. It performs and claims no Admin persistence,
 database mutation, media attachment, seedability, learner exposure, runtime activation, provider call

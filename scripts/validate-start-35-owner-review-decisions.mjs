@@ -369,7 +369,8 @@ export async function assertStart35OwnerReviewDecisions(record, sources) {
   if (
     typeof record.reviewedAt !== 'string' ||
     !isoInstant.test(record.reviewedAt) ||
-    Number.isNaN(reviewedAt)
+    Number.isNaN(reviewedAt) ||
+    new Date(reviewedAt).toISOString() !== record.reviewedAt
   ) {
     throw new Error('The owner-decision record reviewedAt must be a valid UTC ISO-8601 instant.');
   }

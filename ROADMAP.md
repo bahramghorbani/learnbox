@@ -89,8 +89,8 @@ Only disjoint preparation may overlap. Upload, attachment, approval, seed, activ
 - Completed Sep 12: owner selected/created the isolated private-media target and accepted its cost; this did not itself authorize upload.
 - Completed Sep 14: independently verified target isolation with the merged fail-closed guard.
 - Completed Sep 14: owner separately authorized the exact guarded upload plus integrity verification; attachment remained separately prohibited.
-- By Sep 21, complete the separately authorized guarded upload for all starter media and retain its URL-free receipt outside Git. Upload completed Sep 14 with 105/105 initial and resume integrity verification; attachment remains a separate closed gate.
-- Present one batched 35-item approve/return review while preserving six auditable review dimensions.
+- Completed Sep 14: the separately authorized guarded upload for all starter media retained its URL-free receipt outside Git and passed 105/105 initial and resume integrity verification; attachment remains a separate closed gate.
+- Completed Sep 14: presented one batched 35-item approve/return review while preserving six auditable review dimensions.
 - Completed Sep 14: the owner returned that batched review — 210/210 owner-submitted checks `passed`, 35 `approve` decisions and no `reject`/`return_for_revision` — and LB-DS-077 recorded it as a deterministic repository-only decision record bound to source merge `f0f413b`. The record keeps owner intent separate from Admin and release state: every check states `adminOutcomeRecorded: false`, `app_flow` stays `pending_unproven` while only the isolated offline review artifact's card flow was accepted, both prior transcription exceptions stay preserved and unresolved, and no identity proof is claimed. The Admin review store, media attachment, seed and publication stay untouched, so the record alone keeps `seedable: false` and `publicationBlocked: true`.
 - After separate owner authorization for Admin persistence and attachment, close returned defects and reach 35/35 release approval by Sep 22 by executing the recorded decisions through the reviewed path, not by restating repository evidence.
 
@@ -107,7 +107,7 @@ Only disjoint preparation may overlap. Upload, attachment, approval, seed, activ
 
 **Tasks**
 
-- Prepare authenticated Web state, catalog/media and reconciliation activation on disjoint paths while S1 review proceeds.
+- Prepare authenticated Web state, catalog/media and reconciliation activation on disjoint paths while separately authorized S1 Admin persistence and attachment remain pending.
 - After 35/35 approval, run the idempotent seed/release and verify exactly 35 learner-visible rows.
 - Activate only required Web flags in a controlled environment with documented rollback.
 - Verify Today, Words, review scheduling, progress, reconnect acknowledgement and account switching.
