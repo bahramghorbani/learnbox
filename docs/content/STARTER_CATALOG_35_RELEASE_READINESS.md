@@ -231,7 +231,7 @@ Preparing that package grants no approval, and the owner's recorded decisions in
 evidence of that decision rather than its execution: its 210 `passed` checks are explicit
 owner-submitted outcomes (`ownerSubmittedOutcome` with `adminOutcomeRecorded: false`), and its
 `reviewPresentation` records acceptance of the self-contained offline 35-card review artifact only,
-not Production runtime verification. A subsequent serial release task may create
+not Production runtime verification. A separately authorized subsequent serial release task may create
 approved/published `card_versions` and attach authorized private media only by persisting those
 recorded decisions through the reviewed Admin path, and may seed the catalog and consider Preview flag
 enablement only after that persistence and attachment succeed. Publication, participant invitation,
