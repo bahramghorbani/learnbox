@@ -1,0 +1,3382 @@
+{
+  "batchId": "learnbox-start-a1-35-human-review-packet-v1",
+  "state": "prepared_awaiting_owner_review",
+  "publicationBlocked": true,
+  "attachmentAllowed": false,
+  "seedable": false,
+  "learnerExposure": false,
+  "reviewDecisionRecorded": false,
+  "databaseMutationPerformed": false,
+  "providerCallPerformed": false,
+  "purpose": "One deterministic batched human-review packet for the 35 canonical LearnBox Start A1 items across the six canonical review dimensions. It restates final German and Persian text, provenance, selected image with alt text and rollback/version linkage, visual and audio candidate evidence, explicit previously recorded exceptions and an explicitly unproven release-level app flow. It records no check outcome and no approve/reject/return_for_revision decision, points only at repository-local evidence, and authorizes no attachment, database write, seed, flag, deployment or publication.",
+  "reviewDimensions": [
+    "german_linguistic",
+    "persian_translation",
+    "provenance",
+    "visual",
+    "audio",
+    "app_flow"
+  ],
+  "reviewVocabulary": {
+    "checkOutcomes": ["passed", "failed"],
+    "reviewDecisions": ["approve", "reject", "return_for_revision"],
+    "checkStates": [
+      "owner_linguistic_approval_recorded",
+      "candidate_stage_evidence_recorded",
+      "pending_unproven"
+    ],
+    "pendingReleaseOutcome": null
+  },
+  "reviewScope": {
+    "itemCount": 35,
+    "dimensionCount": 6,
+    "itemDimensionPairs": 210,
+    "originalItemCount": 20,
+    "finalItemCount": 15
+  },
+  "dimensionsAwaitingReleaseReview": ["provenance", "visual", "audio", "app_flow"],
+  "pendingReleaseGates": [
+    "final_visual_qa",
+    "final_audio_qa",
+    "app_flow_approval",
+    "owner_release_approval"
+  ],
+  "releasePosition": {
+    "releaseApprovedItemCount": 0,
+    "releaseOutcomesRecorded": 0,
+    "releaseOutcomesPending": 210,
+    "pendingDecisionCount": 35,
+    "seedDecision": "blocked_until_every_dimension_passes_and_the_owner_approves"
+  },
+  "candidateMediaEvidence": {
+    "originalV2Images": { "assetCount": 20, "qaStatus": "candidate_qa_passed" },
+    "originalV1Audio": { "assetCount": 40, "qaStatus": "candidate_qa_passed" },
+    "finalCandidatePackage": {
+      "images": 15,
+      "audio": 30,
+      "humanReviewApproved": 45,
+      "automatedTranscriptionMatches": 28,
+      "automatedTranscriptionTotal": 30
+    }
+  },
+  "privateUploadBaseline": {
+    "selectedAssetCount": 105,
+    "completedOn": "2026-09-14",
+    "verification": "Every selected object passed an initial and a complete resume cache-disabled private-download byte-count and SHA-256 verification.",
+    "receiptInRepository": false,
+    "attachmentAllowed": false,
+    "finalManifestLifecycleFieldsAreCurrentTruth": false
+  },
+  "knownExceptions": [
+    {
+      "exceptionId": "start-a1-essen-sentence",
+      "itemId": "start-a1-essen",
+      "dimension": "audio",
+      "kind": "automated_transcription_discrepancy",
+      "state": "recorded_not_resolved",
+      "detail": "Automated transcription QA reached 28/30 exact normalized matches; this audio stays a recorded discrepancy that human listening approval neither removes nor converts into release approval.",
+      "evidence": [
+        "validation/start-a1-catalog-35-pending-provenance-ledger.json",
+        "validation/start-a1-15-candidate-media-attachment-draft.json",
+        "docs/content/STARTER_CATALOG_35_RELEASE_READINESS.md"
+      ]
+    },
+    {
+      "exceptionId": "start-a1-gross-word",
+      "itemId": "start-a1-gross",
+      "dimension": "audio",
+      "kind": "automated_transcription_discrepancy",
+      "state": "recorded_not_resolved",
+      "detail": "Automated transcription QA reached 28/30 exact normalized matches; this audio stays a recorded discrepancy that human listening approval neither removes nor converts into release approval.",
+      "evidence": [
+        "validation/start-a1-catalog-35-pending-provenance-ledger.json",
+        "validation/start-a1-15-candidate-media-attachment-draft.json",
+        "docs/content/STARTER_CATALOG_35_RELEASE_READINESS.md"
+      ]
+    }
+  ],
+  "unresolvedItemExceptions": ["start-a1-essen", "start-a1-gross"],
+  "rollbackPlan": {
+    "reference": "PDR-008",
+    "codeRevert": "Keep the Admin review runtime gate false to disable every review route and client composition.",
+    "evidencePreservation": "Rolling back route composition does not delete recorded review evidence; no candidate, check, decision or audit record is removed here.",
+    "destructiveDeletionRequiresSeparateAuthorization": true,
+    "supersededMedia": "The superseded V1 image of every original item is recorded per item and stays excluded from the selected media, so a media rollback target remains explicit."
+  },
+  "sourceDocuments": {
+    "catalogSlice": "validation/start-a1-35-catalog-slice.json",
+    "originalDrafts": "vocabulary/start-a1-vertical-slice-drafts.json",
+    "pendingDrafts": "vocabulary/start-a1-catalog-35-pending-drafts.json",
+    "linguisticApproval": "validation/start-a1-slice-linguistic-approval.json",
+    "provenanceLedger": "validation/start-a1-provenance-ledger.json",
+    "pendingProvenanceLedger": "validation/start-a1-catalog-35-pending-provenance-ledger.json",
+    "candidateQa": "validation/start-a1-candidate-qa.json",
+    "v2CandidateQa": "validation/start-a1-v2-candidate-qa.json",
+    "finalMediaManifest": "validation/start-a1-35-final-media-manifest.json",
+    "releaseReadinessAudit": "docs/content/STARTER_CATALOG_35_RELEASE_READINESS.md",
+    "reviewPersistenceDecision": "docs/product-decisions/PDR-008-ADMIN-STARTER-REVIEW-PERSISTENCE.md",
+    "currentWork": "CURRENT_WORK.md"
+  },
+  "items": [
+    {
+      "contentId": "start-a1-apfel",
+      "order": 1,
+      "catalogBatch": "original_vertical_slice",
+      "german": {
+        "lemma": "Apfel",
+        "article": "der",
+        "partOfSpeech": "noun",
+        "cefr": "A1",
+        "essentialInflection": "die Äpfel",
+        "simpleGermanDefinition": "Eine runde Frucht, die man essen kann.",
+        "example": "Der Apfel ist rot."
+      },
+      "persian": { "meanings": ["سیب"], "example": "سیب قرمز است." },
+      "provenance": { "evidenceType": "headword_or_context", "evidencePages": [10] },
+      "image": {
+        "selectedAssetId": "start-a1-apfel-image-v2",
+        "assetVersion": "v2",
+        "expectedMimeType": "image/jpeg",
+        "visualConcept": "One red apple fills the visual focus; Bobo may point at it.",
+        "altText": "Apfel — سیب: Eine runde Frucht, die man essen kann."
+      },
+      "versions": {
+        "draftVersion": 1,
+        "candidateCardVersion": 1,
+        "image": {
+          "assetId": "start-a1-apfel-image-v2",
+          "assetVersion": "v2",
+          "storageKey": "start-a1-apfel/image/v2",
+          "supersededAssetId": "start-a1-apfel-image-v1"
+        },
+        "wordAudio": { "assetId": "start-a1-apfel-word-audio-v1", "assetVersion": "v1" },
+        "sentenceAudio": { "assetId": "start-a1-apfel-sentence-audio-v1", "assetVersion": "v1" }
+      },
+      "checks": {
+        "german_linguistic": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-apfel",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-apfel"
+          ]
+        },
+        "persian_translation": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-apfel",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-apfel"
+          ]
+        },
+        "provenance": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-provenance-ledger.json#start-a1-apfel",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-apfel"
+          ]
+        },
+        "visual": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-media-attachment-draft.json#start-a1-apfel-image-v1",
+            "validation/start-a1-candidate-qa.json#visual",
+            "validation/start-a1-v2-candidate-qa.json#visual",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-apfel-image-v2"
+          ]
+        },
+        "audio": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-media-attachment-draft.json#start-a1-apfel-word-audio-v1",
+            "validation/start-a1-candidate-qa.json#audio",
+            "validation/start-a1-v2-candidate-qa.json#audio",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-apfel-word-audio-v1"
+          ]
+        },
+        "app_flow": {
+          "status": "pending_unproven",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": ["validation/start-a1-candidate-qa.json#app_flow"]
+        }
+      },
+      "decision": { "allowed": ["approve", "reject", "return_for_revision"], "recorded": null }
+    },
+    {
+      "contentId": "start-a1-bahnhof",
+      "order": 2,
+      "catalogBatch": "original_vertical_slice",
+      "german": {
+        "lemma": "Bahnhof",
+        "article": "der",
+        "partOfSpeech": "noun",
+        "cefr": "A1",
+        "essentialInflection": "die Bahnhöfe",
+        "simpleGermanDefinition": "Ein Ort, an dem Züge ankommen und abfahren.",
+        "example": "Der Bahnhof ist nah."
+      },
+      "persian": { "meanings": ["ایستگاه قطار"], "example": "ایستگاه قطار نزدیک است." },
+      "provenance": { "evidenceType": "headword_or_context", "evidencePages": [11] },
+      "image": {
+        "selectedAssetId": "start-a1-bahnhof-image-v2",
+        "assetVersion": "v2",
+        "expectedMimeType": "image/jpeg",
+        "visualConcept": "The station building and tracks carry the meaning; Bobo is a small traveler.",
+        "altText": "Bahnhof — ایستگاه قطار: Ein Ort, an dem Züge ankommen und abfahren."
+      },
+      "versions": {
+        "draftVersion": 1,
+        "candidateCardVersion": 1,
+        "image": {
+          "assetId": "start-a1-bahnhof-image-v2",
+          "assetVersion": "v2",
+          "storageKey": "start-a1-bahnhof/image/v2",
+          "supersededAssetId": "start-a1-bahnhof-image-v1"
+        },
+        "wordAudio": { "assetId": "start-a1-bahnhof-word-audio-v1", "assetVersion": "v1" },
+        "sentenceAudio": { "assetId": "start-a1-bahnhof-sentence-audio-v1", "assetVersion": "v1" }
+      },
+      "checks": {
+        "german_linguistic": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-bahnhof",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-bahnhof"
+          ]
+        },
+        "persian_translation": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-bahnhof",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-bahnhof"
+          ]
+        },
+        "provenance": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-provenance-ledger.json#start-a1-bahnhof",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-bahnhof"
+          ]
+        },
+        "visual": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-media-attachment-draft.json#start-a1-bahnhof-image-v1",
+            "validation/start-a1-candidate-qa.json#visual",
+            "validation/start-a1-v2-candidate-qa.json#visual",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-bahnhof-image-v2"
+          ]
+        },
+        "audio": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-media-attachment-draft.json#start-a1-bahnhof-word-audio-v1",
+            "validation/start-a1-candidate-qa.json#audio",
+            "validation/start-a1-v2-candidate-qa.json#audio",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-bahnhof-word-audio-v1"
+          ]
+        },
+        "app_flow": {
+          "status": "pending_unproven",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": ["validation/start-a1-candidate-qa.json#app_flow"]
+        }
+      },
+      "decision": { "allowed": ["approve", "reject", "return_for_revision"], "recorded": null }
+    },
+    {
+      "contentId": "start-a1-bett",
+      "order": 3,
+      "catalogBatch": "original_vertical_slice",
+      "german": {
+        "lemma": "Bett",
+        "article": "das",
+        "partOfSpeech": "noun",
+        "cefr": "A1",
+        "essentialInflection": "die Betten",
+        "simpleGermanDefinition": "Ein Möbelstück zum Schlafen.",
+        "example": "Das Bett ist im Zimmer."
+      },
+      "persian": { "meanings": ["تخت"], "example": "تخت در اتاق است." },
+      "provenance": { "evidenceType": "headword_or_context", "evidencePages": [11] },
+      "image": {
+        "selectedAssetId": "start-a1-bett-image-v2",
+        "assetVersion": "v2",
+        "expectedMimeType": "image/jpeg",
+        "visualConcept": "A bed is the dominant object in a simple room.",
+        "altText": "Bett — تخت: Ein Möbelstück zum Schlafen."
+      },
+      "versions": {
+        "draftVersion": 1,
+        "candidateCardVersion": 1,
+        "image": {
+          "assetId": "start-a1-bett-image-v2",
+          "assetVersion": "v2",
+          "storageKey": "start-a1-bett/image/v2",
+          "supersededAssetId": "start-a1-bett-image-v1"
+        },
+        "wordAudio": { "assetId": "start-a1-bett-word-audio-v1", "assetVersion": "v1" },
+        "sentenceAudio": { "assetId": "start-a1-bett-sentence-audio-v1", "assetVersion": "v1" }
+      },
+      "checks": {
+        "german_linguistic": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-bett",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-bett"
+          ]
+        },
+        "persian_translation": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-bett",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-bett"
+          ]
+        },
+        "provenance": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-provenance-ledger.json#start-a1-bett",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-bett"
+          ]
+        },
+        "visual": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-media-attachment-draft.json#start-a1-bett-image-v1",
+            "validation/start-a1-candidate-qa.json#visual",
+            "validation/start-a1-v2-candidate-qa.json#visual",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-bett-image-v2"
+          ]
+        },
+        "audio": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-media-attachment-draft.json#start-a1-bett-word-audio-v1",
+            "validation/start-a1-candidate-qa.json#audio",
+            "validation/start-a1-v2-candidate-qa.json#audio",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-bett-word-audio-v1"
+          ]
+        },
+        "app_flow": {
+          "status": "pending_unproven",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": ["validation/start-a1-candidate-qa.json#app_flow"]
+        }
+      },
+      "decision": { "allowed": ["approve", "reject", "return_for_revision"], "recorded": null }
+    },
+    {
+      "contentId": "start-a1-brot",
+      "order": 4,
+      "catalogBatch": "original_vertical_slice",
+      "german": {
+        "lemma": "Brot",
+        "article": "das",
+        "partOfSpeech": "noun",
+        "cefr": "A1",
+        "essentialInflection": "die Brote",
+        "simpleGermanDefinition": "Ein Lebensmittel aus Mehl, Wasser und Hefe.",
+        "example": "Ich esse Brot."
+      },
+      "persian": { "meanings": ["نان"], "example": "من نان می‌خورم." },
+      "provenance": { "evidenceType": "headword_or_context", "evidencePages": [12] },
+      "image": {
+        "selectedAssetId": "start-a1-brot-image-v2",
+        "assetVersion": "v2",
+        "expectedMimeType": "image/jpeg",
+        "visualConcept": "A loaf of bread is the dominant object.",
+        "altText": "Brot — نان: Ein Lebensmittel aus Mehl, Wasser und Hefe."
+      },
+      "versions": {
+        "draftVersion": 1,
+        "candidateCardVersion": 1,
+        "image": {
+          "assetId": "start-a1-brot-image-v2",
+          "assetVersion": "v2",
+          "storageKey": "start-a1-brot/image/v2",
+          "supersededAssetId": "start-a1-brot-image-v1"
+        },
+        "wordAudio": { "assetId": "start-a1-brot-word-audio-v1", "assetVersion": "v1" },
+        "sentenceAudio": { "assetId": "start-a1-brot-sentence-audio-v1", "assetVersion": "v1" }
+      },
+      "checks": {
+        "german_linguistic": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-brot",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-brot"
+          ]
+        },
+        "persian_translation": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-brot",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-brot"
+          ]
+        },
+        "provenance": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-provenance-ledger.json#start-a1-brot",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-brot"
+          ]
+        },
+        "visual": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-media-attachment-draft.json#start-a1-brot-image-v1",
+            "validation/start-a1-candidate-qa.json#visual",
+            "validation/start-a1-v2-candidate-qa.json#visual",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-brot-image-v2"
+          ]
+        },
+        "audio": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-media-attachment-draft.json#start-a1-brot-word-audio-v1",
+            "validation/start-a1-candidate-qa.json#audio",
+            "validation/start-a1-v2-candidate-qa.json#audio",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-brot-word-audio-v1"
+          ]
+        },
+        "app_flow": {
+          "status": "pending_unproven",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": ["validation/start-a1-candidate-qa.json#app_flow"]
+        }
+      },
+      "decision": { "allowed": ["approve", "reject", "return_for_revision"], "recorded": null }
+    },
+    {
+      "contentId": "start-a1-danke",
+      "order": 5,
+      "catalogBatch": "original_vertical_slice",
+      "german": {
+        "lemma": "danke",
+        "article": null,
+        "partOfSpeech": "phrase",
+        "cefr": "A1",
+        "essentialInflection": "ثابت",
+        "simpleGermanDefinition": "Man sagt es, wenn jemand geholfen hat oder freundlich war.",
+        "example": "Danke für deine Hilfe."
+      },
+      "persian": { "meanings": ["ممنون؛ سپاسگزارم"], "example": "ممنون برای کمکت." },
+      "provenance": { "evidenceType": "headword_or_context", "evidencePages": [13, 16, 23] },
+      "image": {
+        "selectedAssetId": "start-a1-danke-image-v2",
+        "assetVersion": "v2",
+        "expectedMimeType": "image/jpeg",
+        "visualConcept": "Bobo thanks someone with a warm gesture.",
+        "altText": "danke — ممنون؛ سپاسگزارم: Man sagt es, wenn jemand geholfen hat oder freundlich war."
+      },
+      "versions": {
+        "draftVersion": 1,
+        "candidateCardVersion": 1,
+        "image": {
+          "assetId": "start-a1-danke-image-v2",
+          "assetVersion": "v2",
+          "storageKey": "start-a1-danke/image/v2",
+          "supersededAssetId": "start-a1-danke-image-v1"
+        },
+        "wordAudio": { "assetId": "start-a1-danke-word-audio-v1", "assetVersion": "v1" },
+        "sentenceAudio": { "assetId": "start-a1-danke-sentence-audio-v1", "assetVersion": "v1" }
+      },
+      "checks": {
+        "german_linguistic": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-danke",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-danke"
+          ]
+        },
+        "persian_translation": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-danke",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-danke"
+          ]
+        },
+        "provenance": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-provenance-ledger.json#start-a1-danke",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-danke"
+          ]
+        },
+        "visual": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-media-attachment-draft.json#start-a1-danke-image-v1",
+            "validation/start-a1-candidate-qa.json#visual",
+            "validation/start-a1-v2-candidate-qa.json#visual",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-danke-image-v2"
+          ]
+        },
+        "audio": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-media-attachment-draft.json#start-a1-danke-word-audio-v1",
+            "validation/start-a1-candidate-qa.json#audio",
+            "validation/start-a1-v2-candidate-qa.json#audio",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-danke-word-audio-v1"
+          ]
+        },
+        "app_flow": {
+          "status": "pending_unproven",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": ["validation/start-a1-candidate-qa.json#app_flow"]
+        }
+      },
+      "decision": { "allowed": ["approve", "reject", "return_for_revision"], "recorded": null }
+    },
+    {
+      "contentId": "start-a1-ei",
+      "order": 6,
+      "catalogBatch": "final_catalog_pending",
+      "german": {
+        "lemma": "Ei",
+        "article": "das",
+        "partOfSpeech": "noun",
+        "cefr": "A1",
+        "essentialInflection": "die Eier",
+        "simpleGermanDefinition": "Ein Lebensmittel vom Huhn.",
+        "example": "Ich esse ein Ei."
+      },
+      "persian": { "meanings": ["تخم‌مرغ"], "example": "من یک تخم‌مرغ می‌خورم." },
+      "provenance": { "evidenceType": "headword_or_context", "evidencePages": [13, 15] },
+      "image": {
+        "selectedAssetId": "start-a1-ei-image-v1",
+        "assetVersion": "v1",
+        "expectedMimeType": "image/jpeg",
+        "visualConcept": "One egg is the clear primary object.",
+        "altText": "Ei — تخم‌مرغ: Ein Lebensmittel vom Huhn."
+      },
+      "versions": {
+        "draftVersion": 1,
+        "candidateCardVersion": 1,
+        "image": {
+          "assetId": "start-a1-ei-image-v1",
+          "assetVersion": "v1",
+          "storageKey": "start-a1-ei/image/v1",
+          "supersededAssetId": null
+        },
+        "wordAudio": { "assetId": "start-a1-ei-word-audio-v1", "assetVersion": "v1" },
+        "sentenceAudio": { "assetId": "start-a1-ei-sentence-audio-v1", "assetVersion": "v1" }
+      },
+      "checks": {
+        "german_linguistic": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-ei",
+            "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-ei"
+          ]
+        },
+        "persian_translation": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-ei",
+            "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-ei"
+          ]
+        },
+        "provenance": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": null,
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-ei",
+            "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-ei"
+          ]
+        },
+        "visual": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-ei",
+            "validation/start-a1-15-candidate-media-attachment-draft.json#start-a1-ei-image-v1",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-ei-image-v1"
+          ]
+        },
+        "audio": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-ei",
+            "validation/start-a1-15-candidate-media-attachment-draft.json#start-a1-ei-word-audio-v1",
+            "validation/start-a1-15-candidate-media-attachment-draft.json#start-a1-ei-sentence-audio-v1",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-ei-sentence-audio-v1"
+          ]
+        },
+        "app_flow": {
+          "status": "pending_unproven",
+          "candidateStageRecord": null,
+          "releaseOutcome": null,
+          "evidence": []
+        }
+      },
+      "decision": { "allowed": ["approve", "reject", "return_for_revision"], "recorded": null }
+    },
+    {
+      "contentId": "start-a1-entschuldigung",
+      "order": 7,
+      "catalogBatch": "original_vertical_slice",
+      "german": {
+        "lemma": "Entschuldigung",
+        "article": null,
+        "partOfSpeech": "phrase",
+        "cefr": "A1",
+        "essentialInflection": "ثابت",
+        "simpleGermanDefinition": "Man sagt es, wenn man höflich um Aufmerksamkeit bittet oder sich entschuldigt.",
+        "example": "Entschuldigung, wo ist der Bahnhof?"
+      },
+      "persian": {
+        "meanings": ["ببخشید؛ معذرت می‌خواهم"],
+        "example": "ببخشید، ایستگاه قطار کجاست؟"
+      },
+      "provenance": { "evidenceType": "headword_or_context", "evidencePages": [14] },
+      "image": {
+        "selectedAssetId": "start-a1-entschuldigung-image-v2",
+        "assetVersion": "v2",
+        "expectedMimeType": "image/jpeg",
+        "visualConcept": "Bobo politely asks a passerby for attention; no written signs.",
+        "altText": "Entschuldigung — ببخشید؛ معذرت می‌خواهم: Man sagt es, wenn man höflich um Aufmerksamkeit bittet oder sich entschuldigt."
+      },
+      "versions": {
+        "draftVersion": 1,
+        "candidateCardVersion": 1,
+        "image": {
+          "assetId": "start-a1-entschuldigung-image-v2",
+          "assetVersion": "v2",
+          "storageKey": "start-a1-entschuldigung/image/v2",
+          "supersededAssetId": "start-a1-entschuldigung-image-v1"
+        },
+        "wordAudio": { "assetId": "start-a1-entschuldigung-word-audio-v1", "assetVersion": "v1" },
+        "sentenceAudio": {
+          "assetId": "start-a1-entschuldigung-sentence-audio-v1",
+          "assetVersion": "v1"
+        }
+      },
+      "checks": {
+        "german_linguistic": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-entschuldigung",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-entschuldigung"
+          ]
+        },
+        "persian_translation": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-entschuldigung",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-entschuldigung"
+          ]
+        },
+        "provenance": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-provenance-ledger.json#start-a1-entschuldigung",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-entschuldigung"
+          ]
+        },
+        "visual": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-media-attachment-draft.json#start-a1-entschuldigung-image-v1",
+            "validation/start-a1-candidate-qa.json#visual",
+            "validation/start-a1-v2-candidate-qa.json#visual",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-entschuldigung-image-v2"
+          ]
+        },
+        "audio": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-media-attachment-draft.json#start-a1-entschuldigung-word-audio-v1",
+            "validation/start-a1-candidate-qa.json#audio",
+            "validation/start-a1-v2-candidate-qa.json#audio",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-entschuldigung-word-audio-v1"
+          ]
+        },
+        "app_flow": {
+          "status": "pending_unproven",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": ["validation/start-a1-candidate-qa.json#app_flow"]
+        }
+      },
+      "decision": { "allowed": ["approve", "reject", "return_for_revision"], "recorded": null }
+    },
+    {
+      "contentId": "start-a1-essen",
+      "order": 8,
+      "catalogBatch": "final_catalog_pending",
+      "german": {
+        "lemma": "essen",
+        "article": null,
+        "partOfSpeech": "verb",
+        "cefr": "A1",
+        "essentialInflection": "isst, aß, hat gegessen",
+        "simpleGermanDefinition": "Etwas als Nahrung zu sich nehmen.",
+        "example": "Ich esse zu Mittag."
+      },
+      "persian": { "meanings": ["خوردن"], "example": "من ناهار می‌خورم." },
+      "provenance": { "evidenceType": "headword_or_context", "evidencePages": [14, 24] },
+      "image": {
+        "selectedAssetId": "start-a1-essen-image-v1",
+        "assetVersion": "v1",
+        "expectedMimeType": "image/jpeg",
+        "visualConcept": "Bobo eats at a simple table and is the clear action subject.",
+        "altText": "essen — خوردن: Etwas als Nahrung zu sich nehmen."
+      },
+      "versions": {
+        "draftVersion": 1,
+        "candidateCardVersion": 1,
+        "image": {
+          "assetId": "start-a1-essen-image-v1",
+          "assetVersion": "v1",
+          "storageKey": "start-a1-essen/image/v1",
+          "supersededAssetId": null
+        },
+        "wordAudio": { "assetId": "start-a1-essen-word-audio-v1", "assetVersion": "v1" },
+        "sentenceAudio": { "assetId": "start-a1-essen-sentence-audio-v1", "assetVersion": "v1" }
+      },
+      "checks": {
+        "german_linguistic": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-essen",
+            "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-essen"
+          ]
+        },
+        "persian_translation": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-essen",
+            "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-essen"
+          ]
+        },
+        "provenance": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": null,
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-essen",
+            "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-essen"
+          ]
+        },
+        "visual": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-essen",
+            "validation/start-a1-15-candidate-media-attachment-draft.json#start-a1-essen-image-v1",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-essen-image-v1"
+          ]
+        },
+        "audio": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-essen",
+            "validation/start-a1-15-candidate-media-attachment-draft.json#start-a1-essen-word-audio-v1",
+            "validation/start-a1-15-candidate-media-attachment-draft.json#start-a1-essen-sentence-audio-v1",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-essen-sentence-audio-v1"
+          ],
+          "exceptions": ["start-a1-essen-sentence"]
+        },
+        "app_flow": {
+          "status": "pending_unproven",
+          "candidateStageRecord": null,
+          "releaseOutcome": null,
+          "evidence": []
+        }
+      },
+      "decision": { "allowed": ["approve", "reject", "return_for_revision"], "recorded": null }
+    },
+    {
+      "contentId": "start-a1-fenster",
+      "order": 9,
+      "catalogBatch": "final_catalog_pending",
+      "german": {
+        "lemma": "Fenster",
+        "article": "das",
+        "partOfSpeech": "noun",
+        "cefr": "A1",
+        "essentialInflection": "die Fenster",
+        "simpleGermanDefinition": "Ein Teil der Wand, den man öffnen kann.",
+        "example": "Das Fenster ist offen."
+      },
+      "persian": { "meanings": ["پنجره"], "example": "پنجره باز است." },
+      "provenance": { "evidenceType": "headword_or_context", "evidencePages": [23, 26] },
+      "image": {
+        "selectedAssetId": "start-a1-fenster-image-v1",
+        "assetVersion": "v1",
+        "expectedMimeType": "image/jpeg",
+        "visualConcept": "An open window in a simple wall is the clear primary object.",
+        "altText": "Fenster — پنجره: Ein Teil der Wand, den man öffnen kann."
+      },
+      "versions": {
+        "draftVersion": 1,
+        "candidateCardVersion": 1,
+        "image": {
+          "assetId": "start-a1-fenster-image-v1",
+          "assetVersion": "v1",
+          "storageKey": "start-a1-fenster/image/v1",
+          "supersededAssetId": null
+        },
+        "wordAudio": { "assetId": "start-a1-fenster-word-audio-v1", "assetVersion": "v1" },
+        "sentenceAudio": { "assetId": "start-a1-fenster-sentence-audio-v1", "assetVersion": "v1" }
+      },
+      "checks": {
+        "german_linguistic": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-fenster",
+            "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-fenster"
+          ]
+        },
+        "persian_translation": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-fenster",
+            "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-fenster"
+          ]
+        },
+        "provenance": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": null,
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-fenster",
+            "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-fenster"
+          ]
+        },
+        "visual": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-fenster",
+            "validation/start-a1-15-candidate-media-attachment-draft.json#start-a1-fenster-image-v1",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-fenster-image-v1"
+          ]
+        },
+        "audio": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-fenster",
+            "validation/start-a1-15-candidate-media-attachment-draft.json#start-a1-fenster-word-audio-v1",
+            "validation/start-a1-15-candidate-media-attachment-draft.json#start-a1-fenster-sentence-audio-v1",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-fenster-sentence-audio-v1"
+          ]
+        },
+        "app_flow": {
+          "status": "pending_unproven",
+          "candidateStageRecord": null,
+          "releaseOutcome": null,
+          "evidence": []
+        }
+      },
+      "decision": { "allowed": ["approve", "reject", "return_for_revision"], "recorded": null }
+    },
+    {
+      "contentId": "start-a1-gehen",
+      "order": 10,
+      "catalogBatch": "final_catalog_pending",
+      "german": {
+        "lemma": "gehen",
+        "article": null,
+        "partOfSpeech": "verb",
+        "cefr": "A1",
+        "essentialInflection": "geht, ging, ist gegangen",
+        "simpleGermanDefinition": "Sich zu Fuß von einem Ort zu einem anderen bewegen.",
+        "example": "Ich gehe zur Schule."
+      },
+      "persian": { "meanings": ["رفتن"], "example": "من به مدرسه می‌روم." },
+      "provenance": { "evidenceType": "headword_or_context", "evidencePages": [15, 16] },
+      "image": {
+        "selectedAssetId": "start-a1-gehen-image-v1",
+        "assetVersion": "v1",
+        "expectedMimeType": "image/jpeg",
+        "visualConcept": "Bobo walks along a street and is the clear action subject.",
+        "altText": "gehen — رفتن: Sich zu Fuß von einem Ort zu einem anderen bewegen."
+      },
+      "versions": {
+        "draftVersion": 1,
+        "candidateCardVersion": 1,
+        "image": {
+          "assetId": "start-a1-gehen-image-v1",
+          "assetVersion": "v1",
+          "storageKey": "start-a1-gehen/image/v1",
+          "supersededAssetId": null
+        },
+        "wordAudio": { "assetId": "start-a1-gehen-word-audio-v1", "assetVersion": "v1" },
+        "sentenceAudio": { "assetId": "start-a1-gehen-sentence-audio-v1", "assetVersion": "v1" }
+      },
+      "checks": {
+        "german_linguistic": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-gehen",
+            "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-gehen"
+          ]
+        },
+        "persian_translation": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-gehen",
+            "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-gehen"
+          ]
+        },
+        "provenance": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": null,
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-gehen",
+            "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-gehen"
+          ]
+        },
+        "visual": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-gehen",
+            "validation/start-a1-15-candidate-media-attachment-draft.json#start-a1-gehen-image-v1",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-gehen-image-v1"
+          ]
+        },
+        "audio": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-gehen",
+            "validation/start-a1-15-candidate-media-attachment-draft.json#start-a1-gehen-word-audio-v1",
+            "validation/start-a1-15-candidate-media-attachment-draft.json#start-a1-gehen-sentence-audio-v1",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-gehen-sentence-audio-v1"
+          ]
+        },
+        "app_flow": {
+          "status": "pending_unproven",
+          "candidateStageRecord": null,
+          "releaseOutcome": null,
+          "evidence": []
+        }
+      },
+      "decision": { "allowed": ["approve", "reject", "return_for_revision"], "recorded": null }
+    },
+    {
+      "contentId": "start-a1-gluecklich",
+      "order": 11,
+      "catalogBatch": "original_vertical_slice",
+      "german": {
+        "lemma": "glücklich",
+        "article": null,
+        "partOfSpeech": "adjective",
+        "cefr": "A1",
+        "essentialInflection": "nicht flektiert im Lernhinweis",
+        "simpleGermanDefinition": "Man fühlt sich sehr gut und zufrieden.",
+        "example": "Ich bin glücklich."
+      },
+      "persian": { "meanings": ["خوشحال"], "example": "من خوشحالم." },
+      "provenance": { "evidenceType": "headword_or_context", "evidencePages": [16] },
+      "image": {
+        "selectedAssetId": "start-a1-gluecklich-image-v2",
+        "assetVersion": "v2",
+        "expectedMimeType": "image/jpeg",
+        "visualConcept": "A clearly happy Bobo is the primary subject.",
+        "altText": "glücklich — خوشحال: Man fühlt sich sehr gut und zufrieden."
+      },
+      "versions": {
+        "draftVersion": 1,
+        "candidateCardVersion": 1,
+        "image": {
+          "assetId": "start-a1-gluecklich-image-v2",
+          "assetVersion": "v2",
+          "storageKey": "start-a1-gluecklich/image/v2",
+          "supersededAssetId": "start-a1-gluecklich-image-v1"
+        },
+        "wordAudio": { "assetId": "start-a1-gluecklich-word-audio-v1", "assetVersion": "v1" },
+        "sentenceAudio": {
+          "assetId": "start-a1-gluecklich-sentence-audio-v1",
+          "assetVersion": "v1"
+        }
+      },
+      "checks": {
+        "german_linguistic": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-gluecklich",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-gluecklich"
+          ]
+        },
+        "persian_translation": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-gluecklich",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-gluecklich"
+          ]
+        },
+        "provenance": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-provenance-ledger.json#start-a1-gluecklich",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-gluecklich"
+          ]
+        },
+        "visual": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-media-attachment-draft.json#start-a1-gluecklich-image-v1",
+            "validation/start-a1-candidate-qa.json#visual",
+            "validation/start-a1-v2-candidate-qa.json#visual",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-gluecklich-image-v2"
+          ]
+        },
+        "audio": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-media-attachment-draft.json#start-a1-gluecklich-word-audio-v1",
+            "validation/start-a1-candidate-qa.json#audio",
+            "validation/start-a1-v2-candidate-qa.json#audio",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-gluecklich-word-audio-v1"
+          ]
+        },
+        "app_flow": {
+          "status": "pending_unproven",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": ["validation/start-a1-candidate-qa.json#app_flow"]
+        }
+      },
+      "decision": { "allowed": ["approve", "reject", "return_for_revision"], "recorded": null }
+    },
+    {
+      "contentId": "start-a1-gross",
+      "order": 12,
+      "catalogBatch": "final_catalog_pending",
+      "german": {
+        "lemma": "groß",
+        "article": null,
+        "partOfSpeech": "adjective",
+        "cefr": "A1",
+        "essentialInflection": "groß, größer, am größten",
+        "simpleGermanDefinition": "Von großer Größe; nicht klein.",
+        "example": "Der Elefant ist groß."
+      },
+      "persian": { "meanings": ["بزرگ"], "example": "فیل بزرگ است." },
+      "provenance": { "evidenceType": "headword_or_context", "evidencePages": [16, 23] },
+      "image": {
+        "selectedAssetId": "start-a1-gross-image-v1",
+        "assetVersion": "v1",
+        "expectedMimeType": "image/jpeg",
+        "visualConcept": "A large house beside a much smaller tree gives a single clear comparison.",
+        "altText": "groß — بزرگ: Von großer Größe; nicht klein."
+      },
+      "versions": {
+        "draftVersion": 1,
+        "candidateCardVersion": 1,
+        "image": {
+          "assetId": "start-a1-gross-image-v1",
+          "assetVersion": "v1",
+          "storageKey": "start-a1-gross/image/v1",
+          "supersededAssetId": null
+        },
+        "wordAudio": { "assetId": "start-a1-gross-word-audio-v1", "assetVersion": "v1" },
+        "sentenceAudio": { "assetId": "start-a1-gross-sentence-audio-v1", "assetVersion": "v1" }
+      },
+      "checks": {
+        "german_linguistic": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-gross",
+            "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-gross"
+          ]
+        },
+        "persian_translation": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-gross",
+            "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-gross"
+          ]
+        },
+        "provenance": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": null,
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-gross",
+            "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-gross"
+          ]
+        },
+        "visual": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-gross",
+            "validation/start-a1-15-candidate-media-attachment-draft.json#start-a1-gross-image-v1",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-gross-image-v1"
+          ]
+        },
+        "audio": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-gross",
+            "validation/start-a1-15-candidate-media-attachment-draft.json#start-a1-gross-word-audio-v1",
+            "validation/start-a1-15-candidate-media-attachment-draft.json#start-a1-gross-sentence-audio-v1",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-gross-sentence-audio-v1"
+          ],
+          "exceptions": ["start-a1-gross-word"]
+        },
+        "app_flow": {
+          "status": "pending_unproven",
+          "candidateStageRecord": null,
+          "releaseOutcome": null,
+          "evidence": []
+        }
+      },
+      "decision": { "allowed": ["approve", "reject", "return_for_revision"], "recorded": null }
+    },
+    {
+      "contentId": "start-a1-guten-tag",
+      "order": 13,
+      "catalogBatch": "original_vertical_slice",
+      "german": {
+        "lemma": "Guten Tag",
+        "article": null,
+        "partOfSpeech": "phrase",
+        "cefr": "A1",
+        "essentialInflection": "ثابت",
+        "simpleGermanDefinition": "Eine höfliche Begrüßung am Tag.",
+        "example": "Guten Tag, Frau Müller."
+      },
+      "persian": { "meanings": ["روز بخیر؛ سلام"], "example": "روز بخیر، خانم مولر." },
+      "provenance": { "evidenceType": "headword_or_context", "evidencePages": [15, 17] },
+      "image": {
+        "selectedAssetId": "start-a1-guten-tag-image-v2",
+        "assetVersion": "v2",
+        "expectedMimeType": "image/jpeg",
+        "visualConcept": "Two people greet each other; no written words in the image.",
+        "altText": "Guten Tag — روز بخیر؛ سلام: Eine höfliche Begrüßung am Tag."
+      },
+      "versions": {
+        "draftVersion": 1,
+        "candidateCardVersion": 1,
+        "image": {
+          "assetId": "start-a1-guten-tag-image-v2",
+          "assetVersion": "v2",
+          "storageKey": "start-a1-guten-tag/image/v2",
+          "supersededAssetId": "start-a1-guten-tag-image-v1"
+        },
+        "wordAudio": { "assetId": "start-a1-guten-tag-word-audio-v1", "assetVersion": "v1" },
+        "sentenceAudio": { "assetId": "start-a1-guten-tag-sentence-audio-v1", "assetVersion": "v1" }
+      },
+      "checks": {
+        "german_linguistic": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-guten-tag",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-guten-tag"
+          ]
+        },
+        "persian_translation": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-guten-tag",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-guten-tag"
+          ]
+        },
+        "provenance": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-provenance-ledger.json#start-a1-guten-tag",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-guten-tag"
+          ]
+        },
+        "visual": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-media-attachment-draft.json#start-a1-guten-tag-image-v1",
+            "validation/start-a1-candidate-qa.json#visual",
+            "validation/start-a1-v2-candidate-qa.json#visual",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-guten-tag-image-v2"
+          ]
+        },
+        "audio": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-media-attachment-draft.json#start-a1-guten-tag-word-audio-v1",
+            "validation/start-a1-candidate-qa.json#audio",
+            "validation/start-a1-v2-candidate-qa.json#audio",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-guten-tag-word-audio-v1"
+          ]
+        },
+        "app_flow": {
+          "status": "pending_unproven",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": ["validation/start-a1-candidate-qa.json#app_flow"]
+        }
+      },
+      "decision": { "allowed": ["approve", "reject", "return_for_revision"], "recorded": null }
+    },
+    {
+      "contentId": "start-a1-haus",
+      "order": 14,
+      "catalogBatch": "original_vertical_slice",
+      "german": {
+        "lemma": "Haus",
+        "article": "das",
+        "partOfSpeech": "noun",
+        "cefr": "A1",
+        "essentialInflection": "die Häuser",
+        "simpleGermanDefinition": "Ein Gebäude, in dem Menschen wohnen.",
+        "example": "Das Haus ist klein."
+      },
+      "persian": { "meanings": ["خانه"], "example": "خانه کوچک است." },
+      "provenance": { "evidenceType": "headword_or_context", "evidencePages": [17] },
+      "image": {
+        "selectedAssetId": "start-a1-haus-image-v2",
+        "assetVersion": "v2",
+        "expectedMimeType": "image/jpeg",
+        "visualConcept": "A small house is the clear primary object; Bobo may stand near the door.",
+        "altText": "Haus — خانه: Ein Gebäude, in dem Menschen wohnen."
+      },
+      "versions": {
+        "draftVersion": 1,
+        "candidateCardVersion": 1,
+        "image": {
+          "assetId": "start-a1-haus-image-v2",
+          "assetVersion": "v2",
+          "storageKey": "start-a1-haus/image/v2",
+          "supersededAssetId": "start-a1-haus-image-v1"
+        },
+        "wordAudio": { "assetId": "start-a1-haus-word-audio-v1", "assetVersion": "v1" },
+        "sentenceAudio": { "assetId": "start-a1-haus-sentence-audio-v1", "assetVersion": "v1" }
+      },
+      "checks": {
+        "german_linguistic": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-haus",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-haus"
+          ]
+        },
+        "persian_translation": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-haus",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-haus"
+          ]
+        },
+        "provenance": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-provenance-ledger.json#start-a1-haus",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-haus"
+          ]
+        },
+        "visual": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-media-attachment-draft.json#start-a1-haus-image-v1",
+            "validation/start-a1-candidate-qa.json#visual",
+            "validation/start-a1-v2-candidate-qa.json#visual",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-haus-image-v2"
+          ]
+        },
+        "audio": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-media-attachment-draft.json#start-a1-haus-word-audio-v1",
+            "validation/start-a1-candidate-qa.json#audio",
+            "validation/start-a1-v2-candidate-qa.json#audio",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-haus-word-audio-v1"
+          ]
+        },
+        "app_flow": {
+          "status": "pending_unproven",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": ["validation/start-a1-candidate-qa.json#app_flow"]
+        }
+      },
+      "decision": { "allowed": ["approve", "reject", "return_for_revision"], "recorded": null }
+    },
+    {
+      "contentId": "start-a1-kaffee",
+      "order": 15,
+      "catalogBatch": "final_catalog_pending",
+      "german": {
+        "lemma": "Kaffee",
+        "article": "der",
+        "partOfSpeech": "noun",
+        "cefr": "A1",
+        "essentialInflection": "kein Plural im üblichen Gebrauch",
+        "simpleGermanDefinition": "Ein heißes Getränk, das viele Menschen am Morgen trinken.",
+        "example": "Der Kaffee ist heiß."
+      },
+      "persian": { "meanings": ["قهوه"], "example": "قهوه داغ است." },
+      "provenance": { "evidenceType": "headword_or_context", "evidencePages": [18, 20] },
+      "image": {
+        "selectedAssetId": "start-a1-kaffee-image-v1",
+        "assetVersion": "v1",
+        "expectedMimeType": "image/jpeg",
+        "visualConcept": "A cup of coffee is the dominant object; steam makes it readable.",
+        "altText": "Kaffee — قهوه: Ein heißes Getränk, das viele Menschen am Morgen trinken."
+      },
+      "versions": {
+        "draftVersion": 1,
+        "candidateCardVersion": 1,
+        "image": {
+          "assetId": "start-a1-kaffee-image-v1",
+          "assetVersion": "v1",
+          "storageKey": "start-a1-kaffee/image/v1",
+          "supersededAssetId": null
+        },
+        "wordAudio": { "assetId": "start-a1-kaffee-word-audio-v1", "assetVersion": "v1" },
+        "sentenceAudio": { "assetId": "start-a1-kaffee-sentence-audio-v1", "assetVersion": "v1" }
+      },
+      "checks": {
+        "german_linguistic": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-kaffee",
+            "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-kaffee"
+          ]
+        },
+        "persian_translation": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-kaffee",
+            "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-kaffee"
+          ]
+        },
+        "provenance": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": null,
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-kaffee",
+            "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-kaffee"
+          ]
+        },
+        "visual": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-kaffee",
+            "validation/start-a1-15-candidate-media-attachment-draft.json#start-a1-kaffee-image-v1",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-kaffee-image-v1"
+          ]
+        },
+        "audio": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-kaffee",
+            "validation/start-a1-15-candidate-media-attachment-draft.json#start-a1-kaffee-word-audio-v1",
+            "validation/start-a1-15-candidate-media-attachment-draft.json#start-a1-kaffee-sentence-audio-v1",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-kaffee-sentence-audio-v1"
+          ]
+        },
+        "app_flow": {
+          "status": "pending_unproven",
+          "candidateStageRecord": null,
+          "releaseOutcome": null,
+          "evidence": []
+        }
+      },
+      "decision": { "allowed": ["approve", "reject", "return_for_revision"], "recorded": null }
+    },
+    {
+      "contentId": "start-a1-kalt",
+      "order": 16,
+      "catalogBatch": "final_catalog_pending",
+      "german": {
+        "lemma": "kalt",
+        "article": null,
+        "partOfSpeech": "adjective",
+        "cefr": "A1",
+        "essentialInflection": "kalt, kälter, am kältesten",
+        "simpleGermanDefinition": "Mit niedriger Temperatur; nicht warm.",
+        "example": "Im Winter ist es kalt."
+      },
+      "persian": { "meanings": ["سرد"], "example": "در زمستان هوا سرد است." },
+      "provenance": { "evidenceType": "headword_or_context", "evidencePages": [18, 23] },
+      "image": {
+        "selectedAssetId": "start-a1-kalt-image-v1",
+        "assetVersion": "v1",
+        "expectedMimeType": "image/jpeg",
+        "visualConcept": "A winter window scene with frost makes the cold concept unmistakable.",
+        "altText": "kalt — سرد: Mit niedriger Temperatur; nicht warm."
+      },
+      "versions": {
+        "draftVersion": 1,
+        "candidateCardVersion": 1,
+        "image": {
+          "assetId": "start-a1-kalt-image-v1",
+          "assetVersion": "v1",
+          "storageKey": "start-a1-kalt/image/v1",
+          "supersededAssetId": null
+        },
+        "wordAudio": { "assetId": "start-a1-kalt-word-audio-v1", "assetVersion": "v1" },
+        "sentenceAudio": { "assetId": "start-a1-kalt-sentence-audio-v1", "assetVersion": "v1" }
+      },
+      "checks": {
+        "german_linguistic": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-kalt",
+            "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-kalt"
+          ]
+        },
+        "persian_translation": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-kalt",
+            "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-kalt"
+          ]
+        },
+        "provenance": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": null,
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-kalt",
+            "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-kalt"
+          ]
+        },
+        "visual": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-kalt",
+            "validation/start-a1-15-candidate-media-attachment-draft.json#start-a1-kalt-image-v1",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-kalt-image-v1"
+          ]
+        },
+        "audio": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-kalt",
+            "validation/start-a1-15-candidate-media-attachment-draft.json#start-a1-kalt-word-audio-v1",
+            "validation/start-a1-15-candidate-media-attachment-draft.json#start-a1-kalt-sentence-audio-v1",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-kalt-sentence-audio-v1"
+          ]
+        },
+        "app_flow": {
+          "status": "pending_unproven",
+          "candidateStageRecord": null,
+          "releaseOutcome": null,
+          "evidence": []
+        }
+      },
+      "decision": { "allowed": ["approve", "reject", "return_for_revision"], "recorded": null }
+    },
+    {
+      "contentId": "start-a1-kaufen",
+      "order": 17,
+      "catalogBatch": "original_vertical_slice",
+      "german": {
+        "lemma": "kaufen",
+        "article": null,
+        "partOfSpeech": "verb",
+        "cefr": "A1",
+        "essentialInflection": "kauft, kaufte, hat gekauft",
+        "simpleGermanDefinition": "Etwas gegen Geld bekommen.",
+        "example": "Ich kaufe Brot."
+      },
+      "persian": { "meanings": ["خریدن"], "example": "من نان می‌خرم." },
+      "provenance": { "evidenceType": "headword_or_context", "evidencePages": [18] },
+      "image": {
+        "selectedAssetId": "start-a1-kaufen-image-v2",
+        "assetVersion": "v2",
+        "expectedMimeType": "image/jpeg",
+        "visualConcept": "Bobo buys bread at a simple shop counter.",
+        "altText": "kaufen — خریدن: Etwas gegen Geld bekommen."
+      },
+      "versions": {
+        "draftVersion": 1,
+        "candidateCardVersion": 1,
+        "image": {
+          "assetId": "start-a1-kaufen-image-v2",
+          "assetVersion": "v2",
+          "storageKey": "start-a1-kaufen/image/v2",
+          "supersededAssetId": "start-a1-kaufen-image-v1"
+        },
+        "wordAudio": { "assetId": "start-a1-kaufen-word-audio-v1", "assetVersion": "v1" },
+        "sentenceAudio": { "assetId": "start-a1-kaufen-sentence-audio-v1", "assetVersion": "v1" }
+      },
+      "checks": {
+        "german_linguistic": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-kaufen",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-kaufen"
+          ]
+        },
+        "persian_translation": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-kaufen",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-kaufen"
+          ]
+        },
+        "provenance": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-provenance-ledger.json#start-a1-kaufen",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-kaufen"
+          ]
+        },
+        "visual": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-media-attachment-draft.json#start-a1-kaufen-image-v1",
+            "validation/start-a1-candidate-qa.json#visual",
+            "validation/start-a1-v2-candidate-qa.json#visual",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-kaufen-image-v2"
+          ]
+        },
+        "audio": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-media-attachment-draft.json#start-a1-kaufen-word-audio-v1",
+            "validation/start-a1-candidate-qa.json#audio",
+            "validation/start-a1-v2-candidate-qa.json#audio",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-kaufen-word-audio-v1"
+          ]
+        },
+        "app_flow": {
+          "status": "pending_unproven",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": ["validation/start-a1-candidate-qa.json#app_flow"]
+        }
+      },
+      "decision": { "allowed": ["approve", "reject", "return_for_revision"], "recorded": null }
+    },
+    {
+      "contentId": "start-a1-klein",
+      "order": 18,
+      "catalogBatch": "original_vertical_slice",
+      "german": {
+        "lemma": "klein",
+        "article": null,
+        "partOfSpeech": "adjective",
+        "cefr": "A1",
+        "essentialInflection": "klein, kleiner, am kleinsten",
+        "simpleGermanDefinition": "Nicht groß.",
+        "example": "Das Haus ist klein."
+      },
+      "persian": { "meanings": ["کوچک"], "example": "خانه کوچک است." },
+      "provenance": { "evidenceType": "headword_or_context", "evidencePages": [18] },
+      "image": {
+        "selectedAssetId": "start-a1-klein-image-v2",
+        "assetVersion": "v2",
+        "expectedMimeType": "image/jpeg",
+        "visualConcept": "A small house beside a much larger tree gives a single clear comparison.",
+        "altText": "klein — کوچک: Nicht groß."
+      },
+      "versions": {
+        "draftVersion": 1,
+        "candidateCardVersion": 1,
+        "image": {
+          "assetId": "start-a1-klein-image-v2",
+          "assetVersion": "v2",
+          "storageKey": "start-a1-klein/image/v2",
+          "supersededAssetId": "start-a1-klein-image-v1"
+        },
+        "wordAudio": { "assetId": "start-a1-klein-word-audio-v1", "assetVersion": "v1" },
+        "sentenceAudio": { "assetId": "start-a1-klein-sentence-audio-v1", "assetVersion": "v1" }
+      },
+      "checks": {
+        "german_linguistic": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-klein",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-klein"
+          ]
+        },
+        "persian_translation": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-klein",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-klein"
+          ]
+        },
+        "provenance": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-provenance-ledger.json#start-a1-klein",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-klein"
+          ]
+        },
+        "visual": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-media-attachment-draft.json#start-a1-klein-image-v1",
+            "validation/start-a1-candidate-qa.json#visual",
+            "validation/start-a1-v2-candidate-qa.json#visual",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-klein-image-v2"
+          ]
+        },
+        "audio": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-media-attachment-draft.json#start-a1-klein-word-audio-v1",
+            "validation/start-a1-candidate-qa.json#audio",
+            "validation/start-a1-v2-candidate-qa.json#audio",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-klein-word-audio-v1"
+          ]
+        },
+        "app_flow": {
+          "status": "pending_unproven",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": ["validation/start-a1-candidate-qa.json#app_flow"]
+        }
+      },
+      "decision": { "allowed": ["approve", "reject", "return_for_revision"], "recorded": null }
+    },
+    {
+      "contentId": "start-a1-lernen",
+      "order": 19,
+      "catalogBatch": "original_vertical_slice",
+      "german": {
+        "lemma": "lernen",
+        "article": null,
+        "partOfSpeech": "verb",
+        "cefr": "A1",
+        "essentialInflection": "lernt, lernte, hat gelernt",
+        "simpleGermanDefinition": "Etwas Neues verstehen und üben.",
+        "example": "Ich lerne Deutsch."
+      },
+      "persian": { "meanings": ["یاد گرفتن"], "example": "من آلمانی یاد می‌گیرم." },
+      "provenance": { "evidenceType": "headword_or_context", "evidencePages": [19] },
+      "image": {
+        "selectedAssetId": "start-a1-lernen-image-v2",
+        "assetVersion": "v2",
+        "expectedMimeType": "image/jpeg",
+        "visualConcept": "Bobo studies with a book and is the clear action subject.",
+        "altText": "lernen — یاد گرفتن: Etwas Neues verstehen und üben."
+      },
+      "versions": {
+        "draftVersion": 1,
+        "candidateCardVersion": 1,
+        "image": {
+          "assetId": "start-a1-lernen-image-v2",
+          "assetVersion": "v2",
+          "storageKey": "start-a1-lernen/image/v2",
+          "supersededAssetId": "start-a1-lernen-image-v1"
+        },
+        "wordAudio": { "assetId": "start-a1-lernen-word-audio-v1", "assetVersion": "v1" },
+        "sentenceAudio": { "assetId": "start-a1-lernen-sentence-audio-v1", "assetVersion": "v1" }
+      },
+      "checks": {
+        "german_linguistic": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-lernen",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-lernen"
+          ]
+        },
+        "persian_translation": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-lernen",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-lernen"
+          ]
+        },
+        "provenance": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-provenance-ledger.json#start-a1-lernen",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-lernen"
+          ]
+        },
+        "visual": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-media-attachment-draft.json#start-a1-lernen-image-v1",
+            "validation/start-a1-candidate-qa.json#visual",
+            "validation/start-a1-v2-candidate-qa.json#visual",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-lernen-image-v2"
+          ]
+        },
+        "audio": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-media-attachment-draft.json#start-a1-lernen-word-audio-v1",
+            "validation/start-a1-candidate-qa.json#audio",
+            "validation/start-a1-v2-candidate-qa.json#audio",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-lernen-word-audio-v1"
+          ]
+        },
+        "app_flow": {
+          "status": "pending_unproven",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": ["validation/start-a1-candidate-qa.json#app_flow"]
+        }
+      },
+      "decision": { "allowed": ["approve", "reject", "return_for_revision"], "recorded": null }
+    },
+    {
+      "contentId": "start-a1-milch",
+      "order": 20,
+      "catalogBatch": "final_catalog_pending",
+      "german": {
+        "lemma": "Milch",
+        "article": "die",
+        "partOfSpeech": "noun",
+        "cefr": "A1",
+        "essentialInflection": "kein Plural im üblichen Gebrauch",
+        "simpleGermanDefinition": "Ein weißes Getränk, das von der Kuh kommt.",
+        "example": "Ich trinke Milch."
+      },
+      "persian": { "meanings": ["شیر"], "example": "من شیر می‌نوشم." },
+      "provenance": { "evidenceType": "headword_or_context", "evidencePages": [20, 26] },
+      "image": {
+        "selectedAssetId": "start-a1-milch-image-v1",
+        "assetVersion": "v1",
+        "expectedMimeType": "image/jpeg",
+        "visualConcept": "A glass of milk is the clear primary object.",
+        "altText": "Milch — شیر: Ein weißes Getränk, das von der Kuh kommt."
+      },
+      "versions": {
+        "draftVersion": 1,
+        "candidateCardVersion": 1,
+        "image": {
+          "assetId": "start-a1-milch-image-v1",
+          "assetVersion": "v1",
+          "storageKey": "start-a1-milch/image/v1",
+          "supersededAssetId": null
+        },
+        "wordAudio": { "assetId": "start-a1-milch-word-audio-v1", "assetVersion": "v1" },
+        "sentenceAudio": { "assetId": "start-a1-milch-sentence-audio-v1", "assetVersion": "v1" }
+      },
+      "checks": {
+        "german_linguistic": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-milch",
+            "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-milch"
+          ]
+        },
+        "persian_translation": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-milch",
+            "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-milch"
+          ]
+        },
+        "provenance": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": null,
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-milch",
+            "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-milch"
+          ]
+        },
+        "visual": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-milch",
+            "validation/start-a1-15-candidate-media-attachment-draft.json#start-a1-milch-image-v1",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-milch-image-v1"
+          ]
+        },
+        "audio": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-milch",
+            "validation/start-a1-15-candidate-media-attachment-draft.json#start-a1-milch-word-audio-v1",
+            "validation/start-a1-15-candidate-media-attachment-draft.json#start-a1-milch-sentence-audio-v1",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-milch-sentence-audio-v1"
+          ]
+        },
+        "app_flow": {
+          "status": "pending_unproven",
+          "candidateStageRecord": null,
+          "releaseOutcome": null,
+          "evidence": []
+        }
+      },
+      "decision": { "allowed": ["approve", "reject", "return_for_revision"], "recorded": null }
+    },
+    {
+      "contentId": "start-a1-muede",
+      "order": 21,
+      "catalogBatch": "original_vertical_slice",
+      "german": {
+        "lemma": "müde",
+        "article": null,
+        "partOfSpeech": "adjective",
+        "cefr": "A1",
+        "essentialInflection": "nicht flektiert im Lernhinweis",
+        "simpleGermanDefinition": "Man braucht Schlaf oder Ruhe.",
+        "example": "Ich bin müde."
+      },
+      "persian": { "meanings": ["خسته"], "example": "من خسته‌ام." },
+      "provenance": { "evidenceType": "headword_or_context", "evidencePages": [20] },
+      "image": {
+        "selectedAssetId": "start-a1-muede-image-v2",
+        "assetVersion": "v2",
+        "expectedMimeType": "image/jpeg",
+        "visualConcept": "A sleepy Bobo and a simple bedside lamp clarify the state.",
+        "altText": "müde — خسته: Man braucht Schlaf oder Ruhe."
+      },
+      "versions": {
+        "draftVersion": 1,
+        "candidateCardVersion": 1,
+        "image": {
+          "assetId": "start-a1-muede-image-v2",
+          "assetVersion": "v2",
+          "storageKey": "start-a1-muede/image/v2",
+          "supersededAssetId": "start-a1-muede-image-v1"
+        },
+        "wordAudio": { "assetId": "start-a1-muede-word-audio-v1", "assetVersion": "v1" },
+        "sentenceAudio": { "assetId": "start-a1-muede-sentence-audio-v1", "assetVersion": "v1" }
+      },
+      "checks": {
+        "german_linguistic": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-muede",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-muede"
+          ]
+        },
+        "persian_translation": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-muede",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-muede"
+          ]
+        },
+        "provenance": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-provenance-ledger.json#start-a1-muede",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-muede"
+          ]
+        },
+        "visual": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-media-attachment-draft.json#start-a1-muede-image-v1",
+            "validation/start-a1-candidate-qa.json#visual",
+            "validation/start-a1-v2-candidate-qa.json#visual",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-muede-image-v2"
+          ]
+        },
+        "audio": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-media-attachment-draft.json#start-a1-muede-word-audio-v1",
+            "validation/start-a1-candidate-qa.json#audio",
+            "validation/start-a1-v2-candidate-qa.json#audio",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-muede-word-audio-v1"
+          ]
+        },
+        "app_flow": {
+          "status": "pending_unproven",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": ["validation/start-a1-candidate-qa.json#app_flow"]
+        }
+      },
+      "decision": { "allowed": ["approve", "reject", "return_for_revision"], "recorded": null }
+    },
+    {
+      "contentId": "start-a1-neu",
+      "order": 22,
+      "catalogBatch": "final_catalog_pending",
+      "german": {
+        "lemma": "neu",
+        "article": null,
+        "partOfSpeech": "adjective",
+        "cefr": "A1",
+        "essentialInflection": "neu, neuer, am neuesten",
+        "simpleGermanDefinition": "Noch nicht lange da; nicht alt.",
+        "example": "Das Auto ist neu."
+      },
+      "persian": { "meanings": ["جدید"], "example": "ماشین نو است." },
+      "provenance": { "evidenceType": "headword_or_context", "evidencePages": [18, 20] },
+      "image": {
+        "selectedAssetId": "start-a1-neu-image-v1",
+        "assetVersion": "v1",
+        "expectedMimeType": "image/jpeg",
+        "visualConcept": "A shiny new bicycle beside an old worn one gives a single clear comparison.",
+        "altText": "neu — جدید: Noch nicht lange da; nicht alt."
+      },
+      "versions": {
+        "draftVersion": 1,
+        "candidateCardVersion": 1,
+        "image": {
+          "assetId": "start-a1-neu-image-v1",
+          "assetVersion": "v1",
+          "storageKey": "start-a1-neu/image/v1",
+          "supersededAssetId": null
+        },
+        "wordAudio": { "assetId": "start-a1-neu-word-audio-v1", "assetVersion": "v1" },
+        "sentenceAudio": { "assetId": "start-a1-neu-sentence-audio-v1", "assetVersion": "v1" }
+      },
+      "checks": {
+        "german_linguistic": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-neu",
+            "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-neu"
+          ]
+        },
+        "persian_translation": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-neu",
+            "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-neu"
+          ]
+        },
+        "provenance": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": null,
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-neu",
+            "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-neu"
+          ]
+        },
+        "visual": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-neu",
+            "validation/start-a1-15-candidate-media-attachment-draft.json#start-a1-neu-image-v1",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-neu-image-v1"
+          ]
+        },
+        "audio": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-neu",
+            "validation/start-a1-15-candidate-media-attachment-draft.json#start-a1-neu-word-audio-v1",
+            "validation/start-a1-15-candidate-media-attachment-draft.json#start-a1-neu-sentence-audio-v1",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-neu-sentence-audio-v1"
+          ]
+        },
+        "app_flow": {
+          "status": "pending_unproven",
+          "candidateStageRecord": null,
+          "releaseOutcome": null,
+          "evidence": []
+        }
+      },
+      "decision": { "allowed": ["approve", "reject", "return_for_revision"], "recorded": null }
+    },
+    {
+      "contentId": "start-a1-schule",
+      "order": 23,
+      "catalogBatch": "original_vertical_slice",
+      "german": {
+        "lemma": "Schule",
+        "article": "die",
+        "partOfSpeech": "noun",
+        "cefr": "A1",
+        "essentialInflection": "die Schulen",
+        "simpleGermanDefinition": "Ein Ort, an dem Kinder und Jugendliche lernen.",
+        "example": "Die Schule ist heute offen."
+      },
+      "persian": { "meanings": ["مدرسه"], "example": "مدرسه امروز باز است." },
+      "provenance": { "evidenceType": "headword_or_context", "evidencePages": [23] },
+      "image": {
+        "selectedAssetId": "start-a1-schule-image-v2",
+        "assetVersion": "v2",
+        "expectedMimeType": "image/jpeg",
+        "visualConcept": "A school building is the main subject; Bobo may be a small student.",
+        "altText": "Schule — مدرسه: Ein Ort, an dem Kinder und Jugendliche lernen."
+      },
+      "versions": {
+        "draftVersion": 1,
+        "candidateCardVersion": 1,
+        "image": {
+          "assetId": "start-a1-schule-image-v2",
+          "assetVersion": "v2",
+          "storageKey": "start-a1-schule/image/v2",
+          "supersededAssetId": "start-a1-schule-image-v1"
+        },
+        "wordAudio": { "assetId": "start-a1-schule-word-audio-v1", "assetVersion": "v1" },
+        "sentenceAudio": { "assetId": "start-a1-schule-sentence-audio-v1", "assetVersion": "v1" }
+      },
+      "checks": {
+        "german_linguistic": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-schule",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-schule"
+          ]
+        },
+        "persian_translation": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-schule",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-schule"
+          ]
+        },
+        "provenance": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-provenance-ledger.json#start-a1-schule",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-schule"
+          ]
+        },
+        "visual": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-media-attachment-draft.json#start-a1-schule-image-v1",
+            "validation/start-a1-candidate-qa.json#visual",
+            "validation/start-a1-v2-candidate-qa.json#visual",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-schule-image-v2"
+          ]
+        },
+        "audio": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-media-attachment-draft.json#start-a1-schule-word-audio-v1",
+            "validation/start-a1-candidate-qa.json#audio",
+            "validation/start-a1-v2-candidate-qa.json#audio",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-schule-word-audio-v1"
+          ]
+        },
+        "app_flow": {
+          "status": "pending_unproven",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": ["validation/start-a1-candidate-qa.json#app_flow"]
+        }
+      },
+      "decision": { "allowed": ["approve", "reject", "return_for_revision"], "recorded": null }
+    },
+    {
+      "contentId": "start-a1-stadt",
+      "order": 24,
+      "catalogBatch": "final_catalog_pending",
+      "german": {
+        "lemma": "Stadt",
+        "article": "die",
+        "partOfSpeech": "noun",
+        "cefr": "A1",
+        "essentialInflection": "die Städte",
+        "simpleGermanDefinition": "Ein großer Ort, in dem viele Menschen wohnen.",
+        "example": "Die Stadt ist groß."
+      },
+      "persian": { "meanings": ["شهر"], "example": "شهر بزرگ است." },
+      "provenance": { "evidenceType": "headword_or_context", "evidencePages": [9, 23] },
+      "image": {
+        "selectedAssetId": "start-a1-stadt-image-v1",
+        "assetVersion": "v1",
+        "expectedMimeType": "image/jpeg",
+        "visualConcept": "A small city skyline carries the meaning; Bobo may be a small pedestrian.",
+        "altText": "Stadt — شهر: Ein großer Ort, in dem viele Menschen wohnen."
+      },
+      "versions": {
+        "draftVersion": 1,
+        "candidateCardVersion": 1,
+        "image": {
+          "assetId": "start-a1-stadt-image-v1",
+          "assetVersion": "v1",
+          "storageKey": "start-a1-stadt/image/v1",
+          "supersededAssetId": null
+        },
+        "wordAudio": { "assetId": "start-a1-stadt-word-audio-v1", "assetVersion": "v1" },
+        "sentenceAudio": { "assetId": "start-a1-stadt-sentence-audio-v1", "assetVersion": "v1" }
+      },
+      "checks": {
+        "german_linguistic": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-stadt",
+            "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-stadt"
+          ]
+        },
+        "persian_translation": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-stadt",
+            "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-stadt"
+          ]
+        },
+        "provenance": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": null,
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-stadt",
+            "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-stadt"
+          ]
+        },
+        "visual": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-stadt",
+            "validation/start-a1-15-candidate-media-attachment-draft.json#start-a1-stadt-image-v1",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-stadt-image-v1"
+          ]
+        },
+        "audio": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-stadt",
+            "validation/start-a1-15-candidate-media-attachment-draft.json#start-a1-stadt-word-audio-v1",
+            "validation/start-a1-15-candidate-media-attachment-draft.json#start-a1-stadt-sentence-audio-v1",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-stadt-sentence-audio-v1"
+          ]
+        },
+        "app_flow": {
+          "status": "pending_unproven",
+          "candidateStageRecord": null,
+          "releaseOutcome": null,
+          "evidence": []
+        }
+      },
+      "decision": { "allowed": ["approve", "reject", "return_for_revision"], "recorded": null }
+    },
+    {
+      "contentId": "start-a1-supermarkt",
+      "order": 25,
+      "catalogBatch": "final_catalog_pending",
+      "german": {
+        "lemma": "Supermarkt",
+        "article": "der",
+        "partOfSpeech": "noun",
+        "cefr": "A1",
+        "essentialInflection": "die Supermärkte",
+        "simpleGermanDefinition": "Ein großes Geschäft, in dem man Lebensmittel kauft.",
+        "example": "Ich kaufe im Supermarkt ein."
+      },
+      "persian": { "meanings": ["سوپرمارکت"], "example": "من از سوپرمارکت خرید می‌کنم." },
+      "provenance": { "evidenceType": "headword_or_context", "evidencePages": [19] },
+      "image": {
+        "selectedAssetId": "start-a1-supermarkt-image-v1",
+        "assetVersion": "v1",
+        "expectedMimeType": "image/jpeg",
+        "visualConcept": "A supermarket interior with shelves carries the meaning; Bobo shops with a basket.",
+        "altText": "Supermarkt — سوپرمارکت: Ein großes Geschäft, in dem man Lebensmittel kauft."
+      },
+      "versions": {
+        "draftVersion": 1,
+        "candidateCardVersion": 1,
+        "image": {
+          "assetId": "start-a1-supermarkt-image-v1",
+          "assetVersion": "v1",
+          "storageKey": "start-a1-supermarkt/image/v1",
+          "supersededAssetId": null
+        },
+        "wordAudio": { "assetId": "start-a1-supermarkt-word-audio-v1", "assetVersion": "v1" },
+        "sentenceAudio": {
+          "assetId": "start-a1-supermarkt-sentence-audio-v1",
+          "assetVersion": "v1"
+        }
+      },
+      "checks": {
+        "german_linguistic": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-supermarkt",
+            "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-supermarkt"
+          ]
+        },
+        "persian_translation": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-supermarkt",
+            "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-supermarkt"
+          ]
+        },
+        "provenance": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": null,
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-supermarkt",
+            "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-supermarkt"
+          ]
+        },
+        "visual": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-supermarkt",
+            "validation/start-a1-15-candidate-media-attachment-draft.json#start-a1-supermarkt-image-v1",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-supermarkt-image-v1"
+          ]
+        },
+        "audio": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-supermarkt",
+            "validation/start-a1-15-candidate-media-attachment-draft.json#start-a1-supermarkt-word-audio-v1",
+            "validation/start-a1-15-candidate-media-attachment-draft.json#start-a1-supermarkt-sentence-audio-v1",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-supermarkt-sentence-audio-v1"
+          ]
+        },
+        "app_flow": {
+          "status": "pending_unproven",
+          "candidateStageRecord": null,
+          "releaseOutcome": null,
+          "evidence": []
+        }
+      },
+      "decision": { "allowed": ["approve", "reject", "return_for_revision"], "recorded": null }
+    },
+    {
+      "contentId": "start-a1-tee",
+      "order": 26,
+      "catalogBatch": "final_catalog_pending",
+      "german": {
+        "lemma": "Tee",
+        "article": "der",
+        "partOfSpeech": "noun",
+        "cefr": "A1",
+        "essentialInflection": "die Tees",
+        "simpleGermanDefinition": "Ein heißes Getränk aus Blättern.",
+        "example": "Der Tee ist heiß."
+      },
+      "persian": { "meanings": ["چای"], "example": "چای داغ است." },
+      "provenance": { "evidenceType": "headword_or_context", "evidencePages": [20, 24] },
+      "image": {
+        "selectedAssetId": "start-a1-tee-image-v1",
+        "assetVersion": "v1",
+        "expectedMimeType": "image/jpeg",
+        "visualConcept": "A cup of tea with a tea bag is the dominant object.",
+        "altText": "Tee — چای: Ein heißes Getränk aus Blättern."
+      },
+      "versions": {
+        "draftVersion": 1,
+        "candidateCardVersion": 1,
+        "image": {
+          "assetId": "start-a1-tee-image-v1",
+          "assetVersion": "v1",
+          "storageKey": "start-a1-tee/image/v1",
+          "supersededAssetId": null
+        },
+        "wordAudio": { "assetId": "start-a1-tee-word-audio-v1", "assetVersion": "v1" },
+        "sentenceAudio": { "assetId": "start-a1-tee-sentence-audio-v1", "assetVersion": "v1" }
+      },
+      "checks": {
+        "german_linguistic": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-tee",
+            "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-tee"
+          ]
+        },
+        "persian_translation": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-tee",
+            "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-tee"
+          ]
+        },
+        "provenance": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": null,
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-tee",
+            "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-tee"
+          ]
+        },
+        "visual": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-tee",
+            "validation/start-a1-15-candidate-media-attachment-draft.json#start-a1-tee-image-v1",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-tee-image-v1"
+          ]
+        },
+        "audio": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-tee",
+            "validation/start-a1-15-candidate-media-attachment-draft.json#start-a1-tee-word-audio-v1",
+            "validation/start-a1-15-candidate-media-attachment-draft.json#start-a1-tee-sentence-audio-v1",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-tee-sentence-audio-v1"
+          ]
+        },
+        "app_flow": {
+          "status": "pending_unproven",
+          "candidateStageRecord": null,
+          "releaseOutcome": null,
+          "evidence": []
+        }
+      },
+      "decision": { "allowed": ["approve", "reject", "return_for_revision"], "recorded": null }
+    },
+    {
+      "contentId": "start-a1-tisch",
+      "order": 27,
+      "catalogBatch": "original_vertical_slice",
+      "german": {
+        "lemma": "Tisch",
+        "article": "der",
+        "partOfSpeech": "noun",
+        "cefr": "A1",
+        "essentialInflection": "die Tische",
+        "simpleGermanDefinition": "Ein Möbelstück mit einer flachen Fläche.",
+        "example": "Der Tisch ist groß."
+      },
+      "persian": { "meanings": ["میز"], "example": "میز بزرگ است." },
+      "provenance": { "evidenceType": "headword_or_context", "evidencePages": [24] },
+      "image": {
+        "selectedAssetId": "start-a1-tisch-image-v2",
+        "assetVersion": "v2",
+        "expectedMimeType": "image/jpeg",
+        "visualConcept": "A table is the only dominant object; no Bobo needed.",
+        "altText": "Tisch — میز: Ein Möbelstück mit einer flachen Fläche."
+      },
+      "versions": {
+        "draftVersion": 1,
+        "candidateCardVersion": 1,
+        "image": {
+          "assetId": "start-a1-tisch-image-v2",
+          "assetVersion": "v2",
+          "storageKey": "start-a1-tisch/image/v2",
+          "supersededAssetId": "start-a1-tisch-image-v1"
+        },
+        "wordAudio": { "assetId": "start-a1-tisch-word-audio-v1", "assetVersion": "v1" },
+        "sentenceAudio": { "assetId": "start-a1-tisch-sentence-audio-v1", "assetVersion": "v1" }
+      },
+      "checks": {
+        "german_linguistic": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-tisch",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-tisch"
+          ]
+        },
+        "persian_translation": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-tisch",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-tisch"
+          ]
+        },
+        "provenance": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-provenance-ledger.json#start-a1-tisch",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-tisch"
+          ]
+        },
+        "visual": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-media-attachment-draft.json#start-a1-tisch-image-v1",
+            "validation/start-a1-candidate-qa.json#visual",
+            "validation/start-a1-v2-candidate-qa.json#visual",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-tisch-image-v2"
+          ]
+        },
+        "audio": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-media-attachment-draft.json#start-a1-tisch-word-audio-v1",
+            "validation/start-a1-candidate-qa.json#audio",
+            "validation/start-a1-v2-candidate-qa.json#audio",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-tisch-word-audio-v1"
+          ]
+        },
+        "app_flow": {
+          "status": "pending_unproven",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": ["validation/start-a1-candidate-qa.json#app_flow"]
+        }
+      },
+      "decision": { "allowed": ["approve", "reject", "return_for_revision"], "recorded": null }
+    },
+    {
+      "contentId": "start-a1-trinken",
+      "order": 28,
+      "catalogBatch": "final_catalog_pending",
+      "german": {
+        "lemma": "trinken",
+        "article": null,
+        "partOfSpeech": "verb",
+        "cefr": "A1",
+        "essentialInflection": "trinkt, trank, hat getrunken",
+        "simpleGermanDefinition": "Eine Flüssigkeit zu sich nehmen.",
+        "example": "Ich trinke Wasser."
+      },
+      "persian": { "meanings": ["نوشیدن"], "example": "من آب می‌نوشم." },
+      "provenance": { "evidenceType": "headword_or_context", "evidencePages": [13, 26] },
+      "image": {
+        "selectedAssetId": "start-a1-trinken-image-v1",
+        "assetVersion": "v1",
+        "expectedMimeType": "image/jpeg",
+        "visualConcept": "Bobo drinks a glass of water and is the clear action subject.",
+        "altText": "trinken — نوشیدن: Eine Flüssigkeit zu sich nehmen."
+      },
+      "versions": {
+        "draftVersion": 1,
+        "candidateCardVersion": 1,
+        "image": {
+          "assetId": "start-a1-trinken-image-v1",
+          "assetVersion": "v1",
+          "storageKey": "start-a1-trinken/image/v1",
+          "supersededAssetId": null
+        },
+        "wordAudio": { "assetId": "start-a1-trinken-word-audio-v1", "assetVersion": "v1" },
+        "sentenceAudio": { "assetId": "start-a1-trinken-sentence-audio-v1", "assetVersion": "v1" }
+      },
+      "checks": {
+        "german_linguistic": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-trinken",
+            "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-trinken"
+          ]
+        },
+        "persian_translation": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-trinken",
+            "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-trinken"
+          ]
+        },
+        "provenance": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": null,
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-trinken",
+            "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-trinken"
+          ]
+        },
+        "visual": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-trinken",
+            "validation/start-a1-15-candidate-media-attachment-draft.json#start-a1-trinken-image-v1",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-trinken-image-v1"
+          ]
+        },
+        "audio": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-trinken",
+            "validation/start-a1-15-candidate-media-attachment-draft.json#start-a1-trinken-word-audio-v1",
+            "validation/start-a1-15-candidate-media-attachment-draft.json#start-a1-trinken-sentence-audio-v1",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-trinken-sentence-audio-v1"
+          ]
+        },
+        "app_flow": {
+          "status": "pending_unproven",
+          "candidateStageRecord": null,
+          "releaseOutcome": null,
+          "evidence": []
+        }
+      },
+      "decision": { "allowed": ["approve", "reject", "return_for_revision"], "recorded": null }
+    },
+    {
+      "contentId": "start-a1-tuer",
+      "order": 29,
+      "catalogBatch": "original_vertical_slice",
+      "german": {
+        "lemma": "Tür",
+        "article": "die",
+        "partOfSpeech": "noun",
+        "cefr": "A1",
+        "essentialInflection": "die Türen",
+        "simpleGermanDefinition": "Man öffnet und schließt sie, um in einen Raum zu gehen.",
+        "example": "Die Tür ist offen."
+      },
+      "persian": { "meanings": ["در"], "example": "در باز است." },
+      "provenance": { "evidenceType": "headword_or_context", "evidencePages": [21, 22] },
+      "image": {
+        "selectedAssetId": "start-a1-tuer-image-v2",
+        "assetVersion": "v2",
+        "expectedMimeType": "image/jpeg",
+        "visualConcept": "An open door clearly shows the concept; Bobo can be small beside it.",
+        "altText": "Tür — در: Man öffnet und schließt sie, um in einen Raum zu gehen."
+      },
+      "versions": {
+        "draftVersion": 1,
+        "candidateCardVersion": 1,
+        "image": {
+          "assetId": "start-a1-tuer-image-v2",
+          "assetVersion": "v2",
+          "storageKey": "start-a1-tuer/image/v2",
+          "supersededAssetId": "start-a1-tuer-image-v1"
+        },
+        "wordAudio": { "assetId": "start-a1-tuer-word-audio-v1", "assetVersion": "v1" },
+        "sentenceAudio": { "assetId": "start-a1-tuer-sentence-audio-v1", "assetVersion": "v1" }
+      },
+      "checks": {
+        "german_linguistic": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-tuer",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-tuer"
+          ]
+        },
+        "persian_translation": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-tuer",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-tuer"
+          ]
+        },
+        "provenance": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-provenance-ledger.json#start-a1-tuer",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-tuer"
+          ]
+        },
+        "visual": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-media-attachment-draft.json#start-a1-tuer-image-v1",
+            "validation/start-a1-candidate-qa.json#visual",
+            "validation/start-a1-v2-candidate-qa.json#visual",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-tuer-image-v2"
+          ]
+        },
+        "audio": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-media-attachment-draft.json#start-a1-tuer-word-audio-v1",
+            "validation/start-a1-candidate-qa.json#audio",
+            "validation/start-a1-v2-candidate-qa.json#audio",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-tuer-word-audio-v1"
+          ]
+        },
+        "app_flow": {
+          "status": "pending_unproven",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": ["validation/start-a1-candidate-qa.json#app_flow"]
+        }
+      },
+      "decision": { "allowed": ["approve", "reject", "return_for_revision"], "recorded": null }
+    },
+    {
+      "contentId": "start-a1-uhr",
+      "order": 30,
+      "catalogBatch": "final_catalog_pending",
+      "german": {
+        "lemma": "Uhr",
+        "article": "die",
+        "partOfSpeech": "noun",
+        "cefr": "A1",
+        "essentialInflection": "die Uhren",
+        "simpleGermanDefinition": "Ein Gerät, das die Zeit zeigt.",
+        "example": "Die Uhr ist neu."
+      },
+      "persian": { "meanings": ["ساعت"], "example": "ساعت نو است." },
+      "provenance": { "evidenceType": "headword_or_context", "evidencePages": [7, 24] },
+      "image": {
+        "selectedAssetId": "start-a1-uhr-image-v1",
+        "assetVersion": "v1",
+        "expectedMimeType": "image/jpeg",
+        "visualConcept": "A wall clock is the only dominant object; the time concept is unambiguous.",
+        "altText": "Uhr — ساعت: Ein Gerät, das die Zeit zeigt."
+      },
+      "versions": {
+        "draftVersion": 1,
+        "candidateCardVersion": 1,
+        "image": {
+          "assetId": "start-a1-uhr-image-v1",
+          "assetVersion": "v1",
+          "storageKey": "start-a1-uhr/image/v1",
+          "supersededAssetId": null
+        },
+        "wordAudio": { "assetId": "start-a1-uhr-word-audio-v1", "assetVersion": "v1" },
+        "sentenceAudio": { "assetId": "start-a1-uhr-sentence-audio-v1", "assetVersion": "v1" }
+      },
+      "checks": {
+        "german_linguistic": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-uhr",
+            "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-uhr"
+          ]
+        },
+        "persian_translation": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-uhr",
+            "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-uhr"
+          ]
+        },
+        "provenance": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": null,
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-uhr",
+            "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-uhr"
+          ]
+        },
+        "visual": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-uhr",
+            "validation/start-a1-15-candidate-media-attachment-draft.json#start-a1-uhr-image-v1",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-uhr-image-v1"
+          ]
+        },
+        "audio": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-uhr",
+            "validation/start-a1-15-candidate-media-attachment-draft.json#start-a1-uhr-word-audio-v1",
+            "validation/start-a1-15-candidate-media-attachment-draft.json#start-a1-uhr-sentence-audio-v1",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-uhr-sentence-audio-v1"
+          ]
+        },
+        "app_flow": {
+          "status": "pending_unproven",
+          "candidateStageRecord": null,
+          "releaseOutcome": null,
+          "evidence": []
+        }
+      },
+      "decision": { "allowed": ["approve", "reject", "return_for_revision"], "recorded": null }
+    },
+    {
+      "contentId": "start-a1-warten",
+      "order": 31,
+      "catalogBatch": "original_vertical_slice",
+      "german": {
+        "lemma": "warten",
+        "article": null,
+        "partOfSpeech": "verb",
+        "cefr": "A1",
+        "essentialInflection": "wartet, wartete, hat gewartet",
+        "simpleGermanDefinition": "Bleiben, bis etwas oder jemand kommt.",
+        "example": "Ich warte auf den Bus."
+      },
+      "persian": { "meanings": ["منتظر ماندن"], "example": "من منتظر اتوبوس هستم." },
+      "provenance": { "evidenceType": "headword_or_context", "evidencePages": [25] },
+      "image": {
+        "selectedAssetId": "start-a1-warten-image-v2",
+        "assetVersion": "v2",
+        "expectedMimeType": "image/jpeg",
+        "visualConcept": "Bobo waits at a bus stop; the waiting action is unmistakable.",
+        "altText": "warten — منتظر ماندن: Bleiben, bis etwas oder jemand kommt."
+      },
+      "versions": {
+        "draftVersion": 1,
+        "candidateCardVersion": 1,
+        "image": {
+          "assetId": "start-a1-warten-image-v2",
+          "assetVersion": "v2",
+          "storageKey": "start-a1-warten/image/v2",
+          "supersededAssetId": "start-a1-warten-image-v1"
+        },
+        "wordAudio": { "assetId": "start-a1-warten-word-audio-v1", "assetVersion": "v1" },
+        "sentenceAudio": { "assetId": "start-a1-warten-sentence-audio-v1", "assetVersion": "v1" }
+      },
+      "checks": {
+        "german_linguistic": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-warten",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-warten"
+          ]
+        },
+        "persian_translation": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-warten",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-warten"
+          ]
+        },
+        "provenance": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-provenance-ledger.json#start-a1-warten",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-warten"
+          ]
+        },
+        "visual": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-media-attachment-draft.json#start-a1-warten-image-v1",
+            "validation/start-a1-candidate-qa.json#visual",
+            "validation/start-a1-v2-candidate-qa.json#visual",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-warten-image-v2"
+          ]
+        },
+        "audio": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-media-attachment-draft.json#start-a1-warten-word-audio-v1",
+            "validation/start-a1-candidate-qa.json#audio",
+            "validation/start-a1-v2-candidate-qa.json#audio",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-warten-word-audio-v1"
+          ]
+        },
+        "app_flow": {
+          "status": "pending_unproven",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": ["validation/start-a1-candidate-qa.json#app_flow"]
+        }
+      },
+      "decision": { "allowed": ["approve", "reject", "return_for_revision"], "recorded": null }
+    },
+    {
+      "contentId": "start-a1-wasser",
+      "order": 32,
+      "catalogBatch": "original_vertical_slice",
+      "german": {
+        "lemma": "Wasser",
+        "article": "das",
+        "partOfSpeech": "noun",
+        "cefr": "A1",
+        "essentialInflection": "kein Plural im üblichen Gebrauch",
+        "simpleGermanDefinition": "Eine klare Flüssigkeit zum Trinken.",
+        "example": "Das Wasser ist kalt."
+      },
+      "persian": { "meanings": ["آب"], "example": "آب سرد است." },
+      "provenance": { "evidenceType": "headword_or_context", "evidencePages": [25] },
+      "image": {
+        "selectedAssetId": "start-a1-wasser-image-v2",
+        "assetVersion": "v2",
+        "expectedMimeType": "image/jpeg",
+        "visualConcept": "A clear glass of water is the dominant object.",
+        "altText": "Wasser — آب: Eine klare Flüssigkeit zum Trinken."
+      },
+      "versions": {
+        "draftVersion": 1,
+        "candidateCardVersion": 1,
+        "image": {
+          "assetId": "start-a1-wasser-image-v2",
+          "assetVersion": "v2",
+          "storageKey": "start-a1-wasser/image/v2",
+          "supersededAssetId": "start-a1-wasser-image-v1"
+        },
+        "wordAudio": { "assetId": "start-a1-wasser-word-audio-v1", "assetVersion": "v1" },
+        "sentenceAudio": { "assetId": "start-a1-wasser-sentence-audio-v1", "assetVersion": "v1" }
+      },
+      "checks": {
+        "german_linguistic": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-wasser",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-wasser"
+          ]
+        },
+        "persian_translation": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-wasser",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-wasser"
+          ]
+        },
+        "provenance": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-provenance-ledger.json#start-a1-wasser",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-wasser"
+          ]
+        },
+        "visual": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-media-attachment-draft.json#start-a1-wasser-image-v1",
+            "validation/start-a1-candidate-qa.json#visual",
+            "validation/start-a1-v2-candidate-qa.json#visual",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-wasser-image-v2"
+          ]
+        },
+        "audio": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-media-attachment-draft.json#start-a1-wasser-word-audio-v1",
+            "validation/start-a1-candidate-qa.json#audio",
+            "validation/start-a1-v2-candidate-qa.json#audio",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-wasser-word-audio-v1"
+          ]
+        },
+        "app_flow": {
+          "status": "pending_unproven",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": ["validation/start-a1-candidate-qa.json#app_flow"]
+        }
+      },
+      "decision": { "allowed": ["approve", "reject", "return_for_revision"], "recorded": null }
+    },
+    {
+      "contentId": "start-a1-wie-geht-es-ihnen",
+      "order": 33,
+      "catalogBatch": "original_vertical_slice",
+      "german": {
+        "lemma": "Wie geht es Ihnen?",
+        "article": null,
+        "partOfSpeech": "phrase",
+        "cefr": "A1",
+        "essentialInflection": "ثابت",
+        "simpleGermanDefinition": "Eine höfliche Frage nach dem Befinden.",
+        "example": "Guten Tag. Wie geht es Ihnen?"
+      },
+      "persian": { "meanings": ["حال شما چطور است؟"], "example": "روز بخیر. حال شما چطور است؟" },
+      "provenance": { "evidenceType": "scope_adaptation", "evidencePages": [13, 15, 16] },
+      "image": {
+        "selectedAssetId": "start-a1-wie-geht-es-ihnen-image-v2",
+        "assetVersion": "v2",
+        "expectedMimeType": "image/jpeg",
+        "visualConcept": "A polite Bobo asks a person how they are; conversational gesture only.",
+        "altText": "Wie geht es Ihnen? — حال شما چطور است؟: Eine höfliche Frage nach dem Befinden."
+      },
+      "versions": {
+        "draftVersion": 1,
+        "candidateCardVersion": 1,
+        "image": {
+          "assetId": "start-a1-wie-geht-es-ihnen-image-v2",
+          "assetVersion": "v2",
+          "storageKey": "start-a1-wie-geht-es-ihnen/image/v2",
+          "supersededAssetId": "start-a1-wie-geht-es-ihnen-image-v1"
+        },
+        "wordAudio": {
+          "assetId": "start-a1-wie-geht-es-ihnen-word-audio-v1",
+          "assetVersion": "v1"
+        },
+        "sentenceAudio": {
+          "assetId": "start-a1-wie-geht-es-ihnen-sentence-audio-v1",
+          "assetVersion": "v1"
+        }
+      },
+      "checks": {
+        "german_linguistic": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-wie-geht-es-ihnen",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-wie-geht-es-ihnen"
+          ]
+        },
+        "persian_translation": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-wie-geht-es-ihnen",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-wie-geht-es-ihnen"
+          ]
+        },
+        "provenance": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-provenance-ledger.json#start-a1-wie-geht-es-ihnen",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-wie-geht-es-ihnen"
+          ]
+        },
+        "visual": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-media-attachment-draft.json#start-a1-wie-geht-es-ihnen-image-v1",
+            "validation/start-a1-candidate-qa.json#visual",
+            "validation/start-a1-v2-candidate-qa.json#visual",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-wie-geht-es-ihnen-image-v2"
+          ]
+        },
+        "audio": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-media-attachment-draft.json#start-a1-wie-geht-es-ihnen-word-audio-v1",
+            "validation/start-a1-candidate-qa.json#audio",
+            "validation/start-a1-v2-candidate-qa.json#audio",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-wie-geht-es-ihnen-word-audio-v1"
+          ]
+        },
+        "app_flow": {
+          "status": "pending_unproven",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": ["validation/start-a1-candidate-qa.json#app_flow"]
+        }
+      },
+      "decision": { "allowed": ["approve", "reject", "return_for_revision"], "recorded": null }
+    },
+    {
+      "contentId": "start-a1-wohnen",
+      "order": 34,
+      "catalogBatch": "original_vertical_slice",
+      "german": {
+        "lemma": "wohnen",
+        "article": null,
+        "partOfSpeech": "verb",
+        "cefr": "A1",
+        "essentialInflection": "wohnt, wohnte, hat gewohnt",
+        "simpleGermanDefinition": "An einem Ort sein Zuhause haben.",
+        "example": "Ich wohne in Berlin."
+      },
+      "persian": { "meanings": ["زندگی کردن؛ ساکن بودن"], "example": "من در برلین زندگی می‌کنم." },
+      "provenance": { "evidenceType": "headword_or_context", "evidencePages": [26] },
+      "image": {
+        "selectedAssetId": "start-a1-wohnen-image-v2",
+        "assetVersion": "v2",
+        "expectedMimeType": "image/jpeg",
+        "visualConcept": "Bobo is comfortably at home in a simple room.",
+        "altText": "wohnen — زندگی کردن؛ ساکن بودن: An einem Ort sein Zuhause haben."
+      },
+      "versions": {
+        "draftVersion": 1,
+        "candidateCardVersion": 1,
+        "image": {
+          "assetId": "start-a1-wohnen-image-v2",
+          "assetVersion": "v2",
+          "storageKey": "start-a1-wohnen/image/v2",
+          "supersededAssetId": "start-a1-wohnen-image-v1"
+        },
+        "wordAudio": { "assetId": "start-a1-wohnen-word-audio-v1", "assetVersion": "v1" },
+        "sentenceAudio": { "assetId": "start-a1-wohnen-sentence-audio-v1", "assetVersion": "v1" }
+      },
+      "checks": {
+        "german_linguistic": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-wohnen",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-wohnen"
+          ]
+        },
+        "persian_translation": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-wohnen",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-wohnen"
+          ]
+        },
+        "provenance": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-provenance-ledger.json#start-a1-wohnen",
+            "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-wohnen"
+          ]
+        },
+        "visual": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-media-attachment-draft.json#start-a1-wohnen-image-v1",
+            "validation/start-a1-candidate-qa.json#visual",
+            "validation/start-a1-v2-candidate-qa.json#visual",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-wohnen-image-v2"
+          ]
+        },
+        "audio": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-media-attachment-draft.json#start-a1-wohnen-word-audio-v1",
+            "validation/start-a1-candidate-qa.json#audio",
+            "validation/start-a1-v2-candidate-qa.json#audio",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-wohnen-word-audio-v1"
+          ]
+        },
+        "app_flow": {
+          "status": "pending_unproven",
+          "candidateStageRecord": "passed_for_candidate_stage",
+          "releaseOutcome": null,
+          "evidence": ["validation/start-a1-candidate-qa.json#app_flow"]
+        }
+      },
+      "decision": { "allowed": ["approve", "reject", "return_for_revision"], "recorded": null }
+    },
+    {
+      "contentId": "start-a1-zimmer",
+      "order": 35,
+      "catalogBatch": "final_catalog_pending",
+      "german": {
+        "lemma": "Zimmer",
+        "article": "das",
+        "partOfSpeech": "noun",
+        "cefr": "A1",
+        "essentialInflection": "die Zimmer",
+        "simpleGermanDefinition": "Ein Raum in einer Wohnung oder in einem Haus.",
+        "example": "Das Zimmer ist groß."
+      },
+      "persian": { "meanings": ["اتاق"], "example": "اتاق بزرگ است." },
+      "provenance": { "evidenceType": "headword_or_context", "evidencePages": [13, 26] },
+      "image": {
+        "selectedAssetId": "start-a1-zimmer-image-v1",
+        "assetVersion": "v1",
+        "expectedMimeType": "image/jpeg",
+        "visualConcept": "A simple furnished room is the dominant scene; no Bobo needed.",
+        "altText": "Zimmer — اتاق: Ein Raum in einer Wohnung oder in einem Haus."
+      },
+      "versions": {
+        "draftVersion": 1,
+        "candidateCardVersion": 1,
+        "image": {
+          "assetId": "start-a1-zimmer-image-v1",
+          "assetVersion": "v1",
+          "storageKey": "start-a1-zimmer/image/v1",
+          "supersededAssetId": null
+        },
+        "wordAudio": { "assetId": "start-a1-zimmer-word-audio-v1", "assetVersion": "v1" },
+        "sentenceAudio": { "assetId": "start-a1-zimmer-sentence-audio-v1", "assetVersion": "v1" }
+      },
+      "checks": {
+        "german_linguistic": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-zimmer",
+            "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-zimmer"
+          ]
+        },
+        "persian_translation": {
+          "status": "owner_linguistic_approval_recorded",
+          "candidateStageRecord": "approved_by_product_owner",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-slice-linguistic-approval.json#start-a1-zimmer",
+            "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-zimmer"
+          ]
+        },
+        "provenance": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": null,
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-zimmer",
+            "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-zimmer"
+          ]
+        },
+        "visual": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-zimmer",
+            "validation/start-a1-15-candidate-media-attachment-draft.json#start-a1-zimmer-image-v1",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-zimmer-image-v1"
+          ]
+        },
+        "audio": {
+          "status": "candidate_stage_evidence_recorded",
+          "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "releaseOutcome": null,
+          "evidence": [
+            "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-zimmer",
+            "validation/start-a1-15-candidate-media-attachment-draft.json#start-a1-zimmer-word-audio-v1",
+            "validation/start-a1-15-candidate-media-attachment-draft.json#start-a1-zimmer-sentence-audio-v1",
+            "validation/start-a1-35-final-media-manifest.json#start-a1-zimmer-sentence-audio-v1"
+          ]
+        },
+        "app_flow": {
+          "status": "pending_unproven",
+          "candidateStageRecord": null,
+          "releaseOutcome": null,
+          "evidence": []
+        }
+      },
+      "decision": { "allowed": ["approve", "reject", "return_for_revision"], "recorded": null }
+    }
+  ]
+}
