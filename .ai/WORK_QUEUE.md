@@ -834,7 +834,7 @@ flag, deployment or publication is authorized by this task.
 
 ## LB-DS-075
 
-- Status: review_requested
+- Status: accepted
 - Executor: orchestrator plus independent documentation reviewer
 - Base: exact `da51c9ecb28f3e731590f3be3991fb128ff3ac25` (`origin/main`, PR #286 merge)
 - Branch: `docs/post286-private-upload-reconcile`
@@ -854,12 +854,14 @@ flag, deployment or publication is authorized by this task.
 - Acceptance: stable documents agree that PR #286 is merged and accepted and exactly 105 private assets passed initial plus resume download/SHA-256 integrity verification; they also agree that attachment and all later gates remain closed and LB-DS-076 is the next authorized repository-only task.
 - Head commit: read the exact live final head from draft PR #287; independent review must bind to that pushed SHA
 - Draft PR: #287 — https://github.com/bahramghorbani/learnbox/pull/287
+- Merge commit: `9a98197ffeee98f4069a690a59caebd0df4b053f`
+- Accepted evidence: exact head `0a147a72d2a5986c82ae168f554cb107dcf4372d` passed two independent final reviews and all seven GitHub/Vercel contexts; PR #287 merged at `9a98197ffeee98f4069a690a59caebd0df4b053f` on 2026-09-14T15:34:03Z.
 
 ## LB-DS-076
 
-- Status: blocked
+- Status: review_requested
 - Executor: W4 content-review worker plus independent product/content reviewer
-- Base: exact eventual merge commit of LB-DS-075 from `origin/main`; do not start from the unmerged reconciliation branch
+- Base: exact `9a98197ffeee98f4069a690a59caebd0df4b053f` (`origin/main`, PR #287 merge)
 - Branch: `feat/start35-human-review-packet`
 - Risk: substantial-content-review-evidence-composition
 - Specification: `docs/content/STARTER_CATALOG_35_RELEASE_READINESS.md`; PDR-008; `content/packs/learnbox-start/validation/start-a1-35-catalog-slice.json`; `content/packs/learnbox-start/vocabulary/start-a1-vertical-slice-drafts.json`; `content/packs/learnbox-start/vocabulary/start-a1-catalog-35-pending-drafts.json`; `content/packs/learnbox-start/validation/start-a1-35-final-media-manifest.json`; `content/packs/learnbox-start/validation/start-a1-slice-linguistic-approval.json`; `content/packs/learnbox-start/validation/start-a1-provenance-ledger.json`; `content/packs/learnbox-start/validation/start-a1-catalog-35-pending-provenance-ledger.json`; `content/packs/learnbox-start/validation/start-a1-candidate-qa.json`; `content/packs/learnbox-start/validation/start-a1-v2-candidate-qa.json`; `content/packs/learnbox-start/validation/start-a1-15-candidate-media-attachment-draft.json`; `database/migrations/0006_content_review_quality_gates.sql`; `database/migrations/0017_start_catalog_review_candidates.sql`; `apps/admin/lib/server/postgres-content-review-store.ts`; `apps/admin/lib/server/admin-content-review-routes.ts`
@@ -872,9 +874,13 @@ flag, deployment or publication is authorized by this task.
 - Simulator required: no
 - Draft PR required: yes
 - Merge allowed: yes
-- Blocked on: LB-DS-075 merge; this record authorizes work only from that exact merged baseline.
+- Blocked on: none; LB-DS-075 merged through PR #287 at `9a98197ffeee98f4069a690a59caebd0df4b053f`.
 - Must not touch: draft/media bytes; provider configuration/credentials/IDs/URLs; receipts; object stores; attachment records; database/migrations; Admin runtime/routes; review decisions; catalog seed; flags; deployment; Preview/Production; publication; learner apps; Bobo assets.
 - Acceptance: one deterministic packet contains exactly 35 canonical items and exactly the six canonical review dimensions for each; includes final German/Persian text, provenance, selected image and alt text, visual/audio evidence, explicit pending release-level app-flow status, decision vocabulary and rollback/version linkage; points only to repository-local evidence; preserves publication blocking; represents known exceptions explicitly; and offers no automatic approval or provider/runtime mutation path.
+- Implementation: two local commits on `feat/start35-human-review-packet`, direct descendants of the recorded starting head `626cc2aee1451f40e7b4fee86606cfb86d02b084`: the initial deterministic packet deliverable and a truthfulness hardening commit that makes the packet's alt-text, database, repository-media and per-dimension evidence-scope limits explicit and validator-enforced; the worker did not push, so the orchestrator pushes the branch and opens the draft PR.
+- Handoff: `.ai/worker-reports/LB-DS-076.md` records the RED then GREEN evidence, the check results, the explicit-path commits and the open review work.
+- Head commit: read the exact live final head from draft PR #288; independent review must bind to that pushed SHA.
+- Draft PR: #288 — https://github.com/bahramghorbani/learnbox/pull/288
 
 ## LB-DS-072
 
