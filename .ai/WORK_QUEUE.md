@@ -834,7 +834,7 @@ flag, deployment or publication is authorized by this task.
 
 ## LB-DS-075
 
-- Status: in_progress
+- Status: review_requested
 - Executor: orchestrator plus independent documentation reviewer
 - Base: exact `da51c9ecb28f3e731590f3be3991fb128ff3ac25` (`origin/main`, PR #286 merge)
 - Branch: `docs/post286-private-upload-reconcile`
@@ -852,8 +852,8 @@ flag, deployment or publication is authorized by this task.
 - Blocked on: none.
 - Must not touch: application code; tests; package manifests/lockfiles; generated content/media records; provider configuration/credentials/IDs/URLs; receipt payloads; object stores; card attachments; review checks/decisions; catalog seed; runtime flags; deployment; Preview/Production; publication; Bobo assets.
 - Acceptance: stable documents agree that PR #286 is merged and accepted and exactly 105 private assets passed initial plus resume download/SHA-256 integrity verification; they also agree that attachment and all later gates remain closed and LB-DS-076 is the next authorized repository-only task.
-- Head commit: pending
-- Draft PR: pending
+- Head commit: read the exact live final head from draft PR #287; independent review must bind to that pushed SHA
+- Draft PR: #287 — https://github.com/bahramghorbani/learnbox/pull/287
 
 ## LB-DS-076
 
