@@ -8,7 +8,7 @@ start. Historical tasks remain for traceability and must not be duplicated.
 ### Current release execution
 
 - **S0 — 30-day finish-line reset:** accepted in PR #278 at `34d0d6dbd85bb42c07a8aaee1576505b0eb8db72`. Official Web/PWA-first v1.0 is targeted for 2026-10-12; Android, commerce and premium packs are v1.1+.
-- **S1 — Private media + 35-item release batch:** in progress. Live read-only verification confirmed the owner-selected target `learnbox-media-staging-isolated` is private, dedicated, empty and connected only to the deployment-free `learnbox-private-media-staging` project. The owner separately authorized guarded upload plus integrity verification for the 105 selected assets, but not attachment, review decisions, seed, runtime activation, deployment or publication. LB-DS-073 adds and reviews the missing exact-105 upload path before provider mutation.
+- **S1 — Private media + 35-item release batch:** in progress. Live read-only verification confirmed the owner-selected target `learnbox-media-staging-isolated` is private, dedicated, empty and connected only to the deployment-free `learnbox-private-media-staging` project. The owner separately authorized guarded upload plus integrity verification for the 105 selected assets, but not attachment, review decisions, seed, runtime activation, deployment or publication. LB-DS-073's exact-105 upload path is merged; LB-DS-074's byte-identical JPEG source-truth correction is awaiting independent review before provider mutation.
 - **S2 — Server-authoritative Web loop:** ready after S1's canonical content identifiers are stable; implementation and default-off integration can overlap S1 after interfaces are fixed.
 - **S3 — Web release essentials:** partial foundations; account/privacy/support/operations work may overlap S2 with disjoint paths.
 - **S4 — Closed alpha:** planned for 2026-10-04 through 2026-10-08 after S1–S3 integration evidence.
@@ -800,7 +800,7 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 
 ## LB-DS-074
 
-- Status: in_progress
+- Status: review_requested
 - Executor: deepseek-flash
 - Base: exact `ba9454de8d13a482a59acbb77f9006aa34e65735` (`origin/main`, PR #285 merge)
 - Branch: `fix/start-v2-jpeg-source-truth`
@@ -812,6 +812,10 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 - Simulator required: no
 - Draft PR required: yes
 - Merge allowed: yes
+- Head commit: read the exact live final head from the draft PR; replacement review must bind to that pushed SHA
+- Draft PR: pending creation after independent local review
+- Blocked on: independent exact-head review and seven terminal-success GitHub contexts before merge; no provider upload may run from this unreviewed branch.
+- Acceptance: all 20 canonical V2 images and three mobile copies retain identical bytes and SHA-256 values while using truthful `.jpg` paths and `image/jpeg`; generated contracts, mobile sync and private Web delivery agree; the exact-105 dry run passes; unknown Web media extensions fail closed before Blob access; full repository and clean Flutter checks pass without provider mutation.
 
 After PR #285 merges, correct the 20 selected V2 images from false PNG metadata/pathnames to their
 actual JPEG MIME and `.jpg` extension without changing a byte, regenerate the deterministic drafts,

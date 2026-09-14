@@ -4,7 +4,7 @@
 
 ## Active work
 
-LB-DS-073 merged through PR #285 at `ba9454de8d13a482a59acbb77f9006aa34e65735` with downloaded-byte SHA-256 verification for every fresh or resumed object. LB-DS-074 is active on `fix/start-v2-jpeg-source-truth` to correct 20 canonical and three mobile JPEG files that were falsely named and declared as PNG. Live verification found the selected store private, empty and connected only to the deployment-free isolated project; no upload has started.
+LB-DS-073 merged through PR #285 at `ba9454de8d13a482a59acbb77f9006aa34e65735` with downloaded-byte SHA-256 verification for every fresh or resumed object. LB-DS-074 has corrected all 20 canonical and three mobile JPEG files that were falsely named and declared as PNG; its exact-105 dry run, full repository checks and clean Flutter suite are green, and it is awaiting independent exact-head review. Live verification found the selected store private, empty and connected only to the deployment-free isolated project; no upload has started.
 
 ### Active release objective
 
