@@ -22,8 +22,8 @@ A missed owner gate moves the 2026-10-12 target one-for-one unless a safe, expli
 
 ## Immediate execution order
 
-1. Complete LB-DS-073 exact-head security review and seven terminal-success CI contexts; do not upload from unreviewed code.
-2. Correct the 20 selected V2 image declarations/extensions and regenerate the deterministic final manifest under a separately reviewed source-truth task; never bypass byte-level MIME validation.
+1. Harden LB-DS-073's reviewed uploader so every fresh or resumed object is downloaded and SHA-256 verified, then obtain replacement exact-head review and seven terminal-success CI contexts; do not upload from unreviewed code.
+2. After PR #285 merges, execute queued LB-DS-074: rename the 20 byte-level JPEG V2 sources and three mobile copies from false `.png` metadata to `.jpg`, regenerate dependent records and prove the real exact-105 dry run passes without loading provider capabilities.
 3. On unchanged reviewed tooling and corrected media truth, execute the owner-authorized upload to the verified isolated target and verify all 105 receipts/checksums outside Git; do not attach.
 4. Present all 35 items for one batched six-dimension human review by 2026-09-22.
 5. Keep attachment, seed, activation and learner exposure downstream of their separate gates and 35/35 release approval.

@@ -789,14 +789,37 @@ state, sync, catalog seed, publication, deployment, migration or runtime flag wa
 - Allowed paths: `scripts/upload-start-slice-private-media.mjs`; `scripts/upload-start-slice-private-media.test.mjs`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-073.md`; `CURRENT_WORK.md`
 - Documentation updates: register LB-DS-073, record real RED/GREEN and exact-head evidence, and state the bounded owner authorization without provider identifiers, private URLs, credentials or receipt payloads in Git.
 - Owner gates: guarded private upload plus integrity verification is authorized for exactly 105 selected assets after target verification. Attachment, content approval/return decisions, seed, runtime activation, deployment, Preview/Production and publication remain prohibited.
-- Handoff evidence: exact merged base; genuine RED before implementation; deterministic 105-asset selection tests; wrong/missing/superseded-file rejection; MIME/checksum validation; dry-run receipt schema; upload-boundary validator; final-manifest validator; security/queue/documentation/continuity checks; Prettier; `git diff --check`; independent exact-head security review; seven terminal GitHub/Vercel contexts.
+- Handoff evidence: exact merged base; genuine RED before implementation; deterministic 105-asset selection tests; wrong/missing/superseded-file rejection; MIME/checksum validation; private cache-disabled streaming download SHA-256 verification for every fresh or resumed object; same-length tamper and partial-failure rerun rejection; URL-free external receipt schema; upload-boundary validator; final-manifest validator; security/queue/documentation/continuity checks; Prettier; `git diff --check`; independent exact-head security review; seven terminal GitHub/Vercel contexts.
 - Required checks: `node --test scripts/upload-start-slice-private-media.test.mjs`; `pnpm verify:private-media-upload-boundary`; `pnpm test:start-35-final-media-manifest`; `pnpm verify:start-35-final-media-manifest`; `pnpm verify:security`; `pnpm verify:ai-worker-queue`; `pnpm verify:documentation-governance`; `pnpm verify:ai-continuity`; Prettier; `git diff --check`; independent exact-head review; seven terminal GitHub/Vercel contexts.
 - Simulator required: no
 - Draft PR required: yes
 - Merge allowed: yes
-- Blocked on: exact-head review and terminal CI before any provider upload. The exact-105 dry run currently fails closed because all 20 selected V2 image files declare PNG but contain JPEG bytes; a separately scoped source-truth correction and regenerated final manifest are required before upload. The verified target is empty and no upload has started.
+- Blocked on: replacement exact-head review and terminal CI after integrity hardening, then acceptance/merge of LB-DS-074 before any provider upload. The exact-105 dry run currently fails closed because all 20 selected V2 image files declare PNG but contain JPEG bytes; LB-DS-074 must correct source truth and regenerate the final manifest. The verified target is empty and no upload has started.
 - Must not touch: media binaries; final manifest; provider configuration; credentials/tokens; tracked provider IDs/URLs/receipts; delivery routes; database/migrations; Admin review stores/routes; card attachments; review checks/decisions; catalog seed; runtime flags; deployment; Preview/Production; learner apps; Bobo assets.
-- Acceptance: the uploader resolves exactly the final manifest's 105 storage keys to the intended 35 current images, 35 word-audio and 35 sentence-audio files; excludes all superseded V1 images for the original 20; rejects any source, MIME, count, key or checksum mismatch before the first write; remains dry-run by default; and writes a complete receipt only to an explicitly ignored external path when `--execute` is supplied. No attachment or runtime action occurs.
+- Acceptance: the uploader resolves exactly the final manifest's 105 storage keys to the intended 35 current images, 35 word-audio and 35 sentence-audio files; excludes all superseded V1 images for the original 20; rejects any source, MIME, count, key or checksum mismatch before the first write; remains dry-run by default; and, when `--execute` is supplied, streams every fresh or resumed private object back with caching disabled, requires exact byte count and SHA-256, and writes a URL-free complete receipt only to an explicitly ignored external path after all 105 pass. No attachment or runtime action occurs.
+
+## LB-DS-074
+
+- Status: blocked
+- Executor: deepseek-flash
+- Base: exact merge commit of PR #285 after LB-DS-073 is accepted
+- Branch: `fix/start-v2-jpeg-source-truth`
+- Risk: substantial-cross-surface-media-contract-correction
+- Specification: LB-DS-073 byte-signature blocker; `content/packs/learnbox-start/validation/start-a1-v2-image-attachment-draft.json`; `content/packs/learnbox-start/validation/start-a1-35-final-media-manifest.json`; private-media delivery contract
+- Allowed paths: `content/packs/learnbox-start/images/start-a1-*-image-v2.png`; `content/packs/learnbox-start/images/start-a1-*-image-v2.jpg`; `content/packs/learnbox-start/validation/start-a1-v2-image-attachment-draft.json`; `content/packs/learnbox-start/validation/start-a1-35-final-media-manifest.json`; `content/packs/learnbox-start/validation/start-a1-v2-images-private-media-attestation.json`; `content/packs/learnbox-start/validation/start-a1-v2-candidate-qa.json`; `scripts/build-start-v2-image-attachment-draft.mjs`; `scripts/build-start-35-final-media-manifest.mjs`; `scripts/build-start-private-media-attestation.mjs`; `scripts/validate-start-35-final-media-manifest.test.mjs`; `scripts/upload-start-slice-private-media.test.mjs`; `scripts/sync-mobile-start-content.mjs`; `apps/mobile/assets/cards/haus.png`; `apps/mobile/assets/cards/haus.jpg`; `apps/mobile/assets/cards/tisch.png`; `apps/mobile/assets/cards/tisch.jpg`; `apps/mobile/assets/cards/tuer.png`; `apps/mobile/assets/cards/tuer.jpg`; `apps/mobile/lib/content/start_pack_content.json`; `apps/mobile/pubspec.yaml`; `apps/website/app/api/private-media/[contentId]/[kind]/route.ts`; `apps/website/test/start-media.test.ts`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-074.md`; `CURRENT_WORK.md`
+- Must not touch: media bytes; V1/superseded images; external final-15 package; provider credentials/configuration; object stores; upload receipts; card attachments; review decisions; seed; flags; deployment; Preview/Production; publication; Bobo assets.
+- Required checks: genuine RED proving the real exact-105 preflight and website MIME route fail on current V2 metadata; byte-identical `git mv` verification for all 20 canonical and three mobile copies; `node --test scripts/upload-start-slice-private-media.test.mjs`; `pnpm test:start-35-final-media-manifest`; `pnpm verify:start-35-final-media-manifest`; `pnpm verify:start-v2-image-attachment-draft`; `pnpm verify:start-v2-images-private-media-attestation`; `pnpm verify:start-v2-images-private-media-upload`; `pnpm test:mobile-start-content`; `pnpm verify:mobile-start-content`; `pnpm verify:private-media-delivery`; focused website private-media route tests; `pnpm verify:ai-worker-queue`; `pnpm verify:documentation-governance`; `pnpm verify:security`; `pnpm verify:ai-continuity`; `pnpm check`; Prettier; ESLint; `git diff --check`; independent exact-head review; seven terminal-success GitHub contexts.
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+
+After PR #285 merges, correct the 20 selected V2 images from false PNG metadata/pathnames to their
+actual JPEG MIME and `.jpg` extension without changing a byte, regenerate the deterministic drafts,
+manifest and attestation, and preserve SHA-256 values. Apply the same truthful extension to the three
+byte-identical mobile copies and make the authenticated website delivery route derive the selected
+asset MIME instead of hardcoding PNG. Use TDD: first prove the real 105-asset preflight and route
+contract fail on the current tree, then make them pass. No provider call, upload, attachment, seed,
+flag, deployment or publication is authorized by this task.
 
 ## LB-DS-072
 

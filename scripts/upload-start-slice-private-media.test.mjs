@@ -6,6 +6,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test, { after, before } from 'node:test';
 import { fileURLToPath } from 'node:url';
+import { ReadableStream } from 'node:stream/web';
 
 import {
   assertFinal35SelectionIntegrity,
@@ -15,12 +16,16 @@ import {
   destinationPathname,
   detectMediaSignature,
   extensionForMimeType,
+  hashPrivateStream,
   loadFinal35Sources,
   loadFinalPackage,
   parseFinalPackageRoot,
   parseMode,
   preflightFinal35Assets,
+  privateUploadConcurrency,
   resolveFinal15Source,
+  uploadVerifiedSelection,
+  verifyStoredPrivateObject,
 } from './upload-start-slice-private-media.mjs';
 
 import {
@@ -146,10 +151,10 @@ test('uploader validates the boundary before loading Blob capabilities', async (
 
   const loadBlobCapabilities = createBlobCapabilityLoader(validBoundary, async () => {
     loadCalls += 1;
-    return { list() {}, head() {}, put() {} };
+    return { list() {}, get() {}, put() {} };
   });
   const capabilities = await loadBlobCapabilities();
-  assert.deepEqual(Object.keys(capabilities).sort(), ['head', 'list', 'put']);
+  assert.deepEqual(Object.keys(capabilities).sort(), ['get', 'list', 'put']);
   assert.equal(loadCalls, 1);
 });
 
@@ -815,4 +820,338 @@ test('the final-35 dry run validates the external package before any provider ca
   assert.match(output, /evidence checksum/i);
   assert.doesNotMatch(output, /OIDC|attestation|@vercel\/blob/i);
   assert.doesNotMatch(output, /Uploaded private candidate|receipt written/i);
+});
+
+// ---------------------------------------------------------------------------
+// Post-upload verification and resume semantics
+// ---------------------------------------------------------------------------
+
+const receiptAssetKeys = [
+  'assetId',
+  'contentId',
+  'etag',
+  'kind',
+  'mimeType',
+  'pathname',
+  'qaStatus',
+  'resumed',
+  'sha256',
+  'size',
+  'storageKey',
+  'verifiedBy',
+].sort();
+
+function fakeAsset(index) {
+  const assetId = `fake-asset-${index}`;
+  const bytes = mp3Bytes(assetId);
+  return {
+    assetId,
+    contentId: `fake-item-${index}`,
+    kind: 'word_audio',
+    storageKey: `fake/${assetId}/word_audio/v1`,
+    mimeType: 'audio/mpeg',
+    bytes,
+    sha256: sha256(bytes),
+    destinationPathname: `learnbox-start/fake/${assetId}.mp3`,
+  };
+}
+
+const fakeAssets = (count) => Array.from({ length: count }, (_, index) => fakeAsset(index));
+
+// Small chunks on purpose: a buffering implementation would still pass a
+// single-chunk stream, so verification is exercised the way the SDK delivers it.
+function chunkedStream(bytes, chunkSize = 7) {
+  let offset = 0;
+  return new ReadableStream({
+    pull(controller) {
+      if (offset >= bytes.byteLength) {
+        controller.close();
+        return;
+      }
+      controller.enqueue(new Uint8Array(bytes.subarray(offset, offset + chunkSize)));
+      offset += chunkSize;
+    },
+  });
+}
+
+function fakePrivateStore({ objects = new Map(), failPutAt, failPutMessage } = {}) {
+  const state = {
+    get: 0,
+    put: 0,
+    list: 0,
+    maxInFlight: 0,
+    inFlight: 0,
+    getOptions: [],
+    putOptions: [],
+  };
+  const track = async (operation) => {
+    state.inFlight += 1;
+    state.maxInFlight = Math.max(state.maxInFlight, state.inFlight);
+    try {
+      return await operation();
+    } finally {
+      state.inFlight -= 1;
+    }
+  };
+
+  const capabilities = {
+    async list() {
+      state.list += 1;
+      return {
+        hasMore: false,
+        blobs: [...objects.keys()].sort().map((pathname) => ({
+          pathname,
+          size: objects.get(pathname).byteLength,
+        })),
+      };
+    },
+    async put(pathname, bytes, options) {
+      state.put += 1;
+      state.putOptions.push(options);
+      return track(async () => {
+        if (state.put === failPutAt) throw new Error(failPutMessage ?? `put failed: ${pathname}`);
+        objects.set(pathname, Buffer.from(bytes));
+        return { pathname, url: `https://store.private.blob.vercel-storage.com/${pathname}` };
+      });
+    },
+    async get(pathname, options) {
+      state.get += 1;
+      state.getOptions.push(options);
+      return track(async () => {
+        const bytes = objects.get(pathname);
+        if (!bytes) return null;
+        const etag = `"etag-${sha256(bytes).slice(0, 12)}"`;
+        return {
+          statusCode: 200,
+          stream: chunkedStream(bytes),
+          headers: new Headers({ etag }),
+          blob: { pathname, etag, size: bytes.byteLength },
+        };
+      });
+    },
+  };
+
+  return { capabilities, objects, state };
+}
+
+const runOptions = (store, prepared) => ({
+  prepared,
+  batchId: 'fake-batch',
+  mode: 'oidc',
+  authentication: { oidcToken: 'fake-oidc-token', storeId: 'fake-store-id' },
+  capabilities: store.capabilities,
+});
+
+test('private objects are downloaded with cache disabled and stream-hashed', async () => {
+  const asset = fakeAsset(0);
+  const store = fakePrivateStore({
+    objects: new Map([[asset.destinationPathname, Buffer.from(asset.bytes)]]),
+  });
+
+  const verified = await verifyStoredPrivateObject(
+    asset,
+    store.capabilities.get,
+    runOptions(store, [asset]).authentication,
+  );
+  assert.equal(verified.size, asset.bytes.byteLength);
+  assert.equal(verified.sha256, asset.sha256);
+  assert.match(verified.etag, /^"etag-/);
+  assert.equal(store.state.getOptions[0].access, 'private');
+  assert.equal(store.state.getOptions[0].useCache, false);
+});
+
+test('a same-length tampered object fails verification', async () => {
+  const asset = fakeAsset(0);
+  const tampered = Buffer.from(asset.bytes);
+  tampered[tampered.byteLength - 1] ^= 0xff;
+  assert.equal(tampered.byteLength, asset.bytes.byteLength);
+
+  const store = fakePrivateStore({
+    objects: new Map([[asset.destinationPathname, tampered]]),
+  });
+  await assert.rejects(
+    () => verifyStoredPrivateObject(asset, store.capabilities.get, {}),
+    /sha256/i,
+  );
+});
+
+test('a truncated, missing or streamless object fails verification', async () => {
+  const asset = fakeAsset(0);
+  const truncated = fakePrivateStore({
+    objects: new Map([[asset.destinationPathname, asset.bytes.subarray(1)]]),
+  });
+  await assert.rejects(
+    () => verifyStoredPrivateObject(asset, truncated.capabilities.get, {}),
+    /bytes/i,
+  );
+
+  const empty = fakePrivateStore();
+  await assert.rejects(
+    () => verifyStoredPrivateObject(asset, empty.capabilities.get, {}),
+    /download/i,
+  );
+
+  await assert.rejects(
+    () =>
+      verifyStoredPrivateObject(
+        asset,
+        async () => ({ statusCode: 304, stream: null, headers: new Headers(), blob: {} }),
+        {},
+      ),
+    /download/i,
+  );
+});
+
+test('stream hashing reads an unbuffered async iterable and never buffers the object', async () => {
+  const bytes = Buffer.from('streamed-private-media-bytes');
+  let chunksRead = 0;
+  const stream = {
+    async *[Symbol.asyncIterator]() {
+      for (let offset = 0; offset < bytes.byteLength; offset += 5) {
+        chunksRead += 1;
+        yield new Uint8Array(bytes.subarray(offset, offset + 5));
+      }
+    },
+  };
+
+  const hashed = await hashPrivateStream(stream);
+  assert.equal(hashed.sha256, sha256(bytes));
+  assert.equal(hashed.byteLength, bytes.byteLength);
+  assert.equal(chunksRead, Math.ceil(bytes.byteLength / 5));
+});
+
+test('a rerun hashes every object the store already holds before any success claim', async () => {
+  const prepared = fakeAssets(105);
+  const store = fakePrivateStore({
+    objects: new Map(
+      prepared.map((asset) => [asset.destinationPathname, Buffer.from(asset.bytes)]),
+    ),
+  });
+
+  const receipt = await uploadVerifiedSelection(runOptions(store, prepared));
+  assert.equal(store.state.put, 0);
+  assert.equal(store.state.get, prepared.length);
+  assert.equal(receipt.assets.length, prepared.length);
+  assert.equal(receipt.assets.filter((asset) => asset.resumed).length, prepared.length);
+  for (const asset of receipt.assets) {
+    assert.equal(asset.verifiedBy, 'download-sha256');
+    assert.equal(asset.size, fakeAsset(Number(asset.assetId.split('-').pop())).bytes.byteLength);
+  }
+});
+
+test('a completed selection is verified with bounded concurrency and a URL-free receipt', async () => {
+  const prepared = fakeAssets(105);
+  const store = fakePrivateStore();
+
+  const receipt = await uploadVerifiedSelection(runOptions(store, prepared));
+  const serialized = JSON.stringify(receipt);
+
+  assert.equal(store.state.put, prepared.length);
+  assert.equal(store.state.get, prepared.length);
+  assert.ok(store.state.maxInFlight <= privateUploadConcurrency, 'concurrency must stay bounded');
+  assert.ok(store.state.maxInFlight > 1, 'verification must not be forced serial');
+  assert.equal(privateUploadConcurrency, 4);
+  assert.equal(
+    store.state.getOptions.every((options) => options.useCache === false),
+    true,
+  );
+
+  assert.equal(receipt.state, 'private_upload_complete_not_attached');
+  assert.equal(receipt.publicationBlocked, true);
+  assert.equal(receipt.authentication, 'oidc');
+  assert.equal(receipt.batchId, 'fake-batch');
+  assert.deepEqual(receipt.verification, {
+    method: 'download-sha256',
+    verifiedAssetCount: 105,
+    cacheDisabled: true,
+  });
+
+  assert.equal(receipt.assets.length, 105);
+  for (const [index, asset] of receipt.assets.entries()) {
+    const local = fakeAsset(index);
+    assert.deepEqual(Object.keys(asset).sort(), receiptAssetKeys);
+    assert.equal(asset.pathname, local.destinationPathname);
+    assert.equal(asset.size, local.bytes.byteLength);
+    assert.equal(asset.sha256, local.sha256);
+    assert.equal(asset.verifiedBy, 'download-sha256');
+    assert.equal(asset.resumed, false);
+    assert.equal(typeof asset.etag, 'string');
+  }
+  assert.doesNotMatch(serialized, /https?:\/\/|blob\.vercel-storage|downloadUrl|"url"/i);
+});
+
+test('a partial put failure produces no receipt and the rerun re-hashes what it left behind', async () => {
+  const prepared = fakeAssets(8);
+  const objects = new Map();
+  const failing = fakePrivateStore({ objects, failPutAt: 5 });
+  await assert.rejects(() => uploadVerifiedSelection(runOptions(failing, prepared)), /put failed/);
+
+  // In-flight workers from the aborted run finish their own writes; settle them
+  // before the rerun lists the store.
+  await new Promise((resolve) => setTimeout(resolve, 25));
+  const partial = objects.size;
+  assert.ok(partial >= 1 && partial < prepared.length, `partial store held ${partial} objects`);
+
+  const resumed = fakePrivateStore({ objects });
+  const receipt = await uploadVerifiedSelection(runOptions(resumed, prepared));
+  assert.equal(resumed.state.get, prepared.length, 'every stored object must be download-hashed');
+  assert.equal(resumed.state.put, prepared.length - partial);
+  assert.equal(receipt.assets.length, prepared.length);
+  assert.equal(receipt.assets.filter((asset) => asset.resumed).length, partial);
+});
+
+test('a put conflict is fatal instead of being matched to a success', async () => {
+  const [asset] = fakeAssets(1);
+  const objects = new Map([[asset.destinationPathname, Buffer.from(asset.bytes)]]);
+  const racing = fakePrivateStore({
+    objects: new Map(),
+    failPutAt: 1,
+    failPutMessage: 'Vercel Blob: A blob with the given pathname already exists.',
+  });
+
+  // The put raced a concurrent writer: the list was still empty, so this must fail
+  // rather than claim the object was verified.
+  await assert.rejects(
+    () => uploadVerifiedSelection(runOptions(racing, [asset])),
+    /already exists/i,
+  );
+
+  const rerun = fakePrivateStore({ objects });
+  const receipt = await uploadVerifiedSelection(runOptions(rerun, [asset]));
+  assert.equal(rerun.state.put, 0);
+  assert.equal(rerun.state.get, 1);
+  assert.equal(receipt.assets[0].resumed, true);
+  assert.equal(receipt.assets[0].sha256, asset.sha256);
+});
+
+test('objects outside this selection fail closed in the dedicated store', async () => {
+  const prepared = fakeAssets(4);
+  const objects = new Map(
+    prepared.map((asset) => [asset.destinationPathname, Buffer.from(asset.bytes)]),
+  );
+  objects.set('learnbox-start/legacy/image/v1.png', Buffer.from('foreign-object'));
+
+  const store = fakePrivateStore({ objects });
+  await assert.rejects(
+    () => uploadVerifiedSelection(runOptions(store, prepared)),
+    /outside this selection/i,
+  );
+  assert.equal(store.state.put, 0, 'a foreign object must stop the run before any write');
+  assert.equal(store.state.get, 0);
+});
+
+test('a stored object with the right pathname but wrong bytes fails the run', async () => {
+  const prepared = fakeAssets(2);
+  const tampered = Buffer.from(prepared[1].bytes);
+  tampered[0] = 0x00;
+  tampered[1] = tampered[1] === 0x00 ? 0x01 : tampered[1];
+
+  const objects = new Map([
+    [prepared[0].destinationPathname, Buffer.from(prepared[0].bytes)],
+    [prepared[1].destinationPathname, tampered],
+  ]);
+  await assert.rejects(
+    () => uploadVerifiedSelection(runOptions(fakePrivateStore({ objects }), prepared)),
+    /sha256/i,
+  );
 });

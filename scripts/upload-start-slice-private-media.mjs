@@ -570,6 +570,151 @@ async function prepareFinal35Assets(finalPackageRoot) {
   return { prepared, batchId: sources.manifest.batchId, receiptPath: final35ReceiptPath };
 }
 
+export const privateUploadConcurrency = 4;
+const privateUploadPrefix = 'learnbox-start/';
+const verificationMethod = 'download-sha256';
+
+// Hashes a private object while it streams back out of the provider, so a receipt
+// can never be produced from metadata alone and no media file is buffered twice.
+export async function hashPrivateStream(stream) {
+  const hash = createHash('sha256');
+  let byteLength = 0;
+  for await (const chunk of stream) {
+    hash.update(chunk);
+    byteLength += chunk.byteLength;
+  }
+  return { sha256: hash.digest('hex'), byteLength };
+}
+
+// Downloads one stored private object with the CDN cache disabled and matches both
+// the streamed byte count and the streamed SHA-256 against the local preflight
+// record, so a same-length replacement object fails instead of being accepted.
+export async function verifyStoredPrivateObject(asset, get, authentication) {
+  const download = await get(asset.destinationPathname, {
+    access: 'private',
+    useCache: false,
+    ...authentication,
+  });
+  if (!download || download.statusCode !== 200 || !download.stream) {
+    throw new Error(
+      `${asset.assetId} could not be downloaded from the private store for verification.`,
+    );
+  }
+
+  const { sha256, byteLength } = await hashPrivateStream(download.stream);
+  if (byteLength !== asset.bytes.byteLength) {
+    throw new Error(
+      `${asset.assetId} downloaded ${byteLength} bytes but its verified local file has ${asset.bytes.byteLength}.`,
+    );
+  }
+  if (sha256 !== asset.sha256) {
+    throw new Error(
+      `${asset.assetId} downloaded sha256 ${sha256} does not match its verified local checksum.`,
+    );
+  }
+
+  return {
+    sha256,
+    size: byteLength,
+    etag: typeof download.blob?.etag === 'string' ? download.blob.etag : null,
+  };
+}
+
+// Uploads or resumes the whole selection. Nothing is reported as stored until it has
+// been downloaded and hashed back, and any failure returns no receipt at all: the
+// caller writes one only when this resolves.
+export async function uploadVerifiedSelection({
+  prepared,
+  batchId,
+  mode,
+  authentication,
+  capabilities,
+  log = () => {},
+}) {
+  const { get, list, put } = capabilities;
+  const existing = await list({ prefix: privateUploadPrefix, limit: 1000, ...authentication });
+  if (existing.hasMore) {
+    throw new Error('فهرست رسانه‌های خصوصی بیش از حد انتظار طولانی است و باید دستی بررسی شود.');
+  }
+
+  // The target attestation declares noExistingObjectsExpected: the dedicated store
+  // must hold no foreign media. Objects matching this run's own destinations are an
+  // earlier authorized partial run and are re-verified below; any other pathname
+  // means the dedicated-store boundary is already broken, so refuse before writing.
+  const selected = new Set(prepared.map((asset) => asset.destinationPathname));
+  const foreign = existing.blobs.filter((blob) => !selected.has(blob.pathname));
+  if (foreign.length > 0) {
+    throw new Error(
+      `The dedicated private store holds ${foreign.length} object(s) outside this selection, starting at ${foreign[0].pathname}; refusing to upload into a shared target.`,
+    );
+  }
+  const priorPathnames = new Set(existing.blobs.map((blob) => blob.pathname));
+
+  async function transfer(asset) {
+    const resumed = priorPathnames.has(asset.destinationPathname);
+    if (!resumed) {
+      // A put conflict or partial failure is never converted into a success by
+      // matching an error string: the object is only accepted through the download
+      // below, and a rerun lists and re-hashes whatever a failed run left behind.
+      await put(asset.destinationPathname, asset.bytes, {
+        access: 'private',
+        addRandomSuffix: false,
+        contentType: asset.mimeType,
+        ...authentication,
+      });
+    }
+
+    const verified = await verifyStoredPrivateObject(asset, get, authentication);
+    log(
+      `${resumed ? 'Verified resumed' : 'Uploaded and verified'} private candidate: ${asset.assetId}`,
+    );
+    return {
+      assetId: asset.assetId,
+      contentId: asset.contentId,
+      kind: asset.kind,
+      storageKey: asset.storageKey,
+      pathname: asset.destinationPathname,
+      mimeType: asset.mimeType,
+      size: verified.size,
+      sha256: verified.sha256,
+      etag: verified.etag,
+      verifiedBy: verificationMethod,
+      qaStatus: 'approved',
+      resumed,
+    };
+  }
+
+  const assets = new Array(prepared.length);
+  let failure;
+  let nextAssetIndex = 0;
+  await Promise.all(
+    Array.from({ length: Math.min(privateUploadConcurrency, prepared.length) }, async () => {
+      while (nextAssetIndex < prepared.length && !failure) {
+        const assetIndex = nextAssetIndex++;
+        try {
+          assets[assetIndex] = await transfer(prepared[assetIndex]);
+        } catch (error) {
+          failure = error;
+          throw error;
+        }
+      }
+    }),
+  );
+
+  return {
+    batchId,
+    state: 'private_upload_complete_not_attached',
+    publicationBlocked: true,
+    authentication: mode,
+    verification: {
+      method: verificationMethod,
+      verifiedAssetCount: assets.length,
+      cacheDisabled: true,
+    },
+    assets,
+  };
+}
+
 async function main() {
   const argv = process.argv;
   const mode = parseMode(argv);
@@ -626,110 +771,22 @@ async function main() {
   }
 
   const credentials = blobCredentials();
-  const { head, list, put } = await loadBlobCapabilities();
-  const authentication = { oidcToken: credentials.oidcToken, storeId: credentials.storeId };
-  const existing = await list({
-    prefix: 'learnbox-start/',
-    limit: 1000,
-    ...authentication,
+  const { get, list, put } = await loadBlobCapabilities();
+
+  // Every selected object, resumed or newly written, is downloaded with the cache
+  // disabled and hashed back before it can appear in a receipt, and a failure
+  // anywhere returns no receipt at all.
+  const receipt = await uploadVerifiedSelection({
+    prepared,
+    batchId,
+    mode: credentials.mode,
+    authentication: { oidcToken: credentials.oidcToken, storeId: credentials.storeId },
+    capabilities: { get, list, put },
+    log: console.info,
   });
-  if (existing.hasMore) {
-    throw new Error('فهرست رسانه‌های خصوصی بیش از حد انتظار طولانی است و باید دستی بررسی شود.');
-  }
-  const existingByPathname = new Map(existing.blobs.map((blob) => [blob.pathname, blob]));
-
-  async function uploadOrResume(asset) {
-    const priorUpload = existingByPathname.get(asset.destinationPathname);
-    if (priorUpload) {
-      if (priorUpload.size !== asset.bytes.byteLength) {
-        throw new Error(`نسخهٔ موجود ${asset.assetId} با اندازهٔ فایل تأییدشده یکسان نیست.`);
-      }
-      console.info(`Validated existing private candidate: ${asset.assetId}`);
-      return {
-        assetId: asset.assetId,
-        contentId: asset.contentId,
-        kind: asset.kind,
-        storageKey: asset.storageKey,
-        pathname: priorUpload.pathname,
-        url: priorUpload.url,
-        mimeType: asset.mimeType,
-        sha256: asset.sha256,
-        qaStatus: 'approved',
-        resumed: true,
-      };
-    }
-
-    let blob;
-    try {
-      blob = await put(asset.destinationPathname, asset.bytes, {
-        access: 'private',
-        addRandomSuffix: false,
-        contentType: asset.mimeType,
-        ...authentication,
-      });
-    } catch (error) {
-      if (!(error instanceof Error) || !error.message.includes('already exists')) throw error;
-
-      const concurrentlyUploaded = await head(asset.destinationPathname, authentication);
-      if (concurrentlyUploaded.size !== asset.bytes.byteLength) {
-        throw new Error(`نسخهٔ هم‌زمان ${asset.assetId} با اندازهٔ فایل تأییدشده یکسان نیست.`);
-      }
-      console.info(`Validated concurrently uploaded private candidate: ${asset.assetId}`);
-      return {
-        assetId: asset.assetId,
-        contentId: asset.contentId,
-        kind: asset.kind,
-        storageKey: asset.storageKey,
-        pathname: concurrentlyUploaded.pathname,
-        url: concurrentlyUploaded.url,
-        mimeType: asset.mimeType,
-        sha256: asset.sha256,
-        qaStatus: 'approved',
-        resumed: true,
-      };
-    }
-
-    console.info(`Uploaded private candidate: ${asset.assetId}`);
-    return {
-      assetId: asset.assetId,
-      contentId: asset.contentId,
-      kind: asset.kind,
-      storageKey: asset.storageKey,
-      pathname: blob.pathname,
-      url: blob.url,
-      mimeType: asset.mimeType,
-      sha256: asset.sha256,
-      qaStatus: 'approved',
-    };
-  }
-
-  const uploaded = new Array(prepared.length);
-  let nextAssetIndex = 0;
-  const concurrency = 4;
-  await Promise.all(
-    Array.from({ length: concurrency }, async () => {
-      while (nextAssetIndex < prepared.length) {
-        const assetIndex = nextAssetIndex++;
-        uploaded[assetIndex] = await uploadOrResume(prepared[assetIndex]);
-      }
-    }),
-  );
 
   await mkdir(receiptDirectory, { recursive: true });
-  await writeFile(
-    receiptPath,
-    `${JSON.stringify(
-      {
-        batchId,
-        state: 'private_upload_complete_not_attached',
-        publicationBlocked: true,
-        authentication: credentials.mode,
-        assets: uploaded,
-      },
-      null,
-      2,
-    )}\n`,
-  );
+  await writeFile(receiptPath, `${JSON.stringify(receipt, null, 2)}\n`);
   console.info(`Private upload receipt written outside the repository: ${receiptPath}`);
 }
 
