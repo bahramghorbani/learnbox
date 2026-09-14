@@ -35,7 +35,7 @@ const contentTypeByExtension: Record<string, string | undefined> = {
   mp3: 'audio/mpeg',
 };
 
-export function contentTypeForPathname(pathname: string): string | null {
+function contentTypeForPathname(pathname: string) {
   const extension = /\.([a-z0-9]+)$/.exec(pathname.toLowerCase())?.[1];
   return extension ? (contentTypeByExtension[extension] ?? null) : null;
 }

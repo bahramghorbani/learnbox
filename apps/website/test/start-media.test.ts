@@ -2,10 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { get as readPrivateBlob } from '@vercel/blob';
 
-import {
-  contentTypeForPathname,
-  GET as privateMedia,
-} from '../app/api/private-media/[contentId]/[kind]/route';
+import { GET as privateMedia } from '../app/api/private-media/[contentId]/[kind]/route';
 import { buildStartMediaSources, resolveStartMediaMode } from '../app/start-media';
 import { createLearnerSession } from '../lib/server-session';
 
@@ -33,6 +30,26 @@ vi.mock(
           contentId: 'start-a1-unbekannt',
           kind: 'image',
           pathname: 'learnbox-start/start-a1-unbekannt/image/v1.webp',
+        },
+        {
+          contentId: 'start-a1-jpeg-long',
+          kind: 'image',
+          pathname: 'learnbox-start/start-a1-jpeg-long/image/v1.jpeg',
+        },
+        {
+          contentId: 'start-a1-uppercase',
+          kind: 'image',
+          pathname: 'learnbox-start/start-a1-uppercase/image/v1.JPG',
+        },
+        {
+          contentId: 'start-a1-png-legacy',
+          kind: 'image',
+          pathname: 'learnbox-start/start-a1-png-legacy/image/v1.png',
+        },
+        {
+          contentId: 'start-a1-no-extension',
+          kind: 'image',
+          pathname: 'learnbox-start/start-a1-no-extension/image/v1',
         },
       ],
     },
@@ -124,20 +141,6 @@ async function fetchPrivateMedia(
   );
 }
 
-describe('Private media content type derivation (LB-DS-074)', () => {
-  it.each([
-    ['learnbox-start/start-a1-fenster/image/v1.jpg', 'image/jpeg'],
-    ['learnbox-start/start-a1-fenster/image/v1.jpeg', 'image/jpeg'],
-    ['learnbox-start/start-a1-fenster/image/v1.JPG', 'image/jpeg'],
-    ['learnbox-start/start-a1-haus/image/v2.png', 'image/png'],
-    ['learnbox-start/start-a1-haus/word_audio/v1.mp3', 'audio/mpeg'],
-    ['learnbox-start/start-a1-unbekannt/image/v1.webp', null],
-    ['learnbox-start/start-a1-unbekannt/image/v1', null],
-  ] as const)('maps the attested pathname %s to %s', (pathname, contentType) => {
-    expect(contentTypeForPathname(pathname)).toBe(contentType);
-  });
-});
-
 describe('Private media delivery contract (LB-DS-074)', () => {
   it('delivers an attested .jpg image as image/jpeg', async () => {
     const response = await fetchPrivateMedia('start-a1-fenster', 'image', {
@@ -146,6 +149,27 @@ describe('Private media delivery contract (LB-DS-074)', () => {
 
     expect(response.status).toBe(200);
     expect(response.headers.get('content-type')).toBe('image/jpeg');
+  });
+
+  it.each(['start-a1-jpeg-long', 'start-a1-uppercase'])(
+    'delivers the allowlisted JPEG variant for %s as image/jpeg',
+    async (contentId) => {
+      const response = await fetchPrivateMedia(contentId, 'image', {
+        cookie: sessionCookie(),
+      });
+
+      expect(response.status).toBe(200);
+      expect(response.headers.get('content-type')).toBe('image/jpeg');
+    },
+  );
+
+  it('delivers an attested legacy .png image as image/png', async () => {
+    const response = await fetchPrivateMedia('start-a1-png-legacy', 'image', {
+      cookie: sessionCookie(),
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toBe('image/png');
   });
 
   it('keeps delivering attested audio as audio/mpeg', async () => {
@@ -159,6 +183,15 @@ describe('Private media delivery contract (LB-DS-074)', () => {
 
   it('fails closed when the attested extension has no allowlisted MIME', async () => {
     const response = await fetchPrivateMedia('start-a1-unbekannt', 'image', {
+      cookie: sessionCookie(),
+    });
+
+    expect(response.status).toBe(404);
+    expect(readPrivateBlob).not.toHaveBeenCalled();
+  });
+
+  it('fails closed when the attested pathname has no extension', async () => {
+    const response = await fetchPrivateMedia('start-a1-no-extension', 'image', {
       cookie: sessionCookie(),
     });
 
