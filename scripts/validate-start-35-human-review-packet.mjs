@@ -1,18 +1,30 @@
 import { readFile } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import {
+  altTextLanguages,
+  altTextSourceSuffix,
+  altTextStatus,
+  cardVersionLinkageBasis,
   checkOutcomeIds,
   checkStateIds,
+  draftSourceNames,
+  evidenceScopeIds,
+  finalVisualAudioEvidenceScope,
   loadStart35HumanReviewPacketSources,
   reviewDecisionIds,
   reviewDimensionIds,
   runStart35HumanReviewPacketBuild,
+  visualConceptStatus,
 } from './build-start-35-human-review-packet.mjs';
 
 const root = process.cwd();
 const contentRoot = 'content/packs/learnbox-start';
+// Repository media directories and the extension each selected MIME type uses.
+// Used to prove the packet's repositoryLocalMedia claim against real files.
+const mediaExtensions = { 'image/jpeg': '.jpg', 'image/png': '.png', 'audio/mpeg': '.mp3' };
 
 // Packet contents must never carry a provider locator, private URL, media digest,
 // byte count, receipt, credential or runtime identifier into Git.
@@ -99,6 +111,16 @@ const sameSet = (left, right) =>
   left.length === right.length &&
   [...left].sort().every((value, index) => value === [...right].sort()[index]);
 
+// Only the original slice has per-item repository-local media; the final 15 are
+// batch-aggregate only and release-level app flow is unproven for every item.
+const expectedEvidenceScope = (dimension, isOriginal) => {
+  if (dimension === 'app_flow') return 'unproven_at_release_level';
+  if ((dimension === 'visual' || dimension === 'audio') && !isOriginal) {
+    return finalVisualAudioEvidenceScope;
+  }
+  return 'repository_local_per_item';
+};
+
 function guardForbidden(packet) {
   const guard = (value, trail) => {
     if (typeof value === 'string') {
@@ -170,6 +192,32 @@ export async function assertStart35HumanReviewPacket(packet, sources) {
   }
 
   guardForbidden(packet);
+
+  // The packet must state the limits of its own claims in one place.
+  const limits = packet.transparencyLimits ?? {};
+  for (const [key, expected] of Object.entries({
+    altTextStatus,
+    altTextSourceBasis: `committed_draft_fields_${altTextSourceSuffix}`,
+    visualConceptStatus,
+    databaseRowsVerified: false,
+    cardVersionLinkageBasis,
+    finalVisualAudioEvidenceScope,
+    humanMediaReviewStillRequired: true,
+  })) {
+    if (limits[key] !== expected) {
+      throw new Error(
+        `The packet transparency limits must stay truthful: transparencyLimits.${key} must be ${expected}.`,
+      );
+    }
+  }
+  if (
+    !sameSet(limits.altTextLanguages ?? [], altTextLanguages) ||
+    !sameSet(limits.evidenceScopeIds ?? [], evidenceScopeIds)
+  ) {
+    throw new Error(
+      'The packet transparency limits must restate the truthful alt-text languages and evidence scopes.',
+    );
+  }
 
   const vocabulary = await loadCanonicalVocabulary();
   if (
@@ -246,6 +294,14 @@ export async function assertStart35HumanReviewPacket(packet, sources) {
         );
       }
       if (
+        !evidenceScopeIds.includes(check.evidenceScope) ||
+        check.evidenceScope !== expectedEvidenceScope(dimension, isOriginal)
+      ) {
+        throw new Error(
+          `${id} ${dimension} must state a truthful evidence scope instead of implying per-item in-repository proof.`,
+        );
+      }
+      if (
         check.candidateStageRecord !== null &&
         ![
           'approved_by_product_owner',
@@ -313,8 +369,62 @@ export async function assertStart35HumanReviewPacket(packet, sources) {
     if (item.image.altText !== expectedAlt || item.image.altText.trim().length === 0) {
       throw new Error(`${id} must carry the deterministic selected-image alt text.`);
     }
-    if (item.image.visualConcept !== draft.visualConcept) {
-      throw new Error(`${id} must keep the recorded visual concept.`);
+    const draftRef = `vocabulary/${
+      isOriginal ? draftSourceNames.drafts : draftSourceNames.pendingDrafts
+    }#${id}`;
+    if (
+      item.image.altTextStatus !== altTextStatus ||
+      item.image.altTextSource !== `${draftRef}:${altTextSourceSuffix}` ||
+      !sameSet(item.image.altTextLanguages, altTextLanguages) ||
+      item.image.altTextLocale !== draft.pronunciation.locale
+    ) {
+      throw new Error(
+        `${id} must state its alt text as derived, unreviewed and truthfully sourced from the committed draft fields.`,
+      );
+    }
+    if (
+      item.image.visualConcept !== draft.visualConcept ||
+      item.image.visualConceptSource !== draftRef ||
+      item.image.visualConceptStatus !== visualConceptStatus
+    ) {
+      throw new Error(
+        `${id} must label its visual concept as draft intent rather than a verified image depiction.`,
+      );
+    }
+    if (
+      item.versions.databaseRowsVerified !== false ||
+      item.versions.linkageBasis !== cardVersionLinkageBasis
+    ) {
+      throw new Error(
+        `${id} must state repository/migration card-version linkage rather than verified database rows.`,
+      );
+    }
+    for (const [label, asset] of [
+      ['image', item.image],
+      ['versions.image', item.versions.image],
+      ['versions.wordAudio', item.versions.wordAudio],
+      ['versions.sentenceAudio', item.versions.sentenceAudio],
+    ]) {
+      if (asset.repositoryLocalMedia !== isOriginal) {
+        throw new Error(`${id} ${label} must state repositoryLocalMedia=${isOriginal}.`);
+      }
+    }
+    for (const [label, assetId, mimeType] of [
+      ['image', item.image.selectedAssetId, item.image.expectedMimeType],
+      ['wordAudio', item.versions.wordAudio.assetId, 'audio/mpeg'],
+      ['sentenceAudio', item.versions.sentenceAudio.assetId, 'audio/mpeg'],
+    ]) {
+      const extension = mediaExtensions[mimeType];
+      if (!extension) {
+        throw new Error(`${id} ${label} carries an unsupported MIME type ${mimeType}.`);
+      }
+      const directory = mimeType.startsWith('image/') ? 'images' : 'audio';
+      const present = existsSync(resolve(root, contentRoot, directory, `${assetId}${extension}`));
+      if (present !== isOriginal) {
+        throw new Error(
+          `${id} ${label} must keep repositoryLocalMedia truthful toward the media files actually in this repository.`,
+        );
+      }
     }
 
     const selectedImage = manifestAssets.find(

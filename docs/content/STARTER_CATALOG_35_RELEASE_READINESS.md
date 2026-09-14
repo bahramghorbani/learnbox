@@ -132,6 +132,31 @@ canonical dimension IDs of migration 0006 and the Admin review store, and it sta
 `publicationBlocked: true`, `seedable: false`, `attachmentAllowed: false`. It offers no provider call,
 no runtime mutation, no database write and no automatic approval path.
 
+### Transparency limits — LB-DS-076 hardening
+
+The packet states the limits of its own evidence in the item records and in a single
+`transparencyLimits` block, and the validator fails closed on any drift away from them:
+
+- the selected-image alt text is `derived_not_reviewed`: it is derived deterministically from the
+  committed draft fields `lemma`, `persianMeanings` and `simpleGermanDefinition` and is **not**
+  authored, reviewed, approved or verified against the actual image;
+- each image records its language mix truthfully (`de`, `fa`) and the recorded draft locale
+  (`de-DE`); no reviewed or approved alt text is claimed;
+- the recorded `visualConcept` is labelled `draft_intent_not_verified_depiction` with its committed
+  draft source, so it is read as draft intent and not as proof of what the image depicts;
+- no item or version is a verified database row: every item states `databaseRowsVerified: false`,
+  and card/version linkage is a repository and migration baseline, **not** live database truth;
+- `repositoryLocalMedia` is true for the 20 original items, whose selected image and audio files are
+  present in this repository, and false for the final 15, whose selected media stays outside the
+  repository until it is attached; the validator re-checks the claim against the files on disk;
+- evidence scope is explicit per dimension: `repository_local_per_item` for the per-item linguistic,
+  provenance and original-slice media records, `batch_aggregate_unverified_in_repository` for the
+  final-15 visual and audio candidates, which are batch-aggregate evidence carrying no per-item
+  in-repository media proof, and `unproven_at_release_level` for app flow.
+
+Derived alt text, repository/migration linkage and aggregate final-15 evidence are not review
+results. The actual media still requires human viewing and listening before any decision.
+
 ## Safe next workstream
 
 The bounded preparation slice described by earlier audits is complete: all 35 items have private

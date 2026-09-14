@@ -8,7 +8,22 @@
   "reviewDecisionRecorded": false,
   "databaseMutationPerformed": false,
   "providerCallPerformed": false,
-  "purpose": "One deterministic batched human-review packet for the 35 canonical LearnBox Start A1 items across the six canonical review dimensions. It restates final German and Persian text, provenance, selected image with alt text and rollback/version linkage, visual and audio candidate evidence, explicit previously recorded exceptions and an explicitly unproven release-level app flow. It records no check outcome and no approve/reject/return_for_revision decision, points only at repository-local evidence, and authorizes no attachment, database write, seed, flag, deployment or publication.",
+  "transparencyLimits": {
+    "altTextStatus": "derived_not_reviewed",
+    "altTextSourceBasis": "committed_draft_fields_lemma,persianMeanings,simpleGermanDefinition",
+    "altTextLanguages": ["de", "fa"],
+    "visualConceptStatus": "draft_intent_not_verified_depiction",
+    "databaseRowsVerified": false,
+    "cardVersionLinkageBasis": "repository_and_migration_baseline_not_live_database",
+    "finalVisualAudioEvidenceScope": "batch_aggregate_unverified_in_repository",
+    "evidenceScopeIds": [
+      "repository_local_per_item",
+      "batch_aggregate_unverified_in_repository",
+      "unproven_at_release_level"
+    ],
+    "humanMediaReviewStillRequired": true
+  },
+  "purpose": "One deterministic batched human-review packet for the 35 canonical LearnBox Start A1 items across the six canonical review dimensions. It restates final German and Persian text, provenance, selected image with derived alt text and rollback/version linkage, visual and audio candidate evidence, explicit previously recorded exceptions and an explicitly unproven release-level app flow. It records no check outcome and no approve/reject/return_for_revision decision, points only at repository-local evidence, and authorizes no attachment, database write, seed, flag, deployment or publication. Alt text stays derived and unreviewed, no item or version is a verified database row, final-15 visual and audio evidence is batch-aggregate only, and the media still needs human viewing and listening.",
   "reviewDimensions": [
     "german_linguistic",
     "persian_translation",
@@ -137,25 +152,44 @@
         "selectedAssetId": "start-a1-apfel-image-v2",
         "assetVersion": "v2",
         "expectedMimeType": "image/jpeg",
+        "repositoryLocalMedia": true,
         "visualConcept": "One red apple fills the visual focus; Bobo may point at it.",
-        "altText": "Apfel — سیب: Eine runde Frucht, die man essen kann."
+        "visualConceptSource": "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-apfel",
+        "visualConceptStatus": "draft_intent_not_verified_depiction",
+        "altText": "Apfel — سیب: Eine runde Frucht, die man essen kann.",
+        "altTextStatus": "derived_not_reviewed",
+        "altTextSource": "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-apfel:lemma,persianMeanings,simpleGermanDefinition",
+        "altTextLanguages": ["de", "fa"],
+        "altTextLocale": "de-DE"
       },
       "versions": {
         "draftVersion": 1,
         "candidateCardVersion": 1,
+        "databaseRowsVerified": false,
+        "linkageBasis": "repository_and_migration_baseline_not_live_database",
         "image": {
           "assetId": "start-a1-apfel-image-v2",
           "assetVersion": "v2",
           "storageKey": "start-a1-apfel/image/v2",
-          "supersededAssetId": "start-a1-apfel-image-v1"
+          "supersededAssetId": "start-a1-apfel-image-v1",
+          "repositoryLocalMedia": true
         },
-        "wordAudio": { "assetId": "start-a1-apfel-word-audio-v1", "assetVersion": "v1" },
-        "sentenceAudio": { "assetId": "start-a1-apfel-sentence-audio-v1", "assetVersion": "v1" }
+        "wordAudio": {
+          "assetId": "start-a1-apfel-word-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": true
+        },
+        "sentenceAudio": {
+          "assetId": "start-a1-apfel-sentence-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": true
+        }
       },
       "checks": {
         "german_linguistic": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-apfel",
@@ -165,6 +199,7 @@
         "persian_translation": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-apfel",
@@ -174,6 +209,7 @@
         "provenance": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-provenance-ledger.json#start-a1-apfel",
@@ -183,6 +219,7 @@
         "visual": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-media-attachment-draft.json#start-a1-apfel-image-v1",
@@ -194,6 +231,7 @@
         "audio": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-media-attachment-draft.json#start-a1-apfel-word-audio-v1",
@@ -205,6 +243,7 @@
         "app_flow": {
           "status": "pending_unproven",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "unproven_at_release_level",
           "releaseOutcome": null,
           "evidence": ["validation/start-a1-candidate-qa.json#app_flow"]
         }
@@ -230,25 +269,44 @@
         "selectedAssetId": "start-a1-bahnhof-image-v2",
         "assetVersion": "v2",
         "expectedMimeType": "image/jpeg",
+        "repositoryLocalMedia": true,
         "visualConcept": "The station building and tracks carry the meaning; Bobo is a small traveler.",
-        "altText": "Bahnhof — ایستگاه قطار: Ein Ort, an dem Züge ankommen und abfahren."
+        "visualConceptSource": "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-bahnhof",
+        "visualConceptStatus": "draft_intent_not_verified_depiction",
+        "altText": "Bahnhof — ایستگاه قطار: Ein Ort, an dem Züge ankommen und abfahren.",
+        "altTextStatus": "derived_not_reviewed",
+        "altTextSource": "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-bahnhof:lemma,persianMeanings,simpleGermanDefinition",
+        "altTextLanguages": ["de", "fa"],
+        "altTextLocale": "de-DE"
       },
       "versions": {
         "draftVersion": 1,
         "candidateCardVersion": 1,
+        "databaseRowsVerified": false,
+        "linkageBasis": "repository_and_migration_baseline_not_live_database",
         "image": {
           "assetId": "start-a1-bahnhof-image-v2",
           "assetVersion": "v2",
           "storageKey": "start-a1-bahnhof/image/v2",
-          "supersededAssetId": "start-a1-bahnhof-image-v1"
+          "supersededAssetId": "start-a1-bahnhof-image-v1",
+          "repositoryLocalMedia": true
         },
-        "wordAudio": { "assetId": "start-a1-bahnhof-word-audio-v1", "assetVersion": "v1" },
-        "sentenceAudio": { "assetId": "start-a1-bahnhof-sentence-audio-v1", "assetVersion": "v1" }
+        "wordAudio": {
+          "assetId": "start-a1-bahnhof-word-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": true
+        },
+        "sentenceAudio": {
+          "assetId": "start-a1-bahnhof-sentence-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": true
+        }
       },
       "checks": {
         "german_linguistic": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-bahnhof",
@@ -258,6 +316,7 @@
         "persian_translation": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-bahnhof",
@@ -267,6 +326,7 @@
         "provenance": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-provenance-ledger.json#start-a1-bahnhof",
@@ -276,6 +336,7 @@
         "visual": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-media-attachment-draft.json#start-a1-bahnhof-image-v1",
@@ -287,6 +348,7 @@
         "audio": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-media-attachment-draft.json#start-a1-bahnhof-word-audio-v1",
@@ -298,6 +360,7 @@
         "app_flow": {
           "status": "pending_unproven",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "unproven_at_release_level",
           "releaseOutcome": null,
           "evidence": ["validation/start-a1-candidate-qa.json#app_flow"]
         }
@@ -323,25 +386,44 @@
         "selectedAssetId": "start-a1-bett-image-v2",
         "assetVersion": "v2",
         "expectedMimeType": "image/jpeg",
+        "repositoryLocalMedia": true,
         "visualConcept": "A bed is the dominant object in a simple room.",
-        "altText": "Bett — تخت: Ein Möbelstück zum Schlafen."
+        "visualConceptSource": "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-bett",
+        "visualConceptStatus": "draft_intent_not_verified_depiction",
+        "altText": "Bett — تخت: Ein Möbelstück zum Schlafen.",
+        "altTextStatus": "derived_not_reviewed",
+        "altTextSource": "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-bett:lemma,persianMeanings,simpleGermanDefinition",
+        "altTextLanguages": ["de", "fa"],
+        "altTextLocale": "de-DE"
       },
       "versions": {
         "draftVersion": 1,
         "candidateCardVersion": 1,
+        "databaseRowsVerified": false,
+        "linkageBasis": "repository_and_migration_baseline_not_live_database",
         "image": {
           "assetId": "start-a1-bett-image-v2",
           "assetVersion": "v2",
           "storageKey": "start-a1-bett/image/v2",
-          "supersededAssetId": "start-a1-bett-image-v1"
+          "supersededAssetId": "start-a1-bett-image-v1",
+          "repositoryLocalMedia": true
         },
-        "wordAudio": { "assetId": "start-a1-bett-word-audio-v1", "assetVersion": "v1" },
-        "sentenceAudio": { "assetId": "start-a1-bett-sentence-audio-v1", "assetVersion": "v1" }
+        "wordAudio": {
+          "assetId": "start-a1-bett-word-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": true
+        },
+        "sentenceAudio": {
+          "assetId": "start-a1-bett-sentence-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": true
+        }
       },
       "checks": {
         "german_linguistic": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-bett",
@@ -351,6 +433,7 @@
         "persian_translation": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-bett",
@@ -360,6 +443,7 @@
         "provenance": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-provenance-ledger.json#start-a1-bett",
@@ -369,6 +453,7 @@
         "visual": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-media-attachment-draft.json#start-a1-bett-image-v1",
@@ -380,6 +465,7 @@
         "audio": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-media-attachment-draft.json#start-a1-bett-word-audio-v1",
@@ -391,6 +477,7 @@
         "app_flow": {
           "status": "pending_unproven",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "unproven_at_release_level",
           "releaseOutcome": null,
           "evidence": ["validation/start-a1-candidate-qa.json#app_flow"]
         }
@@ -416,25 +503,44 @@
         "selectedAssetId": "start-a1-brot-image-v2",
         "assetVersion": "v2",
         "expectedMimeType": "image/jpeg",
+        "repositoryLocalMedia": true,
         "visualConcept": "A loaf of bread is the dominant object.",
-        "altText": "Brot — نان: Ein Lebensmittel aus Mehl, Wasser und Hefe."
+        "visualConceptSource": "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-brot",
+        "visualConceptStatus": "draft_intent_not_verified_depiction",
+        "altText": "Brot — نان: Ein Lebensmittel aus Mehl, Wasser und Hefe.",
+        "altTextStatus": "derived_not_reviewed",
+        "altTextSource": "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-brot:lemma,persianMeanings,simpleGermanDefinition",
+        "altTextLanguages": ["de", "fa"],
+        "altTextLocale": "de-DE"
       },
       "versions": {
         "draftVersion": 1,
         "candidateCardVersion": 1,
+        "databaseRowsVerified": false,
+        "linkageBasis": "repository_and_migration_baseline_not_live_database",
         "image": {
           "assetId": "start-a1-brot-image-v2",
           "assetVersion": "v2",
           "storageKey": "start-a1-brot/image/v2",
-          "supersededAssetId": "start-a1-brot-image-v1"
+          "supersededAssetId": "start-a1-brot-image-v1",
+          "repositoryLocalMedia": true
         },
-        "wordAudio": { "assetId": "start-a1-brot-word-audio-v1", "assetVersion": "v1" },
-        "sentenceAudio": { "assetId": "start-a1-brot-sentence-audio-v1", "assetVersion": "v1" }
+        "wordAudio": {
+          "assetId": "start-a1-brot-word-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": true
+        },
+        "sentenceAudio": {
+          "assetId": "start-a1-brot-sentence-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": true
+        }
       },
       "checks": {
         "german_linguistic": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-brot",
@@ -444,6 +550,7 @@
         "persian_translation": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-brot",
@@ -453,6 +560,7 @@
         "provenance": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-provenance-ledger.json#start-a1-brot",
@@ -462,6 +570,7 @@
         "visual": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-media-attachment-draft.json#start-a1-brot-image-v1",
@@ -473,6 +582,7 @@
         "audio": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-media-attachment-draft.json#start-a1-brot-word-audio-v1",
@@ -484,6 +594,7 @@
         "app_flow": {
           "status": "pending_unproven",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "unproven_at_release_level",
           "releaseOutcome": null,
           "evidence": ["validation/start-a1-candidate-qa.json#app_flow"]
         }
@@ -509,25 +620,44 @@
         "selectedAssetId": "start-a1-danke-image-v2",
         "assetVersion": "v2",
         "expectedMimeType": "image/jpeg",
+        "repositoryLocalMedia": true,
         "visualConcept": "Bobo thanks someone with a warm gesture.",
-        "altText": "danke — ممنون؛ سپاسگزارم: Man sagt es, wenn jemand geholfen hat oder freundlich war."
+        "visualConceptSource": "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-danke",
+        "visualConceptStatus": "draft_intent_not_verified_depiction",
+        "altText": "danke — ممنون؛ سپاسگزارم: Man sagt es, wenn jemand geholfen hat oder freundlich war.",
+        "altTextStatus": "derived_not_reviewed",
+        "altTextSource": "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-danke:lemma,persianMeanings,simpleGermanDefinition",
+        "altTextLanguages": ["de", "fa"],
+        "altTextLocale": "de-DE"
       },
       "versions": {
         "draftVersion": 1,
         "candidateCardVersion": 1,
+        "databaseRowsVerified": false,
+        "linkageBasis": "repository_and_migration_baseline_not_live_database",
         "image": {
           "assetId": "start-a1-danke-image-v2",
           "assetVersion": "v2",
           "storageKey": "start-a1-danke/image/v2",
-          "supersededAssetId": "start-a1-danke-image-v1"
+          "supersededAssetId": "start-a1-danke-image-v1",
+          "repositoryLocalMedia": true
         },
-        "wordAudio": { "assetId": "start-a1-danke-word-audio-v1", "assetVersion": "v1" },
-        "sentenceAudio": { "assetId": "start-a1-danke-sentence-audio-v1", "assetVersion": "v1" }
+        "wordAudio": {
+          "assetId": "start-a1-danke-word-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": true
+        },
+        "sentenceAudio": {
+          "assetId": "start-a1-danke-sentence-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": true
+        }
       },
       "checks": {
         "german_linguistic": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-danke",
@@ -537,6 +667,7 @@
         "persian_translation": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-danke",
@@ -546,6 +677,7 @@
         "provenance": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-provenance-ledger.json#start-a1-danke",
@@ -555,6 +687,7 @@
         "visual": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-media-attachment-draft.json#start-a1-danke-image-v1",
@@ -566,6 +699,7 @@
         "audio": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-media-attachment-draft.json#start-a1-danke-word-audio-v1",
@@ -577,6 +711,7 @@
         "app_flow": {
           "status": "pending_unproven",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "unproven_at_release_level",
           "releaseOutcome": null,
           "evidence": ["validation/start-a1-candidate-qa.json#app_flow"]
         }
@@ -602,25 +737,44 @@
         "selectedAssetId": "start-a1-ei-image-v1",
         "assetVersion": "v1",
         "expectedMimeType": "image/jpeg",
+        "repositoryLocalMedia": false,
         "visualConcept": "One egg is the clear primary object.",
-        "altText": "Ei — تخم‌مرغ: Ein Lebensmittel vom Huhn."
+        "visualConceptSource": "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-ei",
+        "visualConceptStatus": "draft_intent_not_verified_depiction",
+        "altText": "Ei — تخم‌مرغ: Ein Lebensmittel vom Huhn.",
+        "altTextStatus": "derived_not_reviewed",
+        "altTextSource": "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-ei:lemma,persianMeanings,simpleGermanDefinition",
+        "altTextLanguages": ["de", "fa"],
+        "altTextLocale": "de-DE"
       },
       "versions": {
         "draftVersion": 1,
         "candidateCardVersion": 1,
+        "databaseRowsVerified": false,
+        "linkageBasis": "repository_and_migration_baseline_not_live_database",
         "image": {
           "assetId": "start-a1-ei-image-v1",
           "assetVersion": "v1",
           "storageKey": "start-a1-ei/image/v1",
-          "supersededAssetId": null
+          "supersededAssetId": null,
+          "repositoryLocalMedia": false
         },
-        "wordAudio": { "assetId": "start-a1-ei-word-audio-v1", "assetVersion": "v1" },
-        "sentenceAudio": { "assetId": "start-a1-ei-sentence-audio-v1", "assetVersion": "v1" }
+        "wordAudio": {
+          "assetId": "start-a1-ei-word-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": false
+        },
+        "sentenceAudio": {
+          "assetId": "start-a1-ei-sentence-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": false
+        }
       },
       "checks": {
         "german_linguistic": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-ei",
@@ -630,6 +784,7 @@
         "persian_translation": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-ei",
@@ -639,6 +794,7 @@
         "provenance": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": null,
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-ei",
@@ -648,6 +804,7 @@
         "visual": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "evidenceScope": "batch_aggregate_unverified_in_repository",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-ei",
@@ -658,6 +815,7 @@
         "audio": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "evidenceScope": "batch_aggregate_unverified_in_repository",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-ei",
@@ -669,6 +827,7 @@
         "app_flow": {
           "status": "pending_unproven",
           "candidateStageRecord": null,
+          "evidenceScope": "unproven_at_release_level",
           "releaseOutcome": null,
           "evidence": []
         }
@@ -697,28 +856,44 @@
         "selectedAssetId": "start-a1-entschuldigung-image-v2",
         "assetVersion": "v2",
         "expectedMimeType": "image/jpeg",
+        "repositoryLocalMedia": true,
         "visualConcept": "Bobo politely asks a passerby for attention; no written signs.",
-        "altText": "Entschuldigung — ببخشید؛ معذرت می‌خواهم: Man sagt es, wenn man höflich um Aufmerksamkeit bittet oder sich entschuldigt."
+        "visualConceptSource": "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-entschuldigung",
+        "visualConceptStatus": "draft_intent_not_verified_depiction",
+        "altText": "Entschuldigung — ببخشید؛ معذرت می‌خواهم: Man sagt es, wenn man höflich um Aufmerksamkeit bittet oder sich entschuldigt.",
+        "altTextStatus": "derived_not_reviewed",
+        "altTextSource": "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-entschuldigung:lemma,persianMeanings,simpleGermanDefinition",
+        "altTextLanguages": ["de", "fa"],
+        "altTextLocale": "de-DE"
       },
       "versions": {
         "draftVersion": 1,
         "candidateCardVersion": 1,
+        "databaseRowsVerified": false,
+        "linkageBasis": "repository_and_migration_baseline_not_live_database",
         "image": {
           "assetId": "start-a1-entschuldigung-image-v2",
           "assetVersion": "v2",
           "storageKey": "start-a1-entschuldigung/image/v2",
-          "supersededAssetId": "start-a1-entschuldigung-image-v1"
+          "supersededAssetId": "start-a1-entschuldigung-image-v1",
+          "repositoryLocalMedia": true
         },
-        "wordAudio": { "assetId": "start-a1-entschuldigung-word-audio-v1", "assetVersion": "v1" },
+        "wordAudio": {
+          "assetId": "start-a1-entschuldigung-word-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": true
+        },
         "sentenceAudio": {
           "assetId": "start-a1-entschuldigung-sentence-audio-v1",
-          "assetVersion": "v1"
+          "assetVersion": "v1",
+          "repositoryLocalMedia": true
         }
       },
       "checks": {
         "german_linguistic": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-entschuldigung",
@@ -728,6 +903,7 @@
         "persian_translation": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-entschuldigung",
@@ -737,6 +913,7 @@
         "provenance": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-provenance-ledger.json#start-a1-entschuldigung",
@@ -746,6 +923,7 @@
         "visual": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-media-attachment-draft.json#start-a1-entschuldigung-image-v1",
@@ -757,6 +935,7 @@
         "audio": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-media-attachment-draft.json#start-a1-entschuldigung-word-audio-v1",
@@ -768,6 +947,7 @@
         "app_flow": {
           "status": "pending_unproven",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "unproven_at_release_level",
           "releaseOutcome": null,
           "evidence": ["validation/start-a1-candidate-qa.json#app_flow"]
         }
@@ -793,25 +973,44 @@
         "selectedAssetId": "start-a1-essen-image-v1",
         "assetVersion": "v1",
         "expectedMimeType": "image/jpeg",
+        "repositoryLocalMedia": false,
         "visualConcept": "Bobo eats at a simple table and is the clear action subject.",
-        "altText": "essen — خوردن: Etwas als Nahrung zu sich nehmen."
+        "visualConceptSource": "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-essen",
+        "visualConceptStatus": "draft_intent_not_verified_depiction",
+        "altText": "essen — خوردن: Etwas als Nahrung zu sich nehmen.",
+        "altTextStatus": "derived_not_reviewed",
+        "altTextSource": "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-essen:lemma,persianMeanings,simpleGermanDefinition",
+        "altTextLanguages": ["de", "fa"],
+        "altTextLocale": "de-DE"
       },
       "versions": {
         "draftVersion": 1,
         "candidateCardVersion": 1,
+        "databaseRowsVerified": false,
+        "linkageBasis": "repository_and_migration_baseline_not_live_database",
         "image": {
           "assetId": "start-a1-essen-image-v1",
           "assetVersion": "v1",
           "storageKey": "start-a1-essen/image/v1",
-          "supersededAssetId": null
+          "supersededAssetId": null,
+          "repositoryLocalMedia": false
         },
-        "wordAudio": { "assetId": "start-a1-essen-word-audio-v1", "assetVersion": "v1" },
-        "sentenceAudio": { "assetId": "start-a1-essen-sentence-audio-v1", "assetVersion": "v1" }
+        "wordAudio": {
+          "assetId": "start-a1-essen-word-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": false
+        },
+        "sentenceAudio": {
+          "assetId": "start-a1-essen-sentence-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": false
+        }
       },
       "checks": {
         "german_linguistic": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-essen",
@@ -821,6 +1020,7 @@
         "persian_translation": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-essen",
@@ -830,6 +1030,7 @@
         "provenance": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": null,
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-essen",
@@ -839,6 +1040,7 @@
         "visual": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "evidenceScope": "batch_aggregate_unverified_in_repository",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-essen",
@@ -849,6 +1051,7 @@
         "audio": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "evidenceScope": "batch_aggregate_unverified_in_repository",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-essen",
@@ -861,6 +1064,7 @@
         "app_flow": {
           "status": "pending_unproven",
           "candidateStageRecord": null,
+          "evidenceScope": "unproven_at_release_level",
           "releaseOutcome": null,
           "evidence": []
         }
@@ -886,25 +1090,44 @@
         "selectedAssetId": "start-a1-fenster-image-v1",
         "assetVersion": "v1",
         "expectedMimeType": "image/jpeg",
+        "repositoryLocalMedia": false,
         "visualConcept": "An open window in a simple wall is the clear primary object.",
-        "altText": "Fenster — پنجره: Ein Teil der Wand, den man öffnen kann."
+        "visualConceptSource": "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-fenster",
+        "visualConceptStatus": "draft_intent_not_verified_depiction",
+        "altText": "Fenster — پنجره: Ein Teil der Wand, den man öffnen kann.",
+        "altTextStatus": "derived_not_reviewed",
+        "altTextSource": "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-fenster:lemma,persianMeanings,simpleGermanDefinition",
+        "altTextLanguages": ["de", "fa"],
+        "altTextLocale": "de-DE"
       },
       "versions": {
         "draftVersion": 1,
         "candidateCardVersion": 1,
+        "databaseRowsVerified": false,
+        "linkageBasis": "repository_and_migration_baseline_not_live_database",
         "image": {
           "assetId": "start-a1-fenster-image-v1",
           "assetVersion": "v1",
           "storageKey": "start-a1-fenster/image/v1",
-          "supersededAssetId": null
+          "supersededAssetId": null,
+          "repositoryLocalMedia": false
         },
-        "wordAudio": { "assetId": "start-a1-fenster-word-audio-v1", "assetVersion": "v1" },
-        "sentenceAudio": { "assetId": "start-a1-fenster-sentence-audio-v1", "assetVersion": "v1" }
+        "wordAudio": {
+          "assetId": "start-a1-fenster-word-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": false
+        },
+        "sentenceAudio": {
+          "assetId": "start-a1-fenster-sentence-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": false
+        }
       },
       "checks": {
         "german_linguistic": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-fenster",
@@ -914,6 +1137,7 @@
         "persian_translation": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-fenster",
@@ -923,6 +1147,7 @@
         "provenance": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": null,
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-fenster",
@@ -932,6 +1157,7 @@
         "visual": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "evidenceScope": "batch_aggregate_unverified_in_repository",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-fenster",
@@ -942,6 +1168,7 @@
         "audio": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "evidenceScope": "batch_aggregate_unverified_in_repository",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-fenster",
@@ -953,6 +1180,7 @@
         "app_flow": {
           "status": "pending_unproven",
           "candidateStageRecord": null,
+          "evidenceScope": "unproven_at_release_level",
           "releaseOutcome": null,
           "evidence": []
         }
@@ -978,25 +1206,44 @@
         "selectedAssetId": "start-a1-gehen-image-v1",
         "assetVersion": "v1",
         "expectedMimeType": "image/jpeg",
+        "repositoryLocalMedia": false,
         "visualConcept": "Bobo walks along a street and is the clear action subject.",
-        "altText": "gehen — رفتن: Sich zu Fuß von einem Ort zu einem anderen bewegen."
+        "visualConceptSource": "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-gehen",
+        "visualConceptStatus": "draft_intent_not_verified_depiction",
+        "altText": "gehen — رفتن: Sich zu Fuß von einem Ort zu einem anderen bewegen.",
+        "altTextStatus": "derived_not_reviewed",
+        "altTextSource": "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-gehen:lemma,persianMeanings,simpleGermanDefinition",
+        "altTextLanguages": ["de", "fa"],
+        "altTextLocale": "de-DE"
       },
       "versions": {
         "draftVersion": 1,
         "candidateCardVersion": 1,
+        "databaseRowsVerified": false,
+        "linkageBasis": "repository_and_migration_baseline_not_live_database",
         "image": {
           "assetId": "start-a1-gehen-image-v1",
           "assetVersion": "v1",
           "storageKey": "start-a1-gehen/image/v1",
-          "supersededAssetId": null
+          "supersededAssetId": null,
+          "repositoryLocalMedia": false
         },
-        "wordAudio": { "assetId": "start-a1-gehen-word-audio-v1", "assetVersion": "v1" },
-        "sentenceAudio": { "assetId": "start-a1-gehen-sentence-audio-v1", "assetVersion": "v1" }
+        "wordAudio": {
+          "assetId": "start-a1-gehen-word-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": false
+        },
+        "sentenceAudio": {
+          "assetId": "start-a1-gehen-sentence-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": false
+        }
       },
       "checks": {
         "german_linguistic": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-gehen",
@@ -1006,6 +1253,7 @@
         "persian_translation": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-gehen",
@@ -1015,6 +1263,7 @@
         "provenance": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": null,
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-gehen",
@@ -1024,6 +1273,7 @@
         "visual": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "evidenceScope": "batch_aggregate_unverified_in_repository",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-gehen",
@@ -1034,6 +1284,7 @@
         "audio": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "evidenceScope": "batch_aggregate_unverified_in_repository",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-gehen",
@@ -1045,6 +1296,7 @@
         "app_flow": {
           "status": "pending_unproven",
           "candidateStageRecord": null,
+          "evidenceScope": "unproven_at_release_level",
           "releaseOutcome": null,
           "evidence": []
         }
@@ -1070,28 +1322,44 @@
         "selectedAssetId": "start-a1-gluecklich-image-v2",
         "assetVersion": "v2",
         "expectedMimeType": "image/jpeg",
+        "repositoryLocalMedia": true,
         "visualConcept": "A clearly happy Bobo is the primary subject.",
-        "altText": "glücklich — خوشحال: Man fühlt sich sehr gut und zufrieden."
+        "visualConceptSource": "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-gluecklich",
+        "visualConceptStatus": "draft_intent_not_verified_depiction",
+        "altText": "glücklich — خوشحال: Man fühlt sich sehr gut und zufrieden.",
+        "altTextStatus": "derived_not_reviewed",
+        "altTextSource": "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-gluecklich:lemma,persianMeanings,simpleGermanDefinition",
+        "altTextLanguages": ["de", "fa"],
+        "altTextLocale": "de-DE"
       },
       "versions": {
         "draftVersion": 1,
         "candidateCardVersion": 1,
+        "databaseRowsVerified": false,
+        "linkageBasis": "repository_and_migration_baseline_not_live_database",
         "image": {
           "assetId": "start-a1-gluecklich-image-v2",
           "assetVersion": "v2",
           "storageKey": "start-a1-gluecklich/image/v2",
-          "supersededAssetId": "start-a1-gluecklich-image-v1"
+          "supersededAssetId": "start-a1-gluecklich-image-v1",
+          "repositoryLocalMedia": true
         },
-        "wordAudio": { "assetId": "start-a1-gluecklich-word-audio-v1", "assetVersion": "v1" },
+        "wordAudio": {
+          "assetId": "start-a1-gluecklich-word-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": true
+        },
         "sentenceAudio": {
           "assetId": "start-a1-gluecklich-sentence-audio-v1",
-          "assetVersion": "v1"
+          "assetVersion": "v1",
+          "repositoryLocalMedia": true
         }
       },
       "checks": {
         "german_linguistic": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-gluecklich",
@@ -1101,6 +1369,7 @@
         "persian_translation": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-gluecklich",
@@ -1110,6 +1379,7 @@
         "provenance": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-provenance-ledger.json#start-a1-gluecklich",
@@ -1119,6 +1389,7 @@
         "visual": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-media-attachment-draft.json#start-a1-gluecklich-image-v1",
@@ -1130,6 +1401,7 @@
         "audio": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-media-attachment-draft.json#start-a1-gluecklich-word-audio-v1",
@@ -1141,6 +1413,7 @@
         "app_flow": {
           "status": "pending_unproven",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "unproven_at_release_level",
           "releaseOutcome": null,
           "evidence": ["validation/start-a1-candidate-qa.json#app_flow"]
         }
@@ -1166,25 +1439,44 @@
         "selectedAssetId": "start-a1-gross-image-v1",
         "assetVersion": "v1",
         "expectedMimeType": "image/jpeg",
+        "repositoryLocalMedia": false,
         "visualConcept": "A large house beside a much smaller tree gives a single clear comparison.",
-        "altText": "groß — بزرگ: Von großer Größe; nicht klein."
+        "visualConceptSource": "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-gross",
+        "visualConceptStatus": "draft_intent_not_verified_depiction",
+        "altText": "groß — بزرگ: Von großer Größe; nicht klein.",
+        "altTextStatus": "derived_not_reviewed",
+        "altTextSource": "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-gross:lemma,persianMeanings,simpleGermanDefinition",
+        "altTextLanguages": ["de", "fa"],
+        "altTextLocale": "de-DE"
       },
       "versions": {
         "draftVersion": 1,
         "candidateCardVersion": 1,
+        "databaseRowsVerified": false,
+        "linkageBasis": "repository_and_migration_baseline_not_live_database",
         "image": {
           "assetId": "start-a1-gross-image-v1",
           "assetVersion": "v1",
           "storageKey": "start-a1-gross/image/v1",
-          "supersededAssetId": null
+          "supersededAssetId": null,
+          "repositoryLocalMedia": false
         },
-        "wordAudio": { "assetId": "start-a1-gross-word-audio-v1", "assetVersion": "v1" },
-        "sentenceAudio": { "assetId": "start-a1-gross-sentence-audio-v1", "assetVersion": "v1" }
+        "wordAudio": {
+          "assetId": "start-a1-gross-word-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": false
+        },
+        "sentenceAudio": {
+          "assetId": "start-a1-gross-sentence-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": false
+        }
       },
       "checks": {
         "german_linguistic": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-gross",
@@ -1194,6 +1486,7 @@
         "persian_translation": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-gross",
@@ -1203,6 +1496,7 @@
         "provenance": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": null,
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-gross",
@@ -1212,6 +1506,7 @@
         "visual": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "evidenceScope": "batch_aggregate_unverified_in_repository",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-gross",
@@ -1222,6 +1517,7 @@
         "audio": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "evidenceScope": "batch_aggregate_unverified_in_repository",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-gross",
@@ -1234,6 +1530,7 @@
         "app_flow": {
           "status": "pending_unproven",
           "candidateStageRecord": null,
+          "evidenceScope": "unproven_at_release_level",
           "releaseOutcome": null,
           "evidence": []
         }
@@ -1259,25 +1556,44 @@
         "selectedAssetId": "start-a1-guten-tag-image-v2",
         "assetVersion": "v2",
         "expectedMimeType": "image/jpeg",
+        "repositoryLocalMedia": true,
         "visualConcept": "Two people greet each other; no written words in the image.",
-        "altText": "Guten Tag — روز بخیر؛ سلام: Eine höfliche Begrüßung am Tag."
+        "visualConceptSource": "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-guten-tag",
+        "visualConceptStatus": "draft_intent_not_verified_depiction",
+        "altText": "Guten Tag — روز بخیر؛ سلام: Eine höfliche Begrüßung am Tag.",
+        "altTextStatus": "derived_not_reviewed",
+        "altTextSource": "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-guten-tag:lemma,persianMeanings,simpleGermanDefinition",
+        "altTextLanguages": ["de", "fa"],
+        "altTextLocale": "de-DE"
       },
       "versions": {
         "draftVersion": 1,
         "candidateCardVersion": 1,
+        "databaseRowsVerified": false,
+        "linkageBasis": "repository_and_migration_baseline_not_live_database",
         "image": {
           "assetId": "start-a1-guten-tag-image-v2",
           "assetVersion": "v2",
           "storageKey": "start-a1-guten-tag/image/v2",
-          "supersededAssetId": "start-a1-guten-tag-image-v1"
+          "supersededAssetId": "start-a1-guten-tag-image-v1",
+          "repositoryLocalMedia": true
         },
-        "wordAudio": { "assetId": "start-a1-guten-tag-word-audio-v1", "assetVersion": "v1" },
-        "sentenceAudio": { "assetId": "start-a1-guten-tag-sentence-audio-v1", "assetVersion": "v1" }
+        "wordAudio": {
+          "assetId": "start-a1-guten-tag-word-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": true
+        },
+        "sentenceAudio": {
+          "assetId": "start-a1-guten-tag-sentence-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": true
+        }
       },
       "checks": {
         "german_linguistic": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-guten-tag",
@@ -1287,6 +1603,7 @@
         "persian_translation": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-guten-tag",
@@ -1296,6 +1613,7 @@
         "provenance": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-provenance-ledger.json#start-a1-guten-tag",
@@ -1305,6 +1623,7 @@
         "visual": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-media-attachment-draft.json#start-a1-guten-tag-image-v1",
@@ -1316,6 +1635,7 @@
         "audio": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-media-attachment-draft.json#start-a1-guten-tag-word-audio-v1",
@@ -1327,6 +1647,7 @@
         "app_flow": {
           "status": "pending_unproven",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "unproven_at_release_level",
           "releaseOutcome": null,
           "evidence": ["validation/start-a1-candidate-qa.json#app_flow"]
         }
@@ -1352,25 +1673,44 @@
         "selectedAssetId": "start-a1-haus-image-v2",
         "assetVersion": "v2",
         "expectedMimeType": "image/jpeg",
+        "repositoryLocalMedia": true,
         "visualConcept": "A small house is the clear primary object; Bobo may stand near the door.",
-        "altText": "Haus — خانه: Ein Gebäude, in dem Menschen wohnen."
+        "visualConceptSource": "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-haus",
+        "visualConceptStatus": "draft_intent_not_verified_depiction",
+        "altText": "Haus — خانه: Ein Gebäude, in dem Menschen wohnen.",
+        "altTextStatus": "derived_not_reviewed",
+        "altTextSource": "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-haus:lemma,persianMeanings,simpleGermanDefinition",
+        "altTextLanguages": ["de", "fa"],
+        "altTextLocale": "de-DE"
       },
       "versions": {
         "draftVersion": 1,
         "candidateCardVersion": 1,
+        "databaseRowsVerified": false,
+        "linkageBasis": "repository_and_migration_baseline_not_live_database",
         "image": {
           "assetId": "start-a1-haus-image-v2",
           "assetVersion": "v2",
           "storageKey": "start-a1-haus/image/v2",
-          "supersededAssetId": "start-a1-haus-image-v1"
+          "supersededAssetId": "start-a1-haus-image-v1",
+          "repositoryLocalMedia": true
         },
-        "wordAudio": { "assetId": "start-a1-haus-word-audio-v1", "assetVersion": "v1" },
-        "sentenceAudio": { "assetId": "start-a1-haus-sentence-audio-v1", "assetVersion": "v1" }
+        "wordAudio": {
+          "assetId": "start-a1-haus-word-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": true
+        },
+        "sentenceAudio": {
+          "assetId": "start-a1-haus-sentence-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": true
+        }
       },
       "checks": {
         "german_linguistic": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-haus",
@@ -1380,6 +1720,7 @@
         "persian_translation": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-haus",
@@ -1389,6 +1730,7 @@
         "provenance": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-provenance-ledger.json#start-a1-haus",
@@ -1398,6 +1740,7 @@
         "visual": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-media-attachment-draft.json#start-a1-haus-image-v1",
@@ -1409,6 +1752,7 @@
         "audio": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-media-attachment-draft.json#start-a1-haus-word-audio-v1",
@@ -1420,6 +1764,7 @@
         "app_flow": {
           "status": "pending_unproven",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "unproven_at_release_level",
           "releaseOutcome": null,
           "evidence": ["validation/start-a1-candidate-qa.json#app_flow"]
         }
@@ -1445,25 +1790,44 @@
         "selectedAssetId": "start-a1-kaffee-image-v1",
         "assetVersion": "v1",
         "expectedMimeType": "image/jpeg",
+        "repositoryLocalMedia": false,
         "visualConcept": "A cup of coffee is the dominant object; steam makes it readable.",
-        "altText": "Kaffee — قهوه: Ein heißes Getränk, das viele Menschen am Morgen trinken."
+        "visualConceptSource": "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-kaffee",
+        "visualConceptStatus": "draft_intent_not_verified_depiction",
+        "altText": "Kaffee — قهوه: Ein heißes Getränk, das viele Menschen am Morgen trinken.",
+        "altTextStatus": "derived_not_reviewed",
+        "altTextSource": "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-kaffee:lemma,persianMeanings,simpleGermanDefinition",
+        "altTextLanguages": ["de", "fa"],
+        "altTextLocale": "de-DE"
       },
       "versions": {
         "draftVersion": 1,
         "candidateCardVersion": 1,
+        "databaseRowsVerified": false,
+        "linkageBasis": "repository_and_migration_baseline_not_live_database",
         "image": {
           "assetId": "start-a1-kaffee-image-v1",
           "assetVersion": "v1",
           "storageKey": "start-a1-kaffee/image/v1",
-          "supersededAssetId": null
+          "supersededAssetId": null,
+          "repositoryLocalMedia": false
         },
-        "wordAudio": { "assetId": "start-a1-kaffee-word-audio-v1", "assetVersion": "v1" },
-        "sentenceAudio": { "assetId": "start-a1-kaffee-sentence-audio-v1", "assetVersion": "v1" }
+        "wordAudio": {
+          "assetId": "start-a1-kaffee-word-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": false
+        },
+        "sentenceAudio": {
+          "assetId": "start-a1-kaffee-sentence-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": false
+        }
       },
       "checks": {
         "german_linguistic": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-kaffee",
@@ -1473,6 +1837,7 @@
         "persian_translation": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-kaffee",
@@ -1482,6 +1847,7 @@
         "provenance": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": null,
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-kaffee",
@@ -1491,6 +1857,7 @@
         "visual": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "evidenceScope": "batch_aggregate_unverified_in_repository",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-kaffee",
@@ -1501,6 +1868,7 @@
         "audio": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "evidenceScope": "batch_aggregate_unverified_in_repository",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-kaffee",
@@ -1512,6 +1880,7 @@
         "app_flow": {
           "status": "pending_unproven",
           "candidateStageRecord": null,
+          "evidenceScope": "unproven_at_release_level",
           "releaseOutcome": null,
           "evidence": []
         }
@@ -1537,25 +1906,44 @@
         "selectedAssetId": "start-a1-kalt-image-v1",
         "assetVersion": "v1",
         "expectedMimeType": "image/jpeg",
+        "repositoryLocalMedia": false,
         "visualConcept": "A winter window scene with frost makes the cold concept unmistakable.",
-        "altText": "kalt — سرد: Mit niedriger Temperatur; nicht warm."
+        "visualConceptSource": "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-kalt",
+        "visualConceptStatus": "draft_intent_not_verified_depiction",
+        "altText": "kalt — سرد: Mit niedriger Temperatur; nicht warm.",
+        "altTextStatus": "derived_not_reviewed",
+        "altTextSource": "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-kalt:lemma,persianMeanings,simpleGermanDefinition",
+        "altTextLanguages": ["de", "fa"],
+        "altTextLocale": "de-DE"
       },
       "versions": {
         "draftVersion": 1,
         "candidateCardVersion": 1,
+        "databaseRowsVerified": false,
+        "linkageBasis": "repository_and_migration_baseline_not_live_database",
         "image": {
           "assetId": "start-a1-kalt-image-v1",
           "assetVersion": "v1",
           "storageKey": "start-a1-kalt/image/v1",
-          "supersededAssetId": null
+          "supersededAssetId": null,
+          "repositoryLocalMedia": false
         },
-        "wordAudio": { "assetId": "start-a1-kalt-word-audio-v1", "assetVersion": "v1" },
-        "sentenceAudio": { "assetId": "start-a1-kalt-sentence-audio-v1", "assetVersion": "v1" }
+        "wordAudio": {
+          "assetId": "start-a1-kalt-word-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": false
+        },
+        "sentenceAudio": {
+          "assetId": "start-a1-kalt-sentence-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": false
+        }
       },
       "checks": {
         "german_linguistic": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-kalt",
@@ -1565,6 +1953,7 @@
         "persian_translation": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-kalt",
@@ -1574,6 +1963,7 @@
         "provenance": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": null,
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-kalt",
@@ -1583,6 +1973,7 @@
         "visual": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "evidenceScope": "batch_aggregate_unverified_in_repository",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-kalt",
@@ -1593,6 +1984,7 @@
         "audio": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "evidenceScope": "batch_aggregate_unverified_in_repository",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-kalt",
@@ -1604,6 +1996,7 @@
         "app_flow": {
           "status": "pending_unproven",
           "candidateStageRecord": null,
+          "evidenceScope": "unproven_at_release_level",
           "releaseOutcome": null,
           "evidence": []
         }
@@ -1629,25 +2022,44 @@
         "selectedAssetId": "start-a1-kaufen-image-v2",
         "assetVersion": "v2",
         "expectedMimeType": "image/jpeg",
+        "repositoryLocalMedia": true,
         "visualConcept": "Bobo buys bread at a simple shop counter.",
-        "altText": "kaufen — خریدن: Etwas gegen Geld bekommen."
+        "visualConceptSource": "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-kaufen",
+        "visualConceptStatus": "draft_intent_not_verified_depiction",
+        "altText": "kaufen — خریدن: Etwas gegen Geld bekommen.",
+        "altTextStatus": "derived_not_reviewed",
+        "altTextSource": "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-kaufen:lemma,persianMeanings,simpleGermanDefinition",
+        "altTextLanguages": ["de", "fa"],
+        "altTextLocale": "de-DE"
       },
       "versions": {
         "draftVersion": 1,
         "candidateCardVersion": 1,
+        "databaseRowsVerified": false,
+        "linkageBasis": "repository_and_migration_baseline_not_live_database",
         "image": {
           "assetId": "start-a1-kaufen-image-v2",
           "assetVersion": "v2",
           "storageKey": "start-a1-kaufen/image/v2",
-          "supersededAssetId": "start-a1-kaufen-image-v1"
+          "supersededAssetId": "start-a1-kaufen-image-v1",
+          "repositoryLocalMedia": true
         },
-        "wordAudio": { "assetId": "start-a1-kaufen-word-audio-v1", "assetVersion": "v1" },
-        "sentenceAudio": { "assetId": "start-a1-kaufen-sentence-audio-v1", "assetVersion": "v1" }
+        "wordAudio": {
+          "assetId": "start-a1-kaufen-word-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": true
+        },
+        "sentenceAudio": {
+          "assetId": "start-a1-kaufen-sentence-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": true
+        }
       },
       "checks": {
         "german_linguistic": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-kaufen",
@@ -1657,6 +2069,7 @@
         "persian_translation": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-kaufen",
@@ -1666,6 +2079,7 @@
         "provenance": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-provenance-ledger.json#start-a1-kaufen",
@@ -1675,6 +2089,7 @@
         "visual": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-media-attachment-draft.json#start-a1-kaufen-image-v1",
@@ -1686,6 +2101,7 @@
         "audio": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-media-attachment-draft.json#start-a1-kaufen-word-audio-v1",
@@ -1697,6 +2113,7 @@
         "app_flow": {
           "status": "pending_unproven",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "unproven_at_release_level",
           "releaseOutcome": null,
           "evidence": ["validation/start-a1-candidate-qa.json#app_flow"]
         }
@@ -1722,25 +2139,44 @@
         "selectedAssetId": "start-a1-klein-image-v2",
         "assetVersion": "v2",
         "expectedMimeType": "image/jpeg",
+        "repositoryLocalMedia": true,
         "visualConcept": "A small house beside a much larger tree gives a single clear comparison.",
-        "altText": "klein — کوچک: Nicht groß."
+        "visualConceptSource": "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-klein",
+        "visualConceptStatus": "draft_intent_not_verified_depiction",
+        "altText": "klein — کوچک: Nicht groß.",
+        "altTextStatus": "derived_not_reviewed",
+        "altTextSource": "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-klein:lemma,persianMeanings,simpleGermanDefinition",
+        "altTextLanguages": ["de", "fa"],
+        "altTextLocale": "de-DE"
       },
       "versions": {
         "draftVersion": 1,
         "candidateCardVersion": 1,
+        "databaseRowsVerified": false,
+        "linkageBasis": "repository_and_migration_baseline_not_live_database",
         "image": {
           "assetId": "start-a1-klein-image-v2",
           "assetVersion": "v2",
           "storageKey": "start-a1-klein/image/v2",
-          "supersededAssetId": "start-a1-klein-image-v1"
+          "supersededAssetId": "start-a1-klein-image-v1",
+          "repositoryLocalMedia": true
         },
-        "wordAudio": { "assetId": "start-a1-klein-word-audio-v1", "assetVersion": "v1" },
-        "sentenceAudio": { "assetId": "start-a1-klein-sentence-audio-v1", "assetVersion": "v1" }
+        "wordAudio": {
+          "assetId": "start-a1-klein-word-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": true
+        },
+        "sentenceAudio": {
+          "assetId": "start-a1-klein-sentence-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": true
+        }
       },
       "checks": {
         "german_linguistic": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-klein",
@@ -1750,6 +2186,7 @@
         "persian_translation": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-klein",
@@ -1759,6 +2196,7 @@
         "provenance": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-provenance-ledger.json#start-a1-klein",
@@ -1768,6 +2206,7 @@
         "visual": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-media-attachment-draft.json#start-a1-klein-image-v1",
@@ -1779,6 +2218,7 @@
         "audio": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-media-attachment-draft.json#start-a1-klein-word-audio-v1",
@@ -1790,6 +2230,7 @@
         "app_flow": {
           "status": "pending_unproven",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "unproven_at_release_level",
           "releaseOutcome": null,
           "evidence": ["validation/start-a1-candidate-qa.json#app_flow"]
         }
@@ -1815,25 +2256,44 @@
         "selectedAssetId": "start-a1-lernen-image-v2",
         "assetVersion": "v2",
         "expectedMimeType": "image/jpeg",
+        "repositoryLocalMedia": true,
         "visualConcept": "Bobo studies with a book and is the clear action subject.",
-        "altText": "lernen — یاد گرفتن: Etwas Neues verstehen und üben."
+        "visualConceptSource": "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-lernen",
+        "visualConceptStatus": "draft_intent_not_verified_depiction",
+        "altText": "lernen — یاد گرفتن: Etwas Neues verstehen und üben.",
+        "altTextStatus": "derived_not_reviewed",
+        "altTextSource": "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-lernen:lemma,persianMeanings,simpleGermanDefinition",
+        "altTextLanguages": ["de", "fa"],
+        "altTextLocale": "de-DE"
       },
       "versions": {
         "draftVersion": 1,
         "candidateCardVersion": 1,
+        "databaseRowsVerified": false,
+        "linkageBasis": "repository_and_migration_baseline_not_live_database",
         "image": {
           "assetId": "start-a1-lernen-image-v2",
           "assetVersion": "v2",
           "storageKey": "start-a1-lernen/image/v2",
-          "supersededAssetId": "start-a1-lernen-image-v1"
+          "supersededAssetId": "start-a1-lernen-image-v1",
+          "repositoryLocalMedia": true
         },
-        "wordAudio": { "assetId": "start-a1-lernen-word-audio-v1", "assetVersion": "v1" },
-        "sentenceAudio": { "assetId": "start-a1-lernen-sentence-audio-v1", "assetVersion": "v1" }
+        "wordAudio": {
+          "assetId": "start-a1-lernen-word-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": true
+        },
+        "sentenceAudio": {
+          "assetId": "start-a1-lernen-sentence-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": true
+        }
       },
       "checks": {
         "german_linguistic": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-lernen",
@@ -1843,6 +2303,7 @@
         "persian_translation": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-lernen",
@@ -1852,6 +2313,7 @@
         "provenance": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-provenance-ledger.json#start-a1-lernen",
@@ -1861,6 +2323,7 @@
         "visual": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-media-attachment-draft.json#start-a1-lernen-image-v1",
@@ -1872,6 +2335,7 @@
         "audio": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-media-attachment-draft.json#start-a1-lernen-word-audio-v1",
@@ -1883,6 +2347,7 @@
         "app_flow": {
           "status": "pending_unproven",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "unproven_at_release_level",
           "releaseOutcome": null,
           "evidence": ["validation/start-a1-candidate-qa.json#app_flow"]
         }
@@ -1908,25 +2373,44 @@
         "selectedAssetId": "start-a1-milch-image-v1",
         "assetVersion": "v1",
         "expectedMimeType": "image/jpeg",
+        "repositoryLocalMedia": false,
         "visualConcept": "A glass of milk is the clear primary object.",
-        "altText": "Milch — شیر: Ein weißes Getränk, das von der Kuh kommt."
+        "visualConceptSource": "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-milch",
+        "visualConceptStatus": "draft_intent_not_verified_depiction",
+        "altText": "Milch — شیر: Ein weißes Getränk, das von der Kuh kommt.",
+        "altTextStatus": "derived_not_reviewed",
+        "altTextSource": "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-milch:lemma,persianMeanings,simpleGermanDefinition",
+        "altTextLanguages": ["de", "fa"],
+        "altTextLocale": "de-DE"
       },
       "versions": {
         "draftVersion": 1,
         "candidateCardVersion": 1,
+        "databaseRowsVerified": false,
+        "linkageBasis": "repository_and_migration_baseline_not_live_database",
         "image": {
           "assetId": "start-a1-milch-image-v1",
           "assetVersion": "v1",
           "storageKey": "start-a1-milch/image/v1",
-          "supersededAssetId": null
+          "supersededAssetId": null,
+          "repositoryLocalMedia": false
         },
-        "wordAudio": { "assetId": "start-a1-milch-word-audio-v1", "assetVersion": "v1" },
-        "sentenceAudio": { "assetId": "start-a1-milch-sentence-audio-v1", "assetVersion": "v1" }
+        "wordAudio": {
+          "assetId": "start-a1-milch-word-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": false
+        },
+        "sentenceAudio": {
+          "assetId": "start-a1-milch-sentence-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": false
+        }
       },
       "checks": {
         "german_linguistic": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-milch",
@@ -1936,6 +2420,7 @@
         "persian_translation": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-milch",
@@ -1945,6 +2430,7 @@
         "provenance": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": null,
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-milch",
@@ -1954,6 +2440,7 @@
         "visual": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "evidenceScope": "batch_aggregate_unverified_in_repository",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-milch",
@@ -1964,6 +2451,7 @@
         "audio": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "evidenceScope": "batch_aggregate_unverified_in_repository",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-milch",
@@ -1975,6 +2463,7 @@
         "app_flow": {
           "status": "pending_unproven",
           "candidateStageRecord": null,
+          "evidenceScope": "unproven_at_release_level",
           "releaseOutcome": null,
           "evidence": []
         }
@@ -2000,25 +2489,44 @@
         "selectedAssetId": "start-a1-muede-image-v2",
         "assetVersion": "v2",
         "expectedMimeType": "image/jpeg",
+        "repositoryLocalMedia": true,
         "visualConcept": "A sleepy Bobo and a simple bedside lamp clarify the state.",
-        "altText": "müde — خسته: Man braucht Schlaf oder Ruhe."
+        "visualConceptSource": "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-muede",
+        "visualConceptStatus": "draft_intent_not_verified_depiction",
+        "altText": "müde — خسته: Man braucht Schlaf oder Ruhe.",
+        "altTextStatus": "derived_not_reviewed",
+        "altTextSource": "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-muede:lemma,persianMeanings,simpleGermanDefinition",
+        "altTextLanguages": ["de", "fa"],
+        "altTextLocale": "de-DE"
       },
       "versions": {
         "draftVersion": 1,
         "candidateCardVersion": 1,
+        "databaseRowsVerified": false,
+        "linkageBasis": "repository_and_migration_baseline_not_live_database",
         "image": {
           "assetId": "start-a1-muede-image-v2",
           "assetVersion": "v2",
           "storageKey": "start-a1-muede/image/v2",
-          "supersededAssetId": "start-a1-muede-image-v1"
+          "supersededAssetId": "start-a1-muede-image-v1",
+          "repositoryLocalMedia": true
         },
-        "wordAudio": { "assetId": "start-a1-muede-word-audio-v1", "assetVersion": "v1" },
-        "sentenceAudio": { "assetId": "start-a1-muede-sentence-audio-v1", "assetVersion": "v1" }
+        "wordAudio": {
+          "assetId": "start-a1-muede-word-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": true
+        },
+        "sentenceAudio": {
+          "assetId": "start-a1-muede-sentence-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": true
+        }
       },
       "checks": {
         "german_linguistic": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-muede",
@@ -2028,6 +2536,7 @@
         "persian_translation": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-muede",
@@ -2037,6 +2546,7 @@
         "provenance": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-provenance-ledger.json#start-a1-muede",
@@ -2046,6 +2556,7 @@
         "visual": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-media-attachment-draft.json#start-a1-muede-image-v1",
@@ -2057,6 +2568,7 @@
         "audio": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-media-attachment-draft.json#start-a1-muede-word-audio-v1",
@@ -2068,6 +2580,7 @@
         "app_flow": {
           "status": "pending_unproven",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "unproven_at_release_level",
           "releaseOutcome": null,
           "evidence": ["validation/start-a1-candidate-qa.json#app_flow"]
         }
@@ -2093,25 +2606,44 @@
         "selectedAssetId": "start-a1-neu-image-v1",
         "assetVersion": "v1",
         "expectedMimeType": "image/jpeg",
+        "repositoryLocalMedia": false,
         "visualConcept": "A shiny new bicycle beside an old worn one gives a single clear comparison.",
-        "altText": "neu — جدید: Noch nicht lange da; nicht alt."
+        "visualConceptSource": "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-neu",
+        "visualConceptStatus": "draft_intent_not_verified_depiction",
+        "altText": "neu — جدید: Noch nicht lange da; nicht alt.",
+        "altTextStatus": "derived_not_reviewed",
+        "altTextSource": "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-neu:lemma,persianMeanings,simpleGermanDefinition",
+        "altTextLanguages": ["de", "fa"],
+        "altTextLocale": "de-DE"
       },
       "versions": {
         "draftVersion": 1,
         "candidateCardVersion": 1,
+        "databaseRowsVerified": false,
+        "linkageBasis": "repository_and_migration_baseline_not_live_database",
         "image": {
           "assetId": "start-a1-neu-image-v1",
           "assetVersion": "v1",
           "storageKey": "start-a1-neu/image/v1",
-          "supersededAssetId": null
+          "supersededAssetId": null,
+          "repositoryLocalMedia": false
         },
-        "wordAudio": { "assetId": "start-a1-neu-word-audio-v1", "assetVersion": "v1" },
-        "sentenceAudio": { "assetId": "start-a1-neu-sentence-audio-v1", "assetVersion": "v1" }
+        "wordAudio": {
+          "assetId": "start-a1-neu-word-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": false
+        },
+        "sentenceAudio": {
+          "assetId": "start-a1-neu-sentence-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": false
+        }
       },
       "checks": {
         "german_linguistic": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-neu",
@@ -2121,6 +2653,7 @@
         "persian_translation": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-neu",
@@ -2130,6 +2663,7 @@
         "provenance": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": null,
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-neu",
@@ -2139,6 +2673,7 @@
         "visual": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "evidenceScope": "batch_aggregate_unverified_in_repository",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-neu",
@@ -2149,6 +2684,7 @@
         "audio": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "evidenceScope": "batch_aggregate_unverified_in_repository",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-neu",
@@ -2160,6 +2696,7 @@
         "app_flow": {
           "status": "pending_unproven",
           "candidateStageRecord": null,
+          "evidenceScope": "unproven_at_release_level",
           "releaseOutcome": null,
           "evidence": []
         }
@@ -2185,25 +2722,44 @@
         "selectedAssetId": "start-a1-schule-image-v2",
         "assetVersion": "v2",
         "expectedMimeType": "image/jpeg",
+        "repositoryLocalMedia": true,
         "visualConcept": "A school building is the main subject; Bobo may be a small student.",
-        "altText": "Schule — مدرسه: Ein Ort, an dem Kinder und Jugendliche lernen."
+        "visualConceptSource": "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-schule",
+        "visualConceptStatus": "draft_intent_not_verified_depiction",
+        "altText": "Schule — مدرسه: Ein Ort, an dem Kinder und Jugendliche lernen.",
+        "altTextStatus": "derived_not_reviewed",
+        "altTextSource": "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-schule:lemma,persianMeanings,simpleGermanDefinition",
+        "altTextLanguages": ["de", "fa"],
+        "altTextLocale": "de-DE"
       },
       "versions": {
         "draftVersion": 1,
         "candidateCardVersion": 1,
+        "databaseRowsVerified": false,
+        "linkageBasis": "repository_and_migration_baseline_not_live_database",
         "image": {
           "assetId": "start-a1-schule-image-v2",
           "assetVersion": "v2",
           "storageKey": "start-a1-schule/image/v2",
-          "supersededAssetId": "start-a1-schule-image-v1"
+          "supersededAssetId": "start-a1-schule-image-v1",
+          "repositoryLocalMedia": true
         },
-        "wordAudio": { "assetId": "start-a1-schule-word-audio-v1", "assetVersion": "v1" },
-        "sentenceAudio": { "assetId": "start-a1-schule-sentence-audio-v1", "assetVersion": "v1" }
+        "wordAudio": {
+          "assetId": "start-a1-schule-word-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": true
+        },
+        "sentenceAudio": {
+          "assetId": "start-a1-schule-sentence-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": true
+        }
       },
       "checks": {
         "german_linguistic": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-schule",
@@ -2213,6 +2769,7 @@
         "persian_translation": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-schule",
@@ -2222,6 +2779,7 @@
         "provenance": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-provenance-ledger.json#start-a1-schule",
@@ -2231,6 +2789,7 @@
         "visual": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-media-attachment-draft.json#start-a1-schule-image-v1",
@@ -2242,6 +2801,7 @@
         "audio": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-media-attachment-draft.json#start-a1-schule-word-audio-v1",
@@ -2253,6 +2813,7 @@
         "app_flow": {
           "status": "pending_unproven",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "unproven_at_release_level",
           "releaseOutcome": null,
           "evidence": ["validation/start-a1-candidate-qa.json#app_flow"]
         }
@@ -2278,25 +2839,44 @@
         "selectedAssetId": "start-a1-stadt-image-v1",
         "assetVersion": "v1",
         "expectedMimeType": "image/jpeg",
+        "repositoryLocalMedia": false,
         "visualConcept": "A small city skyline carries the meaning; Bobo may be a small pedestrian.",
-        "altText": "Stadt — شهر: Ein großer Ort, in dem viele Menschen wohnen."
+        "visualConceptSource": "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-stadt",
+        "visualConceptStatus": "draft_intent_not_verified_depiction",
+        "altText": "Stadt — شهر: Ein großer Ort, in dem viele Menschen wohnen.",
+        "altTextStatus": "derived_not_reviewed",
+        "altTextSource": "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-stadt:lemma,persianMeanings,simpleGermanDefinition",
+        "altTextLanguages": ["de", "fa"],
+        "altTextLocale": "de-DE"
       },
       "versions": {
         "draftVersion": 1,
         "candidateCardVersion": 1,
+        "databaseRowsVerified": false,
+        "linkageBasis": "repository_and_migration_baseline_not_live_database",
         "image": {
           "assetId": "start-a1-stadt-image-v1",
           "assetVersion": "v1",
           "storageKey": "start-a1-stadt/image/v1",
-          "supersededAssetId": null
+          "supersededAssetId": null,
+          "repositoryLocalMedia": false
         },
-        "wordAudio": { "assetId": "start-a1-stadt-word-audio-v1", "assetVersion": "v1" },
-        "sentenceAudio": { "assetId": "start-a1-stadt-sentence-audio-v1", "assetVersion": "v1" }
+        "wordAudio": {
+          "assetId": "start-a1-stadt-word-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": false
+        },
+        "sentenceAudio": {
+          "assetId": "start-a1-stadt-sentence-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": false
+        }
       },
       "checks": {
         "german_linguistic": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-stadt",
@@ -2306,6 +2886,7 @@
         "persian_translation": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-stadt",
@@ -2315,6 +2896,7 @@
         "provenance": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": null,
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-stadt",
@@ -2324,6 +2906,7 @@
         "visual": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "evidenceScope": "batch_aggregate_unverified_in_repository",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-stadt",
@@ -2334,6 +2917,7 @@
         "audio": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "evidenceScope": "batch_aggregate_unverified_in_repository",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-stadt",
@@ -2345,6 +2929,7 @@
         "app_flow": {
           "status": "pending_unproven",
           "candidateStageRecord": null,
+          "evidenceScope": "unproven_at_release_level",
           "releaseOutcome": null,
           "evidence": []
         }
@@ -2370,28 +2955,44 @@
         "selectedAssetId": "start-a1-supermarkt-image-v1",
         "assetVersion": "v1",
         "expectedMimeType": "image/jpeg",
+        "repositoryLocalMedia": false,
         "visualConcept": "A supermarket interior with shelves carries the meaning; Bobo shops with a basket.",
-        "altText": "Supermarkt — سوپرمارکت: Ein großes Geschäft, in dem man Lebensmittel kauft."
+        "visualConceptSource": "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-supermarkt",
+        "visualConceptStatus": "draft_intent_not_verified_depiction",
+        "altText": "Supermarkt — سوپرمارکت: Ein großes Geschäft, in dem man Lebensmittel kauft.",
+        "altTextStatus": "derived_not_reviewed",
+        "altTextSource": "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-supermarkt:lemma,persianMeanings,simpleGermanDefinition",
+        "altTextLanguages": ["de", "fa"],
+        "altTextLocale": "de-DE"
       },
       "versions": {
         "draftVersion": 1,
         "candidateCardVersion": 1,
+        "databaseRowsVerified": false,
+        "linkageBasis": "repository_and_migration_baseline_not_live_database",
         "image": {
           "assetId": "start-a1-supermarkt-image-v1",
           "assetVersion": "v1",
           "storageKey": "start-a1-supermarkt/image/v1",
-          "supersededAssetId": null
+          "supersededAssetId": null,
+          "repositoryLocalMedia": false
         },
-        "wordAudio": { "assetId": "start-a1-supermarkt-word-audio-v1", "assetVersion": "v1" },
+        "wordAudio": {
+          "assetId": "start-a1-supermarkt-word-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": false
+        },
         "sentenceAudio": {
           "assetId": "start-a1-supermarkt-sentence-audio-v1",
-          "assetVersion": "v1"
+          "assetVersion": "v1",
+          "repositoryLocalMedia": false
         }
       },
       "checks": {
         "german_linguistic": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-supermarkt",
@@ -2401,6 +3002,7 @@
         "persian_translation": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-supermarkt",
@@ -2410,6 +3012,7 @@
         "provenance": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": null,
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-supermarkt",
@@ -2419,6 +3022,7 @@
         "visual": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "evidenceScope": "batch_aggregate_unverified_in_repository",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-supermarkt",
@@ -2429,6 +3033,7 @@
         "audio": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "evidenceScope": "batch_aggregate_unverified_in_repository",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-supermarkt",
@@ -2440,6 +3045,7 @@
         "app_flow": {
           "status": "pending_unproven",
           "candidateStageRecord": null,
+          "evidenceScope": "unproven_at_release_level",
           "releaseOutcome": null,
           "evidence": []
         }
@@ -2465,25 +3071,44 @@
         "selectedAssetId": "start-a1-tee-image-v1",
         "assetVersion": "v1",
         "expectedMimeType": "image/jpeg",
+        "repositoryLocalMedia": false,
         "visualConcept": "A cup of tea with a tea bag is the dominant object.",
-        "altText": "Tee — چای: Ein heißes Getränk aus Blättern."
+        "visualConceptSource": "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-tee",
+        "visualConceptStatus": "draft_intent_not_verified_depiction",
+        "altText": "Tee — چای: Ein heißes Getränk aus Blättern.",
+        "altTextStatus": "derived_not_reviewed",
+        "altTextSource": "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-tee:lemma,persianMeanings,simpleGermanDefinition",
+        "altTextLanguages": ["de", "fa"],
+        "altTextLocale": "de-DE"
       },
       "versions": {
         "draftVersion": 1,
         "candidateCardVersion": 1,
+        "databaseRowsVerified": false,
+        "linkageBasis": "repository_and_migration_baseline_not_live_database",
         "image": {
           "assetId": "start-a1-tee-image-v1",
           "assetVersion": "v1",
           "storageKey": "start-a1-tee/image/v1",
-          "supersededAssetId": null
+          "supersededAssetId": null,
+          "repositoryLocalMedia": false
         },
-        "wordAudio": { "assetId": "start-a1-tee-word-audio-v1", "assetVersion": "v1" },
-        "sentenceAudio": { "assetId": "start-a1-tee-sentence-audio-v1", "assetVersion": "v1" }
+        "wordAudio": {
+          "assetId": "start-a1-tee-word-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": false
+        },
+        "sentenceAudio": {
+          "assetId": "start-a1-tee-sentence-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": false
+        }
       },
       "checks": {
         "german_linguistic": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-tee",
@@ -2493,6 +3118,7 @@
         "persian_translation": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-tee",
@@ -2502,6 +3128,7 @@
         "provenance": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": null,
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-tee",
@@ -2511,6 +3138,7 @@
         "visual": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "evidenceScope": "batch_aggregate_unverified_in_repository",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-tee",
@@ -2521,6 +3149,7 @@
         "audio": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "evidenceScope": "batch_aggregate_unverified_in_repository",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-tee",
@@ -2532,6 +3161,7 @@
         "app_flow": {
           "status": "pending_unproven",
           "candidateStageRecord": null,
+          "evidenceScope": "unproven_at_release_level",
           "releaseOutcome": null,
           "evidence": []
         }
@@ -2557,25 +3187,44 @@
         "selectedAssetId": "start-a1-tisch-image-v2",
         "assetVersion": "v2",
         "expectedMimeType": "image/jpeg",
+        "repositoryLocalMedia": true,
         "visualConcept": "A table is the only dominant object; no Bobo needed.",
-        "altText": "Tisch — میز: Ein Möbelstück mit einer flachen Fläche."
+        "visualConceptSource": "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-tisch",
+        "visualConceptStatus": "draft_intent_not_verified_depiction",
+        "altText": "Tisch — میز: Ein Möbelstück mit einer flachen Fläche.",
+        "altTextStatus": "derived_not_reviewed",
+        "altTextSource": "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-tisch:lemma,persianMeanings,simpleGermanDefinition",
+        "altTextLanguages": ["de", "fa"],
+        "altTextLocale": "de-DE"
       },
       "versions": {
         "draftVersion": 1,
         "candidateCardVersion": 1,
+        "databaseRowsVerified": false,
+        "linkageBasis": "repository_and_migration_baseline_not_live_database",
         "image": {
           "assetId": "start-a1-tisch-image-v2",
           "assetVersion": "v2",
           "storageKey": "start-a1-tisch/image/v2",
-          "supersededAssetId": "start-a1-tisch-image-v1"
+          "supersededAssetId": "start-a1-tisch-image-v1",
+          "repositoryLocalMedia": true
         },
-        "wordAudio": { "assetId": "start-a1-tisch-word-audio-v1", "assetVersion": "v1" },
-        "sentenceAudio": { "assetId": "start-a1-tisch-sentence-audio-v1", "assetVersion": "v1" }
+        "wordAudio": {
+          "assetId": "start-a1-tisch-word-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": true
+        },
+        "sentenceAudio": {
+          "assetId": "start-a1-tisch-sentence-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": true
+        }
       },
       "checks": {
         "german_linguistic": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-tisch",
@@ -2585,6 +3234,7 @@
         "persian_translation": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-tisch",
@@ -2594,6 +3244,7 @@
         "provenance": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-provenance-ledger.json#start-a1-tisch",
@@ -2603,6 +3254,7 @@
         "visual": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-media-attachment-draft.json#start-a1-tisch-image-v1",
@@ -2614,6 +3266,7 @@
         "audio": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-media-attachment-draft.json#start-a1-tisch-word-audio-v1",
@@ -2625,6 +3278,7 @@
         "app_flow": {
           "status": "pending_unproven",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "unproven_at_release_level",
           "releaseOutcome": null,
           "evidence": ["validation/start-a1-candidate-qa.json#app_flow"]
         }
@@ -2650,25 +3304,44 @@
         "selectedAssetId": "start-a1-trinken-image-v1",
         "assetVersion": "v1",
         "expectedMimeType": "image/jpeg",
+        "repositoryLocalMedia": false,
         "visualConcept": "Bobo drinks a glass of water and is the clear action subject.",
-        "altText": "trinken — نوشیدن: Eine Flüssigkeit zu sich nehmen."
+        "visualConceptSource": "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-trinken",
+        "visualConceptStatus": "draft_intent_not_verified_depiction",
+        "altText": "trinken — نوشیدن: Eine Flüssigkeit zu sich nehmen.",
+        "altTextStatus": "derived_not_reviewed",
+        "altTextSource": "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-trinken:lemma,persianMeanings,simpleGermanDefinition",
+        "altTextLanguages": ["de", "fa"],
+        "altTextLocale": "de-DE"
       },
       "versions": {
         "draftVersion": 1,
         "candidateCardVersion": 1,
+        "databaseRowsVerified": false,
+        "linkageBasis": "repository_and_migration_baseline_not_live_database",
         "image": {
           "assetId": "start-a1-trinken-image-v1",
           "assetVersion": "v1",
           "storageKey": "start-a1-trinken/image/v1",
-          "supersededAssetId": null
+          "supersededAssetId": null,
+          "repositoryLocalMedia": false
         },
-        "wordAudio": { "assetId": "start-a1-trinken-word-audio-v1", "assetVersion": "v1" },
-        "sentenceAudio": { "assetId": "start-a1-trinken-sentence-audio-v1", "assetVersion": "v1" }
+        "wordAudio": {
+          "assetId": "start-a1-trinken-word-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": false
+        },
+        "sentenceAudio": {
+          "assetId": "start-a1-trinken-sentence-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": false
+        }
       },
       "checks": {
         "german_linguistic": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-trinken",
@@ -2678,6 +3351,7 @@
         "persian_translation": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-trinken",
@@ -2687,6 +3361,7 @@
         "provenance": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": null,
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-trinken",
@@ -2696,6 +3371,7 @@
         "visual": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "evidenceScope": "batch_aggregate_unverified_in_repository",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-trinken",
@@ -2706,6 +3382,7 @@
         "audio": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "evidenceScope": "batch_aggregate_unverified_in_repository",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-trinken",
@@ -2717,6 +3394,7 @@
         "app_flow": {
           "status": "pending_unproven",
           "candidateStageRecord": null,
+          "evidenceScope": "unproven_at_release_level",
           "releaseOutcome": null,
           "evidence": []
         }
@@ -2742,25 +3420,44 @@
         "selectedAssetId": "start-a1-tuer-image-v2",
         "assetVersion": "v2",
         "expectedMimeType": "image/jpeg",
+        "repositoryLocalMedia": true,
         "visualConcept": "An open door clearly shows the concept; Bobo can be small beside it.",
-        "altText": "Tür — در: Man öffnet und schließt sie, um in einen Raum zu gehen."
+        "visualConceptSource": "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-tuer",
+        "visualConceptStatus": "draft_intent_not_verified_depiction",
+        "altText": "Tür — در: Man öffnet und schließt sie, um in einen Raum zu gehen.",
+        "altTextStatus": "derived_not_reviewed",
+        "altTextSource": "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-tuer:lemma,persianMeanings,simpleGermanDefinition",
+        "altTextLanguages": ["de", "fa"],
+        "altTextLocale": "de-DE"
       },
       "versions": {
         "draftVersion": 1,
         "candidateCardVersion": 1,
+        "databaseRowsVerified": false,
+        "linkageBasis": "repository_and_migration_baseline_not_live_database",
         "image": {
           "assetId": "start-a1-tuer-image-v2",
           "assetVersion": "v2",
           "storageKey": "start-a1-tuer/image/v2",
-          "supersededAssetId": "start-a1-tuer-image-v1"
+          "supersededAssetId": "start-a1-tuer-image-v1",
+          "repositoryLocalMedia": true
         },
-        "wordAudio": { "assetId": "start-a1-tuer-word-audio-v1", "assetVersion": "v1" },
-        "sentenceAudio": { "assetId": "start-a1-tuer-sentence-audio-v1", "assetVersion": "v1" }
+        "wordAudio": {
+          "assetId": "start-a1-tuer-word-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": true
+        },
+        "sentenceAudio": {
+          "assetId": "start-a1-tuer-sentence-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": true
+        }
       },
       "checks": {
         "german_linguistic": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-tuer",
@@ -2770,6 +3467,7 @@
         "persian_translation": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-tuer",
@@ -2779,6 +3477,7 @@
         "provenance": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-provenance-ledger.json#start-a1-tuer",
@@ -2788,6 +3487,7 @@
         "visual": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-media-attachment-draft.json#start-a1-tuer-image-v1",
@@ -2799,6 +3499,7 @@
         "audio": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-media-attachment-draft.json#start-a1-tuer-word-audio-v1",
@@ -2810,6 +3511,7 @@
         "app_flow": {
           "status": "pending_unproven",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "unproven_at_release_level",
           "releaseOutcome": null,
           "evidence": ["validation/start-a1-candidate-qa.json#app_flow"]
         }
@@ -2835,25 +3537,44 @@
         "selectedAssetId": "start-a1-uhr-image-v1",
         "assetVersion": "v1",
         "expectedMimeType": "image/jpeg",
+        "repositoryLocalMedia": false,
         "visualConcept": "A wall clock is the only dominant object; the time concept is unambiguous.",
-        "altText": "Uhr — ساعت: Ein Gerät, das die Zeit zeigt."
+        "visualConceptSource": "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-uhr",
+        "visualConceptStatus": "draft_intent_not_verified_depiction",
+        "altText": "Uhr — ساعت: Ein Gerät, das die Zeit zeigt.",
+        "altTextStatus": "derived_not_reviewed",
+        "altTextSource": "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-uhr:lemma,persianMeanings,simpleGermanDefinition",
+        "altTextLanguages": ["de", "fa"],
+        "altTextLocale": "de-DE"
       },
       "versions": {
         "draftVersion": 1,
         "candidateCardVersion": 1,
+        "databaseRowsVerified": false,
+        "linkageBasis": "repository_and_migration_baseline_not_live_database",
         "image": {
           "assetId": "start-a1-uhr-image-v1",
           "assetVersion": "v1",
           "storageKey": "start-a1-uhr/image/v1",
-          "supersededAssetId": null
+          "supersededAssetId": null,
+          "repositoryLocalMedia": false
         },
-        "wordAudio": { "assetId": "start-a1-uhr-word-audio-v1", "assetVersion": "v1" },
-        "sentenceAudio": { "assetId": "start-a1-uhr-sentence-audio-v1", "assetVersion": "v1" }
+        "wordAudio": {
+          "assetId": "start-a1-uhr-word-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": false
+        },
+        "sentenceAudio": {
+          "assetId": "start-a1-uhr-sentence-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": false
+        }
       },
       "checks": {
         "german_linguistic": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-uhr",
@@ -2863,6 +3584,7 @@
         "persian_translation": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-uhr",
@@ -2872,6 +3594,7 @@
         "provenance": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": null,
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-uhr",
@@ -2881,6 +3604,7 @@
         "visual": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "evidenceScope": "batch_aggregate_unverified_in_repository",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-uhr",
@@ -2891,6 +3615,7 @@
         "audio": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "evidenceScope": "batch_aggregate_unverified_in_repository",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-uhr",
@@ -2902,6 +3627,7 @@
         "app_flow": {
           "status": "pending_unproven",
           "candidateStageRecord": null,
+          "evidenceScope": "unproven_at_release_level",
           "releaseOutcome": null,
           "evidence": []
         }
@@ -2927,25 +3653,44 @@
         "selectedAssetId": "start-a1-warten-image-v2",
         "assetVersion": "v2",
         "expectedMimeType": "image/jpeg",
+        "repositoryLocalMedia": true,
         "visualConcept": "Bobo waits at a bus stop; the waiting action is unmistakable.",
-        "altText": "warten — منتظر ماندن: Bleiben, bis etwas oder jemand kommt."
+        "visualConceptSource": "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-warten",
+        "visualConceptStatus": "draft_intent_not_verified_depiction",
+        "altText": "warten — منتظر ماندن: Bleiben, bis etwas oder jemand kommt.",
+        "altTextStatus": "derived_not_reviewed",
+        "altTextSource": "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-warten:lemma,persianMeanings,simpleGermanDefinition",
+        "altTextLanguages": ["de", "fa"],
+        "altTextLocale": "de-DE"
       },
       "versions": {
         "draftVersion": 1,
         "candidateCardVersion": 1,
+        "databaseRowsVerified": false,
+        "linkageBasis": "repository_and_migration_baseline_not_live_database",
         "image": {
           "assetId": "start-a1-warten-image-v2",
           "assetVersion": "v2",
           "storageKey": "start-a1-warten/image/v2",
-          "supersededAssetId": "start-a1-warten-image-v1"
+          "supersededAssetId": "start-a1-warten-image-v1",
+          "repositoryLocalMedia": true
         },
-        "wordAudio": { "assetId": "start-a1-warten-word-audio-v1", "assetVersion": "v1" },
-        "sentenceAudio": { "assetId": "start-a1-warten-sentence-audio-v1", "assetVersion": "v1" }
+        "wordAudio": {
+          "assetId": "start-a1-warten-word-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": true
+        },
+        "sentenceAudio": {
+          "assetId": "start-a1-warten-sentence-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": true
+        }
       },
       "checks": {
         "german_linguistic": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-warten",
@@ -2955,6 +3700,7 @@
         "persian_translation": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-warten",
@@ -2964,6 +3710,7 @@
         "provenance": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-provenance-ledger.json#start-a1-warten",
@@ -2973,6 +3720,7 @@
         "visual": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-media-attachment-draft.json#start-a1-warten-image-v1",
@@ -2984,6 +3732,7 @@
         "audio": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-media-attachment-draft.json#start-a1-warten-word-audio-v1",
@@ -2995,6 +3744,7 @@
         "app_flow": {
           "status": "pending_unproven",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "unproven_at_release_level",
           "releaseOutcome": null,
           "evidence": ["validation/start-a1-candidate-qa.json#app_flow"]
         }
@@ -3020,25 +3770,44 @@
         "selectedAssetId": "start-a1-wasser-image-v2",
         "assetVersion": "v2",
         "expectedMimeType": "image/jpeg",
+        "repositoryLocalMedia": true,
         "visualConcept": "A clear glass of water is the dominant object.",
-        "altText": "Wasser — آب: Eine klare Flüssigkeit zum Trinken."
+        "visualConceptSource": "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-wasser",
+        "visualConceptStatus": "draft_intent_not_verified_depiction",
+        "altText": "Wasser — آب: Eine klare Flüssigkeit zum Trinken.",
+        "altTextStatus": "derived_not_reviewed",
+        "altTextSource": "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-wasser:lemma,persianMeanings,simpleGermanDefinition",
+        "altTextLanguages": ["de", "fa"],
+        "altTextLocale": "de-DE"
       },
       "versions": {
         "draftVersion": 1,
         "candidateCardVersion": 1,
+        "databaseRowsVerified": false,
+        "linkageBasis": "repository_and_migration_baseline_not_live_database",
         "image": {
           "assetId": "start-a1-wasser-image-v2",
           "assetVersion": "v2",
           "storageKey": "start-a1-wasser/image/v2",
-          "supersededAssetId": "start-a1-wasser-image-v1"
+          "supersededAssetId": "start-a1-wasser-image-v1",
+          "repositoryLocalMedia": true
         },
-        "wordAudio": { "assetId": "start-a1-wasser-word-audio-v1", "assetVersion": "v1" },
-        "sentenceAudio": { "assetId": "start-a1-wasser-sentence-audio-v1", "assetVersion": "v1" }
+        "wordAudio": {
+          "assetId": "start-a1-wasser-word-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": true
+        },
+        "sentenceAudio": {
+          "assetId": "start-a1-wasser-sentence-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": true
+        }
       },
       "checks": {
         "german_linguistic": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-wasser",
@@ -3048,6 +3817,7 @@
         "persian_translation": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-wasser",
@@ -3057,6 +3827,7 @@
         "provenance": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-provenance-ledger.json#start-a1-wasser",
@@ -3066,6 +3837,7 @@
         "visual": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-media-attachment-draft.json#start-a1-wasser-image-v1",
@@ -3077,6 +3849,7 @@
         "audio": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-media-attachment-draft.json#start-a1-wasser-word-audio-v1",
@@ -3088,6 +3861,7 @@
         "app_flow": {
           "status": "pending_unproven",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "unproven_at_release_level",
           "releaseOutcome": null,
           "evidence": ["validation/start-a1-candidate-qa.json#app_flow"]
         }
@@ -3113,31 +3887,44 @@
         "selectedAssetId": "start-a1-wie-geht-es-ihnen-image-v2",
         "assetVersion": "v2",
         "expectedMimeType": "image/jpeg",
+        "repositoryLocalMedia": true,
         "visualConcept": "A polite Bobo asks a person how they are; conversational gesture only.",
-        "altText": "Wie geht es Ihnen? — حال شما چطور است؟: Eine höfliche Frage nach dem Befinden."
+        "visualConceptSource": "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-wie-geht-es-ihnen",
+        "visualConceptStatus": "draft_intent_not_verified_depiction",
+        "altText": "Wie geht es Ihnen? — حال شما چطور است؟: Eine höfliche Frage nach dem Befinden.",
+        "altTextStatus": "derived_not_reviewed",
+        "altTextSource": "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-wie-geht-es-ihnen:lemma,persianMeanings,simpleGermanDefinition",
+        "altTextLanguages": ["de", "fa"],
+        "altTextLocale": "de-DE"
       },
       "versions": {
         "draftVersion": 1,
         "candidateCardVersion": 1,
+        "databaseRowsVerified": false,
+        "linkageBasis": "repository_and_migration_baseline_not_live_database",
         "image": {
           "assetId": "start-a1-wie-geht-es-ihnen-image-v2",
           "assetVersion": "v2",
           "storageKey": "start-a1-wie-geht-es-ihnen/image/v2",
-          "supersededAssetId": "start-a1-wie-geht-es-ihnen-image-v1"
+          "supersededAssetId": "start-a1-wie-geht-es-ihnen-image-v1",
+          "repositoryLocalMedia": true
         },
         "wordAudio": {
           "assetId": "start-a1-wie-geht-es-ihnen-word-audio-v1",
-          "assetVersion": "v1"
+          "assetVersion": "v1",
+          "repositoryLocalMedia": true
         },
         "sentenceAudio": {
           "assetId": "start-a1-wie-geht-es-ihnen-sentence-audio-v1",
-          "assetVersion": "v1"
+          "assetVersion": "v1",
+          "repositoryLocalMedia": true
         }
       },
       "checks": {
         "german_linguistic": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-wie-geht-es-ihnen",
@@ -3147,6 +3934,7 @@
         "persian_translation": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-wie-geht-es-ihnen",
@@ -3156,6 +3944,7 @@
         "provenance": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-provenance-ledger.json#start-a1-wie-geht-es-ihnen",
@@ -3165,6 +3954,7 @@
         "visual": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-media-attachment-draft.json#start-a1-wie-geht-es-ihnen-image-v1",
@@ -3176,6 +3966,7 @@
         "audio": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-media-attachment-draft.json#start-a1-wie-geht-es-ihnen-word-audio-v1",
@@ -3187,6 +3978,7 @@
         "app_flow": {
           "status": "pending_unproven",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "unproven_at_release_level",
           "releaseOutcome": null,
           "evidence": ["validation/start-a1-candidate-qa.json#app_flow"]
         }
@@ -3212,25 +4004,44 @@
         "selectedAssetId": "start-a1-wohnen-image-v2",
         "assetVersion": "v2",
         "expectedMimeType": "image/jpeg",
+        "repositoryLocalMedia": true,
         "visualConcept": "Bobo is comfortably at home in a simple room.",
-        "altText": "wohnen — زندگی کردن؛ ساکن بودن: An einem Ort sein Zuhause haben."
+        "visualConceptSource": "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-wohnen",
+        "visualConceptStatus": "draft_intent_not_verified_depiction",
+        "altText": "wohnen — زندگی کردن؛ ساکن بودن: An einem Ort sein Zuhause haben.",
+        "altTextStatus": "derived_not_reviewed",
+        "altTextSource": "vocabulary/start-a1-vertical-slice-drafts.json#start-a1-wohnen:lemma,persianMeanings,simpleGermanDefinition",
+        "altTextLanguages": ["de", "fa"],
+        "altTextLocale": "de-DE"
       },
       "versions": {
         "draftVersion": 1,
         "candidateCardVersion": 1,
+        "databaseRowsVerified": false,
+        "linkageBasis": "repository_and_migration_baseline_not_live_database",
         "image": {
           "assetId": "start-a1-wohnen-image-v2",
           "assetVersion": "v2",
           "storageKey": "start-a1-wohnen/image/v2",
-          "supersededAssetId": "start-a1-wohnen-image-v1"
+          "supersededAssetId": "start-a1-wohnen-image-v1",
+          "repositoryLocalMedia": true
         },
-        "wordAudio": { "assetId": "start-a1-wohnen-word-audio-v1", "assetVersion": "v1" },
-        "sentenceAudio": { "assetId": "start-a1-wohnen-sentence-audio-v1", "assetVersion": "v1" }
+        "wordAudio": {
+          "assetId": "start-a1-wohnen-word-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": true
+        },
+        "sentenceAudio": {
+          "assetId": "start-a1-wohnen-sentence-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": true
+        }
       },
       "checks": {
         "german_linguistic": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-wohnen",
@@ -3240,6 +4051,7 @@
         "persian_translation": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-wohnen",
@@ -3249,6 +4061,7 @@
         "provenance": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-provenance-ledger.json#start-a1-wohnen",
@@ -3258,6 +4071,7 @@
         "visual": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-media-attachment-draft.json#start-a1-wohnen-image-v1",
@@ -3269,6 +4083,7 @@
         "audio": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-media-attachment-draft.json#start-a1-wohnen-word-audio-v1",
@@ -3280,6 +4095,7 @@
         "app_flow": {
           "status": "pending_unproven",
           "candidateStageRecord": "passed_for_candidate_stage",
+          "evidenceScope": "unproven_at_release_level",
           "releaseOutcome": null,
           "evidence": ["validation/start-a1-candidate-qa.json#app_flow"]
         }
@@ -3305,25 +4121,44 @@
         "selectedAssetId": "start-a1-zimmer-image-v1",
         "assetVersion": "v1",
         "expectedMimeType": "image/jpeg",
+        "repositoryLocalMedia": false,
         "visualConcept": "A simple furnished room is the dominant scene; no Bobo needed.",
-        "altText": "Zimmer — اتاق: Ein Raum in einer Wohnung oder in einem Haus."
+        "visualConceptSource": "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-zimmer",
+        "visualConceptStatus": "draft_intent_not_verified_depiction",
+        "altText": "Zimmer — اتاق: Ein Raum in einer Wohnung oder in einem Haus.",
+        "altTextStatus": "derived_not_reviewed",
+        "altTextSource": "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-zimmer:lemma,persianMeanings,simpleGermanDefinition",
+        "altTextLanguages": ["de", "fa"],
+        "altTextLocale": "de-DE"
       },
       "versions": {
         "draftVersion": 1,
         "candidateCardVersion": 1,
+        "databaseRowsVerified": false,
+        "linkageBasis": "repository_and_migration_baseline_not_live_database",
         "image": {
           "assetId": "start-a1-zimmer-image-v1",
           "assetVersion": "v1",
           "storageKey": "start-a1-zimmer/image/v1",
-          "supersededAssetId": null
+          "supersededAssetId": null,
+          "repositoryLocalMedia": false
         },
-        "wordAudio": { "assetId": "start-a1-zimmer-word-audio-v1", "assetVersion": "v1" },
-        "sentenceAudio": { "assetId": "start-a1-zimmer-sentence-audio-v1", "assetVersion": "v1" }
+        "wordAudio": {
+          "assetId": "start-a1-zimmer-word-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": false
+        },
+        "sentenceAudio": {
+          "assetId": "start-a1-zimmer-sentence-audio-v1",
+          "assetVersion": "v1",
+          "repositoryLocalMedia": false
+        }
       },
       "checks": {
         "german_linguistic": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-zimmer",
@@ -3333,6 +4168,7 @@
         "persian_translation": {
           "status": "owner_linguistic_approval_recorded",
           "candidateStageRecord": "approved_by_product_owner",
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-slice-linguistic-approval.json#start-a1-zimmer",
@@ -3342,6 +4178,7 @@
         "provenance": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": null,
+          "evidenceScope": "repository_local_per_item",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-zimmer",
@@ -3351,6 +4188,7 @@
         "visual": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "evidenceScope": "batch_aggregate_unverified_in_repository",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-zimmer",
@@ -3361,6 +4199,7 @@
         "audio": {
           "status": "candidate_stage_evidence_recorded",
           "candidateStageRecord": "private_candidate_package_human_reviewed",
+          "evidenceScope": "batch_aggregate_unverified_in_repository",
           "releaseOutcome": null,
           "evidence": [
             "validation/start-a1-catalog-35-pending-provenance-ledger.json#start-a1-zimmer",
@@ -3372,6 +4211,7 @@
         "app_flow": {
           "status": "pending_unproven",
           "candidateStageRecord": null,
+          "evidenceScope": "unproven_at_release_level",
           "releaseOutcome": null,
           "evidence": []
         }

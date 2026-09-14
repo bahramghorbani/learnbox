@@ -1,16 +1,24 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
 import { format, resolveConfig } from 'prettier';
 
 import {
+  altTextLanguages,
+  altTextSourceSuffix,
+  altTextStatus,
   buildStart35HumanReviewPacket,
+  cardVersionLinkageBasis,
+  draftSourceNames,
+  finalVisualAudioEvidenceScope,
   packetRepositoryPath,
   renderStart35HumanReviewPacket,
   runStart35HumanReviewPacketBuild,
+  visualConceptStatus,
 } from './build-start-35-human-review-packet.mjs';
 import { assertStart35HumanReviewPacket } from './validate-start-35-human-review-packet.mjs';
 
@@ -383,6 +391,205 @@ test('canonical-set, dimension and count drift fail closed', async () => {
     () => assertStart35HumanReviewPacket(alienItem, sources),
     /canonical|catalog/i,
   );
+});
+
+test('alt text, visual concept, database and media claims stay explicitly unverified', () => {
+  const draftById = new Map(
+    [...sources.drafts.items, ...sources.pendingDrafts.items].map((draft) => [draft.id, draft]),
+  );
+  const originalSet = new Set(original);
+  const mediaExtensions = { 'image/jpeg': '.jpg', 'image/png': '.png', 'audio/mpeg': '.mp3' };
+
+  assert.deepEqual(committed.transparencyLimits, {
+    altTextStatus,
+    altTextSourceBasis: `committed_draft_fields_${altTextSourceSuffix}`,
+    altTextLanguages,
+    visualConceptStatus,
+    databaseRowsVerified: false,
+    cardVersionLinkageBasis,
+    finalVisualAudioEvidenceScope,
+    evidenceScopeIds: [
+      'repository_local_per_item',
+      'batch_aggregate_unverified_in_repository',
+      'unproven_at_release_level',
+    ],
+    humanMediaReviewStillRequired: true,
+  });
+
+  for (const entry of committed.items) {
+    const draft = draftById.get(entry.contentId);
+    const isOriginal = originalSet.has(entry.contentId);
+    const draftRef = `vocabulary/${
+      isOriginal ? draftSourceNames.drafts : draftSourceNames.pendingDrafts
+    }#${entry.contentId}`;
+
+    assert.equal(entry.image.altTextStatus, 'derived_not_reviewed');
+    assert.equal(entry.image.altTextSource, `${draftRef}:${altTextSourceSuffix}`);
+    assert.deepEqual(entry.image.altTextLanguages, ['de', 'fa']);
+    assert.equal(entry.image.altTextLocale, draft.pronunciation.locale);
+    assert.equal(entry.image.visualConceptStatus, 'draft_intent_not_verified_depiction');
+    assert.equal(entry.image.visualConceptSource, draftRef);
+
+    assert.equal(entry.versions.databaseRowsVerified, false);
+    assert.equal(
+      entry.versions.linkageBasis,
+      'repository_and_migration_baseline_not_live_database',
+    );
+
+    for (const asset of [
+      entry.image,
+      entry.versions.image,
+      entry.versions.wordAudio,
+      entry.versions.sentenceAudio,
+    ]) {
+      assert.equal(
+        asset.repositoryLocalMedia,
+        isOriginal,
+        `${entry.contentId} repositoryLocalMedia`,
+      );
+    }
+
+    assert.equal(entry.checks.app_flow.evidenceScope, 'unproven_at_release_level');
+    for (const dimension of ['german_linguistic', 'persian_translation', 'provenance']) {
+      assert.equal(entry.checks[dimension].evidenceScope, 'repository_local_per_item');
+    }
+    for (const dimension of ['visual', 'audio']) {
+      assert.equal(
+        entry.checks[dimension].evidenceScope,
+        isOriginal ? 'repository_local_per_item' : 'batch_aggregate_unverified_in_repository',
+      );
+    }
+
+    // The repositoryLocalMedia claim matches the media files actually on disk.
+    for (const [assetId, mimeType] of [
+      [entry.image.selectedAssetId, entry.image.expectedMimeType],
+      [entry.versions.wordAudio.assetId, 'audio/mpeg'],
+      [entry.versions.sentenceAudio.assetId, 'audio/mpeg'],
+    ]) {
+      const extension = mediaExtensions[mimeType];
+      const directory = mimeType.startsWith('image/') ? 'images' : 'audio';
+      const present = existsSync(
+        new URL(
+          `../content/packs/learnbox-start/${directory}/${assetId}${extension}`,
+          import.meta.url,
+        ),
+      );
+      assert.equal(present, isOriginal, `${entry.contentId} ${assetId} on-disk presence`);
+    }
+  }
+
+  const firstFinal = committed.items.find(
+    (entry) => entry.catalogBatch === 'final_catalog_pending',
+  );
+  const firstOriginal = committed.items.find(
+    (entry) => entry.catalogBatch === 'original_vertical_slice',
+  );
+  assert.equal(firstFinal.image.repositoryLocalMedia, false);
+  assert.equal(firstOriginal.image.repositoryLocalMedia, true);
+});
+
+test('alt-text, database, repository-media and evidence-scope drift fail closed', async () => {
+  const finalIndex = committed.items.findIndex(
+    (entry) => entry.catalogBatch === 'final_catalog_pending',
+  );
+  const originalIndex = committed.items.findIndex(
+    (entry) => entry.catalogBatch === 'original_vertical_slice',
+  );
+
+  for (const [label, mutate, expected] of [
+    [
+      'altTextStatus',
+      (t) => (t.items[originalIndex].image.altTextStatus = 'reviewed'),
+      /alt text/i,
+    ],
+    [
+      'altTextSource',
+      (t) => (t.items[originalIndex].image.altTextSource = 'model_generated'),
+      /alt text/i,
+    ],
+    [
+      'altTextLanguages',
+      (t) => (t.items[originalIndex].image.altTextLanguages = ['de']),
+      /alt text/i,
+    ],
+    ['altTextLocale', (t) => (t.items[originalIndex].image.altTextLocale = 'fa-IR'), /alt text/i],
+    [
+      'visualConceptStatus',
+      (t) => (t.items[originalIndex].image.visualConceptStatus = 'verified_depiction'),
+      /visual concept/i,
+    ],
+    [
+      'visualConceptSource',
+      (t) => (t.items[originalIndex].image.visualConceptSource = 'unknown_source'),
+      /visual concept/i,
+    ],
+    [
+      'databaseRowsVerified',
+      (t) => (t.items[originalIndex].versions.databaseRowsVerified = true),
+      /database rows/i,
+    ],
+    [
+      'linkageBasis',
+      (t) => (t.items[originalIndex].versions.linkageBasis = 'live_database_verified'),
+      /database rows/i,
+    ],
+    [
+      'originalRepositoryLocalMedia',
+      (t) => (t.items[originalIndex].versions.wordAudio.repositoryLocalMedia = false),
+      /repositoryLocalMedia/i,
+    ],
+    [
+      'finalRepositoryLocalMedia',
+      (t) => (t.items[finalIndex].image.repositoryLocalMedia = true),
+      /repositoryLocalMedia/i,
+    ],
+    [
+      'finalVisualEvidenceScope',
+      (t) => (t.items[finalIndex].checks.visual.evidenceScope = 'repository_local_per_item'),
+      /evidence scope/i,
+    ],
+    [
+      'finalAudioEvidenceScope',
+      (t) => (t.items[finalIndex].checks.audio.evidenceScope = 'repository_local_per_item'),
+      /evidence scope/i,
+    ],
+    [
+      'originalVisualEvidenceScope',
+      (t) =>
+        (t.items[originalIndex].checks.visual.evidenceScope =
+          'batch_aggregate_unverified_in_repository'),
+      /evidence scope/i,
+    ],
+    [
+      'unknownEvidenceScope',
+      (t) => (t.items[originalIndex].checks.provenance.evidenceScope = 'made_up'),
+      /evidence scope/i,
+    ],
+    [
+      'transparencyAltTextStatus',
+      (t) => (t.transparencyLimits.altTextStatus = 'reviewed'),
+      /transparency limits/i,
+    ],
+    [
+      'transparencyDatabaseRows',
+      (t) => (t.transparencyLimits.databaseRowsVerified = true),
+      /transparency limits/i,
+    ],
+    [
+      'transparencyHumanMediaReview',
+      (t) => (t.transparencyLimits.humanMediaReviewStillRequired = false),
+      /transparency limits/i,
+    ],
+    ['transparencyMissing', (t) => delete t.transparencyLimits, /transparency limits/i],
+  ]) {
+    const tampered = structuredClone(committed);
+    mutate(tampered);
+    await assert.rejects(
+      () => assertStart35HumanReviewPacket(tampered, sources),
+      expected,
+      `${label} must be rejected`,
+    );
+  }
 });
 
 test('source drift fails closed before a packet can be built', () => {

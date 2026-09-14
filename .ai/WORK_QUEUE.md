@@ -877,8 +877,8 @@ flag, deployment or publication is authorized by this task.
 - Blocked on: none; LB-DS-075 merged through PR #287 at `9a98197ffeee98f4069a690a59caebd0df4b053f`.
 - Must not touch: draft/media bytes; provider configuration/credentials/IDs/URLs; receipts; object stores; attachment records; database/migrations; Admin runtime/routes; review decisions; catalog seed; flags; deployment; Preview/Production; publication; learner apps; Bobo assets.
 - Acceptance: one deterministic packet contains exactly 35 canonical items and exactly the six canonical review dimensions for each; includes final German/Persian text, provenance, selected image and alt text, visual/audio evidence, explicit pending release-level app-flow status, decision vocabulary and rollback/version linkage; points only to repository-local evidence; preserves publication blocking; represents known exceptions explicitly; and offers no automatic approval or provider/runtime mutation path.
-- Implementation: one local deliverable commit on `feat/start35-human-review-packet`, a direct child of the recorded starting head `626cc2aee1451f40e7b4fee86606cfb86d02b084`; the worker did not push, so the orchestrator pushes the branch and opens the draft PR.
-- Handoff: `.ai/worker-reports/LB-DS-076.md` records the RED then GREEN evidence, the check results, the explicit-path commit and the open review work.
+- Implementation: two local commits on `feat/start35-human-review-packet`, direct descendants of the recorded starting head `626cc2aee1451f40e7b4fee86606cfb86d02b084`: the initial deterministic packet deliverable and a truthfulness hardening commit that makes the packet's alt-text, database, repository-media and per-dimension evidence-scope limits explicit and validator-enforced; the worker did not push, so the orchestrator pushes the branch and opens the draft PR.
+- Handoff: `.ai/worker-reports/LB-DS-076.md` records the RED then GREEN evidence, the check results, the explicit-path commits and the open review work.
 
 ## LB-DS-072
 

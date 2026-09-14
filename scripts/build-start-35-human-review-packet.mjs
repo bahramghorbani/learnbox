@@ -24,6 +24,20 @@ export const checkStateIds = [
   'candidate_stage_evidence_recorded',
   'pending_unproven',
 ];
+// Transparency vocabulary. Every claim the packet makes about alt text, database
+// truth, repository-local media and evidence granularity is one of these values,
+// so an unsupported claim fails closed instead of reading as reviewed evidence.
+export const altTextStatus = 'derived_not_reviewed';
+export const altTextSourceSuffix = 'lemma,persianMeanings,simpleGermanDefinition';
+export const altTextLanguages = ['de', 'fa'];
+export const visualConceptStatus = 'draft_intent_not_verified_depiction';
+export const cardVersionLinkageBasis = 'repository_and_migration_baseline_not_live_database';
+export const evidenceScopeIds = [
+  'repository_local_per_item',
+  'batch_aggregate_unverified_in_repository',
+  'unproven_at_release_level',
+];
+export const finalVisualAudioEvidenceScope = 'batch_aggregate_unverified_in_repository';
 
 const itemCount = 35;
 const originalItemCount = 20;
@@ -47,7 +61,7 @@ const sourceNames = {
   finalCandidates: 'start-a1-15-candidate-media-attachment-draft.json',
   finalManifest: 'start-a1-35-final-media-manifest.json',
 };
-const draftSourceNames = {
+export const draftSourceNames = {
   drafts: 'start-a1-vertical-slice-drafts.json',
   pendingDrafts: 'start-a1-catalog-35-pending-drafts.json',
 };
@@ -289,17 +303,32 @@ export function buildStart35HumanReviewPacket(sources) {
       : sources.pendingProvenanceLedger.candidateMedia.status;
     const itemExceptions = audioExceptions.filter((id) => id.startsWith(`${contentId}-`));
     const draftRef = `vocabulary/${draftSource}#${contentId}`;
+    // Evidence scope is derived, never asserted: only the original slice has
+    // per-item repository-local media, the final 15 are batch-aggregate only and
+    // release-level app flow is unproven for every item.
+    const checkScope = (dimension) => {
+      if (dimension === 'app_flow') return 'unproven_at_release_level';
+      if (dimension === 'visual' || dimension === 'audio') {
+        return isOriginal ? 'repository_local_per_item' : finalVisualAudioEvidenceScope;
+      }
+      return 'repository_local_per_item';
+    };
 
     const check = (dimension, { status, candidateStageRecord, evidence: sources_, exceptions }) => {
+      const evidenceScope = checkScope(dimension);
       const entry = {
         status,
         candidateStageRecord,
+        evidenceScope,
         releaseOutcome: null,
         evidence: sources_,
       };
       if (exceptions?.length) entry.exceptions = exceptions;
       if (!checkStateIds.includes(status)) {
         throw new Error(`${dimension} has an unknown check state ${status}.`);
+      }
+      if (!evidenceScopeIds.includes(evidenceScope)) {
+        throw new Error(`${dimension} has an unknown evidence scope ${evidenceScope}.`);
       }
       return entry;
     };
@@ -391,20 +420,42 @@ export function buildStart35HumanReviewPacket(sources) {
         selectedAssetId: imageAsset.assetId,
         assetVersion: imageAsset.assetVersion,
         expectedMimeType: imageAsset.expectedMimeType,
+        // Repository reality: the original slice keeps its selected media in this
+        // repository; the final 15 candidates stay outside it until uploaded.
+        repositoryLocalMedia: isOriginal,
         visualConcept: draft.visualConcept,
+        visualConceptSource: draftRef,
+        visualConceptStatus,
         altText: `${draft.lemma} — ${draft.persianMeanings.join('، ')}: ${draft.simpleGermanDefinition}`,
+        altTextStatus,
+        altTextSource: `${draftRef}:${altTextSourceSuffix}`,
+        altTextLanguages: [...altTextLanguages],
+        altTextLocale: draft.pronunciation.locale,
       },
       versions: {
         draftVersion: draft.version,
         candidateCardVersion: 1,
+        // No live database was read or written for this packet, so no item or
+        // version claim here is a verified database row.
+        databaseRowsVerified: false,
+        linkageBasis: cardVersionLinkageBasis,
         image: {
           assetId: imageAsset.assetId,
           assetVersion: imageAsset.assetVersion,
           storageKey: imageAsset.storageKey,
           supersededAssetId: isOriginal ? `${contentId}-image-v1` : null,
+          repositoryLocalMedia: isOriginal,
         },
-        wordAudio: { assetId: wordAsset.assetId, assetVersion: wordAsset.assetVersion },
-        sentenceAudio: { assetId: sentenceAsset.assetId, assetVersion: sentenceAsset.assetVersion },
+        wordAudio: {
+          assetId: wordAsset.assetId,
+          assetVersion: wordAsset.assetVersion,
+          repositoryLocalMedia: isOriginal,
+        },
+        sentenceAudio: {
+          assetId: sentenceAsset.assetId,
+          assetVersion: sentenceAsset.assetVersion,
+          repositoryLocalMedia: isOriginal,
+        },
       },
       checks,
       decision: { allowed: [...reviewDecisionIds], recorded: null },
@@ -425,8 +476,22 @@ export function buildStart35HumanReviewPacket(sources) {
     reviewDecisionRecorded: false,
     databaseMutationPerformed: false,
     providerCallPerformed: false,
+    // One place where the packet states the limits of its own claims, so a
+    // reviewer cannot read derived alt text, repository linkage or aggregate
+    // final-15 media evidence as reviewed, database-verified or per-item proof.
+    transparencyLimits: {
+      altTextStatus,
+      altTextSourceBasis: `committed_draft_fields_${altTextSourceSuffix}`,
+      altTextLanguages: [...altTextLanguages],
+      visualConceptStatus,
+      databaseRowsVerified: false,
+      cardVersionLinkageBasis,
+      finalVisualAudioEvidenceScope,
+      evidenceScopeIds: [...evidenceScopeIds],
+      humanMediaReviewStillRequired: true,
+    },
     purpose:
-      'One deterministic batched human-review packet for the 35 canonical LearnBox Start A1 items across the six canonical review dimensions. It restates final German and Persian text, provenance, selected image with alt text and rollback/version linkage, visual and audio candidate evidence, explicit previously recorded exceptions and an explicitly unproven release-level app flow. It records no check outcome and no approve/reject/return_for_revision decision, points only at repository-local evidence, and authorizes no attachment, database write, seed, flag, deployment or publication.',
+      'One deterministic batched human-review packet for the 35 canonical LearnBox Start A1 items across the six canonical review dimensions. It restates final German and Persian text, provenance, selected image with derived alt text and rollback/version linkage, visual and audio candidate evidence, explicit previously recorded exceptions and an explicitly unproven release-level app flow. It records no check outcome and no approve/reject/return_for_revision decision, points only at repository-local evidence, and authorizes no attachment, database write, seed, flag, deployment or publication. Alt text stays derived and unreviewed, no item or version is a verified database row, final-15 visual and audio evidence is batch-aggregate only, and the media still needs human viewing and listening.',
     reviewDimensions: [...reviewDimensionIds],
     reviewVocabulary: {
       checkOutcomes: [...checkOutcomeIds],
