@@ -91,7 +91,8 @@ Only disjoint preparation may overlap. Upload, attachment, approval, seed, activ
 - Completed Sep 14: owner separately authorized the exact guarded upload plus integrity verification; attachment remained separately prohibited.
 - By Sep 21, complete the separately authorized guarded upload for all starter media and retain its URL-free receipt outside Git. Upload completed Sep 14 with 105/105 initial and resume integrity verification; attachment remains a separate closed gate.
 - Present one batched 35-item approve/return review while preserving six auditable review dimensions.
-- Close returned defects and reach 35/35 release approval by Sep 22.
+- Completed Sep 14: the owner returned that batched review — 210/210 checks `passed`, 35 `approve` decisions and no `reject`/`return_for_revision` — and LB-DS-077 recorded it as a deterministic repository-only decision record bound to source merge `f0f413b`. The Admin review store, media attachment, seed and publication stay untouched, so the record alone keeps `seedable: false` and `publicationBlocked: true`.
+- Close returned defects and reach 35/35 release approval by Sep 22 by executing the recorded decisions through the reviewed Admin/attachment path, not by restating repository evidence.
 
 **Exit gate**
 
@@ -189,7 +190,7 @@ The 2026-10-12 target assumes:
 
 - storage/cost decision completed Sep 12;
 - separate bounded upload authorization and exact-105 integrity-verified execution completed Sep 14; attachment remains a separate open gate;
-- batched 35/35 human review by Sep 22;
+- batched 35/35 human review decision returned Sep 14 and recorded as repository evidence; executing it through the reviewed Admin/attachment path stays the remaining Sep 22 work;
 - seed/controlled activation approval by Sep 26;
 - owner pilot and invitations available Oct 4–8;
 - public-release approval by Oct 11;

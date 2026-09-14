@@ -1,0 +1,545 @@
+{
+  "recordId": "learnbox-start-a1-35-owner-review-decisions-v1",
+  "recordKind": "repository_owner_review_decision_record",
+  "state": "owner_decisions_recorded_repository_evidence_only",
+  "sourceBatchId": "learnbox-start-a1-35-human-review-packet-v1",
+  "sourceMergeCommit": "f0f413bca32317e0bca25e55c54e950a37a95830",
+  "reviewerRole": "owner",
+  "reviewedAt": "2026-09-14T17:31:26.517Z",
+  "evidenceScope": "repository_owner_evidence_only",
+  "reviewDimensions": [
+    "german_linguistic",
+    "persian_translation",
+    "provenance",
+    "visual",
+    "audio",
+    "app_flow"
+  ],
+  "decisionVocabulary": ["approve", "reject", "return_for_revision"],
+  "checkOutcomeVocabulary": ["passed", "failed"],
+  "reviewScope": {
+    "itemCount": 35,
+    "dimensionCount": 6,
+    "itemDimensionPairs": 210,
+    "originalItemCount": 20,
+    "finalItemCount": 15
+  },
+  "outcomeCounts": { "passed": 210, "failed": 0 },
+  "decisionCounts": { "approve": 35, "reject": 0, "return_for_revision": 0 },
+  "releasePosition": {
+    "ownerApprovedItemCount": 35,
+    "adminReviewOutcomesRecorded": 0,
+    "adminReviewOutcomesPending": 210,
+    "releaseApprovedItemCount": 0,
+    "seedDecision": "blocked_until_admin_persistence_attachment_and_owner_release_gate"
+  },
+  "transparencyLimits": {
+    "decisionOrigin": "owner_submitted_batch_review",
+    "adminReviewStoreRead": false,
+    "databaseRowsVerified": false,
+    "mediaAttached": false,
+    "contentTruthIndependentlyVerified": false
+  },
+  "adminPersistencePerformed": false,
+  "databaseMutationPerformed": false,
+  "attachmentPerformed": false,
+  "attachmentAllowed": false,
+  "seedable": false,
+  "learnerExposure": false,
+  "runtimeActivationPerformed": false,
+  "providerCallPerformed": false,
+  "publicationBlocked": true,
+  "publicationApproved": false,
+  "items": [
+    {
+      "contentId": "start-a1-apfel",
+      "order": 1,
+      "checks": {
+        "german_linguistic": { "outcome": "passed" },
+        "persian_translation": { "outcome": "passed" },
+        "provenance": { "outcome": "passed" },
+        "visual": { "outcome": "passed" },
+        "audio": { "outcome": "passed" },
+        "app_flow": { "outcome": "passed" }
+      },
+      "decision": "approve",
+      "decisionNote": null
+    },
+    {
+      "contentId": "start-a1-bahnhof",
+      "order": 2,
+      "checks": {
+        "german_linguistic": { "outcome": "passed" },
+        "persian_translation": { "outcome": "passed" },
+        "provenance": { "outcome": "passed" },
+        "visual": { "outcome": "passed" },
+        "audio": { "outcome": "passed" },
+        "app_flow": { "outcome": "passed" }
+      },
+      "decision": "approve",
+      "decisionNote": null
+    },
+    {
+      "contentId": "start-a1-bett",
+      "order": 3,
+      "checks": {
+        "german_linguistic": { "outcome": "passed" },
+        "persian_translation": { "outcome": "passed" },
+        "provenance": { "outcome": "passed" },
+        "visual": { "outcome": "passed" },
+        "audio": { "outcome": "passed" },
+        "app_flow": { "outcome": "passed" }
+      },
+      "decision": "approve",
+      "decisionNote": null
+    },
+    {
+      "contentId": "start-a1-brot",
+      "order": 4,
+      "checks": {
+        "german_linguistic": { "outcome": "passed" },
+        "persian_translation": { "outcome": "passed" },
+        "provenance": { "outcome": "passed" },
+        "visual": { "outcome": "passed" },
+        "audio": { "outcome": "passed" },
+        "app_flow": { "outcome": "passed" }
+      },
+      "decision": "approve",
+      "decisionNote": null
+    },
+    {
+      "contentId": "start-a1-danke",
+      "order": 5,
+      "checks": {
+        "german_linguistic": { "outcome": "passed" },
+        "persian_translation": { "outcome": "passed" },
+        "provenance": { "outcome": "passed" },
+        "visual": { "outcome": "passed" },
+        "audio": { "outcome": "passed" },
+        "app_flow": { "outcome": "passed" }
+      },
+      "decision": "approve",
+      "decisionNote": null
+    },
+    {
+      "contentId": "start-a1-ei",
+      "order": 6,
+      "checks": {
+        "german_linguistic": { "outcome": "passed" },
+        "persian_translation": { "outcome": "passed" },
+        "provenance": { "outcome": "passed" },
+        "visual": { "outcome": "passed" },
+        "audio": { "outcome": "passed" },
+        "app_flow": { "outcome": "passed" }
+      },
+      "decision": "approve",
+      "decisionNote": null
+    },
+    {
+      "contentId": "start-a1-entschuldigung",
+      "order": 7,
+      "checks": {
+        "german_linguistic": { "outcome": "passed" },
+        "persian_translation": { "outcome": "passed" },
+        "provenance": { "outcome": "passed" },
+        "visual": { "outcome": "passed" },
+        "audio": { "outcome": "passed" },
+        "app_flow": { "outcome": "passed" }
+      },
+      "decision": "approve",
+      "decisionNote": null
+    },
+    {
+      "contentId": "start-a1-essen",
+      "order": 8,
+      "checks": {
+        "german_linguistic": { "outcome": "passed" },
+        "persian_translation": { "outcome": "passed" },
+        "provenance": { "outcome": "passed" },
+        "visual": { "outcome": "passed" },
+        "audio": { "outcome": "passed" },
+        "app_flow": { "outcome": "passed" }
+      },
+      "decision": "approve",
+      "decisionNote": null
+    },
+    {
+      "contentId": "start-a1-fenster",
+      "order": 9,
+      "checks": {
+        "german_linguistic": { "outcome": "passed" },
+        "persian_translation": { "outcome": "passed" },
+        "provenance": { "outcome": "passed" },
+        "visual": { "outcome": "passed" },
+        "audio": { "outcome": "passed" },
+        "app_flow": { "outcome": "passed" }
+      },
+      "decision": "approve",
+      "decisionNote": null
+    },
+    {
+      "contentId": "start-a1-gehen",
+      "order": 10,
+      "checks": {
+        "german_linguistic": { "outcome": "passed" },
+        "persian_translation": { "outcome": "passed" },
+        "provenance": { "outcome": "passed" },
+        "visual": { "outcome": "passed" },
+        "audio": { "outcome": "passed" },
+        "app_flow": { "outcome": "passed" }
+      },
+      "decision": "approve",
+      "decisionNote": null
+    },
+    {
+      "contentId": "start-a1-gluecklich",
+      "order": 11,
+      "checks": {
+        "german_linguistic": { "outcome": "passed" },
+        "persian_translation": { "outcome": "passed" },
+        "provenance": { "outcome": "passed" },
+        "visual": { "outcome": "passed" },
+        "audio": { "outcome": "passed" },
+        "app_flow": { "outcome": "passed" }
+      },
+      "decision": "approve",
+      "decisionNote": null
+    },
+    {
+      "contentId": "start-a1-gross",
+      "order": 12,
+      "checks": {
+        "german_linguistic": { "outcome": "passed" },
+        "persian_translation": { "outcome": "passed" },
+        "provenance": { "outcome": "passed" },
+        "visual": { "outcome": "passed" },
+        "audio": { "outcome": "passed" },
+        "app_flow": { "outcome": "passed" }
+      },
+      "decision": "approve",
+      "decisionNote": null
+    },
+    {
+      "contentId": "start-a1-guten-tag",
+      "order": 13,
+      "checks": {
+        "german_linguistic": { "outcome": "passed" },
+        "persian_translation": { "outcome": "passed" },
+        "provenance": { "outcome": "passed" },
+        "visual": { "outcome": "passed" },
+        "audio": { "outcome": "passed" },
+        "app_flow": { "outcome": "passed" }
+      },
+      "decision": "approve",
+      "decisionNote": null
+    },
+    {
+      "contentId": "start-a1-haus",
+      "order": 14,
+      "checks": {
+        "german_linguistic": { "outcome": "passed" },
+        "persian_translation": { "outcome": "passed" },
+        "provenance": { "outcome": "passed" },
+        "visual": { "outcome": "passed" },
+        "audio": { "outcome": "passed" },
+        "app_flow": { "outcome": "passed" }
+      },
+      "decision": "approve",
+      "decisionNote": null
+    },
+    {
+      "contentId": "start-a1-kaffee",
+      "order": 15,
+      "checks": {
+        "german_linguistic": { "outcome": "passed" },
+        "persian_translation": { "outcome": "passed" },
+        "provenance": { "outcome": "passed" },
+        "visual": { "outcome": "passed" },
+        "audio": { "outcome": "passed" },
+        "app_flow": { "outcome": "passed" }
+      },
+      "decision": "approve",
+      "decisionNote": null
+    },
+    {
+      "contentId": "start-a1-kalt",
+      "order": 16,
+      "checks": {
+        "german_linguistic": { "outcome": "passed" },
+        "persian_translation": { "outcome": "passed" },
+        "provenance": { "outcome": "passed" },
+        "visual": { "outcome": "passed" },
+        "audio": { "outcome": "passed" },
+        "app_flow": { "outcome": "passed" }
+      },
+      "decision": "approve",
+      "decisionNote": null
+    },
+    {
+      "contentId": "start-a1-kaufen",
+      "order": 17,
+      "checks": {
+        "german_linguistic": { "outcome": "passed" },
+        "persian_translation": { "outcome": "passed" },
+        "provenance": { "outcome": "passed" },
+        "visual": { "outcome": "passed" },
+        "audio": { "outcome": "passed" },
+        "app_flow": { "outcome": "passed" }
+      },
+      "decision": "approve",
+      "decisionNote": null
+    },
+    {
+      "contentId": "start-a1-klein",
+      "order": 18,
+      "checks": {
+        "german_linguistic": { "outcome": "passed" },
+        "persian_translation": { "outcome": "passed" },
+        "provenance": { "outcome": "passed" },
+        "visual": { "outcome": "passed" },
+        "audio": { "outcome": "passed" },
+        "app_flow": { "outcome": "passed" }
+      },
+      "decision": "approve",
+      "decisionNote": null
+    },
+    {
+      "contentId": "start-a1-lernen",
+      "order": 19,
+      "checks": {
+        "german_linguistic": { "outcome": "passed" },
+        "persian_translation": { "outcome": "passed" },
+        "provenance": { "outcome": "passed" },
+        "visual": { "outcome": "passed" },
+        "audio": { "outcome": "passed" },
+        "app_flow": { "outcome": "passed" }
+      },
+      "decision": "approve",
+      "decisionNote": null
+    },
+    {
+      "contentId": "start-a1-milch",
+      "order": 20,
+      "checks": {
+        "german_linguistic": { "outcome": "passed" },
+        "persian_translation": { "outcome": "passed" },
+        "provenance": { "outcome": "passed" },
+        "visual": { "outcome": "passed" },
+        "audio": { "outcome": "passed" },
+        "app_flow": { "outcome": "passed" }
+      },
+      "decision": "approve",
+      "decisionNote": null
+    },
+    {
+      "contentId": "start-a1-muede",
+      "order": 21,
+      "checks": {
+        "german_linguistic": { "outcome": "passed" },
+        "persian_translation": { "outcome": "passed" },
+        "provenance": { "outcome": "passed" },
+        "visual": { "outcome": "passed" },
+        "audio": { "outcome": "passed" },
+        "app_flow": { "outcome": "passed" }
+      },
+      "decision": "approve",
+      "decisionNote": null
+    },
+    {
+      "contentId": "start-a1-neu",
+      "order": 22,
+      "checks": {
+        "german_linguistic": { "outcome": "passed" },
+        "persian_translation": { "outcome": "passed" },
+        "provenance": { "outcome": "passed" },
+        "visual": { "outcome": "passed" },
+        "audio": { "outcome": "passed" },
+        "app_flow": { "outcome": "passed" }
+      },
+      "decision": "approve",
+      "decisionNote": null
+    },
+    {
+      "contentId": "start-a1-schule",
+      "order": 23,
+      "checks": {
+        "german_linguistic": { "outcome": "passed" },
+        "persian_translation": { "outcome": "passed" },
+        "provenance": { "outcome": "passed" },
+        "visual": { "outcome": "passed" },
+        "audio": { "outcome": "passed" },
+        "app_flow": { "outcome": "passed" }
+      },
+      "decision": "approve",
+      "decisionNote": null
+    },
+    {
+      "contentId": "start-a1-stadt",
+      "order": 24,
+      "checks": {
+        "german_linguistic": { "outcome": "passed" },
+        "persian_translation": { "outcome": "passed" },
+        "provenance": { "outcome": "passed" },
+        "visual": { "outcome": "passed" },
+        "audio": { "outcome": "passed" },
+        "app_flow": { "outcome": "passed" }
+      },
+      "decision": "approve",
+      "decisionNote": null
+    },
+    {
+      "contentId": "start-a1-supermarkt",
+      "order": 25,
+      "checks": {
+        "german_linguistic": { "outcome": "passed" },
+        "persian_translation": { "outcome": "passed" },
+        "provenance": { "outcome": "passed" },
+        "visual": { "outcome": "passed" },
+        "audio": { "outcome": "passed" },
+        "app_flow": { "outcome": "passed" }
+      },
+      "decision": "approve",
+      "decisionNote": null
+    },
+    {
+      "contentId": "start-a1-tee",
+      "order": 26,
+      "checks": {
+        "german_linguistic": { "outcome": "passed" },
+        "persian_translation": { "outcome": "passed" },
+        "provenance": { "outcome": "passed" },
+        "visual": { "outcome": "passed" },
+        "audio": { "outcome": "passed" },
+        "app_flow": { "outcome": "passed" }
+      },
+      "decision": "approve",
+      "decisionNote": null
+    },
+    {
+      "contentId": "start-a1-tisch",
+      "order": 27,
+      "checks": {
+        "german_linguistic": { "outcome": "passed" },
+        "persian_translation": { "outcome": "passed" },
+        "provenance": { "outcome": "passed" },
+        "visual": { "outcome": "passed" },
+        "audio": { "outcome": "passed" },
+        "app_flow": { "outcome": "passed" }
+      },
+      "decision": "approve",
+      "decisionNote": null
+    },
+    {
+      "contentId": "start-a1-trinken",
+      "order": 28,
+      "checks": {
+        "german_linguistic": { "outcome": "passed" },
+        "persian_translation": { "outcome": "passed" },
+        "provenance": { "outcome": "passed" },
+        "visual": { "outcome": "passed" },
+        "audio": { "outcome": "passed" },
+        "app_flow": { "outcome": "passed" }
+      },
+      "decision": "approve",
+      "decisionNote": null
+    },
+    {
+      "contentId": "start-a1-tuer",
+      "order": 29,
+      "checks": {
+        "german_linguistic": { "outcome": "passed" },
+        "persian_translation": { "outcome": "passed" },
+        "provenance": { "outcome": "passed" },
+        "visual": { "outcome": "passed" },
+        "audio": { "outcome": "passed" },
+        "app_flow": { "outcome": "passed" }
+      },
+      "decision": "approve",
+      "decisionNote": null
+    },
+    {
+      "contentId": "start-a1-uhr",
+      "order": 30,
+      "checks": {
+        "german_linguistic": { "outcome": "passed" },
+        "persian_translation": { "outcome": "passed" },
+        "provenance": { "outcome": "passed" },
+        "visual": { "outcome": "passed" },
+        "audio": { "outcome": "passed" },
+        "app_flow": { "outcome": "passed" }
+      },
+      "decision": "approve",
+      "decisionNote": null
+    },
+    {
+      "contentId": "start-a1-warten",
+      "order": 31,
+      "checks": {
+        "german_linguistic": { "outcome": "passed" },
+        "persian_translation": { "outcome": "passed" },
+        "provenance": { "outcome": "passed" },
+        "visual": { "outcome": "passed" },
+        "audio": { "outcome": "passed" },
+        "app_flow": { "outcome": "passed" }
+      },
+      "decision": "approve",
+      "decisionNote": null
+    },
+    {
+      "contentId": "start-a1-wasser",
+      "order": 32,
+      "checks": {
+        "german_linguistic": { "outcome": "passed" },
+        "persian_translation": { "outcome": "passed" },
+        "provenance": { "outcome": "passed" },
+        "visual": { "outcome": "passed" },
+        "audio": { "outcome": "passed" },
+        "app_flow": { "outcome": "passed" }
+      },
+      "decision": "approve",
+      "decisionNote": null
+    },
+    {
+      "contentId": "start-a1-wie-geht-es-ihnen",
+      "order": 33,
+      "checks": {
+        "german_linguistic": { "outcome": "passed" },
+        "persian_translation": { "outcome": "passed" },
+        "provenance": { "outcome": "passed" },
+        "visual": { "outcome": "passed" },
+        "audio": { "outcome": "passed" },
+        "app_flow": { "outcome": "passed" }
+      },
+      "decision": "approve",
+      "decisionNote": null
+    },
+    {
+      "contentId": "start-a1-wohnen",
+      "order": 34,
+      "checks": {
+        "german_linguistic": { "outcome": "passed" },
+        "persian_translation": { "outcome": "passed" },
+        "provenance": { "outcome": "passed" },
+        "visual": { "outcome": "passed" },
+        "audio": { "outcome": "passed" },
+        "app_flow": { "outcome": "passed" }
+      },
+      "decision": "approve",
+      "decisionNote": null
+    },
+    {
+      "contentId": "start-a1-zimmer",
+      "order": 35,
+      "checks": {
+        "german_linguistic": { "outcome": "passed" },
+        "persian_translation": { "outcome": "passed" },
+        "provenance": { "outcome": "passed" },
+        "visual": { "outcome": "passed" },
+        "audio": { "outcome": "passed" },
+        "app_flow": { "outcome": "passed" }
+      },
+      "decision": "approve",
+      "decisionNote": null
+    }
+  ]
+}

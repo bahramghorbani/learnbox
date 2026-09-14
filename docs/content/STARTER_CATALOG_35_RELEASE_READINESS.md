@@ -12,12 +12,13 @@ participants, deploy, or publish anything.
 
 ## Verified inventory
 
-| Slice                    | Drafts |                                          Linguistic approval | Provenance                                            | Visual                                                             | Audio                                                                                                                             | App flow                          | Release-approved card versions |
-| ------------------------ | -----: | -----------------------------------------------------------: | ----------------------------------------------------- | ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- | --------------------------------- | -----------------------------: |
-| Original vertical slice  |  20/20 |      20/20 for `german_linguistic` and `persian_translation` | candidate-stage evidence for 20/20                    | 20/20 V2 candidates inspected and privately attested, not attached | 40/40 V1 word/sentence candidates sha-attested and transcription-QA-passed, not attached; Issue #59 V2 regeneration is incomplete | candidate-stage local flow passed |                           0/20 |
-| Remaining catalog drafts |  15/15 | 15/15 for `german_linguistic` and `persian_translation` only | lexical-scope ledger exists for 15/15; candidate-only | 15/15 private candidates human-reviewed, not attached              | 30/30 private candidates human-reviewed; 28/30 exact transcription matches with two recorded exceptions, not attached             | not approved                      |                           0/15 |
-| Total catalog            |  35/35 |                 35/35 for the two linguistic dimensions only | incomplete for release                                | incomplete for release                                             | incomplete for release                                                                                                            | incomplete for release            |                           0/35 |
-| Batched review packet    |  35/35 |             35/35 recorded for the two owner dimensions only | source-local page evidence for 35/35                  | alt text plus selected V2/V1 image for 35/35                       | 105 selected assets linked; 2 exceptions recorded                                                                                 | pending/unproven for 35/35        |                           0/35 |
+| Slice                    | Drafts |                                          Linguistic approval | Provenance                                            | Visual                                                             | Audio                                                                                                                             | App flow                               | Release-approved card versions |
+| ------------------------ | -----: | -----------------------------------------------------------: | ----------------------------------------------------- | ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- | -----------------------------: |
+| Original vertical slice  |  20/20 |      20/20 for `german_linguistic` and `persian_translation` | candidate-stage evidence for 20/20                    | 20/20 V2 candidates inspected and privately attested, not attached | 40/40 V1 word/sentence candidates sha-attested and transcription-QA-passed, not attached; Issue #59 V2 regeneration is incomplete | candidate-stage local flow passed      |                           0/20 |
+| Remaining catalog drafts |  15/15 | 15/15 for `german_linguistic` and `persian_translation` only | lexical-scope ledger exists for 15/15; candidate-only | 15/15 private candidates human-reviewed, not attached              | 30/30 private candidates human-reviewed; 28/30 exact transcription matches with two recorded exceptions, not attached             | not approved                           |                           0/15 |
+| Total catalog            |  35/35 |                 35/35 for the two linguistic dimensions only | incomplete for release                                | incomplete for release                                             | incomplete for release                                                                                                            | incomplete for release                 |                           0/35 |
+| Batched review packet    |  35/35 |             35/35 recorded for the two owner dimensions only | source-local page evidence for 35/35                  | alt text plus selected V2/V1 image for 35/35                       | 105 selected assets linked; 2 exceptions recorded                                                                                 | pending/unproven for 35/35             |                           0/35 |
+| Recorded owner decisions |  35/35 |        35/35 `approve`, repository evidence only (LB-DS-077) | 35/35 `passed` in the decision record                 | 35/35 `passed` in the decision record                              | 35/35 `passed` in the decision record                                                                                             | 35/35 `passed`; not persisted in Admin |                           0/35 |
 
 The canonical catalog snapshot is therefore truthful at its top-level release boundary:
 `releaseStatus: draft`, `seedable: false`, `publicationBlocked: true`, and no seedable item IDs.
@@ -31,15 +32,42 @@ The canonical catalog snapshot is therefore truthful at its top-level release bo
    (`start-a1-essen-sentence`, `start-a1-gross-word`) remain recorded for a later release decision.
    Final visual/audio approval and release authorization are not granted here.
 2. **Remaining 15 items lack app-flow approval.** No artifact proves those items in the learner flow,
-   and every release-level `app_flow` check stays pending/unproven in the review packet.
+   and every release-level `app_flow` check stays pending/unproven in the review packet. The owner
+   recorded `approve` for `app_flow` on all 35 items as repository evidence, which is a decision, not
+   proof of a run learner flow.
 3. **No item has an approved/published `card_versions` row.** ADR 0013 and
    `evaluateStartCatalogSeed` require a release-approved version for every target item; current count
    is 0/35.
 4. **The original 20 have candidate-stage evidence, not release approval.** Private media is attested
    but remains deliberately unattached. Server-session authorization, owner release approval and
    participant-invitation approval remain open.
-5. **Owner release approval is absent for all 35.** Existing owner confirmations cover only German
-   linguistic and Persian translation dimensions; they do not authorize publication.
+5. **Owner release approval is still absent for all 35.** The owner has now recorded `approve` for all
+   35 items across all six dimensions, but only as repository evidence in the LB-DS-077 decision record:
+   no Admin review store row, approved/published `card_versions` row or media attachment exists, so the
+   recorded decisions do not authorize publication.
+
+## Recorded owner review decisions — LB-DS-077 — 2026-09-14
+
+The owner returned the batched six-dimension review of all 35 items, and LB-DS-077 records it in
+`content/packs/learnbox-start/validation/start-a1-35-owner-review-decisions.json`, verified by
+`scripts/validate-start-35-owner-review-decisions.mjs` through
+`pnpm verify:start-35-owner-review-decisions` and `pnpm test:start-35-owner-review-decisions`.
+
+- Exactly 35 unique canonical items in the merged packet's order, six canonical dimensions each: 210
+  item/dimension checks recorded `passed`, 0 `failed`.
+- Exactly 35 `approve` decisions, 0 `reject` and 0 `return_for_revision`, with no decision note.
+- Bound to source merge `f0f413bca32317e0bca25e55c54e950a37a95830` and reviewed at
+  `2026-09-14T17:31:26.517Z`; the validator cross-checks the merged packet, the migration 0006 and
+  Admin review vocabulary, and the merge commit recorded in `.ai/WORK_QUEUE.md`.
+- The submitted artifact's SHA-256 is retained outside the canonical record: no digest, checksum,
+  media byte count, provider identifier, credential, receipt or remote locator enters this repository.
+
+This record is repository evidence of owner intent only. It performs and claims no Admin persistence,
+database mutation, media attachment, seedability, learner exposure, runtime activation, provider call
+or publication: the derived record keeps `attachmentAllowed: false`, `seedable: false`,
+`learnerExposure: false` and `publicationBlocked: true`, with 0/35 release-approved card versions and
+the Admin review store still at `35 / 210 / 210 / 0 / 0`. Recording an approval is not the same as
+executing it, so every blocking gate above remains open and the audit decision remains **BLOCKED**.
 
 ## LB-DS-055 evidence reconciliation — 2026-09-11
 
@@ -161,9 +189,11 @@ results. The actual media still requires human viewing and listening before any 
 
 The bounded preparation slice described by earlier audits is complete: all 35 items have private
 candidate-only media, the final 105-asset selection passed initial and complete-resume private
-integrity verification, and the batched review packet presents the whole set. The next authorized step
-is the owner's per-item review of that packet; it requires no provider cost or candidate generation.
-Human visual/audio/content judgment remains mandatory — validators and AI output cannot grant it.
+integrity verification, the batched review packet presents the whole set, and the owner has returned
+the batched six-dimension decision now recorded as repository evidence by LB-DS-077. The next
+authorized step is executing that recorded decision through the reviewed Admin persistence path and
+the separately gated media attachment; it requires no provider cost or candidate generation. Human
+visual/audio/content judgment remains mandatory — validators and AI output cannot grant it.
 
 ## Release decision package — prepared 2026-09-14
 
@@ -174,10 +204,13 @@ evidence, the selected image with alt text and its visual-QA record, the selecte
 audio with their QA records, the explicitly unproven learner-flow status, the allowed
 `approve | reject | return_for_revision` decision inputs, and rollback/version linkage.
 
-Preparing that package grants no approval. A subsequent serial release task may create
-approved/published `card_versions`, attach authorized private media, seed the catalog and consider
-Preview flag enablement only after the owner returns an explicit decision for every item. Publication,
-participant invitation, Preview activation and Production remain separate owner gates.
+Preparing that package grants no approval, and the owner's recorded decisions in
+`content/packs/learnbox-start/validation/start-a1-35-owner-review-decisions.json` are repository
+evidence of that decision rather than its execution. A subsequent serial release task may create
+approved/published `card_versions` and attach authorized private media only by persisting those
+recorded decisions through the reviewed Admin path, and may seed the catalog and consider Preview flag
+enablement only after that persistence and attachment succeed. Publication, participant invitation,
+Preview activation and Production remain separate owner gates.
 
 ## Evidence sources
 
@@ -197,12 +230,15 @@ participant invitation, Preview activation and Production remain separate owner 
 - `content/packs/learnbox-start/validation/start-a1-avalai-audio-transcription-qa.json`
 - `content/packs/learnbox-start/validation/start-a1-catalog-35-pending-provenance-ledger.json` (LB-DS-055 evidence anchors)
 - `content/packs/learnbox-start/validation/start-a1-35-human-review-packet.json` (LB-DS-076 batched review packet)
+- `content/packs/learnbox-start/validation/start-a1-35-owner-review-decisions.json` (LB-DS-077 recorded owner decisions)
 - `content/packs/learnbox-start/validation/start-a1-35-final-media-manifest.json`
 - `database/migrations/0006_content_review_quality_gates.sql`
 - `apps/admin/lib/server/postgres-content-review-store.ts`
 - `docs/product-decisions/PDR-008-ADMIN-STARTER-REVIEW-PERSISTENCE.md`
 - `scripts/build-start-35-human-review-packet.mjs`; `scripts/validate-start-35-human-review-packet.mjs`; `scripts/validate-start-35-human-review-packet.test.mjs`
+- `scripts/validate-start-35-owner-review-decisions.mjs`; `scripts/validate-start-35-owner-review-decisions.test.mjs`
 - `.ai/worker-reports/LB-DS-076.md`
+- `.ai/worker-reports/LB-DS-077.md`
 - `.ai/worker-reports/LB-DS-055.md`
 - `apps/api/src/catalog/start-catalog-seed-gate.ts`
 - ADR 0013 and ADR 0016
