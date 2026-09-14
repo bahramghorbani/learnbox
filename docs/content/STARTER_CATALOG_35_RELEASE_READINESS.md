@@ -146,8 +146,10 @@ The bounded owner-authorized operation uploaded exactly 105 selected assets to t
 private target. All 105 objects passed an initial and a complete-resume cache-disabled private-download
 byte-count and SHA-256 verification. The URL-free receipt stays outside Git; no provider identifier,
 private locator, asset digest or receipt payload is recorded in this repository. Attachment, learner
-delivery, review decisions and activation have not occurred, and the historical pre-upload lifecycle
-fields inside `start-a1-35-final-media-manifest.json` are **not** current upload truth.
+delivery and activation have not occurred. The owner later returned the repository-only review now
+recorded by LB-DS-077, but no Admin review outcome or release approval was persisted; the historical
+pre-upload lifecycle fields inside `start-a1-35-final-media-manifest.json` are **not** current upload
+truth.
 
 ## Batched human-review packet — LB-DS-076 — 2026-09-14
 
