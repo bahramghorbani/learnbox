@@ -879,6 +879,8 @@ flag, deployment or publication is authorized by this task.
 - Acceptance: one deterministic packet contains exactly 35 canonical items and exactly the six canonical review dimensions for each; includes final German/Persian text, provenance, selected image and alt text, visual/audio evidence, explicit pending release-level app-flow status, decision vocabulary and rollback/version linkage; points only to repository-local evidence; preserves publication blocking; represents known exceptions explicitly; and offers no automatic approval or provider/runtime mutation path.
 - Implementation: two local commits on `feat/start35-human-review-packet`, direct descendants of the recorded starting head `626cc2aee1451f40e7b4fee86606cfb86d02b084`: the initial deterministic packet deliverable and a truthfulness hardening commit that makes the packet's alt-text, database, repository-media and per-dimension evidence-scope limits explicit and validator-enforced; the worker did not push, so the orchestrator pushes the branch and opens the draft PR.
 - Handoff: `.ai/worker-reports/LB-DS-076.md` records the RED then GREEN evidence, the check results, the explicit-path commits and the open review work.
+- Head commit: read the exact live final head from draft PR #288; independent review must bind to that pushed SHA.
+- Draft PR: #288 — https://github.com/bahramghorbani/learnbox/pull/288
 
 ## LB-DS-072
 
