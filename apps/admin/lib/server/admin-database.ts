@@ -1,6 +1,8 @@
 export type AdminDatabaseConfig = {
   connectionString: string;
-  max: 4;
+  max: 2;
+  idleTimeoutMillis: 10_000;
+  connectionTimeoutMillis: 5_000;
 };
 
 type Environment = Record<string, string | undefined>;
@@ -14,5 +16,10 @@ export function requireAdminDatabaseTls(databaseUrl: string) {
 export function readAdminDatabaseConfig(environment: Environment): AdminDatabaseConfig {
   const databaseUrl = environment.DATABASE_URL;
   if (!databaseUrl) throw new Error('DATABASE_URL is required for admin persistence.');
-  return { connectionString: requireAdminDatabaseTls(databaseUrl), max: 4 };
+  return {
+    connectionString: requireAdminDatabaseTls(databaseUrl),
+    max: 2,
+    idleTimeoutMillis: 10_000,
+    connectionTimeoutMillis: 5_000,
+  };
 }

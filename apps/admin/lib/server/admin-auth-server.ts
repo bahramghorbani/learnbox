@@ -8,6 +8,7 @@ import { Pool } from 'pg';
 
 import { readAdminAuthConfig } from './admin-auth-policy';
 import { readAdminDatabaseConfig, type AdminDatabaseConfig } from './admin-database';
+import { getSharedAdminDatabasePool } from './admin-database-pool';
 import { createAdminAuthRuntime } from './admin-auth-runtime';
 
 type Environment = Record<string, string | undefined>;
@@ -104,7 +105,8 @@ export function createAdminAuthServer(dependencies: {
 export function getAdminAuthServer() {
   return createAdminAuthServer({
     environment: process.env,
-    createPool: (config) => new Pool(config),
+    createPool: (config) =>
+      getSharedAdminDatabasePool(config, (poolConfig) => new Pool(poolConfig)),
     webauthn: adaptWebAuthn({ generateAuthenticationOptions, verifyAuthenticationResponse }),
   });
 }
