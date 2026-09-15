@@ -12,6 +12,7 @@ const sourcePacketTaskId = 'LB-DS-076';
 const decisionTaskId = 'LB-DS-077';
 const sourceBatchId = 'learnbox-start-a1-35-human-review-packet-v1';
 const sourceMergeCommit = 'f0f413bca32317e0bca25e55c54e950a37a95830';
+const submittedReviewedAt = '2026-09-14T17:31:26.517Z';
 const recordId = 'learnbox-start-a1-35-owner-review-decisions-v1';
 const recordKind = 'repository_owner_review_decision_record';
 const recordState = 'owner_decisions_recorded_repository_evidence_only';
@@ -293,8 +294,7 @@ async function loadCanonicalVocabulary(root) {
   };
 }
 
-async function loadSourceMergeTruth(root) {
-  const queue = await readFile(resolve(root, '.ai', 'WORK_QUEUE.md'), 'utf8');
+export function parseStart35OwnerReviewSourceMergeTruth(queue) {
   const block = (taskId) => {
     const start = queue.indexOf(`## ${taskId}`);
     if (start === -1) throw new Error(`${taskId} is missing from the work queue.`);
@@ -303,9 +303,11 @@ async function loadSourceMergeTruth(root) {
   };
   const packetBlock = block(sourcePacketTaskId);
   const mergeCommit = packetBlock.match(/- Merge commit: `([0-9a-f]{40})`/)?.[1];
-  const mergedAt = packetBlock.match(
-    /merged at `[0-9a-f]{40}` on (\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z)/,
-  )?.[1];
+  const mergedEvidence = packetBlock.match(
+    /merged at `([0-9a-f]{40})` on (\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z)/,
+  );
+  const mergedEvidenceCommit = mergedEvidence?.[1];
+  const mergedAt = mergedEvidence?.[2];
   const base = block(decisionTaskId).match(/- Base: exact `([0-9a-f]{40})`/)?.[1];
   if (!mergeCommit || !mergedAt || !base) {
     throw new Error('The recorded source-merge evidence for the owner-decision record is missing.');
@@ -313,7 +315,15 @@ async function loadSourceMergeTruth(root) {
   if (base !== mergeCommit) {
     throw new Error('The owner-decision task base must be the exact merged review-packet commit.');
   }
+  if (mergedEvidenceCommit !== mergeCommit) {
+    throw new Error('The review-packet merge timestamp must belong to its recorded merge commit.');
+  }
   return { mergeCommit, mergedAt };
+}
+
+async function loadSourceMergeTruth(root) {
+  const queue = await readFile(resolve(root, '.ai', 'WORK_QUEUE.md'), 'utf8');
+  return parseStart35OwnerReviewSourceMergeTruth(queue);
 }
 
 export async function loadStart35OwnerReviewDecisionsSources(root = process.cwd()) {
@@ -373,6 +383,11 @@ export async function assertStart35OwnerReviewDecisions(record, sources) {
     new Date(reviewedAt).toISOString() !== record.reviewedAt
   ) {
     throw new Error('The owner-decision record reviewedAt must be a valid UTC ISO-8601 instant.');
+  }
+  if (record.reviewedAt !== submittedReviewedAt) {
+    throw new Error(
+      'The owner-decision record must preserve the exact submitted review timestamp.',
+    );
   }
   if (reviewedAt <= Date.parse(sources.sourceMergedAt)) {
     throw new Error(

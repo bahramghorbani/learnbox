@@ -10,6 +10,7 @@ import {
   loadStart35OwnerReviewDecisionsSources,
   normalizeStart35OwnerReviewDecisions,
   ownerReviewDecisionRecordPath,
+  parseStart35OwnerReviewSourceMergeTruth,
 } from './validate-start-35-owner-review-decisions.mjs';
 
 const recordUrl = new URL(
@@ -19,6 +20,7 @@ const recordUrl = new URL(
 const repositoryRoot = new URL('..', import.meta.url).pathname;
 const committedSource = await readFile(recordUrl, 'utf8');
 const committed = JSON.parse(committedSource);
+const queueSource = await readFile(new URL('../.ai/WORK_QUEUE.md', import.meta.url), 'utf8');
 const sources = await loadStart35OwnerReviewDecisionsSources(repositoryRoot);
 const formatterOptions = {
   ...(await resolveConfig(recordUrl.pathname)),
@@ -282,6 +284,7 @@ const mutations = [
     'an impossible calendar timestamp',
     (record) => (record.reviewedAt = '2026-09-31T17:31:26.517Z'),
   ],
+  ['a future review timestamp', (record) => (record.reviewedAt = '2099-01-01T00:00:00.000Z')],
   [
     'a timestamp that precedes the source merge',
     (record) => (record.reviewedAt = '2026-09-14T16:46:50.000Z'),
@@ -436,3 +439,11 @@ for (const [label, mutate] of mutations) {
     await rejects(mutate);
   });
 }
+
+test('the source merge timestamp belongs to the recorded merge commit', () => {
+  const mismatchedQueue = queueSource.replace(
+    'PR #288 merged at `f0f413bca32317e0bca25e55c54e950a37a95830` on',
+    `PR #288 merged at \`${'a'.repeat(40)}\` on`,
+  );
+  assert.throws(() => parseStart35OwnerReviewSourceMergeTruth(mismatchedQueue));
+});

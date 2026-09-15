@@ -1,6 +1,6 @@
 # LearnBox Start 35 — release-readiness audit
 
-**Audit baseline:** `9a98197ffeee98f4069a690a59caebd0df4b053f` (`origin/main`, PR #287 merge)
+**Evidence baseline:** `f0f413bca32317e0bca25e55c54e950a37a95830` (`origin/main`, PR #288 merge); LB-DS-077's repository-only owner-decision record is the candidate evidence reviewed in Draft PR #289.
 **Audited at:** 2026-09-14
 **Decision:** **BLOCKED — do not seed, attach, publish or enable server-backed Today figures.**
 
@@ -31,7 +31,7 @@ The canonical catalog snapshot is therefore truthful at its top-level release bo
    the package remains unattached and two automated transcription discrepancies
    (`start-a1-essen-sentence`, `start-a1-gross-word`) remain recorded for a later release decision.
    Final visual/audio approval and release authorization are not granted here.
-2. **Remaining 15 items lack app-flow approval.** No artifact proves those items in the learner flow,
+2. **All 35 items lack release-level app-flow evidence.** The original 20 have candidate-stage local-flow evidence, while no artifact proves any of the 35 in the release learner flow,
    and every release-level `app_flow` check stays pending/unproven in the review packet. The owner
    accepted `app_flow` for all 35 items as repository evidence for the self-contained offline
    35-card review artifact's card flow only; that acceptance is not proof of a run Production learner
@@ -137,7 +137,7 @@ LB-DS-045 resolves the evidence-metadata drift identified above without expandin
   reviews; `releaseReady: false`, `attachmentAllowed: false` and `publicationBlocked: true`.
 
 The audit decision remains **BLOCKED** because this reconciliation corrects evidence truth only. It
-adds no media approval, app-flow approval, release-approved `card_versions`, seed permission or
+adds no release-level media or app-flow approval, release-approved `card_versions`, seed permission or
 publication permission.
 
 ## Private upload completed — 2026-09-14
