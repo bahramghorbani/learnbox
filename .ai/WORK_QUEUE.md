@@ -8,7 +8,7 @@ start. Historical tasks remain for traceability and must not be duplicated.
 ### Current release execution
 
 - **S0 — 30-day finish-line reset:** accepted in PR #278 at `34d0d6dbd85bb42c07a8aaee1576505b0eb8db72`. Official Web/PWA-first v1.0 is targeted for 2026-10-12; Android, commerce and premium packs are v1.1+.
-- **S1 — Private media + 35-item release batch:** in progress. PR #286 merged the reviewed JPEG source-truth correction, after which the owner-authorized guarded upload placed exactly 105 private assets in the isolated target. Every fresh object and a complete resume pass were verified by cache-disabled private download, exact byte count and SHA-256; the URL-free receipt remains outside Git. Nothing is attached, approved, seeded, activated, deployed or published. The next repository task prepares one batched 35-item/six-dimension human-review packet without making review decisions.
+- **S1 — Private media + 35-item release batch:** in progress. PR #286 merged the reviewed JPEG source-truth correction, after which the owner-authorized guarded upload placed exactly 105 private assets in the isolated target. Every fresh object and a complete resume pass were verified by cache-disabled private download, exact byte count and SHA-256; the URL-free receipt remains outside Git. PR #288 merged the deterministic decision-free 35-item/six-dimension review packet, and Draft PR #289 records the owner's returned review as repository intent only. Admin outcomes remain 0 recorded / 210 pending; 0/35 items are release-approved. Nothing is attached, seeded, activated, deployed or published. Admin persistence and private-media attachment require separate owner authorization after PR #289 clears exact-head review and CI.
 - **S2 — Server-authoritative Web loop:** ready after S1's canonical content identifiers are stable; implementation and default-off integration can overlap S1 after interfaces are fixed.
 - **S3 — Web release essentials:** partial foundations; account/privacy/support/operations work may overlap S2 with disjoint paths.
 - **S4 — Closed alpha:** planned for 2026-10-04 through 2026-10-08 after S1–S3 integration evidence.
@@ -859,7 +859,7 @@ flag, deployment or publication is authorized by this task.
 
 ## LB-DS-076
 
-- Status: review_requested
+- Status: accepted
 - Executor: W4 content-review worker plus independent product/content reviewer
 - Base: exact `9a98197ffeee98f4069a690a59caebd0df4b053f` (`origin/main`, PR #287 merge)
 - Branch: `feat/start35-human-review-packet`
@@ -881,6 +881,35 @@ flag, deployment or publication is authorized by this task.
 - Handoff: `.ai/worker-reports/LB-DS-076.md` records the RED then GREEN evidence, the check results, the explicit-path commits and the open review work.
 - Head commit: read the exact live final head from draft PR #288; independent review must bind to that pushed SHA.
 - Draft PR: #288 — https://github.com/bahramghorbani/learnbox/pull/288
+- Merge commit: `f0f413bca32317e0bca25e55c54e950a37a95830`
+- Accepted evidence: exact head `40633cae30093e7020c432330fd0c84eae9d6400` passed two independent final reviews and all seven GitHub/Vercel contexts; PR #288 merged at `f0f413bca32317e0bca25e55c54e950a37a95830` on 2026-09-14T16:46:51Z.
+
+## LB-DS-077
+
+- Status: review_requested
+- Executor: content-review evidence worker plus independent product/security reviewer
+- Base: exact `f0f413bca32317e0bca25e55c54e950a37a95830` (`origin/main`, PR #288 merge)
+- Branch: `feat/start35-owner-review-decisions`
+- Risk: security-sensitive-human-release-decision-record
+- Specification: owner-submitted `LearnBox-Start-35-Owner-Decisions.json` bound to source merge `f0f413bca32317e0bca25e55c54e950a37a95830`; `content/packs/learnbox-start/validation/start-a1-35-human-review-packet.json`; migration `0006`; `apps/admin/lib/server/postgres-content-review-store.ts`; `apps/admin/lib/server/admin-content-review-routes.ts`; PDR-008
+- Outcome: validate and normalize the owner's submitted batched review as an auditable repository record for exactly 35 canonical items, 210 passed checks and 35 `approve` decisions, while preserving the distinction between recorded owner intent and unexecuted Admin/database persistence. Keep attachment, seedability, learner exposure and publication blocked.
+- Allowed paths: `scripts/validate-start-35-owner-review-decisions.mjs`; `scripts/validate-start-35-owner-review-decisions.test.mjs`; `content/packs/learnbox-start/validation/start-a1-35-owner-review-decisions.json`; `package.json`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-077.md`; `CURRENT_WORK.md`; `PROJECT_STATE.md`; `ROADMAP.md`; `BACKLOG.md`; `docs/PRODUCT_STATUS.md`; `docs/content/STARTER_CATALOG_35_RELEASE_READINESS.md`
+- Documentation updates: record the owner's 35/35 approve decision and 210/210 passed checks, the exact source merge and submitted review time, and the remaining separation between repository evidence, Admin/database persistence, private-media attachment, seedability, activation and publication. Do not store provider locators, credentials, media digests or the external receipt.
+- Owner gates: the submitted artifact explicitly authorizes recording the 35 review decisions as repository evidence. It does not authorize Admin/database mutation, private-media attachment, seed/catalog release, runtime activation, deployment, Preview/Production or publication; all remain separately gated and prohibited.
+- Handoff evidence: exact merged base; submitted artifact SHA-256 captured outside the canonical decision JSON; genuine RED/GREEN; strict schema/key/vocabulary validation; item IDs and ordering set-equal to the merged human-review packet; exactly six canonical dimensions per item; exactly 210 `passed` outcomes; exactly 35 `approve` decisions; source merge exact; timestamp valid; no forbidden locator/provider/credential/receipt fields; deterministic canonical serialization; queue/documentation/continuity/security checks; full `pnpm check`; Prettier; `git diff --check`; independent exact-head review; seven terminal GitHub/Vercel contexts.
+- Required checks: focused validator tests; validator over the canonical owner-decision record; source item/dimension/decision set equality; mutation and malformed-input fail-closed cases; `pnpm verify:start-35-human-review-packet`; `pnpm verify:start-35-final-media-manifest`; `pnpm verify:ai-worker-queue`; `pnpm verify:documentation-governance`; `pnpm verify:security`; `pnpm verify:ai-continuity`; `pnpm check`; Prettier; `git diff --check`; independent exact-head product/security review; seven terminal GitHub/Vercel contexts.
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+- Blocked on: none; owner submission validated locally against exact source merge `f0f413bca32317e0bca25e55c54e950a37a95830` with 35 unique items, six dimensions each, 210 passed checks and 35 approve decisions.
+- Must not touch: provider configuration/credentials/IDs/URLs; external upload receipt; media bytes; object stores; attachment records; database/migrations; Admin runtime/routes or live review rows; catalog seed; flags; deployment; Preview/Production; publication; learner apps; Bobo assets.
+- Acceptance: the committed canonical decision record is byte-deterministic, set-equal to the merged 35-item packet, bound to source merge `f0f413bca32317e0bca25e55c54e950a37a95830`, contains exactly 210 passed checks and 35 owner approve decisions with no forbidden external state, and truthfully keeps Admin persistence, attachment, seedability, learner exposure and publication unperformed and blocked.
+- Implementation: commits on `feat/start35-owner-review-decisions`, direct descendants of the recorded starting head `04748fbe25f1de13bb836ce54b89d21ed91147a4`: the deterministic owner-decision record with its validator, focused tests and `pnpm check` wiring plus the truth-reconciled documentation, then the handoff report, then the semantic-separation hardening commit. The owner-submitted `LearnBox-Start-35-Owner-Decisions.json` binds to source merge `f0f413bca32317e0bca25e55c54e950a37a95830` and hashes to `fb39250a75a34356954dfb4577fa1639cf3e611e3627f4cc5f7165c9118e23c6`, which is retained here and in the handoff report outside the canonical decision JSON; the branch is pushed and Draft PR #289 is open.
+- Semantic separation hardening: independent adversarial audit found that submitted `checks.*.outcome: passed` could be misread as a persisted Admin/release-level outcome, that the accepted app flow was the self-contained offline card-flow review artifact rather than Production runtime behavior, and that the two prior transcription exceptions must not disappear because the owner accepted the audio. The hardening commit normalizes every check to `ownerSubmittedOutcome` with `adminOutcomeRecorded: false` and no bare `outcome` anywhere, adds packet-level `reviewPresentation` (self-contained offline 35-card owner-review artifact, content/card-flow acceptance only) and per-check `ownerEvidenceBasis` plus repeated `sourcePacketStatus`/`sourcePacketEvidenceScope`, preserves both exceptions verbatim as `priorEvidenceExceptions` derived from the packet with disposition `accepted_as_presented_unpersisted_to_admin` and `resolved: false`, and states `reviewerRoleBasis: 'owner_asserted_through_submitted_review_artifact'` with no identity, cryptographic or session proof. Counts stay truthful to owner intent: 35 owner approvals, 210 owner-submitted `passed`, 0 Admin outcomes recorded, 210 pending, 0 release-approved, attachment/seed/runtime/provider/publication false.
+- Semantic separation fail-closed cases: app-flow Production/runtime overclaim, app-flow production-verified evidence basis, app-flow source status or release-level scope alteration, review artifact production/runtime/activation/Admin-persistence/live-database claim, weakened review presentation scope or artifact kind, dropped or duplicated or altered or resolved prior transcription exception, weakened exception disposition, Admin outcome claim inside a check or in the release position, cleared pending Admin count, reviewer identity or session-proof overclaim, weakened reviewer role basis, reintroduced bare `outcome` field or bare `outcomeCounts` field.
+- Handoff: `.ai/worker-reports/LB-DS-077.md` records the RED then GREEN evidence, the check results, the explicit-path commits and the open review and execution work.
+- Head commit: read live with `gh pr view 289 --json headRefOid` before readiness or merge.
+- Draft PR: #289 — https://github.com/bahramghorbani/learnbox/pull/289 (open, Draft)
 
 ## LB-DS-072
 

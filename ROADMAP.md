@@ -42,7 +42,7 @@ At the baseline:
 - 35 starter drafts exist, but 0/35 are release-approved, `seedable` is false and publication remains blocked.
 - Private-media guard code and corrected media source truth are merged. The owner-authorized exact-105 upload to the verified isolated target completed with cache-disabled private-download size/SHA-256 verification on both initial and resume runs; no attachment exists.
 - Web learning, server-read and reconciliation foundations exist behind disabled boundaries; production composition is not active.
-- Admin review and release foundations exist, but human review, content publication and production release have not occurred.
+- Admin review and release foundations exist, and the owner completed the repository-only 35-item artifact review recorded by LB-DS-077. Admin review outcomes remain unpersisted, 0/35 items are release-approved, media remains unattached, and content publication and Production release have not occurred.
 - No payment provider is needed for this Web-first v1.0.
 
 Critical path:
@@ -89,9 +89,10 @@ Only disjoint preparation may overlap. Upload, attachment, approval, seed, activ
 - Completed Sep 12: owner selected/created the isolated private-media target and accepted its cost; this did not itself authorize upload.
 - Completed Sep 14: independently verified target isolation with the merged fail-closed guard.
 - Completed Sep 14: owner separately authorized the exact guarded upload plus integrity verification; attachment remained separately prohibited.
-- By Sep 21, complete the separately authorized guarded upload for all starter media and retain its URL-free receipt outside Git. Upload completed Sep 14 with 105/105 initial and resume integrity verification; attachment remains a separate closed gate.
-- Present one batched 35-item approve/return review while preserving six auditable review dimensions.
-- Close returned defects and reach 35/35 release approval by Sep 22.
+- Completed Sep 14: the separately authorized guarded upload for all starter media retained its URL-free receipt outside Git and passed 105/105 initial and resume integrity verification; attachment remains a separate closed gate.
+- Completed Sep 14: presented one batched 35-item approve/return review while preserving six auditable review dimensions.
+- Completed Sep 14: the owner returned that batched review — 210/210 owner-submitted checks `passed`, 35 `approve` decisions and no `reject`/`return_for_revision` — and LB-DS-077 recorded it as a deterministic repository-only decision record bound to source merge `f0f413b`. The record keeps owner intent separate from Admin and release state: every check states `adminOutcomeRecorded: false`, `app_flow` stays `pending_unproven` while only the isolated offline review artifact's card flow was accepted, both prior transcription exceptions stay preserved and unresolved, and no identity proof is claimed. The Admin review store, media attachment, seed and publication stay untouched, so the record alone keeps `seedable: false` and `publicationBlocked: true`.
+- After separate owner authorization for each gate, persist corresponding Admin outcomes and attach private media through their distinct reviewed paths; then reach 35/35 release approval by Sep 22, not by restating repository evidence.
 
 **Exit gate**
 
@@ -106,7 +107,7 @@ Only disjoint preparation may overlap. Upload, attachment, approval, seed, activ
 
 **Tasks**
 
-- Prepare authenticated Web state, catalog/media and reconciliation activation on disjoint paths while S1 review proceeds.
+- Prepare authenticated Web state, catalog/media and reconciliation activation on disjoint paths while separately authorized S1 Admin persistence and attachment remain pending.
 - After 35/35 approval, run the idempotent seed/release and verify exactly 35 learner-visible rows.
 - Activate only required Web flags in a controlled environment with documented rollback.
 - Verify Today, Words, review scheduling, progress, reconnect acknowledgement and account switching.
@@ -189,7 +190,7 @@ The 2026-10-12 target assumes:
 
 - storage/cost decision completed Sep 12;
 - separate bounded upload authorization and exact-105 integrity-verified execution completed Sep 14; attachment remains a separate open gate;
-- batched 35/35 human review by Sep 22;
+- batched 35/35 human review decision returned Sep 14 and recorded as repository evidence; two distinct owner authorizations and execution paths remain for Sep 22 work: Admin-outcome persistence and private-media attachment;
 - seed/controlled activation approval by Sep 26;
 - owner pilot and invitations available Oct 4–8;
 - public-release approval by Oct 11;
