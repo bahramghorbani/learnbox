@@ -92,7 +92,7 @@ Only disjoint preparation may overlap. Upload, attachment, approval, seed, activ
 - Completed Sep 14: the separately authorized guarded upload for all starter media retained its URL-free receipt outside Git and passed 105/105 initial and resume integrity verification; attachment remains a separate closed gate.
 - Completed Sep 14: presented one batched 35-item approve/return review while preserving six auditable review dimensions.
 - Completed Sep 14: the owner returned that batched review — 210/210 owner-submitted checks `passed`, 35 `approve` decisions and no `reject`/`return_for_revision` — and LB-DS-077 recorded it as a deterministic repository-only decision record bound to source merge `f0f413b`. The record keeps owner intent separate from Admin and release state: every check states `adminOutcomeRecorded: false`, `app_flow` stays `pending_unproven` while only the isolated offline review artifact's card flow was accepted, both prior transcription exceptions stay preserved and unresolved, and no identity proof is claimed. The Admin review store, media attachment, seed and publication stay untouched, so the record alone keeps `seedable: false` and `publicationBlocked: true`.
-- After separate owner authorization for each gate, persist corresponding Admin outcomes and attach private media through their distinct reviewed paths; then close returned defects and reach 35/35 release approval by Sep 22, not by restating repository evidence.
+- After separate owner authorization for each gate, persist corresponding Admin outcomes and attach private media through their distinct reviewed paths; then reach 35/35 release approval by Sep 22, not by restating repository evidence.
 
 **Exit gate**
 
@@ -190,7 +190,7 @@ The 2026-10-12 target assumes:
 
 - storage/cost decision completed Sep 12;
 - separate bounded upload authorization and exact-105 integrity-verified execution completed Sep 14; attachment remains a separate open gate;
-- batched 35/35 human review decision returned Sep 14 and recorded as repository evidence; separately authorizing and then executing it through the reviewed Admin/attachment path stays the remaining Sep 22 work;
+- batched 35/35 human review decision returned Sep 14 and recorded as repository evidence; two distinct owner authorizations and execution paths remain for Sep 22 work: Admin-outcome persistence and private-media attachment;
 - seed/controlled activation approval by Sep 26;
 - owner pilot and invitations available Oct 4–8;
 - public-release approval by Oct 11;

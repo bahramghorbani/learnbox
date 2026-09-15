@@ -211,10 +211,11 @@ results. The actual media still requires human viewing and listening before any 
 The bounded preparation slice described by earlier audits is complete: all 35 items have private
 candidate-only media, the final 105-asset selection passed initial and complete-resume private
 integrity verification, the batched review packet presents the whole set, and the owner has returned
-the batched six-dimension decision now recorded as repository evidence by LB-DS-077. Executing that
-recorded decision through the reviewed Admin persistence path and attaching media are possible only
-after separate owner authorization; neither action is authorized by the recorded review artifact.
-Once separately authorized, that work requires no provider cost or candidate generation. Human
+the batched six-dimension decision now recorded as repository evidence by LB-DS-077. Persisting
+corresponding Admin outcomes and attaching private media are possible only after two distinct owner
+authorizations and through two distinct reviewed execution paths; neither action is authorized by the
+recorded review artifact. Once each is separately authorized, neither path requires provider cost or
+candidate generation. Human
 visual/audio/content judgment remains mandatory — validators and AI output cannot grant it.
 
 ## Release decision package — prepared 2026-09-14
@@ -231,10 +232,11 @@ Preparing that package grants no approval, and the owner's recorded decisions in
 evidence of that decision rather than its execution: its 210 `passed` checks are explicit
 owner-submitted outcomes (`ownerSubmittedOutcome` with `adminOutcomeRecorded: false`), and its
 `reviewPresentation` records acceptance of the self-contained offline 35-card review artifact only,
-not Production runtime verification. A separately authorized subsequent serial release task may create
-approved/published `card_versions` and attach authorized private media only by persisting those
-recorded decisions through the reviewed Admin path, and may seed the catalog and consider Preview flag
-enablement only after that persistence and attachment succeed. Publication, participant invitation,
+not Production runtime verification. One later task may persist corresponding Admin outcomes and
+create approved/published `card_versions` only after explicit authorization for that Admin path. A
+distinct later task may attach private media only after explicit attachment authorization and through
+the reviewed attachment path. The catalog may be seeded and Preview activation considered only after
+both independent operations succeed. Publication, participant invitation,
 Preview activation and Production remain separate owner gates.
 
 ## Evidence sources

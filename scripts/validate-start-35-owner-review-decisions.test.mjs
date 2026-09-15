@@ -422,11 +422,14 @@ const mutations = [
   ['a provider credential field', (record) => (record.providerApiKey = 'redacted')],
   ['a receipt field', (record) => (record.uploadReceipt = 'opaque')],
   ['a digest field', (record) => (record.artifactSha256 = 'opaque')],
-  ['a remote URL value', (record) => (record.state = 'https://example.com/record')],
-  ['a digest-like value', (record) => (record.state = 'a'.repeat(40))],
+  [
+    'a remote URL value',
+    (record) => (record.priorEvidenceExceptions[0].detail = 'https://example.com/record'),
+  ],
+  ['a digest-like value', (record) => (record.priorEvidenceExceptions[0].detail = 'a'.repeat(40))],
   [
     'a runtime identifier value',
-    (record) => (record.state = '11111111-2222-3333-4444-555555555555'),
+    (record) => (record.priorEvidenceExceptions[0].detail = '11111111-2222-3333-4444-555555555555'),
   ],
   [
     'a forbidden field inside an item',
