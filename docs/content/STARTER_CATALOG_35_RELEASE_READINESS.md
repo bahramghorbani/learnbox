@@ -233,11 +233,13 @@ evidence of that decision rather than its execution: its 210 `passed` checks are
 owner-submitted outcomes (`ownerSubmittedOutcome` with `adminOutcomeRecorded: false`), and its
 `reviewPresentation` records acceptance of the self-contained offline 35-card review artifact only,
 not Production runtime verification. One later task may persist corresponding Admin outcomes and
-create approved/published `card_versions` only after explicit authorization for that Admin path. A
+produce approved, unpublished `card_versions` only after explicit authorization for that Admin path.
+A
 distinct later task may attach private media only after explicit attachment authorization and through
 the reviewed attachment path. The catalog may be seeded and Preview activation considered only after
-both independent operations succeed. Publication, participant invitation,
-Preview activation and Production remain separate owner gates.
+both independent operations succeed. Transitioning a version to `published` requires its own explicit
+publication authorization and execution path after the attachment, seed/release and publication gates
+are satisfied. Participant invitation, Preview activation and Production remain separate owner gates.
 
 ## Evidence sources
 
