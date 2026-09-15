@@ -478,7 +478,7 @@ export class PostgresContentReviewStore {
       ]);
       await client.query(
         `INSERT INTO audit_logs (actor_user_id, action, entity_type, entity_id, metadata)
-         VALUES ($1, $2, 'card_version', $3, jsonb_build_object('decision_key', $4))`,
+         VALUES ($1, $2, 'card_version', $3, jsonb_build_object('decision_key', $4::uuid))`,
         [actorUserId, `content_review.${input.action}`, input.cardVersionId, input.decisionKey],
       );
       await client.query('COMMIT');

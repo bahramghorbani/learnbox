@@ -517,6 +517,7 @@ describe('PostgresContentReviewStore final decisions', () => {
     const update = client.calls.find((call) => call.sql.startsWith('UPDATE card_versions'));
     expect(update?.params).toEqual([cardVersionId, 'approved']);
     const audit = client.calls.find((call) => call.sql.includes('INSERT INTO audit_logs'));
+    expect(audit?.sql).toContain("jsonb_build_object('decision_key', $4::uuid)");
     expect(audit?.params).toEqual([
       actorUserId,
       'content_review.approve',
