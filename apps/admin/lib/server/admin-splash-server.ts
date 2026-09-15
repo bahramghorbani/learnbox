@@ -2,6 +2,7 @@ import { Pool } from 'pg';
 
 import { readAdminAuthConfig } from './admin-auth-policy';
 import { readAdminDatabaseConfig, type AdminDatabaseConfig } from './admin-database';
+import { getSharedAdminDatabasePool } from './admin-database-pool';
 import {
   createSplashCurrentRoute,
   createSplashPreviewRoute,
@@ -80,7 +81,8 @@ export function createAdminSplashServer(dependencies: {
 export function getAdminSplashServer() {
   return createAdminSplashServer({
     environment: process.env,
-    createPool: (config) => new Pool(config),
+    createPool: (config) =>
+      getSharedAdminDatabasePool(config, (poolConfig) => new Pool(poolConfig)),
     createStorage: (token) => createPrivateSplashStorage({ token }),
   });
 }

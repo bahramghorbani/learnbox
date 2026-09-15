@@ -7,6 +7,7 @@ import {
   createContentReviewQueueRoute,
 } from './admin-content-review-routes';
 import { readAdminDatabaseConfig, type AdminDatabaseConfig } from './admin-database';
+import { getSharedAdminDatabasePool } from './admin-database-pool';
 import { PostgresOwnerAuthStore } from './postgres-owner-auth-store';
 import { PostgresContentReviewStore } from './postgres-content-review-store';
 
@@ -51,6 +52,7 @@ export function createAdminContentReviewServer(dependencies: {
 export function getAdminContentReviewServer() {
   return createAdminContentReviewServer({
     environment: process.env,
-    createPool: (config) => new Pool(config),
+    createPool: (config) =>
+      getSharedAdminDatabasePool(config, (poolConfig) => new Pool(poolConfig)),
   });
 }
