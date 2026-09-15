@@ -36,7 +36,7 @@ function contentTypeForPathname(pathname: string) {
   return extension ? (contentTypeByExtension[extension] ?? null) : null;
 }
 
-export function isStagingPrivateMediaEnvironment(environment: NodeJS.ProcessEnv = process.env) {
+function isStagingPrivateMediaEnvironment(environment: NodeJS.ProcessEnv = process.env) {
   if (environment.VERCEL_ENV === 'production' || environment.APP_ENV === 'production') return false;
   return (
     environment.VERCEL_ENV === 'preview' ||
