@@ -47,6 +47,8 @@ for (const required of [
 
 for (const required of [
   "LEARNBOX_PRIVATE_MEDIA_ATTACHMENT_ENABLED !== 'true'",
+  'isStagingPrivateMediaEnvironment()',
+  'start-a1-35-final-private-media-attestation.json',
   'readLearnerSession(request)',
   "access: 'private'",
   "'Cache-Control': 'private, no-store'",

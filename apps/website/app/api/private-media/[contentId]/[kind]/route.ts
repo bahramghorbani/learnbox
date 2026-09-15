@@ -1,7 +1,6 @@
 import { get } from '@vercel/blob';
 
-import privateMediaAttestation from '../../../../../../../content/packs/learnbox-start/validation/start-a1-private-media-attestation.json';
-import privateV2ImageAttestation from '../../../../../../../content/packs/learnbox-start/validation/start-a1-v2-images-private-media-attestation.json';
+import privateMediaAttestation from '../../../../../../../content/packs/learnbox-start/validation/start-a1-35-final-private-media-attestation.json';
 import { readLearnerSession } from '../../../../../lib/server-session';
 
 export const runtime = 'nodejs';
@@ -18,10 +17,7 @@ const kindByRouteSegment = {
 } as const;
 
 const privateMediaByKey = new Map(
-  [...privateMediaAttestation.assets, ...privateV2ImageAttestation.assets].map((asset) => [
-    `${asset.contentId}:${asset.kind}`,
-    asset,
-  ]),
+  privateMediaAttestation.assets.map((asset) => [`${asset.contentId}:${asset.kind}`, asset]),
 );
 
 // LB-DS-074: the pending JPEG Start candidates attest `image/jpeg`, so the
@@ -40,8 +36,24 @@ function contentTypeForPathname(pathname: string) {
   return extension ? (contentTypeByExtension[extension] ?? null) : null;
 }
 
+function isStagingPrivateMediaEnvironment(environment: NodeJS.ProcessEnv = process.env) {
+  if (environment.VERCEL_ENV === 'production' || environment.APP_ENV === 'production') return false;
+  return (
+    environment.VERCEL_ENV === 'preview' ||
+    environment.APP_ENV === 'staging' ||
+    (environment.VERCEL_ENV === undefined &&
+      environment.APP_ENV === undefined &&
+      environment.NODE_ENV === 'development')
+  );
+}
+
+// The final 35-item attestation is only serviceable in staging or local development.
+// A separately approved Production delivery transition must replace this allowlist.
 export async function GET(request: Request, context: RouteContext) {
-  if (process.env.LEARNBOX_PRIVATE_MEDIA_ATTACHMENT_ENABLED !== 'true') {
+  if (
+    process.env.LEARNBOX_PRIVATE_MEDIA_ATTACHMENT_ENABLED !== 'true' ||
+    !isStagingPrivateMediaEnvironment()
+  ) {
     return new Response('Not found', { status: 404 });
   }
 

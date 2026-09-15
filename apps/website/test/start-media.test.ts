@@ -6,13 +6,10 @@ import { GET as privateMedia } from '../app/api/private-media/[contentId]/[kind]
 import { buildStartMediaSources, resolveStartMediaMode } from '../app/start-media';
 import { createLearnerSession } from '../lib/server-session';
 
-// LB-DS-074: the pending JPEG Start candidates attest `image/jpeg`
-// (start-a1-15-candidate-media-attachment-draft.json), so a delivered media
-// response must follow the attested pathname extension instead of a hardcoded
-// `image/png`. The fixture stands in for the JPEG attestation batch; the real
-// V2 image attestation stays loaded to prove PNG delivery is unchanged.
+// Route tests use a compact fixture for the canonical 105-asset attestation.
+// The committed artifact is validated separately by the attestation validator.
 vi.mock(
-  '../../../content/packs/learnbox-start/validation/start-a1-private-media-attestation.json',
+  '../../../content/packs/learnbox-start/validation/start-a1-35-final-private-media-attestation.json',
   () => ({
     default: {
       assets: [
@@ -123,6 +120,7 @@ describe('Start media sources', () => {
 
 const sessionCookie = () => {
   vi.stubEnv('LEARNBOX_PRIVATE_MEDIA_ATTACHMENT_ENABLED', 'true');
+  vi.stubEnv('APP_ENV', 'staging');
   vi.stubEnv('LEARNBOX_SESSION_SECRET', 'start-media-test-session-secret-32-bytes');
   return `learnbox_alpha_session=${createLearnerSession('start-learner-1')}`;
 };
@@ -142,7 +140,7 @@ async function fetchPrivateMedia(
 }
 
 describe('Private media delivery contract (LB-DS-074)', () => {
-  it('delivers an attested .jpg image as image/jpeg', async () => {
+  it('delivers the final-15 attached image as image/jpeg', async () => {
     const response = await fetchPrivateMedia('start-a1-fenster', 'image', {
       cookie: sessionCookie(),
     });
@@ -209,8 +207,19 @@ describe('Private media delivery contract (LB-DS-074)', () => {
     expect(response.headers.get('x-content-type-options')).toBe('nosniff');
   });
 
+  it('refuses delivery in Production even when the attachment flag is enabled', async () => {
+    vi.stubEnv('VERCEL_ENV', 'production');
+    const response = await fetchPrivateMedia('start-a1-fenster', 'image', {
+      cookie: sessionCookie(),
+    });
+
+    expect(response.status).toBe(404);
+    expect(readPrivateBlob).not.toHaveBeenCalled();
+  });
+
   it('keeps the release flag and learner session guards', async () => {
     vi.stubEnv('LEARNBOX_PRIVATE_MEDIA_ATTACHMENT_ENABLED', 'true');
+    vi.stubEnv('APP_ENV', 'staging');
     vi.stubEnv('LEARNBOX_SESSION_SECRET', 'start-media-test-session-secret-32-bytes');
     const withoutSession = await fetchPrivateMedia('start-a1-fenster', 'image');
     expect(withoutSession.status).toBe(401);
