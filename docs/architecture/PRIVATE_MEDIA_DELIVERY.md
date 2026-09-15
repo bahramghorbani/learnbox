@@ -8,9 +8,10 @@ rendered into cards, or sent to a browser client.
 `/api/private-media/[contentId]/[kind]` returns a media stream only when all conditions hold:
 
 1. `LEARNBOX_PRIVATE_MEDIA_ATTACHMENT_ENABLED=true` is explicitly configured.
-2. The request has a valid, signed, short-lived learner session cookie.
-3. The requested card and media kind appear in the checksum-attested Start manifest.
-4. Vercel Blob can read the private object through project-scoped OIDC.
+2. The deployment is not Production (`VERCEL_ENV` and `APP_ENV` are both not `production`).
+3. The request has a valid, signed, short-lived learner session cookie.
+4. The requested card and media kind appear in the checksum-attested 35-item/105-asset Start manifest.
+5. Vercel Blob can read the private object through project-scoped OIDC.
 
 Otherwise the route returns either `404` (feature disabled or unknown media) or `401` (no valid
 session). Successful responses are `private, no-store`, same-origin and `nosniff`.
