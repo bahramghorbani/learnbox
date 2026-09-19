@@ -57,6 +57,11 @@ function serialize(state: LearnerStateSnapshot): JsonObject {
       lapses: schedule.lapses,
       dueAt: schedule.dueAt.toISOString(),
     })),
+    newCards: state.newCards.map((card) => ({
+      cardId: card.cardId,
+      contentId: card.contentId,
+      importance: card.importance,
+    })),
     plan: {
       mode: state.plan.mode,
       reviewCardIds: state.plan.reviewCardIds,

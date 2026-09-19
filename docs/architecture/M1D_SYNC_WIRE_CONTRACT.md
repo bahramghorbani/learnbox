@@ -55,10 +55,12 @@ Verified current facts (`origin/main` at `4718f93`):
   acknowledge; a cursor alone never removes queue entries). Slice 1b/1c/1d all state:
   "Remaining (separate serial M1-D slices): delta response semantics, and production
   composition/flag enablement."
-- **GET learner state exists, dormant:** `GET /api/learner/state` returns `schedules`,
-  `plan`, `reviewEventsCount` (exact `COUNT(*)`, not a watermark) behind
-  `LEARNER_STATE_ENABLED`. It is a read and carries **no** reconciliation cursor today
-  (Slice 1b "Remaining").
+- **GET learner state exists, dormant:** `GET /api/learner/state` returns learner-scoped
+  `schedules`, selected `newCards` (each binds its card UUID to canonical `contentId`),
+  `plan`, `reviewEventsCount` (exact `COUNT(*)`, not a watermark), and the authoritative
+  decimal-string `reconciliationCursor` behind `LEARNER_STATE_ENABLED`. New-card candidates
+  are limited to approved/published, unscheduled `start-a1-%` content; the engine admits at
+  most three after due reviews and none in recovery mode. The read creates no schedules.
 - **Pull read exists but remains dormant.** `GET /api/reviews/mobile/reconciliation` returns
   learner-scoped applied event identities after a cursor only when the existing mobile review sync
   runtime is explicitly and completely enabled. No client calls it and no server-push channel

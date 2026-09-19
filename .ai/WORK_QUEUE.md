@@ -43,9 +43,29 @@ The M0–M8 records below retain implementation provenance only; they do not ove
 
 ### Active grouped workstreams
 
+## LB-DS-079
+
+- Status: review_requested
+- Executor: supervisor with independent S2 data-flow reviewer and final exact-head QA
+- Base: exact `6f1eb9e81acb35c183f1d330a87ed43a07690ca1` (`origin/main`, PR #293 merge)
+- Branch: `feat/s2-start35-new-card-intake`
+- Risk: learner-scoped-server-authoritative-new-card-intake
+- Specification: `ROADMAP.md` S2; ADR 0012; ADR 0013; ADR 0014; ADR 0016; `docs/architecture/M1D_SYNC_PERSISTENCE_SLICE1.md`; `docs/architecture/M1D_SYNC_WIRE_CONTRACT.md`
+- Outcome: expose a bounded set of approved/published, learner-unscheduled Start Pack candidates through the server-authoritative learner-state read, carry canonical `contentId` beside each selected card, preserve review-first capacity and recovery-mode behavior, and perform no read-side schedule writes.
+- Allowed paths: `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-079.md`; `CURRENT_WORK.md`; `PROJECT_STATE.md`; `docs/PRODUCT_STATUS.md`; `docs/architecture/M1D_SYNC_PERSISTENCE_SLICE1.md`; `docs/architecture/M1D_SYNC_WIRE_CONTRACT.md`; `docs/architecture/ADR/0012-web-learner-state-server-wiring.md`; `apps/api/src/learner-state/**`; `apps/api/test/learner-state-http.test.ts`; `apps/api/test/learner-state.service.test.ts`; `apps/api/test/postgres-learner-state.repository.test.ts`; `apps/website/lib/learner-state-web-client.ts`; `apps/website/lib/learner-state-web-http.ts`; `apps/website/test/learner-state-web-client.test.ts`; `apps/website/test/learner-state-web-http.test.ts`; `apps/website/test/learner-today-server-states.test.tsx`
+- Dependencies: merged LB-DS-078 targeted schedule creation; existing canonical `cards.content_id`; approved/published card-version gate; existing authenticated API and Web learner-state boundaries.
+- Owner gates: repository implementation and tests are authorized. No Production/public activation, DNS/provider/payment change, secret mutation, OTP send, database migration execution, staging deployment, catalog decision mutation, private-media attachment, or publication is authorized by this item.
+- Must not touch: native Android; payments/entitlements; premium packs; private provider credentials or locators; public landing; Production composition; Admin decision history; existing Start-35 approval outcomes; private-media receipt.
+- Acceptance: the repository returns at most 12 approved/published `start-a1-%` cards not scheduled for the authenticated learner; another learner's schedule does not hide a candidate; the engine admits at most three after due reviews and none in recovery mode; API and Web responses bind each selected card UUID to its canonical `contentId`; reads create no schedules; existing auth, no-store, review idempotency and reconciliation semantics remain green; no migration, runtime flag or environment changes.
+- Required checks: focused learner-state repository/service/API/Web tests; API and Website typecheck/test; `pnpm verify:ai-worker-queue`; `pnpm verify:documentation-governance`; `pnpm verify:security`; `pnpm check`; `gitleaks`; `git diff --check`; independent exact-head review; seven terminal GitHub/Vercel contexts before merge.
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+- Blocked on: independent exact-head PASS and all required CI terminal-success contexts; staging/Production activation remains a separate gate.
+
 ## LB-DS-078
 
-- Status: in_progress
+- Status: accepted
 - Executor: supervisor with independent S2 data-flow reviewer and final exact-head QA
 - Base: exact `ad0b1583bc7f1ef0b825aa7f0fefb7e0149752a8` (`origin/main`, PR #292 merge)
 - Branch: `feat/s2-start35-seed-release`
@@ -61,7 +81,11 @@ The M0–M8 records below retain implementation provenance only; they do not ove
 - Simulator required: no
 - Draft PR required: yes
 - Merge allowed: yes
-- Blocked on: independent exact-head PASS and all required CI terminal-success contexts; staging/Production deployment remains a separate gate.
+- Head commit: `5cf8e1485ab70109783a4b95b95a7cee17784fdf`
+- Draft PR: #293 — https://github.com/bahramghorbani/learnbox/pull/293 (merged)
+- Merge commit: `6f1eb9e81acb35c183f1d330a87ed43a07690ca1`
+- Blocked on: none; exact-head independent review passed and all seven GitHub/Vercel contexts were terminal-success before merge.
+- Accepted evidence: PR #293 merged at `6f1eb9e81acb35c183f1d330a87ed43a07690ca1`; `origin/main` and the reported squash merge were verified equal, and the remote feature branch was deleted.
 
 ## LB-DS-065
 

@@ -34,3 +34,54 @@ describe('PostgresLearnerStateRepository.readReconciliationCursor', () => {
     expect(await repository.readReconciliationCursor(userId)).toBe('0');
   });
 });
+
+describe('PostgresLearnerStateRepository.findNewCardCandidates', () => {
+  it('returns only bounded approved Start candidates unscheduled for this learner', async () => {
+    const calls: Array<{ sql: string; params?: unknown[] }> = [];
+    const pool = {
+      query: async (sql: string, params?: unknown[]) => {
+        calls.push({ sql, params });
+        return {
+          rows: [
+            {
+              card_id: '11111111-1111-4111-8111-111111111111',
+              content_id: 'start-a1-haus',
+            },
+          ],
+        };
+      },
+    } as unknown as Pool;
+    const repository = new PostgresLearnerStateRepository(pool);
+
+    const candidates = await repository.findNewCardCandidates(userId, 12);
+
+    expect(candidates).toEqual([
+      {
+        cardId: '11111111-1111-4111-8111-111111111111',
+        contentId: 'start-a1-haus',
+        importance: 1,
+      },
+    ]);
+    expect(calls).toHaveLength(1);
+    expect(calls[0]?.params).toEqual([userId, 'start-a1-%', 12]);
+    expect(calls[0]?.sql).toMatch(/cv\.status IN \('approved', 'published'\)/);
+    expect(calls[0]?.sql).toMatch(
+      /LEFT JOIN card_schedules s\s+ON s\.user_id = \$1 AND s\.card_id = c\.id/,
+    );
+    expect(calls[0]?.sql).toMatch(/s\.card_id IS NULL/);
+    expect(calls[0]?.sql).toMatch(/c\.content_id LIKE \$2/);
+    expect(calls[0]?.sql).toMatch(/LIMIT \$3/);
+  });
+
+  it('rejects an unbounded or invalid candidate limit before querying', async () => {
+    const pool = {
+      query: async () => {
+        throw new Error('must not query');
+      },
+    } as unknown as Pool;
+    const repository = new PostgresLearnerStateRepository(pool);
+
+    await expect(repository.findNewCardCandidates(userId, 0)).rejects.toThrow('candidate limit');
+    await expect(repository.findNewCardCandidates(userId, 13)).rejects.toThrow('candidate limit');
+  });
+});

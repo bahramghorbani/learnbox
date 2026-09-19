@@ -21,10 +21,17 @@ const canonicalBody = {
       dueAt: '2026-08-08T06:00:00.000Z',
     },
   ],
+  newCards: [
+    {
+      cardId: '22222222-2222-4222-8222-222222222222',
+      contentId: 'start-a1-tisch',
+      importance: 1,
+    },
+  ],
   plan: {
     mode: 'normal',
     reviewCardIds: ['11111111-1111-4111-8111-111111111111'],
-    newCardIds: [],
+    newCardIds: ['22222222-2222-4222-8222-222222222222'],
     message: 'daily',
   },
   reviewEventsCount: 2,
@@ -119,6 +126,28 @@ describe('web learner state client', () => {
       reviewEventsCount: unknown;
     };
     body.schedules = [mutate(structuredClone(canonicalBody.schedules[0]))];
+    expect((await fetchWebLearnerState(vi.fn(async () => jsonResponse(200, body)))).status).toBe(
+      'unavailable',
+    );
+  });
+
+  it.each([
+    ['missing contentId', (card: Record<string, unknown>) => ({ ...card, contentId: undefined })],
+    ['non-string cardId', (card: Record<string, unknown>) => ({ ...card, cardId: 4 })],
+    ['non-positive importance', (card: Record<string, unknown>) => ({ ...card, importance: 0 })],
+  ])('rejects a new-card entry with %s', async (_label, mutate) => {
+    const body = structuredClone(canonicalBody) as Record<string, unknown> & {
+      newCards: Array<Record<string, unknown>>;
+    };
+    body.newCards = [mutate(structuredClone(canonicalBody.newCards[0]))];
+    expect((await fetchWebLearnerState(vi.fn(async () => jsonResponse(200, body)))).status).toBe(
+      'unavailable',
+    );
+  });
+
+  it('rejects a plan whose new-card ids do not match the selected wire identities', async () => {
+    const body = structuredClone(canonicalBody);
+    body.plan.newCardIds = ['33333333-3333-4333-8333-333333333333'];
     expect((await fetchWebLearnerState(vi.fn(async () => jsonResponse(200, body)))).status).toBe(
       'unavailable',
     );

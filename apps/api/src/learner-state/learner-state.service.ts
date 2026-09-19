@@ -10,6 +10,12 @@ export interface LearnerScheduleRow {
   dueAt: Date;
 }
 
+export interface LearnerNewCardCandidate {
+  cardId: string;
+  contentId: string;
+  importance: number;
+}
+
 export interface LearnerStatePlan {
   mode: 'normal' | 'recovery';
   reviewCardIds: string[];
@@ -19,6 +25,8 @@ export interface LearnerStatePlan {
 
 export interface LearnerStateSnapshot {
   schedules: LearnerScheduleRow[];
+  /** Selected unscheduled Start cards; contentId is the review-submit wire identity. */
+  newCards: LearnerNewCardCandidate[];
   plan: LearnerStatePlan;
   /** Server-held review event count; clients reconcile their local pending queue against it. */
   reviewEventsCount: number;
@@ -32,20 +40,22 @@ export interface LearnerStateSnapshot {
 
 export interface LearnerStateRepository {
   findSchedules(userId: string): Promise<LearnerScheduleRow[]>;
+  findNewCardCandidates(userId: string, limit: number): Promise<LearnerNewCardCandidate[]>;
   countReviewEvents(userId: string): Promise<number>;
   readReconciliationCursor(userId: string): Promise<string>;
 }
 
 const SESSION_DURATION_MINUTES = 5 as const;
+const NEW_CARD_CANDIDATE_LIMIT = 12;
+const SUGGESTED_NEW_CARDS = 3;
 
 /**
  * Server-authoritative learner state read (M1-D 12.3). The plan comes from the
  * same learning-engine seam the review write path uses, so the response matches
  * what the server would schedule next.
  *
- * ponytail: new-card intake (catalog/importance) is a separate M1-B contract, so
- * this slice always plans reviews only (`newCards: []`, `suggestedNewCards: 0`).
- * Add catalog candidates once the new-card endpoint contract exists.
+ * New material is bounded twice: the repository returns at most one 5-minute
+ * session capacity, then the learning engine admits at most three after reviews.
  */
 export class LearnerStateService {
   constructor(
@@ -55,6 +65,10 @@ export class LearnerStateService {
 
   async readLearnerState(userId: string): Promise<LearnerStateSnapshot> {
     const schedules = await this.repository.findSchedules(userId);
+    const candidates = await this.repository.findNewCardCandidates(
+      userId,
+      NEW_CARD_CANDIDATE_LIMIT,
+    );
     const plan = createDailySessionPlan({
       durationMinutes: SESSION_DURATION_MINUTES,
       now: this.now(),
@@ -67,11 +81,17 @@ export class LearnerStateService {
         // ponytail: catalog importance is not in card_schedules; default until M1-B defines it.
         importance: 1,
       })),
-      newCards: [],
-      suggestedNewCards: 0,
+      newCards: candidates,
+      suggestedNewCards: SUGGESTED_NEW_CARDS,
+    });
+    const candidatesById = new Map(candidates.map((candidate) => [candidate.cardId, candidate]));
+    const newCards = plan.newCardIds.flatMap((cardId) => {
+      const candidate = candidatesById.get(cardId);
+      return candidate ? [candidate] : [];
     });
     return {
       schedules,
+      newCards,
       plan,
       reviewEventsCount: await this.repository.countReviewEvents(userId),
       reconciliationCursor: await this.repository.readReconciliationCursor(userId),

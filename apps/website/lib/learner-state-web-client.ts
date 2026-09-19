@@ -29,8 +29,15 @@ interface ParsedSchedule {
   dueAt: string;
 }
 
+interface ParsedNewCard {
+  cardId: string;
+  contentId: string;
+  importance: number;
+}
+
 interface ParsedSnapshot {
   schedules: ParsedSchedule[];
+  newCards: ParsedNewCard[];
   plan: {
     mode: PlanMode;
     reviewCardIds: string[];
@@ -113,6 +120,17 @@ function isSchedule(value: unknown): value is ParsedSchedule {
   );
 }
 
+function isNewCard(value: unknown): value is ParsedNewCard {
+  if (typeof value !== 'object' || value === null) return false;
+  const candidate = value as Record<string, unknown>;
+  return (
+    isNonEmptyString(candidate.cardId) &&
+    isNonEmptyString(candidate.contentId) &&
+    isFiniteNumber(candidate.importance) &&
+    candidate.importance > 0
+  );
+}
+
 function isStringArray(value: unknown): value is string[] {
   return Array.isArray(value) && value.every((entry) => typeof entry === 'string');
 }
@@ -131,10 +149,25 @@ function isPlan(value: unknown): value is ParsedSnapshot['plan'] {
 function isSnapshot(body: unknown): body is ParsedSnapshot {
   if (typeof body !== 'object' || body === null) return false;
   const candidate = body as Record<string, unknown>;
+  const schedules = candidate.schedules;
+  const newCards = candidate.newCards;
+  const plan = candidate.plan;
+  if (
+    !Array.isArray(schedules) ||
+    !schedules.every(isSchedule) ||
+    !Array.isArray(newCards) ||
+    !newCards.every(isNewCard) ||
+    !isPlan(plan)
+  ) {
+    return false;
+  }
+  if (
+    newCards.length !== plan.newCardIds.length ||
+    newCards.some((card, index) => card.cardId !== plan.newCardIds[index])
+  ) {
+    return false;
+  }
   return (
-    Array.isArray(candidate.schedules) &&
-    candidate.schedules.every(isSchedule) &&
-    isPlan(candidate.plan) &&
     isNonNegativeInteger(candidate.reviewEventsCount) &&
     isNonNegativeDecimalString(candidate.reconciliationCursor)
   );
@@ -146,6 +179,7 @@ function normalizeSnapshot(body: ParsedSnapshot): LearnerStateSnapshot {
       ...schedule,
       dueAt: new Date(schedule.dueAt),
     })),
+    newCards: body.newCards,
     plan: body.plan,
     reviewEventsCount: body.reviewEventsCount,
     reconciliationCursor: body.reconciliationCursor,

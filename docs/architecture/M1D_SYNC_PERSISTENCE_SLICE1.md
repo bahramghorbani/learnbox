@@ -62,13 +62,21 @@ production path that reuses only verified M1-A seams:
         "dueAt": "2026-07-25T12:00:00.000Z"
       }
     ],
+    "newCards": [
+      {
+        "cardId": "uuid",
+        "contentId": "start-a1-haus",
+        "importance": 1
+      }
+    ],
     "plan": {
       "mode": "normal",
       "reviewCardIds": ["uuid"],
-      "newCardIds": [],
+      "newCardIds": ["uuid"],
       "message": "امروز یک قدم کوچک و پیوسته کافی است."
     },
-    "reviewEventsCount": 3
+    "reviewEventsCount": 3,
+    "reconciliationCursor": "3"
   }
   ```
 - `400 validation` (non-GET, insecure transport); `401 invalidToken` (missing/malformed/invalid
@@ -77,9 +85,12 @@ production path that reuses only verified M1-A seams:
 
 ## Implementation notes and deliberate limits
 
-- `newCards` is always `[]` and `suggestedNewCards` is `0`: new-card intake needs the catalog
-  (content factory + pack membership) contract, which is a separate M1-B decision. The plan
-  seam is already wired so adding it later is a service-level change only.
+- New-card intake reads only approved/published, unscheduled cards in the `start-a1-%` namespace
+  for the authenticated learner. The query is learner-scoped and bounded to 12 candidates;
+  the learning engine admits at most 3 after due reviews and returns each selected card's
+  canonical `contentId` beside its UUID so review submission does not need a second lookup.
+- Recovery mode remains review-only: the learning engine emits no `newCardIds`, and therefore
+  the top-level `newCards` array is empty even when repository candidates exist.
 - `importance` is fixed to `1` per schedule row (`ponytail` comment in the service): the
   recovery risk score uses it, but `card_schedules` has no importance column and M1-A does not
   define one. Recovery-mode risk ordering is therefore flat until M1-B defines catalog

@@ -18,10 +18,17 @@ const snapshot: LearnerStateSnapshot = {
       dueAt: new Date('2026-08-08T06:00:00.000Z'),
     },
   ],
+  newCards: [
+    {
+      cardId: '22222222-2222-4222-8222-222222222222',
+      contentId: 'start-a1-tisch',
+      importance: 1,
+    },
+  ],
   plan: {
     mode: 'normal',
     reviewCardIds: ['11111111-1111-4111-8111-111111111111'],
-    newCardIds: [],
+    newCardIds: ['22222222-2222-4222-8222-222222222222'],
     message: 'daily',
   },
   reviewEventsCount: 2,
@@ -70,10 +77,17 @@ describe('web learner state HTTP boundary', () => {
           dueAt: '2026-08-08T06:00:00.000Z',
         },
       ],
+      newCards: [
+        {
+          cardId: '22222222-2222-4222-8222-222222222222',
+          contentId: 'start-a1-tisch',
+          importance: 1,
+        },
+      ],
       plan: {
         mode: 'normal',
         reviewCardIds: ['11111111-1111-4111-8111-111111111111'],
-        newCardIds: [],
+        newCardIds: ['22222222-2222-4222-8222-222222222222'],
         message: 'daily',
       },
       reviewEventsCount: 2,
