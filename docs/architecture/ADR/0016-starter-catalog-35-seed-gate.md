@@ -62,7 +62,7 @@ seeding, schedule bootstrap and publication remain blocked until every release g
 
 - **Editorial content required:** no bundled or draft item becomes resolvable content until its
   `card_versions` row is `approved`/`published` (ADR 0013; enforced by
-  `PostgresReviewEventStore.resolveCardId` and `bootstrap_approved_card_schedules`).
+  `PostgresReviewEventStore.resolveCardId` and targeted approved-schedule creation).
 - **No learner seed/release:** PDR-008 permits only deterministic `needs_review` review-candidate
   rows and pending review checks. No catalog membership, price, publication, learner schedule
   bootstrap or learner-route activation is authorized. `releaseStatus` stays `"draft"`.

@@ -49,9 +49,9 @@ const item = (overrides: Partial<MobileReviewBatchItem> = {}): MobileReviewBatch
 const request = (items: MobileReviewBatchItem[]): MobileReviewBatchRequest => ({ userId, items });
 
 interface CallLog {
-  bootstrap: number;
   resolve: string[];
-  schedule: string[];
+  replay: string[];
+  ensure: string[];
   write: string[];
 }
 
@@ -60,18 +60,19 @@ function mockStore(
     write?: (input: MobileReviewBatchItem & { userId: string }) => Promise<ReviewEventWriteResult>;
   } = {},
 ) {
-  const log: CallLog = { bootstrap: 0, resolve: [], schedule: [], write: [] };
+  const log: CallLog = { resolve: [], replay: [], ensure: [], write: [] };
   const store = {
-    bootstrapSchedules: vi.fn(async () => {
-      log.bootstrap += 1;
-    }),
     resolveCardId: vi.fn(async (contentId: string) => {
       log.resolve.push(contentId);
       return contentId === 'content-a' ? cardId : null;
     }),
-    findSchedule: vi.fn(async (learnerId: string, foundCardId: string) => {
-      log.schedule.push(foundCardId);
-      return foundCardId === cardId ? schedule : null;
+    findByLearnerAndClientEventId: vi.fn(async (learnerId: string, clientEventId: string) => {
+      log.replay.push(clientEventId);
+      return null;
+    }),
+    ensureApprovedSchedule: vi.fn(async (learnerId: string, contentId: string) => {
+      log.ensure.push(contentId);
+      return contentId === 'content-a' ? { cardId, schedule } : null;
     }),
     writeAtomically: vi.fn(async (input: { userId: string } & MobileReviewBatchItem) => {
       log.write.push(input.clientEventId);
@@ -92,7 +93,7 @@ describe('MobileReviewBatchService', () => {
 
     await expect(service.submit(request(items))).rejects.toBeInstanceOf(MobileReviewBatchError);
     await expect(service.submit(request(items))).rejects.toMatchObject({ code: 'validation' });
-    expect(log.bootstrap).toBe(0);
+    expect(log.ensure).toEqual([]);
     expect(log.write).toEqual([]);
   });
 
@@ -103,7 +104,7 @@ describe('MobileReviewBatchService', () => {
     await expect(service.submit(request([item(), item({ grade: 'hard' })]))).rejects.toMatchObject({
       code: 'validation',
     });
-    expect(log.bootstrap).toBe(0);
+    expect(log.ensure).toEqual([]);
   });
 
   it('rejects malformed items before any write', async () => {
@@ -121,7 +122,7 @@ describe('MobileReviewBatchService', () => {
     expect(log.write).toEqual([]);
   });
 
-  it('bootstraps schedules once and processes items in persisted order', async () => {
+  it('ensures only each submitted approved schedule and processes items in persisted order', async () => {
     const { store, log } = mockStore();
     const service = new MobileReviewBatchService(store, () => fixedNow);
     const items = [
@@ -132,9 +133,7 @@ describe('MobileReviewBatchService', () => {
 
     const outcomes = await service.submit(request(items));
 
-    expect(log.bootstrap).toBe(1);
-    expect(log.resolve).toEqual(['content-a', 'content-a', 'content-a']);
-    expect(log.schedule).toEqual([cardId, cardId, cardId]);
+    expect(log.ensure).toEqual(['content-a', 'content-a', 'content-a']);
     expect(log.write).toEqual(['evt-1', 'evt-2', 'evt-3']);
     expect(outcomes).toHaveLength(3);
     for (const outcome of outcomes) {
@@ -147,14 +146,13 @@ describe('MobileReviewBatchService', () => {
     }
   });
 
-  it('acknowledges an exact idempotent replay with the authoritative cursor and no bump', async () => {
-    const { store, log } = mockStore({
-      write: async () => ({
-        ...written('evt-1', 'forgot'),
-        idempotent: true,
-        reconciliationCursor: '7',
-      }),
-    });
+  it('acknowledges an exact idempotent replay with the authoritative cursor and no mutation', async () => {
+    const { store, log } = mockStore();
+    store.findByLearnerAndClientEventId = vi.fn(async () => ({
+      ...written('evt-1', 'forgot'),
+      idempotent: true,
+      reconciliationCursor: '7',
+    })) as typeof store.findByLearnerAndClientEventId;
     const service = new MobileReviewBatchService(store, () => fixedNow);
 
     const [outcome] = await service.submit(request([item()]));
@@ -163,7 +161,8 @@ describe('MobileReviewBatchService', () => {
     if (outcome.status === 'acknowledged') {
       expect(outcome.reconciliationCursor).toBe('7');
     }
-    expect(log.write).toEqual(['evt-1']);
+    expect(log.ensure).toEqual([]);
+    expect(log.write).toEqual([]);
   });
 
   it('never reports a cursor for validation or clockSkew outcomes', async () => {
@@ -171,10 +170,6 @@ describe('MobileReviewBatchService', () => {
     const service = new MobileReviewBatchService(store, () => fixedNow);
     const unknown = item({ contentId: 'content-unknown', clientEventId: 'evt-u' });
     const skew = item({ occurredAt: new Date('2026-07-26T12:40:00Z'), clientEventId: 'evt-f' });
-    // make the schedule lookup miss only for the second card
-    store.findSchedule = vi.fn(async (learnerId: string, foundCardId: string) =>
-      foundCardId === cardId ? schedule : null,
-    ) as typeof store.findSchedule;
     const noSchedule = item({ contentId: 'content-b', clientEventId: 'evt-s' });
 
     const outcomes = await service.submit(request([unknown, noSchedule, skew]));
@@ -185,6 +180,7 @@ describe('MobileReviewBatchService', () => {
     for (const outcome of outcomes) {
       expect(outcome).not.toHaveProperty('reconciliationCursor');
     }
+    expect(log.ensure).toEqual([]);
     expect(log.write).toEqual([]);
   });
 
@@ -206,13 +202,46 @@ describe('MobileReviewBatchService', () => {
     expect(log.write).toEqual(['evt-1', 'evt-2']);
   });
 
+  it('rejects a conflicting replay without creating a schedule or writing', async () => {
+    const { store, log } = mockStore();
+    store.findByLearnerAndClientEventId = vi.fn(async () => ({
+      ...written('evt-1', 'remembered'),
+      idempotent: true,
+    })) as typeof store.findByLearnerAndClientEventId;
+    const service = new MobileReviewBatchService(store, () => fixedNow);
+
+    const [outcome] = await service.submit(request([item({ grade: 'forgot' })]));
+
+    expect(outcome).toMatchObject({ status: 'idempotencyConflict', clientEventId: 'evt-1' });
+    expect(log.ensure).toEqual([]);
+    expect(log.write).toEqual([]);
+  });
+
+  it('gives unknown content validation precedence over clock skew without creating a schedule', async () => {
+    const { store, log } = mockStore();
+    const service = new MobileReviewBatchService(store, () => fixedNow);
+
+    const [outcome] = await service.submit(
+      request([
+        item({
+          contentId: 'content-unknown',
+          occurredAt: new Date('2026-07-26T12:40:00Z'),
+          clientEventId: 'evt-unknown-skew',
+        }),
+      ]),
+    );
+
+    expect(outcome).toMatchObject({ status: 'validation', clientEventId: 'evt-unknown-skew' });
+    expect(log.ensure).toEqual([]);
+    expect(log.write).toEqual([]);
+  });
+
   it('never acknowledges unknown content or missing schedules', async () => {
     const { store, log } = mockStore();
     const service = new MobileReviewBatchService(store, () => fixedNow);
     const unknown = item({ contentId: 'content-unknown', clientEventId: 'evt-u' });
     const noSchedule = item({ clientEventId: 'evt-s' });
-    // make the schedule lookup miss only for the second card via a custom store
-    store.findSchedule = vi.fn(async () => null) as typeof store.findSchedule;
+    store.ensureApprovedSchedule = vi.fn(async () => null) as typeof store.ensureApprovedSchedule;
 
     const outcomes = await service.submit(request([unknown, noSchedule]));
 
@@ -230,6 +259,7 @@ describe('MobileReviewBatchService', () => {
     );
 
     expect(outcome).toMatchObject({ status: 'clockSkew', clientEventId: 'evt-f' });
+    expect(log.ensure).toEqual([]);
     expect(log.write).toEqual([]);
   });
 
@@ -242,6 +272,7 @@ describe('MobileReviewBatchService', () => {
     );
 
     expect(outcome).toMatchObject({ status: 'validation', clientEventId: 'evt-old' });
+    expect(log.ensure).toEqual([]);
     expect(log.write).toEqual([]);
   });
 
@@ -269,6 +300,6 @@ describe('MobileReviewBatchService', () => {
     const outcomes = await service.submit(request([]));
 
     expect(outcomes).toEqual([]);
-    expect(log.bootstrap).toBe(0);
+    expect(log.ensure).toEqual([]);
   });
 });

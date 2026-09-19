@@ -129,12 +129,13 @@ LEAST(occurred_at, now()))` — monotonic, never before prior applied_at for tha
 - The server resolves canonical `contentId` → `cards.id` **only for content with an
   `approved`/`published` `card_versions` row** (`PostgresReviewEventStore.resolveCardId`);
   unknown content → per-item `validation` outcome.
-- `bootstrap_approved_card_schedules(user_id)` is a server-owned, repeatable SQL function:
-  idempotent insert of schedules for approved/published cards only
-  (`0013_native_review_transport.sql`). Invoked once per authenticated batch
-  (`MobileReviewBatchService.submit`).
-- Schedules must exist before an event can be applied: `findSchedule` miss → per-item
-  `validation`; store refuses to update a missing schedule (`writeAtomically` throws).
+- Review submission creates a schedule only for the submitted canonical `contentId`, only after
+  resolving it through an `approved`/`published` version. The insert is learner-scoped and
+  idempotent on `(user_id, card_id)`; unknown/draft/rejected content returns per-item
+  `validation`. The legacy `bootstrap_approved_card_schedules(user_id)` function remains in the
+  immutable migration history but is not called by the application.
+- Schedules must exist before an event can be applied: the targeted ensure miss returns per-item
+  `validation`; the store still refuses to update a missing schedule (`writeAtomically` throws).
 
 - **Proposed (M1-D):** server-side snapshot/state endpoint (e.g. due cards + schedules +
   pending-count reconciliation) so clients can rebuild state after reconnect; the exact shape

@@ -23,9 +23,10 @@ The bundled Start Pack is the free A1 vertical slice shipped inside the learner 
   characters, unique, immutable via trigger `cards_content_id_immutable`, backfilled
   `'legacy-' || id` for legacy rows (migration 0013). Server review writes resolve
   `contentId → cards.id` **only** for cards that have an `approved`/`published`
-  `card_versions` row (`PostgresReviewEventStore.resolveCardId`); schedule bootstrap
-  (`bootstrap_approved_card_schedules`) inserts learner schedules only for approved/published
-  cards. `review_events` is keyed by `cards.id` (`card_id`), never by `content_id`.
+  `card_versions` row (`PostgresReviewEventStore.resolveCardId`); review submission creates only
+  the submitted learner schedule through the same eligibility predicate. The historical
+  all-approved bootstrap function is not called by the application. `review_events` is keyed by
+  `cards.id` (`card_id`), never by `content_id`.
 - The web learner-state read (`GET /api/learner/state`, PR #163) returns both
   `schedules[].cardId` (DB UUID) and `schedules[].contentId` (canonical `cards.content_id`)
   in every schedule row (`learner-state-web-http.ts` serialize).

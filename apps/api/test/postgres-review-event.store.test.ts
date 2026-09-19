@@ -408,14 +408,28 @@ describe('PostgresReviewEventStore learner-scoped idempotency', () => {
     expect(transactionCalls.some((sql) => sql.startsWith('UPDATE review_events'))).toBe(false);
   });
 
-  it('resolves canonical content ids, bootstraps schedules and reads learner schedules', async () => {
+  it('ensures only the submitted approved canonical schedule and reads learner schedules', async () => {
     const queries: Array<{ sql: string; params?: unknown[] }> = [];
     const pool = {
       query: async (sql: string, params?: unknown[]) => {
         queries.push({ sql, params });
-        if (sql.startsWith('SELECT c.id')) {
-          return params?.[0] === 'content-a' ? { rows: [{ id: input.cardId }] } : { rows: [] };
+        if (sql.startsWith('INSERT INTO card_schedules')) {
+          return params?.[1] === 'content-a'
+            ? {
+                rows: [
+                  {
+                    card_id: input.cardId,
+                    state: 'new',
+                    stability_days: 1 / 24,
+                    difficulty: 5,
+                    lapses: 0,
+                    due_at: new Date('2026-07-26T12:00:00Z'),
+                  },
+                ],
+              }
+            : { rows: [] };
         }
+        if (sql.startsWith('SELECT c.id AS card_id')) return { rows: [] };
         if (sql.startsWith('SELECT state')) {
           return {
             rows: [
@@ -437,20 +451,56 @@ describe('PostgresReviewEventStore learner-scoped idempotency', () => {
     } as unknown as Pool;
     const store = new PostgresReviewEventStore(pool);
 
-    await expect(store.resolveCardId('content-a')).resolves.toBe(input.cardId);
-    await expect(store.resolveCardId('missing')).resolves.toBeNull();
-    await store.bootstrapSchedules(input.userId);
+    await expect(store.ensureApprovedSchedule(input.userId, 'content-a')).resolves.toMatchObject({
+      cardId: input.cardId,
+      schedule: { state: 'new' },
+    });
+    await expect(store.ensureApprovedSchedule(input.userId, 'missing')).resolves.toBeNull();
     await expect(store.findSchedule(input.userId, input.cardId)).resolves.toMatchObject({
       state: 'review',
       stabilityDays: 2,
     });
 
-    expect(queries[0].sql).toMatch(/FROM cards c\s+WHERE c\.content_id = \$1/i);
-    expect(queries[0].params).toEqual(['content-a']);
-    expect(queries[1].params).toEqual(['missing']);
-    expect(queries[2].sql).toMatch(/bootstrap_approved_card_schedules\(\$1\)/);
-    expect(queries[2].params).toEqual([input.userId]);
+    expect(queries[0].sql).toMatch(/INSERT INTO card_schedules \(user_id, card_id\)/i);
+    expect(queries[0].sql).toMatch(/c\.content_id = \$2/i);
+    expect(queries[0].sql).toMatch(/cv\.status IN \('approved', 'published'\)/i);
+    expect(queries[0].sql).toMatch(/ON CONFLICT \(user_id, card_id\) DO NOTHING/i);
+    expect(queries[0].params).toEqual([input.userId, 'content-a']);
+    expect(queries[1].params).toEqual([input.userId, 'missing']);
+    expect(queries[2].sql).toMatch(/SELECT c\.id AS card_id/i);
     expect(queries[3].sql).toMatch(/FROM card_schedules\s+WHERE user_id = \$1 AND card_id = \$2/);
+  });
+
+  it('returns an existing approved schedule after an idempotent insert conflict', async () => {
+    const queries: string[] = [];
+    const pool = {
+      query: async (sql: string) => {
+        queries.push(sql);
+        if (sql.startsWith('INSERT INTO card_schedules')) return { rows: [] };
+        return {
+          rows: [
+            {
+              card_id: input.cardId,
+              state: 'learning',
+              stability_days: 1,
+              difficulty: 5,
+              lapses: 0,
+              due_at: new Date('2026-07-27T12:00:00Z'),
+            },
+          ],
+        };
+      },
+    } as unknown as Pool;
+
+    const result = await new PostgresReviewEventStore(pool).ensureApprovedSchedule(
+      input.userId,
+      'content-a',
+    );
+
+    expect(result).toMatchObject({ cardId: input.cardId, schedule: { state: 'learning' } });
+    expect(queries).toHaveLength(2);
+    expect(queries[1]).toMatch(/JOIN card_schedules s ON s\.card_id = c\.id AND s\.user_id = \$1/i);
+    expect(queries[1]).toMatch(/cv\.status IN \('approved', 'published'\)/i);
   });
 
   it('reads only applied events after the learner cursor with bounded ordered paging', async () => {

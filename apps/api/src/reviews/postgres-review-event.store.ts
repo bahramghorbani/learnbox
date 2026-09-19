@@ -36,6 +36,11 @@ interface ScheduleRow {
   due_at: Date;
 }
 
+export interface ApprovedSchedule {
+  cardId: string;
+  schedule: CardSchedule;
+}
+
 /**
  * Same-learner client event id already exists with a different payload.
  * The batch service maps this to a typed `idempotencyConflict` outcome.
@@ -191,7 +196,7 @@ export class PostgresReviewEventStore implements ReviewEventStore {
     }
   }
 
-  private async findByLearnerAndClientEventId(
+  async findByLearnerAndClientEventId(
     userId: string,
     clientEventId: string,
   ): Promise<ReviewEventWriteResult | null> {
@@ -232,9 +237,47 @@ export class PostgresReviewEventStore implements ReviewEventStore {
     return result.rows[0]?.id ?? null;
   }
 
-  /** Idempotent server-owned schedule bootstrap for a learner (approved content only). */
-  async bootstrapSchedules(userId: string): Promise<void> {
-    await this.pool.query(`SELECT bootstrap_approved_card_schedules($1)`, [userId]);
+  /**
+   * Creates only the submitted approved/published card schedule. Unknown, draft and rejected
+   * content fails closed; the unique key makes concurrent first submissions idempotent.
+   */
+  async ensureApprovedSchedule(
+    userId: string,
+    contentId: string,
+  ): Promise<ApprovedSchedule | null> {
+    const inserted = await this.pool.query<ScheduleRow & { card_id: string }>(
+      `INSERT INTO card_schedules (user_id, card_id)
+       SELECT $1, c.id
+         FROM cards c
+        WHERE c.content_id = $2
+          AND EXISTS (
+            SELECT 1
+              FROM card_versions cv
+             WHERE cv.card_id = c.id
+               AND cv.status IN ('approved', 'published')
+          )
+       ON CONFLICT (user_id, card_id) DO NOTHING
+       RETURNING card_id, state, stability_days, difficulty, lapses, due_at`,
+      [userId, contentId],
+    );
+    const created = inserted.rows[0];
+    if (created) return { cardId: created.card_id, schedule: toSchedule(created) };
+
+    const existing = await this.pool.query<ScheduleRow & { card_id: string }>(
+      `SELECT c.id AS card_id, s.state, s.stability_days, s.difficulty, s.lapses, s.due_at
+         FROM cards c
+         JOIN card_schedules s ON s.card_id = c.id AND s.user_id = $1
+        WHERE c.content_id = $2
+          AND EXISTS (
+            SELECT 1
+              FROM card_versions cv
+             WHERE cv.card_id = c.id
+               AND cv.status IN ('approved', 'published')
+          )`,
+      [userId, contentId],
+    );
+    const row = existing.rows[0];
+    return row ? { cardId: row.card_id, schedule: toSchedule(row) } : null;
   }
 
   async findSchedule(userId: string, cardId: string): Promise<CardSchedule | null> {

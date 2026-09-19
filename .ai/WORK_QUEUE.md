@@ -43,6 +43,26 @@ The M0–M8 records below retain implementation provenance only; they do not ove
 
 ### Active grouped workstreams
 
+## LB-DS-078
+
+- Status: in_progress
+- Executor: supervisor with independent S2 data-flow reviewer and final exact-head QA
+- Base: exact `ad0b1583bc7f1ef0b825aa7f0fefb7e0149752a8` (`origin/main`, PR #292 merge)
+- Branch: `feat/s2-start35-seed-release`
+- Risk: server-authoritative-new-card-intake-and-schedule-idempotency
+- Specification: `ROADMAP.md` S2; ADR 0012; ADR 0013; ADR 0014; ADR 0016; `docs/architecture/M1D_SYNC_PERSISTENCE_SLICE1.md`
+- Outcome: remove the unsafe all-catalog schedule bootstrap from review submission and idempotently create a schedule only for the submitted approved/published canonical content ID. The separate read-side new-card intake remains a follow-up after this write-path correction lands.
+- Allowed paths: `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-078.md`; `CURRENT_WORK.md`; `PROJECT_STATE.md`; `docs/PRODUCT_STATUS.md`; `docs/architecture/M1D_SYNC_PERSISTENCE_SLICE1.md`; `docs/architecture/M1D_SYNC_WIRE_CONTRACT.md`; `docs/architecture/M1_ONLINE_LEARNING_CONTRACT.md`; `docs/architecture/ADR/0012-web-learner-state-server-wiring.md`; `docs/architecture/ADR/0013-start-pack-contentid-contract.md`; `docs/architecture/ADR/0016-starter-catalog-35-seed-gate.md`; `apps/api/src/reviews/**`; `apps/api/test/**`; `package.json`
+- Dependencies: merged S1 Admin approval persistence and staging-only private-media delivery through PR #292; existing canonical `cards.content_id`; approved/published card-version gate; existing Web learner session identity.
+- Owner gates: repository implementation and tests are authorized. No Production/public activation, DNS/provider/payment change, secret mutation, OTP send, database migration execution, staging deployment, or catalog publication is authorized by this item.
+- Must not touch: native Android; payments/entitlements; premium packs; private provider credentials or locators; public landing; Production composition; Admin decision history; existing Start-35 approval outcomes; private-media receipt.
+- Acceptance: malformed, stale, future-skewed, unknown, draft and rejected submissions create no schedule; a valid first submission creates only its approved/published canonical card schedule; retries and concurrent insert conflicts reuse that same schedule through `(user_id, card_id)` uniqueness; no unrelated approved card is inserted; existing review idempotency and reconciliation semantics remain green; no migration, runtime flag or environment changes.
+- Required checks: focused mobile-review store/service tests written RED first; API typecheck/test; migration validator unchanged; `pnpm check`; `gitleaks`; `git diff --check`; independent exact-head review; seven terminal GitHub/Vercel contexts before merge.
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+- Blocked on: independent exact-head PASS and all required CI terminal-success contexts; staging/Production deployment remains a separate gate.
+
 ## LB-DS-065
 
 - Status: accepted

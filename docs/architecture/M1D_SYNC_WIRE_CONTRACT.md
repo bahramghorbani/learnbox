@@ -241,7 +241,7 @@ The GET read never replaces per-item acknowledgement; it complements it.
   client re-issues with `after=<nextCursor>`. The client must not assume a page boundary
   aligns with an acknowledgement boundary — per-item matching still governs removals.
 - **No re-application:** nothing in the GET path re-runs `scheduleReview`,
-  `writeAtomically` or `bootstrap_approved_card_schedules`. Read-only projection query.
+  `writeAtomically` or targeted schedule creation. Read-only projection query.
 
 ## 6. Malformed/partial response and retry
 
