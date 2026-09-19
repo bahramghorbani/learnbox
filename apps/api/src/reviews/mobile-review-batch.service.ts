@@ -124,8 +124,6 @@ export class MobileReviewBatchService {
     validateBatch(request.items);
     if (request.items.length === 0) return [];
 
-    await this.store.bootstrapSchedules(request.userId);
-
     const outcomes: MobileReviewBatchItemOutcome[] = [];
     try {
       for (const item of request.items) {
@@ -147,15 +145,33 @@ export class MobileReviewBatchService {
     const cardId = await this.store.resolveCardId(item.contentId);
     if (!cardId) return { status: 'validation', clientEventId: item.clientEventId };
 
-    const schedule = await this.store.findSchedule(userId, cardId);
-    if (!schedule) return { status: 'validation', clientEventId: item.clientEventId };
-
     if (item.occurredAt.getTime() < this.now().getTime() - OCCURRED_AT_PAST_WINDOW_MS) {
       return { status: 'validation', clientEventId: item.clientEventId };
     }
 
     const skew = clockSkewStatus(item, this.now());
     if (skew) return { ...skew, clientEventId: item.clientEventId };
+
+    const replay = await this.store.findByLearnerAndClientEventId(userId, item.clientEventId);
+    if (replay) {
+      const matches =
+        replay.event.cardId === cardId &&
+        replay.event.grade === item.grade &&
+        replay.event.occurredAt.getTime() === item.occurredAt.getTime();
+      return matches
+        ? {
+            status: 'acknowledged',
+            clientEventId: item.clientEventId,
+            eventId: replay.event.id,
+            idempotent: true,
+            reconciliationCursor: replay.reconciliationCursor,
+          }
+        : { status: 'idempotencyConflict', clientEventId: item.clientEventId };
+    }
+
+    const approvedSchedule = await this.store.ensureApprovedSchedule(userId, item.contentId);
+    if (!approvedSchedule) return { status: 'validation', clientEventId: item.clientEventId };
+    const { schedule } = approvedSchedule;
 
     const nextSchedule = scheduleReview(schedule, item.grade, item.occurredAt);
     try {

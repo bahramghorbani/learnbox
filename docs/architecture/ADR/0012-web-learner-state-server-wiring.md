@@ -105,8 +105,8 @@ reviewEventsCount }`, `200`, `cache-control: no-store`,
    users") resolved this: the Web OTP verification resolves `users.id` server-side and issues
    the signed cookie with the canonical UUID subject, so the read route maps the cookie
    `subject` directly to `users.id` with no lookup and no client-supplied identifier.
-3. **Start Pack seed/release.** New-card intake (`newCards`, `suggestedNewCards`,
-   `bootstrap_approved_card_schedules` for Start-pack content) requires the catalog and
+3. **Start Pack seed/release.** New-card intake (`newCards`, `suggestedNewCards`, plus targeted
+   learner schedule creation for selected approved Start-pack content) requires the catalog and
    pack-membership contract plus approved content. This is a **separate owner/review-gated
    decision** and is out of scope here. Until then the plan always returns `newCardIds: []`
    and `suggestedNewCards: 0` (M1-D slice 1 `ponytail` comment), and the Web surface keeps
