@@ -64,7 +64,9 @@ code, API or schema change is added here.
 
 - **Editorial content required:** no bundled or draft item becomes resolvable content until
   its `card_versions` row is `approved`/`published`. `resolveCardId` and
-  `bootstrap_approved_card_schedules` keep enforcing this; the editorial review packet
+  targeted `ensureApprovedSchedule` keep enforcing this; the legacy
+  `bootstrap_approved_card_schedules` migration function is not called by the application.
+  The editorial review packet
   (`docs/content/START_A1_EDITORIAL_REVIEW_PACKET.md`) records that the 20-draft batch is
   linguistic-review-confirmed but publication remains blocked.
 - **Seed/release is a separate review-gated task:** inserting Start-pack rows into `cards`,

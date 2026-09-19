@@ -7,8 +7,8 @@
 - Scope completed: targeted schedule creation replaces batch-wide approved-catalog bootstrap
 - Files changed: review service/store/tests, governing contracts, queue, and this report
 - Checks run: focused 28/28; API 137/137; migrations 17/17; `pnpm check`; queue/docs/security/continuity validators; Prettier; Gitleaks; exact-head independent review
-- Checks unavailable: GitHub CI is unavailable until the draft PR is pushed
-- Remaining work: read-side new-card admission, real-Postgres integration coverage, PR CI, and separately authorized staging activation
+- Checks unavailable: no local check is unavailable; remote CI is terminal-green on the PR head
+- Remaining work: read-side new-card admission, real-Postgres integration coverage, and separately authorized staging activation
 - Risks: a server fault after targeted creation can leave one submitted approved learner/card schedule in `new`; concurrent schedule calculation remains a separate hardening concern
 - Secrets or production changes: no
 - Bobo canonical status: in_progress
