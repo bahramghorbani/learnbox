@@ -1,5 +1,18 @@
 # LB-DS-078 — targeted approved schedule creation
 
+- Branch: `feat/s2-start35-seed-release`
+- Base commit: `ad0b1583bc7f1ef0b825aa7f0fefb7e0149752a8`
+- Head commit: read live with `gh pr view <PR> --json headRefOid` before readiness or merge
+- Draft PR: yes
+- Scope completed: targeted schedule creation replaces batch-wide approved-catalog bootstrap
+- Files changed: review service/store/tests, governing contracts, queue, and this report
+- Checks run: focused 28/28; API 137/137; migrations 17/17; `pnpm check`; queue/docs/security/continuity validators; Prettier; Gitleaks; exact-head independent review
+- Checks unavailable: GitHub CI is unavailable until the draft PR is pushed
+- Remaining work: read-side new-card admission, real-Postgres integration coverage, PR CI, and separately authorized staging activation
+- Risks: a server fault after targeted creation can leave one submitted approved learner/card schedule in `new`; concurrent schedule calculation remains a separate hardening concern
+- Secrets or production changes: no
+- Bobo canonical status: in_progress
+
 ## Scope
 
 Correct the review write path before exposing server-side new-card intake. The previous batch-level bootstrap created `card_schedules` for every approved/published card when one review batch arrived. Since new schedules are immediately due, the first submission could turn the whole approved catalog into a recovery backlog.
