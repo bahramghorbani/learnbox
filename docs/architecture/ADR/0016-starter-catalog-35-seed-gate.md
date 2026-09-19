@@ -64,8 +64,9 @@ seeding, schedule bootstrap and publication remain blocked until every release g
   `card_versions` row is `approved`/`published` (ADR 0013; enforced by
   `PostgresReviewEventStore.resolveCardId` and targeted approved-schedule creation).
 - **No learner seed/release:** PDR-008 permits only deterministic `needs_review` review-candidate
-  rows and pending review checks. No catalog membership, price, publication, learner schedule
-  bootstrap or learner-route activation is authorized. `releaseStatus` stays `"draft"`.
+  rows and pending review checks. No catalog membership, price, publication, batch catalog
+  schedule bootstrap, or learner-route activation is authorized. `releaseStatus` stays
+  `"draft"`.
 - **No production activation:** no route, flag, deployment or environment change is included.
 - **No fabrication:** the snapshot and tests contain only repository-recorded state; nothing is
   invented (no extra lemmas, approvals, media claims, prices or user data).
