@@ -8,8 +8,8 @@ start. Historical tasks remain for traceability and must not be duplicated.
 ### Current release execution
 
 - **S0 — 30-day finish-line reset:** accepted in PR #278 at `34d0d6dbd85bb42c07a8aaee1576505b0eb8db72`. Official Web/PWA-first v1.0 is targeted for 2026-10-12; Android, commerce and premium packs are v1.1+.
-- **S1 — Private media + 35-item release batch:** in progress. PR #286 merged the reviewed JPEG source-truth correction, after which the owner-authorized guarded upload placed exactly 105 private assets in the isolated target. Every fresh object and a complete resume pass were verified by cache-disabled private download, exact byte count and SHA-256; the URL-free receipt remains outside Git. PR #288 merged the deterministic decision-free 35-item/six-dimension review packet, and Draft PR #289 records the owner's returned review as repository intent only. Admin outcomes remain 0 recorded / 210 pending; 0/35 items are release-approved. Nothing is attached, seeded, activated, deployed or published. Admin persistence and private-media attachment require separate owner authorization after PR #289 clears exact-head review and CI.
-- **S2 — Server-authoritative Web loop:** ready after S1's canonical content identifiers are stable; implementation and default-off integration can overlap S1 after interfaces are fixed.
+- **S1 — Private media + 35-item release batch:** in progress. PR #286 merged the reviewed JPEG source-truth correction, after which the owner-authorized guarded upload placed exactly 105 private assets in the isolated target and verified each by cache-disabled download, byte count and SHA-256. PR #288 merged the decision-free review packet; PR #289 merged the owner's 210/210 `passed` checks and 35 `approve` decisions as repository intent only. PR #292 added protected staging delivery/attestation without changing the canonical `private_storage_verified_not_attached` state. Admin outcomes remain 0 recorded / 210 pending; 0/35 items are release-approved. Nothing is attached, seeded, activated or published; those gates remain separately owner-authorized.
+- **S2 — Server-authoritative Web loop:** partial/dormant. PR #293 replaced eager all-catalog schedule bootstrap with one approved submitted-card schedule, and PR #294 added bounded learner-scoped approved Start-card intake to the authenticated learner-state read. Runtime flags remain default-off; staging/Production activation is separately gated.
 - **S3 — Web release essentials:** partial foundations; account/privacy/support/operations work may overlap S2 with disjoint paths.
 - **S4 — Closed alpha:** planned for 2026-10-04 through 2026-10-08 after S1–S3 integration evidence.
 - **S5 — Public Web/PWA v1.0:** planned for 2026-10-09 through 2026-10-12; production/public activation remains owner-gated.
@@ -45,7 +45,7 @@ The M0–M8 records below retain implementation provenance only; they do not ove
 
 ## LB-DS-079
 
-- Status: review_requested
+- Status: accepted
 - Executor: supervisor with independent S2 data-flow reviewer and final exact-head QA
 - Base: exact `6f1eb9e81acb35c183f1d330a87ed43a07690ca1` (`origin/main`, PR #293 merge)
 - Branch: `feat/s2-start35-new-card-intake`
@@ -61,7 +61,11 @@ The M0–M8 records below retain implementation provenance only; they do not ove
 - Simulator required: no
 - Draft PR required: yes
 - Merge allowed: yes
-- Blocked on: independent exact-head PASS and all required CI terminal-success contexts; staging/Production activation remains a separate gate.
+- Head commit: `9a218855744f2bfdd22fefc5f62dfd75879802da`
+- Draft PR: #294 — https://github.com/bahramghorbani/learnbox/pull/294 (merged)
+- Merge commit: `21c624ad2e08a6ba8997b9c4563bd16823792232`
+- Blocked on: none for repository scope; staging/Production activation remains a separate owner gate.
+- Accepted evidence: exact-head independent review passed; all seven GitHub/Vercel contexts were terminal-success; PR #294 merged at `21c624ad2e08a6ba8997b9c4563bd16823792232`; remote `main` was verified equal and the remote feature branch was deleted.
 
 ## LB-DS-078
 

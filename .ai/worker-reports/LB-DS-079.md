@@ -2,16 +2,16 @@
 
 - Branch: `feat/s2-start35-new-card-intake`
 - Base commit: `6f1eb9e81acb35c183f1d330a87ed43a07690ca1`
-- Head commit: read live with `gh pr view <PR> --json headRefOid` before readiness or merge
-- Draft PR: yes
+- Head commit: `9a218855744f2bfdd22fefc5f62dfd75879802da`
+- Draft PR: #294 — https://github.com/bahramghorbani/learnbox/pull/294 (merged)
 - Scope completed: bounded, learner-scoped approved Start-card admission through the existing server-authoritative learner-state read
 - Files changed: learner-state repository/service/serializers/client/tests, governing contracts, queue, and this report
 - Checks run: focused learner-state API 16/16; focused Website 54/54; API 142/142; Website 309/309; serial full `pnpm check`; queue/docs/security validators; API and Website typecheck; Prettier; ESLint; `git diff --check`; Gitleaks diff scan
-- Checks unavailable: exact-head independent review and live GitHub/Vercel CI for the current PR head
-- Remaining work: exact-head independent review, terminal-success CI verification, and separately authorized staging/Production activation
+- Checks unavailable: none for the repository scope
+- Remaining work: separately authorized staging/Production activation plus the deliberate follow-ups below
 - Risks: the repository bounds the candidate pool by `content_id`, but equal-importance final admission is deterministically tie-broken by card UUID until the catalog contract adds explicit curriculum priority
 - Secrets or production changes: no
-- Bobo canonical status: review_requested
+- Bobo canonical status: accepted
 
 ## Scope
 
@@ -26,7 +26,6 @@ Expose approved/published Start Pack cards that remain unscheduled for the authe
 - Tightened the Web parser so the selected card identities must align exactly with `plan.newCardIds`.
 - Added focused coverage for candidate bounds, database-executed two-learner anti-join semantics, read-only SQL, response serialization, parser fail-closed identity/count alignment, the three-card cap, and recovery mode.
 - Updated the governing persistence, Web wiring, and wire-contract documents.
-- Repaired the LB-DS-079 queue record after a context-compression marker had replaced its required fields.
 
 ## Security and release boundary
 
@@ -44,6 +43,8 @@ Expose approved/published Start Pack cards that remain unscheduled for the authe
 - Full Website suite: 309/309 passed.
 - Full workspace `pnpm check` passed with workspace concurrency restricted to one to avoid unrelated test timeout contention.
 - Queue, documentation-governance, Web-security, formatting, lint, typecheck, diff, and secret-scan gates passed.
+- Independent exact-head review passed on `9a218855744f2bfdd22fefc5f62dfd75879802da`; all seven required GitHub/Vercel contexts reached terminal success before merge.
+- PR #294 merged at `21c624ad2e08a6ba8997b9c4563bd16823792232`; remote `main` was verified equal and the remote feature branch was deleted.
 
 ## Deliberate follow-up
 
