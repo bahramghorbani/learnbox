@@ -4,7 +4,7 @@
 
 ## Active work
 
-LB-DS-081 (`feat/v1-web-vertical-loop`, `in_progress`) is the first owner-approved accelerated launch slice: complete the cookie-authenticated server-backed Web learning loop end to end in one coherent PR, including server-selected Start cards, Web-scoped idempotent review submission, durable offline queue retry and authoritative refresh. It is repository implementation only; no runtime flag, database, provider, staging/Production, deployment, seed, attachment, publication or public-release mutation is authorized. LB-DS-080 remains independently open as Draft PR #296 for repository-only media attachment evidence and does not overlap the Web runtime paths.
+LB-DS-081 (`feat/v1-web-vertical-loop`, `review_requested`) is open as Draft PR #297. It completes the cookie-authenticated server-backed Web learning loop in one coherent default-off repository slice: server-selected Start cards, Web-scoped idempotent review submission, durable offline queue retry and authoritative refresh. Final exact-head review and terminal CI remain open; merge is not authorized. No runtime flag, database, provider, staging/Production, deployment, seed, attachment, publication or public-release mutation is authorized. LB-DS-080 remains independently open as Draft PR #296 for repository-only media attachment evidence and does not overlap the Web runtime paths.
 
 ### Active release objective
 

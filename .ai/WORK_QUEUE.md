@@ -46,7 +46,7 @@ The M0–M8 records below retain implementation provenance only; they do not ove
 ## LB-DS-081
 
 - Status: review_requested
-- Executor: supervisor with independent exact-head security/data-flow review pending after the final commit
+- Executor: supervisor with independent exact-head security/data-flow review required before readiness
 - Base: exact `7277e00f903b468d39678710deefb59a18c03654` (`origin/main`, PR #295 merge)
 - Branch: `feat/v1-web-vertical-loop`
 - Risk: authenticated-server-authoritative-web-review-write-and-lossless-reconnect
@@ -62,7 +62,7 @@ The M0–M8 records below retain implementation provenance only; they do not ove
 - Draft PR required: yes
 - Merge allowed: no
 - Head commit: read live with `gh pr view <PR> --json headRefOid`; merge requires separate exact-head readiness evidence and owner authorization.
-- Draft PR: not created; local implementation complete and awaiting final exact-head review plus Draft PR creation
+- Draft PR: #297 — https://github.com/bahramghorbani/learnbox/pull/297 (open Draft; merge not authorized)
 - Blocked on: no repository implementation blocker. Runtime activation and all external state transitions remain separately owner-gated.
 
 ## LB-DS-079
