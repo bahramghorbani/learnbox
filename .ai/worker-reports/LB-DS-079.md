@@ -11,7 +11,7 @@
 - Remaining work: separately authorized staging/Production activation plus the deliberate follow-ups below
 - Risks: the repository bounds the candidate pool by `content_id`, but equal-importance final admission is deterministically tie-broken by card UUID until the catalog contract adds explicit curriculum priority
 - Secrets or production changes: no
-- Bobo canonical status: accepted
+- Bobo canonical status: unchanged; no Bobo asset, prompt or canonical-character usage changed.
 
 ## Scope
 
