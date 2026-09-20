@@ -58,7 +58,7 @@ The M0–M8 records below retain implementation provenance only; they do not ove
 - Draft PR required: yes
 - Merge allowed: no
 - Head commit: read live with `gh pr view <PR> --json headRefOid` before readiness; merge is not authorized.
-- Draft PR: owner authorized branch push and Draft PR creation on 2026-09-20; record the PR number after creation.
+- Draft PR: #296 — https://github.com/bahramghorbani/learnbox/pull/296 (open Draft; merge not authorized)
 - Blocked on: no local repository blocker. Admin outcome persistence, operational database/provider attachment, learner delivery activation, seed, deployment and publication remain separately owner-gated.
 - Must not touch: provider resources or credentials; private receipt or private locators; database/migrations; Admin review outcomes; routes; runtime flags or environments; staging/Preview/Production; seed; deployment; publication; Bobo assets.
 - Acceptance: the record has state `private_media_attached` qualified as repository evidence only; binds exactly 35 content IDs/105 assets and three exact kind counts; anchors the committed manifest and attestation by SHA-256; records no per-asset locator, checksum, byte size or secret; independently re-derives that 60 assets across 20 content IDs have byte-identical tracked public copies and 45 assets across 15 content IDs do not; rejects missing/extra/duplicate/drifted sources and exposure counts; keeps publication blocked and learner delivery, database writes and provider calls false; performs no network or external mutation.
