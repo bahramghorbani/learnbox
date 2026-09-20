@@ -6,10 +6,10 @@
 - Draft PR: yes
 - Scope completed: bounded, learner-scoped approved Start-card admission through the existing server-authoritative learner-state read
 - Files changed: learner-state repository/service/serializers/client/tests, governing contracts, queue, and this report
-- Checks run: focused learner-state 15/15; API 141/141; Website 308/308; serial full `pnpm check`; queue/docs/security validators; API and Website typecheck; Prettier; ESLint; `git diff --check`; Gitleaks diff scan
+- Checks run: focused learner-state API 16/16; focused Website 54/54; API 142/142; Website 309/309; serial full `pnpm check`; queue/docs/security validators; API and Website typecheck; Prettier; ESLint; `git diff --check`; Gitleaks diff scan
 - Checks unavailable: exact-head independent review and live GitHub/Vercel CI for the current PR head
 - Remaining work: exact-head independent review, terminal-success CI verification, and separately authorized staging/Production activation
-- Risks: candidate selection currently uses deterministic `content_id` ordering with constant importance until the catalog contract adds explicit curriculum priority
+- Risks: the repository bounds the candidate pool by `content_id`, but equal-importance final admission is deterministically tie-broken by card UUID until the catalog contract adds explicit curriculum priority
 - Secrets or production changes: no
 - Bobo canonical status: review_requested
 
@@ -24,7 +24,7 @@ Expose approved/published Start Pack cards that remain unscheduled for the authe
 - Passed candidates through the existing learning-engine session planner, admitting at most three after due reviews and none in recovery mode.
 - Added the selected `newCards` projection to API and Web responses.
 - Tightened the Web parser so the selected card identities must align exactly with `plan.newCardIds`.
-- Added focused coverage for candidate bounds, learner-scoped anti-join placement, response serialization, parser fail-closed behavior, the three-card cap, and recovery mode.
+- Added focused coverage for candidate bounds, database-executed two-learner anti-join semantics, read-only SQL, response serialization, parser fail-closed identity/count alignment, the three-card cap, and recovery mode.
 - Updated the governing persistence, Web wiring, and wire-contract documents.
 - Repaired the LB-DS-079 queue record after a context-compression marker had replaced its required fields.
 
@@ -38,12 +38,13 @@ Expose approved/published Start Pack cards that remain unscheduled for the authe
 
 ## Verification
 
-- Focused learner-state API tests: 15/15 passed.
-- Full API suite: 141/141 passed.
-- Full Website suite: 308/308 passed.
+- Focused learner-state API tests: 16/16 passed.
+- Focused Website learner-state tests: 54/54 passed.
+- Full API suite: 142/142 passed.
+- Full Website suite: 309/309 passed.
 - Full workspace `pnpm check` passed with workspace concurrency restricted to one to avoid unrelated test timeout contention.
 - Queue, documentation-governance, Web-security, formatting, lint, typecheck, diff, and secret-scan gates passed.
 
 ## Deliberate follow-up
 
-Explicit curriculum priority/importance, strict single-snapshot reads, real-Postgres integration coverage, and any staging or Production activation remain separate work. The current deterministic `content_id` ordering is bounded and safe but is not claimed as final pedagogical sequencing.
+Explicit curriculum priority/importance, strict single-snapshot reads, real-Postgres integration coverage, and any staging or Production activation remain separate work. The repository's `content_id`-ordered pool is bounded, while equal-importance final admission currently uses the learning engine's card-UUID tie-break; neither is claimed as final pedagogical sequencing.

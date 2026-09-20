@@ -153,6 +153,14 @@ describe('web learner state client', () => {
     );
   });
 
+  it('rejects a plan whose new-card count does not match the selected wire identities', async () => {
+    const body = structuredClone(canonicalBody);
+    body.plan.newCardIds = [];
+    expect((await fetchWebLearnerState(vi.fn(async () => jsonResponse(200, body)))).status).toBe(
+      'unavailable',
+    );
+  });
+
   it.each([
     ['disallowed plan mode', (plan: Record<string, unknown>) => ({ ...plan, mode: 'party' })],
     ['missing plan', () => null],

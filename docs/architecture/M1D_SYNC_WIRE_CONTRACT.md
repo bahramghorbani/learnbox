@@ -13,7 +13,8 @@ never wires a reconciliation endpoint, so no network route is active. All sync f
 (`MOBILE_REVIEW_SYNC_ENABLED`, `MOBILE_AUTH_ENABLED`, `LEARNER_STATE_ENABLED`,
 `WEB_LEARNER_STATE_ENABLED`); runtime activation and deployment require separate authorization.
 
-**Basis:** `origin/main` at `4718f93` (PR #204 merged). Read with
+**Basis:** LB-DS-079 base `origin/main` at `6f1eb9e81acb35c183f1d330a87ed43a07690ca1`
+(PR #293 merged). Read with
 `docs/architecture/M1_ONLINE_LEARNING_CONTRACT.md` (§3, §5, §6, §8, §9, §12),
 `docs/architecture/M1D_SYNC_PERSISTENCE_SLICE1.md` (Wire contract / Next steps /
 appendixes 1b–1d), `docs/architecture/ADR/0014-push-reconciliation-cursor-policy.md`,
@@ -28,7 +29,8 @@ client a compact server-authoritative signal of _which of its locally queued rev
 the server has applied_, so the client can reconcile after reconnect without guessing, and
 with no risk of deleting an unacknowledged event.
 
-Verified current facts (`origin/main` at `4718f93`):
+Verified current facts (LB-DS-079 base `origin/main` at
+`6f1eb9e81acb35c183f1d330a87ed43a07690ca1`):
 
 - **POST exists, dormant:** `POST /api/reviews/mobile` is implemented behind
   `MOBILE_REVIEW_SYNC_ENABLED !== 'true'` → 503 `serverUnavailable`, no cookie, no-store
@@ -60,7 +62,9 @@ Verified current facts (`origin/main` at `4718f93`):
   `plan`, `reviewEventsCount` (exact `COUNT(*)`, not a watermark), and the authoritative
   decimal-string `reconciliationCursor` behind `LEARNER_STATE_ENABLED`. New-card candidates
   are limited to approved/published, unscheduled `start-a1-%` content; the engine admits at
-  most three after due reviews and none in recovery mode. The read creates no schedules.
+  most three after due reviews and none in recovery mode. The read creates no schedules;
+  LB-DS-078 removed the prior eager all-catalog bootstrap and now creates only the submitted
+  approved card's schedule on its first accepted review.
 - **Pull read exists but remains dormant.** `GET /api/reviews/mobile/reconciliation` returns
   learner-scoped applied event identities after a cursor only when the existing mobile review sync
   runtime is explicitly and completely enabled. No client calls it and no server-push channel
