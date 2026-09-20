@@ -41,7 +41,7 @@
     }
   },
   "publicExposure": {
-    "classification": "mixed_public_legacy_copies_and_private_only_assets",
+    "classification": "mixed_public_copies_and_private_only_assets",
     "verificationMethod": "sha256_equality_against_tracked_git_blobs",
     "allAssetsPrivate": false,
     "assetsWithPublicByteIdenticalCopy": 60,

@@ -48,7 +48,7 @@ requires `LEARNBOX_PRIVATE_MEDIA_ATTACHMENT_ENABLED=true`, a non-Production depl
 learner session, and neither flag is enabled in any environment tracked here.
 
 The record also preserves the verified exposure truth. 60 of the 105 attested assets are
-byte-identical to legacy copies already tracked in this public repository — 20 images, 20 word-audio
+byte-identical to copies already tracked in this public repository — 20 images, 20 word-audio
 and 20 sentence-audio assets across 20 of the 35 content IDs, matching 63 tracked paths — so those
 assets are not private and must never be described as such. The remaining 45 assets across 15 content
 IDs have no public byte-identical copy. `pnpm verify:start-35-final-private-media-attachment`

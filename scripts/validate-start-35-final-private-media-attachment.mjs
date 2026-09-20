@@ -126,13 +126,12 @@ export function deriveStart35FinalPrivateMediaExposure(attestation, trackedDiges
   const byKind = Object.fromEntries(
     assetKinds.map((kind) => [kind, matched.filter((asset) => asset.kind === kind).length]),
   );
-  const allAssetsPrivate = matched.length === attestation.assets.length;
-  const classification =
-    matched.length === 0
-      ? 'no_public_byte_identical_copies'
-      : allAssetsPrivate
-        ? 'all_assets_have_public_byte_identical_copies'
-        : 'mixed_public_legacy_copies_and_private_only_assets';
+  const allAssetsPrivate = matched.length === 0;
+  const classification = allAssetsPrivate
+    ? 'no_public_byte_identical_copies'
+    : matched.length === attestation.assets.length
+      ? 'all_assets_have_public_byte_identical_copies'
+      : 'mixed_public_copies_and_private_only_assets';
   return {
     classification,
     allAssetsPrivate,

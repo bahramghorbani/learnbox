@@ -68,7 +68,7 @@ authorize any later arrow. The documented storage target and the upload/attachme
 operations are unchanged.
 
 The same record preserves the verified exposure truth: 60 of the 105 attested assets already have
-byte-identical legacy copies tracked in this public repository — 20 images, 20 word-audio and 20
+byte-identical copies tracked in this public repository — 20 images, 20 word-audio and 20
 sentence-audio assets across 20 of the 35 content IDs, matching 63 tracked paths including three
 mobile card copies — so those 60 assets must never be called private. The remaining 45 assets across
 15 content IDs have no public byte-identical copy. `pnpm verify:start-35-final-private-media-attachment`

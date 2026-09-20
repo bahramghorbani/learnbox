@@ -112,7 +112,7 @@ test('builds the canonical digest-anchored attachment record without per-asset e
     },
   });
   assert.deepEqual(value.publicExposure, {
-    classification: 'mixed_public_legacy_copies_and_private_only_assets',
+    classification: 'mixed_public_copies_and_private_only_assets',
     verificationMethod: 'sha256_equality_against_tracked_git_blobs',
     allAssetsPrivate: false,
     assetsWithPublicByteIdenticalCopy: PUBLIC_ASSET_COUNT,

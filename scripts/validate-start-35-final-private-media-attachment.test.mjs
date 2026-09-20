@@ -4,7 +4,10 @@ import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 
-import { assertStart35FinalPrivateMediaAttachment } from './validate-start-35-final-private-media-attachment.mjs';
+import {
+  assertStart35FinalPrivateMediaAttachment,
+  deriveStart35FinalPrivateMediaExposure,
+} from './validate-start-35-final-private-media-attachment.mjs';
 import { readTrackedBlobDigests } from './tracked-git-blob-digests.mjs';
 
 const ASSET_KINDS = ['image', 'word_audio', 'sentence_audio'];
@@ -136,7 +139,7 @@ const record = () => ({
     },
   },
   publicExposure: {
-    classification: 'mixed_public_legacy_copies_and_private_only_assets',
+    classification: 'mixed_public_copies_and_private_only_assets',
     verificationMethod: 'sha256_equality_against_tracked_git_blobs',
     allAssetsPrivate: false,
     assetsWithPublicByteIdenticalCopy: PUBLIC_ASSET_COUNT,
@@ -150,6 +153,34 @@ const record = () => ({
       sentence_audio: PUBLIC_CONTENT_ID_COUNT,
     },
   },
+});
+
+test('derives all-private and all-public exposure semantics without inversion', () => {
+  const source = attestation();
+  assert.deepEqual(
+    {
+      ...deriveStart35FinalPrivateMediaExposure(source, new Map()),
+      assetsWithPublicByteIdenticalCopyByKind: undefined,
+    },
+    {
+      classification: 'no_public_byte_identical_copies',
+      allAssetsPrivate: true,
+      assetsWithPublicByteIdenticalCopy: 0,
+      contentIdsWithPublicByteIdenticalCopy: 0,
+      trackedPathsWithPublicByteIdenticalCopy: 0,
+      assetsWithoutPublicCopy: ASSET_COUNT,
+      contentIdsWithoutPublicCopy: CONTENT_ID_COUNT,
+      assetsWithPublicByteIdenticalCopyByKind: undefined,
+    },
+  );
+
+  const everyDigest = new Map(
+    source.assets.map((asset) => [asset.sha256, [`public/${asset.assetId}`]]),
+  );
+  const allPublic = deriveStart35FinalPrivateMediaExposure(source, everyDigest);
+  assert.equal(allPublic.classification, 'all_assets_have_public_byte_identical_copies');
+  assert.equal(allPublic.allAssetsPrivate, false);
+  assert.equal(allPublic.assetsWithPublicByteIdenticalCopy, ASSET_COUNT);
 });
 
 test('accepts the exact canonical private-media attachment record', () => {
@@ -332,7 +363,7 @@ test('accepts the committed record and recomputes the verified exposure truth', 
   );
   assert.equal(committed.state, 'private_media_attached');
   assert.deepEqual(committed.publicExposure, {
-    classification: 'mixed_public_legacy_copies_and_private_only_assets',
+    classification: 'mixed_public_copies_and_private_only_assets',
     verificationMethod: 'sha256_equality_against_tracked_git_blobs',
     allAssetsPrivate: false,
     assetsWithPublicByteIdenticalCopy: 60,
