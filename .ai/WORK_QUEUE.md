@@ -900,8 +900,8 @@ flag, deployment or publication is authorized by this task.
 - Blocked on: none.
 - Must not touch: application code; tests; package manifests/lockfiles; generated content/media records; provider configuration/credentials/IDs/URLs; receipt payloads; object stores; card attachments; review checks/decisions; catalog seed; runtime flags; deployment; Preview/Production; publication; Bobo assets.
 - Acceptance: stable documents agree that PR #286 is merged and accepted and exactly 105 private assets passed initial plus resume download/SHA-256 integrity verification; they also agree that attachment and all later gates remain closed and LB-DS-076 is the next authorized repository-only task.
-- Head commit: read the exact live final head from draft PR #287; independent review must bind to that pushed SHA
-- Draft PR: #287 — https://github.com/bahramghorbani/learnbox/pull/287
+- Head commit: `0a147a72d2a5986c82ae168f554cb107dcf4372d`
+- Draft PR: #287 — https://github.com/bahramghorbani/learnbox/pull/287 (merged)
 - Merge commit: `9a98197ffeee98f4069a690a59caebd0df4b053f`
 - Accepted evidence: exact head `0a147a72d2a5986c82ae168f554cb107dcf4372d` passed two independent final reviews and all seven GitHub/Vercel contexts; PR #287 merged at `9a98197ffeee98f4069a690a59caebd0df4b053f` on 2026-09-14T15:34:03Z.
 
@@ -927,14 +927,14 @@ flag, deployment or publication is authorized by this task.
 - Acceptance: one deterministic packet contains exactly 35 canonical items and exactly the six canonical review dimensions for each; includes final German/Persian text, provenance, selected image and alt text, visual/audio evidence, explicit pending release-level app-flow status, decision vocabulary and rollback/version linkage; points only to repository-local evidence; preserves publication blocking; represents known exceptions explicitly; and offers no automatic approval or provider/runtime mutation path.
 - Implementation: two local commits on `feat/start35-human-review-packet`, direct descendants of the recorded starting head `626cc2aee1451f40e7b4fee86606cfb86d02b084`: the initial deterministic packet deliverable and a truthfulness hardening commit that makes the packet's alt-text, database, repository-media and per-dimension evidence-scope limits explicit and validator-enforced; the worker did not push, so the orchestrator pushes the branch and opens the draft PR.
 - Handoff: `.ai/worker-reports/LB-DS-076.md` records the RED then GREEN evidence, the check results, the explicit-path commits and the open review work.
-- Head commit: read the exact live final head from draft PR #288; independent review must bind to that pushed SHA.
-- Draft PR: #288 — https://github.com/bahramghorbani/learnbox/pull/288
+- Head commit: `40633cae30093e7020c432330fd0c84eae9d6400`
+- Draft PR: #288 — https://github.com/bahramghorbani/learnbox/pull/288 (merged)
 - Merge commit: `f0f413bca32317e0bca25e55c54e950a37a95830`
 - Accepted evidence: exact head `40633cae30093e7020c432330fd0c84eae9d6400` passed two independent final reviews and all seven GitHub/Vercel contexts; PR #288 merged at `f0f413bca32317e0bca25e55c54e950a37a95830` on 2026-09-14T16:46:51Z.
 
 ## LB-DS-077
 
-- Status: review_requested
+- Status: accepted
 - Executor: content-review evidence worker plus independent product/security reviewer
 - Base: exact `f0f413bca32317e0bca25e55c54e950a37a95830` (`origin/main`, PR #288 merge)
 - Branch: `feat/start35-owner-review-decisions`
@@ -952,12 +952,14 @@ flag, deployment or publication is authorized by this task.
 - Blocked on: none; owner submission validated locally against exact source merge `f0f413bca32317e0bca25e55c54e950a37a95830` with 35 unique items, six dimensions each, 210 passed checks and 35 approve decisions.
 - Must not touch: provider configuration/credentials/IDs/URLs; external upload receipt; media bytes; object stores; attachment records; database/migrations; Admin runtime/routes or live review rows; catalog seed; flags; deployment; Preview/Production; publication; learner apps; Bobo assets.
 - Acceptance: the committed canonical decision record is byte-deterministic, set-equal to the merged 35-item packet, bound to source merge `f0f413bca32317e0bca25e55c54e950a37a95830`, contains exactly 210 passed checks and 35 owner approve decisions with no forbidden external state, and truthfully keeps Admin persistence, attachment, seedability, learner exposure and publication unperformed and blocked.
-- Implementation: commits on `feat/start35-owner-review-decisions`, direct descendants of the recorded starting head `04748fbe25f1de13bb836ce54b89d21ed91147a4`: the deterministic owner-decision record with its validator, focused tests and `pnpm check` wiring plus the truth-reconciled documentation, then the handoff report, then the semantic-separation hardening commit. The owner-submitted `LearnBox-Start-35-Owner-Decisions.json` binds to source merge `f0f413bca32317e0bca25e55c54e950a37a95830` and hashes to `fb39250a75a34356954dfb4577fa1639cf3e611e3627f4cc5f7165c9118e23c6`, which is retained here and in the handoff report outside the canonical decision JSON; the branch is pushed and Draft PR #289 is open.
+- Implementation: commits on `feat/start35-owner-review-decisions`, direct descendants of the recorded starting head `04748fbe25f1de13bb836ce54b89d21ed91147a4`: the deterministic owner-decision record with its validator, focused tests and `pnpm check` wiring plus the truth-reconciled documentation, then the handoff report, then the semantic-separation hardening commit. The owner-submitted `LearnBox-Start-35-Owner-Decisions.json` binds to source merge `f0f413bca32317e0bca25e55c54e950a37a95830` and hashes to `fb39250a75a34356954dfb4577fa1639cf3e611e3627f4cc5f7165c9118e23c6`, which is retained here and in the handoff report outside the canonical decision JSON; PR #289 merged without executing any downstream gate.
 - Semantic separation hardening: independent adversarial audit found that submitted `checks.*.outcome: passed` could be misread as a persisted Admin/release-level outcome, that the accepted app flow was the self-contained offline card-flow review artifact rather than Production runtime behavior, and that the two prior transcription exceptions must not disappear because the owner accepted the audio. The hardening commit normalizes every check to `ownerSubmittedOutcome` with `adminOutcomeRecorded: false` and no bare `outcome` anywhere, adds packet-level `reviewPresentation` (self-contained offline 35-card owner-review artifact, content/card-flow acceptance only) and per-check `ownerEvidenceBasis` plus repeated `sourcePacketStatus`/`sourcePacketEvidenceScope`, preserves both exceptions verbatim as `priorEvidenceExceptions` derived from the packet with disposition `accepted_as_presented_unpersisted_to_admin` and `resolved: false`, and states `reviewerRoleBasis: 'owner_asserted_through_submitted_review_artifact'` with no identity, cryptographic or session proof. Counts stay truthful to owner intent: 35 owner approvals, 210 owner-submitted `passed`, 0 Admin outcomes recorded, 210 pending, 0 release-approved, attachment/seed/runtime/provider/publication false.
 - Semantic separation fail-closed cases: app-flow Production/runtime overclaim, app-flow production-verified evidence basis, app-flow source status or release-level scope alteration, review artifact production/runtime/activation/Admin-persistence/live-database claim, weakened review presentation scope or artifact kind, dropped or duplicated or altered or resolved prior transcription exception, weakened exception disposition, Admin outcome claim inside a check or in the release position, cleared pending Admin count, reviewer identity or session-proof overclaim, weakened reviewer role basis, reintroduced bare `outcome` field or bare `outcomeCounts` field.
-- Handoff: `.ai/worker-reports/LB-DS-077.md` records the RED then GREEN evidence, the check results, the explicit-path commits and the open review and execution work.
-- Head commit: read live with `gh pr view 289 --json headRefOid` before readiness or merge.
-- Draft PR: #289 — https://github.com/bahramghorbani/learnbox/pull/289 (open, Draft)
+- Handoff: `.ai/worker-reports/LB-DS-077.md` records the RED then GREEN evidence, final review/CI evidence, exact merged lifecycle metadata and the still-closed downstream gates.
+- Head commit: `d3924f8d0748df73c3c2460ccfe6f55ca0fcad15`
+- Draft PR: #289 — https://github.com/bahramghorbani/learnbox/pull/289 (merged)
+- Merge commit: `00d8b988a02aedf189f9588df5e1697c7bcea135`
+- Accepted evidence: exact head `d3924f8d0748df73c3c2460ccfe6f55ca0fcad15` passed independent exact-head review and all seven GitHub/Vercel contexts; PR #289 merged at `00d8b988a02aedf189f9588df5e1697c7bcea135` on 2026-09-15T09:28:06Z. The merge records owner intent only: Admin persistence, private-media attachment, seed, activation, deployment and publication remain separately gated and unperformed.
 
 ## LB-DS-072
 

@@ -1,6 +1,6 @@
 # LearnBox Start 35 — release-readiness audit
 
-**Evidence baseline:** `f0f413bca32317e0bca25e55c54e950a37a95830` (`origin/main`, PR #288 merge); LB-DS-077's repository-only owner-decision record is the candidate evidence reviewed in Draft PR #289.
+**Evidence baseline:** LB-DS-077's repository-only owner-decision record merged through PR #289 at `00d8b988a02aedf189f9588df5e1697c7bcea135` (exact reviewed head `d3924f8d0748df73c3c2460ccfe6f55ca0fcad15`), bound to source packet merge `f0f413bca32317e0bca25e55c54e950a37a95830` (PR #288).
 **Audited at:** 2026-09-14
 **Decision:** **BLOCKED — do not seed, attach, publish or enable server-backed Today figures.**
 
