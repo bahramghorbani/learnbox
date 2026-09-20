@@ -58,7 +58,7 @@ describe('Today server snapshot truth states', () => {
     expect(fetchMock.mock.calls.filter(([url]) => url === '/api/learner/state')).toHaveLength(0);
   });
 
-  it('shows the server-read status label after a successful fetch while keeping the local session figure, without claiming acknowledgement or a server-read list', async () => {
+  it('shows the server-read status label and only the server-selected session after a successful fetch', async () => {
     vi.stubGlobal('fetch', mockRouter({ state: () => json(200, canonicalBody) }));
     rendered = await renderLearner({ otpUiFlag: 'true' });
     await rendered.signInLocally();
@@ -68,7 +68,8 @@ describe('Today server snapshot truth states', () => {
     });
     expect(rendered.text()).toContain('وضعیت یادگیری از سرور خوانده شد');
     expect(rendered.text()).toContain('کارت‌های این دستگاه برای مرور آماده‌اند');
-    expect(rendered.text()).toContain('۳ کارت برای شروع');
+    expect(rendered.text()).toContain('۱ کارت برای شروع');
+    expect(rendered.text()).not.toContain('۳ کارت برای شروع');
     expect(rendered.text()).not.toContain('همگام‌سازی شد');
   });
 
@@ -238,7 +239,7 @@ describe('Today server snapshot truth states', () => {
     expect(rendered.text()).not.toContain('آفلاین');
   });
 
-  it('keeps the local session figure for the Today CTA when the server snapshot lists one review card', async () => {
+  it('uses the server-selected session count when the snapshot lists one review card', async () => {
     const serverSnapshotWithOneReview = {
       schedules: [
         {
@@ -269,8 +270,8 @@ describe('Today server snapshot truth states', () => {
       await Promise.resolve();
     });
     expect(rendered.text()).toContain('وضعیت یادگیری از سرور خوانده شد');
-    expect(rendered.text()).toContain('۳ کارت برای شروع');
-    expect(rendered.text()).not.toContain('۱ کارت برای شروع');
+    expect(rendered.text()).toContain('۱ کارت برای شروع');
+    expect(rendered.text()).not.toContain('۳ کارت برای شروع');
   });
 
   it('preserves the local pending-sync chip alongside server-backed figures', async () => {

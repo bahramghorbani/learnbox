@@ -4,7 +4,7 @@
 
 ## Active work
 
-No feature implementation is currently open, and the next functional task is not yet queued. LB-DS-077 through LB-DS-079 are merged: owner decisions remain repository intent only (PR #289), protected private-media delivery/attestation preserves `private_storage_verified_not_attached` (PR #292), targeted first-review schedule creation replaced the eager catalog bootstrap (PR #293), and bounded learner-scoped approved Start-card intake is implemented behind the existing default-off learner-state runtimes (PR #294).
+LB-DS-081 (`feat/v1-web-vertical-loop`, `in_progress`) is the first owner-approved accelerated launch slice: complete the cookie-authenticated server-backed Web learning loop end to end in one coherent PR, including server-selected Start cards, Web-scoped idempotent review submission, durable offline queue retry and authoritative refresh. It is repository implementation only; no runtime flag, database, provider, staging/Production, deployment, seed, attachment, publication or public-release mutation is authorized. LB-DS-080 remains independently open as Draft PR #296 for repository-only media attachment evidence and does not overlap the Web runtime paths.
 
 ### Active release objective
 

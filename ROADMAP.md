@@ -41,7 +41,7 @@ At the baseline:
 
 - 35 starter drafts exist, but 0/35 are release-approved, `seedable` is false and publication remains blocked.
 - Private-media guard code and corrected media source truth are merged. The owner-authorized exact-105 upload to the verified isolated target completed with cache-disabled private-download size/SHA-256 verification on both initial and resume runs; no attachment exists.
-- Web learning, server-read and reconciliation foundations exist behind disabled boundaries; production composition is not active.
+- Web learning, server-read, Web review submission and reconciliation foundations exist behind disabled boundaries; production composition is not active.
 - Admin review and release foundations exist, and the owner completed the repository-only 35-item artifact review recorded by LB-DS-077. Admin review outcomes remain unpersisted, 0/35 items are release-approved, media remains unattached, and content publication and Production release have not occurred.
 - No payment provider is needed for this Web-first v1.0.
 
