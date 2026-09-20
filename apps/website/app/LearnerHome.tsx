@@ -124,10 +124,6 @@ export function LearnerHome({
   const serverSession = serverSnapshot
     ? deriveWebSessionItems(serverSnapshot, resolveStartSliceItem)
     : { items: [], unavailableContentIds: [] };
-  const studyItems =
-    serverSyncState === 'server-backed'
-      ? serverSession.items.map(({ item }) => item)
-      : localStudyItems;
   const authMode = resolveLearnerAuthMode(otpUiFlag);
   const inviteGateMode = resolveInviteGateMode(inviteFlag);
   const [inviteAccepted, setInviteAccepted] = useState(inviteGateMode === 'local-prototype');
@@ -149,6 +145,7 @@ export function LearnerHome({
   >('today');
   const [flipped, setFlipped] = useState(false);
   const [grade, setGrade] = useState<Grade | null>(null);
+  const [sessionItems, setSessionItems] = useState<typeof localStudyItems | null>(null);
   const [sessionIndex, setSessionIndex] = useState(0);
   const [reviewedToday, setReviewedToday] = useState(0);
   const [streakDays, setStreakDays] = useState(0);
@@ -166,6 +163,9 @@ export function LearnerHome({
   >({ status: 'unavailable' });
   const profileIdentityReadGenerationRef = useRef(0);
   const gradeSubmissionRef = useRef(false);
+  const reviewFlushInFlightRef = useRef(false);
+  const reviewFlushQueuedRef = useRef(false);
+  const requestServerReviewFlushRef = useRef<() => void>(() => undefined);
   const flipHintRef = useRef<HTMLButtonElement>(null);
   const flipAgainRef = useRef<HTMLButtonElement>(null);
   const completionHeadingRef = useRef<HTMLHeadingElement>(null);
@@ -178,6 +178,11 @@ export function LearnerHome({
   const learningGoalReturnTargetRef = useRef<'profile' | 'settings' | null>(null);
   const profileSettingsRowRef = useRef<HTMLButtonElement>(null);
   const profileSettingsReturnRef = useRef(false);
+  const studyItems =
+    sessionItems ??
+    (serverSyncState === 'server-backed'
+      ? serverSession.items.map(({ item }) => item)
+      : localStudyItems);
   const remainingTodayReviews = Math.max(0, studyItems.length - reviewedToday);
   const isServerOtp = authMode === 'server-otp';
   const profileIdentityEnabled = profileIdentityFlag === 'true';
@@ -357,13 +362,29 @@ export function LearnerHome({
 
   const flushServerReviewQueue = useCallback(() => {
     if (!authenticated || !isServerOtp || typeof window === 'undefined') return;
-    void flushWebReviewQueue({ storage: getDeviceStorage(), key: reviewSyncStorageKey }).then(
-      (result) => {
-        setPendingReviewCount(result.pendingCount);
-        if (result.acknowledged) retryServerStateRead();
-      },
-    );
+    if (reviewFlushInFlightRef.current) {
+      reviewFlushQueuedRef.current = true;
+      return;
+    }
+    reviewFlushInFlightRef.current = true;
+    void flushWebReviewQueue({ storage: getDeviceStorage(), key: reviewSyncStorageKey })
+      .then(
+        (result) => {
+          setPendingReviewCount(result.pendingCount);
+          if (result.acknowledged) retryServerStateRead();
+        },
+        () => undefined,
+      )
+      .finally(() => {
+        reviewFlushInFlightRef.current = false;
+        if (reviewFlushQueuedRef.current) {
+          reviewFlushQueuedRef.current = false;
+          requestServerReviewFlushRef.current();
+        }
+      });
   }, [authenticated, isServerOtp, retryServerStateRead]);
+
+  requestServerReviewFlushRef.current = flushServerReviewQueue;
 
   useEffect(() => {
     if (!authenticated || !isServerOtp || typeof window === 'undefined') return;
@@ -424,7 +445,10 @@ export function LearnerHome({
   }, [screen, readProfileIdentity]);
 
   const begin = () => {
+    const itemsForSession = studyItems;
     const nextIndex = resumableSessionIndex ?? 0;
+    if (!itemsForSession[nextIndex]) return;
+    setSessionItems(itemsForSession);
     setScreen('card');
     setFlipped(false);
     setGrade(null);
@@ -530,6 +554,7 @@ export function LearnerHome({
     }
 
     clearReviewSession(getDeviceStorage(), reviewSessionStorageKey);
+    setSessionItems(null);
     setResumableSessionIndex(null);
     setCompletedSessions((sessions) => sessions + 1);
     setScreen('complete');

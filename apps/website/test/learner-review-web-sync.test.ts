@@ -44,6 +44,45 @@ describe('web review queue sync', () => {
     expect(storage.getItem(key)).toBeNull();
   });
 
+  it('preserves an event queued while the request is in flight', async () => {
+    const storage = createMemoryStorage();
+    storage.setItem(key, JSON.stringify([{ ...queued, nextAttemptAt: now.toISOString() }]));
+    let resolveFirst: ((value: unknown) => void) | undefined;
+    const first = flushWebReviewQueue({
+      storage,
+      key,
+      now,
+      submit: () =>
+        new Promise((resolve) => {
+          resolveFirst = resolve;
+        }) as never,
+    });
+    const later = { ...queued, clientEventId: 'event-2', nextAttemptAt: now };
+    storage.setItem(
+      key,
+      JSON.stringify([
+        { ...queued, nextAttemptAt: now.toISOString() },
+        { ...later, nextAttemptAt: now.toISOString() },
+      ]),
+    );
+    resolveFirst?.({
+      status: 'ok',
+      outcomes: [
+        {
+          status: 'acknowledged',
+          clientEventId: 'event-1',
+          eventId: 'server-1',
+          idempotent: false,
+          reconciliationCursor: '1',
+        },
+      ],
+    });
+    await first;
+    expect(
+      loadSyncQueue<QueuedWebReview>(storage, key).map((event) => event.clientEventId),
+    ).toEqual(['event-2']);
+  });
+
   it('retains validation outcomes and backs off unavailable due events', async () => {
     const storage = createMemoryStorage();
     storage.setItem(key, JSON.stringify([{ ...queued, nextAttemptAt: now.toISOString() }]));
@@ -66,7 +105,7 @@ describe('web review queue sync', () => {
     });
     expect(unavailable.pendingCount).toBe(1);
     const stored = loadSyncQueue<QueuedWebReview>(storage, key);
-    expect(stored[0].attempts).toBe(1);
+    expect(stored[0].attempts).toBe(2);
     expect(stored[0].nextAttemptAt.getTime()).toBeGreaterThan(now.getTime());
   });
 });

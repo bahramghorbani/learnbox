@@ -14,6 +14,7 @@ export type QueuedWebReview = {
   cardId: string;
   grade: 'forgot' | 'hard' | 'remembered' | 'mastered';
   reviewedAt: string;
+  requiresAttention?: boolean;
 };
 
 export type WebReviewSyncResult = {
@@ -43,9 +44,10 @@ export async function flushWebReviewQueue(input: {
 
   const submit = input.submit ?? ((items) => submitWebReviewBatch(items));
   const result = await submit(due.map(toWireItem));
+  const currentQueue = () => loadSyncQueue<QueuedWebReview>(input.storage, input.key);
   if (result.status !== 'ok') {
     const deferred = new Set(due.map((event) => event.clientEventId));
-    const next = queue.map((event) =>
+    const next = currentQueue().map((event) =>
       deferred.has(event.clientEventId) ? retryAfter(event, now) : event,
     );
     saveSyncQueue(input.storage, input.key, next);
@@ -56,10 +58,21 @@ export async function flushWebReviewQueue(input: {
   const acknowledged = result.outcomes
     .filter((outcome) => outcome.status === 'acknowledged')
     .map((outcome) => outcome.clientEventId);
-  const acknowledgedQueue = acknowledgeSyncEvents(queue, acknowledged);
+  const acknowledgedQueue = acknowledgeSyncEvents(currentQueue(), acknowledged);
+  const attentionIds = new Set(
+    result.outcomes
+      .filter(
+        (outcome) => outcome.status === 'validation' || outcome.status === 'idempotencyConflict',
+      )
+      .map((outcome) => outcome.clientEventId),
+  );
   const retryIds = new Set(
     due
-      .filter((event) => outcomesById.get(event.clientEventId)?.status === 'clockSkew')
+      .filter(
+        (event) =>
+          outcomesById.get(event.clientEventId)?.status === 'clockSkew' ||
+          attentionIds.has(event.clientEventId),
+      )
       .map((event) => event.clientEventId),
   );
   const next = acknowledgedQueue.map((event) =>
