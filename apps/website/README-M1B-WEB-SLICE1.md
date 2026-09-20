@@ -17,36 +17,27 @@ Status: Draft PR (`worker/m1b-web-learner-today`). Scope: `apps/website/**` only
 - Tests: `test/learner-sync-state.test.ts` + `test/learner-today-sync.test.tsx` (TDD: RED
   before the components existed, GREEN after).
 
-## Exact blocker: why the Today screen is not server-wired
+## Historical blocker at the time of this slice
 
-The only existing route the Web app could call for learner state is the M1-D slice-1
-snapshot `GET /api/learner/state`
-(`apps/api/src/learner-state/learner-state-http.ts`, merged in PR #152). It is **not
-exposed by any Next.js route** in `apps/website/app/api/**` — only `apps/api`'s NestJS
-`main.ts` serves it, and it requires a `Bearer` access token issued by the **mobile**
-session contract (`LEARNBOX_MOBILE_SESSION_SECRET`, audience `learnbox-mobile`). The Web
-learner surface authenticates with the **browser** learner cookie
-(`learnbox_alpha_session`, HMAC `LEARNBOX_SESSION_SECRET`) via `lib/server-session.ts`,
-which is a different audience and format. There is no Web route and no Web credential that
-can satisfy the snapshot route.
+When this original slice landed, the only learner-state route was the M1-D slice-1 snapshot
+`GET /api/learner/state` (`apps/api/src/learner-state/learner-state-http.ts`, merged in PR
+#152). No Next.js route exposed it under `apps/website/app/api/**`; only `apps/api`'s NestJS
+`main.ts` served it, using the mobile Bearer-session contract. The Web learner surface used
+the separate browser learner cookie. PR #163 later added the cookie-authenticated Next.js
+route described below.
 
-Additionally, the snapshot returns **schedule rows + a due-card plan** keyed by
-`contentId`/`cardId` (DB `card_schedules`), while the Web Today surface composes its
-session from the **bundled Start pack** (`content/packs/learnbox-start/...`) keyed by
-`start-a1-*` ids. No existing route maps Start-pack content to `card_schedules` content
-ids; the contract (`docs/architecture/M1_ONLINE_LEARNING_CONTRACT.md` §3.2) records the
-`cardId` ↔ `contentId` mapping as unsolved.
+At the time of this original slice, the snapshot returned **schedule rows + a due-card
+plan** keyed by `contentId`/`cardId` (DB `card_schedules`), while the Web Today surface
+composed its session from the **bundled Start pack** (`content/packs/learnbox-start/...`)
+keyed by `start-a1-*` ids. The catalog identity contract had not yet been decided. ADR 0013
+later made those bundled `start-a1-*` IDs the canonical immutable `cards.content_id`
+values, and LB-DS-079 now returns selected learner-unscheduled cards with both identities.
 
-Per the M1-B task rules, wiring the Web Today screen to the snapshot would require either:
-
-1. a new Web route exposing the snapshot with the Web learner-cookie boundary (new code,
-   not an "existing route"), or
-2. the mobile session contract on Web (out of scope: mobile/admin/API secrets),
-   plus the Start-pack ↔ content-id mapping contract (M1-A open item).
-
-Both are explicitly out of this slice's bounds ("no API, no inventing routes"). The
-truthful local slice above is the smallest compliant deliverable; the `server-backed`
-label exists and is tested so the future wiring is a one-line switch plus a fetch.
+Under the original M1-B task rules, wiring the Web Today screen would also have required a
+new Web route exposing the snapshot with the Web learner-cookie boundary. That route and
+identity bridge were then implemented in the follow-up described below. They were
+explicitly out of the original slice's bounds ("no API, no inventing routes"), so its
+truthful local-only state remains accurate historical scope rather than a current blocker.
 
 ## Deliberate limits
 
@@ -72,9 +63,10 @@ serverUnavailable`, all `no-store`.
   only after authentication; the snapshot is treated as server-backed only after a successful
   fetch and parse. Loading/error/offline fallbacks keep the truthful device-local label, and
   the local pending-sync chip is preserved. No sync acknowledgement is ever claimed.
-- Start Pack ↔ canonical `contentId` join remains unsolved (M1-A §3.2): the server `contentId`
-  is authoritative, the bundled `start-a1-*` ids are not joined, and the local review path is
-  unchanged. `newCardIds` stays empty until the catalog contract is approved.
+- Start Pack ↔ canonical `contentId` intake is resolved by LB-DS-079: the server selects a bounded
+  set of approved/published, learner-unscheduled `start-a1-*` cards and returns each selected UUID
+  beside its authoritative `contentId`. The local prototype review path remains unchanged; server
+  admission stays behind the existing dormant learner-state runtime.
 
 ## Follow-up hardening (M-L2 / M-L3, merged with this slice's tracking)
 

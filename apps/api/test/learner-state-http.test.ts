@@ -24,10 +24,17 @@ const dependencies: LearnerStateHttpDependencies = {
           dueAt: new Date('2026-07-25T12:00:00Z'),
         },
       ],
+      newCards: [
+        {
+          cardId: '22222222-2222-4222-8222-222222222222',
+          contentId: 'start-a1-haus',
+          importance: 1,
+        },
+      ],
       plan: {
         mode: 'normal',
         reviewCardIds: ['170b8a2a-7fa7-4e26-94ba-37e3a7fb65da'],
-        newCardIds: [],
+        newCardIds: ['22222222-2222-4222-8222-222222222222'],
         message: 'امروز یک قدم کوچک و پیوسته کافی است.',
       },
       reviewEventsCount: 3,
@@ -86,10 +93,17 @@ describe('GET learner state boundary (contract M1-D 12.3)', () => {
           dueAt: '2026-07-25T12:00:00.000Z',
         },
       ],
+      newCards: [
+        {
+          cardId: '22222222-2222-4222-8222-222222222222',
+          contentId: 'start-a1-haus',
+          importance: 1,
+        },
+      ],
       plan: {
         mode: 'normal',
         reviewCardIds: ['170b8a2a-7fa7-4e26-94ba-37e3a7fb65da'],
-        newCardIds: [],
+        newCardIds: ['22222222-2222-4222-8222-222222222222'],
         message: 'امروز یک قدم کوچک و پیوسته کافی است.',
       },
       reviewEventsCount: 3,

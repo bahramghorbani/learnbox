@@ -105,12 +105,11 @@ reviewEventsCount }`, `200`, `cache-control: no-store`,
    users") resolved this: the Web OTP verification resolves `users.id` server-side and issues
    the signed cookie with the canonical UUID subject, so the read route maps the cookie
    `subject` directly to `users.id` with no lookup and no client-supplied identifier.
-3. **Start Pack seed/release.** New-card intake (`newCards`, `suggestedNewCards`, plus targeted
-   learner schedule creation for selected approved Start-pack content) requires the catalog and
-   pack-membership contract plus approved content. This is a **separate owner/review-gated
-   decision** and is out of scope here. Until then the plan always returns `newCardIds: []`
-   and `suggestedNewCards: 0` (M1-D slice 1 `ponytail` comment), and the Web surface keeps
-   its bundled device-local Start pack with local-only labels.
+3. **Start Pack read-side intake (resolved in LB-DS-079).** The state read selects only
+   approved/published, learner-unscheduled cards in the `start-a1-%` namespace, capped at 12
+   candidates. The engine admits at most 3 after due reviews and exposes both `cardId` and
+   canonical `contentId`; recovery mode admits none. Schedule creation remains targeted on the
+   first accepted review submission, so reading state does not mutate learner progress.
 4. **API module mounting / DB access (resolved).** The Next.js route imports the existing
    API package's built `dist` artifacts (`apps/website/lib/learner-state-web-runtime.ts`,
    same pattern as `lib/mobile-review-runtime.ts`) and a shared verified-TLS

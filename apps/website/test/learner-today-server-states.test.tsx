@@ -18,6 +18,7 @@ const canonicalBody = {
       dueAt: '2026-08-08T06:00:00.000Z',
     },
   ],
+  newCards: [],
   plan: {
     mode: 'normal',
     reviewCardIds: ['11111111-1111-4111-8111-111111111111'],
@@ -250,6 +251,7 @@ describe('Today server snapshot truth states', () => {
           dueAt: '2026-08-08T06:00:00.000Z',
         },
       ],
+      newCards: [],
       plan: {
         mode: 'normal',
         reviewCardIds: ['11111111-1111-4111-8111-111111111111'],
