@@ -12,13 +12,13 @@ participants, deploy, or publish anything.
 
 ## Verified inventory
 
-| Slice                    | Drafts |                                          Linguistic approval | Provenance                                            | Visual                                                             | Audio                                                                                                                             | App flow                                                                                                                                                       | Release-approved card versions |
-| ------------------------ | -----: | -----------------------------------------------------------: | ----------------------------------------------------- | ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | -----------------------------: |
-| Original vertical slice  |  20/20 |      20/20 for `german_linguistic` and `persian_translation` | candidate-stage evidence for 20/20                    | 20/20 V2 candidates inspected and privately attested, not attached | 40/40 V1 word/sentence candidates sha-attested and transcription-QA-passed, not attached; Issue #59 V2 regeneration is incomplete | candidate-stage local flow passed                                                                                                                              |                           0/20 |
-| Remaining catalog drafts |  15/15 | 15/15 for `german_linguistic` and `persian_translation` only | lexical-scope ledger exists for 15/15; candidate-only | 15/15 private candidates human-reviewed, not attached              | 30/30 private candidates human-reviewed; 28/30 exact transcription matches with two recorded exceptions, not attached             | not approved                                                                                                                                                   |                           0/15 |
-| Total catalog            |  35/35 |                 35/35 for the two linguistic dimensions only | incomplete for release                                | incomplete for release                                             | incomplete for release                                                                                                            | incomplete for release                                                                                                                                         |                           0/35 |
-| Batched review packet    |  35/35 |             35/35 recorded for the two owner dimensions only | source-local page evidence for 35/35                  | alt text plus selected V2/V1 image for 35/35                       | 105 selected assets linked; 2 exceptions recorded                                                                                 | pending/unproven for 35/35                                                                                                                                     |                           0/35 |
-| Recorded owner decisions |  35/35 |        35/35 `approve`, repository evidence only (LB-DS-077) | 35/35 owner-submitted `passed`                        | 35/35 owner-submitted `passed`                                     | 35/35 owner-submitted `passed`                                                                                                    | 35/35 owner-submitted `passed`; app flow accepted only as the isolated offline review artifact's card flow, not Production runtime; nothing persisted in Admin |                           0/35 |
+| Slice                    | Drafts |                                          Linguistic approval | Provenance                                            | Visual                                                                                                                                       | Audio                                                                                                                                                                                                       | App flow                                                                                                                                                       | Release-approved card versions |
+| ------------------------ | -----: | -----------------------------------------------------------: | ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | -----------------------------: |
+| Original vertical slice  |  20/20 |      20/20 for `german_linguistic` and `persian_translation` | candidate-stage evidence for 20/20                    | 20/20 V2 candidates inspected and privately attested; LB-DS-080 records the repository attachment state only, with no operational attachment | 40/40 V1 word/sentence candidates sha-attested and transcription-QA-passed; LB-DS-080 records the repository attachment state only, with no operational attachment; Issue #59 V2 regeneration is incomplete | candidate-stage local flow passed                                                                                                                              |                           0/20 |
+| Remaining catalog drafts |  15/15 | 15/15 for `german_linguistic` and `persian_translation` only | lexical-scope ledger exists for 15/15; candidate-only | 15/15 private candidates human-reviewed; LB-DS-080 records the repository attachment state only, with no operational attachment              | 30/30 private candidates human-reviewed; 28/30 exact transcription matches with two recorded exceptions, not attached                                                                                       | not approved                                                                                                                                                   |                           0/15 |
+| Total catalog            |  35/35 |                 35/35 for the two linguistic dimensions only | incomplete for release                                | incomplete for release                                                                                                                       | incomplete for release                                                                                                                                                                                      | incomplete for release                                                                                                                                         |                           0/35 |
+| Batched review packet    |  35/35 |             35/35 recorded for the two owner dimensions only | source-local page evidence for 35/35                  | alt text plus selected V2/V1 image for 35/35                                                                                                 | 105 selected assets linked; 2 exceptions recorded                                                                                                                                                           | pending/unproven for 35/35                                                                                                                                     |                           0/35 |
+| Recorded owner decisions |  35/35 |        35/35 `approve`, repository evidence only (LB-DS-077) | 35/35 owner-submitted `passed`                        | 35/35 owner-submitted `passed`                                                                                                               | 35/35 owner-submitted `passed`                                                                                                                                                                              | 35/35 owner-submitted `passed`; app flow accepted only as the isolated offline review artifact's card flow, not Production runtime; nothing persisted in Admin |                           0/35 |
 
 The canonical catalog snapshot is therefore truthful at its top-level release boundary:
 `releaseStatus: draft`, `seedable: false`, `publicationBlocked: true`, and no seedable item IDs.
@@ -28,7 +28,8 @@ The canonical catalog snapshot is therefore truthful at its top-level release bo
 1. **Remaining 15 items still lack final media validation.** Private candidate-only media now exists:
    all 15 images and 30 audio clips received human review, the whole 105-asset selection was uploaded
    to the verified isolated target and passed initial plus complete-resume integrity verification, but
-   the package remains unattached and two automated transcription discrepancies
+   the package has no operational attachment (LB-DS-080 records the attachment state as repository
+   evidence only) and two automated transcription discrepancies
    (`start-a1-essen-sentence`, `start-a1-gross-word`) remain recorded for a later release decision.
    Final visual/audio approval and release authorization are not granted here.
 2. **All 35 items lack release-level app-flow evidence.** The original 20 have candidate-stage local-flow evidence, while no artifact proves any of the 35 in the release learner flow,
@@ -39,8 +40,10 @@ The canonical catalog snapshot is therefore truthful at its top-level release bo
 3. **No item has an approved/published `card_versions` row.** ADR 0013 and
    `evaluateStartCatalogSeed` require a release-approved version for every target item; current count
    is 0/35.
-4. **The original 20 have candidate-stage evidence, not release approval.** Private media is attested
-   but remains deliberately unattached. Server-session authorization, owner release approval and
+4. **The original 20 have candidate-stage evidence, not release approval.** Private media is attested and its
+   repository attachment state is recorded (LB-DS-080, `private_media_attached` as repository evidence
+   only), but no operational attachment, database media row, provider call or learner delivery exists.
+   Server-session authorization, owner release approval and
    participant-invitation approval remain open.
 5. **Owner release approval is still absent for all 35.** The owner has now recorded `approve` for all
    35 items across all six dimensions, but only as repository evidence in the LB-DS-077 decision record:
@@ -241,6 +244,21 @@ both independent operations succeed. Transitioning a version to `published` requ
 publication authorization and execution path after the attachment, seed/release and publication gates
 are satisfied. Participant invitation, Preview activation and Production remain separate owner gates.
 
+LB-DS-080 now records the attachment state itself as repository evidence in
+`content/packs/learnbox-start/validation/start-a1-35-final-private-media-attachment.json`: derived
+deterministically from the immutable manifest and the immutable attestation, digest-anchoring both,
+carrying no per-asset pathname, checksum, byte size or provider locator, and executing nothing
+(`publicationBlocked: true`, `learnerDeliveryActivated: false`, `databaseMediaRowsWritten: false`,
+`providerCallPerformed: false`). It grants no operational attachment, database row, provider call,
+deployment, learner delivery or publication.
+
+That record also preserves the verified exposure truth, which no summary may overstate as "all 105
+private": 60 of the 105 attested assets are byte-identical to legacy copies already tracked in this
+public repository — 20 images, 20 word-audio and 20 sentence-audio assets across 20 of the 35 content
+IDs, matching 63 tracked paths — so those 60 assets are not private. The remaining 45 assets across 15
+content IDs have no public byte-identical copy. `pnpm verify:start-35-final-private-media-attachment`
+re-derives both counts from tracked Git blobs without any provider or network call.
+
 ## Evidence sources
 
 - `content/packs/learnbox-start/validation/start-a1-35-catalog-slice.json`
@@ -251,6 +269,7 @@ are satisfied. Participant invitation, Preview activation and Production remain 
 - `content/packs/learnbox-start/validation/start-a1-catalog-35-pending-provenance-ledger.json`
 - `content/packs/learnbox-start/validation/start-a1-private-media-attestation.json`
 - `content/packs/learnbox-start/validation/start-a1-v2-images-private-media-attestation.json`
+- `content/packs/learnbox-start/validation/start-a1-35-final-private-media-attachment.json`
 - `content/packs/learnbox-start/validation/start-a1-issue59-audio-gate.json`
 - `content/packs/learnbox-start/validation/start-a1-slice-candidates.json`
 - `content/packs/learnbox-start/validation/start-a1-catalog-35-pending-candidates.json`

@@ -1,0 +1,58 @@
+{
+  "recordVersion": 1,
+  "recordKind": "canonical_repository_private_media_attachment_record",
+  "batchId": "learnbox-start-a1-35-final-media-v1",
+  "state": "private_media_attached",
+  "attachmentScope": "repository_evidence_only",
+  "publicationBlocked": true,
+  "learnerDeliveryActivated": false,
+  "databaseMediaRowsWritten": false,
+  "providerCallPerformed": false,
+  "authorization": {
+    "basis": "owner_authorized_repository_attachment_record",
+    "identityIndependentlyVerified": false,
+    "authorizes": ["record_repository_attachment_state"],
+    "doesNotAuthorize": [
+      "admin_outcome_persistence",
+      "database_media_rows",
+      "provider_operation",
+      "learner_delivery_activation",
+      "catalog_seed",
+      "deployment",
+      "publication"
+    ]
+  },
+  "counts": {
+    "itemCount": 35,
+    "assetCount": 105,
+    "contentIdCount": 35,
+    "assetsByKind": { "image": 35, "word_audio": 35, "sentence_audio": 35 }
+  },
+  "sourceArtifacts": {
+    "manifest": {
+      "path": "content/packs/learnbox-start/validation/start-a1-35-final-media-manifest.json",
+      "sha256": "0edcdd4d348f91534d49343ec5840bef8e2335fd9cf8b017f045d393f9b9a21b",
+      "state": "prepared_awaiting_private_upload"
+    },
+    "attestation": {
+      "path": "content/packs/learnbox-start/validation/start-a1-35-final-private-media-attestation.json",
+      "sha256": "79abb707f912db2277baaa42278c1fc041318c90ada3fc82290eddb0bc6b8c74",
+      "state": "private_storage_verified_not_attached"
+    }
+  },
+  "publicExposure": {
+    "classification": "mixed_public_legacy_copies_and_private_only_assets",
+    "verificationMethod": "sha256_equality_against_tracked_git_blobs",
+    "allAssetsPrivate": false,
+    "assetsWithPublicByteIdenticalCopy": 60,
+    "contentIdsWithPublicByteIdenticalCopy": 20,
+    "trackedPathsWithPublicByteIdenticalCopy": 63,
+    "assetsWithoutPublicCopy": 45,
+    "contentIdsWithoutPublicCopy": 15,
+    "assetsWithPublicByteIdenticalCopyByKind": {
+      "image": 20,
+      "word_audio": 20,
+      "sentence_audio": 20
+    }
+  }
+}

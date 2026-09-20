@@ -8,7 +8,7 @@ start. Historical tasks remain for traceability and must not be duplicated.
 ### Current release execution
 
 - **S0 — 30-day finish-line reset:** accepted in PR #278 at `34d0d6dbd85bb42c07a8aaee1576505b0eb8db72`. Official Web/PWA-first v1.0 is targeted for 2026-10-12; Android, commerce and premium packs are v1.1+.
-- **S1 — Private media + 35-item release batch:** in progress. PR #286 merged the reviewed JPEG source-truth correction, after which the owner-authorized guarded upload placed exactly 105 private assets in the isolated target and verified each by cache-disabled download, byte count and SHA-256. PR #288 merged the decision-free review packet; PR #289 merged the owner's 210/210 `passed` checks and 35 `approve` decisions as repository intent only. PR #292 added protected staging delivery/attestation without changing the canonical `private_storage_verified_not_attached` state. Admin outcomes remain 0 recorded / 210 pending; 0/35 items are release-approved. Nothing is attached, seeded, activated or published; those gates remain separately owner-authorized.
+- **S1 — Private media + 35-item release batch:** in progress. PR #286 merged the reviewed JPEG source-truth correction, after which the owner-authorized guarded upload placed exactly 105 assets in the isolated target and verified each by cache-disabled download, byte count and SHA-256. PR #288 merged the decision-free review packet; PR #289 merged the owner's 210/210 `passed` checks and 35 `approve` decisions as repository intent only. PR #292 added protected staging delivery/attestation without changing the canonical source attestation state `private_storage_verified_not_attached`. LB-DS-080 now records `private_media_attached` as owner-authorized repository evidence only, with publication, delivery, database and provider gates closed; it also discloses that 60/105 attested assets across 20/35 content IDs have byte-identical copies in the public repository, while 45/105 across 15/35 do not. Admin outcomes remain 0 recorded / 210 pending; 0/35 items are release-approved. Nothing is operationally attached, seeded, activated or published; those gates remain separately owner-authorized.
 - **S2 — Server-authoritative Web loop:** partial/dormant. PR #293 replaced eager all-catalog schedule bootstrap with one approved submitted-card schedule, and PR #294 added bounded learner-scoped approved Start-card intake to the authenticated learner-state read. Runtime flags remain default-off; staging/Production activation is separately gated.
 - **S3 — Web release essentials:** partial foundations; account/privacy/support/operations work may overlap S2 with disjoint paths.
 - **S4 — Closed alpha:** planned for 2026-10-04 through 2026-10-08 after S1–S3 integration evidence.
@@ -42,6 +42,26 @@ The M0–M8 records below retain implementation provenance only; they do not ove
   browser visual/AX/keyboard acceptance is not claimed — it can be verified only against a staging deployment running the current merged build (staging is not confirmed current; the Chrome permission dialog blocker also remains).
 
 ### Active grouped workstreams
+
+## LB-DS-080
+
+- Status: review_requested
+- Executor: supervisor
+- Base: exact `7277e00f903b468d39678710deefb59a18c03654` (`origin/main`, PR #295 merge)
+- Branch: `feat/s1-start35-private-media-attachment`
+- Risk: repository-attachment-truth-and-public-asset-disclosure
+- Specification: owner authorization in the originating request; `ROADMAP.md` S1; `docs/architecture/PRIVATE_MEDIA_DELIVERY.md`; `docs/operations/ISOLATED_PRIVATE_MEDIA_STORAGE.md`; `docs/content/STARTER_CATALOG_35_RELEASE_READINESS.md`
+- Outcome: add one canonical, deterministic repository attachment record for the 35-item/105-asset Start package, digest-anchor the immutable source manifest and source attestation, disclose byte-identical tracked public copies truthfully, and keep every operational/release gate default-off.
+- Allowed paths: `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-080.md`; `CURRENT_WORK.md`; `PROJECT_STATE.md`; `BACKLOG.md`; `ROADMAP.md`; `docs/PRODUCT_STATUS.md`; `docs/content/STARTER_CATALOG_35_RELEASE_READINESS.md`; `docs/architecture/PRIVATE_MEDIA_DELIVERY.md`; `docs/operations/ISOLATED_PRIVATE_MEDIA_STORAGE.md`; `content/packs/learnbox-start/validation/start-a1-35-final-private-media-attachment.json`; `scripts/build-start-35-final-private-media-attachment.mjs`; `scripts/build-start-35-final-private-media-attachment.test.mjs`; `scripts/tracked-git-blob-digests.mjs`; `scripts/validate-start-35-final-private-media-attachment.mjs`; `scripts/validate-start-35-final-private-media-attachment.test.mjs`; `package.json`
+- Required checks: focused attachment tests and validator; byte-identical deterministic rebuild; existing final manifest and source-attestation validators; private-media delivery validator; queue/documentation/security/continuity validators; full `pnpm check`; Prettier; ESLint; `git diff --check`; Gitleaks; local commit verification.
+- Simulator required: no
+- Draft PR required: no
+- Merge allowed: no
+- Head commit: read live with `git rev-parse HEAD`; local commit only, with no push, PR or merge authorized.
+- Draft PR: not created; external mutations are outside scope.
+- Blocked on: no local repository blocker. Admin outcome persistence, operational database/provider attachment, learner delivery activation, seed, deployment and publication remain separately owner-gated.
+- Must not touch: provider resources or credentials; private receipt or private locators; database/migrations; Admin review outcomes; routes; runtime flags or environments; staging/Preview/Production; seed; deployment; publication; Bobo assets.
+- Acceptance: the record has state `private_media_attached` qualified as repository evidence only; binds exactly 35 content IDs/105 assets and three exact kind counts; anchors the committed manifest and attestation by SHA-256; records no per-asset locator, checksum, byte size or secret; independently re-derives that 60 assets across 20 content IDs have byte-identical tracked public copies and 45 assets across 15 content IDs do not; rejects missing/extra/duplicate/drifted sources and exposure counts; keeps publication blocked and learner delivery, database writes and provider calls false; performs no network or external mutation.
 
 ## LB-DS-079
 

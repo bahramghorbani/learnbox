@@ -54,6 +54,26 @@ no target
 
 Every arrow is independent. Passing an earlier transition grants none of the later ones.
 
+## Repository attachment record — LB-DS-080
+
+LB-DS-080 records the attachment _state_ as repository evidence only, in
+`content/packs/learnbox-start/validation/start-a1-35-final-private-media-attachment.json`. The record
+is derived deterministically from the immutable committed manifest and the immutable committed
+attestation, anchors both by SHA-256, carries no per-asset pathname, checksum, byte size or provider
+locator, and executes nothing: `publicationBlocked: true`, `learnerDeliveryActivated: false`,
+`databaseMediaRowsWritten: false`, `providerCallPerformed: false`.
+
+It is not the operational `separately approved persisted attachment` transition above and it does not
+authorize any later arrow. The documented storage target and the upload/attachment provider
+operations are unchanged.
+
+The same record preserves the verified exposure truth: 60 of the 105 attested assets already have
+byte-identical legacy copies tracked in this public repository — 20 images, 20 word-audio and 20
+sentence-audio assets across 20 of the 35 content IDs, matching 63 tracked paths including three
+mobile card copies — so those 60 assets must never be called private. The remaining 45 assets across
+15 content IDs have no public byte-identical copy. `pnpm verify:start-35-final-private-media-attachment`
+re-derives both counts from tracked Git blobs with no provider or network access.
+
 ## Non-secret attestation shape for LB-DS-062
 
 LB-DS-062 may accept only a local ignored JSON file with these literal booleans and labels. It must never contain an ID, token, URL, pathname, account name, project ID or object metadata:
