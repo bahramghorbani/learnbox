@@ -55,10 +55,10 @@ The M0–M8 records below retain implementation provenance only; they do not ove
 - Allowed paths: `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-080.md`; `CURRENT_WORK.md`; `PROJECT_STATE.md`; `BACKLOG.md`; `ROADMAP.md`; `docs/PRODUCT_STATUS.md`; `docs/content/STARTER_CATALOG_35_RELEASE_READINESS.md`; `docs/architecture/PRIVATE_MEDIA_DELIVERY.md`; `docs/operations/ISOLATED_PRIVATE_MEDIA_STORAGE.md`; `content/packs/learnbox-start/validation/start-a1-35-final-private-media-attachment.json`; `scripts/build-start-35-final-private-media-attachment.mjs`; `scripts/build-start-35-final-private-media-attachment.test.mjs`; `scripts/tracked-git-blob-digests.mjs`; `scripts/validate-start-35-final-private-media-attachment.mjs`; `scripts/validate-start-35-final-private-media-attachment.test.mjs`; `package.json`
 - Required checks: focused attachment tests and validator; byte-identical deterministic rebuild; existing final manifest and source-attestation validators; private-media delivery validator; queue/documentation/security/continuity validators; full `pnpm check`; Prettier; ESLint; `git diff --check`; Gitleaks; local commit verification.
 - Simulator required: no
-- Draft PR required: no
+- Draft PR required: yes
 - Merge allowed: no
-- Head commit: read live with `git rev-parse HEAD`; local commit only, with no push, PR or merge authorized.
-- Draft PR: not created; external mutations are outside scope.
+- Head commit: read live with `gh pr view <PR> --json headRefOid` before readiness; merge is not authorized.
+- Draft PR: owner authorized branch push and Draft PR creation on 2026-09-20; record the PR number after creation.
 - Blocked on: no local repository blocker. Admin outcome persistence, operational database/provider attachment, learner delivery activation, seed, deployment and publication remain separately owner-gated.
 - Must not touch: provider resources or credentials; private receipt or private locators; database/migrations; Admin review outcomes; routes; runtime flags or environments; staging/Preview/Production; seed; deployment; publication; Bobo assets.
 - Acceptance: the record has state `private_media_attached` qualified as repository evidence only; binds exactly 35 content IDs/105 assets and three exact kind counts; anchors the committed manifest and attestation by SHA-256; records no per-asset locator, checksum, byte size or secret; independently re-derives that 60 assets across 20 content IDs have byte-identical tracked public copies and 45 assets across 15 content IDs do not; rejects missing/extra/duplicate/drifted sources and exposure counts; keeps publication blocked and learner delivery, database writes and provider calls false; performs no network or external mutation.
