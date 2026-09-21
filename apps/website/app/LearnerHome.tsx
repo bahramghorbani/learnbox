@@ -45,8 +45,13 @@ import { StartMediaVisual } from './components/StartMediaVisual';
 import { personalWordLimit } from './product-experience';
 import { resolveSupportivePlusOffer } from './paywall';
 import { buildStartMediaSources, resolveStartMediaMode, type StartMediaMode } from './start-media';
-import { selectTodayStartSession, stagedStartSlice } from './start-slice';
-import { fetchWebLearnerState } from '../lib/learner-state-web-client';
+import { resolveStartSliceItem, selectTodayStartSession, stagedStartSlice } from './start-slice';
+import {
+  deriveWebSessionItems,
+  fetchWebLearnerState,
+  type WebLearnerStateResult,
+} from '../lib/learner-state-web-client';
+import { flushWebReviewQueue } from '../lib/learner-review-web-sync';
 import { fetchWebLearnerProfile } from '../lib/learner-profile-web-client';
 import type { LearnerSyncState } from './learner-sync-state';
 
@@ -110,7 +115,15 @@ export function LearnerHome({
   inviteFlag = process.env.NEXT_PUBLIC_LEARNBOX_ALPHA_INVITE_UI_ENABLED,
   profileIdentityFlag = process.env.NEXT_PUBLIC_LEARNBOX_PROFILE_IDENTITY_ENABLED,
 }: LearnerHomeProps = {}) {
-  const studyItems = selectTodayStartSession();
+  const [serverSyncState, setServerSyncState] = useState<LearnerSyncState>('local-only');
+  const [serverLastSyncedAt, setServerLastSyncedAt] = useState<string | null>(null);
+  const localStudyItems = selectTodayStartSession();
+  const [serverSnapshot, setServerSnapshot] = useState<
+    Extract<WebLearnerStateResult, { status: 'ok' }>['snapshot'] | null
+  >(null);
+  const serverSession = serverSnapshot
+    ? deriveWebSessionItems(serverSnapshot, resolveStartSliceItem)
+    : { items: [], unavailableContentIds: [] };
   const authMode = resolveLearnerAuthMode(otpUiFlag);
   const inviteGateMode = resolveInviteGateMode(inviteFlag);
   const [inviteAccepted, setInviteAccepted] = useState(inviteGateMode === 'local-prototype');
@@ -132,6 +145,7 @@ export function LearnerHome({
   >('today');
   const [flipped, setFlipped] = useState(false);
   const [grade, setGrade] = useState<Grade | null>(null);
+  const [sessionItems, setSessionItems] = useState<typeof localStudyItems | null>(null);
   const [sessionIndex, setSessionIndex] = useState(0);
   const [reviewedToday, setReviewedToday] = useState(0);
   const [streakDays, setStreakDays] = useState(0);
@@ -141,8 +155,6 @@ export function LearnerHome({
   const [plusOfferDismissed, setPlusOfferDismissed] = useState(false);
   const [startMediaMode, setStartMediaMode] = useState<StartMediaMode>('placeholder');
   const [isRecordingGrade, setIsRecordingGrade] = useState(false);
-  const [serverSyncState, setServerSyncState] = useState<LearnerSyncState>('local-only');
-  const [serverLastSyncedAt, setServerLastSyncedAt] = useState<string | null>(null);
   const [profileIdentity, setProfileIdentity] = useState<
     | { status: 'loading' }
     | { status: 'ok'; maskedPhone: string }
@@ -151,6 +163,9 @@ export function LearnerHome({
   >({ status: 'unavailable' });
   const profileIdentityReadGenerationRef = useRef(0);
   const gradeSubmissionRef = useRef(false);
+  const reviewFlushInFlightRef = useRef(false);
+  const reviewFlushQueuedRef = useRef(false);
+  const requestServerReviewFlushRef = useRef<() => void>(() => undefined);
   const flipHintRef = useRef<HTMLButtonElement>(null);
   const flipAgainRef = useRef<HTMLButtonElement>(null);
   const completionHeadingRef = useRef<HTMLHeadingElement>(null);
@@ -163,6 +178,11 @@ export function LearnerHome({
   const learningGoalReturnTargetRef = useRef<'profile' | 'settings' | null>(null);
   const profileSettingsRowRef = useRef<HTMLButtonElement>(null);
   const profileSettingsReturnRef = useRef(false);
+  const studyItems =
+    sessionItems ??
+    (serverSyncState === 'server-backed'
+      ? serverSession.items.map(({ item }) => item)
+      : localStudyItems);
   const remainingTodayReviews = Math.max(0, studyItems.length - reviewedToday);
   const isServerOtp = authMode === 'server-otp';
   const profileIdentityEnabled = profileIdentityFlag === 'true';
@@ -284,10 +304,12 @@ export function LearnerHome({
   const applyServerStateResult = useCallback(
     (result: Awaited<ReturnType<typeof fetchWebLearnerState>>) => {
       if (result.status === 'ok') {
+        setServerSnapshot(result.snapshot);
         setServerLastSyncedAt(new Date().toISOString());
         setServerSyncState('server-backed');
         return;
       }
+      setServerSnapshot(null);
       if (result.status === 'unauthorized') {
         setServerSyncState('local-only');
         return;
@@ -337,6 +359,40 @@ export function LearnerHome({
       .then(applyServerStateResult)
       .catch(() => setServerSyncState('error'));
   }, [authenticated, isServerOtp, applyServerStateResult]);
+
+  const flushServerReviewQueue = useCallback(() => {
+    if (!authenticated || !isServerOtp || typeof window === 'undefined') return;
+    if (reviewFlushInFlightRef.current) {
+      reviewFlushQueuedRef.current = true;
+      return;
+    }
+    reviewFlushInFlightRef.current = true;
+    void flushWebReviewQueue({ storage: getDeviceStorage(), key: reviewSyncStorageKey })
+      .then(
+        (result) => {
+          setPendingReviewCount(result.pendingCount);
+          if (result.acknowledged) retryServerStateRead();
+        },
+        () => undefined,
+      )
+      .finally(() => {
+        reviewFlushInFlightRef.current = false;
+        if (reviewFlushQueuedRef.current) {
+          reviewFlushQueuedRef.current = false;
+          requestServerReviewFlushRef.current();
+        }
+      });
+  }, [authenticated, isServerOtp, retryServerStateRead]);
+
+  requestServerReviewFlushRef.current = flushServerReviewQueue;
+
+  useEffect(() => {
+    if (!authenticated || !isServerOtp || typeof window === 'undefined') return;
+    const flush = () => flushServerReviewQueue();
+    flush();
+    window.addEventListener('online', flush);
+    return () => window.removeEventListener('online', flush);
+  }, [authenticated, isServerOtp, flushServerReviewQueue]);
 
   const readProfileIdentity = useCallback(() => {
     const generation = ++profileIdentityReadGenerationRef.current;
@@ -389,7 +445,10 @@ export function LearnerHome({
   }, [screen, readProfileIdentity]);
 
   const begin = () => {
+    const itemsForSession = studyItems;
     const nextIndex = resumableSessionIndex ?? 0;
+    if (!itemsForSession[nextIndex]) return;
+    setSessionItems(itemsForSession);
     setScreen('card');
     setFlipped(false);
     setGrade(null);
@@ -464,6 +523,7 @@ export function LearnerHome({
       ];
       saveSyncQueue(storage, reviewSyncStorageKey, nextQueue);
       setPendingReviewCount(nextQueue.length);
+      if (isServerOtp) flushServerReviewQueue();
     }
     setGrade(nextGrade);
     setReviewedToday((count) => {
@@ -494,6 +554,7 @@ export function LearnerHome({
     }
 
     clearReviewSession(getDeviceStorage(), reviewSessionStorageKey);
+    setSessionItems(null);
     setResumableSessionIndex(null);
     setCompletedSessions((sessions) => sessions + 1);
     setScreen('complete');

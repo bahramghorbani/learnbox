@@ -1,5 +1,38 @@
 import type { LearnerStateSnapshot } from '../../api/dist/learner-state/learner-state.service.js';
 
+export type ServerSessionItem<T> = { item: T; cardId: string; contentId: string };
+
+/**
+ * Preserves the server plan order while rendering only content represented by a
+ * canonical local face. Unknown IDs are reported, never substituted.
+ */
+export function deriveWebSessionItems<T>(
+  snapshot: LearnerStateSnapshot,
+  resolve: (contentId: string) => T | undefined,
+): { items: ServerSessionItem<T>[]; unavailableContentIds: string[] } {
+  const contentByCardId = new Map<string, string>();
+  for (const schedule of snapshot.schedules)
+    contentByCardId.set(schedule.cardId, schedule.contentId);
+  for (const card of snapshot.newCards) contentByCardId.set(card.cardId, card.contentId);
+
+  const selected = [...snapshot.plan.reviewCardIds, ...snapshot.plan.newCardIds];
+  const seenContent = new Set<string>();
+  const unavailableContentIds: string[] = [];
+  const items: ServerSessionItem<T>[] = [];
+  for (const cardId of selected) {
+    const contentId = contentByCardId.get(cardId);
+    if (!contentId || seenContent.has(contentId)) continue;
+    seenContent.add(contentId);
+    const item = resolve(contentId);
+    if (!item) {
+      unavailableContentIds.push(contentId);
+      continue;
+    }
+    items.push({ item, cardId, contentId });
+  }
+  return { items, unavailableContentIds };
+}
+
 export type WebLearnerStateResult =
   | { status: 'ok'; snapshot: LearnerStateSnapshot }
   | { status: 'unauthorized' }

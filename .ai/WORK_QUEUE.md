@@ -43,9 +43,31 @@ The M0–M8 records below retain implementation provenance only; they do not ove
 
 ### Active grouped workstreams
 
-## LB-DS-080
+## LB-DS-081
 
 - Status: review_requested
+- Executor: supervisor with independent exact-head security/data-flow review required before readiness
+- Base: exact `7277e00f903b468d39678710deefb59a18c03654` (`origin/main`, PR #295 merge)
+- Branch: `feat/v1-web-vertical-loop`
+- Risk: authenticated-server-authoritative-web-review-write-and-lossless-reconnect
+- Specification: owner-approved accelerated two-lane launch execution on 2026-09-20; `ROADMAP.md` S2; ADR 0012; ADR 0013; ADR 0014; `docs/architecture/M1_ONLINE_LEARNING_CONTRACT.md`; `docs/architecture/M1D_SYNC_WIRE_CONTRACT.md`
+- Outcome: complete one coherent Web vertical slice so a cookie-authenticated learner sees the server-selected due/new Start cards, submits idempotent review events through a Web-scoped route, keeps unacknowledged events durably queued offline, retries them after reconnect, and refreshes authoritative learner state without loss, duplication or mobile-token coupling.
+- Allowed paths: `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-081.md`; `CURRENT_WORK.md`; `PROJECT_STATE.md`; `docs/PRODUCT_STATUS.md`; `ROADMAP.md`; `BACKLOG.md`; `apps/website/app/LearnerHome.tsx`; `apps/website/app/start-slice.ts`; `apps/website/app/api/learner/**`; `apps/website/lib/learner-state-web-client.ts`; `apps/website/lib/learner-review-web-*.ts`; `apps/website/test/learner-state-web-client.test.ts`; `apps/website/test/learner-review-web-*.test.ts`; `apps/website/test/learner-today-server-states.test.tsx`; `apps/website/test/start-slice.test.ts`; `package.json`
+- Dependencies: merged cookie-authenticated Web learner-state read; merged approved/published Start-card intake; merged idempotent review-event store/service and reconciliation cursor semantics; canonical 35-item repository drafts.
+- Owner gates: repository implementation, tests, branch push, Draft PR and merge after exact-head PASS/current-main reconciliation/green CI were authorized. No database mutation, migration execution, provider call, OTP send, staging/Production activation, DNS change, deployment, private-media attachment, seed operation, publication or public release is authorized.
+- Must not touch: native Android; Admin decision rows; database migrations; production composition; private provider credentials/locators/receipts; payments/entitlements; premium packs; public landing; Bobo assets; unrelated refactors.
+- Acceptance: local-prototype behavior remains local; server-OTP mode renders only server-selected canonical Start content after a valid snapshot; unknown server content fails closed; Web review identity comes only from the signed HttpOnly learner cookie; request validation, no-store, HTTPS and same-origin/CSRF defenses fail closed; acknowledged/idempotent events leave the durable queue while rejected/unavailable events remain; reconnect retries due events and refreshes state; duplicate submissions cannot double-apply; no mobile bearer token/secret is used; no activation or external mutation occurs.
+- Required checks: focused RED/GREEN unit/route/component tests; Website and API typecheck/tests; `pnpm verify:ai-worker-queue`; `pnpm verify:documentation-governance`; `pnpm verify:security`; `pnpm check` or truthful pre-existing failure isolation; Prettier; ESLint; `git diff --check`; Gitleaks; independent exact-head security/data-flow review; required GitHub/Vercel contexts before any merge decision.
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+- Head commit: read live with `gh pr view 297 --json headRefOid`; merge requires current-main reconciliation and replacement exact-head evidence.
+- Draft PR: #297 — https://github.com/bahramghorbani/learnbox/pull/297 (open Draft; reconciling merged PR #296 before final review)
+- Blocked on: no repository implementation blocker. Runtime activation and all external state transitions remain separately owner-gated.
+
+## LB-DS-080
+
+- Status: accepted
 - Executor: supervisor
 - Base: exact `7277e00f903b468d39678710deefb59a18c03654` (`origin/main`, PR #295 merge)
 - Branch: `feat/s1-start35-private-media-attachment`
@@ -56,10 +78,12 @@ The M0–M8 records below retain implementation provenance only; they do not ove
 - Required checks: focused attachment tests and validator; byte-identical deterministic rebuild; existing final manifest and source-attestation validators; private-media delivery validator; queue/documentation/security/continuity validators; full `pnpm check`; Prettier; ESLint; `git diff --check`; Gitleaks; local commit verification.
 - Simulator required: no
 - Draft PR required: yes
-- Merge allowed: no
-- Head commit: read live with `gh pr view <PR> --json headRefOid` before readiness; merge is not authorized.
-- Draft PR: #296 — https://github.com/bahramghorbani/learnbox/pull/296 (open Draft; merge not authorized)
-- Blocked on: no local repository blocker. Admin outcome persistence, operational database/provider attachment, learner delivery activation, seed, deployment and publication remain separately owner-gated.
+- Merge allowed: yes
+- Head commit: `b0518d359ece45bf06c87f5ab34ad4fbaa8d6280`
+- Draft PR: #296 — https://github.com/bahramghorbani/learnbox/pull/296 (merged)
+- Merge commit: `3edc699f4133b7def2a28639fb03ebe312db6953`
+- Blocked on: no repository blocker. Admin outcome persistence, operational database/provider attachment, learner delivery activation, seed, deployment and publication remain separately owner-gated.
+- Accepted evidence: owner-authorized sequential merge; exact-head independent review passed; all seven GitHub/Vercel contexts were terminal-success; PR #296 merged at `3edc699f4133b7def2a28639fb03ebe312db6953`; remote `main` was verified equal.
 - Must not touch: provider resources or credentials; private receipt or private locators; database/migrations; Admin review outcomes; routes; runtime flags or environments; staging/Preview/Production; seed; deployment; publication; Bobo assets.
 - Acceptance: the record has state `private_media_attached` qualified as repository evidence only; binds exactly 35 content IDs/105 assets and three exact kind counts; anchors the committed manifest and attestation by SHA-256; records no per-asset locator, checksum, byte size or secret; independently re-derives that 60 assets across 20 content IDs have byte-identical tracked public copies and 45 assets across 15 content IDs do not; rejects missing/extra/duplicate/drifted sources and exposure counts; keeps publication blocked and learner delivery, database writes and provider calls false; performs no network or external mutation.
 
