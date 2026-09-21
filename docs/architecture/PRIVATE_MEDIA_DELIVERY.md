@@ -33,6 +33,27 @@ placeholder, while localhost retains its explicit QA preview. The public selecti
 server delivery flag are deliberately independent and both remain `false` by default. Media errors
 fall back to generic unavailable copy and never block grading.
 
+## Canonical repository attachment record
+
+`content/packs/learnbox-start/validation/start-a1-35-final-private-media-attachment.json` (LB-DS-080)
+records the attachment state as repository evidence: state `private_media_attached` for the same
+35-item/105-asset package with `publicationBlocked: true`, `learnerDeliveryActivated: false`,
+`databaseMediaRowsWritten: false` and `providerCallPerformed: false`. It is derived deterministically
+from the immutable manifest and the immutable `private_storage_verified_not_attached` attestation,
+anchors both artifacts by SHA-256, and carries no per-asset pathname, checksum, byte size or provider
+locator. It grants nothing beyond repository evidence.
+
+The route, the client seam and both delivery flags are unchanged by that record: delivery still
+requires `LEARNBOX_PRIVATE_MEDIA_ATTACHMENT_ENABLED=true`, a non-Production deployment and a signed
+learner session, and neither flag is enabled in any environment tracked here.
+
+The record also preserves the verified exposure truth. 60 of the 105 attested assets are
+byte-identical to copies already tracked in this public repository — 20 images, 20 word-audio
+and 20 sentence-audio assets across 20 of the 35 content IDs, matching 63 tracked paths — so those
+assets are not private and must never be described as such. The remaining 45 assets across 15 content
+IDs have no public byte-identical copy. `pnpm verify:start-35-final-private-media-attachment`
+re-derives both counts from tracked Git blobs without any provider or network call.
+
 ## Rollback
 
 Set either `NEXT_PUBLIC_LEARNBOX_PRIVATE_MEDIA_ENABLED=false` to stop client selection or
