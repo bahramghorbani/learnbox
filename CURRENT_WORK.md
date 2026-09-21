@@ -4,7 +4,7 @@
 
 ## Active work
 
-LB-DS-081 (`feat/v1-web-vertical-loop`, `review_requested`) is open as Draft PR #297. It completes the cookie-authenticated server-backed Web learning loop in one coherent default-off repository slice: server-selected Start cards, Web-scoped idempotent review submission, durable offline queue retry and authoritative refresh. Final exact-head review and terminal CI remain open; merge is not authorized. No runtime flag, database, provider, staging/Production, deployment, seed, attachment, publication or public-release mutation is authorized. LB-DS-080 remains independently open as Draft PR #296 for repository-only media attachment evidence and does not overlap the Web runtime paths.
+LB-DS-081 (`feat/v1-web-vertical-loop`, `review_requested`) is open as Draft PR #297. It completes the cookie-authenticated server-backed Web learning loop in one coherent default-off repository slice: server-selected Start cards, Web-scoped idempotent review submission, durable offline queue retry and authoritative refresh. PR #296/LB-DS-080 is merged at `3edc699f4133b7def2a28639fb03ebe312db6953`; PR #297 is being reconciled against that current `main` and requires fresh exact-head review and terminal CI before its owner-authorized merge. No runtime flag, database, provider, staging/Production, deployment, seed, operational attachment, publication or public-release mutation is authorized.
 
 ### Active release objective
 

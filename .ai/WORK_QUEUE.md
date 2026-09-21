@@ -8,7 +8,7 @@ start. Historical tasks remain for traceability and must not be duplicated.
 ### Current release execution
 
 - **S0 — 30-day finish-line reset:** accepted in PR #278 at `34d0d6dbd85bb42c07a8aaee1576505b0eb8db72`. Official Web/PWA-first v1.0 is targeted for 2026-10-12; Android, commerce and premium packs are v1.1+.
-- **S1 — Private media + 35-item release batch:** in progress. PR #286 merged the reviewed JPEG source-truth correction, after which the owner-authorized guarded upload placed exactly 105 private assets in the isolated target and verified each by cache-disabled download, byte count and SHA-256. PR #288 merged the decision-free review packet; PR #289 merged the owner's 210/210 `passed` checks and 35 `approve` decisions as repository intent only. PR #292 added protected staging delivery/attestation without changing the canonical `private_storage_verified_not_attached` state. Admin outcomes remain 0 recorded / 210 pending; 0/35 items are release-approved. Nothing is attached, seeded, activated or published; those gates remain separately owner-authorized.
+- **S1 — Private media + 35-item release batch:** in progress. PR #286 merged the reviewed JPEG source-truth correction, after which the owner-authorized guarded upload placed exactly 105 assets in the isolated target and verified each by cache-disabled download, byte count and SHA-256. PR #288 merged the decision-free review packet; PR #289 merged the owner's 210/210 `passed` checks and 35 `approve` decisions as repository intent only. PR #292 added protected staging delivery/attestation without changing the canonical source attestation state `private_storage_verified_not_attached`. LB-DS-080 now records `private_media_attached` as owner-authorized repository evidence only, with publication, delivery, database and provider gates closed; it also discloses that 60/105 attested assets across 20/35 content IDs have byte-identical copies in the public repository, while 45/105 across 15/35 do not. Admin outcomes remain 0 recorded / 210 pending; 0/35 items are release-approved. Nothing is operationally attached, seeded, activated or published; those gates remain separately owner-authorized.
 - **S2 — Server-authoritative Web loop:** partial/dormant. PR #293 replaced eager all-catalog schedule bootstrap with one approved submitted-card schedule, and PR #294 added bounded learner-scoped approved Start-card intake to the authenticated learner-state read. Runtime flags remain default-off; staging/Production activation is separately gated.
 - **S3 — Web release essentials:** partial foundations; account/privacy/support/operations work may overlap S2 with disjoint paths.
 - **S4 — Closed alpha:** planned for 2026-10-04 through 2026-10-08 after S1–S3 integration evidence.
@@ -54,16 +54,38 @@ The M0–M8 records below retain implementation provenance only; they do not ove
 - Outcome: complete one coherent Web vertical slice so a cookie-authenticated learner sees the server-selected due/new Start cards, submits idempotent review events through a Web-scoped route, keeps unacknowledged events durably queued offline, retries them after reconnect, and refreshes authoritative learner state without loss, duplication or mobile-token coupling.
 - Allowed paths: `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-081.md`; `CURRENT_WORK.md`; `PROJECT_STATE.md`; `docs/PRODUCT_STATUS.md`; `ROADMAP.md`; `BACKLOG.md`; `apps/website/app/LearnerHome.tsx`; `apps/website/app/start-slice.ts`; `apps/website/app/api/learner/**`; `apps/website/lib/learner-state-web-client.ts`; `apps/website/lib/learner-review-web-*.ts`; `apps/website/test/learner-state-web-client.test.ts`; `apps/website/test/learner-review-web-*.test.ts`; `apps/website/test/learner-today-server-states.test.tsx`; `apps/website/test/start-slice.test.ts`; `package.json`
 - Dependencies: merged cookie-authenticated Web learner-state read; merged approved/published Start-card intake; merged idempotent review-event store/service and reconciliation cursor semantics; canonical 35-item repository drafts.
-- Owner gates: repository implementation, tests, branch push and Draft PR are authorized. No database mutation, migration execution, provider call, OTP send, staging/Production activation, DNS change, deployment, private-media attachment, seed operation, publication or public release is authorized.
+- Owner gates: repository implementation, tests, branch push, Draft PR and merge after exact-head PASS/current-main reconciliation/green CI were authorized. No database mutation, migration execution, provider call, OTP send, staging/Production activation, DNS change, deployment, private-media attachment, seed operation, publication or public release is authorized.
 - Must not touch: native Android; Admin decision rows; database migrations; production composition; private provider credentials/locators/receipts; payments/entitlements; premium packs; public landing; Bobo assets; unrelated refactors.
 - Acceptance: local-prototype behavior remains local; server-OTP mode renders only server-selected canonical Start content after a valid snapshot; unknown server content fails closed; Web review identity comes only from the signed HttpOnly learner cookie; request validation, no-store, HTTPS and same-origin/CSRF defenses fail closed; acknowledged/idempotent events leave the durable queue while rejected/unavailable events remain; reconnect retries due events and refreshes state; duplicate submissions cannot double-apply; no mobile bearer token/secret is used; no activation or external mutation occurs.
 - Required checks: focused RED/GREEN unit/route/component tests; Website and API typecheck/tests; `pnpm verify:ai-worker-queue`; `pnpm verify:documentation-governance`; `pnpm verify:security`; `pnpm check` or truthful pre-existing failure isolation; Prettier; ESLint; `git diff --check`; Gitleaks; independent exact-head security/data-flow review; required GitHub/Vercel contexts before any merge decision.
 - Simulator required: no
 - Draft PR required: yes
-- Merge allowed: no
-- Head commit: read live with `gh pr view <PR> --json headRefOid`; merge requires separate exact-head readiness evidence and owner authorization.
-- Draft PR: #297 — https://github.com/bahramghorbani/learnbox/pull/297 (open Draft; merge not authorized)
+- Merge allowed: yes
+- Head commit: read live with `gh pr view 297 --json headRefOid`; merge requires current-main reconciliation and replacement exact-head evidence.
+- Draft PR: #297 — https://github.com/bahramghorbani/learnbox/pull/297 (open Draft; reconciling merged PR #296 before final review)
 - Blocked on: no repository implementation blocker. Runtime activation and all external state transitions remain separately owner-gated.
+
+## LB-DS-080
+
+- Status: accepted
+- Executor: supervisor
+- Base: exact `7277e00f903b468d39678710deefb59a18c03654` (`origin/main`, PR #295 merge)
+- Branch: `feat/s1-start35-private-media-attachment`
+- Risk: repository-attachment-truth-and-public-asset-disclosure
+- Specification: owner authorization in the originating request; `ROADMAP.md` S1; `docs/architecture/PRIVATE_MEDIA_DELIVERY.md`; `docs/operations/ISOLATED_PRIVATE_MEDIA_STORAGE.md`; `docs/content/STARTER_CATALOG_35_RELEASE_READINESS.md`
+- Outcome: add one canonical, deterministic repository attachment record for the 35-item/105-asset Start package, digest-anchor the immutable source manifest and source attestation, disclose byte-identical tracked public copies truthfully, and keep every operational/release gate default-off.
+- Allowed paths: `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-080.md`; `CURRENT_WORK.md`; `PROJECT_STATE.md`; `BACKLOG.md`; `ROADMAP.md`; `docs/PRODUCT_STATUS.md`; `docs/content/STARTER_CATALOG_35_RELEASE_READINESS.md`; `docs/architecture/PRIVATE_MEDIA_DELIVERY.md`; `docs/operations/ISOLATED_PRIVATE_MEDIA_STORAGE.md`; `content/packs/learnbox-start/validation/start-a1-35-final-private-media-attachment.json`; `scripts/build-start-35-final-private-media-attachment.mjs`; `scripts/build-start-35-final-private-media-attachment.test.mjs`; `scripts/tracked-git-blob-digests.mjs`; `scripts/validate-start-35-final-private-media-attachment.mjs`; `scripts/validate-start-35-final-private-media-attachment.test.mjs`; `package.json`
+- Required checks: focused attachment tests and validator; byte-identical deterministic rebuild; existing final manifest and source-attestation validators; private-media delivery validator; queue/documentation/security/continuity validators; full `pnpm check`; Prettier; ESLint; `git diff --check`; Gitleaks; local commit verification.
+- Simulator required: no
+- Draft PR required: yes
+- Merge allowed: yes
+- Head commit: `b0518d359ece45bf06c87f5ab34ad4fbaa8d6280`
+- Draft PR: #296 — https://github.com/bahramghorbani/learnbox/pull/296 (merged)
+- Merge commit: `3edc699f4133b7def2a28639fb03ebe312db6953`
+- Blocked on: no repository blocker. Admin outcome persistence, operational database/provider attachment, learner delivery activation, seed, deployment and publication remain separately owner-gated.
+- Accepted evidence: owner-authorized sequential merge; exact-head independent review passed; all seven GitHub/Vercel contexts were terminal-success; PR #296 merged at `3edc699f4133b7def2a28639fb03ebe312db6953`; remote `main` was verified equal.
+- Must not touch: provider resources or credentials; private receipt or private locators; database/migrations; Admin review outcomes; routes; runtime flags or environments; staging/Preview/Production; seed; deployment; publication; Bobo assets.
+- Acceptance: the record has state `private_media_attached` qualified as repository evidence only; binds exactly 35 content IDs/105 assets and three exact kind counts; anchors the committed manifest and attestation by SHA-256; records no per-asset locator, checksum, byte size or secret; independently re-derives that 60 assets across 20 content IDs have byte-identical tracked public copies and 45 assets across 15 content IDs do not; rejects missing/extra/duplicate/drifted sources and exposure counts; keeps publication blocked and learner delivery, database writes and provider calls false; performs no network or external mutation.
 
 ## LB-DS-079
 
