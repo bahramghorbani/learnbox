@@ -4,7 +4,15 @@
 
 ## Active work
 
-LB-DS-081 (`feat/v1-web-vertical-loop`, `review_requested`) is open as Draft PR #297. It completes the cookie-authenticated server-backed Web learning loop in one coherent default-off repository slice: server-selected Start cards, Web-scoped idempotent review submission, durable offline queue retry and authoritative refresh. PR #296/LB-DS-080 is merged at `3edc699f4133b7def2a28639fb03ebe312db6953`; PR #297 is being reconciled against that current `main` and requires fresh exact-head review and terminal CI before its owner-authorized merge. No runtime flag, database, provider, staging/Production, deployment, seed, operational attachment, publication or public-release mutation is authorized.
+Both LB-DS-080 and LB-DS-081 are merged. PR #296 (LB-DS-080, `feat/s1-start35-private-media-attachment`) merged at `3edc699f4133b7def2a28639fb03ebe312db6953`; PR #297 (LB-DS-081, `feat/v1-web-vertical-loop`) merged at `f727ce5204b04852844fbd4f0cfc79826d5d757e`. The repository now holds the canonical digest-anchored private-media attachment record and the complete cookie-authenticated server-backed Web learning loop (server-selected Start cards, Web-scoped idempotent review submission, durable offline queue retry, authoritative refresh) — both default-off with all operational gates closed.
+
+The next critical-path items are:
+
+1. **Owner authorization for Admin outcome persistence** — separately authorize execution of the reviewed Admin review-check/decision path so 35/35 card versions can reach release-approved status; repository-recorded owner intent alone does not authorize this.
+2. **Operational private-media attachment** — separately authorize the distinct operational attachment path; the repository attachment record (LB-DS-080) is repository evidence only; no database row, provider call or locator exists yet.
+3. Queue a path-bounded task for each authorized gate before execution begins.
+
+No runtime flag, database, provider, staging/Production, deployment, seed, operational attachment, publication or public-release mutation is authorized until each respective owner gate is opened.
 
 ### Active release objective
 
