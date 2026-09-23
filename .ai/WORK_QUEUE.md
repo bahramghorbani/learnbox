@@ -45,7 +45,7 @@ The M0–M8 records below retain implementation provenance only; they do not ove
 
 ## LB-DS-081
 
-- Status: review_requested
+- Status: accepted
 - Executor: supervisor with independent exact-head security/data-flow review required before readiness
 - Base: exact `7277e00f903b468d39678710deefb59a18c03654` (`origin/main`, PR #295 merge)
 - Branch: `feat/v1-web-vertical-loop`
@@ -61,9 +61,11 @@ The M0–M8 records below retain implementation provenance only; they do not ove
 - Simulator required: no
 - Draft PR required: yes
 - Merge allowed: yes
-- Head commit: read live with `gh pr view 297 --json headRefOid`; merge requires current-main reconciliation and replacement exact-head evidence.
-- Draft PR: #297 — https://github.com/bahramghorbani/learnbox/pull/297 (open Draft; reconciling merged PR #296 before final review)
-- Blocked on: no repository implementation blocker. Runtime activation and all external state transitions remain separately owner-gated.
+- Head commit: `952c3e41ac136cc6980c9e5463ff28806befd134`
+- Draft PR: #297 — https://github.com/bahramghorbani/learnbox/pull/297 (merged)
+- Merge commit: `f727ce5204b04852844fbd4f0cfc79826d5d757e`
+- Blocked on: no repository blocker. Admin outcome persistence, operational database/provider attachment, learner delivery activation, seed, deployment and publication remain separately owner-gated.
+- Accepted evidence: owner-authorized sequential merge after current-main reconciliation; independent implementation-head review passed; all GitHub/Vercel contexts were terminal-success; PR #297 merged at `f727ce5204b04852844fbd4f0cfc79826d5d757e`; remote `main` was verified equal.
 
 ## LB-DS-080
 
