@@ -36,6 +36,8 @@ interface ProfileScreenProps {
 // destinations). The learner app opens them without depending on the marketing site.
 const privacyUrl = 'https://learnboxapp.com/privacy';
 const supportEmail = 'mailto:hi@learnboxapp.com';
+const deletionRequestEmail =
+  'mailto:hi@learnboxapp.com?subject=درخواست%20حذف%20داده%20LearnBox&body=لطفاً%20اطلاعات%20حساب%20من%20را%20حذف%20کنید.';
 
 export function ProfileScreen({
   goal,
@@ -167,6 +169,15 @@ export function ProfileScreen({
               <small className="profile-row-url" dir="ltr">
                 hi@learnboxapp.com
               </small>
+            </span>
+            <span className="profile-row-arrow" aria-hidden="true">
+              ↗
+            </span>
+          </a>
+          <a className="profile-row" href={deletionRequestEmail}>
+            <span className="profile-row-copy">
+              <strong>درخواست حذف داده</strong>
+              <small>برای حذف اطلاعات خود، درخواست بدهید</small>
             </span>
             <span className="profile-row-arrow" aria-hidden="true">
               ↗

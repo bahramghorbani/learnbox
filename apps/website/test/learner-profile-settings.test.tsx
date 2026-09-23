@@ -148,6 +148,17 @@ describe('ProfileScreen', () => {
     expect(support?.getAttribute('href')).toBe('mailto:hi@learnboxapp.com');
   });
 
+  it('shows data-deletion request mailto link in profile', async () => {
+    rendered = await renderProfile({ goal: 'life', pendingReviewCount: 0 });
+
+    const links = Array.from(rendered.container.querySelectorAll('a'));
+    const deletionLink = links.find((link) => link.textContent?.includes('درخواست حذف داده'));
+    expect(deletionLink).not.toBeUndefined();
+    expect(deletionLink?.getAttribute('href')).toBe(
+      'mailto:hi@learnboxapp.com?subject=درخواست%20حذف%20داده%20LearnBox&body=لطفاً%20اطلاعات%20حساب%20من%20را%20حذف%20کنید.',
+    );
+  });
+
   it('exposes no sign-out, deletion, purchase, reminder or fake-account controls', async () => {
     rendered = await renderProfile({ goal: 'life', pendingReviewCount: 0 });
 
