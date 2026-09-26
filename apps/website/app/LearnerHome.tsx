@@ -115,6 +115,10 @@ export function LearnerHome({
   inviteFlag = process.env.NEXT_PUBLIC_LEARNBOX_ALPHA_INVITE_UI_ENABLED,
   profileIdentityFlag = process.env.NEXT_PUBLIC_LEARNBOX_PROFILE_IDENTITY_ENABLED,
 }: LearnerHomeProps = {}) {
+  // Force inline: Next.js only inlines direct process.env.NEXT_PUBLIC_* references
+  // These constants ensure the values are always available regardless of build tooling
+  const resolvedOtpFlag = process.env.NEXT_PUBLIC_LEARNBOX_OTP_UI_ENABLED ?? otpUiFlag ?? 'true';
+  const resolvedInviteFlag = process.env.NEXT_PUBLIC_LEARNBOX_ALPHA_INVITE_UI_ENABLED ?? inviteFlag ?? 'false';
   const [serverSyncState, setServerSyncState] = useState<LearnerSyncState>('local-only');
   const [serverLastSyncedAt, setServerLastSyncedAt] = useState<string | null>(null);
   const localStudyItems = selectTodayStartSession();
@@ -124,8 +128,8 @@ export function LearnerHome({
   const serverSession = serverSnapshot
     ? deriveWebSessionItems(serverSnapshot, resolveStartSliceItem)
     : { items: [], unavailableContentIds: [] };
-  const authMode = resolveLearnerAuthMode(otpUiFlag);
-  const inviteGateMode = resolveInviteGateMode(inviteFlag);
+  const authMode = resolveLearnerAuthMode(resolvedOtpFlag);
+  const inviteGateMode = resolveInviteGateMode(resolvedInviteFlag);
   const [inviteAccepted, setInviteAccepted] = useState(inviteGateMode === 'local-prototype');
   const [authenticated, setAuthenticated] = useState(false);
   const [onboarded, setOnboarded] = useState(false);
@@ -141,7 +145,7 @@ export function LearnerHome({
   const [newPersian, setNewPersian] = useState('');
   const [personalWordNotice, setPersonalWordNotice] = useState('');
   const [screen, setScreen] = useState<
-    'today' | 'card' | 'complete' | 'progress' | 'words' | 'profile' | 'settings'
+    'today' | 'card' | 'complete' | 'progress' | 'words' | 'store' | 'profile' | 'settings'
   >('today');
   const [flipped, setFlipped] = useState(false);
   const [grade, setGrade] = useState<Grade | null>(null);

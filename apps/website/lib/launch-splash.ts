@@ -16,7 +16,8 @@ export function readLaunchSplashConfig(environment: Environment): LaunchSplashCo
   if (environment.LEARNBOX_DYNAMIC_SPLASH_ENABLED !== 'true') return null;
   const databaseUrl = environment.DATABASE_URL ?? '';
   const blobToken = environment.BLOB_READ_WRITE_TOKEN ?? '';
-  if (!/^postgres(ql)?:\/\//.test(databaseUrl) || blobToken.length < 20) return null;
+  if (!/^postgres(ql)?:\/\//.test(databaseUrl)) return null;
+  // blobToken is optional — when absent, splash is served directly from DB image_data column
   try {
     const parsed = new URL(databaseUrl);
     parsed.searchParams.set('sslmode', 'verify-full');
@@ -32,41 +33,69 @@ export function createLaunchSplashRoute(dependencies: {
   readBlob?: (objectKey: string) => Promise<ReadableStream<Uint8Array> | undefined>;
 }) {
   return async function GET() {
-    if (!dependencies.enabled || !dependencies.pool || !dependencies.readBlob) {
+    if (!dependencies.enabled || !dependencies.pool) {
       return new Response('Not found', { status: 404, headers: { 'Cache-Control': 'no-store' } });
     }
     try {
-      const result = await dependencies.pool.query(
-        `SELECT splash_versions.object_key
-           FROM current_splash
-           JOIN splash_versions ON splash_versions.id = current_splash.version_id
-          WHERE current_splash.singleton_id = 1
+      // Try DB image_data first (works without Vercel Blob)
+      const dbResult = await dependencies.pool.query(
+        `SELECT sv.image_data, sv.media_type
+           FROM current_splash cs
+           JOIN splash_versions sv ON sv.id = cs.version_id
+          WHERE cs.singleton_id = 1
+            AND sv.image_data IS NOT NULL
           LIMIT 1`,
       );
-      const objectKey = result.rows[0]?.object_key;
-      if (
-        typeof objectKey !== 'string' ||
-        !/^admin\/splash\/[a-z0-9-]{3,64}\.webp$/.test(objectKey)
-      ) {
-        return new Response('Not found', {
-          status: 404,
-          headers: { 'Cache-Control': 'no-store' },
+      if (dbResult.rows[0]?.image_data) {
+        const imageData = dbResult.rows[0].image_data as Buffer;
+        const mediaType = (dbResult.rows[0].media_type as string) || 'image/webp';
+        return new Response(new Uint8Array(imageData), {
+          headers: {
+            'Cache-Control': 'public, max-age=3600',
+            'Content-Type': mediaType,
+            'Cross-Origin-Resource-Policy': 'same-origin',
+            'X-Content-Type-Options': 'nosniff',
+          },
         });
       }
-      const stream = await dependencies.readBlob(objectKey);
-      if (!stream) {
-        return new Response('Not found', {
-          status: 404,
-          headers: { 'Cache-Control': 'no-store' },
+      // Fallback to Vercel Blob if readBlob is available
+      if (dependencies.readBlob) {
+        const result = await dependencies.pool.query(
+          `SELECT sv.object_key
+             FROM current_splash cs
+             JOIN splash_versions sv ON sv.id = cs.version_id
+            WHERE cs.singleton_id = 1
+            LIMIT 1`,
+        );
+        const objectKey = result.rows[0]?.object_key;
+        if (
+          typeof objectKey !== 'string' ||
+          !/^admin\/splash\/[a-z0-9-]{3,64}\.webp$/.test(objectKey)
+        ) {
+          return new Response('Not found', {
+            status: 404,
+            headers: { 'Cache-Control': 'no-store' },
+          });
+        }
+        const stream = await dependencies.readBlob(objectKey);
+        if (!stream) {
+          return new Response('Not found', {
+            status: 404,
+            headers: { 'Cache-Control': 'no-store' },
+          });
+        }
+        return new Response(stream, {
+          headers: {
+            'Cache-Control': 'no-store',
+            'Content-Type': 'image/webp',
+            'Cross-Origin-Resource-Policy': 'same-origin',
+            'X-Content-Type-Options': 'nosniff',
+          },
         });
       }
-      return new Response(stream, {
-        headers: {
-          'Cache-Control': 'no-store',
-          'Content-Type': 'image/webp',
-          'Cross-Origin-Resource-Policy': 'same-origin',
-          'X-Content-Type-Options': 'nosniff',
-        },
+      return new Response('Not found', {
+        status: 404,
+        headers: { 'Cache-Control': 'no-store' },
       });
     } catch {
       return new Response('Splash unavailable', {

@@ -120,7 +120,17 @@ function isTrustedJsonPost(request: Request): boolean {
   const origin = request.headers.get('origin');
   if (!origin) return false;
   try {
-    return new URL(origin).origin === new URL(request.url).origin;
+    const originHost = new URL(origin).origin;
+    const requestHost = new URL(request.url).origin;
+    if (originHost === requestHost) return true;
+    // Behind reverse proxy (Caddy): request.url is internal (http://localhost:3000)
+    // but origin is the real external origin — trust X-Forwarded-Host when present.
+    const forwarded = request.headers.get('x-forwarded-host') ?? request.headers.get('x-forwarded-for');
+    if (forwarded) {
+      const forwardedOrigin = `${request.headers.get('x-forwarded-proto') ?? 'https'}://${forwarded.split(',')[0].trim()}`;
+      return new URL(forwardedOrigin).origin === originHost;
+    }
+    return false;
   } catch {
     return false;
   }

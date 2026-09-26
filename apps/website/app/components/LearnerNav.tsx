@@ -1,4 +1,4 @@
-export type LearnerDestination = 'today' | 'words' | 'progress' | 'profile';
+export type LearnerDestination = 'today' | 'words' | 'store' | 'progress' | 'profile';
 
 interface LearnerNavProps {
   current: LearnerDestination;
@@ -8,6 +8,7 @@ interface LearnerNavProps {
 const destinations: Array<{ id: LearnerDestination; label: string }> = [
   { id: 'today', label: 'امروز' },
   { id: 'words', label: 'واژه‌ها' },
+  { id: 'store', label: 'فروشگاه' },
   { id: 'progress', label: 'پیشرفت' },
   { id: 'profile', label: 'پروفایل' },
 ];
