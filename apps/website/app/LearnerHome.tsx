@@ -134,6 +134,7 @@ export function LearnerHome({
   const inviteGateMode = resolveInviteGateMode(resolvedInviteFlag);
   const [inviteAccepted, setInviteAccepted] = useState(inviteGateMode === 'local-prototype');
   const [authenticated, setAuthenticated] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
   const [onboarded, setOnboarded] = useState(false);
   const [learningGoal, setLearningGoal] = useState<LearningGoal>('life');
   const [soundEnabled, setSoundEnabled] = useState(true);
@@ -255,6 +256,28 @@ export function LearnerHome({
     );
     setPersonalWordsLoaded(true);
   }, []);
+
+  // Restore session from cookie on page load — prevents re-login on refresh
+  useEffect(() => {
+    if (authenticated || !isServerOtp || typeof window === 'undefined') {
+      setAuthChecked(true);
+      return;
+    }
+    let cancelled = false;
+    fetch('/api/auth/session', { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((data: { authenticated?: boolean }) => {
+        if (cancelled) return;
+        if (data.authenticated) {
+          setAuthenticated(true);
+        }
+        setAuthChecked(true);
+      })
+      .catch(() => {
+        if (!cancelled) setAuthChecked(true);
+      });
+    return () => { cancelled = true; };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const progress = loadDailyReviewProgress(
@@ -592,6 +615,11 @@ export function LearnerHome({
 
   if (!inviteAccepted) {
     return <InviteGate mode={inviteGateMode} onInviteAccepted={() => setInviteAccepted(true)} />;
+  }
+
+  if (!authenticated && !authChecked) {
+    // Still checking session cookie — show nothing (prevents flash of login screen)
+    return null;
   }
 
   if (!authenticated) {
