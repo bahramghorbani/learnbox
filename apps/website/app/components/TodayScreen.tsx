@@ -7,6 +7,17 @@ import { toPersianDigits } from '../persian-digits';
 import { type StartSliceItem } from '../start-slice';
 import { Bobo } from './Bobo';
 
+interface Banner {
+  id: string;
+  title: string;
+  description: string | null;
+  image_url: string | null;
+  background_color: string | null;
+  link_url: string | null;
+  link_type: string | null;
+  link_target: string | null;
+}
+
 export interface TodayScreenProps {
   reviewCount: number;
   syncState?: LearnerSyncState;
@@ -21,25 +32,17 @@ export interface TodayScreenProps {
   studyItems?: StartSliceItem[];
   soundEnabled?: boolean;
   onToggleSound?: () => void;
+  /** Leitner box distribution [box1, box2, box3, box4, box5] — from parent */
+  leitnerDist?: number[];
+  /** Accuracy percentage 0-100 — from parent */
+  accuracy?: number;
+  /** Approximate study minutes today — from parent */
+  studyMinutes?: number;
+  /** Navigate to a screen (for banner links) */
+  onNavigate?: (screen: string) => void;
 }
 
-const DAILY_GOAL = 15;
-
 const WEEK_DAYS_FA = ['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج'];
-
-const BANNERS = [
-  { cls: 'b1', badge: '📚 جدید', title: '۵۰۰ واژه آلمانی', sub: 'سطح A1 تا B2 — همه در یک جا', deco: '📖' },
-  { cls: 'b2', badge: '🎯 چالش', title: 'روزانه ۱۵ کارت', sub: 'به هدفت برس و سیل بزن!', deco: '🎯' },
-  { cls: 'b3', badge: '🏆 رکورد', title: '۷ روز پشت سر هم!', sub: 'ادامه بده، فوق‌العاده‌ای!', deco: '🌟' },
-];
-
-const WORD_OF_DAY = {
-  german: 'Schmetterling',
-  article: 'der',
-  pos: 'اسم مذکر',
-  cefr: 'A2',
-  persian: 'پروانه 🦋',
-};
 
 const TIPS = [
   'واژه‌های جعبه ۱ را هر روز مرور کن. با تکرار منظم، آن‌ها به جعبه‌های بالاتر می‌رسند و ماندگارتر می‌شوند.',
@@ -49,28 +52,33 @@ const TIPS = [
 
 function getGreeting(): string {
   const h = new Date().getHours();
-  if (h >= 4 && h < 12) return 'صبح بخیر!';
-  if (h >= 12 && h < 17) return 'ظهر بخیر!';
-  if (h >= 17 && h < 21) return 'عصر بخیر!';
-  return 'شب بخیر!';
+  if (h >= 4 && h < 12) return '🌅 صبح بخیر';
+  if (h >= 12 && h < 17) return '☀️ ظهر بخیر';
+  if (h >= 17 && h < 21) return '🌇 عصر بخیر';
+  return '🌙 شب بخیر';
 }
 
 function buildWeekDays(streakDays: number): Array<{ label: string; status: 'done' | 'today' | 'empty' }> {
-  // Build 7-day week ending today
   const today = new Date();
-  const result = [];
+  const result: Array<{ label: string; status: 'done' | 'today' | 'empty' }> = [];
   for (let i = 6; i >= 0; i--) {
     const d = new Date(today);
     d.setDate(today.getDate() - i);
     const dow = d.getDay();
-    const label = WEEK_DAYS_FA[dow === 6 ? 0 : dow]; // Sat=0 for Persian week
-    const daysAgo = i;
+    const label = WEEK_DAYS_FA[dow === 6 ? 0 : dow] ?? '';
     let status: 'done' | 'today' | 'empty' = 'empty';
-    if (daysAgo === 0) status = 'today';
-    else if (daysAgo < streakDays) status = 'done';
+    if (i === 0) status = 'today';
+    else if (i < streakDays) status = 'done';
     result.push({ label, status });
   }
   return result;
+}
+
+/** Pick a "word of the day" from real study items based on the current date */
+function pickWordOfDay(items?: StartSliceItem[]): StartSliceItem | null {
+  if (!items || items.length === 0) return null;
+  const dayNumber = Math.floor(Date.now() / 86_400_000);
+  return items[dayNumber % items.length] ?? null;
 }
 
 export function TodayScreen({
@@ -86,29 +94,58 @@ export function TodayScreen({
   studyItems,
   soundEnabled = true,
   onToggleSound,
+  leitnerDist,
+  accuracy,
+  studyMinutes,
+  onNavigate,
 }: TodayScreenProps) {
   const [bannerIdx, setBannerIdx] = useState(0);
+  const [banners, setBanners] = useState<Banner[]>([]);
   const [lboxVisible, setLboxVisible] = useState(false);
   const lboxRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const greeting = getGreeting();
-  const totalItems = studyItems?.length ?? DAILY_GOAL;
+  const totalItems = studyItems?.length ?? 0;
   const completed = Math.min(reviewedToday, totalItems);
   const ringPct = totalItems > 0 ? completed / totalItems : 0;
   const circumference = 264;
   const ringOffset = circumference - ringPct * circumference;
 
-  const leitnerDist = [42, 31, 25, 18, 84];
-  const leitnerMax = Math.max(...leitnerDist);
+  // Real leitner distribution from props, fallback to all items in box 1
+  const boxes = leitnerDist ?? [totalItems, 0, 0, 0, 0];
+  const boxMax = Math.max(...boxes, 1);
+
   const weekDays = buildWeekDays(streakDays);
   const tipText = TIPS[new Date().getDate() % TIPS.length];
+  const wordOfDay = pickWordOfDay(studyItems);
+
+  // Real accuracy & study time from props
+  const realAccuracy = accuracy ?? 0;
+  const realMinutes = studyMinutes ?? 0;
+
+  // Fetch banners from API
   useEffect(() => {
+    let cancelled = false;
+    fetch('/api/banners', { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((data: { banners?: Banner[] }) => {
+        if (!cancelled && data.banners && data.banners.length > 0) {
+          setBanners(data.banners);
+        }
+      })
+      .catch(() => { /* ignore — banners are non-critical */ });
+    return () => { cancelled = true; };
+  }, []);
+
+  // Auto-rotate banners
+  useEffect(() => {
+    if (banners.length <= 1) return;
     timerRef.current = setInterval(() => {
-      setBannerIdx((i) => (i + 1) % BANNERS.length);
+      setBannerIdx((i) => (i + 1) % banners.length);
     }, 4000);
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, []);
+  }, [banners.length]);
 
   // Leitner bar animate-in
   useEffect(() => {
@@ -166,7 +203,7 @@ export function TodayScreen({
         </div>
       </div>
 
-      {/* Subtle sync status — non-scary */}
+      {/* Subtle sync status — only show for real server-sync errors, not local-only mode */}
       {syncState === 'error' && (
         <div className="home-sync-error" role="status">
           <span>اتصال به سرور قطع است — داده‌های محلی نمایش داده می‌شود</span>
@@ -182,39 +219,52 @@ export function TodayScreen({
       )}
 
       <div className="home-screen-body">
-        {/* Banner Slider */}
-        <div className="banner-wrap" aria-label="بنرهای پیشنهادی">
-          <div
-            className="banner-track"
-            style={{ transform: `translateX(${bannerIdx * 100}%)` }}
-          >
-            {BANNERS.map((b, i) => (
-              <div key={i} className={`banner-slide ${b.cls}`}>
-                <div className="banner-content">
-                  <div className="banner-badge">{b.badge}</div>
-                  <div className="banner-title">{b.title}</div>
-                  <div className="banner-sub">{b.sub}</div>
+        {/* Banner Slider — from API */}
+        {banners.length > 0 && (
+          <div className="banner-wrap" aria-label="بنرهای پیشنهادی">
+            <div
+              className="banner-track"
+              style={{ transform: `translateX(${bannerIdx * 100}%)` }}
+            >
+              {banners.map((b) => (
+                <div
+                  key={b.id}
+                  className="banner-slide"
+                  style={{ background: b.background_color ?? 'var(--primary)' }}
+                  onClick={() => {
+                    if (b.link_type === 'screen' && b.link_url && onNavigate) {
+                      onNavigate(b.link_url);
+                    }
+                  }}
+                  role={b.link_url ? 'button' : undefined}
+                  tabIndex={b.link_url ? 0 : undefined}
+                >
+                  <div className="banner-content">
+                    <div className="banner-title">{b.title}</div>
+                    {b.description && <div className="banner-sub">{b.description}</div>}
+                  </div>
                 </div>
-                <div className="banner-deco" aria-hidden="true">{b.deco}</div>
+              ))}
+            </div>
+            {banners.length > 1 && (
+              <div className="banner-dots" aria-hidden="true">
+                {banners.map((_, i) => (
+                  <button
+                    key={i}
+                    className={`bndot${bannerIdx === i ? ' on' : ''}`}
+                    type="button"
+                    onClick={() => setBannerIdx(i)}
+                    aria-label={`بنر ${toPersianDigits(i + 1)}`}
+                  />
+                ))}
               </div>
-            ))}
+            )}
           </div>
-          <div className="banner-dots" aria-hidden="true">
-            {BANNERS.map((_, i) => (
-              <button
-                key={i}
-                className={`bndot${bannerIdx === i ? ' on' : ''}`}
-                type="button"
-                onClick={() => setBannerIdx(i)}
-                aria-label={`بنر ${toPersianDigits(i + 1)}`}
-              />
-            ))}
-          </div>
-        </div>
+        )}
 
         {/* Goal Ring Card */}
         <div className="goal-card">
-          <div className="ring-wrap" aria-label={`${toPersianDigits(completed)} از ${toPersianDigits(DAILY_GOAL)} کارت مرور شده`}>
+          <div className="ring-wrap" aria-label={`${toPersianDigits(completed)} از ${toPersianDigits(totalItems)} کارت مرور شده`}>
             <svg className="ring-svg" viewBox="0 0 96 96">
               <defs>
                 <linearGradient id="goalGradTod" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -232,7 +282,7 @@ export function TodayScreen({
             </svg>
             <div className="ring-center" aria-hidden="true">
               <div className="ring-num">{toPersianDigits(completed)}</div>
-              <div className="ring-denom">از {toPersianDigits(DAILY_GOAL)}</div>
+              <div className="ring-denom">از {toPersianDigits(totalItems)}</div>
             </div>
           </div>
           <div className="goal-info">
@@ -261,7 +311,7 @@ export function TodayScreen({
           </div>
         </div>
 
-        {/* Quick Stats */}
+        {/* Quick Stats — real data from props */}
         <div className="quick-stats" aria-label="آمار سریع">
           <div className="stat-card">
             <div className="stat-icon" aria-hidden="true">
@@ -280,7 +330,7 @@ export function TodayScreen({
                 <path d="M128,24A104,104,0,1,0,232,128,104.12,104.12,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm64-88a8,8,0,0,1-8,8H128a8,8,0,0,1-8-8V72a8,8,0,0,1,16,0v48h48A8,8,0,0,1,192,128Z"/>
               </svg>
             </div>
-            <div className="stat-value">{toPersianDigits(Math.round(reviewedToday * 0.7))}</div>
+            <div className="stat-value">{toPersianDigits(realMinutes)}</div>
             <div className="stat-lbl">دقیقه</div>
           </div>
           <div className="stat-card">
@@ -291,13 +341,13 @@ export function TodayScreen({
               </svg>
             </div>
             <div className="stat-value">
-              {reviewedToday > 0 ? `${toPersianDigits(85)}٪` : `۰٪`}
+              {reviewedToday > 0 ? `${toPersianDigits(realAccuracy)}٪` : '۰٪'}
             </div>
             <div className="stat-lbl">دقت</div>
           </div>
         </div>
 
-        {/* Leitner Bars */}
+        {/* Leitner Bars — real distribution from props */}
         <div className="sec-head">
           <div className="sec-title">
             <svg className="sec-title-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true">
@@ -309,9 +359,9 @@ export function TodayScreen({
           <button className="sec-link" type="button" onClick={onBrowseWords}>همه واژه‌ها</button>
         </div>
         <div className="leitner-bars" ref={lboxRef} aria-label="توزیع واژه‌ها در جعبه‌های لایتنر">
-          {leitnerDist.map((count, i) => {
+          {boxes.map((count, i) => {
             const colors = ['var(--leitner-1)', 'var(--leitner-2)', 'var(--leitner-3)', 'var(--leitner-4)', 'var(--leitner-5)'];
-            const heightPct = leitnerMax > 0 ? (count / leitnerMax) * 100 : 0;
+            const heightPct = boxMax > 0 ? (count / boxMax) * 100 : 0;
             return (
               <div key={i} className="lbox">
                 <div className="lbox-bar-wrap">
@@ -369,14 +419,16 @@ export function TodayScreen({
           </div>
         </div>
 
-        {/* Word of the Day */}
-        <div className="wod-card" aria-label="واژه روز">
-          <div className="wod-deco" aria-hidden="true">⭐</div>
-          <div className="wod-badge" aria-hidden="true">⭐ واژه روز</div>
-          <div className="wod-de" lang="de" dir="ltr">{WORD_OF_DAY.german}</div>
-          <div className="wod-art">{WORD_OF_DAY.article} • {WORD_OF_DAY.pos} • {WORD_OF_DAY.cefr}</div>
-          <div className="wod-fa">{WORD_OF_DAY.persian}</div>
-        </div>
+        {/* Word of the Day — from real study items */}
+        {wordOfDay && (
+          <div className="wod-card" aria-label="واژه روز">
+            <div className="wod-deco" aria-hidden="true">⭐</div>
+            <div className="wod-badge" aria-hidden="true">⭐ واژه روز</div>
+            <div className="wod-de" lang="de" dir="ltr">{wordOfDay.german}</div>
+            <div className="wod-art">{wordOfDay.article}{wordOfDay.article ? ' • ' : ''}{wordOfDay.germanDefinition}</div>
+            <div className="wod-fa">{wordOfDay.persian}</div>
+          </div>
+        )}
 
         {/* Bobo companion */}
         <div style={{ display: 'flex', justifyContent: 'center', padding: '16px 0 0', flexDirection: 'column', alignItems: 'center' }}>

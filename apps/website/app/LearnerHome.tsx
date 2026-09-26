@@ -41,7 +41,6 @@ import { Bobo } from './components/Bobo';
 import { OnboardingGoal } from './components/OnboardingGoal';
 import { ProgressScreen } from './components/ProgressScreen';
 import { SupportivePlusOffer } from './components/SupportivePlusOffer';
-import { StartMediaVisual } from './components/StartMediaVisual';
 import { personalWordLimit } from './product-experience';
 import { resolveSupportivePlusOffer } from './paywall';
 import { buildStartMediaSources, resolveStartMediaMode, type StartMediaMode } from './start-media';
@@ -120,6 +119,8 @@ export function LearnerHome({
   const resolvedOtpFlag = process.env.NEXT_PUBLIC_LEARNBOX_OTP_UI_ENABLED ?? otpUiFlag ?? 'true';
   const resolvedInviteFlag = process.env.NEXT_PUBLIC_LEARNBOX_ALPHA_INVITE_UI_ENABLED ?? inviteFlag ?? 'false';
   const [serverSyncState, setServerSyncState] = useState<LearnerSyncState>('local-only');
+  const [todayGrades, setTodayGrades] = useState<Grade[]>([]);
+  const [sessionStartTime] = useState(() => Date.now());
   const [serverLastSyncedAt, setServerLastSyncedAt] = useState<string | null>(null);
   const localStudyItems = selectTodayStartSession();
   const [serverSnapshot, setServerSnapshot] = useState<
@@ -132,6 +133,7 @@ export function LearnerHome({
   const inviteGateMode = resolveInviteGateMode(resolvedInviteFlag);
   const [inviteAccepted, setInviteAccepted] = useState(inviteGateMode === 'local-prototype');
   const [authenticated, setAuthenticated] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
   const [onboarded, setOnboarded] = useState(false);
   const [learningGoal, setLearningGoal] = useState<LearningGoal>('life');
   const [soundEnabled, setSoundEnabled] = useState(true);
@@ -252,6 +254,28 @@ export function LearnerHome({
       loadSyncQueue<QueuedPersonalVocabulary>(storage, personalVocabularySyncStorageKey).length,
     );
     setPersonalWordsLoaded(true);
+  }, []);
+
+  // Restore session from cookie on page load — prevents re-login on refresh
+  useEffect(() => {
+    if (authenticated || !isServerOtp || typeof window === 'undefined') {
+      setAuthChecked(true);
+      return;
+    }
+    let cancelled = false;
+    fetch('/api/auth/session', { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((data: { authenticated?: boolean }) => {
+        if (cancelled) return;
+        if (data.authenticated) {
+          setAuthenticated(true);
+        }
+        setAuthChecked(true);
+      })
+      .catch(() => {
+        if (!cancelled) setAuthChecked(true);
+      });
+    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
@@ -530,6 +554,7 @@ export function LearnerHome({
       if (isServerOtp) flushServerReviewQueue();
     }
     setGrade(nextGrade);
+    setTodayGrades((prev) => [...prev, nextGrade]);
     setReviewedToday((count) => {
       const reviewedCount = count + 1;
       saveDailyReviewProgress(getDeviceStorage(), dailyReviewStorageKey, {
@@ -589,6 +614,11 @@ export function LearnerHome({
 
   if (!inviteAccepted) {
     return <InviteGate mode={inviteGateMode} onInviteAccepted={() => setInviteAccepted(true)} />;
+  }
+
+  if (!authenticated && !authChecked) {
+    // Still checking session cookie — show nothing (prevents flash of login screen)
+    return null;
   }
 
   if (!authenticated) {
@@ -854,62 +884,124 @@ export function LearnerHome({
           <span style={{ width: `${(completedCount / studyItems.length) * 100}%` }} />
         </div>
         <p className="session-remaining">{remainingCount} کارت برای تمرین امروز مانده است.</p>
-        <section className="study-card">
-          {!flipped ? (
-            <div className="card-face">
-              {currentItem.article ? <span className="article">{currentItem.article}</span> : null}
-              <h1 lang="de" dir="ltr">
-                {currentItem.german}
-              </h1>
-              <PronunciationButton
-                text={currentItem.german}
-                src={mediaSources.wordAudio}
-                soundEnabled={soundEnabled}
-              />
-              <StartMediaVisual contentId={currentItem.id} mode={startMediaMode} />
-              <p className="hint" lang="de" dir="ltr">
-                {currentItem.germanDefinition}
-              </p>
-              <button ref={flipHintRef} className="flip-hint" onClick={() => setFlipped(true)}>
-                برای دیدن معنی، کارت را برگردان
-              </button>
+        <div className="flip-container" onClick={() => setFlipped(!flipped)}>
+          <div className={`flip-inner${flipped ? ' flipped' : ''}`} style={{ minHeight: '340px' }}>
+            <div className="card-face card-front">
+              <div className="card-img-strip">
+                {mediaSources.image ? (
+                  <img
+                    src={mediaSources.image}
+                    alt=""
+                    className="card-img-photo"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                ) : (
+                  <div className="card-img-icon">📖</div>
+                )}
+              </div>
+              <div className="card-front-body">
+                <div className="card-tap-hint">👆 برای دیدن معنی لمس کن</div>
+                {currentItem.article && (
+                  <div className={`card-article-badge art-${currentItem.article}`}>
+                    {currentItem.article}
+                  </div>
+                )}
+                <div className="card-word-de" lang="de" dir="ltr">
+                  {currentItem.german}
+                </div>
+                <div className="card-badges">
+                  <span className={`card-cefr cefr-${currentItem.cefr?.toLowerCase()}`}>
+                    {currentItem.cefr}
+                  </span>
+                  <span className="card-pos">{currentItem.partOfSpeech}</span>
+                </div>
+                <div className="card-ipa-row" onClick={(e) => e.stopPropagation()}>
+                  <span className="card-ipa" dir="ltr">
+                    {currentItem.ipa}
+                  </span>
+                  <PronunciationButton
+                    text={currentItem.german}
+                    src={mediaSources.wordAudio}
+                    soundEnabled={soundEnabled}
+                  />
+                </div>
+                {currentItem.topicTags?.length > 0 && (
+                  <div className="card-tags">
+                    {currentItem.topicTags.map((t) => (
+                      <span key={t} className="card-tag">
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
-          ) : (
             <div className="card-face card-back">
-              <button ref={flipAgainRef} className="flip-again" onClick={() => setFlipped(false)}>
-                برگرداندن کارت
-              </button>
-              <h1>{currentItem.persian}</h1>
-              <div className="example" dir="ltr">
-                <strong>{currentItem.exampleGerman}</strong>
-                <span dir="rtl">{currentItem.examplePersian}</span>
-              </div>
-              <PronunciationButton
-                text={currentItem.exampleGerman}
-                src={mediaSources.sentenceAudio}
-                soundEnabled={soundEnabled}
-              />
-              <p className="instruction">چقدر یادت آمد؟</p>
-              <div
-                className="grade-grid"
-                role="group"
-                aria-label="درجهٔ یادآوری"
-                aria-busy={isRecordingGrade}
-              >
-                {grades.map((item) => (
-                  <button
-                    key={item.id}
-                    className={`grade grade-${item.id}`}
-                    onClick={() => recordGrade(item.id)}
-                    disabled={isRecordingGrade}
-                  >
-                    {item.label}
-                  </button>
-                ))}
+              <div className="card-back-body">
+                <div className="card-fa-meanings">{currentItem.persian}</div>
+                <div className="card-fa-sep" />
+                <div className="card-example-block">
+                  <div className="card-ex-de" lang="de" dir="ltr">
+                    {currentItem.exampleGerman}
+                  </div>
+                  <div className="card-ex-fa">{currentItem.examplePersian}</div>
+                  <div className="card-ex-audio" onClick={(e) => e.stopPropagation()}>
+                    <PronunciationButton
+                      text={currentItem.exampleGerman}
+                      src={mediaSources.sentenceAudio}
+                      soundEnabled={soundEnabled}
+                    />
+                    <span style={{ fontSize: '10px', color: 'var(--muted)' }}>شنیدن جمله</span>
+                  </div>
+                </div>
+                {currentItem.grammarNote && (
+                  <div className="card-grammar-box">
+                    <div className="card-grammar-icon">💡</div>
+                    <div className="card-grammar-text">{currentItem.grammarNote}</div>
+                  </div>
+                )}
+                {currentItem.inflection && (
+                  <div className="card-inflection-box">
+                    <div className="card-inflection-label">صرف</div>
+                    <div className="card-inflection-text" dir="ltr">
+                      {currentItem.inflection}
+                    </div>
+                  </div>
+                )}
+                <div className="card-definition-box">
+                  <div className="card-def-label">تعریف آلمانی</div>
+                  <div className="card-def-text" lang="de" dir="ltr">
+                    {currentItem.germanDefinition}
+                  </div>
+                </div>
               </div>
             </div>
-          )}
-        </section>
+          </div>
+        </div>
+        {flipped && (
+          <>
+            <p className="instruction">چقدر یادت آمد؟</p>
+            <div
+              className="grade-grid"
+              role="group"
+              aria-label="درجهٔ یادآوری"
+              aria-busy={isRecordingGrade}
+            >
+              {grades.map((item) => (
+                <button
+                  key={item.id}
+                  className={`grade grade-${item.id}`}
+                  onClick={() => recordGrade(item.id)}
+                  disabled={isRecordingGrade}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
       </main>
     );
   }
@@ -918,7 +1010,7 @@ export function LearnerHome({
     <>
       <TodayScreen
         reviewCount={remainingTodayReviews}
-        syncState={serverSyncState}
+        syncState={isServerOtp ? serverSyncState : 'local-only'}
         pendingReviewCount={pendingReviewCount}
         lastSyncedAt={serverLastSyncedAt}
         onRetryServerRead={retryServerStateRead}
@@ -930,6 +1022,10 @@ export function LearnerHome({
         studyItems={studyItems}
         soundEnabled={soundEnabled}
         onToggleSound={() => handleToggleSound(!soundEnabled)}
+        leitnerDist={computeLeitnerDist(todayGrades, studyItems.length)}
+        accuracy={computeAccuracy(todayGrades)}
+        studyMinutes={Math.round((Date.now() - sessionStartTime) / 60_000)}
+        onNavigate={(dest) => setScreen(dest as typeof screen)}
       />
       <LearnerNav current="today" onNavigate={(destination) => setScreen(destination)} />
     </>
@@ -956,4 +1052,31 @@ function getPreviousDateKey(now: Date): string {
   const previousDay = new Date(now);
   previousDay.setDate(previousDay.getDate() - 1);
   return getLocalDateKey(previousDay);
+}
+
+/**
+ * Compute a 5-box Leitner distribution from today's grades.
+ * Grade mapping: forgot→box1, hard→box2, remembered→box3, mastered→box4/5.
+ * Unreviewed items stay in box 1.
+ */
+function computeLeitnerDist(grades: Grade[], totalItems: number): number[] {
+  const dist = [0, 0, 0, 0, 0];
+  for (const g of grades) {
+    if (g === 'forgot') dist[0]++;
+    else if (g === 'hard') dist[1]++;
+    else if (g === 'remembered') dist[2]++;
+    else if (g === 'mastered') dist[3]++;
+  }
+  // Unreviewed items go to box 1
+  const reviewed = grades.length;
+  const unreviewed = Math.max(0, totalItems - reviewed);
+  dist[0] += unreviewed;
+  return dist;
+}
+
+/** Compute accuracy percentage from today's grades */
+function computeAccuracy(grades: Grade[]): number {
+  if (grades.length === 0) return 0;
+  const correct = grades.filter((g) => g === 'remembered' || g === 'mastered').length;
+  return Math.round((correct / grades.length) * 100);
 }

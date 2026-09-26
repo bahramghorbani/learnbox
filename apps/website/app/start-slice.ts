@@ -4,6 +4,15 @@ import startA1DraftsJson from '../../../content/packs/learnbox-start/vocabulary/
 export const startSliceBatchId = startA1DraftsJson.batchId;
 export const dailySessionSize = 3;
 
+const posMap: Record<string, string> = {
+  noun: 'اسم',
+  verb: 'فعل',
+  adjective: 'صفت',
+  adverb: 'قید',
+  interjection: 'حرف ندا',
+  phrase: 'عبارت',
+};
+
 export type StartSliceItem = {
   id: string;
   article: string;
@@ -12,7 +21,16 @@ export type StartSliceItem = {
   persian: string;
   exampleGerman: string;
   examplePersian: string;
+  ipa: string;
+  cefr: string;
+  partOfSpeech: string;
+  grammarNote: string;
+  inflection: string;
+  topicTags: string[];
 };
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type RawItem = any;
 
 export const stagedStartSlice: StartSliceItem[] = startA1DraftsJson.items.map(toStartSliceItem);
 
@@ -23,7 +41,7 @@ const allStartItems = new Map(
   ]),
 );
 
-function toStartSliceItem(item: (typeof startA1DraftsJson.items)[number]): StartSliceItem {
+function toStartSliceItem(item: RawItem): StartSliceItem {
   return {
     id: item.id,
     article: item.article ?? '',
@@ -32,6 +50,12 @@ function toStartSliceItem(item: (typeof startA1DraftsJson.items)[number]): Start
     persian: item.persianMeanings[0],
     exampleGerman: item.examples[0].german,
     examplePersian: item.examples[0].persian,
+    ipa: item.pronunciation?.ipa ?? '',
+    cefr: item.cefr ?? '',
+    partOfSpeech: posMap[item.partOfSpeech ?? ''] ?? '',
+    grammarNote: item.grammarNote ?? '',
+    inflection: item.essentialInflection ?? '',
+    topicTags: item.topicTags ?? [],
   };
 }
 
