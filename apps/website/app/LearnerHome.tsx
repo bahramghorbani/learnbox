@@ -120,6 +120,8 @@ export function LearnerHome({
   const resolvedOtpFlag = process.env.NEXT_PUBLIC_LEARNBOX_OTP_UI_ENABLED ?? otpUiFlag ?? 'true';
   const resolvedInviteFlag = process.env.NEXT_PUBLIC_LEARNBOX_ALPHA_INVITE_UI_ENABLED ?? inviteFlag ?? 'false';
   const [serverSyncState, setServerSyncState] = useState<LearnerSyncState>('local-only');
+  const [todayGrades, setTodayGrades] = useState<Grade[]>([]);
+  const [sessionStartTime] = useState(() => Date.now());
   const [serverLastSyncedAt, setServerLastSyncedAt] = useState<string | null>(null);
   const localStudyItems = selectTodayStartSession();
   const [serverSnapshot, setServerSnapshot] = useState<
@@ -530,6 +532,7 @@ export function LearnerHome({
       if (isServerOtp) flushServerReviewQueue();
     }
     setGrade(nextGrade);
+    setTodayGrades((prev) => [...prev, nextGrade]);
     setReviewedToday((count) => {
       const reviewedCount = count + 1;
       saveDailyReviewProgress(getDeviceStorage(), dailyReviewStorageKey, {
@@ -918,7 +921,7 @@ export function LearnerHome({
     <>
       <TodayScreen
         reviewCount={remainingTodayReviews}
-        syncState={serverSyncState}
+        syncState={isServerOtp ? serverSyncState : 'local-only'}
         pendingReviewCount={pendingReviewCount}
         lastSyncedAt={serverLastSyncedAt}
         onRetryServerRead={retryServerStateRead}
@@ -930,6 +933,10 @@ export function LearnerHome({
         studyItems={studyItems}
         soundEnabled={soundEnabled}
         onToggleSound={() => handleToggleSound(!soundEnabled)}
+        leitnerDist={computeLeitnerDist(todayGrades, studyItems.length)}
+        accuracy={computeAccuracy(todayGrades)}
+        studyMinutes={Math.round((Date.now() - sessionStartTime) / 60_000)}
+        onNavigate={(dest) => setScreen(dest as typeof screen)}
       />
       <LearnerNav current="today" onNavigate={(destination) => setScreen(destination)} />
     </>
@@ -956,4 +963,31 @@ function getPreviousDateKey(now: Date): string {
   const previousDay = new Date(now);
   previousDay.setDate(previousDay.getDate() - 1);
   return getLocalDateKey(previousDay);
+}
+
+/**
+ * Compute a 5-box Leitner distribution from today's grades.
+ * Grade mapping: forgot→box1, hard→box2, remembered→box3, mastered→box4/5.
+ * Unreviewed items stay in box 1.
+ */
+function computeLeitnerDist(grades: Grade[], totalItems: number): number[] {
+  const dist = [0, 0, 0, 0, 0];
+  for (const g of grades) {
+    if (g === 'forgot') dist[0]++;
+    else if (g === 'hard') dist[1]++;
+    else if (g === 'remembered') dist[2]++;
+    else if (g === 'mastered') dist[3]++;
+  }
+  // Unreviewed items go to box 1
+  const reviewed = grades.length;
+  const unreviewed = Math.max(0, totalItems - reviewed);
+  dist[0] += unreviewed;
+  return dist;
+}
+
+/** Compute accuracy percentage from today's grades */
+function computeAccuracy(grades: Grade[]): number {
+  if (grades.length === 0) return 0;
+  const correct = grades.filter((g) => g === 'remembered' || g === 'mastered').length;
+  return Math.round((correct / grades.length) * 100);
 }
