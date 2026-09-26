@@ -923,35 +923,14 @@ export function LearnerHome({
         lastSyncedAt={serverLastSyncedAt}
         onRetryServerRead={retryServerStateRead}
         onBrowseWords={() => setScreen('words')}
+        onStartReview={begin}
         primaryActionRef={startReviewRef}
+        streakDays={streakDays}
+        reviewedToday={reviewedToday}
+        studyItems={studyItems}
+        soundEnabled={soundEnabled}
+        onToggleSound={() => handleToggleSound(!soundEnabled)}
       />
-      {remainingTodayReviews > 0 ? (
-        <>
-          <button ref={startReviewRef} className="primary-button" onClick={begin}>
-            {resumableSessionIndex === null ? 'شروع مرور' : 'ادامهٔ مرور'}{' '}
-            <span aria-hidden="true">←</span>
-          </button>
-          <button className="recovery" onClick={begin}>
-            <Bobo expression="recovery" className="bobo bobo-recovery" />
-            <span>
-              <strong>چند روزی از دست رفته؟</strong>از آخرین مرور ادامه بده
-            </span>
-          </button>
-        </>
-      ) : null}
-      <section className="progress-note">
-        <div className="progress-icon streak-icon" aria-hidden="true">
-          ✦
-        </div>
-        <div>
-          <h2>زنجیرهٔ آرام تو</h2>
-          <p>هر روزی که برگردی، ادامه می‌دهیم.</p>
-          <div className="progress-bar">
-            <span style={{ width: `${Math.min(100, streakDays * 10)}%` }} />
-          </div>
-        </div>
-        <span>{streakDays ? `${streakDays} روز` : 'شروع تازه'}</span>
-      </section>
       <LearnerNav current="today" onNavigate={(destination) => setScreen(destination)} />
     </>
   );
