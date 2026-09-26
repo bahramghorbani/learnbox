@@ -41,7 +41,6 @@ import { Bobo } from './components/Bobo';
 import { OnboardingGoal } from './components/OnboardingGoal';
 import { ProgressScreen } from './components/ProgressScreen';
 import { SupportivePlusOffer } from './components/SupportivePlusOffer';
-import { StartMediaVisual } from './components/StartMediaVisual';
 import { personalWordLimit } from './product-experience';
 import { resolveSupportivePlusOffer } from './paywall';
 import { buildStartMediaSources, resolveStartMediaMode, type StartMediaMode } from './start-media';
@@ -277,7 +276,7 @@ export function LearnerHome({
         if (!cancelled) setAuthChecked(true);
       });
     return () => { cancelled = true; };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const progress = loadDailyReviewProgress(
@@ -885,62 +884,124 @@ export function LearnerHome({
           <span style={{ width: `${(completedCount / studyItems.length) * 100}%` }} />
         </div>
         <p className="session-remaining">{remainingCount} کارت برای تمرین امروز مانده است.</p>
-        <section className="study-card">
-          {!flipped ? (
-            <div className="card-face">
-              {currentItem.article ? <span className="article">{currentItem.article}</span> : null}
-              <h1 lang="de" dir="ltr">
-                {currentItem.german}
-              </h1>
-              <PronunciationButton
-                text={currentItem.german}
-                src={mediaSources.wordAudio}
-                soundEnabled={soundEnabled}
-              />
-              <StartMediaVisual contentId={currentItem.id} mode={startMediaMode} />
-              <p className="hint" lang="de" dir="ltr">
-                {currentItem.germanDefinition}
-              </p>
-              <button ref={flipHintRef} className="flip-hint" onClick={() => setFlipped(true)}>
-                برای دیدن معنی، کارت را برگردان
-              </button>
+        <div className="flip-container" onClick={() => setFlipped(!flipped)}>
+          <div className={`flip-inner${flipped ? ' flipped' : ''}`} style={{ minHeight: '340px' }}>
+            <div className="card-face card-front">
+              <div className="card-img-strip">
+                {mediaSources.image ? (
+                  <img
+                    src={mediaSources.image}
+                    alt=""
+                    className="card-img-photo"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                ) : (
+                  <div className="card-img-icon">📖</div>
+                )}
+              </div>
+              <div className="card-front-body">
+                <div className="card-tap-hint">👆 برای دیدن معنی لمس کن</div>
+                {currentItem.article && (
+                  <div className={`card-article-badge art-${currentItem.article}`}>
+                    {currentItem.article}
+                  </div>
+                )}
+                <div className="card-word-de" lang="de" dir="ltr">
+                  {currentItem.german}
+                </div>
+                <div className="card-badges">
+                  <span className={`card-cefr cefr-${currentItem.cefr?.toLowerCase()}`}>
+                    {currentItem.cefr}
+                  </span>
+                  <span className="card-pos">{currentItem.partOfSpeech}</span>
+                </div>
+                <div className="card-ipa-row" onClick={(e) => e.stopPropagation()}>
+                  <span className="card-ipa" dir="ltr">
+                    {currentItem.ipa}
+                  </span>
+                  <PronunciationButton
+                    text={currentItem.german}
+                    src={mediaSources.wordAudio}
+                    soundEnabled={soundEnabled}
+                  />
+                </div>
+                {currentItem.topicTags?.length > 0 && (
+                  <div className="card-tags">
+                    {currentItem.topicTags.map((t) => (
+                      <span key={t} className="card-tag">
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
-          ) : (
             <div className="card-face card-back">
-              <button ref={flipAgainRef} className="flip-again" onClick={() => setFlipped(false)}>
-                برگرداندن کارت
-              </button>
-              <h1>{currentItem.persian}</h1>
-              <div className="example" dir="ltr">
-                <strong>{currentItem.exampleGerman}</strong>
-                <span dir="rtl">{currentItem.examplePersian}</span>
-              </div>
-              <PronunciationButton
-                text={currentItem.exampleGerman}
-                src={mediaSources.sentenceAudio}
-                soundEnabled={soundEnabled}
-              />
-              <p className="instruction">چقدر یادت آمد؟</p>
-              <div
-                className="grade-grid"
-                role="group"
-                aria-label="درجهٔ یادآوری"
-                aria-busy={isRecordingGrade}
-              >
-                {grades.map((item) => (
-                  <button
-                    key={item.id}
-                    className={`grade grade-${item.id}`}
-                    onClick={() => recordGrade(item.id)}
-                    disabled={isRecordingGrade}
-                  >
-                    {item.label}
-                  </button>
-                ))}
+              <div className="card-back-body">
+                <div className="card-fa-meanings">{currentItem.persian}</div>
+                <div className="card-fa-sep" />
+                <div className="card-example-block">
+                  <div className="card-ex-de" lang="de" dir="ltr">
+                    {currentItem.exampleGerman}
+                  </div>
+                  <div className="card-ex-fa">{currentItem.examplePersian}</div>
+                  <div className="card-ex-audio" onClick={(e) => e.stopPropagation()}>
+                    <PronunciationButton
+                      text={currentItem.exampleGerman}
+                      src={mediaSources.sentenceAudio}
+                      soundEnabled={soundEnabled}
+                    />
+                    <span style={{ fontSize: '10px', color: 'var(--muted)' }}>شنیدن جمله</span>
+                  </div>
+                </div>
+                {currentItem.grammarNote && (
+                  <div className="card-grammar-box">
+                    <div className="card-grammar-icon">💡</div>
+                    <div className="card-grammar-text">{currentItem.grammarNote}</div>
+                  </div>
+                )}
+                {currentItem.inflection && (
+                  <div className="card-inflection-box">
+                    <div className="card-inflection-label">صرف</div>
+                    <div className="card-inflection-text" dir="ltr">
+                      {currentItem.inflection}
+                    </div>
+                  </div>
+                )}
+                <div className="card-definition-box">
+                  <div className="card-def-label">تعریف آلمانی</div>
+                  <div className="card-def-text" lang="de" dir="ltr">
+                    {currentItem.germanDefinition}
+                  </div>
+                </div>
               </div>
             </div>
-          )}
-        </section>
+          </div>
+        </div>
+        {flipped && (
+          <>
+            <p className="instruction">چقدر یادت آمد؟</p>
+            <div
+              className="grade-grid"
+              role="group"
+              aria-label="درجهٔ یادآوری"
+              aria-busy={isRecordingGrade}
+            >
+              {grades.map((item) => (
+                <button
+                  key={item.id}
+                  className={`grade grade-${item.id}`}
+                  onClick={() => recordGrade(item.id)}
+                  disabled={isRecordingGrade}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
       </main>
     );
   }
