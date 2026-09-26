@@ -153,12 +153,6 @@ async function clickButton(container: HTMLElement, label: string): Promise<void>
   await act(async () => button.click());
 }
 
-function buttonLabels(container: HTMLElement): string[] {
-  return Array.from(container.querySelectorAll('button')).map(
-    (button) => button.textContent?.trim() ?? '',
-  );
-}
-
 function installLocalStorage() {
   const entries = new Map<string, string>();
   const storage: Storage = {
