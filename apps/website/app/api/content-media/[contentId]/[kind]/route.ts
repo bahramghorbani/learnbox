@@ -1,4 +1,5 @@
 import path from 'node:path';
+import { accessSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { NextResponse } from 'next/server';
 
@@ -16,7 +17,7 @@ function contentBase(): string {
   for (let i = 0; i < 5; i++) {
     const candidate = path.join(dir, 'content', 'packs', 'learnbox-start');
     try {
-      require('node:fs').accessSync(candidate);
+      accessSync(candidate);
       return candidate;
     } catch {
       dir = path.dirname(dir);
