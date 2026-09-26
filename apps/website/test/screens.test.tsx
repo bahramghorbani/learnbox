@@ -26,24 +26,18 @@ describe('ProgressScreen', () => {
   it('shows today-reviewed progress when the learner has graded cards', async () => {
     rendered = await renderProgress({ reviewedToday: 3, streakDays: 1, pendingReviewCount: 3 });
 
-    expect(rendered.text()).toContain('امروز 3 کارت را ثبت کردی.');
-    expect(rendered.text()).toContain('3 کارت در این دستگاه ثبت شد');
-    expect(rendered.text()).toContain('1 روز همراه LearnBox در این دستگاه');
-    expect(rendered.text()).toContain(
-      '3 پاسخ فقط روی این دستگاه ذخیره شده و سرور آن‌ها را تأیید نکرده است.',
-    );
-    expect(rendered.text()).toContain('گزارش هفتگی سرور هنوز فعال نیست.');
+    // New ProgressScreen: shows streak and pending-count; no old device/server labels
+    expect(rendered.text()).toContain('۳ پاسخ فقط روی این دستگاه ذخیره شده است.');
+    expect(rendered.text()).toContain('ادامهٔ مرور');
+    expect(rendered.text()).toContain('۱');  // streak days
   });
 
   it('shows a fresh-start message when nothing is reviewed yet', async () => {
     rendered = await renderProgress({ reviewedToday: 0, streakDays: 0, pendingReviewCount: 0 });
 
-    expect(rendered.text()).toContain('با یک مرور کوتاه، گزارش واقعی‌ات از همین‌جا شکل می‌گیرد.');
-    expect(rendered.text()).toContain('شروع تازه در این دستگاه');
-    expect(rendered.text()).toContain(
-      'این گزارش فقط از داده‌های ذخیره‌شده در همین مرورگر ساخته می‌شود.',
-    );
-    expect(rendered.text()).not.toContain('سرور آن‌ها را تأیید نکرده است');
+    // New ProgressScreen: CTA still present; no pending-sync chip with 0 count
+    expect(rendered.text()).toContain('ادامهٔ مرور');
+    expect(rendered.text()).not.toContain('پاسخ فقط روی این دستگاه ذخیره شده است.');
   });
 
   it('invokes the review action from the progress CTA', async () => {

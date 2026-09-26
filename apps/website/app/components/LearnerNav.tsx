@@ -16,7 +16,7 @@ const navIcons: Record<LearnerDestination, string> = {
 const destinations: Array<{ id: LearnerDestination; label: string }> = [
   { id: 'today', label: 'امروز' },
   { id: 'words', label: 'واژه‌ها' },
-  { id: 'store', label: 'فروشگاه' },
+  // 'store' is v1.1+ (premium packs) — excluded from v1.0 release
   { id: 'progress', label: 'پیشرفت' },
   { id: 'profile', label: 'پروفایل' },
 ];

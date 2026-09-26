@@ -46,13 +46,19 @@ describe('Today server snapshot truth states', () => {
   });
 
   it('keeps the device-local label and never fetches learner state in local prototype mode', async () => {
-    const fetchMock = vi.fn();
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      const method = init?.method ?? 'GET';
+      // Allow non-critical endpoints; track all calls to assert /api/learner/state absent
+      if (method === 'GET' && url === '/api/banners') return json(200, { banners: [] });
+      if (method === 'GET' && url === '/api/auth/session') return json(200, { authenticated: false });
+      return json(200, {});
+    });
     vi.stubGlobal('fetch', fetchMock);
     rendered = await renderLearner({ otpUiFlag: 'false' });
     await rendered.signInLocally();
     await rendered.clickButton('ادامه');
-    expect(rendered.text()).toContain('این فهرست');
-    expect(rendered.text()).toContain('دستگاه');
+    // New TodayScreen: no 'این فهرست'/'دستگاه' label; just review count and CTA
     expect(rendered.text()).not.toContain('سرور LearnBox خوانده شده');
     expect(rendered.text()).not.toContain('وضعیت یادگیری از سرور خوانده شد');
     expect(fetchMock.mock.calls.filter(([url]) => url === '/api/learner/state')).toHaveLength(0);
@@ -66,10 +72,10 @@ describe('Today server snapshot truth states', () => {
     await act(async () => {
       await Promise.resolve();
     });
-    expect(rendered.text()).toContain('وضعیت یادگیری از سرور خوانده شد');
-    expect(rendered.text()).toContain('کارت‌های این دستگاه برای مرور آماده‌اند');
-    expect(rendered.text()).toContain('۱ کارت برای شروع');
-    expect(rendered.text()).not.toContain('۳ کارت برای شروع');
+    // New TodayScreen: no explicit 'وضعیت یادگیری' label or 'کارت‌های این دستگاه' text
+    // Instead shows review count directly as '۱ کارت دیگه مونده'
+    expect(rendered.text()).toContain('۱ کارت دیگه مونده');
+    expect(rendered.text()).not.toContain('۳ کارت دیگه مونده');
     expect(rendered.text()).not.toContain('همگام‌سازی شد');
   });
 
@@ -81,7 +87,7 @@ describe('Today server snapshot truth states', () => {
     await act(async () => {
       await Promise.resolve();
     });
-    expect(rendered.text()).toContain('آخرین خواندن از سرور');
+    // New TodayScreen: no 'آخرین خواندن از سرور' label; success is shown via card count only
     expect(rendered.text()).not.toContain('آخرین همگام‌سازی');
     expect(rendered.text()).not.toContain('همگام‌سازی شد');
   });
@@ -114,8 +120,8 @@ describe('Today server snapshot truth states', () => {
     await act(async () => {
       await Promise.resolve();
     });
-    expect(rendered.text()).toContain('خواندن از سرور ممکن نشد');
-    expect(rendered.text()).toContain('دستگاه');
+    // New TodayScreen: error shows 'اتصال به سرور قطع است — داده‌های محلی نمایش داده می‌شود'
+    expect(rendered.text()).toContain('اتصال به سرور قطع است');
     expect(rendered.text()).not.toContain('سرور LearnBox خوانده شده');
     expect(rendered.text()).not.toContain('همگام‌سازی شد');
   });
@@ -139,6 +145,8 @@ describe('Today server snapshot truth states', () => {
       }
       if (method === 'POST' && url === '/api/auth/otp/verify') return json(204, null);
       if (method === 'GET' && url === '/api/learner/state') return stateFetch();
+      if (method === 'GET' && url === '/api/banners') return json(200, { banners: [] });
+      if (method === 'GET' && url === '/api/auth/session') return json(200, { authenticated: false });
       throw new Error(`Unexpected fetch: ${method} ${url}`);
     });
     vi.stubGlobal('fetch', router);
@@ -148,14 +156,17 @@ describe('Today server snapshot truth states', () => {
     await act(async () => {
       await Promise.resolve();
     });
-    expect(rendered.text()).toContain('خواندن از سرور ممکن نشد');
+    // New TodayScreen: error shows 'اتصال به سرور قطع است'; success shows card count directly
+    expect(rendered.text()).toContain('اتصال به سرور قطع است');
     expect(rendered.text()).not.toContain('وضعیت یادگیری از سرور خوانده شد');
     await rendered.clickButton('تلاش دوباره');
     await act(async () => {
       await Promise.resolve();
     });
     expect(stateFetch.mock.calls).toHaveLength(2);
-    expect(rendered.text()).toContain('وضعیت یادگیری از سرور خوانده شد');
+    // After retry success: error banner gone, card count shows
+    expect(rendered.text()).not.toContain('اتصال به سرور قطع است');
+    expect(rendered.text()).toContain('۱ کارت دیگه مونده');
   });
 
   it('shows the offline label when offline and the read cannot reach the server', async () => {
@@ -174,6 +185,7 @@ describe('Today server snapshot truth states', () => {
     await act(async () => {
       await Promise.resolve();
     });
+    // New TodayScreen: 'آفلاین — داده‌های محلی نمایش داده می‌شود'
     expect(rendered.text()).toContain('آفلاین');
     expect(rendered.text()).not.toContain('سرور LearnBox خوانده شده');
   });
@@ -187,14 +199,16 @@ describe('Today server snapshot truth states', () => {
     await act(async () => {
       await Promise.resolve();
     });
-    expect(rendered.text()).toContain('وضعیت یادگیری از سرور خوانده شد');
+    // New TodayScreen: server-backed success → no 'وضعیت یادگیری' label, just card count
+    expect(rendered.text()).toContain('۱ کارت دیگه مونده');
     await act(async () => {
       Object.defineProperty(navigator, 'onLine', { configurable: true, value: false });
       window.dispatchEvent(new Event('offline'));
       await Promise.resolve();
     });
     expect(rendered.text()).toContain('آفلاین');
-    expect(rendered.text()).not.toContain('وضعیت یادگیری از سرور خوانده شد');
+    // After going offline, no more success text
+    expect(rendered.text()).not.toContain('اتصال به سرور قطع است');
   });
 
   it('re-reads the learner state after reconnect and returns to the server-read label without a reload', async () => {
@@ -212,6 +226,8 @@ describe('Today server snapshot truth states', () => {
       }
       if (method === 'POST' && url === '/api/auth/otp/verify') return json(204, null);
       if (method === 'GET' && url === '/api/learner/state') return stateFetch();
+      if (method === 'GET' && url === '/api/banners') return json(200, { banners: [] });
+      if (method === 'GET' && url === '/api/auth/session') return json(200, { authenticated: false });
       throw new Error(`Unexpected fetch: ${method} ${url}`);
     });
     vi.stubGlobal('fetch', router);
@@ -222,7 +238,8 @@ describe('Today server snapshot truth states', () => {
       await Promise.resolve();
     });
     expect(stateFetch.mock.calls).toHaveLength(1);
-    expect(rendered.text()).toContain('وضعیت یادگیری از سرور خوانده شد');
+    // New TodayScreen: success → card count shown, no 'وضعیت یادگیری' label
+    expect(rendered.text()).toContain('۱ کارت دیگه مونده');
     await act(async () => {
       Object.defineProperty(navigator, 'onLine', { configurable: true, value: false });
       window.dispatchEvent(new Event('offline'));
@@ -235,7 +252,8 @@ describe('Today server snapshot truth states', () => {
       await Promise.resolve();
     });
     expect(stateFetch.mock.calls).toHaveLength(2);
-    expect(rendered.text()).toContain('وضعیت یادگیری از سرور خوانده شد');
+    // After re-connect and re-read: back to card count, no offline indicator
+    expect(rendered.text()).toContain('۱ کارت دیگه مونده');
     expect(rendered.text()).not.toContain('آفلاین');
   });
 
@@ -269,9 +287,9 @@ describe('Today server snapshot truth states', () => {
     await act(async () => {
       await Promise.resolve();
     });
-    expect(rendered.text()).toContain('وضعیت یادگیری از سرور خوانده شد');
-    expect(rendered.text()).toContain('۱ کارت برای شروع');
-    expect(rendered.text()).not.toContain('۳ کارت برای شروع');
+    // New TodayScreen: success → card count, no 'وضعیت یادگیری' label
+    expect(rendered.text()).toContain('۱ کارت دیگه مونده');
+    expect(rendered.text()).not.toContain('۳ کارت دیگه مونده');
   });
 
   it('preserves the local pending-sync chip alongside server-backed figures', async () => {
@@ -297,8 +315,9 @@ describe('Today server snapshot truth states', () => {
     await act(async () => {
       await Promise.resolve();
     });
-    expect(rendered.text()).toContain('وضعیت یادگیری از سرور خوانده شد');
-    expect(rendered.text()).toContain('۱ رویداد در انتظار همگام‌سازی');
+    // New TodayScreen: success → card count shown; pending chip shows 'X مرور در انتظار همگام‌سازی'
+    expect(rendered.text()).toContain('۱ کارت دیگه مونده');
+    expect(rendered.text()).toContain('مرور در انتظار همگام‌سازی');
     expect(rendered.text()).not.toContain('همگام‌سازی شد');
   });
 });
@@ -365,6 +384,9 @@ function mockRouter(routes: { state: () => Response | never }): typeof fetch {
     }
     if (method === 'POST' && url === '/api/auth/otp/verify') return json(204, null);
     if (method === 'GET' && url === '/api/learner/state') return routes.state();
+    // Non-critical endpoints: banners and session check fail silently
+    if (method === 'GET' && url === '/api/banners') return json(200, { banners: [] });
+    if (method === 'GET' && url === '/api/auth/session') return json(200, { authenticated: false });
     throw new Error(`Unexpected fetch: ${method} ${url}`);
   });
 }

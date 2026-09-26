@@ -151,6 +151,11 @@ export function TodayScreen({
   useEffect(() => {
     const el = lboxRef.current;
     if (!el) return;
+    // IntersectionObserver is not available in all environments (e.g. test)
+    if (typeof IntersectionObserver === 'undefined') {
+      setLboxVisible(true);
+      return;
+    }
     const obs = new IntersectionObserver(
       (entries) => {
         if (entries[0]?.isIntersecting) {
@@ -210,6 +215,11 @@ export function TodayScreen({
           {onRetryServerRead && (
             <button type="button" onClick={onRetryServerRead}>تلاش دوباره</button>
           )}
+        </div>
+      )}
+      {syncState === 'offline' && (
+        <div className="home-sync-offline" role="status">
+          <span>آفلاین — داده‌های محلی نمایش داده می‌شود</span>
         </div>
       )}
       {typeof pendingReviewCount === 'number' && pendingReviewCount > 0 && (

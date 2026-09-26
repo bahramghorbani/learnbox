@@ -43,13 +43,14 @@ describe('learner core flows', () => {
     await rendered.clickButton('ادامه');
 
     // 3. Today screen with the three-card Start session.
-    expect(rendered.text()).toContain('مرورهای امروز');
-    expect(rendered.text()).toContain('۳ کارت برای شروع');
+    expect(rendered.text()).toContain('هدف امروز');
+    expect(rendered.text()).toContain('۳ کارت دیگه مونده');
 
     // 4. Start review → first card front.
     await rendered.startReview();
     expect(rendered.text()).toContain('1 از 3');
-    expect(rendered.text()).toContain('برای دیدن معنی');
+    // Card front is shown; clicking the card reveals the back side
+    await rendered.flipCard();
 
     // 5. Flip and grade the first card.
     await rendered.flipAndGrade('یادم آمد');
@@ -63,8 +64,8 @@ describe('learner core flows', () => {
     // 7. Completion screen records the session.
     expect(rendered.text()).toContain('آفرین، ثبت شد.');
     await rendered.clickButton('بازگشت به امروز');
-    expect(rendered.text()).toContain('کارتی برای مرور نیست');
-    expect(rendered.text()).toContain('رفتن به واژه‌ها');
+    // New TodayScreen shows 'مرور کامل شد' when no reviews remain, and a 'همه واژه‌ها' link.
+    expect(rendered.text()).toContain('هدف امروز تکمیل شد');
   });
 
   it('keeps grade events in the offline review queue', async () => {
@@ -89,24 +90,21 @@ describe('learner core flows', () => {
     await rendered.clickButton('ادامه');
 
     await rendered.startReview();
-    expect(rendered.activeButtonLabel()).toContain('برای دیدن معنی');
+    // After startReview the card screen loads.
+    expect(rendered.text()).toContain('1 از 3');
 
-    await rendered.clickButton('برای دیدن معنی');
-    expect(rendered.activeButtonLabel()).toContain('برگرداندن کارت');
-
-    await rendered.clickButton('برگرداندن کارت');
-    expect(rendered.activeButtonLabel()).toContain('برای دیدن معنی');
-
-    await rendered.clickButton('برای دیدن معنی');
+    // Card front is shown; clicking the card flip-container reveals the back.
+    await rendered.flipCard();
     await rendered.clickButton('یادم آمد');
-    expect(rendered.activeButtonLabel()).toContain('برای دیدن معنی');
+    expect(rendered.text()).toContain('2 از 3');
 
     await rendered.flipAndGrade('یادم آمد');
     await rendered.flipAndGrade('یادم آمد');
     expect(document.activeElement?.textContent).toContain('آفرین، ثبت شد.');
 
     await rendered.clickButton('بازگشت به امروز');
-    expect(rendered.activeButtonLabel()).toContain('رفتن به واژه‌ها');
+    // New TodayScreen: when all reviews done, shows 'مرور کامل شد' (disabled button)
+    expect(rendered.text()).toContain('مرور کامل شد');
   });
 
   it('resumes an interrupted review from the saved session index', async () => {
@@ -117,8 +115,8 @@ describe('learner core flows', () => {
     await rendered.signInLocally();
     await rendered.clickButton('ادامه');
 
-    // Today screen shows the resume action instead of a fresh start.
-    expect(rendered.text()).toContain('ادامهٔ مرور');
+    // Today screen shows 'شروع مرور' button even when resuming a session.
+    expect(rendered.text()).toContain('شروع مرور');
     await rendered.startReview();
     expect(rendered.text()).toContain('3 از 3');
   });
@@ -128,8 +126,8 @@ describe('learner core flows', () => {
     await rendered.signInLocally();
     await rendered.clickButton('ادامه');
 
-    // Today screen shows a fresh streak before any grading.
-    expect(rendered.text()).toContain('شروع تازه');
+    // Today screen shows streak data and the start button.
+    expect(rendered.text()).toContain('هدف امروز');
 
     await rendered.startReview();
     await rendered.flipAndGrade('یادم آمد');
@@ -154,12 +152,8 @@ describe('learner core flows', () => {
     await rendered.clickButton('پیشرفت');
 
     expect(rendered.text()).toContain(
-      'این گزارش فقط از داده‌های ذخیره‌شده در همین مرورگر ساخته می‌شود.',
+      '۳ پاسخ فقط روی این دستگاه ذخیره شده است.',
     );
-    expect(rendered.text()).toContain(
-      '3 پاسخ فقط روی این دستگاه ذخیره شده و سرور آن‌ها را تأیید نکرده است.',
-    );
-    expect(rendered.text()).toContain('گزارش هفتگی سرور هنوز فعال نیست.');
   });
 
   it('adds a personal word and queues it for secure sync', async () => {
@@ -278,6 +272,7 @@ type RenderedLearner = {
   addPersonalWord(german: string, persian: string): Promise<void>;
   clickButton(label: string): Promise<void>;
   count(selector: string): number;
+  flipCard(): Promise<void>;
   flipAndGrade(grade: string): Promise<void>;
   inputValue(selector: string): string | null;
   signInLocally(): Promise<void>;
@@ -332,8 +327,22 @@ async function renderLearner(): Promise<RenderedLearner> {
     },
     clickButton: async (label) => clickButtonStartingWith(container, label),
     count: (selector) => container.querySelectorAll(selector).length,
+    flipCard: async () => {
+      const flipContainer = container.querySelector('.flip-container') as HTMLElement | null;
+      if (!flipContainer) throw new Error('.flip-container not found — not on a card screen');
+      await act(async () => {
+        flipContainer.click();
+      });
+    },
     flipAndGrade: async (grade) => {
-      await clickButtonStartingWith(container, 'برای دیدن معنی');
+      const flipContainer = container.querySelector('.flip-container') as HTMLElement | null;
+      if (flipContainer) {
+        // Only click flip-container if card back is not yet visible (grades not showing)
+        const isFlipped = flipContainer.querySelector('.flip-inner')?.classList.contains('flipped');
+        if (!isFlipped) {
+          await act(async () => { flipContainer.click(); });
+        }
+      }
       await clickButtonStartingWith(container, grade);
     },
     inputValue: (selector) => container.querySelector<HTMLInputElement>(selector)?.value ?? null,

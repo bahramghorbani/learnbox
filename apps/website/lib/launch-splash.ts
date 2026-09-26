@@ -17,7 +17,7 @@ export function readLaunchSplashConfig(environment: Environment): LaunchSplashCo
   const databaseUrl = environment.DATABASE_URL ?? '';
   const blobToken = environment.BLOB_READ_WRITE_TOKEN ?? '';
   if (!/^postgres(ql)?:\/\//.test(databaseUrl)) return null;
-  // blobToken is optional — when absent, splash is served directly from DB image_data column
+  if (!blobToken) return null;
   try {
     const parsed = new URL(databaseUrl);
     parsed.searchParams.set('sslmode', 'verify-full');

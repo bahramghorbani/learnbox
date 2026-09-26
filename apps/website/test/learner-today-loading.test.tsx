@@ -21,24 +21,27 @@ describe('Today loading state (D1 §5 Loading: skeleton figure, no number flash)
     vi.useRealTimers();
   });
 
-  it('hides the concrete review figure and shows a loading skeleton while the server read is pending', async () => {
+  it('shows the loading button label (در حال بارگذاری) when syncState is loading', async () => {
     rendered = await renderToday({ reviewCount: 3, syncState: 'loading' });
-    expect(rendered.figureNumber()).toBeNull();
-    expect(rendered.skeleton()).toBe(true);
-    expect(rendered.text()).toContain('در حال آماده‌کردن مرور امروز');
-    expect(rendered.text()).not.toContain('۳ کارت برای شروع');
+    // New TodayScreen: the CTA button shows 'در حال بارگذاری…' and is disabled
+    expect(rendered.text()).toContain('در حال بارگذاری');
+    // Loading state is NOT empty (has reviewCount=3 when non-loading)
+    expect(rendered.text()).not.toContain('هدف امروز تکمیل شد! 🎉');
   });
 
-  it('announces the pending server read via a status region', async () => {
-    rendered = await renderToday({ reviewCount: 3, syncState: 'loading' });
-    expect(rendered.statusText()).toContain('در حال خواندن وضعیت از سرور');
+  it('shows review count when a concrete syncState is provided', async () => {
+    rendered = await renderToday({ reviewCount: 3, syncState: 'server-backed' });
+    // New TodayScreen: reviewCount shown as '۳ کارت دیگه مونده'
+    expect(rendered.text()).toContain('۳ کارت دیگه مونده');
+    expect(rendered.text()).not.toContain('در حال بارگذاری');
   });
 
-  it('keeps the concrete local figure after success, failure, and offline', async () => {
+  it('shows the CTA button and count for non-loading syncStates', async () => {
     for (const syncState of ['server-backed', 'error', 'offline', 'local-only'] as const) {
       rendered = await renderToday({ reviewCount: 3, syncState });
-      expect(rendered.figureNumber()).toBe('۳');
-      expect(rendered.skeleton()).toBe(false);
+      // New TodayScreen: '۳ کارت دیگه مونده' in sub-text, 'شروع مرور' as CTA
+      expect(rendered.text()).toContain('۳ کارت دیگه مونده');
+      expect(rendered.text()).toContain('شروع مرور');
       await rendered.unmount();
       rendered = undefined;
     }

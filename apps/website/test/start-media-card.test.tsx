@@ -103,7 +103,8 @@ describe('learner page media attachment boundary', () => {
   });
 
   it('attaches private media only after server OTP and keeps grading usable after failure', async () => {
-    mockFetch(response(201, challenge()), response(204));
+    // Session check (mount), OTP request (201+challenge), OTP verify (204)
+    mockFetch(response(200, { authenticated: false }), response(201, challenge()), response(204));
     renderedPage = await renderLearnerPage({
       hostname: 'app.learnboxapp.com',
       otpUiFlag: 'true',
@@ -248,7 +249,13 @@ async function renderLearnerPage(props: {
       await act(async () => image.dispatchEvent(new Event('error')));
     },
     flipAndGrade: async (grade) => {
-      await clickButtonStartingWith(container, 'برای دیدن معنی');
+      // In the v2 card UI, flipping is done by clicking the flip-container, not a button
+      const flipContainer = container.querySelector('.flip-container') as HTMLElement | null;
+      if (!flipContainer) throw new Error('.flip-container not found');
+      const isFlipped = flipContainer.querySelector('.flip-inner')?.classList.contains('flipped');
+      if (!isFlipped) {
+        await act(async () => { flipContainer.click(); });
+      }
       await clickButtonStartingWith(container, grade);
     },
     signInLocally,

@@ -63,6 +63,12 @@ export function ProgressScreen({
   useEffect(() => {
     const barsEl = barsRef.current;
     const distEl = distRef.current;
+    // IntersectionObserver is not available in all environments (e.g. test)
+    if (typeof IntersectionObserver === 'undefined') {
+      setBarsVisible(true);
+      setDistVisible(true);
+      return;
+    }
     const obs = new IntersectionObserver(
       (entries) => {
         for (const e of entries) {

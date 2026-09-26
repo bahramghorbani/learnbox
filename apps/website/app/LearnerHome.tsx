@@ -44,6 +44,7 @@ import { SupportivePlusOffer } from './components/SupportivePlusOffer';
 import { personalWordLimit } from './product-experience';
 import { resolveSupportivePlusOffer } from './paywall';
 import { buildStartMediaSources, resolveStartMediaMode, type StartMediaMode } from './start-media';
+import { StartMediaVisual } from './components/StartMediaVisual';
 import { resolveStartSliceItem, selectTodayStartSession, stagedStartSlice } from './start-slice';
 import {
   deriveWebSessionItems,
@@ -887,20 +888,7 @@ export function LearnerHome({
         <div className="flip-container" onClick={() => setFlipped(!flipped)}>
           <div className={`flip-inner${flipped ? ' flipped' : ''}`} style={{ minHeight: '340px' }}>
             <div className="card-face card-front">
-              <div className="card-img-strip">
-                {mediaSources.image ? (
-                  <img
-                    src={mediaSources.image}
-                    alt=""
-                    className="card-img-photo"
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none';
-                    }}
-                  />
-                ) : (
-                  <div className="card-img-icon">📖</div>
-                )}
-              </div>
+              <StartMediaVisual contentId={currentItem.id} mode={startMediaMode} />
               <div className="card-front-body">
                 <div className="card-tap-hint">👆 برای دیدن معنی لمس کن</div>
                 {currentItem.article && (

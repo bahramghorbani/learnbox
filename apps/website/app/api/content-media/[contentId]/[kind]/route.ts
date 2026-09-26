@@ -2,6 +2,7 @@ import path from 'node:path';
 import { accessSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { NextResponse } from 'next/server';
+import { readLearnerSession } from '../../../../../lib/server-session';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -47,9 +48,21 @@ const mimeTypes: Record<string, string> = {
 };
 
 export async function GET(
-  _req: Request,
+  req: Request,
   context: { params: Promise<{ contentId: string; kind: string }> },
 ): Promise<NextResponse> {
+  // SECURITY: vocabulary/card content is protected — requires valid authenticated session
+  const session = readLearnerSession(req);
+  if (!session) {
+    return NextResponse.json(
+      { error: 'unauthorized' },
+      {
+        status: 401,
+        headers: { 'cache-control': 'no-store', 'www-authenticate': 'Cookie' },
+      },
+    );
+  }
+
   const { contentId, kind } = await context.params;
 
   if (!validContentId.test(contentId) || !validKinds.has(kind)) {
@@ -85,7 +98,8 @@ export async function GET(
     status: 200,
     headers: {
       'Content-Type': contentType,
-      'Cache-Control': 'public, max-age=86400, immutable',
+      // Private: never cache publicly; authenticated per-request
+      'Cache-Control': 'private, no-store',
     },
   });
 }

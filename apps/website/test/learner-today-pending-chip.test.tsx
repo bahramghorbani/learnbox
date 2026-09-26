@@ -21,26 +21,23 @@ describe('Today pending-sync chip (D1 §5 sync row, M-L3 parity)', () => {
     vi.useRealTimers();
   });
 
-  it('shows the device-local label and the pending chip with a positive count', async () => {
+  it('shows the pending sync chip with a positive count', async () => {
     rendered = await renderToday({ reviewCount: 3, pendingReviewCount: 2 });
-    expect(rendered.text()).toContain('این فهرست');
-    expect(rendered.text()).toContain('دستگاه');
-    expect(rendered.text()).toContain('در انتظار همگام‌سازی');
-    expect(rendered.text()).toContain('۲ رویداد در انتظار همگام‌سازی');
+    // New TodayScreen: shows 'X مرور در انتظار همگام‌سازی' in a status div
+    expect(rendered.text()).toContain('مرور در انتظار همگام‌سازی');
+    expect(rendered.text()).toContain('۲ مرور در انتظار همگام‌سازی');
     expect(rendered.pendingChip()).toBe(true);
   });
 
   it('shows no pending chip when the local queue is empty', async () => {
     rendered = await renderToday({ reviewCount: 0, pendingReviewCount: 0 });
-    expect(rendered.text()).not.toContain('در انتظار همگام‌سازی');
-    expect(rendered.text()).toContain('این فهرست');
+    expect(rendered.text()).not.toContain('مرور در انتظار همگام‌سازی');
   });
 
-  it('fails closed without a pending chip when the queue read fails', async () => {
+  it('fails closed without a pending chip when the queue read fails (null)', async () => {
     rendered = await renderToday({ reviewCount: 3, pendingReviewCount: null });
-    expect(rendered.text()).not.toContain('در انتظار همگام‌سازی');
-    expect(rendered.text()).toContain('این فهرست');
-    expect(rendered.statusText()).toContain('این فهرست');
+    expect(rendered.text()).not.toContain('مرور در انتظار همگام‌سازی');
+    expect(rendered.pendingChip()).toBe(false);
   });
 
   it('never claims server acknowledgement or server-backed state', async () => {
@@ -73,7 +70,7 @@ async function renderToday(props: TodayScreenProps): Promise<Rendered> {
   });
 
   return {
-    pendingChip: () => container.querySelector('.today-chip.sync-status') !== null,
+    pendingChip: () => container.querySelector('.home-sync-pending') !== null,
     statusText: () => container.querySelector('[role="status"]')?.textContent?.trim() ?? '',
     text: () => container.textContent ?? '',
     unmount: async () => {

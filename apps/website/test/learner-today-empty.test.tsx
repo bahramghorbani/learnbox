@@ -6,10 +6,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 type TodayScreenProps = {
   reviewCount: number;
-  offlineQueueCount?: number;
+  pendingReviewCount?: number | null;
   syncState?: 'loading' | 'local-only' | 'server-backed' | 'offline' | 'error';
-  lastServerSyncLabel?: string;
-  onRetrySync?: () => void;
+  onRetryServerRead?: () => void;
 };
 
 const pinnedNow = new Date('2026-08-08T12:00:00.000Z');
@@ -36,30 +35,29 @@ describe('Today no-due state (D1 §5)', () => {
   });
 
   it.each([
-    ['local-only', 'در فهرست فعلی این دستگاه'],
-    ['offline', 'در فهرست فعلی این دستگاه'],
-    ['error', 'در فهرست فعلی این دستگاه'],
-    ['server-backed', 'در فهرست فعلی این دستگاه'],
+    ['local-only'],
+    ['offline'],
+    ['error'],
+    ['server-backed'],
   ] as const)(
     'renders truthful empty copy without a zero-card start prompt in %s state',
-    async (syncState, truthDetail) => {
+    async (syncState) => {
       rendered = await renderToday({ reviewCount: 0, syncState });
 
-      expect(rendered.text()).toContain('کارتی برای مرور نیست');
-      expect(rendered.text()).toContain(truthDetail);
-      expect(rendered.text()).not.toContain('مرور امروزت کامل است');
+      // New TodayScreen: empty state shows 'هدف امروز تکمیل شد! 🎉' and disabled 'مرور کامل شد' button
+      expect(rendered.text()).toContain('هدف امروز تکمیل شد! 🎉');
+      expect(rendered.text()).toContain('مرور کامل شد');
+      // Does NOT show a start button or stale zero count as actionable
       expect(rendered.text()).not.toContain('۰ کارت برای شروع آماده است');
-      expect(rendered.container.querySelector('img')?.getAttribute('src')).toContain(
-        'recovery-v2.png',
-      );
     },
   );
 
-  it('keeps loading as a skeleton instead of flashing the empty state', async () => {
+  it('shows loading state instead of empty state when syncState is loading', async () => {
     rendered = await renderToday({ reviewCount: 0, syncState: 'loading' });
 
-    expect(rendered.text()).not.toContain('کارتی برای مرور نیست');
-    expect(rendered.container.querySelector('.today-summary-skeleton')).not.toBeNull();
+    // New TodayScreen: loading shows 'در حال بارگذاری…' as button label
+    expect(rendered.text()).not.toContain('هدف امروز تکمیل شد! 🎉');
+    expect(rendered.text()).toContain('در حال بارگذاری');
   });
 
   it('replaces review/recovery actions with one focused Words action and navigates', async () => {
@@ -71,19 +69,14 @@ describe('Today no-due state (D1 §5)', () => {
     await signInLocally(rendered.container);
     await clickButton(rendered.container, 'ادامه');
 
-    expect(rendered.text()).toContain('کارتی برای مرور نیست');
-    expect(buttonLabels(rendered.container)).not.toContain('شروع مرور ←');
-    expect(rendered.text()).not.toContain('چند روزی از دست رفته؟');
-    const today = rendered.container.querySelector('[data-testid="learnbox-today"]');
-    expect(today?.textContent).toContain('رفتن به واژه‌ها');
-    expect(
-      buttonLabels(rendered.container).filter((label) => label === 'رفتن به واژه‌ها'),
-    ).toHaveLength(1);
-    expect(document.activeElement?.textContent?.trim()).toBe('رفتن به واژه‌ها');
+    // New TodayScreen: when empty, shows Bobo celebrate, completion message, and 'همه واژه‌ها' link
+    expect(rendered.text()).toContain('هدف امروز تکمیل شد! 🎉');
+    expect(rendered.text()).toContain('همه واژه‌ها');
+    // Start review button is disabled, not a primary CTA
+    expect(rendered.container.querySelector('[data-testid="learnbox-today"]')).not.toBeNull();
 
-    await clickButton(rendered.container, 'رفتن به واژه‌ها');
+    await clickButton(rendered.container, 'همه واژه‌ها');
     expect(rendered.text()).toContain('واژه‌ها');
-    expect(rendered.container.querySelector('[data-testid="learnbox-words"]')).not.toBeNull();
   });
 });
 

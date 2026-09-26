@@ -634,7 +634,7 @@ describe('learner Profile and Settings shell flows', () => {
     // The disabled preference stops the Audio path in a later session.
     await rendered.clickButton('بازگشت به پروفایل');
     await rendered.clickButton('امروز');
-    await rendered.clickButton('ادامهٔ مرور');
+    await rendered.clickButton('شروع مرور');
     const audioButton = rendered.container.querySelector<HTMLButtonElement>('button.audio-button');
     expect(audioButton?.disabled).toBe(true);
     expect(rendered.text()).toContain('تلفظ خاموش است');

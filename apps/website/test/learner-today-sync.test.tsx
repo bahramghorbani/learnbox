@@ -21,12 +21,12 @@ describe('Today sync truth label (D1 §5 sync row)', () => {
     vi.useRealTimers();
   });
 
-  it('shows the device-local label on the Today surface when no server route is wired', async () => {
+  it('shows the review count on the Today surface when no server route is wired', async () => {
     rendered = await renderToday();
-    expect(rendered.text()).toContain('مرورهای امروز');
-    expect(rendered.text()).toContain('دستگاه');
-    expect(rendered.text()).toContain('سرور');
-    expect(rendered.text()).toContain('این فهرست');
+    // New TodayScreen: shows '۳ کارت دیگه مونده' and 'هدف امروز' — no device/server label
+    expect(rendered.text()).toContain('هدف امروز');
+    expect(rendered.text()).toContain('۳ کارت دیگه مونده');
+    expect(rendered.text()).toContain('شروع مرور');
   });
 });
 
