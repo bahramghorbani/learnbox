@@ -1,6 +1,6 @@
 import type { Ref } from 'react';
 
-import { Bobo } from './Bobo';
+import { Bobo, type BoboAnimation } from './Bobo';
 import { syncStateText, type LearnerSyncState } from '../learner-sync-state';
 import { toPersianDigits } from '../persian-digits';
 
@@ -30,6 +30,21 @@ export function TodayScreen({
   const isEmpty = syncState !== 'loading' && reviewCount === 0;
   const emptyMessage =
     'در فهرست فعلی این دستگاه کارتی برای مرور نیست؛ می‌توانی واژه‌ها را ببینی یا بعداً برگردی.';
+
+  let boboExpression: 'welcome' | 'encourage' | 'celebrate' | 'recovery' | 'focus' = 'welcome';
+  let boboAnimation: BoboAnimation = 'float';
+  let boboSpeech: string = 'سلام! آماده‌ای شروع کنیم؟';
+
+  if (isEmpty) {
+    boboExpression = 'recovery';
+    boboAnimation = 'headShake';
+    boboSpeech = 'بیا برگردیم به مرور!';
+  } else if (reviewCount >= 7) {
+    boboExpression = 'celebrate';
+    boboAnimation = 'dance';
+    boboSpeech = 'عالیه! ادامه بده!';
+  }
+
   return (
     <main className="app-shell" data-testid="learnbox-today">
       <section className="today-intro" aria-labelledby="today-title">
@@ -77,7 +92,13 @@ export function TodayScreen({
           آخرین خواندن از سرور: {formatSyncTime(lastSyncedAt)}
         </p>
       ) : null}
-      <Bobo expression={isEmpty ? 'recovery' : 'welcome'} className="bobo bobo-header" priority />
+      <Bobo
+        expression={boboExpression}
+        animation={boboAnimation}
+        speech={boboSpeech}
+        className="bobo bobo-header"
+        priority
+      />
       {isEmpty && onBrowseWords ? (
         <button
           ref={primaryActionRef}

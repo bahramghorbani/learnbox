@@ -15,11 +15,34 @@
 }
 
 :root {
-  --bg: #fffaf4;
-  --surface: #fff;
+  --primary: #6d28d9;
+  --primary-light: #7c3aed;
+  --primary-grad: linear-gradient(135deg, #7c3aed, #6d28d9);
+  --accent: #f97316;
+  --accent-grad: linear-gradient(135deg, #fb923c, #f97316);
+  --success: #22c55e;
+  --warning: #eab308;
+  --error: #ef4444;
+  --bg: #f1f0ff;
+  --surface: #ffffff;
+  --text: #1e1b4b;
+  --muted: #6b7280;
+  --light: #a5b4fc;
+  --card-radius: 16px;
+  --card-shadow: 0 4px 24px rgba(109,40,217,0.08);
+  --card-shadow-lg: 0 8px 32px rgba(109,40,217,0.16);
+  --der: #3b82f6;
+  --die: #ec4899;
+  --das: #22c55e;
+  --leitner-1: #ef4444;
+  --leitner-2: #f97316;
+  --leitner-3: #eab308;
+  --leitner-4: #22c55e;
+  --leitner-5: #3b82f6;
+  --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --nav-h: 70px;
   --ink: #1e293b;
-  --muted: #64748b;
-  --primary: #4d6bfe;
   --apricot: #ffb36b;
   --lavender: #f3ecff;
   --border: #e7e3ff;
@@ -2160,4 +2183,163 @@ p {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* ── Navigation CSS ── */
+.learner-nav {
+  height: var(--nav-h);
+  background: var(--surface);
+  border-top: 1px solid rgba(109,40,217,0.07);
+  box-shadow: 0 -4px 20px rgba(109,40,217,0.07);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 8px 8px;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+}
+
+.learner-nav button {
+  flex: 1; border: none; background: none; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 8px 4px; border-radius: 14px;
+  position: relative;
+  transition: transform 200ms var(--spring);
+  min-height: 44px;
+  color: var(--muted);
+}
+
+.learner-nav button:active { transform: scale(0.88); }
+
+.learner-nav .nav-icon {
+  width: 24px; height: 24px;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 300ms var(--spring);
+}
+
+.learner-nav-active .nav-icon { transform: scale(1.15) translateY(-2px); color: var(--primary); }
+.learner-nav-active { color: var(--primary) !important; }
+
+.learner-nav .nav-label {
+  font-size: 10px; font-weight: 600;
+  transition: color 200ms;
+}
+
+.learner-nav .nav-dot {
+  position: absolute;
+  bottom: 2px;
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: var(--primary);
+  opacity: 0;
+  transition: opacity 200ms;
+}
+
+.learner-nav-active .nav-dot { opacity: 1; }
+
+/* ── Bobo CSS ── */
+.bobo-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.bobo-container img {
+  width: 90px; height: auto;
+  filter: drop-shadow(0 6px 18px rgba(0,0,0,0.18));
+}
+
+.speech-bubble {
+  background: var(--surface);
+  border-radius: 18px;
+  padding: 10px 16px;
+  box-shadow: var(--card-shadow);
+  font-size: 13px;
+  max-width: 220px;
+  text-align: center;
+  color: var(--text);
+  position: relative;
+  margin-top: 8px;
+  animation: fadeUp 400ms var(--ease-out);
+}
+
+.speech-bubble::after {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0; height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 8px solid var(--surface);
+}
+
+@keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+@keyframes boboFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+@keyframes boboSlideInRight { from{transform:translateX(100px);opacity:0} to{transform:translateX(0);opacity:1} }
+@keyframes boboJumpUp { 0%{transform:translateY(0)} 30%{transform:translateY(-20px)} 50%{transform:translateY(0)} 70%{transform:translateY(-10px)} 100%{transform:translateY(0)} }
+@keyframes boboHeadShake { 0%{transform:translateX(0)} 15%{transform:translateX(-6px) rotateY(-9deg)} 30%{transform:translateX(5px) rotateY(7deg)} 45%{transform:translateX(-3px) rotateY(-5deg)} 60%{transform:translateX(2px) rotateY(3deg)} 75%{transform:translateX(-1px) rotateY(-1deg)} 100%{transform:translateX(0)} }
+@keyframes boboDance { 0%{transform:rotate(0)} 20%{transform:rotate(-10deg) scale(1.1)} 40%{transform:rotate(10deg) scale(1.1)} 60%{transform:rotate(-5deg)} 80%{transform:rotate(5deg)} 100%{transform:rotate(0)} }
+@keyframes boboWiggle { 0%,100%{transform:rotate(0)} 25%{transform:rotate(-3deg)} 75%{transform:rotate(3deg)} }
+
+/* ── 3D Card CSS ── */
+.study-card-3d {
+  width: 100%;
+  max-width: 340px;
+  height: 420px;
+  perspective: 1200px;
+  margin: 0 auto;
+}
+
+.card-flipper {
+  width: 100%; height: 100%;
+  position: relative;
+  transition: transform 600ms var(--spring);
+  transform-style: preserve-3d;
+}
+
+.card-flipper.is-flipped { transform: rotateY(180deg); }
+
+.card-face-3d {
+  position: absolute; inset: 0;
+  backface-visibility: hidden;
+  border-radius: 22px;
+  overflow: hidden;
+  background: var(--surface);
+  box-shadow: var(--card-shadow-lg);
+  display: flex; flex-direction: column;
+}
+
+.card-back-3d {
+  transform: rotateY(180deg);
+  overflow-y: auto;
+}
+
+.article-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 14px;
+  color: white;
+}
+
+.article-badge.der { background: var(--der); }
+.article-badge.die { background: var(--die); }
+.article-badge.das { background: var(--das); }
+
+.cefr-badge {
+  display: inline-flex;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--light);
+  color: var(--primary);
 }
