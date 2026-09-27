@@ -61,8 +61,7 @@ export async function POST(request: Request) {
       return new Response('Verification failed', { status: 400 });
     }
 
-    const { credential, credentialDeviceType, credentialBackedUp } =
-      verification.registrationInfo;
+    const { credential, credentialDeviceType, credentialBackedUp } = verification.registrationInfo;
 
     // Store new credential
     await store.addCredentialToOwner(

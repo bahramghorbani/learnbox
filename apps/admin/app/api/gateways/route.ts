@@ -9,7 +9,10 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 function getPool() {
-  return getSharedAdminDatabasePool(readAdminDatabaseConfig(process.env), (c: Record<string, unknown>) => new Pool(c));
+  return getSharedAdminDatabasePool(
+    readAdminDatabaseConfig(process.env),
+    (c: Record<string, unknown>) => new Pool(c),
+  );
 }
 
 async function requireSession(request: Request) {
@@ -30,7 +33,7 @@ export async function GET(request: Request) {
 
   const pool = getPool();
   const result = await pool.query(
-    `SELECT id, name, type, is_active, created_at FROM payment_gateways ORDER BY created_at`
+    `SELECT id, name, type, is_active, created_at FROM payment_gateways ORDER BY created_at`,
   );
   return Response.json({ gateways: result.rows });
 }

@@ -115,9 +115,12 @@ export async function POST(request: Request) {
   const exFaIdx = header.indexOf('example_fa');
 
   if (lemmaIdx === -1 || meaningsIdx === -1) {
-    return Response.json({
-      error: 'ستون‌های lemma و meanings الزامی هستند. ستون‌های موجود: ' + header.join(', '),
-    }, { status: 400 });
+    return Response.json(
+      {
+        error: 'ستون‌های lemma و meanings الزامی هستند. ستون‌های موجود: ' + header.join(', '),
+      },
+      { status: 400 },
+    );
   }
 
   // Get existing lemmas to check duplicates
@@ -135,29 +138,32 @@ export async function POST(request: Request) {
       errors.push('lemma خالی است');
     }
 
-    const article = articleIdx >= 0 ? (fields[articleIdx] || null) : null;
+    const article = articleIdx >= 0 ? fields[articleIdx] || null : null;
     if (article && !validArticles.includes(article.toLowerCase())) {
       errors.push('article باید der/die/das باشد');
     }
 
-    const pos = posIdx >= 0 ? (fields[posIdx] || 'other') : 'other';
+    const pos = posIdx >= 0 ? fields[posIdx] || 'other' : 'other';
     if (!validPOS.includes(pos.toLowerCase())) {
       errors.push('part_of_speech نامعتبر: ' + pos);
     }
 
-    const cefr = cefrIdx >= 0 ? (fields[cefrIdx] || 'A1') : 'A1';
+    const cefr = cefrIdx >= 0 ? fields[cefrIdx] || 'A1' : 'A1';
     if (!validCEFR.includes(cefr.toUpperCase())) {
       errors.push('cefr نامعتبر: ' + cefr);
     }
 
     const meaningsRaw = fields[meaningsIdx] ?? '';
-    const meanings = meaningsRaw.split('|').map((m) => m.trim()).filter(Boolean);
+    const meanings = meaningsRaw
+      .split('|')
+      .map((m) => m.trim())
+      .filter(Boolean);
     if (meanings.length === 0) {
       errors.push('حداقل یک معنی فارسی لازم است');
     }
 
-    const exDe = exDeIdx >= 0 ? (fields[exDeIdx] || null) : null;
-    const exFa = exFaIdx >= 0 ? (fields[exFaIdx] || null) : null;
+    const exDe = exDeIdx >= 0 ? fields[exDeIdx] || null : null;
+    const exFa = exFaIdx >= 0 ? fields[exFaIdx] || null : null;
 
     const duplicate = existingSet.has(lemma.toLowerCase());
 
@@ -192,7 +198,7 @@ export async function POST(request: Request) {
 
 async function handleConfirmImport(request: Request) {
   const pool = getPool();
-  const body = await request.json() as {
+  const body = (await request.json()) as {
     pack_id: string;
     cards: ParsedCard[];
   };

@@ -219,7 +219,12 @@ export function PackBuilder() {
     }
   }
 
-  if (loading) return <div className="pack-builder"><p>در حال بارگذاری...</p></div>;
+  if (loading)
+    return (
+      <div className="pack-builder">
+        <p>در حال بارگذاری...</p>
+      </div>
+    );
 
   return (
     <div className="pack-builder">
@@ -230,7 +235,11 @@ export function PackBuilder() {
         </button>
       </div>
 
-      {error && <div className="pack-error">{error} <button onClick={() => setError(null)}>✕</button></div>}
+      {error && (
+        <div className="pack-error">
+          {error} <button onClick={() => setError(null)}>✕</button>
+        </div>
+      )}
 
       {showCreate && (
         <form className="pack-create-form" onSubmit={createPack}>
@@ -257,8 +266,15 @@ export function PackBuilder() {
             </label>
             <label>
               سطح CEFR
-              <select value={newPack.target_cefr} onChange={(e) => setNewPack({ ...newPack, target_cefr: e.target.value })}>
-                {cefrOptions.map((c) => <option key={c} value={c}>{c}</option>)}
+              <select
+                value={newPack.target_cefr}
+                onChange={(e) => setNewPack({ ...newPack, target_cefr: e.target.value })}
+              >
+                {cefrOptions.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
               </select>
             </label>
             <label>
@@ -269,7 +285,9 @@ export function PackBuilder() {
                 max={500}
                 required
                 value={newPack.target_item_count}
-                onChange={(e) => setNewPack({ ...newPack, target_item_count: Number(e.target.value) })}
+                onChange={(e) =>
+                  setNewPack({ ...newPack, target_item_count: Number(e.target.value) })
+                }
               />
             </label>
             <label>
@@ -308,7 +326,9 @@ export function PackBuilder() {
               rows={3}
             />
           </label>
-          <button className="pack-btn pack-btn-primary" type="submit">ساخت بسته</button>
+          <button className="pack-btn pack-btn-primary" type="submit">
+            ساخت بسته
+          </button>
         </form>
       )}
 
@@ -326,9 +346,17 @@ export function PackBuilder() {
               </div>
               {pack.description && <p className="pack-desc">{pack.description}</p>}
               <div className="pack-meta">
-                <span>📚 {pack.card_count}/{pack.target_item_count} کلمه</span>
+                <span>
+                  📚 {pack.card_count}/{pack.target_item_count} کلمه
+                </span>
                 <span>🎯 {pack.target_cefr}</span>
-                <span>{pack.is_free ? '🆓 رایگان' : pack.price_tomans ? `💰 ${Number(pack.price_tomans).toLocaleString('fa-IR')} تومان` : '💰 قیمت‌گذاری نشده'}</span>
+                <span>
+                  {pack.is_free
+                    ? '🆓 رایگان'
+                    : pack.price_tomans
+                      ? `💰 ${Number(pack.price_tomans).toLocaleString('fa-IR')} تومان`
+                      : '💰 قیمت‌گذاری نشده'}
+                </span>
                 <span>📅 {new Date(pack.created_at).toLocaleDateString('fa-IR')}</span>
               </div>
               {pack.ai_prompt && (
@@ -360,14 +388,12 @@ export function PackBuilder() {
                     }}
                   />
                 </label>
-                <a
-                  className="pack-btn pack-btn-template"
-                  href="/api/packs?template=csv"
-                  download
-                >
+                <a className="pack-btn pack-btn-template" href="/api/packs?template=csv" download>
                   ⬇️ دانلود قالب
                 </a>
-                {(pack.status === 'ai_generated' || pack.status === 'approved' || pack.status === 'needs_review') && (
+                {(pack.status === 'ai_generated' ||
+                  pack.status === 'approved' ||
+                  pack.status === 'needs_review') && (
                   <button
                     className="pack-btn pack-btn-publish"
                     onClick={() => publishPack(pack.id)}
@@ -381,7 +407,9 @@ export function PackBuilder() {
                     onClick={() => generateCards(pack.id)}
                     disabled={generating === pack.id}
                   >
-                    {generating === pack.id ? '⏳ ...' : `🤖 تکمیل (${pack.target_item_count - Number(pack.card_count)} مانده)`}
+                    {generating === pack.id
+                      ? '⏳ ...'
+                      : `🤖 تکمیل (${pack.target_item_count - Number(pack.card_count)} مانده)`}
                   </button>
                 )}
               </div>
@@ -391,26 +419,43 @@ export function PackBuilder() {
                   <h4>📋 پیش‌نمایش وارد کردن</h4>
                   <div className="csv-stats">
                     <span className="csv-stat-valid">✅ {importPreview.valid} معتبر</span>
-                    {importPreview.duplicates > 0 && <span className="csv-stat-dup">⚠️ {importPreview.duplicates} تکراری</span>}
-                    {importPreview.errors > 0 && <span className="csv-stat-err">❌ {importPreview.errors} خطا</span>}
+                    {importPreview.duplicates > 0 && (
+                      <span className="csv-stat-dup">⚠️ {importPreview.duplicates} تکراری</span>
+                    )}
+                    {importPreview.errors > 0 && (
+                      <span className="csv-stat-err">❌ {importPreview.errors} خطا</span>
+                    )}
                   </div>
                   <div className="csv-cards-list">
                     {importPreview.cards.map((c, i) => (
-                      <div key={i} className={`csv-card-row ${c.errors.length ? 'has-error' : ''} ${c.duplicate ? 'is-dup' : ''}`}>
+                      <div
+                        key={i}
+                        className={`csv-card-row ${c.errors.length ? 'has-error' : ''} ${c.duplicate ? 'is-dup' : ''}`}
+                      >
                         <span className="csv-row-num">{c.row}</span>
                         <strong>{c.lemma}</strong>
                         <span className="csv-meanings">{c.meanings.join('، ')}</span>
                         <span className="csv-cefr">{c.cefr}</span>
                         {c.duplicate && <span className="csv-badge csv-badge-dup">تکراری</span>}
-                        {c.errors.map((e, j) => <span key={j} className="csv-badge csv-badge-err">{e}</span>)}
+                        {c.errors.map((e, j) => (
+                          <span key={j} className="csv-badge csv-badge-err">
+                            {e}
+                          </span>
+                        ))}
                       </div>
                     ))}
                   </div>
                   <div className="csv-actions">
-                    <button className="pack-btn pack-btn-primary" onClick={confirmImport} disabled={importPreview.valid === 0}>
+                    <button
+                      className="pack-btn pack-btn-primary"
+                      onClick={confirmImport}
+                      disabled={importPreview.valid === 0}
+                    >
                       ✅ تأیید و ذخیره {importPreview.valid} کلمه
                     </button>
-                    <button className="pack-btn" onClick={() => setImportPreview(null)}>انصراف</button>
+                    <button className="pack-btn" onClick={() => setImportPreview(null)}>
+                      انصراف
+                    </button>
                   </div>
                 </div>
               )}

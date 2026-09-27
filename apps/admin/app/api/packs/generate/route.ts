@@ -31,7 +31,7 @@ export async function POST(request: Request) {
 
   const pool = getPool();
   try {
-    const body = await request.json() as {
+    const body = (await request.json()) as {
       pack_id: string;
       prompt?: string;
     };
@@ -57,10 +57,13 @@ export async function POST(request: Request) {
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
-      return Response.json({
-        error: 'api_key_missing',
-        message: 'کلید API هوش مصنوعی تنظیم نشده. ANTHROPIC_API_KEY را در Vercel اضافه کنید.',
-      }, { status: 503 });
+      return Response.json(
+        {
+          error: 'api_key_missing',
+          message: 'کلید API هوش مصنوعی تنظیم نشده. ANTHROPIC_API_KEY را در Vercel اضافه کنید.',
+        },
+        { status: 503 },
+      );
     }
 
     const systemPrompt = `You are a German language expert creating vocabulary cards for Persian-speaking learners.
@@ -97,15 +100,21 @@ Avoid duplicate lemmas. Make sure examples are natural and useful for ${pack.tar
     if (!response.ok) {
       const errText = await response.text();
       console.error('[ai-generate] Claude API error:', response.status, errText);
-      return Response.json({ error: 'ai_error', message: 'خطا در ارتباط با هوش مصنوعی' }, { status: 502 });
+      return Response.json(
+        { error: 'ai_error', message: 'خطا در ارتباط با هوش مصنوعی' },
+        { status: 502 },
+      );
     }
 
-    const aiResult = await response.json() as {
+    const aiResult = (await response.json()) as {
       content: { type: string; text: string }[];
     };
     const textContent = aiResult.content.find((c: { type: string }) => c.type === 'text');
     if (!textContent) {
-      return Response.json({ error: 'ai_empty', message: 'پاسخ هوش مصنوعی خالی بود' }, { status: 502 });
+      return Response.json(
+        { error: 'ai_empty', message: 'پاسخ هوش مصنوعی خالی بود' },
+        { status: 502 },
+      );
     }
 
     let generatedCards: {
@@ -126,7 +135,10 @@ Avoid duplicate lemmas. Make sure examples are natural and useful for ${pack.tar
       if (jsonMatch) {
         generatedCards = JSON.parse(jsonMatch[0]);
       } else {
-        return Response.json({ error: 'ai_parse_error', message: 'پاسخ هوش مصنوعی قابل پردازش نبود' }, { status: 502 });
+        return Response.json(
+          { error: 'ai_parse_error', message: 'پاسخ هوش مصنوعی قابل پردازش نبود' },
+          { status: 502 },
+        );
       }
     }
 

@@ -41,10 +41,16 @@ export default function BootstrapPage() {
     return (
       <main className="admin-auth-shell">
         <section className="admin-auth-card" aria-labelledby="bootstrap-title">
-          <span className="admin-auth-mark" aria-hidden="true">✅</span>
+          <span className="admin-auth-mark" aria-hidden="true">
+            ✅
+          </span>
           <h1 id="bootstrap-title">ثبت Passkey موفق</h1>
           <p>Passkey مدیر با موفقیت ثبت شد. اکنون می‌توانید وارد شوید.</p>
-          <a href="/" className="admin-auth-button" style={{ textDecoration: 'none', textAlign: 'center', display: 'block' }}>
+          <a
+            href="/"
+            className="admin-auth-button"
+            style={{ textDecoration: 'none', textAlign: 'center', display: 'block' }}
+          >
             ورود به پنل مدیر
           </a>
         </section>
@@ -55,7 +61,9 @@ export default function BootstrapPage() {
   return (
     <main className="admin-auth-shell">
       <section className="admin-auth-card" aria-labelledby="bootstrap-title">
-        <span className="admin-auth-mark" aria-hidden="true">🔐</span>
+        <span className="admin-auth-mark" aria-hidden="true">
+          🔐
+        </span>
         <h1 id="bootstrap-title">ثبت اولیه Passkey مدیر</h1>
         <p>برای راه‌اندازی اولیه، کد امنیتی Bootstrap را وارد کنید.</p>
         <input

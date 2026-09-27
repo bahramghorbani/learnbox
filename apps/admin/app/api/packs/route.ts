@@ -67,7 +67,7 @@ export async function POST(request: Request) {
 
   const pool = getPool();
   try {
-    const body = await request.json() as {
+    const body = (await request.json()) as {
       display_name: string;
       description?: string;
       locale?: string;
@@ -79,11 +79,14 @@ export async function POST(request: Request) {
       ai_prompt?: string;
     };
 
-    const id = body.display_name
-      .toLowerCase()
-      .replace(/[^a-z0-9\u0600-\u06FF]+/g, '_')
-      .replace(/^_|_$/g, '')
-      .substring(0, 60) + '_' + Date.now().toString(36);
+    const id =
+      body.display_name
+        .toLowerCase()
+        .replace(/[^a-z0-9\u0600-\u06FF]+/g, '_')
+        .replace(/^_|_$/g, '')
+        .substring(0, 60) +
+      '_' +
+      Date.now().toString(36);
 
     const result = await pool.query(
       `INSERT INTO packs (id, display_name, description, locale, target_cefr, target_item_count, category, is_free, price_tomans, ai_prompt, status)
@@ -117,7 +120,7 @@ export async function PATCH(request: Request) {
 
   const pool = getPool();
   try {
-    const body = await request.json() as { pack_id: string; status: string };
+    const body = (await request.json()) as { pack_id: string; status: string };
     const validStatuses = ['draft', 'ai_generated', 'needs_review', 'approved', 'published'];
     if (!validStatuses.includes(body.status)) {
       return Response.json({ error: 'invalid_status' }, { status: 400 });
@@ -135,11 +138,14 @@ export async function PATCH(request: Request) {
 
     // If publishing, also publish all cards in the pack
     if (body.status === 'published') {
-      await pool.query(`
+      await pool.query(
+        `
         UPDATE card_versions SET status = 'published', published_at = now()
         WHERE card_id IN (SELECT card_id FROM pack_cards WHERE pack_id = $1)
         AND status != 'published'
-      `, [body.pack_id]);
+      `,
+        [body.pack_id],
+      );
     }
 
     return Response.json({ pack: result.rows[0] });

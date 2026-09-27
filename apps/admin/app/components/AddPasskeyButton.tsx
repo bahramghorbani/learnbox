@@ -47,7 +47,11 @@ export function AddPasskeyButton() {
         onClick={handleAdd}
         disabled={state === 'loading' || state === 'success'}
       >
-        {state === 'loading' ? 'در حال ثبت...' : state === 'success' ? '✅ ثبت شد' : '➕ افزودن Passkey جدید'}
+        {state === 'loading'
+          ? 'در حال ثبت...'
+          : state === 'success'
+            ? '✅ ثبت شد'
+            : '➕ افزودن Passkey جدید'}
       </button>
       {message && (
         <p className={`add-passkey-message ${state === 'error' ? 'error' : 'success'}`}>

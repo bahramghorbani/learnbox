@@ -10,7 +10,10 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 function getPool() {
-  return getSharedAdminDatabasePool(readAdminDatabaseConfig(process.env), (c: Record<string, unknown>) => new Pool(c));
+  return getSharedAdminDatabasePool(
+    readAdminDatabaseConfig(process.env),
+    (c: Record<string, unknown>) => new Pool(c),
+  );
 }
 
 async function requireSession(request: Request) {

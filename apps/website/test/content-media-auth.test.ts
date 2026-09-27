@@ -101,8 +101,8 @@ describe('content-media auth gate — denied kinds', () => {
 
   it('denies sentence-audio without session', async () => {
     process.env.LEARNBOX_SESSION_SECRET = 'test-secret-long-enough-for-hmac-operations-ok';
-    expect(
-      (await GET(makeRequest(), makeContext('start-a1-haus', 'sentence-audio'))).status,
-    ).toBe(401);
+    expect((await GET(makeRequest(), makeContext('start-a1-haus', 'sentence-audio'))).status).toBe(
+      401,
+    );
   });
 });

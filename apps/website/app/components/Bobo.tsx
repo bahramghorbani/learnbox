@@ -4,13 +4,7 @@ import Image from 'next/image';
 import { useEffect, useState } from 'react';
 
 export type BoboAnimation =
-  | 'float'
-  | 'slideIn'
-  | 'jumpUp'
-  | 'headShake'
-  | 'dance'
-  | 'wiggle'
-  | 'none';
+  'float' | 'slideIn' | 'jumpUp' | 'headShake' | 'dance' | 'wiggle' | 'none';
 
 type BoboExpression = 'welcome' | 'encourage' | 'celebrate' | 'recovery' | 'focus';
 

@@ -29,7 +29,7 @@ describe('ProgressScreen', () => {
     // New ProgressScreen: shows streak and pending-count; no old device/server labels
     expect(rendered.text()).toContain('۳ پاسخ فقط روی این دستگاه ذخیره شده است.');
     expect(rendered.text()).toContain('ادامهٔ مرور');
-    expect(rendered.text()).toContain('۱');  // streak days
+    expect(rendered.text()).toContain('۱'); // streak days
   });
 
   it('shows a fresh-start message when nothing is reviewed yet', async () => {

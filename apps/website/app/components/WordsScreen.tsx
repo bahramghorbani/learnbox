@@ -104,7 +104,12 @@ interface WordsScreenProps {
 export function WordsScreen({ onNavigate, onStartReview }: WordsScreenProps) {
   const [packs, setPacks] = useState<WordPack[]>([]);
   const [words, setWords] = useState<WordItem[]>([]);
-  const [summary, setSummary] = useState<WordsSummary>({ total: 0, mastered: 0, learning: 0, new: 0 });
+  const [summary, setSummary] = useState<WordsSummary>({
+    total: 0,
+    mastered: 0,
+    learning: 0,
+    new: 0,
+  });
   const [loading, setLoading] = useState(true);
   const [packFilter, setPackFilter] = useState<string | null>(null);
   const [sortMode, setSortMode] = useState<SortMode>('weakest');
@@ -119,7 +124,13 @@ export function WordsScreen({ onNavigate, onStartReview }: WordsScreenProps) {
       const res = await fetch(url);
       if (res.ok) {
         const json = await res.json();
-        console.log('[words] API response:', json.words?.length, 'words,', json.packs?.length, 'packs');
+        console.log(
+          '[words] API response:',
+          json.words?.length,
+          'words,',
+          json.packs?.length,
+          'packs',
+        );
         setPacks(json.packs ?? []);
         setWords(json.words ?? []);
         setSummary(json.summary ?? { total: 0, mastered: 0, learning: 0, new: 0 });
@@ -141,7 +152,8 @@ export function WordsScreen({ onNavigate, onStartReview }: WordsScreenProps) {
     ? words.filter((w) => `${w.german} ${w.persian}`.toLocaleLowerCase().includes(query))
     : words;
   const sortedWords = sortWords(filteredWords, sortMode);
-  const progressPercent = summary.total > 0 ? Math.round((summary.mastered / summary.total) * 100) : 0;
+  const progressPercent =
+    summary.total > 0 ? Math.round((summary.mastered / summary.total) * 100) : 0;
 
   return (
     <main className="app-shell words-shell" data-testid="learnbox-words-v2">
@@ -154,19 +166,20 @@ export function WordsScreen({ onNavigate, onStartReview }: WordsScreenProps) {
         <div className="words-v2-header">
           <h1>واژه‌های من</h1>
           <div className="words-v2-progress-bar">
-            <div
-              className="words-v2-progress-fill"
-              style={{ width: `${progressPercent}%` }}
-            />
+            <div className="words-v2-progress-fill" style={{ width: `${progressPercent}%` }} />
           </div>
           <p className="words-v2-progress-text">
-            {toPersianDigits(summary.mastered)} از {toPersianDigits(summary.total)} واژه مسلط شده
-            ({toPersianDigits(progressPercent)}٪)
+            {toPersianDigits(summary.mastered)} از {toPersianDigits(summary.total)} واژه مسلط شده (
+            {toPersianDigits(progressPercent)}٪)
           </p>
           <div className="words-v2-summary-chips">
             <span className="words-chip words-chip-new">جدید: {toPersianDigits(summary.new)}</span>
-            <span className="words-chip words-chip-learning">یادگیری: {toPersianDigits(summary.learning)}</span>
-            <span className="words-chip words-chip-mastered">مسلط: {toPersianDigits(summary.mastered)}</span>
+            <span className="words-chip words-chip-learning">
+              یادگیری: {toPersianDigits(summary.learning)}
+            </span>
+            <span className="words-chip words-chip-mastered">
+              مسلط: {toPersianDigits(summary.mastered)}
+            </span>
           </div>
         </div>
 
@@ -235,9 +248,7 @@ export function WordsScreen({ onNavigate, onStartReview }: WordsScreenProps) {
         </div>
 
         {/* Word count */}
-        <p className="words-v2-count">
-          {toPersianDigits(sortedWords.length)} واژه
-        </p>
+        <p className="words-v2-count">{toPersianDigits(sortedWords.length)} واژه</p>
 
         {/* Word list */}
         {loading ? (
@@ -255,10 +266,7 @@ export function WordsScreen({ onNavigate, onStartReview }: WordsScreenProps) {
                 type="button"
                 onClick={() => setSelectedWord(word)}
               >
-                <span
-                  className="words-v2-box-badge"
-                  style={{ background: word.boxColor }}
-                >
+                <span className="words-v2-box-badge" style={{ background: word.boxColor }}>
                   {word.box === 0 ? '✦' : toPersianDigits(word.box)}
                 </span>
                 <span className="words-v2-word-info">
@@ -312,18 +320,24 @@ export function WordsScreen({ onNavigate, onStartReview }: WordsScreenProps) {
             <div className="words-v2-modal-stats">
               <div className="words-v2-stat-row">
                 <span className="words-v2-stat-icon">📦</span>
-                <span>جعبه {selectedWord.box === 0 ? '—' : toPersianDigits(selectedWord.box)} از ۵</span>
+                <span>
+                  جعبه {selectedWord.box === 0 ? '—' : toPersianDigits(selectedWord.box)} از ۵
+                </span>
                 <span className="words-v2-stat-value">{selectedWord.boxLabel}</span>
               </div>
               <div className="words-v2-stat-row">
                 <span className="words-v2-stat-icon">🔄</span>
                 <span>تعداد مرور</span>
-                <span className="words-v2-stat-value">{toPersianDigits(selectedWord.reviewCount)} بار</span>
+                <span className="words-v2-stat-value">
+                  {toPersianDigits(selectedWord.reviewCount)} بار
+                </span>
               </div>
               <div className="words-v2-stat-row">
                 <span className="words-v2-stat-icon">❌</span>
                 <span>فراموش شده</span>
-                <span className="words-v2-stat-value">{toPersianDigits(selectedWord.forgotCount)} بار</span>
+                <span className="words-v2-stat-value">
+                  {toPersianDigits(selectedWord.forgotCount)} بار
+                </span>
               </div>
               <div className="words-v2-stat-row">
                 <span className="words-v2-stat-icon">📅</span>

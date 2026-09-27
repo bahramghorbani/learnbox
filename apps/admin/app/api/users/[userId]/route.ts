@@ -25,10 +25,7 @@ async function requireSession(request: Request) {
   return session;
 }
 
-export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ userId: string }> },
-) {
+export async function GET(request: Request, { params }: { params: Promise<{ userId: string }> }) {
   const session = await requireSession(request);
   if (!session) return new Response('Unauthorized', { status: 401 });
 
@@ -39,20 +36,26 @@ export async function GET(
     const user = await pool.query('SELECT * FROM users WHERE id = $1', [userId]);
     if (user.rows.length === 0) return Response.json({ error: 'not_found' }, { status: 404 });
 
-    const stats = await pool.query(`
+    const stats = await pool.query(
+      `
       SELECT
         (SELECT count(*) FROM card_schedules WHERE user_id = $1) as cards_started,
         (SELECT count(*) FROM review_events WHERE user_id = $1) as total_reviews,
         (SELECT max(created_at) FROM review_events WHERE user_id = $1) as last_review_at
-    `, [userId]);
+    `,
+      [userId],
+    );
 
-    const recentReviews = await pool.query(`
+    const recentReviews = await pool.query(
+      `
       SELECT card_id, rating, created_at
       FROM review_events
       WHERE user_id = $1
       ORDER BY created_at DESC
       LIMIT 20
-    `, [userId]);
+    `,
+      [userId],
+    );
 
     return Response.json({
       user: user.rows[0],
@@ -65,16 +68,13 @@ export async function GET(
   }
 }
 
-export async function PATCH(
-  request: Request,
-  { params }: { params: Promise<{ userId: string }> },
-) {
+export async function PATCH(request: Request, { params }: { params: Promise<{ userId: string }> }) {
   const session = await requireSession(request);
   if (!session) return new Response('Unauthorized', { status: 401 });
 
   const { userId } = await params;
   const pool = getPool();
-  const body = await request.json() as { action: string };
+  const body = (await request.json()) as { action: string };
 
   try {
     if (body.action === 'reset_progress') {

@@ -41,10 +41,9 @@ export function createDatabaseSplashStorage(pool: DatabasePool) {
     },
     async delete(objectKey: string): Promise<void> {
       pendingUploads.delete(objectKey);
-      await pool.query(
-        'UPDATE splash_versions SET image_data = NULL WHERE object_key = $1',
-        [objectKey],
-      );
+      await pool.query('UPDATE splash_versions SET image_data = NULL WHERE object_key = $1', [
+        objectKey,
+      ]);
     },
   };
 }
@@ -59,9 +58,9 @@ export async function flushPendingSplashImage(
 ): Promise<void> {
   const bytes = pendingUploads.get(objectKey);
   if (!bytes) return;
-  await pool.query(
-    'UPDATE splash_versions SET image_data = $1 WHERE object_key = $2',
-    [bytes, objectKey],
-  );
+  await pool.query('UPDATE splash_versions SET image_data = $1 WHERE object_key = $2', [
+    bytes,
+    objectKey,
+  ]);
   pendingUploads.delete(objectKey);
 }

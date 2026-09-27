@@ -145,7 +145,11 @@ export function UsersManagement() {
         />
       </div>
 
-      {error && <p className="users-error" role="alert">{error}</p>}
+      {error && (
+        <p className="users-error" role="alert">
+          {error}
+        </p>
+      )}
 
       {loading ? (
         <p className="users-loading">در حال بارگذاری...</p>
@@ -199,7 +203,9 @@ export function UsersManagement() {
               ))}
               {users.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="users-empty">کاربری یافت نشد.</td>
+                  <td colSpan={8} className="users-empty">
+                    کاربری یافت نشد.
+                  </td>
                 </tr>
               )}
             </tbody>
@@ -216,15 +222,35 @@ export function UsersManagement() {
               <>
                 <div className="user-detail-header">
                   <h3>جزئیات کاربر</h3>
-                  <button type="button" onClick={() => setSelectedUser(null)}>✕</button>
+                  <button type="button" onClick={() => setSelectedUser(null)}>
+                    ✕
+                  </button>
                 </div>
                 <dl className="user-detail-info">
-                  <div><dt>شماره</dt><dd dir="ltr">{formatPhone(selectedUser.user.phone_e164)}</dd></div>
-                  <div><dt>نام</dt><dd>{selectedUser.user.first_name ?? '—'}</dd></div>
-                  <div><dt>ثبت‌نام</dt><dd>{formatDate(selectedUser.user.created_at)}</dd></div>
-                  <div><dt>کارت‌های شروع‌شده</dt><dd>{selectedUser.stats.cards_started}</dd></div>
-                  <div><dt>کل مرورها</dt><dd>{selectedUser.stats.total_reviews}</dd></div>
-                  <div><dt>آخرین مرور</dt><dd>{formatDate(selectedUser.stats.last_review_at)}</dd></div>
+                  <div>
+                    <dt>شماره</dt>
+                    <dd dir="ltr">{formatPhone(selectedUser.user.phone_e164)}</dd>
+                  </div>
+                  <div>
+                    <dt>نام</dt>
+                    <dd>{selectedUser.user.first_name ?? '—'}</dd>
+                  </div>
+                  <div>
+                    <dt>ثبت‌نام</dt>
+                    <dd>{formatDate(selectedUser.user.created_at)}</dd>
+                  </div>
+                  <div>
+                    <dt>کارت‌های شروع‌شده</dt>
+                    <dd>{selectedUser.stats.cards_started}</dd>
+                  </div>
+                  <div>
+                    <dt>کل مرورها</dt>
+                    <dd>{selectedUser.stats.total_reviews}</dd>
+                  </div>
+                  <div>
+                    <dt>آخرین مرور</dt>
+                    <dd>{formatDate(selectedUser.stats.last_review_at)}</dd>
+                  </div>
                 </dl>
 
                 {Number(selectedUser.stats.total_reviews) > 0 && (
