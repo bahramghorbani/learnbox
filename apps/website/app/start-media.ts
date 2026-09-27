@@ -1,6 +1,6 @@
 import type { LearnerAuthMode } from './learner-auth-mode';
 
-export type StartMediaMode = 'placeholder' | 'local-preview' | 'private-session' | 'bundled';
+export type StartMediaMode = 'placeholder' | 'local-preview' | 'private-session' | 'server-media';
 
 export type StartMediaSources = {
   image?: string;
@@ -21,25 +21,26 @@ export function resolveStartMediaMode({
   authMode,
   hostname,
 }: StartMediaModeInput): StartMediaMode {
+  // Private Vercel Blob delivery: exact flag 'true' (case-sensitive) AND server-otp only.
+  // Auth boundary is enforced server-side on every media route — not by hostname.
   if (privateMediaFlag === 'true' && authMode === 'server-otp') return 'private-session';
+  // VPS filesystem delivery uses its own authenticated server route.
+  if (authMode === 'server-otp') return 'server-media';
+  // Local filesystem preview: localhost dev only.
   if (hostname === 'localhost' || hostname === '127.0.0.1') return 'local-preview';
-  // Production VPS: not localhost, not Vercel
-  if (!hostname.endsWith('.vercel.app')) return 'bundled';
+  // All other cases: no media sources (UI shows placeholder).
   return 'placeholder';
 }
 
 export function buildStartMediaSources(contentId: string, mode: StartMediaMode): StartMediaSources {
   if (mode === 'placeholder' || !validContentId.test(contentId)) return {};
 
-  if (mode === 'bundled') {
-    return {
-      image: `/api/content-media/${contentId}/image`,
-      wordAudio: `/api/content-media/${contentId}/word-audio`,
-      sentenceAudio: `/api/content-media/${contentId}/sentence-audio`,
-    };
-  }
-
-  const route = mode === 'private-session' ? 'private-media' : 'local-preview-media';
+  const route =
+    mode === 'private-session'
+      ? 'private-media'
+      : mode === 'server-media'
+        ? 'content-media'
+        : 'local-preview-media';
   const basePath = `/api/${route}/${contentId}`;
   return {
     image: `${basePath}/image`,

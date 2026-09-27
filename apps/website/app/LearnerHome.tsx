@@ -44,7 +44,8 @@ import { SupportivePlusOffer } from './components/SupportivePlusOffer';
 import { personalWordLimit } from './product-experience';
 import { resolveSupportivePlusOffer } from './paywall';
 import { buildStartMediaSources, resolveStartMediaMode, type StartMediaMode } from './start-media';
-import { resolveStartSliceItem, selectTodayStartSession, stagedStartSlice } from './start-slice';
+import { StartMediaVisual } from './components/StartMediaVisual';
+import type { StartSliceItem } from './start-slice';
 import {
   deriveWebSessionItems,
   fetchWebLearnerState,
@@ -68,13 +69,13 @@ type QueuedPersonalVocabulary = PersonalVocabularyEntry & {
   savedAt: string;
 };
 
-const reviewSyncStorageKey = 'learnbox:review-sync:v1:local-prototype';
-const personalVocabularyStorageKey = 'learnbox:personal-vocabulary:v1:local-prototype';
-const personalVocabularySyncStorageKey = 'learnbox:personal-vocabulary-sync:v1:local-prototype';
-const onboardingGoalStorageKey = 'learnbox:onboarding-goal:v1:local-prototype';
-const reviewSessionStorageKey = 'learnbox:review-session:v1:local-prototype';
-const dailyReviewStorageKey = 'learnbox:daily-review:v1:local-prototype';
-const learningStreakStorageKey = 'learnbox:learning-streak:v1:local-prototype';
+const baseReviewSyncStorageKey = 'learnbox:review-sync:v1:local-prototype';
+const basePersonalVocabularyStorageKey = 'learnbox:personal-vocabulary:v1:local-prototype';
+const basePersonalVocabularySyncStorageKey = 'learnbox:personal-vocabulary-sync:v1:local-prototype';
+const baseOnboardingGoalStorageKey = 'learnbox:onboarding-goal:v1:local-prototype';
+const baseReviewSessionStorageKey = 'learnbox:review-session:v1:local-prototype';
+const baseDailyReviewStorageKey = 'learnbox:daily-review:v1:local-prototype';
+const baseLearningStreakStorageKey = 'learnbox:learning-streak:v1:local-prototype';
 const temporaryDeviceStorage = createMemoryStorage();
 
 function getDeviceStorage(): DeviceStorage {
@@ -85,12 +86,6 @@ function getDeviceStorage(): DeviceStorage {
     return temporaryDeviceStorage;
   }
 }
-
-const canonicalStartWords = stagedStartSlice.slice(0, 3).map((item) => ({
-  german: item.article ? `${item.article} ${item.german}` : item.german,
-  persian: item.persian,
-  progress: 0,
-}));
 
 const grades: Array<{ id: Grade; label: string; detail: string }> = [
   { id: 'forgot', label: 'فراموش کردم', detail: 'زودتر دوباره می‌بینیمش.' },
@@ -103,6 +98,8 @@ type LearnerHomeProps = {
   hostname?: string;
   otpUiFlag?: string;
   privateMediaFlag?: string;
+  /** Component-test data; never selected or bundled in the release runtime. */
+  testStudyItems?: StartSliceItem[];
   inviteFlag?: string;
   profileIdentityFlag?: string;
 };
@@ -111,36 +108,46 @@ export function LearnerHome({
   hostname,
   otpUiFlag = process.env.NEXT_PUBLIC_LEARNBOX_OTP_UI_ENABLED,
   privateMediaFlag = process.env.NEXT_PUBLIC_LEARNBOX_PRIVATE_MEDIA_ENABLED,
+  testStudyItems,
   inviteFlag = process.env.NEXT_PUBLIC_LEARNBOX_ALPHA_INVITE_UI_ENABLED,
   profileIdentityFlag = process.env.NEXT_PUBLIC_LEARNBOX_PROFILE_IDENTITY_ENABLED,
 }: LearnerHomeProps = {}) {
   // Force inline: Next.js only inlines direct process.env.NEXT_PUBLIC_* references
   // These constants ensure the values are always available regardless of build tooling
   const resolvedOtpFlag = process.env.NEXT_PUBLIC_LEARNBOX_OTP_UI_ENABLED ?? otpUiFlag ?? 'true';
-  const resolvedInviteFlag = process.env.NEXT_PUBLIC_LEARNBOX_ALPHA_INVITE_UI_ENABLED ?? inviteFlag ?? 'false';
+  const resolvedInviteFlag =
+    process.env.NEXT_PUBLIC_LEARNBOX_ALPHA_INVITE_UI_ENABLED ?? inviteFlag ?? 'false';
   const [serverSyncState, setServerSyncState] = useState<LearnerSyncState>('local-only');
   const [todayGrades, setTodayGrades] = useState<Grade[]>([]);
   const [sessionStartTime] = useState(() => Date.now());
   const [serverLastSyncedAt, setServerLastSyncedAt] = useState<string | null>(null);
-  const localStudyItems = selectTodayStartSession();
+  const [serverFaces, setServerFaces] = useState<StartSliceItem[]>([]);
   const [serverSnapshot, setServerSnapshot] = useState<
     Extract<WebLearnerStateResult, { status: 'ok' }>['snapshot'] | null
   >(null);
-  const serverSession = serverSnapshot
-    ? deriveWebSessionItems(serverSnapshot, resolveStartSliceItem)
-    : { items: [], unavailableContentIds: [] };
+  const [serverStateOwner, setServerStateOwner] = useState<string | null>(null);
   const authMode = resolveLearnerAuthMode(resolvedOtpFlag);
   const inviteGateMode = resolveInviteGateMode(resolvedInviteFlag);
   const [inviteAccepted, setInviteAccepted] = useState(inviteGateMode === 'local-prototype');
   const [authenticated, setAuthenticated] = useState(false);
+  const [sessionUserId, setSessionUserId] = useState<string | null>(null);
+  const activeSessionSubjectRef = useRef<string | null>(null);
+  activeSessionSubjectRef.current = authenticated ? sessionUserId : null;
+  const serverSession =
+    serverSnapshot && authenticated && sessionUserId !== null && serverStateOwner === sessionUserId
+      ? deriveWebSessionItems(serverSnapshot, (contentId) =>
+          serverFaces.find((face) => face.id === contentId),
+        )
+      : { items: [], unavailableContentIds: [] };
   const [authChecked, setAuthChecked] = useState(false);
   const [onboarded, setOnboarded] = useState(false);
+  const [onboardedKey, setOnboardedKey] = useState<string | null>(null);
   const [learningGoal, setLearningGoal] = useState<LearningGoal>('life');
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [wordQuery, setWordQuery] = useState('');
   const [wordSourceFilter, setWordSourceFilter] = useState<WordSourceFilter>('all');
-  const [personalWords, setPersonalWords] = useState<PersonalVocabularyEntry[]>([]);
-  const [personalWordsLoaded, setPersonalWordsLoaded] = useState(false);
+  const [personalWordsState, setPersonalWords] = useState<PersonalVocabularyEntry[]>([]);
+  const [personalWordsLoadedKey, setPersonalWordsLoadedKey] = useState<string | null>(null);
   const [pendingPersonalWordSyncCount, setPendingPersonalWordSyncCount] = useState(0);
   const [addingWord, setAddingWord] = useState(false);
   const [newGerman, setNewGerman] = useState('');
@@ -151,7 +158,7 @@ export function LearnerHome({
   >('today');
   const [flipped, setFlipped] = useState(false);
   const [grade, setGrade] = useState<Grade | null>(null);
-  const [sessionItems, setSessionItems] = useState<typeof localStudyItems | null>(null);
+  const [sessionItems, setSessionItems] = useState<StartSliceItem[] | null>(null);
   const [sessionIndex, setSessionIndex] = useState(0);
   const [reviewedToday, setReviewedToday] = useState(0);
   const [streakDays, setStreakDays] = useState(0);
@@ -184,14 +191,48 @@ export function LearnerHome({
   const learningGoalReturnTargetRef = useRef<'profile' | 'settings' | null>(null);
   const profileSettingsRowRef = useRef<HTMLButtonElement>(null);
   const profileSettingsReturnRef = useRef(false);
+  const isServerOtp = authMode === 'server-otp';
   const studyItems =
     sessionItems ??
-    (serverSyncState === 'server-backed'
+    (serverSyncState === 'server-backed' &&
+    (!isServerOtp || (sessionUserId !== null && serverStateOwner === sessionUserId))
       ? serverSession.items.map(({ item }) => item)
-      : localStudyItems);
+      : process.env.NODE_ENV === 'test'
+        ? (testStudyItems ?? [])
+        : []);
   const remainingTodayReviews = Math.max(0, studyItems.length - reviewedToday);
-  const isServerOtp = authMode === 'server-otp';
+  // Device queues and personal data must never cross authenticated accounts.
+  // Legacy unscoped keys are left intact, not silently claimed by a new user.
+  const storageScope = isServerOtp ? `:account:${sessionUserId ?? 'unverified'}` : '';
+  const reviewSyncStorageKey = baseReviewSyncStorageKey + storageScope;
+  const personalVocabularyStorageKey = basePersonalVocabularyStorageKey + storageScope;
+  const personalWords =
+    personalWordsLoadedKey === personalVocabularyStorageKey ? personalWordsState : [];
+  const personalVocabularySyncStorageKey = basePersonalVocabularySyncStorageKey + storageScope;
+  const onboardingGoalStorageKey = baseOnboardingGoalStorageKey + storageScope;
+  const reviewSessionStorageKey = baseReviewSessionStorageKey + storageScope;
+  const dailyReviewStorageKey = baseDailyReviewStorageKey + storageScope;
+  const learningStreakStorageKey = baseLearningStreakStorageKey + storageScope;
   const profileIdentityEnabled = profileIdentityFlag === 'true';
+  const previousAccountRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!isServerOtp || previousAccountRef.current === sessionUserId) return;
+    previousAccountRef.current = sessionUserId;
+    // A cookie expiry or account switch must not retain the previous learner's
+    // in-memory review, identity, metrics, or card session.
+    setSessionItems(null);
+    setScreen('today');
+    setTodayGrades([]);
+    setCompletedSessions(0);
+    setServerFaces([]);
+    setServerSnapshot(null);
+    setServerStateOwner(null);
+    setServerLastSyncedAt(null);
+    setProfileIdentity({ status: 'unavailable' });
+    setPendingReviewCount(0);
+    setPendingPersonalWordSyncCount(0);
+  }, [isServerOtp, sessionUserId]);
 
   useEffect(() => {
     if (typeof document === 'undefined') return;
@@ -235,7 +276,7 @@ export function LearnerHome({
   }, [flipped, onboarded, screen, sessionIndex]);
 
   useEffect(() => {
-    if (!authenticated || typeof window === 'undefined') return;
+    if (!authenticated || (isServerOtp && !sessionUserId) || typeof window === 'undefined') return;
     const storage = getDeviceStorage();
     setPendingReviewCount(loadSyncQueue<QueuedReview>(storage, reviewSyncStorageKey).length);
     const savedSession = loadReviewSession(storage, reviewSessionStorageKey);
@@ -245,16 +286,30 @@ export function LearnerHome({
     }
     if (savedSession) clearReviewSession(storage, reviewSessionStorageKey);
     setResumableSessionIndex(null);
-  }, [authenticated, studyItems.length]);
+  }, [
+    authenticated,
+    isServerOtp,
+    sessionUserId,
+    studyItems.length,
+    reviewSyncStorageKey,
+    reviewSessionStorageKey,
+  ]);
 
   useEffect(() => {
+    if (isServerOtp && (!authenticated || !sessionUserId)) return;
     const storage = getDeviceStorage();
     setPersonalWords(loadPersonalVocabulary(storage, personalVocabularyStorageKey));
     setPendingPersonalWordSyncCount(
       loadSyncQueue<QueuedPersonalVocabulary>(storage, personalVocabularySyncStorageKey).length,
     );
-    setPersonalWordsLoaded(true);
-  }, []);
+    setPersonalWordsLoadedKey(personalVocabularyStorageKey);
+  }, [
+    authenticated,
+    isServerOtp,
+    sessionUserId,
+    personalVocabularyStorageKey,
+    personalVocabularySyncStorageKey,
+  ]);
 
   // Restore session from cookie on page load — prevents re-login on refresh
   useEffect(() => {
@@ -265,9 +320,10 @@ export function LearnerHome({
     let cancelled = false;
     fetch('/api/auth/session', { cache: 'no-store' })
       .then((r) => r.json())
-      .then((data: { authenticated?: boolean }) => {
+      .then((data: { authenticated?: boolean; userId?: string }) => {
         if (cancelled) return;
-        if (data.authenticated) {
+        if (data.authenticated && typeof data.userId === 'string' && data.userId.length > 0) {
+          setSessionUserId(data.userId);
           setAuthenticated(true);
         }
         setAuthChecked(true);
@@ -275,19 +331,44 @@ export function LearnerHome({
       .catch(() => {
         if (!cancelled) setAuthChecked(true);
       });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
+  // OTP success happens after the initial cookie check; bind device state only
+  // after the newly issued server session identifies its account.
   useEffect(() => {
+    if (!isServerOtp || !authenticated || sessionUserId) return;
+    let cancelled = false;
+    fetch('/api/auth/session', { cache: 'no-store' })
+      .then((response) => response.json())
+      .then((data: { authenticated?: boolean; userId?: string }) => {
+        if (cancelled) return;
+        if (data.authenticated && typeof data.userId === 'string' && data.userId.length > 0)
+          setSessionUserId(data.userId);
+        else setAuthenticated(false);
+      })
+      .catch(() => {
+        if (!cancelled) setAuthenticated(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [authenticated, isServerOtp, sessionUserId]);
+
+  useEffect(() => {
+    if (isServerOtp && (!authenticated || !sessionUserId)) return;
     const progress = loadDailyReviewProgress(
       getDeviceStorage(),
       dailyReviewStorageKey,
       getLocalDateKey(),
     );
     setReviewedToday(progress?.reviewedCount ?? 0);
-  }, []);
+  }, [authenticated, isServerOtp, sessionUserId, dailyReviewStorageKey]);
 
   useEffect(() => {
+    if (isServerOtp && (!authenticated || !sessionUserId)) return;
     const now = new Date();
     setStreakDays(
       getCurrentStreakDays(
@@ -296,23 +377,24 @@ export function LearnerHome({
         getPreviousDateKey(now),
       ),
     );
-  }, []);
+  }, [authenticated, isServerOtp, sessionUserId, learningStreakStorageKey]);
 
   useEffect(() => {
-    const storedGoal = readStoredLearningGoal(getDeviceStorage());
-    if (!storedGoal) return;
-    setLearningGoal(storedGoal);
-    setOnboarded(true);
-  }, []);
+    if (isServerOtp && (!authenticated || !sessionUserId)) return;
+    const storedGoal = readStoredLearningGoal(getDeviceStorage(), onboardingGoalStorageKey);
+    setLearningGoal(storedGoal ?? 'life');
+    setOnboarded(storedGoal !== null);
+    setOnboardedKey(onboardingGoalStorageKey);
+  }, [authenticated, isServerOtp, sessionUserId, onboardingGoalStorageKey]);
 
   useEffect(() => {
     setSoundEnabled(loadSoundPreference());
   }, []);
 
   useEffect(() => {
-    if (!personalWordsLoaded) return;
-    savePersonalVocabulary(getDeviceStorage(), personalVocabularyStorageKey, personalWords);
-  }, [personalWords, personalWordsLoaded]);
+    if (personalWordsLoadedKey !== personalVocabularyStorageKey) return;
+    savePersonalVocabulary(getDeviceStorage(), personalVocabularyStorageKey, personalWordsState);
+  }, [personalWordsState, personalWordsLoadedKey, personalVocabularyStorageKey]);
 
   useEffect(() => {
     setStartMediaMode(
@@ -330,15 +412,43 @@ export function LearnerHome({
   }, [screen, sessionIndex]);
 
   const applyServerStateResult = useCallback(
-    (result: Awaited<ReturnType<typeof fetchWebLearnerState>>) => {
+    async (result: Awaited<ReturnType<typeof fetchWebLearnerState>>, expectedUserId: string) => {
+      if (activeSessionSubjectRef.current !== expectedUserId) return;
       if (result.status === 'ok') {
+        try {
+          const response = await fetch('/api/learner/cards', { cache: 'no-store' });
+          if (!response.ok) throw new Error('cards unavailable');
+          const body: unknown = await response.json();
+          if (activeSessionSubjectRef.current !== expectedUserId) return;
+          if (
+            !body ||
+            typeof body !== 'object' ||
+            !('items' in body) ||
+            !Array.isArray(body.items) ||
+            !body.items.every(isStartSliceItem)
+          )
+            throw new Error('invalid card faces');
+          setServerFaces(body.items);
+        } catch {
+          if (activeSessionSubjectRef.current !== expectedUserId) return;
+          setServerFaces([]);
+          setServerSnapshot(null);
+          setServerStateOwner(null);
+          setServerSyncState('error');
+          return;
+        }
         setServerSnapshot(result.snapshot);
+        setServerStateOwner(expectedUserId);
         setServerLastSyncedAt(new Date().toISOString());
         setServerSyncState('server-backed');
         return;
       }
+      setServerFaces([]);
       setServerSnapshot(null);
+      setServerStateOwner(null);
       if (result.status === 'unauthorized') {
+        setAuthenticated(false);
+        setSessionUserId(null);
         setServerSyncState('local-only');
         return;
       }
@@ -350,14 +460,14 @@ export function LearnerHome({
   );
 
   useEffect(() => {
-    if (!authenticated || !isServerOtp || typeof window === 'undefined') return;
+    if (!authenticated || !isServerOtp || !sessionUserId || typeof window === 'undefined') return;
     let cancelled = false;
     const readServerState = () => {
       setServerSyncState('loading');
       void fetchWebLearnerState()
         .then((result) => {
           if (cancelled) return;
-          applyServerStateResult(result);
+          void applyServerStateResult(result, sessionUserId);
         })
         .catch(() => {
           if (cancelled) return;
@@ -378,26 +488,31 @@ export function LearnerHome({
       window.removeEventListener('offline', goOffline);
       window.removeEventListener('online', goOnline);
     };
-  }, [authenticated, isServerOtp, applyServerStateResult]);
+  }, [authenticated, isServerOtp, sessionUserId, applyServerStateResult]);
 
   const retryServerStateRead = useCallback(() => {
-    if (!authenticated || !isServerOtp || typeof window === 'undefined') return;
+    if (!authenticated || !isServerOtp || !sessionUserId || typeof window === 'undefined') return;
     setServerSyncState('loading');
     void fetchWebLearnerState()
-      .then(applyServerStateResult)
+      .then((result) => applyServerStateResult(result, sessionUserId))
       .catch(() => setServerSyncState('error'));
-  }, [authenticated, isServerOtp, applyServerStateResult]);
+  }, [authenticated, isServerOtp, sessionUserId, applyServerStateResult]);
 
   const flushServerReviewQueue = useCallback(() => {
-    if (!authenticated || !isServerOtp || typeof window === 'undefined') return;
+    if (!authenticated || !isServerOtp || !sessionUserId || typeof window === 'undefined') return;
     if (reviewFlushInFlightRef.current) {
       reviewFlushQueuedRef.current = true;
       return;
     }
     reviewFlushInFlightRef.current = true;
-    void flushWebReviewQueue({ storage: getDeviceStorage(), key: reviewSyncStorageKey })
+    void flushWebReviewQueue({
+      storage: getDeviceStorage(),
+      key: reviewSyncStorageKey,
+      ownerId: sessionUserId,
+    })
       .then(
         (result) => {
+          if (activeSessionSubjectRef.current !== sessionUserId) return;
           setPendingReviewCount(result.pendingCount);
           if (result.acknowledged) retryServerStateRead();
         },
@@ -410,7 +525,7 @@ export function LearnerHome({
           requestServerReviewFlushRef.current();
         }
       });
-  }, [authenticated, isServerOtp, retryServerStateRead]);
+  }, [authenticated, isServerOtp, sessionUserId, reviewSyncStorageKey, retryServerStateRead]);
 
   requestServerReviewFlushRef.current = flushServerReviewQueue;
 
@@ -541,6 +656,7 @@ export function LearnerHome({
         {
           clientEventId,
           payload: {
+            // The review API accepts the immutable public contentId, not the DB UUID.
             cardId: studyItems[sessionIndex].id,
             grade: nextGrade,
             reviewedAt: new Date().toISOString(),
@@ -610,6 +726,17 @@ export function LearnerHome({
     setPersonalWordNotice('');
   };
 
+  const canonicalStartWords = (
+    authMode === 'server-otp'
+      ? serverFaces
+      : process.env.NODE_ENV === 'test'
+        ? (testStudyItems ?? [])
+        : []
+  ).map((item) => ({
+    german: item.article ? `${item.article} ${item.german}` : item.german,
+    persian: item.persian,
+    progress: 0,
+  }));
   const searchableWords = [...personalWords, ...canonicalStartWords];
 
   if (!inviteAccepted) {
@@ -623,6 +750,9 @@ export function LearnerHome({
 
   if (!authenticated) {
     return <AuthGate mode={authMode} onAuthenticated={() => setAuthenticated(true)} />;
+  }
+  if (isServerOtp && (!sessionUserId || onboardedKey !== onboardingGoalStorageKey)) {
+    return null;
   }
 
   if (!onboarded) {
@@ -887,20 +1017,7 @@ export function LearnerHome({
         <div className="flip-container" onClick={() => setFlipped(!flipped)}>
           <div className={`flip-inner${flipped ? ' flipped' : ''}`} style={{ minHeight: '340px' }}>
             <div className="card-face card-front">
-              <div className="card-img-strip">
-                {mediaSources.image ? (
-                  <img
-                    src={mediaSources.image}
-                    alt=""
-                    className="card-img-photo"
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none';
-                    }}
-                  />
-                ) : (
-                  <div className="card-img-icon">📖</div>
-                )}
-              </div>
+              <StartMediaVisual contentId={currentItem.id} mode={startMediaMode} />
               <div className="card-front-body">
                 <div className="card-tap-hint">👆 برای دیدن معنی لمس کن</div>
                 {currentItem.article && (
@@ -1010,7 +1127,13 @@ export function LearnerHome({
     <>
       <TodayScreen
         reviewCount={remainingTodayReviews}
-        syncState={isServerOtp ? serverSyncState : 'local-only'}
+        syncState={
+          isServerOtp
+            ? serverSyncState === 'server-backed' && serverStateOwner !== sessionUserId
+              ? 'loading'
+              : serverSyncState
+            : 'local-only'
+        }
         pendingReviewCount={pendingReviewCount}
         lastSyncedAt={serverLastSyncedAt}
         onRetryServerRead={retryServerStateRead}
@@ -1032,9 +1155,12 @@ export function LearnerHome({
   );
 }
 
-function readStoredLearningGoal(storage: Pick<Storage, 'getItem'>): LearningGoal | null {
+function readStoredLearningGoal(
+  storage: Pick<Storage, 'getItem'>,
+  key: string,
+): LearningGoal | null {
   try {
-    const value = storage.getItem(onboardingGoalStorageKey);
+    const value = storage.getItem(key);
     return value === 'life' || value === 'career' || value === 'travel' ? value : null;
   } catch {
     return null;
@@ -1072,6 +1198,29 @@ function computeLeitnerDist(grades: Grade[], totalItems: number): number[] {
   const unreviewed = Math.max(0, totalItems - reviewed);
   dist[0] += unreviewed;
   return dist;
+}
+
+function isStartSliceItem(value: unknown): value is StartSliceItem {
+  if (!value || typeof value !== 'object') return false;
+  const item = value as Record<string, unknown>;
+  return (
+    [
+      'id',
+      'article',
+      'german',
+      'germanDefinition',
+      'persian',
+      'exampleGerman',
+      'examplePersian',
+      'ipa',
+      'cefr',
+      'partOfSpeech',
+      'grammarNote',
+      'inflection',
+    ].every((key) => typeof item[key] === 'string') &&
+    Array.isArray(item.topicTags) &&
+    item.topicTags.every((tag: unknown) => typeof tag === 'string')
+  );
 }
 
 /** Compute accuracy percentage from today's grades */

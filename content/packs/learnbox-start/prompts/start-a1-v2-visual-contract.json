@@ -1,0 +1,81 @@
+{
+  "version": "v2",
+  "model": "flux.2-pro",
+  "style": "Premium soft 3D educational illustration; one dominant teaching concept; warm off-white studio ground; one subtle abstract lilac shape behind the subject; soft natural shadow; no text, letters, numbers, typography, logos, watermarks, UI, frames, labels, Bobo, or clutter.",
+  "cards": [
+    {
+      "contentId": "start-a1-haus",
+      "brief": "One friendly German-style house, large and centered, with a clear roof, door, and windows."
+    },
+    {
+      "contentId": "start-a1-tisch",
+      "brief": "One simple wooden dining table, large and centered."
+    },
+    {
+      "contentId": "start-a1-tuer",
+      "brief": "One open apartment door, large and centered, with its opening unmistakable."
+    },
+    { "contentId": "start-a1-bett", "brief": "One neatly made bed, large and centered." },
+    { "contentId": "start-a1-apfel", "brief": "One red apple, large and centered." },
+    {
+      "contentId": "start-a1-brot",
+      "brief": "One appetizing rustic loaf of bread, large and centered; no hands or packaging."
+    },
+    {
+      "contentId": "start-a1-wasser",
+      "brief": "One transparent drinking glass with a clearly visible waterline, large and centered."
+    },
+    {
+      "contentId": "start-a1-bahnhof",
+      "brief": "One clearly recognizable small German train station exterior with a short rail platform; no signs or train labels."
+    },
+    {
+      "contentId": "start-a1-schule",
+      "brief": "One clearly recognizable school building exterior with simple windows and entrance; no signs or flags."
+    },
+    {
+      "contentId": "start-a1-lernen",
+      "brief": "One blank open notebook with one pencil, large and centered, communicating study; pages are completely empty."
+    },
+    {
+      "contentId": "start-a1-wohnen",
+      "brief": "One cozy home interior with an armchair, small side table, and lamp; no people, showing a lived-in home."
+    },
+    {
+      "contentId": "start-a1-kaufen",
+      "brief": "One simple shopping basket containing bread and an apple, large and centered, clearly communicating shopping; no hands, money, or cards."
+    },
+    {
+      "contentId": "start-a1-warten",
+      "brief": "One generic adult standing calmly beside a simple bus-stop bench, clearly waiting; no bus number, sign text, or speech bubble."
+    },
+    {
+      "contentId": "start-a1-gluecklich",
+      "brief": "One generic adult with a warm joyful smile and relaxed open posture, clearly showing happiness."
+    },
+    {
+      "contentId": "start-a1-muede",
+      "brief": "One generic adult sitting beside a simple bed with a gentle yawn, clearly showing tiredness."
+    },
+    {
+      "contentId": "start-a1-klein",
+      "brief": "One tiny wooden cube beside one much larger wooden cube, making small size unmistakable."
+    },
+    {
+      "contentId": "start-a1-guten-tag",
+      "brief": "Two generic adults at a comfortable distance with a friendly gentle wave, clearly greeting each other; no speech bubble."
+    },
+    {
+      "contentId": "start-a1-wie-geht-es-ihnen",
+      "brief": "Two generic adults facing each other in a polite attentive conversation; no speech bubble or gesture implying another phrase."
+    },
+    {
+      "contentId": "start-a1-danke",
+      "brief": "One generic adult warmly receiving a small bouquet from another generic adult, clearly showing thanks; no card or writing."
+    },
+    {
+      "contentId": "start-a1-entschuldigung",
+      "brief": "One generic adult with hand gently over chest and a small respectful bowed posture, clearly communicating apology."
+    }
+  ]
+}

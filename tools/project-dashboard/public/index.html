@@ -1,0 +1,655 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <title>داشبورد توسعه‌ی LearnBox</title>
+    <style>
+      @font-face {
+        font-family: 'Vazir Dashboard';
+        src: local('Vazir'), local('Vazir Regular');
+        font-style: normal;
+        font-weight: 400;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: 'Vazir Dashboard';
+        src: local('Vazir Medium'), local('Vazir-Medium');
+        font-style: normal;
+        font-weight: 500;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: 'Vazir Dashboard';
+        src: local('Vazir Bold'), local('Vazir-Bold');
+        font-style: normal;
+        font-weight: 700;
+        font-display: swap;
+      }
+      :root {
+        --bg: #f4f6fb;
+        --card: #ffffff;
+        --ink: #1a2333;
+        --muted: #5b6472;
+        --line: #dde3ee;
+        --brand: #2f6fed;
+        --brand-ink: #ffffff;
+        --ok: #1a9e5c;
+        --warn: #c9870f;
+        --bad: #c9392b;
+        --soft: #eef2f9;
+        --shadow: 0 1px 3px rgba(20, 30, 55, 0.08);
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #10151f;
+          --card: #1a2230;
+          --ink: #e7ecf3;
+          --muted: #9aa5b4;
+          --line: #2c3849;
+          --soft: #222c3d;
+          --shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: 'Vazir Dashboard', Tahoma, 'Segoe UI', system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--ink);
+        line-height: 1.6;
+      }
+      header.top {
+        padding: 12px 18px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+        background: var(--card);
+        border-bottom: 1px solid var(--line);
+        position: sticky;
+        top: 0;
+      }
+      header.top h1 {
+        font-size: 1.1rem;
+        margin: 0;
+      }
+      .spacer {
+        flex: 1;
+      }
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 2px 10px;
+        font-size: 0.8rem;
+        color: var(--muted);
+        background: var(--soft);
+      }
+      .chip.offline {
+        border-color: var(--bad);
+        color: var(--bad);
+        background: rgba(201, 57, 43, 0.1);
+      }
+      .chip .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: currentColor;
+      }
+      .chip .dot.pulse {
+        animation: pulse 1.6s ease-in-out infinite;
+      }
+      @keyframes pulse {
+        50% {
+          opacity: 0.25;
+        }
+      }
+      main {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 16px;
+      }
+      .banner.error {
+        display: none;
+        background: rgba(201, 57, 43, 0.12);
+        border: 1px solid var(--bad);
+        color: var(--bad);
+        padding: 10px 14px;
+        border-radius: 8px;
+        margin-bottom: 14px;
+        font-size: 0.9rem;
+      }
+      section {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 16px;
+        box-shadow: var(--shadow);
+      }
+      section h2 {
+        font-size: 0.95rem;
+        margin: 0 0 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .grid-overview {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+        margin-bottom: 14px;
+      }
+      .metric .big {
+        font-size: 1.9rem;
+        font-weight: 700;
+      }
+      .metric .sub {
+        color: var(--muted);
+        font-size: 0.85rem;
+        min-height: 1.2em;
+      }
+      .bar {
+        height: 10px;
+        border-radius: 999px;
+        background: var(--soft);
+        overflow: hidden;
+        margin-top: 8px;
+      }
+      .bar-fill {
+        height: 100%;
+        border-radius: 999px;
+        background: var(--brand);
+        width: 0;
+        transition: width 0.5s ease;
+      }
+      .bar-fill.warn {
+        background: var(--warn);
+      }
+      .bar-fill.bad {
+        background: var(--bad);
+      }
+      .grid-columns {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+        margin-bottom: 14px;
+      }
+      .col-title {
+        font-weight: 700;
+        border-bottom: 1px solid var(--line);
+        padding-bottom: 6px;
+        margin-bottom: 10px;
+        display: flex;
+        justify-content: space-between;
+      }
+      .task {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 8px 10px;
+        margin-bottom: 8px;
+        background: var(--soft);
+      }
+      .task .t-title {
+        font-size: 0.9rem;
+      }
+      .task .t-note {
+        font-size: 0.78rem;
+        color: var(--muted);
+      }
+      .task .t-blocker {
+        font-size: 0.78rem;
+        color: var(--bad);
+      }
+      .task .t-percent {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: var(--brand);
+      }
+      .empty {
+        color: var(--muted);
+        font-size: 0.85rem;
+        font-style: italic;
+      }
+      .grid-bottom {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+        margin-bottom: 14px;
+      }
+      .grid-bottom .full {
+        grid-column: 1 / -1;
+      }
+      .check {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        margin-bottom: 6px;
+        padding: 6px 10px;
+        font-size: 0.85rem;
+        display: flex;
+        gap: 8px;
+        align-items: baseline;
+      }
+      .check .ok {
+        color: var(--ok);
+      }
+      .check .no {
+        color: var(--bad);
+      }
+      .check .ev {
+        color: var(--muted);
+        font-size: 0.78rem;
+      }
+      .weight {
+        margin-inline-start: auto;
+        color: var(--muted);
+        font-size: 0.78rem;
+        white-space: nowrap;
+      }
+      .muted {
+        color: var(--muted);
+      }
+      .small {
+        font-size: 0.8rem;
+      }
+      .formula {
+        font-family: Consolas, Menlo, monospace;
+        direction: ltr;
+        text-align: left;
+        background: var(--soft);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 8px 10px;
+        font-size: 0.82rem;
+      }
+      ul.flush {
+        margin: 0;
+        padding-inline-start: 18px;
+      }
+      ul.flush li {
+        font-size: 0.85rem;
+        margin-bottom: 4px;
+      }
+      table.map {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.82rem;
+      }
+      table.map th,
+      table.map td {
+        border: 1px solid var(--line);
+        padding: 4px 8px;
+        text-align: right;
+      }
+      table.map th {
+        background: var(--soft);
+      }
+      .badge.dirty {
+        color: var(--warn);
+      }
+      .badge.clean {
+        color: var(--ok);
+      }
+      footer {
+        text-align: center;
+        color: var(--muted);
+        font-size: 0.75rem;
+        padding: 16px;
+      }
+      :focus-visible {
+        outline: 3px solid var(--brand);
+        outline-offset: 2px;
+        border-radius: 4px;
+      }
+      [aria-busy='true'] {
+        opacity: 0.7;
+      }
+      @media (max-width: 840px) {
+        .grid-overview,
+        .grid-columns,
+        .grid-bottom {
+          grid-template-columns: 1fr;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          animation: none !important;
+          transition: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="top">
+      <h1>داشبورد توسعه‌ی LearnBox</h1>
+      <div class="spacer"></div>
+      <span class="chip" id="ghChip" hidden
+        ><span class="dot"></span><span id="ghChipText"></span
+      ></span>
+      <span class="chip"><span class="dot pulse"></span>به‌روزرسانی هر ۱۵ ثانیه</span>
+      <span class="chip" id="timeChip" aria-live="polite"></span>
+    </header>
+    <main id="main" aria-busy="true">
+      <div class="banner error" id="errBanner" role="alert"></div>
+
+      <div class="grid-overview">
+        <section aria-label="وظیفه‌ی فعال">
+          <h2>وظیفه‌ی فعال</h2>
+          <div class="metric">
+            <div class="big" id="activePct">—</div>
+            <div class="sub" id="activeTitle">در حال بارگیری…</div>
+          </div>
+          <div class="bar"><div class="bar-fill" id="activeBar"></div></div>
+        </section>
+        <section aria-label="پیشرفت مراحل">
+          <h2>مراحل Storyboard</h2>
+          <div class="metric">
+            <div class="big" id="storyPct">—</div>
+            <div class="sub" id="storySub">—</div>
+          </div>
+          <div class="bar"><div class="bar-fill" id="storyBar"></div></div>
+        </section>
+        <section aria-label="آمادگی انتشار کافه‌بازار">
+          <h2>آمادگی انتشار کافه‌بازار</h2>
+          <div class="metric">
+            <div class="big" id="relPct">—</div>
+            <div class="sub" id="relSub">—</div>
+          </div>
+          <div class="bar"><div class="bar-fill bad" id="relBar"></div></div>
+        </section>
+      </div>
+
+      <div class="grid-columns">
+        <section aria-labelledby="hDone">
+          <h2 id="hDone">تکمیل‌شده</h2>
+          <div id="colDone"></div>
+        </section>
+        <section aria-labelledby="hCur">
+          <h2 id="hCur">در حال انجام</h2>
+          <div id="colCur"></div>
+        </section>
+        <section aria-labelledby="hRem">
+          <h2 id="hRem">باقی‌مانده</h2>
+          <div id="colRem"></div>
+        </section>
+      </div>
+
+      <div class="grid-bottom">
+        <section aria-labelledby="hRelease">
+          <h2 id="hRelease">چک‌لیست وزنی انتشار در کافه‌بازار</h2>
+          <p class="small muted" id="relDetail">—</p>
+          <div class="formula" id="relFormula">—</div>
+          <p class="small muted">
+            <strong>موانع (blockers):</strong> موارد بدون تیک در زیر — شواهد هر مورد از مخزن است، نه
+            عدد زنده.
+          </p>
+          <div id="blockers"></div>
+        </section>
+        <section aria-labelledby="hStory">
+          <h2 id="hStory">پیشرفت مراحل</h2>
+          <p class="small muted" id="storyPath"></p>
+          <div id="storyBody"></div>
+          <h3 class="small">وظیفه‌های مراحل</h3>
+          <div id="storyTasks"></div>
+        </section>
+
+        <section aria-labelledby="hGit">
+          <h2 id="hGit">وضعیت Git</h2>
+          <div id="gitBody"></div>
+        </section>
+        <section aria-labelledby="hPr">
+          <h2 id="hPr">درخواست‌های ادغام (gh)</h2>
+          <div id="prBody"></div>
+        </section>
+
+        <section class="full" aria-labelledby="hMap">
+          <h2 id="hMap">نقشه‌ی درصد وظیفه (وضعیت ← درصد)</h2>
+          <table class="map">
+            <thead>
+              <tr>
+                <th>وضعیت</th>
+                <th>درصد</th>
+              </tr>
+            </thead>
+            <tbody id="mapBody"></tbody>
+          </table>
+        </section>
+      </div>
+    </main>
+    <footer>
+      فقط روی لوکال‌هاست — بدون تغییر خارجی و بدون سرویس Production. داده‌ی زنده از فایل‌های مخزن،
+      Git و GitHub به‌صورت فقط‌خواندنی دریافت می‌شود.
+    </footer>
+
+    <script>
+      const REFRESH_MS = 15000;
+      const $ = (id) => document.getElementById(id);
+
+      function el(tag, cls, text) {
+        const n = document.createElement(tag);
+        if (cls) n.className = cls;
+        if (text !== undefined) n.textContent = text;
+        return n;
+      }
+
+      const faN = new Intl.NumberFormat('fa-IR');
+
+      function showError(msg) {
+        const b = $('errBanner');
+        b.textContent = 'خطا در دریافت داده: ' + (msg || 'نامشخص');
+        b.style.display = 'block';
+      }
+      function hideError() {
+        $('errBanner').style.display = 'none';
+      }
+
+      function percentClass(p) {
+        return p >= 70 ? 'bar-fill' : p >= 40 ? 'bar-fill warn' : 'bar-fill bad';
+      }
+
+      function renderTaskCard(t, showPct) {
+        const card = el('div', 'task');
+        card.appendChild(el('div', 't-title', t.title || t.id));
+        if (showPct && t.percent !== undefined)
+          card.appendChild(el('div', 't-percent', faN.format(t.percent) + '٪'));
+        if (t.note) card.appendChild(el('div', 't-note', t.note));
+        if (t.blocker) card.appendChild(el('div', 't-blocker', 'مانع: ' + t.blocker));
+        return card;
+      }
+
+      function renderColumn(id, list, showPct, emptyText) {
+        const box = $(id);
+        box.textContent = '';
+        if (!list.length) {
+          box.appendChild(el('div', 'empty', emptyText));
+          return;
+        }
+        list.forEach((t) => box.appendChild(renderTaskCard(t, showPct)));
+      }
+
+      function render(d) {
+        $('main').setAttribute('aria-busy', 'false');
+        $('timeChip').textContent = new Date(d.generatedAtIso).toLocaleString('fa-IR', {
+          dateStyle: 'short',
+          timeStyle: 'medium',
+        });
+
+        // Active task
+        $('activePct').textContent = faN.format(d.activePercent) + '٪';
+        $('activeTitle').textContent = d.active
+          ? d.active.title + ' (' + d.active.status + ')'
+          : 'وظیفه‌ای تعریف نشده';
+        $('activeBar').className = 'bar-fill ' + (d.activePercent >= 70 ? '' : 'warn');
+        $('activeBar').style.width = Math.min(100, d.activePercent) + '%';
+
+        // Storyboard
+        $('storyPct').textContent = faN.format(d.storyboard.percent) + '٪';
+        $('storySub').textContent =
+          'مرحله ' +
+          faN.format(d.storyboard.currentStage) +
+          ' از ' +
+          faN.format(d.storyboard.stages) +
+          ' (باقی‌مانده: ' +
+          faN.format(d.storyboard.remaining) +
+          ')';
+        $('storyBar').style.width = Math.min(100, d.storyboard.percent) + '%';
+
+        // Release
+        $('relPct').textContent = faN.format(d.release.percent) + '٪';
+        $('relSub').textContent = d.release.detail;
+        $('relBar').style.width = Math.min(100, d.release.percent) + '%';
+        $('relDetail').textContent = 'درصد وزنی: ' + d.release.detail;
+        $('relFormula').textContent = 'فرمول: ' + d.release.formula;
+
+        // Columns
+        renderColumn('colDone', d.columns.completed, true, 'وظیفه‌ی تکمیل‌شده‌ای نیست.');
+        renderColumn('colCur', d.columns.current, true, 'وظیفه‌ی فعالی در جریان نیست.');
+        renderColumn('colRem', d.columns.remaining, false, 'وظیفه‌ای باقی نمانده است.');
+
+        // Blockers
+        const bl = $('blockers');
+        bl.textContent = '';
+        if (!d.release.blockers.length)
+          bl.appendChild(el('div', 'check', 'هیچ مانعی ثبت نشده است — آماده برای انتشار.'));
+        d.release.blockers.forEach((x) => {
+          const row = el('div', 'check');
+          row.appendChild(el('span', 'no', '✗'));
+          row.appendChild(el('span', '', x.label + ' — ' + (x.evidence || 'چک‌نشده')));
+          row.appendChild(el('span', 'weight', 'وزن ' + faN.format(x.weight)));
+          bl.appendChild(row);
+        });
+
+        // Story body
+        $('storyPath').textContent =
+          'منبع زنده: docs/storyboard/STATUS.md (سقوط به مقدار توضیح‌شده در config اگر فایل نباشد).';
+        const sbody = $('storyBody');
+        sbody.textContent = '';
+        sbody.appendChild(
+          el(
+            'div',
+            'small',
+            'مرحله‌ی فعلی: ' +
+              faN.format(d.storyboard.currentStage) +
+              ' از ' +
+              faN.format(d.storyboard.stages),
+          ),
+        );
+        sbody.appendChild(el('div', 'bar')).appendChild(
+          (() => {
+            const f = el('div', percentClass(d.storyboard.percent));
+            f.style.width = Math.min(100, d.storyboard.percent) + '%';
+            return f;
+          })(),
+        );
+
+        // Story tasks (counts from columns are a proxy; show a simple breakdown)
+        const st = $('storyTasks');
+        st.textContent = '';
+        st.appendChild(
+          el(
+            'div',
+            'small',
+            'تکمیل‌شده: ' +
+              faN.format(d.columns.completed.length) +
+              ' · در جریان: ' +
+              faN.format(d.columns.current.length) +
+              ' · باقی‌مانده: ' +
+              faN.format(d.columns.remaining.length),
+          ),
+        );
+
+        // Git
+        const g = d.live.git;
+        const gb = $('gitBody');
+        gb.textContent = '';
+        if (g.status && g.status.error) {
+          gb.appendChild(el('div', 'empty', 'دسترسی به git ممکن نیست.'));
+        } else {
+          const branchRow = el('div', 'small');
+          branchRow.appendChild(el('span', '', 'شاخه: '));
+          branchRow.appendChild(el('strong', '', g.branch || g.status.branch || '—'));
+          gb.appendChild(branchRow);
+          gb.appendChild(
+            el(
+              'div',
+              'small ' + (g.status.dirty ? 'badge dirty' : 'badge clean'),
+              g.status.dirty
+                ? 'تغییرات‌نشده: ' + faN.format(g.status.changes) + ' فایل'
+                : 'شاخه تمیز است',
+            ),
+          );
+        }
+        gb.appendChild(el('h3', 'small', 'آخرین commit ها'));
+        const ul = el('ul', 'flush');
+        (g.log && g.log.length ? g.log : ['—']).forEach((c) => ul.appendChild(el('li', '', c)));
+        gb.appendChild(ul);
+
+        // gh chip + PRs
+        const chip = $('ghChip');
+        if (d.live.ghOffline) {
+          chip.hidden = false;
+          chip.className = 'chip offline';
+          $('ghChipText').textContent = 'gh آفلاین';
+        } else {
+          chip.hidden = true;
+        }
+        const pb = $('prBody');
+        pb.textContent = '';
+        if (d.live.ghOffline) {
+          pb.appendChild(el('div', 'empty', 'gh در دسترس نیست (آفلاین) — PR ها بارگیری نشدند.'));
+          pb.appendChild(
+            el('div', 'small muted', 'بازرسی و جمع‌آوری داده به‌صورت لوکال ادامه دارد.'),
+          );
+        } else if (!d.live.prs.length) {
+          pb.appendChild(el('div', 'empty', 'هیچ PR بازی وجود ندارد.'));
+        } else {
+          const pul = el('ul', 'flush');
+          d.live.prs.forEach((p) =>
+            pul.appendChild(
+              el(
+                'li',
+                '',
+                '#' + p.number + ' — ' + p.title + (p.state ? ' (' + p.state + ')' : ''),
+              ),
+            ),
+          );
+          pb.appendChild(pul);
+        }
+
+        // Map table
+        const mb = $('mapBody');
+        mb.textContent = '';
+        d.map.forEach((row) => {
+          const tr = document.createElement('tr');
+          tr.appendChild(el('td', '', row.status + ' ← '));
+          tr.appendChild(el('td', '', faN.format(row.percent) + '٪'));
+          mb.appendChild(tr);
+        });
+      }
+
+      async function load() {
+        $('main').setAttribute('aria-busy', 'true');
+        try {
+          const res = await fetch('/api', { cache: 'no-store' });
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          const data = await res.json();
+          render(data);
+          hideError();
+        } catch (err) {
+          showError(err.message || String(err));
+        }
+      }
+
+      load();
+      setInterval(load, REFRESH_MS);
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) load();
+      });
+    </script>
+  </body>
+</html>

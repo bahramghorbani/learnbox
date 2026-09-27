@@ -1,0 +1,10 @@
+:root {
+  --lb-bg: #fffaf4;
+  --lb-surface: #ffffff;
+  --lb-ink: #1e293b;
+  --lb-primary: #4d6bfe;
+  --lb-warm: #ffb36b;
+  --lb-success: #228b62;
+  --lb-radius: 20px;
+  --lb-space: 16px;
+}

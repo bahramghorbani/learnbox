@@ -1,0 +1,18 @@
+schema_version: 1
+lock_policy: capability-based
+description: >-
+  This lock records required outcomes, not vendor, model, plugin, skill, or tool names. Providers
+  may use different mechanisms as long as they satisfy the referenced capability safely.
+required_capabilities:
+  - repository_orientation
+  - implementation
+  - testing
+  - security_review
+  - handoff
+conditional_capabilities:
+  github_pr: Required when a change is proposed for merge.
+  visual_qa: Required for user-facing visual changes.
+  planning: Required for multi-step or material changes.
+resolution_rule: >-
+  Resolve names through provider-mappings.yaml. If no equivalent exists, use a safe manual process
+  and record the limitation in the pull request or CURRENT_WORK.md.

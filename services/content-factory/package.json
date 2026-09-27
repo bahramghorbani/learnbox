@@ -1,0 +1,17 @@
+{
+  "name": "@learnbox/content-factory",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "pnpm --filter @learnbox/content-models build && tsc -p tsconfig.json",
+    "typecheck": "pnpm --filter @learnbox/content-models build && tsc --noEmit",
+    "test": "pnpm --filter @learnbox/content-models build && vitest run"
+  },
+  "dependencies": {
+    "@learnbox/content-models": "workspace:*"
+  },
+  "devDependencies": {
+    "vitest": "^3.2.4"
+  }
+}

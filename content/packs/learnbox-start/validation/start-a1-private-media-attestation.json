@@ -1,0 +1,618 @@
+{
+  "batchId": "learnbox-start-a1-vertical-slice-drafts-v1",
+  "state": "private_storage_verified_not_attached",
+  "publicationBlocked": true,
+  "storage": {
+    "provider": "vercel_blob",
+    "access": "private",
+    "authentication": "oidc",
+    "receiptContainsNoUrls": true
+  },
+  "requiredBeforeAttachment": [
+    "server_session_authorization",
+    "owner_release_approval",
+    "participant_invitation_approval"
+  ],
+  "assets": [
+    {
+      "assetId": "start-a1-haus-image-v1",
+      "contentId": "start-a1-haus",
+      "kind": "image",
+      "storageKey": "start-a1-haus/image/v1",
+      "pathname": "learnbox-start/start-a1-haus/image/v1.png",
+      "bytes": 252359,
+      "sha256": "4f5c751441562edb91b4985ef9ba6dd7a18df98f20eebc824601685479400d4e",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-haus-word-audio-v1",
+      "contentId": "start-a1-haus",
+      "kind": "word_audio",
+      "storageKey": "start-a1-haus/word_audio/v1",
+      "pathname": "learnbox-start/start-a1-haus/word_audio/v1.mp3",
+      "bytes": 10911,
+      "sha256": "cf23b7ed5fb6b591635891b529396c80923e9bc9f0d4e05c03b30a3514843fe1",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-haus-sentence-audio-v1",
+      "contentId": "start-a1-haus",
+      "kind": "sentence_audio",
+      "storageKey": "start-a1-haus/sentence_audio/v1",
+      "pathname": "learnbox-start/start-a1-haus/sentence_audio/v1.mp3",
+      "bytes": 23449,
+      "sha256": "0db5bf152fc4da66d76da4c42ecc58baac88936e3a72b0dbbb3c6cab32e75803",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-tisch-image-v1",
+      "contentId": "start-a1-tisch",
+      "kind": "image",
+      "storageKey": "start-a1-tisch/image/v1",
+      "pathname": "learnbox-start/start-a1-tisch/image/v1.png",
+      "bytes": 295317,
+      "sha256": "c1083a13b7f356f035713e99796eabacbcb10699e4bfb0d9182624be4761d9e8",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-tisch-word-audio-v1",
+      "contentId": "start-a1-tisch",
+      "kind": "word_audio",
+      "storageKey": "start-a1-tisch/word_audio/v1",
+      "pathname": "learnbox-start/start-a1-tisch/word_audio/v1.mp3",
+      "bytes": 10075,
+      "sha256": "9327cf5758f26a380d01b8ca968b91cb47aa62432fe7b6a874af74287a1e1704",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-tisch-sentence-audio-v1",
+      "contentId": "start-a1-tisch",
+      "kind": "sentence_audio",
+      "storageKey": "start-a1-tisch/sentence_audio/v1",
+      "pathname": "learnbox-start/start-a1-tisch/sentence_audio/v1.mp3",
+      "bytes": 19688,
+      "sha256": "8808bd3c0c10dad7e91c72ca337bb0591032665c6b856786ca9f28530ab89d94",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-tuer-image-v1",
+      "contentId": "start-a1-tuer",
+      "kind": "image",
+      "storageKey": "start-a1-tuer/image/v1",
+      "pathname": "learnbox-start/start-a1-tuer/image/v1.png",
+      "bytes": 267107,
+      "sha256": "fa0b0a3da78393d4e7a4336ad344870d05f7fa323479ee31a95b1cd618746265",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-tuer-word-audio-v1",
+      "contentId": "start-a1-tuer",
+      "kind": "word_audio",
+      "storageKey": "start-a1-tuer/word_audio/v1",
+      "pathname": "learnbox-start/start-a1-tuer/word_audio/v1.mp3",
+      "bytes": 13056,
+      "sha256": "d73f0dc7a9b0c2115a0fb2fd3a361de41f0b64076c83715b49565aedf740e7ef",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-tuer-sentence-audio-v1",
+      "contentId": "start-a1-tuer",
+      "kind": "sentence_audio",
+      "storageKey": "start-a1-tuer/sentence_audio/v1",
+      "pathname": "learnbox-start/start-a1-tuer/sentence_audio/v1.mp3",
+      "bytes": 20942,
+      "sha256": "ff4e2966def4940eb22129cddfd26f58034db48511a6ccdda401aa360fded145",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-bett-image-v1",
+      "contentId": "start-a1-bett",
+      "kind": "image",
+      "storageKey": "start-a1-bett/image/v1",
+      "pathname": "learnbox-start/start-a1-bett/image/v1.png",
+      "bytes": 256547,
+      "sha256": "0748490e4dec7e4b7df15d02a6c796002a01fb6c93345f85eee7aef430c8367e",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-bett-word-audio-v1",
+      "contentId": "start-a1-bett",
+      "kind": "word_audio",
+      "storageKey": "start-a1-bett/word_audio/v1",
+      "pathname": "learnbox-start/start-a1-bett/word_audio/v1.mp3",
+      "bytes": 10075,
+      "sha256": "44bf588ec74028eb03a15b6a48af7e65b4b528d94ccf80f16fa531e4c9259685",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-bett-sentence-audio-v1",
+      "contentId": "start-a1-bett",
+      "kind": "sentence_audio",
+      "storageKey": "start-a1-bett/sentence_audio/v1",
+      "pathname": "learnbox-start/start-a1-bett/sentence_audio/v1.mp3",
+      "bytes": 24285,
+      "sha256": "0c309fa0c33f55a49c769202499d9b6bcb75c0e6ed8618999fed2a521a0a7e9b",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-apfel-image-v1",
+      "contentId": "start-a1-apfel",
+      "kind": "image",
+      "storageKey": "start-a1-apfel/image/v1",
+      "pathname": "learnbox-start/start-a1-apfel/image/v1.png",
+      "bytes": 298446,
+      "sha256": "3ed40a77fe93c5a92c5a2786af29bed0b714858abdc3ef153778e59f5575fd9f",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-apfel-word-audio-v1",
+      "contentId": "start-a1-apfel",
+      "kind": "word_audio",
+      "storageKey": "start-a1-apfel/word_audio/v1",
+      "pathname": "learnbox-start/start-a1-apfel/word_audio/v1.mp3",
+      "bytes": 10075,
+      "sha256": "43614098c497e0ba235b46df2a12f7dbe2df761e511eab2c09114cc9192101f0",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-apfel-sentence-audio-v1",
+      "contentId": "start-a1-apfel",
+      "kind": "sentence_audio",
+      "storageKey": "start-a1-apfel/sentence_audio/v1",
+      "pathname": "learnbox-start/start-a1-apfel/sentence_audio/v1.mp3",
+      "bytes": 18852,
+      "sha256": "d301e21547815d41ffdcfef26984d65f5be3b6b51c7f552018cb5a4d612418b8",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-brot-image-v1",
+      "contentId": "start-a1-brot",
+      "kind": "image",
+      "storageKey": "start-a1-brot/image/v1",
+      "pathname": "learnbox-start/start-a1-brot/image/v1.png",
+      "bytes": 258421,
+      "sha256": "20ce464b2790b27fc99961cba8cd2a380c0cc379905b2836eda8c72377cd0af1",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-brot-word-audio-v1",
+      "contentId": "start-a1-brot",
+      "kind": "word_audio",
+      "storageKey": "start-a1-brot/word_audio/v1",
+      "pathname": "learnbox-start/start-a1-brot/word_audio/v1.mp3",
+      "bytes": 16128,
+      "sha256": "7d5872c614faf14c494a20589d79b9f262b55e94f6522d2945eff09b697e016e",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-brot-sentence-audio-v1",
+      "contentId": "start-a1-brot",
+      "kind": "sentence_audio",
+      "storageKey": "start-a1-brot/sentence_audio/v1",
+      "pathname": "learnbox-start/start-a1-brot/sentence_audio/v1.mp3",
+      "bytes": 17598,
+      "sha256": "c2afa4291f42c19ff43a0447f6a1d39fde07a4245710bc86f45ee0d062dfe556",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-wasser-image-v1",
+      "contentId": "start-a1-wasser",
+      "kind": "image",
+      "storageKey": "start-a1-wasser/image/v1",
+      "pathname": "learnbox-start/start-a1-wasser/image/v1.png",
+      "bytes": 209509,
+      "sha256": "aef981ab0578144172ab87c2a90c11abbd05b747d7c2ec802938ee4f11d378e6",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-wasser-word-audio-v1",
+      "contentId": "start-a1-wasser",
+      "kind": "word_audio",
+      "storageKey": "start-a1-wasser/word_audio/v1",
+      "pathname": "learnbox-start/start-a1-wasser/word_audio/v1.mp3",
+      "bytes": 13000,
+      "sha256": "6245408a460da1b0a8d694f98c77be94aa13d2629f2a80011b2fcba53dc6028f",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-wasser-sentence-audio-v1",
+      "contentId": "start-a1-wasser",
+      "kind": "sentence_audio",
+      "storageKey": "start-a1-wasser/sentence_audio/v1",
+      "pathname": "learnbox-start/start-a1-wasser/sentence_audio/v1.mp3",
+      "bytes": 20524,
+      "sha256": "3ca36f0eb5bd3277bd4083ea99b70ceadf73f856069035eea04e68afdf3d08ce",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-bahnhof-image-v1",
+      "contentId": "start-a1-bahnhof",
+      "kind": "image",
+      "storageKey": "start-a1-bahnhof/image/v1",
+      "pathname": "learnbox-start/start-a1-bahnhof/image/v1.png",
+      "bytes": 332018,
+      "sha256": "57320547c75ec44a939440794dbb5494f1d2e1a59876d3a68576ef82f0bfa28e",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-bahnhof-word-audio-v1",
+      "contentId": "start-a1-bahnhof",
+      "kind": "word_audio",
+      "storageKey": "start-a1-bahnhof/word_audio/v1",
+      "pathname": "learnbox-start/start-a1-bahnhof/word_audio/v1.mp3",
+      "bytes": 16762,
+      "sha256": "19308e4ec4049b073d205d8545231d16df3ae3eee35ad5017194d70c684e1070",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-bahnhof-sentence-audio-v1",
+      "contentId": "start-a1-bahnhof",
+      "kind": "sentence_audio",
+      "storageKey": "start-a1-bahnhof/sentence_audio/v1",
+      "pathname": "learnbox-start/start-a1-bahnhof/sentence_audio/v1.mp3",
+      "bytes": 20942,
+      "sha256": "95dc4d7c562bb83d1ef47fdbbb1e4de32a2fe5597edda25dcdaf2fa6865893fa",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-schule-image-v1",
+      "contentId": "start-a1-schule",
+      "kind": "image",
+      "storageKey": "start-a1-schule/image/v1",
+      "pathname": "learnbox-start/start-a1-schule/image/v1.png",
+      "bytes": 297099,
+      "sha256": "0b85a6db42318dc94058f7e73120f31157694aac4d5edcf0486ab8071afbac90",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-schule-word-audio-v1",
+      "contentId": "start-a1-schule",
+      "kind": "word_audio",
+      "storageKey": "start-a1-schule/word_audio/v1",
+      "pathname": "learnbox-start/start-a1-schule/word_audio/v1.mp3",
+      "bytes": 13836,
+      "sha256": "57f3a115162523314841d4d9d9c454d0463957c4027f2cb4db056cc7b6057f57",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-schule-sentence-audio-v1",
+      "contentId": "start-a1-schule",
+      "kind": "sentence_audio",
+      "storageKey": "start-a1-schule/sentence_audio/v1",
+      "pathname": "learnbox-start/start-a1-schule/sentence_audio/v1.mp3",
+      "bytes": 24703,
+      "sha256": "5f12fd33b9eb072b6ac34e4aa2742e2e75ffd8659bea8761097a501f45f74580",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-lernen-image-v1",
+      "contentId": "start-a1-lernen",
+      "kind": "image",
+      "storageKey": "start-a1-lernen/image/v1",
+      "pathname": "learnbox-start/start-a1-lernen/image/v1.png",
+      "bytes": 250971,
+      "sha256": "aed9eec9063abeb788019a608825bff7f5ea252b7880164454f4531ae0d1a6ec",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-lernen-word-audio-v1",
+      "contentId": "start-a1-lernen",
+      "kind": "word_audio",
+      "storageKey": "start-a1-lernen/word_audio/v1",
+      "pathname": "learnbox-start/start-a1-lernen/word_audio/v1.mp3",
+      "bytes": 12164,
+      "sha256": "78607b667bad443f5eecaafbfc0a5bae702b954c972c9c7aeb477ba69d5eeb78",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-lernen-sentence-audio-v1",
+      "contentId": "start-a1-lernen",
+      "kind": "sentence_audio",
+      "storageKey": "start-a1-lernen/sentence_audio/v1",
+      "pathname": "learnbox-start/start-a1-lernen/sentence_audio/v1.mp3",
+      "bytes": 18016,
+      "sha256": "7cb1600d84bae9a9c253c6f5b91661ff6ee8dc10c7f1c188eb6d70121f14ab25",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-wohnen-image-v1",
+      "contentId": "start-a1-wohnen",
+      "kind": "image",
+      "storageKey": "start-a1-wohnen/image/v1",
+      "pathname": "learnbox-start/start-a1-wohnen/image/v1.png",
+      "bytes": 257700,
+      "sha256": "5eed7705a76eb3bcbd061f3e97cd9654b046f200e692a9a875a79a2aad7157d2",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-wohnen-word-audio-v1",
+      "contentId": "start-a1-wohnen",
+      "kind": "word_audio",
+      "storageKey": "start-a1-wohnen/word_audio/v1",
+      "pathname": "learnbox-start/start-a1-wohnen/word_audio/v1.mp3",
+      "bytes": 12164,
+      "sha256": "f2817f05995d371ea95156068fe131a6db7259ef6f412552d093671f9557752d",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-wohnen-sentence-audio-v1",
+      "contentId": "start-a1-wohnen",
+      "kind": "sentence_audio",
+      "storageKey": "start-a1-wohnen/sentence_audio/v1",
+      "pathname": "learnbox-start/start-a1-wohnen/sentence_audio/v1.mp3",
+      "bytes": 20942,
+      "sha256": "1103a6f4f23a3442af4326d4d0dc6cbff6958f66f45a1629b30f16e87e4ac48b",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-kaufen-image-v1",
+      "contentId": "start-a1-kaufen",
+      "kind": "image",
+      "storageKey": "start-a1-kaufen/image/v1",
+      "pathname": "learnbox-start/start-a1-kaufen/image/v1.png",
+      "bytes": 295604,
+      "sha256": "6556e9e2766e0ff27969e71fcc9dad92bf5678747eec4021d62ef34dc7d2fb69",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-kaufen-word-audio-v1",
+      "contentId": "start-a1-kaufen",
+      "kind": "word_audio",
+      "storageKey": "start-a1-kaufen/word_audio/v1",
+      "pathname": "learnbox-start/start-a1-kaufen/word_audio/v1.mp3",
+      "bytes": 10911,
+      "sha256": "c57ed3cdf5cea162edb594d212c389b40daa9eaaf11afae6aebb0fd05cb1a811",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-kaufen-sentence-audio-v1",
+      "contentId": "start-a1-kaufen",
+      "kind": "sentence_audio",
+      "storageKey": "start-a1-kaufen/sentence_audio/v1",
+      "pathname": "learnbox-start/start-a1-kaufen/sentence_audio/v1.mp3",
+      "bytes": 18016,
+      "sha256": "a6d0950ab29af5f7325deab404cae00bc9d4b0a80d599ad4506eee01a8b252f2",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-warten-image-v1",
+      "contentId": "start-a1-warten",
+      "kind": "image",
+      "storageKey": "start-a1-warten/image/v1",
+      "pathname": "learnbox-start/start-a1-warten/image/v1.png",
+      "bytes": 301794,
+      "sha256": "3ae09b615a9c5fe633724c02614550657b7cccdaf148bc943ad050841dc3bfa3",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-warten-word-audio-v1",
+      "contentId": "start-a1-warten",
+      "kind": "word_audio",
+      "storageKey": "start-a1-warten/word_audio/v1",
+      "pathname": "learnbox-start/start-a1-warten/word_audio/v1.mp3",
+      "bytes": 12164,
+      "sha256": "91f36a84e8509fd280135769fd94c906a603e02b1e2cdcacae9791f240717dab",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-warten-sentence-audio-v1",
+      "contentId": "start-a1-warten",
+      "kind": "sentence_audio",
+      "storageKey": "start-a1-warten/sentence_audio/v1",
+      "pathname": "learnbox-start/start-a1-warten/sentence_audio/v1.mp3",
+      "bytes": 20942,
+      "sha256": "8877eb2e7dd35320ef6b6795ae68b6074dea30bf35373bcad88cb3589632bd8e",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-gluecklich-image-v1",
+      "contentId": "start-a1-gluecklich",
+      "kind": "image",
+      "storageKey": "start-a1-gluecklich/image/v1",
+      "pathname": "learnbox-start/start-a1-gluecklich/image/v1.png",
+      "bytes": 309597,
+      "sha256": "cd27bfe19c26aa368029fc9d192a3cf72bb669905829ccecbc97536181106030",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-gluecklich-word-audio-v1",
+      "contentId": "start-a1-gluecklich",
+      "kind": "word_audio",
+      "storageKey": "start-a1-gluecklich/word_audio/v1",
+      "pathname": "learnbox-start/start-a1-gluecklich/word_audio/v1.mp3",
+      "bytes": 12164,
+      "sha256": "b8847864c6d0f0430c3b193423e0580aa6ad6ce19ee7ca5200df1dcb1ed083c3",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-gluecklich-sentence-audio-v1",
+      "contentId": "start-a1-gluecklich",
+      "kind": "sentence_audio",
+      "storageKey": "start-a1-gluecklich/sentence_audio/v1",
+      "pathname": "learnbox-start/start-a1-gluecklich/sentence_audio/v1.mp3",
+      "bytes": 18016,
+      "sha256": "e4fcaf53f8cc7d442b474cd5e2bc7dab43387430cb09b69afe31e723f77c241a",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-muede-image-v1",
+      "contentId": "start-a1-muede",
+      "kind": "image",
+      "storageKey": "start-a1-muede/image/v1",
+      "pathname": "learnbox-start/start-a1-muede/image/v1.png",
+      "bytes": 326761,
+      "sha256": "5c3d7c9e02e25559739e9bfe216a8527e041b95eda26162a9dc14ac00ae7dd7e",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-muede-word-audio-v1",
+      "contentId": "start-a1-muede",
+      "kind": "word_audio",
+      "storageKey": "start-a1-muede/word_audio/v1",
+      "pathname": "learnbox-start/start-a1-muede/word_audio/v1.mp3",
+      "bytes": 12164,
+      "sha256": "267d02b89608c753047f67d1b5f5cf7839672bfc9265d4cffc986248cc28beef",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-muede-sentence-audio-v1",
+      "contentId": "start-a1-muede",
+      "kind": "sentence_audio",
+      "storageKey": "start-a1-muede/sentence_audio/v1",
+      "pathname": "learnbox-start/start-a1-muede/sentence_audio/v1.mp3",
+      "bytes": 17598,
+      "sha256": "5027b4a4a579b68766da144c73e5b7e44d9274fda1e9930cf022541197ac607a",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-klein-image-v1",
+      "contentId": "start-a1-klein",
+      "kind": "image",
+      "storageKey": "start-a1-klein/image/v1",
+      "pathname": "learnbox-start/start-a1-klein/image/v1.png",
+      "bytes": 315663,
+      "sha256": "3c9ae8eeab1adbd3488c9f8c492e713f6ddea9b944d5eef94bf6e8c2ab350735",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-klein-word-audio-v1",
+      "contentId": "start-a1-klein",
+      "kind": "word_audio",
+      "storageKey": "start-a1-klein/word_audio/v1",
+      "pathname": "learnbox-start/start-a1-klein/word_audio/v1.mp3",
+      "bytes": 11328,
+      "sha256": "4d160fcd0381cfea09fab491edf588157597fd232219cfae29320f262d16ecdd",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-klein-sentence-audio-v1",
+      "contentId": "start-a1-klein",
+      "kind": "sentence_audio",
+      "storageKey": "start-a1-klein/sentence_audio/v1",
+      "pathname": "learnbox-start/start-a1-klein/sentence_audio/v1.mp3",
+      "bytes": 20942,
+      "sha256": "3acb4fae8aac47d20689a026ea8d5dc43588dfce44cb93cffa11d06d487af20a",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-guten-tag-image-v1",
+      "contentId": "start-a1-guten-tag",
+      "kind": "image",
+      "storageKey": "start-a1-guten-tag/image/v1",
+      "pathname": "learnbox-start/start-a1-guten-tag/image/v1.png",
+      "bytes": 295273,
+      "sha256": "4541b1d0f10680324ac2a19a399a934bf8fdc7c1c63e9bcdb0f5a4689df563ae",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-guten-tag-word-audio-v1",
+      "contentId": "start-a1-guten-tag",
+      "kind": "word_audio",
+      "storageKey": "start-a1-guten-tag/word_audio/v1",
+      "pathname": "learnbox-start/start-a1-guten-tag/word_audio/v1.mp3",
+      "bytes": 13000,
+      "sha256": "d16295401d26c0aa1cd9abb6d9006719ec54c8d3e9031e20149d8cc0f1d03737",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-guten-tag-sentence-audio-v1",
+      "contentId": "start-a1-guten-tag",
+      "kind": "sentence_audio",
+      "storageKey": "start-a1-guten-tag/sentence_audio/v1",
+      "pathname": "learnbox-start/start-a1-guten-tag/sentence_audio/v1.mp3",
+      "bytes": 23449,
+      "sha256": "b3817968567d50af1b1ad9e3d31fba0f766447c99a0b764dd1057706b846642b",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-wie-geht-es-ihnen-image-v1",
+      "contentId": "start-a1-wie-geht-es-ihnen",
+      "kind": "image",
+      "storageKey": "start-a1-wie-geht-es-ihnen/image/v1",
+      "pathname": "learnbox-start/start-a1-wie-geht-es-ihnen/image/v1.png",
+      "bytes": 344223,
+      "sha256": "59a46b80aec739a2aab7d12d75d38a350cacf07a424d11befd6cee1bc8f4a800",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-wie-geht-es-ihnen-word-audio-v1",
+      "contentId": "start-a1-wie-geht-es-ihnen",
+      "kind": "word_audio",
+      "storageKey": "start-a1-wie-geht-es-ihnen/word_audio/v1",
+      "pathname": "learnbox-start/start-a1-wie-geht-es-ihnen/word_audio/v1.mp3",
+      "bytes": 18016,
+      "sha256": "d93270d2b6c6abbc327f568cb1b748630f2d9767e88133ffde40f7d43dd3cb8d",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-wie-geht-es-ihnen-sentence-audio-v1",
+      "contentId": "start-a1-wie-geht-es-ihnen",
+      "kind": "sentence_audio",
+      "storageKey": "start-a1-wie-geht-es-ihnen/sentence_audio/v1",
+      "pathname": "learnbox-start/start-a1-wie-geht-es-ihnen/sentence_audio/v1.mp3",
+      "bytes": 24285,
+      "sha256": "47c37a20de279d2bf1f7109b205fc756d289ca6237e027aba92a3c5308d57877",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-danke-image-v1",
+      "contentId": "start-a1-danke",
+      "kind": "image",
+      "storageKey": "start-a1-danke/image/v1",
+      "pathname": "learnbox-start/start-a1-danke/image/v1.png",
+      "bytes": 345519,
+      "sha256": "50a7a852369407e9ba8a03b6b271ef4be73567181019cea7c9e302a7dd64992b",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-danke-word-audio-v1",
+      "contentId": "start-a1-danke",
+      "kind": "word_audio",
+      "storageKey": "start-a1-danke/word_audio/v1",
+      "pathname": "learnbox-start/start-a1-danke/word_audio/v1.mp3",
+      "bytes": 10075,
+      "sha256": "28221993ae2c698fb71c45443df9f4a686062bacbea132389e22c1149a38643a",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-danke-sentence-audio-v1",
+      "contentId": "start-a1-danke",
+      "kind": "sentence_audio",
+      "storageKey": "start-a1-danke/sentence_audio/v1",
+      "pathname": "learnbox-start/start-a1-danke/sentence_audio/v1.mp3",
+      "bytes": 20524,
+      "sha256": "e190a41c0187ceac40d117ec2e75423b727214484a91328042ffe30601c3b784",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-entschuldigung-image-v1",
+      "contentId": "start-a1-entschuldigung",
+      "kind": "image",
+      "storageKey": "start-a1-entschuldigung/image/v1",
+      "pathname": "learnbox-start/start-a1-entschuldigung/image/v1.png",
+      "bytes": 272440,
+      "sha256": "fe8363b3ef0a8f889e56ba472658bbdef4a643c0cdb76dd4499a66f453c0a30f",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-entschuldigung-word-audio-v1",
+      "contentId": "start-a1-entschuldigung",
+      "kind": "word_audio",
+      "storageKey": "start-a1-entschuldigung/word_audio/v1",
+      "pathname": "learnbox-start/start-a1-entschuldigung/word_audio/v1.mp3",
+      "bytes": 13836,
+      "sha256": "afd32b7869a45e79d57986596d1c17e7d7af7e1223ac07984e97aba689ca95ac",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    },
+    {
+      "assetId": "start-a1-entschuldigung-sentence-audio-v1",
+      "contentId": "start-a1-entschuldigung",
+      "kind": "sentence_audio",
+      "storageKey": "start-a1-entschuldigung/sentence_audio/v1",
+      "pathname": "learnbox-start/start-a1-entschuldigung/sentence_audio/v1.mp3",
+      "bytes": 31391,
+      "sha256": "e2c27b267f18f007fd89a0ae1ba69e0438568998644707ceda07dc9323fe6bef",
+      "attachmentStatus": "verified_private_storage_not_attached"
+    }
+  ]
+}

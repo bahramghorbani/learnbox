@@ -1,0 +1,26 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "LearnBox Flutter: pub get",
+      "type": "shell",
+      "command": "flutter pub get",
+      "options": { "cwd": "${workspaceFolder}/apps/mobile" },
+      "problemMatcher": []
+    },
+    {
+      "label": "LearnBox Flutter: analyze",
+      "type": "shell",
+      "command": "flutter analyze",
+      "options": { "cwd": "${workspaceFolder}/apps/mobile" },
+      "problemMatcher": "$dart-analyzer"
+    },
+    {
+      "label": "LearnBox Flutter: test",
+      "type": "shell",
+      "command": "flutter test",
+      "options": { "cwd": "${workspaceFolder}/apps/mobile" },
+      "problemMatcher": []
+    }
+  ]
+}

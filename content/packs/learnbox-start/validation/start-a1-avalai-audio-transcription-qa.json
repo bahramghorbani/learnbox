@@ -1,0 +1,411 @@
+{
+  "batchId": "learnbox-start-a1-vertical-slice-drafts-v1",
+  "checkedAt": "2026-07-28T10:39:57.790Z",
+  "verifier": "AvalAI groq.whisper-large-v3-turbo",
+  "purpose": "Candidate QA only. A passing transcription does not publish or attach media.",
+  "total": 40,
+  "passed": 40,
+  "needsReview": [],
+  "results": [
+    {
+      "id": "start-a1-apfel-sentence",
+      "expected": "Der Apfel ist rot.",
+      "filename": "start-a1-apfel-sentence-v1.mp3",
+      "bytes": 18852,
+      "transcript": "Der Apfel ist rot.",
+      "normalizedExpected": "der apfel ist rot",
+      "normalizedTranscript": "der apfel ist rot",
+      "matchesExpected": true
+    },
+    {
+      "id": "start-a1-apfel-word",
+      "expected": "Apfel",
+      "filename": "start-a1-apfel-word-v1.mp3",
+      "bytes": 10075,
+      "transcript": "Apfel.",
+      "normalizedExpected": "apfel",
+      "normalizedTranscript": "apfel",
+      "matchesExpected": true
+    },
+    {
+      "id": "start-a1-bahnhof-sentence",
+      "expected": "Der Bahnhof ist nah.",
+      "filename": "start-a1-bahnhof-sentence-v1.mp3",
+      "bytes": 20942,
+      "transcript": "Der Bahnhof ist nah.",
+      "normalizedExpected": "der bahnhof ist nah",
+      "normalizedTranscript": "der bahnhof ist nah",
+      "matchesExpected": true
+    },
+    {
+      "id": "start-a1-bahnhof-word",
+      "expected": "Bahnhof",
+      "filename": "start-a1-bahnhof-word-v2.mp3",
+      "bytes": 16762,
+      "transcript": "Bahnhof.",
+      "normalizedExpected": "bahnhof",
+      "normalizedTranscript": "bahnhof",
+      "matchesExpected": true
+    },
+    {
+      "id": "start-a1-bett-sentence",
+      "expected": "Das Bett ist im Zimmer.",
+      "filename": "start-a1-bett-sentence-v1.mp3",
+      "bytes": 24285,
+      "transcript": "Das Bett ist im Zimmer.",
+      "normalizedExpected": "das bett ist im zimmer",
+      "normalizedTranscript": "das bett ist im zimmer",
+      "matchesExpected": true
+    },
+    {
+      "id": "start-a1-bett-word",
+      "expected": "Bett",
+      "filename": "start-a1-bett-word-v1.mp3",
+      "bytes": 10075,
+      "transcript": "Bett",
+      "normalizedExpected": "bett",
+      "normalizedTranscript": "bett",
+      "matchesExpected": true
+    },
+    {
+      "id": "start-a1-brot-sentence",
+      "expected": "Ich esse Brot.",
+      "filename": "start-a1-brot-sentence-v1.mp3",
+      "bytes": 17598,
+      "transcript": "Ich esse Brot.",
+      "normalizedExpected": "ich esse brot",
+      "normalizedTranscript": "ich esse brot",
+      "matchesExpected": true
+    },
+    {
+      "id": "start-a1-brot-word",
+      "expected": "Brot",
+      "filename": "start-a1-brot-word-v3.mp3",
+      "bytes": 16128,
+      "transcript": "Brot",
+      "normalizedExpected": "brot",
+      "normalizedTranscript": "brot",
+      "matchesExpected": true
+    },
+    {
+      "id": "start-a1-danke-sentence",
+      "expected": "Danke für deine Hilfe.",
+      "filename": "start-a1-danke-sentence-v1.mp3",
+      "bytes": 20524,
+      "transcript": "Danke für deine Hilfe.",
+      "normalizedExpected": "danke für deine hilfe",
+      "normalizedTranscript": "danke für deine hilfe",
+      "matchesExpected": true
+    },
+    {
+      "id": "start-a1-danke-word",
+      "expected": "danke",
+      "filename": "start-a1-danke-word-v1.mp3",
+      "bytes": 10075,
+      "transcript": "Danke.",
+      "normalizedExpected": "danke",
+      "normalizedTranscript": "danke",
+      "matchesExpected": true
+    },
+    {
+      "id": "start-a1-entschuldigung-sentence",
+      "expected": "Entschuldigung, wo ist der Bahnhof?",
+      "filename": "start-a1-entschuldigung-sentence-v1.mp3",
+      "bytes": 31391,
+      "transcript": "Entschuldigung, wo ist der Bahnhof?",
+      "normalizedExpected": "entschuldigung wo ist der bahnhof",
+      "normalizedTranscript": "entschuldigung wo ist der bahnhof",
+      "matchesExpected": true
+    },
+    {
+      "id": "start-a1-entschuldigung-word",
+      "expected": "Entschuldigung",
+      "filename": "start-a1-entschuldigung-word-v1.mp3",
+      "bytes": 13836,
+      "transcript": "Entschuldigung.",
+      "normalizedExpected": "entschuldigung",
+      "normalizedTranscript": "entschuldigung",
+      "matchesExpected": true
+    },
+    {
+      "id": "start-a1-gluecklich-sentence",
+      "expected": "Ich bin glücklich.",
+      "filename": "start-a1-gluecklich-sentence-v1.mp3",
+      "bytes": 18016,
+      "transcript": "Ich bin glücklich.",
+      "normalizedExpected": "ich bin glücklich",
+      "normalizedTranscript": "ich bin glücklich",
+      "matchesExpected": true
+    },
+    {
+      "id": "start-a1-gluecklich-word",
+      "expected": "glücklich",
+      "filename": "start-a1-gluecklich-word-v1.mp3",
+      "bytes": 12164,
+      "transcript": "Glücklich!",
+      "normalizedExpected": "glücklich",
+      "normalizedTranscript": "glücklich",
+      "matchesExpected": true
+    },
+    {
+      "id": "start-a1-guten-tag-sentence",
+      "expected": "Guten Tag, Frau Müller.",
+      "filename": "start-a1-guten-tag-sentence-v1.mp3",
+      "bytes": 23449,
+      "transcript": "Guten Tag, Frau Müller.",
+      "normalizedExpected": "guten tag frau müller",
+      "normalizedTranscript": "guten tag frau müller",
+      "matchesExpected": true
+    },
+    {
+      "id": "start-a1-guten-tag-word",
+      "expected": "Guten Tag",
+      "filename": "start-a1-guten-tag-word-v1.mp3",
+      "bytes": 13000,
+      "transcript": "Guten Tag!",
+      "normalizedExpected": "guten tag",
+      "normalizedTranscript": "guten tag",
+      "matchesExpected": true
+    },
+    {
+      "id": "start-a1-haus-sentence",
+      "expected": "Das Haus ist klein.",
+      "filename": "start-a1-haus-sentence-v1.mp3",
+      "bytes": 23449,
+      "transcript": "Das Haus ist klein.",
+      "normalizedExpected": "das haus ist klein",
+      "normalizedTranscript": "das haus ist klein",
+      "matchesExpected": true
+    },
+    {
+      "id": "start-a1-haus-word",
+      "expected": "Haus",
+      "filename": "start-a1-haus-word-v1.mp3",
+      "bytes": 10911,
+      "transcript": "Haus.",
+      "normalizedExpected": "haus",
+      "normalizedTranscript": "haus",
+      "matchesExpected": true
+    },
+    {
+      "id": "start-a1-kaufen-sentence",
+      "expected": "Ich kaufe Brot.",
+      "filename": "start-a1-kaufen-sentence-v1.mp3",
+      "bytes": 18016,
+      "transcript": "Ich kaufe Brot.",
+      "normalizedExpected": "ich kaufe brot",
+      "normalizedTranscript": "ich kaufe brot",
+      "matchesExpected": true
+    },
+    {
+      "id": "start-a1-kaufen-word",
+      "expected": "kaufen",
+      "filename": "start-a1-kaufen-word-v1.mp3",
+      "bytes": 10911,
+      "transcript": "Kaufen.",
+      "normalizedExpected": "kaufen",
+      "normalizedTranscript": "kaufen",
+      "matchesExpected": true
+    },
+    {
+      "id": "start-a1-klein-sentence",
+      "expected": "Das Haus ist klein.",
+      "filename": "start-a1-klein-sentence-v1.mp3",
+      "bytes": 20942,
+      "transcript": "Das Haus ist klein.",
+      "normalizedExpected": "das haus ist klein",
+      "normalizedTranscript": "das haus ist klein",
+      "matchesExpected": true
+    },
+    {
+      "id": "start-a1-klein-word",
+      "expected": "klein",
+      "filename": "start-a1-klein-word-v1.mp3",
+      "bytes": 11328,
+      "transcript": "Klein.",
+      "normalizedExpected": "klein",
+      "normalizedTranscript": "klein",
+      "matchesExpected": true
+    },
+    {
+      "id": "start-a1-lernen-sentence",
+      "expected": "Ich lerne Deutsch.",
+      "filename": "start-a1-lernen-sentence-v1.mp3",
+      "bytes": 18016,
+      "transcript": "Ich lerne Deutsch.",
+      "normalizedExpected": "ich lerne deutsch",
+      "normalizedTranscript": "ich lerne deutsch",
+      "matchesExpected": true
+    },
+    {
+      "id": "start-a1-lernen-word",
+      "expected": "lernen",
+      "filename": "start-a1-lernen-word-v1.mp3",
+      "bytes": 12164,
+      "transcript": "Lernen",
+      "normalizedExpected": "lernen",
+      "normalizedTranscript": "lernen",
+      "matchesExpected": true
+    },
+    {
+      "id": "start-a1-muede-sentence",
+      "expected": "Ich bin müde.",
+      "filename": "start-a1-muede-sentence-v1.mp3",
+      "bytes": 17598,
+      "transcript": "Ich bin müde.",
+      "normalizedExpected": "ich bin müde",
+      "normalizedTranscript": "ich bin müde",
+      "matchesExpected": true
+    },
+    {
+      "id": "start-a1-muede-word",
+      "expected": "müde",
+      "filename": "start-a1-muede-word-v1.mp3",
+      "bytes": 12164,
+      "transcript": "Müde.",
+      "normalizedExpected": "müde",
+      "normalizedTranscript": "müde",
+      "matchesExpected": true
+    },
+    {
+      "id": "start-a1-schule-sentence",
+      "expected": "Die Schule ist heute offen.",
+      "filename": "start-a1-schule-sentence-v1.mp3",
+      "bytes": 24703,
+      "transcript": "Die Schule ist heute offen.",
+      "normalizedExpected": "die schule ist heute offen",
+      "normalizedTranscript": "die schule ist heute offen",
+      "matchesExpected": true
+    },
+    {
+      "id": "start-a1-schule-word",
+      "expected": "Schule",
+      "filename": "start-a1-schule-word-v2.mp3",
+      "bytes": 13836,
+      "transcript": "Schule",
+      "normalizedExpected": "schule",
+      "normalizedTranscript": "schule",
+      "matchesExpected": true
+    },
+    {
+      "id": "start-a1-tisch-sentence",
+      "expected": "Der Tisch ist groß.",
+      "filename": "start-a1-tisch-sentence-v1.mp3",
+      "bytes": 19688,
+      "transcript": "Der Tisch ist groß.",
+      "normalizedExpected": "der tisch ist groß",
+      "normalizedTranscript": "der tisch ist groß",
+      "matchesExpected": true
+    },
+    {
+      "id": "start-a1-tisch-word",
+      "expected": "Tisch",
+      "filename": "start-a1-tisch-word-v1.mp3",
+      "bytes": 10075,
+      "transcript": "Tisch",
+      "normalizedExpected": "tisch",
+      "normalizedTranscript": "tisch",
+      "matchesExpected": true
+    },
+    {
+      "id": "start-a1-tuer-sentence",
+      "expected": "Die Tür ist offen.",
+      "filename": "start-a1-tuer-sentence-v2.mp3",
+      "bytes": 20942,
+      "transcript": "Die Tür ist offen.",
+      "normalizedExpected": "die tür ist offen",
+      "normalizedTranscript": "die tür ist offen",
+      "matchesExpected": true
+    },
+    {
+      "id": "start-a1-tuer-word",
+      "expected": "Tür",
+      "filename": "start-a1-tuer-word-v3.mp3",
+      "bytes": 13056,
+      "transcript": "Tür",
+      "normalizedExpected": "tür",
+      "normalizedTranscript": "tür",
+      "matchesExpected": true
+    },
+    {
+      "id": "start-a1-warten-sentence",
+      "expected": "Ich warte auf den Bus.",
+      "filename": "start-a1-warten-sentence-v1.mp3",
+      "bytes": 20942,
+      "transcript": "Ich warte auf den Bus.",
+      "normalizedExpected": "ich warte auf den bus",
+      "normalizedTranscript": "ich warte auf den bus",
+      "matchesExpected": true
+    },
+    {
+      "id": "start-a1-warten-word",
+      "expected": "warten",
+      "filename": "start-a1-warten-word-v1.mp3",
+      "bytes": 12164,
+      "transcript": "Warten.",
+      "normalizedExpected": "warten",
+      "normalizedTranscript": "warten",
+      "matchesExpected": true
+    },
+    {
+      "id": "start-a1-wasser-sentence",
+      "expected": "Das Wasser ist kalt.",
+      "filename": "start-a1-wasser-sentence-v1.mp3",
+      "bytes": 20524,
+      "transcript": "Das Wasser ist kalt.",
+      "normalizedExpected": "das wasser ist kalt",
+      "normalizedTranscript": "das wasser ist kalt",
+      "matchesExpected": true
+    },
+    {
+      "id": "start-a1-wasser-word",
+      "expected": "Wasser",
+      "filename": "start-a1-wasser-word-v1.mp3",
+      "bytes": 13000,
+      "transcript": "Wasser.",
+      "normalizedExpected": "wasser",
+      "normalizedTranscript": "wasser",
+      "matchesExpected": true
+    },
+    {
+      "id": "start-a1-wie-geht-es-ihnen-sentence",
+      "expected": "Guten Tag. Wie geht es Ihnen?",
+      "filename": "start-a1-wie-geht-es-ihnen-sentence-v1.mp3",
+      "bytes": 24285,
+      "transcript": "Guten Tag, wie geht es Ihnen?",
+      "normalizedExpected": "guten tag wie geht es ihnen",
+      "normalizedTranscript": "guten tag wie geht es ihnen",
+      "matchesExpected": true
+    },
+    {
+      "id": "start-a1-wie-geht-es-ihnen-word",
+      "expected": "Wie geht es Ihnen?",
+      "filename": "start-a1-wie-geht-es-ihnen-word-v1.mp3",
+      "bytes": 18016,
+      "transcript": "Wie geht es Ihnen?",
+      "normalizedExpected": "wie geht es ihnen",
+      "normalizedTranscript": "wie geht es ihnen",
+      "matchesExpected": true
+    },
+    {
+      "id": "start-a1-wohnen-sentence",
+      "expected": "Ich wohne in Berlin.",
+      "filename": "start-a1-wohnen-sentence-v1.mp3",
+      "bytes": 20942,
+      "transcript": "Ich wohne in Berlin.",
+      "normalizedExpected": "ich wohne in berlin",
+      "normalizedTranscript": "ich wohne in berlin",
+      "matchesExpected": true
+    },
+    {
+      "id": "start-a1-wohnen-word",
+      "expected": "wohnen",
+      "filename": "start-a1-wohnen-word-v1.mp3",
+      "bytes": 12164,
+      "transcript": "Wohnen.",
+      "normalizedExpected": "wohnen",
+      "normalizedTranscript": "wohnen",
+      "matchesExpected": true
+    }
+  ]
+}

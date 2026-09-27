@@ -1,6 +1,9 @@
 import path from 'node:path';
+import { accessSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { NextResponse } from 'next/server';
+import { readLearnerSession } from '../../../../../lib/server-session';
+import { isPublishedStartContentId } from '../../../../../lib/published-start-card';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -16,7 +19,7 @@ function contentBase(): string {
   for (let i = 0; i < 5; i++) {
     const candidate = path.join(dir, 'content', 'packs', 'learnbox-start');
     try {
-      require('node:fs').accessSync(candidate);
+      accessSync(candidate);
       return candidate;
     } catch {
       dir = path.dirname(dir);
@@ -46,13 +49,39 @@ const mimeTypes: Record<string, string> = {
 };
 
 export async function GET(
-  _req: Request,
+  req: Request,
   context: { params: Promise<{ contentId: string; kind: string }> },
 ): Promise<NextResponse> {
+  // SECURITY: vocabulary/card content is protected — requires valid authenticated session
+  const session = readLearnerSession(req);
+  if (!session) {
+    return NextResponse.json(
+      { error: 'unauthorized' },
+      {
+        status: 401,
+        headers: { 'cache-control': 'no-store', 'www-authenticate': 'Cookie' },
+      },
+    );
+  }
+
   const { contentId, kind } = await context.params;
 
   if (!validContentId.test(contentId) || !validKinds.has(kind)) {
     return NextResponse.json({ error: 'not found' }, { status: 404 });
+  }
+
+  try {
+    if (!(await isPublishedStartContentId(contentId)))
+      return NextResponse.json(
+        { error: 'not found' },
+        { status: 404, headers: { 'Cache-Control': 'no-store' } },
+      );
+  } catch {
+    // Never expose a file when publication cannot be verified.
+    return NextResponse.json(
+      { error: 'unavailable' },
+      { status: 503, headers: { 'Cache-Control': 'no-store' } },
+    );
   }
 
   const base = contentBase();
@@ -84,7 +113,8 @@ export async function GET(
     status: 200,
     headers: {
       'Content-Type': contentType,
-      'Cache-Control': 'public, max-age=86400, immutable',
+      // Private: never cache publicly; authenticated per-request
+      'Cache-Control': 'private, no-store',
     },
   });
 }

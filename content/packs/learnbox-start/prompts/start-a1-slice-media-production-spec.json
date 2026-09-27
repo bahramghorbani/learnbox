@@ -1,0 +1,29 @@
+{
+  "batchId": "learnbox-start-a1-vertical-slice-drafts-v1",
+  "state": "planning_only",
+  "assetNaming": "{contentId}/{assetKind}/v1",
+  "expectedAssetsPerCard": ["image", "word_audio", "sentence_audio"],
+  "imageRequirements": {
+    "style": "consistent soft 3D",
+    "primaryConcept": "one clear concept",
+    "bobo": "only the canonical 1.0.0 Bobo when the individual draft calls for it",
+    "forbidden": [
+      "embedded German or Persian text",
+      "watermark",
+      "unauthorized Bobo variation",
+      "irrelevant clutter"
+    ]
+  },
+  "audioRequirements": {
+    "locale": "de-DE",
+    "word": "one clear standard-German pronunciation of the lemma or expression",
+    "sentence": "one clear standard-German pronunciation of the practical example",
+    "qualityGate": ["word audio verified", "sentence audio verified", "no truncation or distortion"]
+  },
+  "productionSafeguards": [
+    "No provider request until the item passes linguistic review.",
+    "No paid provider is enabled without an owner-approved cost and account step.",
+    "No asset is attached to a card before visual or audio QA passes.",
+    "No card is published before PWA and mobile flow validation."
+  ]
+}

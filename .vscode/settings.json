@@ -1,0 +1,11 @@
+{
+  "dart.lineLength": 100,
+  "dart.analysisExcludedFolders": [
+    "${workspaceFolder}/.dart_tool",
+    "${workspaceFolder}/apps/mobile/build"
+  ],
+  "files.exclude": {
+    "**/.dart_tool": true,
+    "**/build": true
+  }
+}
