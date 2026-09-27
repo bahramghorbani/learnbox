@@ -4,6 +4,7 @@ import {
 } from '../../api/dist/reviews/mobile-review-batch.request.js';
 import type { MobileReviewBatchItemOutcome } from '../../api/dist/reviews/mobile-review-batch.service.js';
 import type { MobileReviewReconciliationResult } from '../../api/dist/reviews/postgres-review-event.store.js';
+import { hasJsonContentType, isTrustedRequestOrigin } from './trusted-origin';
 
 type BoundaryOptions = { development?: boolean };
 type JsonObject = Record<string, unknown>;
@@ -101,18 +102,8 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function isTrustedSameOriginJsonPost(request: Request): boolean {
-  if (
-    !/^application\/json(?:;\s*charset=utf-8)?$/i.test(request.headers.get('content-type') ?? '')
-  ) {
-    return false;
-  }
-  const origin = request.headers.get('origin');
-  if (!origin) return false;
-  try {
-    return new URL(origin).origin === new URL(request.url).origin;
-  } catch {
-    return false;
-  }
+  if (!hasJsonContentType(request, true)) return false;
+  return isTrustedRequestOrigin(request);
 }
 
 function isSecure(request: Request, development: boolean): boolean {

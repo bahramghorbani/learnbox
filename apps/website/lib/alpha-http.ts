@@ -1,3 +1,5 @@
+import { hasJsonContentType, isTrustedRequestOrigin } from './trusted-origin';
+
 import type { InviteCheckOutcome } from '../../api/dist/alpha/invite-access.service.js';
 
 export type InviteHttpDependencies = {
@@ -49,16 +51,8 @@ export async function handleInviteCheck(
 
 function isTrustedJsonPost(request: Request): boolean {
   if (request.method !== 'POST') return false;
-  if (!request.headers.get('content-type')?.toLowerCase().startsWith('application/json')) {
-    return false;
-  }
-  const origin = request.headers.get('origin');
-  if (!origin) return false;
-  try {
-    return new URL(origin).origin === new URL(request.url).origin;
-  } catch {
-    return false;
-  }
+  if (!hasJsonContentType(request, false)) return false;
+  return isTrustedRequestOrigin(request);
 }
 
 async function readJsonObject(request: Request): Promise<Record<string, unknown> | null> {

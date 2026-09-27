@@ -1,3 +1,5 @@
+import { hasJsonContentType, isTrustedRequestOrigin } from './trusted-origin';
+
 type OwnerInviteIssueDependencies = {
   issue(): Promise<{ code: string; expiresAt: Date }>;
   reportIssue?(diagnostic: OwnerInviteIssueDiagnostic): void;
@@ -51,14 +53,6 @@ function reportOwnerInviteIssue(diagnostic: OwnerInviteIssueDiagnostic): void {
 
 function isTrustedJsonPost(request: Request): boolean {
   if (request.method !== 'POST') return false;
-  if (!request.headers.get('content-type')?.toLowerCase().startsWith('application/json')) {
-    return false;
-  }
-  const origin = request.headers.get('origin');
-  if (!origin) return false;
-  try {
-    return new URL(origin).origin === new URL(request.url).origin;
-  } catch {
-    return false;
-  }
+  if (!hasJsonContentType(request, false)) return false;
+  return isTrustedRequestOrigin(request);
 }

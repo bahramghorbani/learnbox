@@ -1,3 +1,5 @@
+import { hasJsonContentType, isTrustedRequestOrigin } from './trusted-origin';
+
 type OtpPurpose = 'sign_in';
 
 type RequestChallengeInput = {
@@ -114,27 +116,8 @@ export async function handleOtpVerification(
 
 function isTrustedJsonPost(request: Request): boolean {
   if (request.method !== 'POST') return false;
-  if (!request.headers.get('content-type')?.toLowerCase().startsWith('application/json')) {
-    return false;
-  }
-  const origin = request.headers.get('origin');
-  if (!origin) return false;
-  try {
-    const originHost = new URL(origin).origin;
-    const requestHost = new URL(request.url).origin;
-    if (originHost === requestHost) return true;
-    // Behind reverse proxy (Caddy): request.url is internal (http://localhost:3000)
-    // but origin is the real external origin — trust X-Forwarded-Host when present.
-    const forwarded =
-      request.headers.get('x-forwarded-host') ?? request.headers.get('x-forwarded-for');
-    if (forwarded) {
-      const forwardedOrigin = `${request.headers.get('x-forwarded-proto') ?? 'https'}://${forwarded.split(',')[0].trim()}`;
-      return new URL(forwardedOrigin).origin === originHost;
-    }
-    return false;
-  } catch {
-    return false;
-  }
+  if (!hasJsonContentType(request, false)) return false;
+  return isTrustedRequestOrigin(request);
 }
 
 async function readJsonObject(request: Request): Promise<Record<string, unknown> | null> {
