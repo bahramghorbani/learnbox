@@ -24,7 +24,10 @@ function getPool() {
 export async function GET(request: Request): Promise<Response> {
   const session = readLearnerSession(request);
   if (!session) {
-    return Response.json({ error: 'unauthorized' }, { status: 401 });
+    return Response.json(
+      { error: 'unauthorized' },
+      { status: 401, headers: { 'Cache-Control': 'private, no-store' } },
+    );
   }
 
   const userId = session.subject;
@@ -244,7 +247,10 @@ export async function GET(request: Request): Promise<Response> {
     );
   } catch (err) {
     console.error('[today] API error:', err);
-    return Response.json({ error: 'internal_error' }, { status: 500 });
+    return Response.json(
+      { error: 'internal_error' },
+      { status: 500, headers: { 'Cache-Control': 'no-store' } },
+    );
   } finally {
     await pool.end();
   }

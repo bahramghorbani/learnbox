@@ -1,20 +1,25 @@
 import { Pool } from 'pg';
 import { readLearnerSession } from '../../../../../lib/server-session';
+import { requireVerifiedDatabaseTls } from '../../../../../../api/dist/database/migration-runner.js';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+const privateHeaders = {
+  'Cache-Control': 'private, no-store',
+  'X-Content-Type-Options': 'nosniff',
+};
 
 function getPool() {
   const url = process.env.DATABASE_URL;
   if (!url) throw new Error('DATABASE_URL not set');
-  return new Pool({ connectionString: url });
+  return new Pool({ connectionString: requireVerifiedDatabaseTls(url) });
 }
 
 export async function GET(request: Request): Promise<Response> {
   const session = readLearnerSession(request);
   const userId = session?.subject ?? null;
   if (!userId) {
-    return Response.json({ error: 'unauthorized' }, { status: 401 });
+    return Response.json({ error: 'unauthorized' }, { status: 401, headers: privateHeaders });
   }
 
   const pool = getPool();
@@ -26,7 +31,7 @@ export async function GET(request: Request): Promise<Response> {
     );
     const user = userResult.rows[0];
     if (!user) {
-      return Response.json({ error: 'user_not_found' }, { status: 404 });
+      return Response.json({ error: 'user_not_found' }, { status: 404, headers: privateHeaders });
     }
 
     // Card stats by state
@@ -81,9 +86,7 @@ export async function GET(request: Request): Promise<Response> {
     const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
     const lastDay = currentStreak?.last_day?.toISOString?.()?.split?.('T')?.[0] ?? '';
     const streakDays =
-      lastDay === today || lastDay === yesterday
-        ? Number(currentStreak?.streak_length ?? 0)
-        : 0;
+      lastDay === today || lastDay === yesterday ? Number(currentStreak?.streak_length ?? 0) : 0;
 
     // Best day ever
     const bestDay = await pool.query(
@@ -144,43 +147,48 @@ export async function GET(request: Request): Promise<Response> {
 
     const stats = cardStats.rows[0];
 
-    return Response.json({
-      profile: {
-        firstName: user.first_name,
-        maskedPhone,
-        createdAt: user.created_at,
+    return Response.json(
+      {
+        profile: {
+          firstName: user.first_name,
+          maskedPhone,
+          createdAt: user.created_at,
+        },
+        stats: {
+          newCards: Number(stats.new_cards),
+          learningCards: Number(stats.learning_cards),
+          learnedCards: Number(stats.learned_cards),
+          totalCards: Number(stats.total_cards),
+          totalReviews: Number(reviewCount.rows[0].total),
+          streakDays,
+          longestStreak: Number(longestStreak.rows[0]?.longest ?? 0),
+          bestDayReviews: Number(bestDay.rows[0]?.reviews ?? 0),
+          bestDayDate: bestDay.rows[0]?.day ?? null,
+        },
+        weeklyActivity: weeklyActivity.rows.map((r) => ({
+          day: r.day,
+          reviews: Number(r.reviews),
+        })),
+        packs: packs.rows.map((p) => ({
+          id: p.id,
+          name: p.display_name,
+          isFree: p.is_free,
+          priceTomans: p.price_tomans,
+          totalCards: Number(p.total_cards),
+          startedCards: Number(p.started_cards),
+          learnedCards: Number(p.learned_cards),
+        })),
+        cefrDistribution: cefrDistribution.rows.map((r) => ({
+          level: r.cefr_level,
+          count: Number(r.count),
+        })),
       },
-      stats: {
-        newCards: Number(stats.new_cards),
-        learningCards: Number(stats.learning_cards),
-        learnedCards: Number(stats.learned_cards),
-        totalCards: Number(stats.total_cards),
-        totalReviews: Number(reviewCount.rows[0].total),
-        streakDays,
-        longestStreak: Number(longestStreak.rows[0]?.longest ?? 0),
-        bestDayReviews: Number(bestDay.rows[0]?.reviews ?? 0),
-        bestDayDate: bestDay.rows[0]?.day ?? null,
-      },
-      weeklyActivity: weeklyActivity.rows.map((r) => ({
-        day: r.day,
-        reviews: Number(r.reviews),
-      })),
-      packs: packs.rows.map((p) => ({
-        id: p.id,
-        name: p.display_name,
-        isFree: p.is_free,
-        priceTomans: p.price_tomans,
-        totalCards: Number(p.total_cards),
-        startedCards: Number(p.started_cards),
-        learnedCards: Number(p.learned_cards),
-      })),
-      cefrDistribution: cefrDistribution.rows.map((r) => ({
-        level: r.cefr_level,
-        count: Number(r.count),
-      })),
-    });
+      { headers: privateHeaders },
+    );
   } catch (error) {
     console.error('[learner/profile/stats] failed:', error);
-    return Response.json({ error: 'server_error' }, { status: 500 });
+    return Response.json({ error: 'server_error' }, { status: 500, headers: privateHeaders });
+  } finally {
+    await pool.end();
   }
 }
