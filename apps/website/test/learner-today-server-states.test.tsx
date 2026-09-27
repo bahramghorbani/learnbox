@@ -46,6 +46,63 @@ describe('Today server snapshot truth states', () => {
     vi.useRealTimers();
   });
 
+  it('drops a previous account snapshot and card session on expiry and account switch', async () => {
+    window.localStorage.setItem(
+      'learnbox:onboarding-goal:v1:local-prototype:account:account_a',
+      'life',
+    );
+    window.localStorage.setItem(
+      'learnbox:onboarding-goal:v1:local-prototype:account:account_b',
+      'travel',
+    );
+    let account: string | null = null;
+    let otpCount = 0;
+    let expire = false;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+        const url = String(input);
+        if (url === '/api/auth/otp/request')
+          return json(201, {
+            challengeId: 'switch-challenge-0001',
+            expiresAt: '2026-08-08T12:05:00.000Z',
+            resendAvailableAt: '2026-08-08T12:01:00.000Z',
+          });
+        if (url === '/api/auth/otp/verify') {
+          account = ++otpCount === 1 ? 'account_a' : 'account_b';
+          return json(204, null);
+        }
+        if (url === '/api/auth/session')
+          return json(200, {
+            authenticated: account !== null,
+            userId: account ?? undefined,
+          });
+        if (url === '/api/learner/state') {
+          if (expire) {
+            expire = false;
+            account = null;
+            return json(401, {});
+          }
+          if (account === 'account_a') return json(200, canonicalBody);
+          throw new Error('second account state unavailable');
+        }
+        if (url === '/api/learner/cards')
+          return json(200, { items: [resolveStartSliceItem('start-a1-haus')] });
+        if (url === '/api/banners') return json(200, { banners: [] });
+        throw new Error(`Unexpected fetch: ${init?.method ?? 'GET'} ${url}`);
+      }),
+    );
+    rendered = await renderLearner({ otpUiFlag: 'true' });
+    await rendered.signInLocally();
+    expect(rendered.text()).toContain('۱ کارت دیگه مونده');
+    expire = true;
+    await act(async () => window.dispatchEvent(new Event('online')));
+    expect(rendered.text()).toContain('شمارهٔ موبایل');
+    await rendered.signInLocally();
+    expect(rendered.text()).not.toContain('۱ کارت دیگه مونده');
+    expect(rendered.text()).toContain('داده‌های یادگیری در دسترس نیستند');
+  });
+
   it('keeps the device-local label and never fetches learner state in local prototype mode', async () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);

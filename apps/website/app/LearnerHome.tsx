@@ -125,16 +125,20 @@ export function LearnerHome({
   const [serverSnapshot, setServerSnapshot] = useState<
     Extract<WebLearnerStateResult, { status: 'ok' }>['snapshot'] | null
   >(null);
-  const serverSession = serverSnapshot
-    ? deriveWebSessionItems(serverSnapshot, (contentId) =>
-        serverFaces.find((face) => face.id === contentId),
-      )
-    : { items: [], unavailableContentIds: [] };
+  const [serverStateOwner, setServerStateOwner] = useState<string | null>(null);
   const authMode = resolveLearnerAuthMode(resolvedOtpFlag);
   const inviteGateMode = resolveInviteGateMode(resolvedInviteFlag);
   const [inviteAccepted, setInviteAccepted] = useState(inviteGateMode === 'local-prototype');
   const [authenticated, setAuthenticated] = useState(false);
   const [sessionUserId, setSessionUserId] = useState<string | null>(null);
+  const activeSessionSubjectRef = useRef<string | null>(null);
+  activeSessionSubjectRef.current = authenticated ? sessionUserId : null;
+  const serverSession =
+    serverSnapshot && authenticated && sessionUserId !== null && serverStateOwner === sessionUserId
+      ? deriveWebSessionItems(serverSnapshot, (contentId) =>
+          serverFaces.find((face) => face.id === contentId),
+        )
+      : { items: [], unavailableContentIds: [] };
   const [authChecked, setAuthChecked] = useState(false);
   const [onboarded, setOnboarded] = useState(false);
   const [onboardedKey, setOnboardedKey] = useState<string | null>(null);
@@ -187,15 +191,16 @@ export function LearnerHome({
   const learningGoalReturnTargetRef = useRef<'profile' | 'settings' | null>(null);
   const profileSettingsRowRef = useRef<HTMLButtonElement>(null);
   const profileSettingsReturnRef = useRef(false);
+  const isServerOtp = authMode === 'server-otp';
   const studyItems =
     sessionItems ??
-    (serverSyncState === 'server-backed'
+    (serverSyncState === 'server-backed' &&
+    (!isServerOtp || (sessionUserId !== null && serverStateOwner === sessionUserId))
       ? serverSession.items.map(({ item }) => item)
       : process.env.NODE_ENV === 'test'
         ? (testStudyItems ?? [])
         : []);
   const remainingTodayReviews = Math.max(0, studyItems.length - reviewedToday);
-  const isServerOtp = authMode === 'server-otp';
   // Device queues and personal data must never cross authenticated accounts.
   // Legacy unscoped keys are left intact, not silently claimed by a new user.
   const storageScope = isServerOtp ? `:account:${sessionUserId ?? 'unverified'}` : '';
@@ -209,6 +214,25 @@ export function LearnerHome({
   const dailyReviewStorageKey = baseDailyReviewStorageKey + storageScope;
   const learningStreakStorageKey = baseLearningStreakStorageKey + storageScope;
   const profileIdentityEnabled = profileIdentityFlag === 'true';
+  const previousAccountRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!isServerOtp || previousAccountRef.current === sessionUserId) return;
+    previousAccountRef.current = sessionUserId;
+    // A cookie expiry or account switch must not retain the previous learner's
+    // in-memory review, identity, metrics, or card session.
+    setSessionItems(null);
+    setScreen('today');
+    setTodayGrades([]);
+    setCompletedSessions(0);
+    setServerFaces([]);
+    setServerSnapshot(null);
+    setServerStateOwner(null);
+    setServerLastSyncedAt(null);
+    setProfileIdentity({ status: 'unavailable' });
+    setPendingReviewCount(0);
+    setPendingPersonalWordSyncCount(0);
+  }, [isServerOtp, sessionUserId]);
 
   useEffect(() => {
     if (typeof document === 'undefined') return;
@@ -388,12 +412,14 @@ export function LearnerHome({
   }, [screen, sessionIndex]);
 
   const applyServerStateResult = useCallback(
-    async (result: Awaited<ReturnType<typeof fetchWebLearnerState>>) => {
+    async (result: Awaited<ReturnType<typeof fetchWebLearnerState>>, expectedUserId: string) => {
+      if (activeSessionSubjectRef.current !== expectedUserId) return;
       if (result.status === 'ok') {
         try {
           const response = await fetch('/api/learner/cards', { cache: 'no-store' });
           if (!response.ok) throw new Error('cards unavailable');
           const body: unknown = await response.json();
+          if (activeSessionSubjectRef.current !== expectedUserId) return;
           if (
             !body ||
             typeof body !== 'object' ||
@@ -404,18 +430,22 @@ export function LearnerHome({
             throw new Error('invalid card faces');
           setServerFaces(body.items);
         } catch {
+          if (activeSessionSubjectRef.current !== expectedUserId) return;
           setServerFaces([]);
           setServerSnapshot(null);
+          setServerStateOwner(null);
           setServerSyncState('error');
           return;
         }
         setServerSnapshot(result.snapshot);
+        setServerStateOwner(expectedUserId);
         setServerLastSyncedAt(new Date().toISOString());
         setServerSyncState('server-backed');
         return;
       }
       setServerFaces([]);
       setServerSnapshot(null);
+      setServerStateOwner(null);
       if (result.status === 'unauthorized') {
         setAuthenticated(false);
         setSessionUserId(null);
@@ -430,14 +460,14 @@ export function LearnerHome({
   );
 
   useEffect(() => {
-    if (!authenticated || !isServerOtp || typeof window === 'undefined') return;
+    if (!authenticated || !isServerOtp || !sessionUserId || typeof window === 'undefined') return;
     let cancelled = false;
     const readServerState = () => {
       setServerSyncState('loading');
       void fetchWebLearnerState()
         .then((result) => {
           if (cancelled) return;
-          applyServerStateResult(result);
+          void applyServerStateResult(result, sessionUserId);
         })
         .catch(() => {
           if (cancelled) return;
@@ -458,15 +488,15 @@ export function LearnerHome({
       window.removeEventListener('offline', goOffline);
       window.removeEventListener('online', goOnline);
     };
-  }, [authenticated, isServerOtp, applyServerStateResult]);
+  }, [authenticated, isServerOtp, sessionUserId, applyServerStateResult]);
 
   const retryServerStateRead = useCallback(() => {
-    if (!authenticated || !isServerOtp || typeof window === 'undefined') return;
+    if (!authenticated || !isServerOtp || !sessionUserId || typeof window === 'undefined') return;
     setServerSyncState('loading');
     void fetchWebLearnerState()
-      .then(applyServerStateResult)
+      .then((result) => applyServerStateResult(result, sessionUserId))
       .catch(() => setServerSyncState('error'));
-  }, [authenticated, isServerOtp, applyServerStateResult]);
+  }, [authenticated, isServerOtp, sessionUserId, applyServerStateResult]);
 
   const flushServerReviewQueue = useCallback(() => {
     if (!authenticated || !isServerOtp || !sessionUserId || typeof window === 'undefined') return;
@@ -482,6 +512,7 @@ export function LearnerHome({
     })
       .then(
         (result) => {
+          if (activeSessionSubjectRef.current !== sessionUserId) return;
           setPendingReviewCount(result.pendingCount);
           if (result.acknowledged) retryServerStateRead();
         },
@@ -1096,7 +1127,13 @@ export function LearnerHome({
     <>
       <TodayScreen
         reviewCount={remainingTodayReviews}
-        syncState={isServerOtp ? serverSyncState : 'local-only'}
+        syncState={
+          isServerOtp
+            ? serverSyncState === 'server-backed' && serverStateOwner !== sessionUserId
+              ? 'loading'
+              : serverSyncState
+            : 'local-only'
+        }
         pendingReviewCount={pendingReviewCount}
         lastSyncedAt={serverLastSyncedAt}
         onRetryServerRead={retryServerStateRead}

@@ -35,7 +35,7 @@ Running VPS app image: `sha256:80bf3bf3715cb5cb125f5a710e1c2b6ff7154066611b036e2
 - **MUST REMAIN DORMANT** — local-prototype auth/media/static-data paths → approved server-auth and real per-user flow. Runtime flags and fallback behavior need verification; tests must show a user cannot see another user's state and no fake metrics appear as real.
 - **STILL REQUIRED** — `sw.js`, old DB migration history, approved starter evidence, canonical Bobo assets; current main deletion is not evidence that these are obsolete. Test PWA update, migration validation and media/content provenance.
 - **UNKNOWN — NEEDS EVIDENCE** — root HTML `s-maxage=31536000`, Cloudflare policy and installed-client cache → latest build; determine edge cache and device behavior before changing caching.
-- **UNKNOWN — NEEDS EVIDENCE** — public `/api/content-media/*` → prior private-session media contract; decide from actual later owner approval and content publication state, then test unauthenticated access boundary.
+- **RESOLVED — OWNER SECURITY CONTRACT** — `/api/content-media/*` is session-gated per request, requires a published card in a published pack, returns private/no-store on success, and returns 401 to anonymous or invalid sessions. This is independently tested in a built clean checkout; it is not evidence of a live OTP journey.
 - **UNKNOWN — NEEDS EVIDENCE** — older CSS `.card-face:hover` and fixed-height `.flip-inner` → v2 card presentation; code shows clipping/transform collision but mobile PWA closure needs actual reproduction/logs before selecting the smallest fix.
 - **UNKNOWN — NEEDS EVIDENCE** — Admin/Words/Profile/Progress local untracked variants → current approved implementations; inspect source provenance and live screens before classifying removal/migration.
 
