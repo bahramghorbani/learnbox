@@ -51,6 +51,25 @@ describe('Start card media visual', () => {
     expect(rendered.text()).toContain('در حال آماده‌سازی است');
   });
 
+  // Staging Preview regression: authenticated server-media served the real asset
+  // while the UI still claimed the media was "being prepared" under the image.
+  it('shows the real server-media image without a contradictory pending notice', async () => {
+    rendered = await renderMedia('server-media');
+
+    expect(rendered.image()?.getAttribute('src')).toBe('/api/content-media/start-a1-001/image');
+    expect(rendered.text()).not.toContain('در حال آماده‌سازی است');
+    expect(rendered.text().trim()).toBe('');
+  });
+
+  it('still reports server-media failure instead of staying silent', async () => {
+    rendered = await renderMedia('server-media');
+
+    await rendered.failImage();
+
+    expect(rendered.image()).toBeNull();
+    expect(rendered.text()).toContain('اکنون در دسترس نیست');
+  });
+
   it('returns to the neutral placeholder after an image route fails', async () => {
     rendered = await renderMedia('private-session');
 
@@ -175,7 +194,9 @@ type RenderedLearnerPage = {
   unmount(): Promise<void>;
 };
 
-async function renderMedia(mode: 'placeholder' | 'local-preview' | 'private-session') {
+async function renderMedia(
+  mode: 'placeholder' | 'local-preview' | 'private-session' | 'server-media',
+) {
   const container = document.createElement('div');
   document.body.append(container);
   const root = createRoot(container);

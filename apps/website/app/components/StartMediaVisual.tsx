@@ -16,13 +16,18 @@ export function StartMediaVisual({ contentId, mode }: StartMediaVisualProps) {
   useEffect(() => setFailed(false), [contentId, mode]);
 
   const unavailable = failed || !sources.image;
+  // 'server-media' delivers the real recorded asset through the authenticated
+  // content-media route, so it carries no notice: showing a "being prepared"
+  // message next to a successfully rendered image contradicts what the user sees.
   const notice = failed
     ? 'رسانهٔ این کارت اکنون در دسترس نیست.'
     : mode === 'private-session'
       ? 'رسانهٔ محافظت‌شدهٔ آلفا فقط در نشست امن نمایش داده می‌شود.'
       : mode === 'local-preview'
         ? 'تصویر و صدای نامزد فقط برای بررسی محلی نمایش داده می‌شوند.'
-        : 'تصویر و صدای ضبط‌شدهٔ این کارت در حال آماده‌سازی است.';
+        : mode === 'server-media'
+          ? null
+          : 'تصویر و صدای ضبط‌شدهٔ این کارت در حال آماده‌سازی است.';
 
   return (
     <>
@@ -33,9 +38,11 @@ export function StartMediaVisual({ contentId, mode }: StartMediaVisualProps) {
           <img src={sources.image} alt="" onError={() => setFailed(true)} />
         )}
       </div>
-      <p className="media-pending" role={failed ? 'status' : undefined}>
-        {notice}
-      </p>
+      {notice ? (
+        <p className="media-pending" role={failed ? 'status' : undefined}>
+          {notice}
+        </p>
+      ) : null}
     </>
   );
 }
