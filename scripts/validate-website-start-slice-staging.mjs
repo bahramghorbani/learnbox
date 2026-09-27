@@ -67,9 +67,14 @@ if (
   throw new Error('Candidate media may only appear in the local preview.');
 }
 
+// Asserted on whitespace-normalised source: Prettier reflowing the conditional
+// across lines must not silently disable this check.
+const normalisedMediaSource = mediaSource.replace(/\s+/g, ' ');
+
 if (
-  !mediaSource.includes("mode === 'private-session' ? 'private-media' : 'local-preview-media'") ||
-  !mediaSource.includes('const basePath = `/api/${route}/${contentId}`')
+  !normalisedMediaSource.includes("mode === 'private-session' ? 'private-media'") ||
+  !normalisedMediaSource.includes("'local-preview-media'") ||
+  !normalisedMediaSource.includes('const basePath = `/api/${route}/${contentId}`')
 ) {
   throw new Error('The staged Start slice must map image candidates through the local-only route.');
 }

@@ -71,16 +71,41 @@ for (const disabledDefault of [
   }
 }
 
+// Route-mapping safeguards are asserted on whitespace-normalised source so that
+// Prettier reflowing a conditional cannot silently disable a security check.
+const normalisedStartMedia = startMediaSource.replace(/\s+/g, ' ');
+
 for (const required of [
   "privateMediaFlag === 'true' && authMode === 'server-otp'",
-  "mode === 'private-session' ? 'private-media' : 'local-preview-media'",
+  // A private session must resolve to the authenticated private-media route,
+  // and anything that is not a private session must never borrow that route.
+  "mode === 'private-session' ? 'private-media'",
+  "'local-preview-media'",
   '`/api/${route}/${contentId}`',
   'image: `${basePath}/image`',
   'wordAudio: `${basePath}/word-audio`',
   'sentenceAudio: `${basePath}/sentence-audio`',
 ]) {
-  if (!startMediaSource.includes(required)) {
+  if (!normalisedStartMedia.includes(required.replace(/\s+/g, ' '))) {
     throw new Error(`Private media client safeguard missing: ${required}`);
+  }
+}
+
+// Every route this module can emit must be an authenticated or local-only route:
+// a new mode must never be able to point media at a public or third-party origin.
+// Only the `route` assignment is inspected, so StartMediaMode names (e.g.
+// 'server-media') are not mistaken for route values.
+const allowedMediaRoutes = new Set(['private-media', 'content-media', 'local-preview-media']);
+const routeAssignment = /const route = (.*?);/.exec(normalisedStartMedia);
+if (!routeAssignment) {
+  throw new Error('Could not locate the media route assignment in start-media.ts');
+}
+const emittedRoutes = [...routeAssignment[1].matchAll(/(?<![=!]==\s)'([a-z-]+)'/g)]
+  .map((m) => m[1])
+  .filter((candidate) => candidate.endsWith('media'));
+for (const route of emittedRoutes) {
+  if (!allowedMediaRoutes.has(route)) {
+    throw new Error(`Unexpected media route in start-media.ts: ${route}`);
   }
 }
 
