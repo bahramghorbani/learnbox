@@ -33,6 +33,7 @@ const MAX_BATCH_SIZE = 20;
 export async function flushWebReviewQueue(input: {
   storage: SyncQueueStorage;
   key: string;
+  ownerId?: string;
   now?: Date;
   submit?: (items: WebReviewItem[]) => ReturnType<typeof submitWebReviewBatch>;
 }): Promise<WebReviewSyncResult> {
@@ -42,7 +43,7 @@ export async function flushWebReviewQueue(input: {
   if (due.length === 0)
     return { pendingCount: queue.length, attentionCount: 0, acknowledged: false };
 
-  const submit = input.submit ?? ((items) => submitWebReviewBatch(items));
+  const submit = input.submit ?? ((items) => submitWebReviewBatch(items, fetch, input.ownerId));
   const result = await submit(due.map(toWireItem));
   const currentQueue = () => loadSyncQueue<QueuedWebReview>(input.storage, input.key);
   if (result.status !== 'ok') {

@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { GET as localPreviewMedia } from '../app/api/local-preview-media/[contentId]/[kind]/route';
+import { createLearnerSession } from '../lib/server-session';
 
 // Issue #59: word audio must be the exact displayed German phrase, including
 // the article (e.g. `das Haus`). The local-preview route must serve the V2
@@ -12,12 +13,25 @@ afterEach(() => {
 });
 
 async function fetchClip(kind: string) {
-  return localPreviewMedia(new Request('http://localhost/'), {
-    params: Promise.resolve({ contentId: 'start-a1-haus', kind }),
-  });
+  vi.stubEnv('LEARNBOX_SESSION_SECRET', 'local-preview-test-session-secret-32-bytes');
+  return localPreviewMedia(
+    new Request('http://localhost/', {
+      headers: { cookie: `learnbox_alpha_session=${createLearnerSession('test-user')}` },
+    }),
+    {
+      params: Promise.resolve({ contentId: 'start-a1-haus', kind }),
+    },
+  );
 }
 
 describe('local-preview-media audio (Issue #59)', () => {
+  it('never serves a protected clip without a learner session, even on localhost', async () => {
+    vi.stubEnv('NODE_ENV', 'development');
+    const response = await localPreviewMedia(new Request('http://localhost/'), {
+      params: Promise.resolve({ contentId: 'start-a1-haus', kind: 'word-audio' }),
+    });
+    expect(response.status).toBe(401);
+  });
   it('serves the v2 word-audio clip for a bundled Start card', async () => {
     vi.stubEnv('NODE_ENV', 'development');
     const response = await fetchClip('word-audio');

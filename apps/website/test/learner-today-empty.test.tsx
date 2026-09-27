@@ -34,19 +34,23 @@ describe('Today no-due state (D1 §5)', () => {
     vi.useRealTimers();
   });
 
-  it.each([
-    ['local-only'],
-    ['offline'],
-    ['error'],
-    ['server-backed'],
-  ] as const)(
+  it.each([['local-only'], ['offline'], ['error'], ['server-backed']] as const)(
     'renders truthful empty copy without a zero-card start prompt in %s state',
     async (syncState) => {
       rendered = await renderToday({ reviewCount: 0, syncState });
 
-      // New TodayScreen: empty state shows 'هدف امروز تکمیل شد! 🎉' and disabled 'مرور کامل شد' button
-      expect(rendered.text()).toContain('هدف امروز تکمیل شد! 🎉');
-      expect(rendered.text()).toContain('مرور کامل شد');
+      // No queue must not claim a daily goal was completed, especially offline or after an error.
+      if (syncState === 'server-backed' || syncState === 'local-only') {
+        expect(rendered.text()).toContain('فعلاً کارتی در صف مرور نیست');
+      } else {
+        expect(rendered.text()).toContain('داده‌ها در دسترس نیستند');
+      }
+      expect(rendered.text()).toContain(
+        syncState === 'server-backed' || syncState === 'local-only'
+          ? 'مروری در صف نیست'
+          : 'مرور در دسترس نیست',
+      );
+      expect(rendered.text()).not.toContain('هدف امروز تکمیل شد');
       // Does NOT show a start button or stale zero count as actionable
       expect(rendered.text()).not.toContain('۰ کارت برای شروع آماده است');
     },
@@ -56,7 +60,7 @@ describe('Today no-due state (D1 §5)', () => {
     rendered = await renderToday({ reviewCount: 0, syncState: 'loading' });
 
     // New TodayScreen: loading shows 'در حال بارگذاری…' as button label
-    expect(rendered.text()).not.toContain('هدف امروز تکمیل شد! 🎉');
+    expect(rendered.text()).not.toContain('فعلاً کارتی در صف مرور نیست');
     expect(rendered.text()).toContain('در حال بارگذاری');
   });
 
@@ -69,8 +73,8 @@ describe('Today no-due state (D1 §5)', () => {
     await signInLocally(rendered.container);
     await clickButton(rendered.container, 'ادامه');
 
-    // New TodayScreen: when empty, shows Bobo celebrate, completion message, and 'همه واژه‌ها' link
-    expect(rendered.text()).toContain('هدف امروز تکمیل شد! 🎉');
+    // A device-only fixture can exhaust its queue without claiming a server-confirmed goal.
+    expect(rendered.text()).toContain('فعلاً کارتی در صف مرور نیست');
     expect(rendered.text()).toContain('همه واژه‌ها');
     // Start review button is disabled, not a primary CTA
     expect(rendered.container.querySelector('[data-testid="learnbox-today"]')).not.toBeNull();
@@ -95,6 +99,7 @@ async function renderLearner(): Promise<Rendered> {
   const { LearnerHome } = await import('../app/LearnerHome.js');
   const props = {
     hostname: 'localhost',
+    testStudyItems: (await import('../app/start-slice.js')).selectTodayStartSession(),
     otpUiFlag: 'false',
     privateMediaFlag: 'false',
     inviteFlag: 'false',

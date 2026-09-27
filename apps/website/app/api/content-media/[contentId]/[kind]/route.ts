@@ -3,6 +3,7 @@ import { accessSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { NextResponse } from 'next/server';
 import { readLearnerSession } from '../../../../../lib/server-session';
+import { isPublishedStartContentId } from '../../../../../lib/published-start-card';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -67,6 +68,20 @@ export async function GET(
 
   if (!validContentId.test(contentId) || !validKinds.has(kind)) {
     return NextResponse.json({ error: 'not found' }, { status: 404 });
+  }
+
+  try {
+    if (!(await isPublishedStartContentId(contentId)))
+      return NextResponse.json(
+        { error: 'not found' },
+        { status: 404, headers: { 'Cache-Control': 'no-store' } },
+      );
+  } catch {
+    // Never expose a file when publication cannot be verified.
+    return NextResponse.json(
+      { error: 'unavailable' },
+      { status: 503, headers: { 'Cache-Control': 'no-store' } },
+    );
   }
 
   const base = contentBase();

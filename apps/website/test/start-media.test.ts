@@ -72,7 +72,7 @@ describe('Start media mode', () => {
     ],
     [
       { privateMediaFlag: 'TRUE', authMode: 'server-otp', hostname: 'app.learnboxapp.com' },
-      'placeholder',
+      'server-media',
     ],
     [
       { privateMediaFlag: 'true', authMode: 'local-prototype', hostname: 'app.learnboxapp.com' },
@@ -96,6 +96,13 @@ describe('Start media mode', () => {
 });
 
 describe('Start media sources', () => {
+  it('builds authenticated VPS media paths without hostname as a security boundary', () => {
+    expect(buildStartMediaSources('start-a1-001', 'server-media')).toEqual({
+      image: '/api/content-media/start-a1-001/image',
+      wordAudio: '/api/content-media/start-a1-001/word-audio',
+      sentenceAudio: '/api/content-media/start-a1-001/sentence-audio',
+    });
+  });
   it('builds only relative same-origin private paths', () => {
     expect(buildStartMediaSources('start-a1-001', 'private-session')).toEqual({
       image: '/api/private-media/start-a1-001/image',

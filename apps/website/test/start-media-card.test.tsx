@@ -7,6 +7,7 @@ import { resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { StartMediaVisual } from '../app/components/StartMediaVisual';
+import { selectTodayStartSession } from '../app/start-slice';
 
 // The Start daily session rotates with the calendar date. Pin the clock so the
 // three-card session is deterministic and the asserted card ids stay stable.
@@ -103,8 +104,7 @@ describe('learner page media attachment boundary', () => {
   });
 
   it('attaches private media only after server OTP and keeps grading usable after failure', async () => {
-    // Session check (mount), OTP request (201+challenge), OTP verify (204)
-    mockFetch(response(200, { authenticated: false }), response(201, challenge()), response(204));
+    mockAuthenticatedFetch();
     renderedPage = await renderLearnerPage({
       hostname: 'app.learnboxapp.com',
       otpUiFlag: 'true',
@@ -213,7 +213,11 @@ async function renderLearnerPage(props: {
   privateMediaFlag: string;
 }): Promise<RenderedLearnerPage> {
   installLocalStorage();
-  window.localStorage.setItem('learnbox:onboarding-goal:v1:local-prototype', 'life');
+  window.localStorage.setItem(
+    'learnbox:onboarding-goal:v1:local-prototype' +
+      (props.otpUiFlag === 'true' ? ':account:learner_fixture' : ''),
+    'life',
+  );
   const container = document.createElement('div');
   document.body.append(container);
   const root = createRoot(container);
@@ -224,7 +228,11 @@ async function renderLearnerPage(props: {
   const { LearnerHome } = await import('../app/LearnerHome.js');
 
   await act(async () => {
-    root.render(createElement(LearnerHome as FunctionComponent<typeof props>, props));
+    const learnerProps = {
+      ...props,
+      testStudyItems: props.otpUiFlag === 'false' ? selectTodayStartSession() : undefined,
+    };
+    root.render(createElement(LearnerHome as FunctionComponent<typeof learnerProps>, learnerProps));
   });
 
   const signInLocally = async () => {
@@ -254,7 +262,9 @@ async function renderLearnerPage(props: {
       if (!flipContainer) throw new Error('.flip-container not found');
       const isFlipped = flipContainer.querySelector('.flip-inner')?.classList.contains('flipped');
       if (!isFlipped) {
-        await act(async () => { flipContainer.click(); });
+        await act(async () => {
+          flipContainer.click();
+        });
       }
       await clickButtonStartingWith(container, grade);
     },
@@ -295,19 +305,51 @@ async function clickButtonStartingWith(container: HTMLElement, label: string): P
   await act(async () => button.click());
 }
 
-function mockFetch(...results: Array<Response | Error>) {
-  const fetchMock = vi.fn(async () => {
-    const next = results.shift();
-    if (next instanceof Error) throw next;
-    if (!next) throw new Error('Unexpected fetch call.');
-    return next;
-  });
-  vi.stubGlobal('fetch', fetchMock);
-  return fetchMock;
+function mockAuthenticatedFetch() {
+  const items = selectTodayStartSession();
+  let signedIn = false;
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      if (url === '/api/auth/session')
+        return response(200, {
+          authenticated: signedIn,
+          userId: signedIn ? 'learner_fixture' : undefined,
+        });
+      if (url === '/api/auth/otp/request') return response(201, challenge());
+      if (url === '/api/auth/otp/verify') {
+        signedIn = true;
+        return response(204);
+      }
+      if (url === '/api/learner/state')
+        return response(200, {
+          schedules: [],
+          newCards: items.map((item, i) => ({
+            cardId: `card-${i}`,
+            contentId: item.id,
+            importance: 1,
+          })),
+          plan: {
+            mode: 'normal',
+            reviewCardIds: [],
+            newCardIds: items.map((_, i) => `card-${i}`),
+            message: '',
+          },
+          reviewEventsCount: 0,
+          reconciliationCursor: '0',
+        });
+      if (url === '/api/learner/cards') return response(200, { items });
+      if (url === '/api/banners') return response(200, { banners: [] });
+      if (url === '/api/learner/reviews' && init?.method === 'POST')
+        return response(503, { error: 'serverUnavailable' });
+      throw new Error(`Unexpected fetch: ${url}`);
+    }),
+  );
 }
 
 function response(status: number, body: unknown = null): Response {
-  return { status, json: async () => body } as Response;
+  return { status, ok: status >= 200 && status < 300, json: async () => body } as Response;
 }
 
 function challenge() {

@@ -23,8 +23,9 @@ describe('Today sync truth label (D1 §5 sync row)', () => {
 
   it('shows the review count on the Today surface when no server route is wired', async () => {
     rendered = await renderToday();
-    // New TodayScreen: shows '۳ کارت دیگه مونده' and 'هدف امروز' — no device/server label
-    expect(rendered.text()).toContain('هدف امروز');
+    // Local-only content here is an isolated test fixture, not a release fallback.
+    expect(rendered.text()).toContain('مرورهای جلسه');
+    expect(rendered.text()).not.toContain('هدف امروز');
     expect(rendered.text()).toContain('۳ کارت دیگه مونده');
     expect(rendered.text()).toContain('شروع مرور');
   });

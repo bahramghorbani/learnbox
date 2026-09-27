@@ -1,6 +1,6 @@
 import type { LearnerAuthMode } from './learner-auth-mode';
 
-export type StartMediaMode = 'placeholder' | 'local-preview' | 'private-session';
+export type StartMediaMode = 'placeholder' | 'local-preview' | 'private-session' | 'server-media';
 
 export type StartMediaSources = {
   image?: string;
@@ -24,6 +24,8 @@ export function resolveStartMediaMode({
   // Private Vercel Blob delivery: exact flag 'true' (case-sensitive) AND server-otp only.
   // Auth boundary is enforced server-side on every media route — not by hostname.
   if (privateMediaFlag === 'true' && authMode === 'server-otp') return 'private-session';
+  // VPS filesystem delivery uses its own authenticated server route.
+  if (authMode === 'server-otp') return 'server-media';
   // Local filesystem preview: localhost dev only.
   if (hostname === 'localhost' || hostname === '127.0.0.1') return 'local-preview';
   // All other cases: no media sources (UI shows placeholder).
@@ -33,7 +35,12 @@ export function resolveStartMediaMode({
 export function buildStartMediaSources(contentId: string, mode: StartMediaMode): StartMediaSources {
   if (mode === 'placeholder' || !validContentId.test(contentId)) return {};
 
-  const route = mode === 'private-session' ? 'private-media' : 'local-preview-media';
+  const route =
+    mode === 'private-session'
+      ? 'private-media'
+      : mode === 'server-media'
+        ? 'content-media'
+        : 'local-preview-media';
   const basePath = `/api/${route}/${contentId}`;
   return {
     image: `${basePath}/image`,

@@ -36,12 +36,20 @@ describe('Today loading state (D1 §5 Loading: skeleton figure, no number flash)
     expect(rendered.text()).not.toContain('در حال بارگذاری');
   });
 
-  it('shows the CTA button and count for non-loading syncStates', async () => {
-    for (const syncState of ['server-backed', 'error', 'offline', 'local-only'] as const) {
+  it('allows review only for a server snapshot (or an isolated test fixture)', async () => {
+    for (const syncState of ['server-backed', 'local-only'] as const) {
       rendered = await renderToday({ reviewCount: 3, syncState });
-      // New TodayScreen: '۳ کارت دیگه مونده' in sub-text, 'شروع مرور' as CTA
       expect(rendered.text()).toContain('۳ کارت دیگه مونده');
       expect(rendered.text()).toContain('شروع مرور');
+      expect(rendered.reviewDisabled()).toBe(false);
+      await rendered.unmount();
+      rendered = undefined;
+    }
+    for (const syncState of ['error', 'offline'] as const) {
+      rendered = await renderToday({ reviewCount: 3, syncState });
+      expect(rendered.text()).not.toContain('۳ کارت دیگه مونده');
+      expect(rendered.text()).toContain('مرور در دسترس نیست');
+      expect(rendered.reviewDisabled()).toBe(true);
       await rendered.unmount();
       rendered = undefined;
     }
@@ -52,6 +60,7 @@ type Rendered = {
   figureNumber(): string | null;
   skeleton(): boolean;
   statusText(): string;
+  reviewDisabled(): boolean;
   text(): string;
   unmount(): Promise<void>;
 };
@@ -74,6 +83,7 @@ async function renderToday(props: TodayScreenProps): Promise<Rendered> {
     figureNumber: () => container.querySelector('.summary strong')?.textContent?.trim() ?? null,
     skeleton: () => container.querySelector('.summary .today-summary-skeleton') !== null,
     statusText: () => container.querySelector('[role="status"]')?.textContent?.trim() ?? '',
+    reviewDisabled: () => container.querySelector('.cta-btn')?.hasAttribute('disabled') ?? false,
     text: () => container.textContent ?? '',
     unmount: async () => {
       await act(async () => root.unmount());

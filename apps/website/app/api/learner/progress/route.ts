@@ -1,5 +1,6 @@
 import { Pool } from 'pg';
 import { readLearnerSession } from '../../../../lib/server-session';
+import { requireVerifiedDatabaseTls } from '../../../../../api/dist/database/migration-runner.js';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -7,14 +8,17 @@ export const dynamic = 'force-dynamic';
 function getPool() {
   const url = process.env.DATABASE_URL;
   if (!url) throw new Error('DATABASE_URL not set');
-  return new Pool({ connectionString: url });
+  return new Pool({ connectionString: requireVerifiedDatabaseTls(url), max: 1 });
 }
 
 export async function GET(request: Request): Promise<Response> {
   const session = readLearnerSession(request);
   const userId = session?.subject ?? null;
   if (!userId) {
-    return Response.json({ error: 'unauthorized' }, { status: 401 });
+    return Response.json(
+      { error: 'unauthorized' },
+      { status: 401, headers: { 'Cache-Control': 'no-store' } },
+    );
   }
 
   const pool = getPool();
@@ -112,9 +116,7 @@ export async function GET(request: Request): Promise<Response> {
     const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
     const lastDay = currentStreak?.last_day?.toISOString?.()?.split?.('T')?.[0] ?? '';
     const streakDays =
-      lastDay === today || lastDay === yesterday
-        ? Number(currentStreak?.streak_length ?? 0)
-        : 0;
+      lastDay === today || lastDay === yesterday ? Number(currentStreak?.streak_length ?? 0) : 0;
 
     const longestStreak = await pool.query(
       `WITH daily AS (
@@ -175,12 +177,12 @@ export async function GET(request: Request): Promise<Response> {
 
     // 12. CEFR
     const cefr = await pool.query(
-      `SELECT cv.cefr_level, count(*) as count
+      `SELECT cv.content_json->>'cefr' as cefr_level, count(*) as count
       FROM card_schedules cs
       JOIN card_versions cv ON cv.card_id = cs.card_id AND cv.status = 'published'
       WHERE cs.user_id = $1 AND cs.state IN ('review','mastered')
-      GROUP BY cv.cefr_level
-      ORDER BY cv.cefr_level`,
+      GROUP BY cv.content_json->>'cefr'
+      ORDER BY cefr_level`,
       [userId],
     );
 
@@ -198,67 +200,76 @@ export async function GET(request: Request): Promise<Response> {
     const boxes = boxDist.rows[0];
     const states = stateDist.rows[0];
 
-    return Response.json({
-      leitnerBoxes: {
-        box1: Number(boxes.box1),
-        box2: Number(boxes.box2),
-        box3: Number(boxes.box3),
-        box4: Number(boxes.box4),
-        box5: Number(boxes.box5),
-      },
-      cardStates: {
-        new: Number(states.new_count),
-        learning: Number(states.learning_count),
-        review: Number(states.review_count),
-        mastered: Number(states.mastered_count),
-        total: Number(states.total),
-      },
-      weeklyActivity: weeklyActivity.rows.map((r) => ({
-        day: r.day,
-        reviews: Number(r.reviews),
-      })),
-      monthlyActivity: monthlyActivity.rows.map((r) => ({
-        day: r.day,
-        reviews: Number(r.reviews),
-      })),
-      studyPattern: {
-        bestHour: hourPattern.rows.length > 0
-          ? Number(hourPattern.rows.sort((a, b) => Number(b.reviews) - Number(a.reviews))[0].hour)
-          : null,
-        bestDay: dayPattern.rows.length > 0
-          ? dowNames[Number(dayPattern.rows[0].dow)]
-          : null,
-        hourDistribution: hourPattern.rows.map((r) => ({
-          hour: Number(r.hour),
+    return Response.json(
+      {
+        leitnerBoxes: {
+          box1: Number(boxes.box1),
+          box2: Number(boxes.box2),
+          box3: Number(boxes.box3),
+          box4: Number(boxes.box4),
+          box5: Number(boxes.box5),
+        },
+        cardStates: {
+          new: Number(states.new_count),
+          learning: Number(states.learning_count),
+          review: Number(states.review_count),
+          mastered: Number(states.mastered_count),
+          total: Number(states.total),
+        },
+        weeklyActivity: weeklyActivity.rows.map((r) => ({
+          day: r.day,
           reviews: Number(r.reviews),
         })),
+        monthlyActivity: monthlyActivity.rows.map((r) => ({
+          day: r.day,
+          reviews: Number(r.reviews),
+        })),
+        studyPattern: {
+          bestHour:
+            hourPattern.rows.length > 0
+              ? Number(
+                  hourPattern.rows.sort((a, b) => Number(b.reviews) - Number(a.reviews))[0].hour,
+                )
+              : null,
+          bestDay: dayPattern.rows.length > 0 ? dowNames[Number(dayPattern.rows[0].dow)] : null,
+          hourDistribution: hourPattern.rows.map((r) => ({
+            hour: Number(r.hour),
+            reviews: Number(r.reviews),
+          })),
+        },
+        streak: {
+          current: streakDays,
+          longest: Number(longestStreak.rows[0]?.longest ?? 0),
+          bestDayReviews: Number(bestDay.rows[0]?.reviews ?? 0),
+          bestDayDate: bestDay.rows[0]?.day ?? null,
+        },
+        totals: {
+          reviews: Number(totalReviews.rows[0].total),
+          todayReviews: Number(todayReviews.rows[0].today),
+          dailyAverage: Number(dailyAvg.rows[0]?.avg_daily ?? 0),
+          firstReviewDate: firstReview.rows[0]?.first ?? null,
+        },
+        packs: packs.rows.map((p) => ({
+          id: p.id,
+          name: p.display_name,
+          totalCards: Number(p.total_cards),
+          startedCards: Number(p.started_cards),
+          learnedCards: Number(p.learned_cards),
+        })),
+        cefr: cefr.rows.map((r) => ({
+          level: r.cefr_level,
+          count: Number(r.count),
+        })),
       },
-      streak: {
-        current: streakDays,
-        longest: Number(longestStreak.rows[0]?.longest ?? 0),
-        bestDayReviews: Number(bestDay.rows[0]?.reviews ?? 0),
-        bestDayDate: bestDay.rows[0]?.day ?? null,
-      },
-      totals: {
-        reviews: Number(totalReviews.rows[0].total),
-        todayReviews: Number(todayReviews.rows[0].today),
-        dailyAverage: Number(dailyAvg.rows[0]?.avg_daily ?? 0),
-        firstReviewDate: firstReview.rows[0]?.first ?? null,
-      },
-      packs: packs.rows.map((p) => ({
-        id: p.id,
-        name: p.display_name,
-        totalCards: Number(p.total_cards),
-        startedCards: Number(p.started_cards),
-        learnedCards: Number(p.learned_cards),
-      })),
-      cefr: cefr.rows.map((r) => ({
-        level: r.cefr_level,
-        count: Number(r.count),
-      })),
-    });
+      { headers: { 'Cache-Control': 'private, no-store' } },
+    );
   } catch (error) {
     console.error('[learner/progress] failed:', error);
-    return Response.json({ error: 'server_error' }, { status: 500 });
+    return Response.json(
+      { error: 'server_error' },
+      { status: 500, headers: { 'Cache-Control': 'no-store' } },
+    );
+  } finally {
+    await pool.end();
   }
 }

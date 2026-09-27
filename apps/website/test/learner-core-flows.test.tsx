@@ -3,6 +3,7 @@
 import { act, createElement, Fragment, type FunctionComponent } from 'react';
 import { createRoot } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { selectTodayStartSession } from '../app/start-slice';
 
 // The Start daily session rotates with the calendar date. Pin the clock so the
 // three-card session is deterministic and the asserted card ids stay stable.
@@ -43,7 +44,7 @@ describe('learner core flows', () => {
     await rendered.clickButton('ادامه');
 
     // 3. Today screen with the three-card Start session.
-    expect(rendered.text()).toContain('هدف امروز');
+    expect(rendered.text()).toContain('مرورهای جلسه');
     expect(rendered.text()).toContain('۳ کارت دیگه مونده');
 
     // 4. Start review → first card front.
@@ -64,8 +65,8 @@ describe('learner core flows', () => {
     // 7. Completion screen records the session.
     expect(rendered.text()).toContain('آفرین، ثبت شد.');
     await rendered.clickButton('بازگشت به امروز');
-    // New TodayScreen shows 'مرور کامل شد' when no reviews remain, and a 'همه واژه‌ها' link.
-    expect(rendered.text()).toContain('هدف امروز تکمیل شد');
+    // New TodayScreen shows 'مروری در صف نیست' when no reviews remain, and a 'همه واژه‌ها' link.
+    expect(rendered.text()).toContain('فعلاً کارتی در صف مرور نیست');
   });
 
   it('keeps grade events in the offline review queue', async () => {
@@ -103,8 +104,8 @@ describe('learner core flows', () => {
     expect(document.activeElement?.textContent).toContain('آفرین، ثبت شد.');
 
     await rendered.clickButton('بازگشت به امروز');
-    // New TodayScreen: when all reviews done, shows 'مرور کامل شد' (disabled button)
-    expect(rendered.text()).toContain('مرور کامل شد');
+    // New TodayScreen: when all reviews done, shows 'مروری در صف نیست' (disabled button)
+    expect(rendered.text()).toContain('مروری در صف نیست');
   });
 
   it('resumes an interrupted review from the saved session index', async () => {
@@ -127,7 +128,7 @@ describe('learner core flows', () => {
     await rendered.clickButton('ادامه');
 
     // Today screen shows streak data and the start button.
-    expect(rendered.text()).toContain('هدف امروز');
+    expect(rendered.text()).toContain('مرورهای جلسه');
 
     await rendered.startReview();
     await rendered.flipAndGrade('یادم آمد');
@@ -151,9 +152,7 @@ describe('learner core flows', () => {
     await rendered.clickButton('بازگشت به امروز');
     await rendered.clickButton('پیشرفت');
 
-    expect(rendered.text()).toContain(
-      '۳ پاسخ فقط روی این دستگاه ذخیره شده است.',
-    );
+    expect(rendered.text()).toContain('۳ پاسخ فقط روی این دستگاه ذخیره شده است.');
   });
 
   it('adds a personal word and queues it for secure sync', async () => {
@@ -294,6 +293,7 @@ async function renderLearner(): Promise<RenderedLearner> {
   const { LearnerHome } = await import('../app/LearnerHome.js');
   const props = {
     hostname: 'localhost',
+    testStudyItems: selectTodayStartSession(),
     otpUiFlag: 'false',
     privateMediaFlag: 'false',
     inviteFlag: 'false',
@@ -340,7 +340,9 @@ async function renderLearner(): Promise<RenderedLearner> {
         // Only click flip-container if card back is not yet visible (grades not showing)
         const isFlipped = flipContainer.querySelector('.flip-inner')?.classList.contains('flipped');
         if (!isFlipped) {
-          await act(async () => { flipContainer.click(); });
+          await act(async () => {
+            flipContainer.click();
+          });
         }
       }
       await clickButtonStartingWith(container, grade);

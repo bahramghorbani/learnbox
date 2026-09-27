@@ -3,6 +3,7 @@
 import { act, createElement, Fragment, type FunctionComponent } from 'react';
 import { createRoot } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { resolveStartSliceItem } from '../app/start-slice';
 
 const pinnedNow = new Date('2026-08-08T12:00:00.000Z');
 
@@ -51,7 +52,8 @@ describe('Today server snapshot truth states', () => {
       const method = init?.method ?? 'GET';
       // Allow non-critical endpoints; track all calls to assert /api/learner/state absent
       if (method === 'GET' && url === '/api/banners') return json(200, { banners: [] });
-      if (method === 'GET' && url === '/api/auth/session') return json(200, { authenticated: false });
+      if (method === 'GET' && url === '/api/auth/session')
+        return json(200, { authenticated: false });
       return json(200, {});
     });
     vi.stubGlobal('fetch', fetchMock);
@@ -120,8 +122,8 @@ describe('Today server snapshot truth states', () => {
     await act(async () => {
       await Promise.resolve();
     });
-    // New TodayScreen: error shows 'اتصال به سرور قطع است — داده‌های محلی نمایش داده می‌شود'
-    expect(rendered.text()).toContain('اتصال به سرور قطع است');
+    // Error must not advertise locally bundled learning data.
+    expect(rendered.text()).toContain('داده‌های یادگیری در دسترس نیستند');
     expect(rendered.text()).not.toContain('سرور LearnBox خوانده شده');
     expect(rendered.text()).not.toContain('همگام‌سازی شد');
   });
@@ -133,6 +135,7 @@ describe('Today server snapshot truth states', () => {
       if (attempts === 1) throw new Error('network unavailable');
       return json(200, canonicalBody);
     });
+    let signedIn = false;
     const router = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);
       const method = init?.method ?? 'GET';
@@ -143,10 +146,19 @@ describe('Today server snapshot truth states', () => {
           resendAvailableAt: '2026-08-08T12:01:00.000Z',
         });
       }
-      if (method === 'POST' && url === '/api/auth/otp/verify') return json(204, null);
+      if (method === 'POST' && url === '/api/auth/otp/verify') {
+        signedIn = true;
+        return json(204, null);
+      }
       if (method === 'GET' && url === '/api/learner/state') return stateFetch();
+      if (method === 'GET' && url === '/api/learner/cards')
+        return json(200, { items: [resolveStartSliceItem('start-a1-haus')] });
       if (method === 'GET' && url === '/api/banners') return json(200, { banners: [] });
-      if (method === 'GET' && url === '/api/auth/session') return json(200, { authenticated: false });
+      if (method === 'GET' && url === '/api/auth/session')
+        return json(200, {
+          authenticated: signedIn,
+          userId: signedIn ? 'learner_fixture' : undefined,
+        });
       throw new Error(`Unexpected fetch: ${method} ${url}`);
     });
     vi.stubGlobal('fetch', router);
@@ -156,8 +168,8 @@ describe('Today server snapshot truth states', () => {
     await act(async () => {
       await Promise.resolve();
     });
-    // New TodayScreen: error shows 'اتصال به سرور قطع است'; success shows card count directly
-    expect(rendered.text()).toContain('اتصال به سرور قطع است');
+    // New TodayScreen: error shows 'داده‌های یادگیری در دسترس نیستند'; success shows card count directly
+    expect(rendered.text()).toContain('داده‌های یادگیری در دسترس نیستند');
     expect(rendered.text()).not.toContain('وضعیت یادگیری از سرور خوانده شد');
     await rendered.clickButton('تلاش دوباره');
     await act(async () => {
@@ -165,7 +177,7 @@ describe('Today server snapshot truth states', () => {
     });
     expect(stateFetch.mock.calls).toHaveLength(2);
     // After retry success: error banner gone, card count shows
-    expect(rendered.text()).not.toContain('اتصال به سرور قطع است');
+    expect(rendered.text()).not.toContain('داده‌های یادگیری در دسترس نیستند');
     expect(rendered.text()).toContain('۱ کارت دیگه مونده');
   });
 
@@ -208,12 +220,13 @@ describe('Today server snapshot truth states', () => {
     });
     expect(rendered.text()).toContain('آفلاین');
     // After going offline, no more success text
-    expect(rendered.text()).not.toContain('اتصال به سرور قطع است');
+    expect(rendered.text()).not.toContain('داده‌های یادگیری در دسترس نیستند');
   });
 
   it('re-reads the learner state after reconnect and returns to the server-read label without a reload', async () => {
     Object.defineProperty(navigator, 'onLine', { configurable: true, value: true });
     const stateFetch = vi.fn(async () => json(200, canonicalBody));
+    let signedIn = false;
     const router = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);
       const method = init?.method ?? 'GET';
@@ -224,10 +237,19 @@ describe('Today server snapshot truth states', () => {
           resendAvailableAt: '2026-08-08T12:01:00.000Z',
         });
       }
-      if (method === 'POST' && url === '/api/auth/otp/verify') return json(204, null);
+      if (method === 'POST' && url === '/api/auth/otp/verify') {
+        signedIn = true;
+        return json(204, null);
+      }
       if (method === 'GET' && url === '/api/learner/state') return stateFetch();
+      if (method === 'GET' && url === '/api/learner/cards')
+        return json(200, { items: [resolveStartSliceItem('start-a1-haus')] });
       if (method === 'GET' && url === '/api/banners') return json(200, { banners: [] });
-      if (method === 'GET' && url === '/api/auth/session') return json(200, { authenticated: false });
+      if (method === 'GET' && url === '/api/auth/session')
+        return json(200, {
+          authenticated: signedIn,
+          userId: signedIn ? 'learner_fixture' : undefined,
+        });
       throw new Error(`Unexpected fetch: ${method} ${url}`);
     });
     vi.stubGlobal('fetch', router);
@@ -295,7 +317,7 @@ describe('Today server snapshot truth states', () => {
   it('preserves the local pending-sync chip alongside server-backed figures', async () => {
     vi.stubGlobal('fetch', mockRouter({ state: () => json(200, canonicalBody) }));
     window.localStorage.setItem(
-      'learnbox:review-sync:v1:local-prototype',
+      'learnbox:review-sync:v1:local-prototype:account:learner_fixture',
       JSON.stringify([
         {
           clientEventId: 'evt-1',
@@ -372,6 +394,7 @@ async function renderLearner(props: { otpUiFlag: string }): Promise<RenderedLear
 }
 
 function mockRouter(routes: { state: () => Response | never }): typeof fetch {
+  let signedIn = false;
   return vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = String(input);
     const method = init?.method ?? 'GET';
@@ -382,17 +405,26 @@ function mockRouter(routes: { state: () => Response | never }): typeof fetch {
         resendAvailableAt: '2026-08-08T12:01:00.000Z',
       });
     }
-    if (method === 'POST' && url === '/api/auth/otp/verify') return json(204, null);
+    if (method === 'POST' && url === '/api/auth/otp/verify') {
+      signedIn = true;
+      return json(204, null);
+    }
     if (method === 'GET' && url === '/api/learner/state') return routes.state();
-    // Non-critical endpoints: banners and session check fail silently
+    if (method === 'GET' && url === '/api/learner/cards')
+      return json(200, { items: [resolveStartSliceItem('start-a1-haus')] });
+    // Non-critical endpoints: banners and session status
     if (method === 'GET' && url === '/api/banners') return json(200, { banners: [] });
-    if (method === 'GET' && url === '/api/auth/session') return json(200, { authenticated: false });
+    if (method === 'GET' && url === '/api/auth/session')
+      return json(200, {
+        authenticated: signedIn,
+        userId: signedIn ? 'learner_fixture' : undefined,
+      });
     throw new Error(`Unexpected fetch: ${method} ${url}`);
   });
 }
 
 function json(status: number, body: unknown): Response {
-  return { status, json: async () => body } as Response;
+  return { status, ok: status >= 200 && status < 300, json: async () => body } as Response;
 }
 
 function installLocalStorage() {

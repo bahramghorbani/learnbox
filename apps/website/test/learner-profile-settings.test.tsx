@@ -374,8 +374,9 @@ describe('learner Profile and Settings shell flows', () => {
   });
 
   it('ignores a deferred identity completion after navigation', async () => {
-    window.localStorage.setItem(onboardingGoalKey, 'life');
+    window.localStorage.setItem(`${onboardingGoalKey}:account:profile_fixture`, 'life');
     let resolveProfile: ((response: Response) => void) | undefined;
+    let signedIn = false;
     vi.stubGlobal(
       'fetch',
       vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
@@ -389,10 +390,25 @@ describe('learner Profile and Settings shell flows', () => {
               resendAvailableAt: '2026-08-08T12:01:00.000Z',
             }),
           } as Response);
-        if (init?.method === 'POST' && url === '/api/auth/otp/verify')
+        if (init?.method === 'POST' && url === '/api/auth/otp/verify') {
+          signedIn = true;
           return Promise.resolve({ status: 204, json: async () => null } as Response);
-        if (url === '/api/learner/state')
-          return Promise.resolve({ status: 401, json: async () => ({}) } as Response);
+        }
+        if (url === '/api/auth/session')
+          return Promise.resolve({
+            status: 200,
+            json: async () => ({
+              authenticated: signedIn,
+              userId: signedIn ? 'profile_fixture' : undefined,
+            }),
+          } as Response);
+        if (url === '/api/learner/state') return Promise.resolve(emptyServerState());
+        if (url === '/api/learner/cards')
+          return Promise.resolve({
+            status: 200,
+            ok: true,
+            json: async () => ({ items: [] }),
+          } as Response);
         if (url === '/api/learner/profile')
           return new Promise<Response>((resolve) => {
             resolveProfile = resolve;
@@ -416,8 +432,9 @@ describe('learner Profile and Settings shell flows', () => {
   });
 
   it('clears identity offline and rereads it only on reconnect while eligible', async () => {
-    window.localStorage.setItem(onboardingGoalKey, 'life');
+    window.localStorage.setItem(`${onboardingGoalKey}:account:profile_fixture`, 'life');
     let profileReads = 0;
+    let signedIn = false;
     vi.stubGlobal(
       'fetch',
       vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -431,10 +448,21 @@ describe('learner Profile and Settings shell flows', () => {
               resendAvailableAt: '2026-08-08T12:01:00.000Z',
             }),
           } as Response;
-        if (init?.method === 'POST' && url === '/api/auth/otp/verify')
+        if (init?.method === 'POST' && url === '/api/auth/otp/verify') {
+          signedIn = true;
           return { status: 204, json: async () => null } as Response;
-        if (url === '/api/learner/state')
-          return { status: 401, json: async () => ({}) } as Response;
+        }
+        if (url === '/api/auth/session')
+          return {
+            status: 200,
+            json: async () => ({
+              authenticated: signedIn,
+              userId: signedIn ? 'profile_fixture' : undefined,
+            }),
+          } as Response;
+        if (url === '/api/learner/state') return emptyServerState();
+        if (url === '/api/learner/cards')
+          return { status: 200, ok: true, json: async () => ({ items: [] }) } as Response;
         if (url === '/api/learner/profile') {
           profileReads += 1;
           return {
@@ -462,7 +490,8 @@ describe('learner Profile and Settings shell flows', () => {
   });
 
   it('keeps disabled identity composition neutral without fetching', async () => {
-    window.localStorage.setItem(onboardingGoalKey, 'life');
+    window.localStorage.setItem(`${onboardingGoalKey}:account:profile_fixture`, 'life');
+    let signedIn = false;
     const profileFetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);
       if (init?.method === 'POST' && url === '/api/auth/otp/request')
@@ -474,8 +503,18 @@ describe('learner Profile and Settings shell flows', () => {
             resendAvailableAt: '2026-08-08T12:01:00.000Z',
           }),
         } as Response;
-      if (init?.method === 'POST' && url === '/api/auth/otp/verify')
+      if (init?.method === 'POST' && url === '/api/auth/otp/verify') {
+        signedIn = true;
         return { status: 204, json: async () => null } as Response;
+      }
+      if (url === '/api/auth/session')
+        return {
+          status: 200,
+          json: async () => ({
+            authenticated: signedIn,
+            userId: signedIn ? 'profile_fixture' : undefined,
+          }),
+        } as Response;
       if (url === '/api/learner/profile')
         return { status: 200, json: async () => ({ maskedPhone: '0912***4567' }) } as Response;
       throw new Error(`Unexpected fetch: ${init?.method} ${url}`);
@@ -835,6 +874,20 @@ type RenderedLearner = Rendered & {
   signInLocally(): Promise<void>;
 };
 
+function emptyServerState(): Response {
+  return {
+    status: 200,
+    ok: true,
+    json: async () => ({
+      schedules: [],
+      newCards: [],
+      plan: { mode: 'normal', reviewCardIds: [], newCardIds: [], message: '' },
+      reviewEventsCount: 0,
+      reconciliationCursor: '0',
+    }),
+  } as Response;
+}
+
 async function renderLearner(
   overrides?: Partial<{
     hostname: string;
@@ -855,6 +908,7 @@ async function renderLearner(
   const { LearnerHome } = await import('../app/LearnerHome.js');
   const props = {
     hostname: 'localhost',
+    testStudyItems: (await import('../app/start-slice.js')).selectTodayStartSession(),
     otpUiFlag: 'false',
     privateMediaFlag: 'false',
     profileIdentityFlag: 'false',

@@ -1,5 +1,6 @@
 import { Pool } from 'pg';
 import { readLearnerSession } from '../../../../lib/server-session';
+import { requireVerifiedDatabaseTls } from '../../../../../api/dist/database/migration-runner.js';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -7,7 +8,7 @@ export const dynamic = 'force-dynamic';
 function getPool() {
   const url = process.env.DATABASE_URL;
   if (!url) throw new Error('DATABASE_URL is not configured');
-  return new Pool({ connectionString: url, max: 1 });
+  return new Pool({ connectionString: requireVerifiedDatabaseTls(url), max: 1 });
 }
 
 /**
@@ -35,37 +36,25 @@ export async function GET(request: Request): Promise<Response> {
       `SELECT
          COUNT(*) as reviewed_today,
          COUNT(*) FILTER (WHERE grade = 'remembered') as correct_today,
-         MIN(occurred_at) as first_review_today,
          MAX(occurred_at) as last_review_at
        FROM review_events
        WHERE user_id = $1 AND occurred_at::date = CURRENT_DATE`,
-      [userId]
+      [userId],
     );
 
     const reviewedToday = parseInt(todayStats.rows[0]?.reviewed_today ?? '0', 10);
     const correctToday = parseInt(todayStats.rows[0]?.correct_today ?? '0', 10);
     const lastReviewAt = todayStats.rows[0]?.last_review_at ?? null;
-    const firstReviewToday = todayStats.rows[0]?.first_review_today ?? null;
 
-    // Estimate study time (avg 20 seconds per card)
-    let studyMinutesToday = 0;
-    if (firstReviewToday && lastReviewAt && reviewedToday > 1) {
-      const diff = new Date(lastReviewAt).getTime() - new Date(firstReviewToday).getTime();
-      studyMinutesToday = Math.max(1, Math.round(diff / 60000));
-    } else if (reviewedToday > 0) {
-      studyMinutesToday = Math.max(1, Math.round(reviewedToday * 20 / 60));
-    }
-
-    const accuracyPercent = reviewedToday > 0
-      ? Math.round((correctToday / reviewedToday) * 100)
-      : 0;
+    const accuracyPercent =
+      reviewedToday > 0 ? Math.round((correctToday / reviewedToday) * 100) : 0;
 
     // 2. Cards due for review (today or overdue)
     const dueCards = await pool.query(
       `SELECT COUNT(*) as due_count
        FROM card_schedules
        WHERE user_id = $1 AND due_at <= NOW()`,
-      [userId]
+      [userId],
     );
     const dueCount = parseInt(dueCards.rows[0]?.due_count ?? '0', 10);
 
@@ -79,7 +68,7 @@ export async function GET(request: Request): Promise<Response> {
            SELECT 1 FROM card_schedules cs
            WHERE cs.card_id = cv.card_id AND cs.user_id = $1
          )`,
-      [userId]
+      [userId],
     );
     const newCount = parseInt(newCards.rows[0]?.new_count ?? '0', 10);
 
@@ -101,7 +90,7 @@ export async function GET(request: Request): Promise<Response> {
        WHERE user_id = $1
        GROUP BY box
        ORDER BY box`,
-      [userId]
+      [userId],
     );
     const boxes = [0, 0, 0, 0, 0];
     for (const row of leitnerBoxes.rows) {
@@ -116,12 +105,12 @@ export async function GET(request: Request): Promise<Response> {
        WHERE user_id = $1 AND occurred_at >= CURRENT_DATE - INTERVAL '6 days'
        GROUP BY day
        ORDER BY day`,
-      [userId]
+      [userId],
     );
     const weekDays: { day: string; active: boolean }[] = [];
     const persianDayNames = ['ی', 'د', 'س', 'چ', 'پ', 'ج', 'ش'];
     const activeDays = new Set(
-      weeklyActivity.rows.map((r: { day: string }) => new Date(r.day).toISOString().split('T')[0])
+      weeklyActivity.rows.map((r: { day: string }) => new Date(r.day).toISOString().split('T')[0]),
     );
     for (let i = 6; i >= 0; i--) {
       const d = new Date();
@@ -141,7 +130,7 @@ export async function GET(request: Request): Promise<Response> {
        FROM review_events
        WHERE user_id = $1
        ORDER BY day DESC`,
-      [userId]
+      [userId],
     );
     if (allActivity.rows.length > 0) {
       const today = new Date();
@@ -171,19 +160,25 @@ export async function GET(request: Request): Promise<Response> {
        WHERE cs.user_id = $1 AND cs.due_at <= NOW() + INTERVAL '1 day'
        ORDER BY cs.due_at ASC
        LIMIT 3`,
-      [userId]
+      [userId],
     );
-    const dueSoonCards = dueSoon.rows.map((r: { card_id: string; content_json: { lemma?: string; article?: string; persianMeanings?: string[] }; due_at: string }) => {
-      const c = r.content_json ?? {};
-      const article = c.article ?? '';
-      const lemma = c.lemma ?? '';
-      return {
-        cardId: r.card_id,
-        german: article ? `${article} ${lemma}` : lemma,
-        persian: (c.persianMeanings ?? [])[0] ?? '',
-        dueAt: r.due_at,
-      };
-    });
+    const dueSoonCards = dueSoon.rows.map(
+      (r: {
+        card_id: string;
+        content_json: { lemma?: string; article?: string; persianMeanings?: string[] };
+        due_at: string;
+      }) => {
+        const c = r.content_json ?? {};
+        const article = c.article ?? '';
+        const lemma = c.lemma ?? '';
+        return {
+          cardId: r.card_id,
+          german: article ? `${article} ${lemma}` : lemma,
+          persian: (c.persianMeanings ?? [])[0] ?? '',
+          dueAt: r.due_at,
+        };
+      },
+    );
 
     // 7. Days since last activity (for smart recovery)
     let daysSinceLastActivity = 0;
@@ -192,7 +187,7 @@ export async function GET(request: Request): Promise<Response> {
     } else {
       const lastEver = await pool.query(
         `SELECT MAX(occurred_at) as last_at FROM review_events WHERE user_id = $1`,
-        [userId]
+        [userId],
       );
       if (lastEver.rows[0]?.last_at) {
         const diff = Date.now() - new Date(lastEver.rows[0].last_at).getTime();
@@ -205,7 +200,7 @@ export async function GET(request: Request): Promise<Response> {
     // 8. Total stats (all time)
     const totalStats = await pool.query(
       `SELECT COUNT(*) as total_reviews FROM review_events WHERE user_id = $1`,
-      [userId]
+      [userId],
     );
     const totalReviews = parseInt(totalStats.rows[0]?.total_reviews ?? '0', 10);
 
@@ -226,24 +221,27 @@ export async function GET(request: Request): Promise<Response> {
       }
     }
 
-    return Response.json({
-      reviewedToday,
-      correctToday,
-      accuracyPercent,
-      studyMinutesToday,
-      totalTodayCards,
-      dueCount,
-      newCount,
-      dailyGoal: 15, // TODO: make configurable per user
-      leitnerBoxes: boxes,
-      weekDays,
-      streakDays,
-      longestStreak,
-      dueSoonCards,
-      daysSinceLastActivity,
-      lastReviewAt,
-      totalReviews,
-    });
+    return Response.json(
+      {
+        reviewedToday,
+        correctToday,
+        accuracyPercent,
+        studyMinutesToday: null, // Duration is not measured by the review-event schema.
+        totalTodayCards,
+        dueCount,
+        newCount,
+        dailyGoal: null, // No persisted per-learner goal exists yet.
+        leitnerBoxes: boxes,
+        weekDays,
+        streakDays,
+        longestStreak,
+        dueSoonCards,
+        daysSinceLastActivity,
+        lastReviewAt,
+        totalReviews,
+      },
+      { headers: { 'Cache-Control': 'private, no-store' } },
+    );
   } catch (err) {
     console.error('[today] API error:', err);
     return Response.json({ error: 'internal_error' }, { status: 500 });

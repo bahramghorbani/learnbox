@@ -33,6 +33,7 @@ export type WebReviewReconciliationResult =
 export async function submitWebReviewBatch(
   items: WebReviewItem[],
   fetchFn: typeof fetch = fetch,
+  ownerId?: string,
 ): Promise<WebReviewSubmitResult> {
   let response: Response;
   try {
@@ -40,7 +41,11 @@ export async function submitWebReviewBatch(
       method: 'POST',
       credentials: 'same-origin',
       cache: 'no-store',
-      headers: { 'content-type': 'application/json', accept: 'application/json' },
+      headers: {
+        'content-type': 'application/json',
+        accept: 'application/json',
+        ...(ownerId ? { 'x-learnbox-review-owner': ownerId } : {}),
+      },
       body: JSON.stringify({ items }),
     });
   } catch {
