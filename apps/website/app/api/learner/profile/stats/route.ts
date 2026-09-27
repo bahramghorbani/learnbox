@@ -131,12 +131,13 @@ export async function GET(request: Request): Promise<Response> {
 
     // CEFR level estimation
     const cefrDistribution = await pool.query(
-      `SELECT cv.cefr_level, count(*) as count
+      `SELECT COALESCE(NULLIF(cv.content_json->>'cefr', ''), 'unknown') AS cefr_level,
+        count(*) as count
       FROM card_schedules cs
       JOIN card_versions cv ON cv.card_id = cs.card_id AND cv.status = 'published'
       WHERE cs.user_id = $1 AND cs.state = 'review'
-      GROUP BY cv.cefr_level
-      ORDER BY cv.cefr_level`,
+      GROUP BY COALESCE(NULLIF(cv.content_json->>'cefr', ''), 'unknown')
+      ORDER BY cefr_level`,
       [userId],
     );
 
