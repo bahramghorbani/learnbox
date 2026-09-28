@@ -23,6 +23,12 @@ type ProfileIdentity =
 interface ProfileScreenProps {
   goal: LearnerLearningGoal | null;
   pendingReviewCount: number;
+  /**
+   * True when this session posts review answers to the server. The status note must describe what
+   * actually happens: server sync has been live and automatic (on mount, on reconnect, and after
+   * each answer), while this screen still told learners it was not enabled.
+   */
+  syncsToServer?: boolean;
   identity?: ProfileIdentity;
   onRetryIdentity?: () => void;
   headingRef?: RefObject<HTMLHeadingElement | null>;
@@ -41,6 +47,7 @@ const supportEmail = 'mailto:hi@learnboxapp.com';
 export function ProfileScreen({
   goal,
   pendingReviewCount,
+  syncsToServer = false,
   identity = { status: 'unavailable' },
   onRetryIdentity,
   headingRef,
@@ -130,7 +137,9 @@ export function ProfileScreen({
             </strong>
           )}
           <p className="profile-card-note">
-            همگام‌سازی خودکار هنوز فعال نیست؛ این شمارش فقط صف واقعی همین مرورگر را نشان می‌دهد.
+            {syncsToServer
+              ? 'پاسخ‌های شما به‌صورت خودکار برای سرور فرستاده می‌شوند؛ اگر اینترنت قطع باشد، در همین دستگاه می‌مانند و پس از وصل‌شدن دوباره فرستاده می‌شوند.'
+              : 'در این حالت پاسخ‌ها فقط روی همین دستگاه نگهداری می‌شوند و برای سرور فرستاده نمی‌شوند.'}
           </p>
         </div>
       </section>

@@ -108,8 +108,11 @@ describe('ProfileScreen', () => {
 
     expect(rendered.text()).not.toContain('تأیید نشده است');
     expect(rendered.text()).toContain('رویدادی در صف همگام‌سازی پاسخ‌های مرور نیست.');
-    // The device-local truth note never claims a server-synced state.
-    expect(rendered.text()).toContain('همگام‌سازی خودکار هنوز فعال نیست');
+    // The device-local note must never claim a server-synced state. The old wording ("automatic
+    // sync is not enabled yet") was globally false once server sync went live, so the note is now
+    // conditional: in device-only mode it says answers stay on this device.
+    expect(rendered.text()).toContain('فقط روی همین دستگاه نگهداری می‌شوند');
+    expect(rendered.text()).not.toContain('به‌صورت خودکار برای سرور فرستاده می‌شوند');
   });
 
   it('offers a goal picker when no device-local goal exists', async () => {

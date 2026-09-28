@@ -983,6 +983,8 @@ export function LearnerHome({
       <ProfileScreen
         goal={learningGoal}
         pendingReviewCount={pendingReviewCount}
+        // Server sync runs exactly when the session is a real server-backed OTP session.
+        syncsToServer={authenticated && isServerOtp}
         identity={profileIdentity}
         onRetryIdentity={readProfileIdentity}
         headingRef={profileHeadingRef}
