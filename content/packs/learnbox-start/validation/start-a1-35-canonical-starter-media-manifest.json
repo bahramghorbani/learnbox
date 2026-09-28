@@ -44,8 +44,23 @@
     "newOwnerAuthorizedReplacement": 45,
     "existingPreserved": 60
   },
+  "lifecycle": {
+    "model": "media_exposure_and_release_stage_are_independent",
+    "mediaPublicExposureBlocked": true,
+    "mediaExposure": "authenticated_only",
+    "stage": "released_and_serving_learners",
+    "stageHistory": [
+      "canonical_repository_media_complete",
+      "released_and_serving_learners"
+    ],
+    "release": {
+      "tag": "v1.0.0",
+      "productionVerifiedAuthenticated200": true,
+      "productionVerifiedAnonymous401": true
+    },
+    "publicAnnouncementPerformed": false
+  },
   "publicationBlocked": true,
-  "publicActivationPerformed": false,
   "assets": [
     {
       "cardId": "96d7ac0c-deeb-56c2-a8b3-946b155de557",
