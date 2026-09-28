@@ -1,39 +1,33 @@
 # LearnBox current work
 
-**Scope:** only unfinished work. Stable merged facts live in `PROJECT_STATE.md`; capability truth lives in `docs/PRODUCT_STATUS.md`; release sequencing lives in `ROADMAP.md`; task authorization lives in `.ai/WORK_QUEUE.md`.
+**Scope:** only unfinished work. Stable merged facts live in `PROJECT_STATE.md`; capability truth lives in `docs/PRODUCT_STATUS.md`; release sequencing lives in `ROADMAP.md`; the normalized v1.1 backlog lives in `BACKLOG.md`; task authorization lives in `.ai/WORK_QUEUE.md`.
 
 ## Active work
 
-Both LB-DS-080 and LB-DS-081 are merged. PR #296 (LB-DS-080, `feat/s1-start35-private-media-attachment`) merged at `3edc699f4133b7def2a28639fb03ebe312db6953`; PR #297 (LB-DS-081, `feat/v1-web-vertical-loop`) merged at `f727ce5204b04852844fbd4f0cfc79826d5d757e`. The repository now holds the canonical digest-anchored private-media attachment record and the complete cookie-authenticated server-backed Web learning loop (server-selected Start cards, Web-scoped idempotent review submission, durable offline queue retry, authoritative refresh) — both default-off with all operational gates closed.
+**None. Web/PWA v1 is LIVE and CLOSED** as of 2026-09-28 at Production application SHA
+`2acdcef4bc4e06c020f08de1fd16e4fbad2e1ea3`, image digest
+`sha256:4e008803b22c63cc08ccbce4514834ceddeed0209f44c8e296c7efb665ae3bef`.
 
-The next critical-path items are:
+No v1.1 work is authorized or in progress. The candidate v1.1 scope is inventoried in
+[`BACKLOG.md`](./BACKLOG.md) and awaits owner scope selection before any task is queued.
 
-1. **Owner authorization for Admin outcome persistence** — separately authorize execution of the reviewed Admin review-check/decision path so 35/35 card versions can reach release-approved status; repository-recorded owner intent alone does not authorize this.
-2. **Operational private-media attachment** — separately authorize the distinct operational attachment path; the repository attachment record (LB-DS-080) is repository evidence only; no database row, provider call or locator exists yet.
-3. Queue a path-bounded task for each authorized gate before execution begins.
+## What closed with v1
 
-No runtime flag, database, provider, staging/Production, deployment, seed, operational attachment, publication or public-release mutation is authorized until each respective owner gate is opened.
+The pre-activation owner gates that this document previously tracked are resolved:
 
-### Active release objective
+- the 35-item human review, starter media canonicalization (35/35 cards, 105/105 assets) and the
+  authenticated learning loop shipped in the activated release;
+- public activation completed with zero drift and no release blockers;
+- rollback images, environment backups and the database backup are preserved.
 
-Official Web/PWA v1.0 is targeted for **2026-10-12**. It includes 35/35 human-approved starter items, server-authoritative learning with lossless reconnect, release-critical account/privacy/support and exercised operations. Native Android/Cafe Bazaar, every payment path and premium packs are v1.1+.
+Historical gate-by-gate detail remains in `ROADMAP.md` and the validation records under
+`content/packs/learnbox-start/validation/` as history; it no longer describes pending work.
 
-## Deadline-critical owner gates
+## Before starting v1.1
 
-1. **Completed Sep 12:** create and verify an isolated private-media target.
-2. **Completed Sep 14, bounded:** upload exactly 105 selected private assets and verify every object by cache-disabled download, byte count and SHA-256; attachment was not authorized.
-3. **Completed Sep 14, repository evidence only:** record the owner's 210/210 `passed` checks and 35 `approve` decisions as owner intent; `adminOutcomeRecorded` remains false.
-4. **Still gated:** separately authorize and execute Admin outcome persistence and private-media attachment. Until both are verified, 0/35 card versions are release-approved and the package remains unseedable.
-5. **Still gated:** approve starter seed and staging activation only after 35/35 release approval.
-6. **Still gated:** approve phased public Web/PWA rollout only after closed-alpha exit evidence.
-
-A missed owner gate moves the target one-for-one unless an explicit safe scope decision removes that dependency. It never authorizes bypassing security, review or release controls.
-
-## Immediate execution order
-
-1. Obtain explicit owner authorization for the next consequential gate; repository-recorded owner intent alone cannot authorize Admin persistence or attachment.
-2. Persist Admin outcomes through the reviewed protected Admin path and independently verify the resulting counts before claiming release approval.
-3. Attach the already verified private media only through its distinct authorized path; keep locators and receipts outside Git.
-4. Re-evaluate 35/35 release readiness, then request separate seed/staging activation authorization.
-5. Continue disjoint default-off S2/S3 implementation only through newly queued, path-bounded tasks.
-6. Admit no Android, payment, premium or generalized AI-factory work into v1.0.
+1. Obtain explicit owner selection of the v1.1 scope from the `BACKLOG.md` candidate set.
+2. Queue a path-bounded task per selected item before execution begins.
+3. Keep Production change, database mutation, credential rotation and SMS configuration behind
+   their existing owner gates; v1 being live does not open them.
+4. Preserve rollback and backup evidence; deletion requires explicit owner authorization naming
+   the specific artifacts.

@@ -1,6 +1,12 @@
 # LearnBox
 
-LearnBox is a real online-first German vocabulary Leitner product for Persian-speaking learners. It is free to download, includes approximately 35 complete A1 words, and sells additional complete vocabulary packs.
+LearnBox is a real online-first German vocabulary Leitner product for Persian-speaking learners. It is free to use, includes 35 complete A1 words, and will sell additional complete vocabulary packs.
+
+## Release state
+
+**Web/PWA v1 is LIVE and closed.** The learner app is publicly reachable at `app.learnboxapp.com` with the free 35-card A1 Starter pack. Future work begins at v1.1; see [`BACKLOG.md`](BACKLOG.md).
+
+The deployed application source is recorded in [`PROJECT_STATE.md`](PROJECT_STATE.md). Repository `main` may advance beyond it with documentation-only commits; that is not application drift.
 
 ## Start here
 
@@ -15,8 +21,8 @@ LearnBox is a real online-first German vocabulary Leitner product for Persian-sp
 ## Surfaces
 
 - `learnboxapp.com`: independent informational landing only; it is not connected to learner, admin or API.
-- Learner Web App: online learner experience and interim iOS route.
-- Android app: native online-first app with tolerance for temporary disconnects.
+- `app.learnboxapp.com`: the LIVE learner Web/PWA app — the v1 release surface.
+- Android app: native online-first app, deferred to v1.1.
 - Native iOS app: final App Store surface in a later milestone.
 - Admin panel: AI-assisted content, media QA, pack release, catalog, pricing, commerce and operations.
 - API/workers: account, learning state, sync, canonical vocabulary, content jobs, purchase verification and shared entitlements.
