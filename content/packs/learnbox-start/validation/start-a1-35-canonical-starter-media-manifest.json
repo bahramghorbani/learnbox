@@ -49,10 +49,7 @@
     "mediaPublicExposureBlocked": true,
     "mediaExposure": "authenticated_only",
     "stage": "released_and_serving_learners",
-    "stageHistory": [
-      "canonical_repository_media_complete",
-      "released_and_serving_learners"
-    ],
+    "stageHistory": ["canonical_repository_media_complete", "released_and_serving_learners"],
     "release": {
       "tag": "v1.0.0",
       "productionVerifiedAuthenticated200": true,
