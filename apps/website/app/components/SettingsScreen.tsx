@@ -2,6 +2,8 @@ import { useState, type RefObject } from 'react';
 
 import type { SoundPreferenceDurability } from '../sound-preference';
 import { learnerGoalTitle, type LearnerLearningGoal } from './ProfileScreen';
+import { DeleteAccountPanel, type AccountDeletionResult } from './DeleteAccountPanel';
+import { supportLinkFor } from '../../lib/support-contact';
 
 interface SettingsScreenProps {
   goal: LearnerLearningGoal;
@@ -11,6 +13,12 @@ interface SettingsScreenProps {
   onBack: () => void;
   onChooseGoal: () => void;
   onToggleSound: (enabled: boolean) => Promise<SoundPreferenceDurability>;
+  /** Omitted in the local prototype, where there is no server account to delete. */
+  onDeleteAccount?: (input: {
+    confirmPhone: string;
+    requestId: string;
+  }) => Promise<AccountDeletionResult>;
+  onAccountDeleted?: () => void;
 }
 
 const soundSwitchLabel = 'پخش تلفظ';
@@ -28,6 +36,8 @@ export function SettingsScreen({
   onBack,
   onChooseGoal,
   onToggleSound,
+  onDeleteAccount,
+  onAccountDeleted,
 }: SettingsScreenProps) {
   const [saveStatus, setSaveStatus] = useState('');
 
@@ -105,6 +115,15 @@ export function SettingsScreen({
           </span>
         </div>
       </div>
+      {onDeleteAccount && onAccountDeleted ? (
+        <div className="settings-rows settings-rows-danger">
+          <DeleteAccountPanel
+            onDelete={onDeleteAccount}
+            onDeleted={onAccountDeleted}
+            supportUrl={supportLinkFor('profile')}
+          />
+        </div>
+      ) : null}
       <p className="settings-save-status" role="status">
         {saveStatus}
       </p>

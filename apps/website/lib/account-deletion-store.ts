@@ -25,7 +25,14 @@ import {
  * review audit chain. These are owner/reviewer identities, not ordinary learners, so the request is
  * refused explicitly instead of partially applied.
  */
-export type DeletionRefusal = { readonly status: 'refused'; readonly reason: 'privileged_account' };
+export type DeletionRefusal = {
+  readonly status: 'refused';
+  /**
+   * `privileged_account` — owner/reviewer identity referenced by the content review audit chain.
+   * `unknown_account`   — no such account and no deletion record; nothing can be truthfully said.
+   */
+  readonly reason: 'privileged_account' | 'unknown_account';
+};
 
 export type DeletionOutcome =
   | { readonly status: 'deleted'; readonly deletionId: string; readonly counts: DeletionCounts }
@@ -85,8 +92,21 @@ export async function deleteAccount(
       [input.userId],
     );
     if (user.rowCount === 0) {
+      // The account is already gone, but under a DIFFERENT request id (for example the learner
+      // deleted from another device). Return the most recent deletion event for this account so
+      // the caller still receives a truthful, quotable deletion id rather than an empty success.
+      const previous = await client.query<{ id: string }>(
+        `SELECT id FROM account_deletion_events
+          WHERE prior_user_id = $1
+          ORDER BY completed_at DESC
+          LIMIT 1`,
+        [input.userId],
+      );
       await client.query('ROLLBACK');
-      return { status: 'already_deleted' };
+      return previous.rowCount
+        ? { status: 'already_deleted', deletionId: previous.rows[0].id }
+        : // No audit row at all: this account id never existed. Refuse rather than invent an id.
+          { status: 'refused', reason: 'unknown_account' };
     }
 
     // 1. Refuse privileged accounts before anything is touched.

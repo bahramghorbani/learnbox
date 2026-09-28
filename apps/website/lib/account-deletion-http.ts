@@ -24,7 +24,7 @@ export type DeletionOutcome =
   | { status: 'deleted'; deletionId: string }
   /** A retry of an already-completed deletion, carrying the original deletion id. */
   | { status: 'already_deleted'; deletionId: string }
-  | { status: 'refused'; reason: 'privileged_account' };
+  | { status: 'refused'; reason: 'privileged_account' | 'unknown_account' };
 
 export type AccountDeletionDependencies = {
   /** Returns the E.164 phone for the session subject, or null when unknown. */
