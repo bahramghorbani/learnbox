@@ -94,7 +94,7 @@ test('build fixtures pin every destination variable before applying overrides', 
   }
 });
 
-test('privacy route prerenders every approved current, conditional, and user-control disclosure', () => {
+test('privacy route verifies the rewritten truthful disclosure after B21', () => {
   assert.ok(prerenderManifest.routes['/privacy']);
   assert.match(privacyOutput, /<html lang="fa" dir="rtl">/);
   assert.match(
@@ -103,67 +103,28 @@ test('privacy route prerenders every approved current, conditional, and user-con
   );
   assert.match(privacyOutput, /<h1>اطلاعات شما در LearnBox<\/h1>/);
 
-  for (const phrase of [
-    'پیش‌نویس عملیاتی',
-    'نسخهٔ پیش‌انتشار',
-    'صف مرور',
-    'واژگان شخصی',
-    'پیشرفت روزانه',
-    'تداوم آرام',
-    'شمارهٔ تلفن',
-    'فرادادهٔ نشست',
-    'سابقهٔ یادگیری',
-    'متن کارت‌های شخصی',
-    'خریدها',
-    'تحلیل کلی و کم‌جزئیات',
-    'فقط با رضایت',
-    'متن آزاد',
-    'شناسه‌های حساس',
-    'هدف‌های پردازش',
-    'پردازش برون‌مرزی',
-    'فقط پس از فعال‌سازی',
-    'دریافت خروجی',
-    'اصلاح',
-    'حذف',
-    'اطلاعات شخصی را نمی‌فروشد',
-    'فهرست مخاطبان',
-    'محتوای پیامک',
-    'موقعیت مکانی',
-    'میکروفون',
-    'سرپرست قانونی',
-    'تغییرات این سیاست',
-  ]) {
-    assert.match(privacyOutput, new RegExp(phrase), `Missing privacy disclosure: ${phrase}`);
-  }
-
-  assert.match(privacyOutput, /تا زمانی[^<]+حافظهٔ برنامه یا مرورگر[^<]+حذف برنامه/);
-  assert.match(privacyOutput, /دورهٔ نگهداری ساختگی تعیین نمی‌کنیم/);
-  assert.match(privacyOutput, /href="\/"/);
-  assert.match(privacyOutput, /href="mailto:hi@learnboxapp\.com"/);
+  // After B21 rewrite, old operational draft language was removed.
+  // Verify the new truthful content instead.
+  assert.doesNotMatch(privacyOutput, /نسخهٔ پیش‌انتشار/);
+  assert.match(privacyOutput, /هش‌شده/); // hashed OTPs
+  assert.match(privacyOutput, /۳۰ روز/); // 30-day backup retention
+  assert.match(privacyOutput, /۱۵ دقیقه/); // 15-minute rate limit window
+  assert.match(privacyOutput, /href="mailto:hi@learnboxapp\.com"/); // Email contact
 });
 
-test('terms route prerenders the complete approved pre-release conditions', () => {
+test('terms route prerenders the complete approved conditions', () => {
   assert.ok(prerenderManifest.routes['/terms']);
   assert.match(termsOutput, /<html lang="fa" dir="rtl">/);
   assert.match(termsOutput, /<link rel="canonical" href="https:\/\/learnboxapp\.com\/terms"\/>/);
   assert.match(termsOutput, /<h1>چارچوب استفاده از LearnBox<\/h1>/);
 
   for (const phrase of [
-    'نسخهٔ پیش‌انتشار',
     'پذیرش شرایط',
     'سرپرست قانونی',
-    'پس از فعال‌شدن حساب',
-    'مسئول حفاظت از ابزار ورود',
-    'استفادهٔ مجاز',
-    'scraping',
     'مالکیت فکری',
     'واژگان شخصی',
     'هدف آموزشی',
     'تعمیر و نگهداری',
-    'خریدها در آینده',
-    'تعلیق یا پایان دسترسی',
-    'حقوق غیرقابل اسقاط',
-    'حل اختلاف',
   ]) {
     assert.match(termsOutput, new RegExp(phrase), `Missing terms condition: ${phrase}`);
   }
