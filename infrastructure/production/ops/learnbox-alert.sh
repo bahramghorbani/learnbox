@@ -3,15 +3,18 @@
 #
 # Sends a short operational message to the owner's Telegram alert route.
 #
-# Secrets: the bot token and chat id are read from an operator-owned env file that is NEVER in Git
-# (default /home/ubuntu/learnbox/ops/alerting.env, mode 0600). This script must not echo the token,
-# and no caller may pass it as an argument, because process arguments are world-readable in /proc.
+# Secrets: the bot token and chat id are read from the Production env file that is NEVER in Git
+# (default /home/ubuntu/learnbox/app/.env, mode 0600). This script must not echo the token, and no
+# caller may pass it as an argument, because process arguments are world-readable in /proc.
+#
+# This reads the MONITORING bot only. The learner support bot is a separate identity and must never
+# be used for operational alerts.
 #
 # Usage: learnbox-alert.sh <severity> <title> [detail]
 #   severity: info | warn | critical
 set -euo pipefail
 
-ALERT_ENV="${LEARNBOX_ALERT_ENV:-/home/ubuntu/learnbox/ops/alerting.env}"
+ALERT_ENV="${LEARNBOX_ALERT_ENV:-/home/ubuntu/learnbox/app/.env}"
 
 severity="${1:-info}"
 title="${2:-}"
@@ -27,13 +30,14 @@ if [ ! -r "$ALERT_ENV" ]; then
   exit 3
 fi
 
-# shellcheck disable=SC1090
-set +u
-. "$ALERT_ENV"
-set -u
+# Read only the two keys we need, without sourcing the whole env file (which contains unrelated
+# production secrets and arbitrary values that must not become shell variables here).
+read_key() {
+  sed -n "s/^$1=//p" "$ALERT_ENV" | tail -n 1
+}
 
-: "${LEARNBOX_ALERT_TELEGRAM_BOT_TOKEN:=}"
-: "${LEARNBOX_ALERT_TELEGRAM_CHAT_ID:=}"
+LEARNBOX_ALERT_TELEGRAM_BOT_TOKEN="$(read_key LEARNBOX_MONITORING_TELEGRAM_BOT_TOKEN)"
+LEARNBOX_ALERT_TELEGRAM_CHAT_ID="$(read_key LEARNBOX_MONITORING_TELEGRAM_CHAT_ID)"
 
 if [ -z "$LEARNBOX_ALERT_TELEGRAM_BOT_TOKEN" ] || [ -z "$LEARNBOX_ALERT_TELEGRAM_CHAT_ID" ]; then
   echo "alert: alert route not configured; nothing sent" >&2

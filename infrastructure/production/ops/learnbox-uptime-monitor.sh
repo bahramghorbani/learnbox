@@ -16,6 +16,9 @@ APP_ORIGIN="${LEARNBOX_MONITOR_ORIGIN:-https://app.learnboxapp.com}"
 STATE_DIR="${LEARNBOX_MONITOR_STATE_DIR:-/home/ubuntu/learnbox/ops/state}"
 ALERT_BIN="${LEARNBOX_ALERT_BIN:-/home/ubuntu/learnbox/ops/learnbox-alert.sh}"
 FAILURES_BEFORE_ALERT="${LEARNBOX_MONITOR_FAILURES_BEFORE_ALERT:-2}"
+# Health path may be set empty to check availability only. This matters during a deploy window in
+# which the running build predates /api/health: a missing endpoint is not an outage.
+HEALTH_PATH="${LEARNBOX_MONITOR_HEALTH_PATH-/api/health}"
 
 mkdir -p "$STATE_DIR"
 STATE_FILE="$STATE_DIR/uptime.state"
@@ -33,9 +36,9 @@ if [ "$root_code" != "200" ]; then
   problem="Learner app root returned HTTP ${root_code}"
 fi
 
-if [ -z "$problem" ]; then
-  health_body="$(curl -sS -m 15 "$APP_ORIGIN/api/health" 2>/dev/null || echo '')"
-  health_code="$(curl -sS -o /dev/null -w '%{http_code}' -m 15 "$APP_ORIGIN/api/health" 2>/dev/null || echo 000)"
+if [ -z "$problem" ] && [ -n "$HEALTH_PATH" ]; then
+  health_body="$(curl -sS -m 15 "$APP_ORIGIN$HEALTH_PATH" 2>/dev/null || echo '')"
+  health_code="$(curl -sS -o /dev/null -w '%{http_code}' -m 15 "$APP_ORIGIN$HEALTH_PATH" 2>/dev/null || echo 000)"
   case "$health_code" in
     200) ;;
     503) problem="Health endpoint reports a dependency down" ;;

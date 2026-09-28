@@ -24,7 +24,14 @@ if [ "$(wc -l < "$SEEN_FILE")" -gt 500 ]; then
   tail -n 200 "$SEEN_FILE" > "$SEEN_FILE.tmp" && mv "$SEEN_FILE.tmp" "$SEEN_FILE"
 fi
 
-logs="$(docker logs --since "$WINDOW" "$CONTAINER" 2>&1 || true)"
+# The log source may be overridden with a file so the capture path can be exercised deliberately
+# (LB-B02 requires a safe test) without waiting for a genuine production fault.
+LOG_FILE="${LEARNBOX_ERROR_LOG_FILE:-}"
+if [ -n "$LOG_FILE" ]; then
+  logs="$(cat "$LOG_FILE" 2>/dev/null || true)"
+else
+  logs="$(docker logs --since "$WINDOW" "$CONTAINER" 2>&1 || true)"
+fi
 
 # Aggregate: fingerprint -> count, reading only well-formed learnbox.error records.
 summary="$(printf '%s\n' "$logs" | grep -F '"kind":"learnbox.error"' 2>/dev/null | \
