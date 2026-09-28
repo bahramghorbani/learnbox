@@ -106,10 +106,11 @@ test('privacy route verifies the rewritten truthful disclosure after B21', () =>
   // After B21 rewrite, old operational draft language was removed.
   // Verify the new truthful content instead.
   assert.doesNotMatch(privacyOutput, /نسخهٔ پیش‌انتشار/);
-  assert.match(privacyOutput, /هش‌شده/); // hashed OTPs
-  assert.match(privacyOutput, /۳۰ روز/); // 30-day backup retention
-  assert.match(privacyOutput, /۱۵ دقیقه/); // 15-minute rate limit window
-  assert.match(privacyOutput, /href="mailto:hi@learnboxapp\.com"/); // Email contact
+  assert.match(privacyOutput, /کد یک‌بارمصرف به‌صورت رمزنگاری‌شده و با عمر کوتاه نگهداری می‌شود/);
+  assert.match(privacyOutput, /تعداد[\s\S]*?درخواست کد برای هر شماره محدود شده/);
+  assert.match(privacyOutput, /۳۰ روز/); // backup retention
+  assert.match(privacyOutput, /فقط برای کاربر واردشده قابل دریافت/); // authenticated-only media
+  assert.match(privacyOutput, /href="mailto:hi@learnboxapp\.com"/);
 });
 
 test('terms route prerenders the complete approved conditions', () => {
