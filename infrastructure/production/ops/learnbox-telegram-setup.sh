@@ -16,6 +16,8 @@ API="https://api.telegram.org"
 c_ok()   { printf '\033[32m%s\033[0m\n' "$1"; }
 c_bad()  { printf '\033[31m%s\033[0m\n' "$1"; }
 c_info() { printf '\033[36m%s\033[0m\n' "$1"; }
+# Telegram usernames are case-insensitive; normalise before comparing.
+lower()  { printf '%s' "$1" | tr '[:upper:]' '[:lower:]'; }
 
 need() { command -v "$1" >/dev/null 2>&1 || { c_bad "Missing required tool: $1"; exit 1; }; }
 need curl; need python3; need ssh
@@ -64,7 +66,10 @@ setup_bot() {
     bot_id="$(printf '%s' "$me" | json result.id)"
     c_ok "Verified bot: @$bot_user (id $bot_id)"
 
-    if [ "$bot_user" != "$username" ]; then
+    # Telegram usernames are case-insensitive: getMe may answer "Learnboxmonitoringbot"
+    # for the bot we call "@learnboxmonitoringbot". Compare case-insensitively so a correct
+    # token is never rejected, while a genuinely different bot is still caught.
+    if [ "$(lower "$bot_user")" != "$(lower "$username")" ]; then
       c_bad "That token belongs to @$bot_user but this step expects @$username."
       c_bad "Refusing to continue so the two bots cannot be cross-wired."
       token=""
