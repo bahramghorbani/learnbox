@@ -1,0 +1,16 @@
+# LearnBox uptime/readiness monitor (LB-B02).
+# Install: /etc/systemd/system/learnbox-uptime-monitor.service
+[Unit]
+Description=LearnBox uptime and readiness check
+After=docker.service
+
+[Service]
+Type=oneshot
+User=ubuntu
+# Until the v1.1 build carrying /api/health is deployed, check availability only: a missing
+# endpoint on the older running build is not an outage. Remove this line after the v1.1 deploy
+# so readiness (database reachability) is monitored too.
+Environment=LEARNBOX_MONITOR_HEALTH_PATH=
+ExecStart=/home/ubuntu/learnbox/ops/learnbox-uptime-monitor.sh
+StandardOutput=journal
+StandardError=journal

@@ -1,0 +1,12 @@
+# LearnBox error scan schedule (LB-B02).
+# Install: /etc/systemd/system/learnbox-error-scan.timer
+[Unit]
+Description=LearnBox error scan every 15 minutes
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=15min
+AccuracySec=60s
+
+[Install]
+WantedBy=timers.target

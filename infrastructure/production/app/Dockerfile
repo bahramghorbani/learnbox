@@ -41,6 +41,15 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV HOSTNAME=0.0.0.0
 ENV PORT=3000
 
+# Release provenance. A deployed artifact must be traceable back to the exact source commit it was
+# built from, so the running container's identity can be proven rather than assumed. Passed as
+# --build-arg APP_SOURCE_SHA=<full sha> and recorded both as a standard OCI label and as a runtime
+# environment variable, so `docker image inspect` and the running container agree on one answer.
+ARG APP_SOURCE_SHA=unknown
+LABEL org.opencontainers.image.revision="${APP_SOURCE_SHA}"
+LABEL org.opencontainers.image.title="learnbox-app"
+ENV APP_SOURCE_SHA=${APP_SOURCE_SHA}
+
 RUN groupadd --system --gid 1001 nodejs \
     && useradd --system --uid 1001 --gid nodejs nextjs
 

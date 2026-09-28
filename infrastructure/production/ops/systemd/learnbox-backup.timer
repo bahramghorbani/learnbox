@@ -1,0 +1,14 @@
+# Daily LearnBox database backup (LB-B01).
+# Install: /etc/systemd/system/learnbox-backup.timer
+[Unit]
+Description=Daily LearnBox database backup
+
+[Timer]
+# 02:30 UTC daily, outside Iranian peak learner hours.
+OnCalendar=*-*-* 02:30:00 UTC
+# Still run if the host was powered down at the scheduled time.
+Persistent=true
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target

@@ -1,8 +1,9 @@
 /**
- * Formats a count as Persian digits for RTL UI surfaces (M-L2 numeral parity).
- * Keeps the negative sign as-is; only 0-9 are transliterated.
+ * Formats a count or display string as Persian digits for RTL UI surfaces (M-L2 numeral parity).
+ * Keeps every non-digit character as-is (the negative sign, and the stars in a masked phone);
+ * only 0-9 are transliterated.
  */
-export function toPersianDigits(value: number): string {
+export function toPersianDigits(value: number | string): string {
   return value
     .toString()
     .replaceAll('0', '۰')

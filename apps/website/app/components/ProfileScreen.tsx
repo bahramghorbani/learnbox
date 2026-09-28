@@ -2,6 +2,7 @@ import type { RefObject } from 'react';
 
 import { LearnerNav, type LearnerDestination } from './LearnerNav';
 import { toPersianDigits } from '../persian-digits';
+import { supportLinkFor } from '../../lib/support-contact';
 
 export type LearnerLearningGoal = 'life' | 'career' | 'travel';
 
@@ -22,6 +23,12 @@ type ProfileIdentity =
 interface ProfileScreenProps {
   goal: LearnerLearningGoal | null;
   pendingReviewCount: number;
+  /**
+   * True when this session posts review answers to the server. The status note must describe what
+   * actually happens: server sync has been live and automatic (on mount, on reconnect, and after
+   * each answer), while this screen still told learners it was not enabled.
+   */
+  syncsToServer?: boolean;
   identity?: ProfileIdentity;
   onRetryIdentity?: () => void;
   headingRef?: RefObject<HTMLHeadingElement | null>;
@@ -40,6 +47,7 @@ const supportEmail = 'mailto:hi@learnboxapp.com';
 export function ProfileScreen({
   goal,
   pendingReviewCount,
+  syncsToServer = false,
   identity = { status: 'unavailable' },
   onRetryIdentity,
   headingRef,
@@ -67,7 +75,7 @@ export function ProfileScreen({
         <h2 id="profile-account-title">حساب</h2>
         <div className="profile-card">
           <strong className="profile-account-name">
-            {identity.status === 'ok' ? identity.maskedPhone : 'حساب LearnBox'}
+            {identity.status === 'ok' ? toPersianDigits(identity.maskedPhone) : 'حساب LearnBox'}
           </strong>
           {identity.status === 'loading' ? (
             <p className="profile-card-note" role="status">
@@ -129,7 +137,9 @@ export function ProfileScreen({
             </strong>
           )}
           <p className="profile-card-note">
-            همگام‌سازی خودکار هنوز فعال نیست؛ این شمارش فقط صف واقعی همین مرورگر را نشان می‌دهد.
+            {syncsToServer
+              ? 'پاسخ‌های شما به‌صورت خودکار برای سرور فرستاده می‌شوند؛ اگر اینترنت قطع باشد، در همین دستگاه می‌مانند و پس از وصل‌شدن دوباره فرستاده می‌شوند.'
+              : 'در این حالت پاسخ‌ها فقط روی همین دستگاه نگهداری می‌شوند و برای سرور فرستاده نمی‌شوند.'}
           </p>
         </div>
       </section>
@@ -161,9 +171,25 @@ export function ProfileScreen({
               ↗
             </span>
           </a>
+          <a
+            className="profile-row"
+            href={supportLinkFor('profile')}
+            target="_blank"
+            rel="noreferrer"
+          >
+            <span className="profile-row-copy">
+              <strong>پشتیبانی در تلگرام</strong>
+              <small className="profile-row-url" dir="ltr">
+                @learnboxsupportbot
+              </small>
+            </span>
+            <span className="profile-row-arrow" aria-hidden="true">
+              ↗
+            </span>
+          </a>
           <a className="profile-row" href={supportEmail}>
             <span className="profile-row-copy">
-              <strong>پشتیبانی</strong>
+              <strong>پشتیبانی با ایمیل</strong>
               <small className="profile-row-url" dir="ltr">
                 hi@learnboxapp.com
               </small>

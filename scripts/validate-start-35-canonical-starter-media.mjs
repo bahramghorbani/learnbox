@@ -151,9 +151,72 @@ for (const asset of assets) {
   }
 }
 
+// Lifecycle model.
+//
+// The previous schema conflated two unrelated things in two booleans: whether learning media is
+// publicly exposed (a permanent security invariant) and how far the product has progressed towards
+// public release (a forward-only lifecycle stage). Because the gate demanded
+// publicActivationPerformed=false, the manifest could only ever describe the pre-release world —
+// it would have had to start lying the moment the release actually shipped, which it now has.
+//
+// These are now enforced independently: the media invariant holds at every stage, and the stage is
+// validated as a forward-only progression instead of being pinned to "not released".
+const lifecycle = manifest.lifecycle;
+if (!lifecycle || typeof lifecycle !== 'object') {
+  fail('manifest must declare a lifecycle model');
+} else {
+  // Permanent, stage-independent security invariant.
+  if (lifecycle.mediaPublicExposureBlocked !== true) {
+    fail('lifecycle.mediaPublicExposureBlocked must be true at every release stage');
+  }
+  if (lifecycle.mediaExposure !== 'authenticated_only') {
+    fail(`lifecycle.mediaExposure must be authenticated_only, found ${lifecycle.mediaExposure}`);
+  }
+
+  // Forward-only stage progression.
+  const STAGES = [
+    'canonical_repository_media_complete',
+    'released_and_serving_learners',
+    'publicly_announced',
+  ];
+  const stageIndex = STAGES.indexOf(lifecycle.stage);
+  if (stageIndex < 0) fail(`unknown lifecycle.stage ${lifecycle.stage}`);
+
+  const history = Array.isArray(lifecycle.stageHistory) ? lifecycle.stageHistory : [];
+  if (history.length === 0) fail('lifecycle.stageHistory must record how the manifest got here');
+  if (history[0] !== STAGES[0]) {
+    fail(`lifecycle.stageHistory must begin at ${STAGES[0]}`);
+  }
+  if (history.at(-1) !== lifecycle.stage) {
+    fail('lifecycle.stageHistory must end at the current lifecycle.stage');
+  }
+  const indices = history.map((entry) => STAGES.indexOf(entry));
+  if (indices.some((index) => index < 0)) fail('lifecycle.stageHistory contains an unknown stage');
+  for (let i = 1; i < indices.length; i += 1) {
+    if (indices[i] <= indices[i - 1]) {
+      fail(`lifecycle.stageHistory must move forward: ${history[i - 1]} -> ${history[i]}`);
+    }
+  }
+
+  // Claiming a release stage requires the Production evidence for it.
+  if (stageIndex >= STAGES.indexOf('released_and_serving_learners')) {
+    const release = lifecycle.release ?? {};
+    if (!release.tag) fail('a released stage must name the release tag it shipped as');
+    if (release.productionVerifiedAuthenticated200 !== true) {
+      fail('a released stage must record that authenticated media was verified serving');
+    }
+    if (release.productionVerifiedAnonymous401 !== true) {
+      fail('a released stage must record that anonymous media access was verified refused');
+    }
+  }
+}
+
+// Learning-media publication stays blocked regardless of release stage.
 if (manifest.publicationBlocked !== true) fail('manifest must keep publicationBlocked=true');
-if (manifest.publicActivationPerformed !== false) {
-  fail('manifest must record publicActivationPerformed=false');
+
+// The superseded booleans must not reappear alongside the lifecycle model.
+if ('publicActivationPerformed' in manifest) {
+  fail('publicActivationPerformed is superseded by lifecycle.stage and must be removed');
 }
 
 if (failures.length > 0) {

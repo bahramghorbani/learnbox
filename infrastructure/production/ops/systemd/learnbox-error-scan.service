@@ -1,0 +1,12 @@
+# LearnBox error capture scanner (LB-B02).
+# Install: /etc/systemd/system/learnbox-error-scan.service
+[Unit]
+Description=LearnBox captured-error scan and alert
+After=docker.service
+
+[Service]
+Type=oneshot
+User=ubuntu
+ExecStart=/home/ubuntu/learnbox/ops/learnbox-error-scan.sh
+StandardOutput=journal
+StandardError=journal

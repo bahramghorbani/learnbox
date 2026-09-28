@@ -8,11 +8,13 @@ import {
   normalizeOtpDigits,
   otpErrorMessage,
   readChallengeResponse,
+  readRetryAfterSeconds,
   rememberOtpChallenge,
   validateIranianMobile,
   verifyOtpChallenges,
   type ChallengeResponse,
 } from '../../lib/otp-client';
+import { supportLabelFor, supportLinkFor } from '../../lib/support-contact';
 
 interface AuthGateProps {
   mode: LearnerAuthMode;
@@ -71,7 +73,9 @@ export function AuthGate({ mode, onAuthenticated }: AuthGateProps) {
       });
       const body = await readJson(response);
       if (response.status !== 201) {
-        setError(otpErrorMessage(response.status, readErrorCode(body)));
+        setError(
+          otpErrorMessage(response.status, readErrorCode(body), readRetryAfterSeconds(response)),
+        );
         return;
       }
       const nextChallenge = readChallengeResponse(body);
@@ -128,7 +132,13 @@ export function AuthGate({ mode, onAuthenticated }: AuthGateProps) {
         return;
       }
       const body = await readJson(verification.response);
-      setError(otpErrorMessage(verification.response.status, readErrorCode(body)));
+      setError(
+        otpErrorMessage(
+          verification.response.status,
+          readErrorCode(body),
+          readRetryAfterSeconds(verification.response),
+        ),
+      );
     } catch {
       setError('ارتباط با سرویس انجام نشد؛ دوباره تلاش کنید.');
     } finally {
@@ -254,18 +264,33 @@ export function AuthGate({ mode, onAuthenticated }: AuthGateProps) {
             </button>
           </form>
           {!isLocalPrototype ? (
-            <button
-              className="text-button auth-back"
-              type="button"
-              onClick={() => void requestCode()}
-              disabled={pending || resendSeconds > 0}
-            >
-              {pending
-                ? 'در حال ارسال…'
-                : resendSeconds > 0
-                  ? `ارسال دوباره تا ${toPersianDigits(resendSeconds)} ثانیهٔ دیگر`
-                  : 'ارسال دوبارهٔ کد'}
-            </button>
+            <>
+              <button
+                className="text-button auth-back"
+                type="button"
+                onClick={() => void requestCode()}
+                disabled={pending || resendSeconds > 0}
+              >
+                {pending
+                  ? 'در حال ارسال…'
+                  : resendSeconds > 0
+                    ? `ارسال دوباره تا ${toPersianDigits(resendSeconds)} ثانیهٔ دیگر`
+                    : 'ارسال دوبارهٔ کد'}
+              </button>
+              {/*
+                LB-B08 escape path: when SMS genuinely does not arrive, the learner is not stuck.
+                A plain Telegram link — no ticketing, no account linking, no authentication.
+              */}
+              <a
+                className="auth-support-link"
+                data-testid="auth-support-link"
+                href={supportLinkFor('login')}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {supportLabelFor('login')}
+              </a>
+            </>
           ) : null}
         </section>
       )}

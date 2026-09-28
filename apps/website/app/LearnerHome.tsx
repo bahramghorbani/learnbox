@@ -26,6 +26,7 @@ import {
 import { LearnerNav } from './components/LearnerNav';
 import { ProfileScreen } from './components/ProfileScreen';
 import { SettingsScreen } from './components/SettingsScreen';
+import type { AccountDeletionResult } from './components/DeleteAccountPanel';
 import {
   loadSoundPreference,
   saveSoundPreference,
@@ -612,6 +613,56 @@ export function LearnerHome({
     setScreen('settings');
   };
   const closeSettings = () => setScreen('profile');
+
+  /**
+   * LB-B04 account deletion.
+   *
+   * Sends the deletion request and translates the HTTP outcome into the panel's result type. The
+   * request id makes a retry after a dropped connection idempotent rather than a second deletion.
+   */
+  const requestAccountDeletion = useCallback(
+    async (input: { confirmPhone: string; requestId: string }): Promise<AccountDeletionResult> => {
+      let response: Response;
+      try {
+        response = await fetch('/api/learner/account', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify(input),
+        });
+      } catch {
+        return { status: 'unavailable' };
+      }
+      if (response.ok) {
+        const body = (await response.json().catch(() => ({}))) as { deletionId?: string };
+        return { status: 'deleted', deletionId: body.deletionId ?? '' };
+      }
+      // 403 is the deliberate phone-confirmation mismatch; 409 is a refusal to delete this account.
+      if (response.status === 403) return { status: 'mismatch' };
+      if (response.status === 409) return { status: 'refused' };
+      return { status: 'unavailable' };
+    },
+    [],
+  );
+
+  /**
+   * After deletion the server session is already void. Clear this device's local learner state too,
+   * so the next person using the device cannot see the deleted learner's goal, streak or queued
+   * review work, then reload into the signed-out experience.
+   */
+  const handleAccountDeleted = useCallback(() => {
+    try {
+      const storage = window.localStorage;
+      for (let index = storage.length - 1; index >= 0; index -= 1) {
+        const key = storage.key(index);
+        if (key && key.startsWith('learnbox:')) storage.removeItem(key);
+      }
+    } catch {
+      // A browser that denies storage access has nothing device-local to clear.
+    }
+    window.location.replace('/');
+  }, []);
+
   const handleToggleSound = useCallback(
     async (enabled: boolean): Promise<SoundPreferenceDurability> => {
       setSoundEnabled(enabled);
@@ -932,6 +983,8 @@ export function LearnerHome({
       <ProfileScreen
         goal={learningGoal}
         pendingReviewCount={pendingReviewCount}
+        // Server sync runs exactly when the session is a real server-backed OTP session.
+        syncsToServer={authenticated && isServerOtp}
         identity={profileIdentity}
         onRetryIdentity={readProfileIdentity}
         headingRef={profileHeadingRef}
@@ -954,6 +1007,8 @@ export function LearnerHome({
         onBack={closeSettings}
         onChooseGoal={editLearningGoal}
         onToggleSound={handleToggleSound}
+        onDeleteAccount={requestAccountDeletion}
+        onAccountDeleted={handleAccountDeleted}
       />
     );
   }

@@ -1,3 +1,5 @@
+import { toPersianDigits } from '../app/persian-digits';
+
 export type ChallengeResponse = {
   challengeId: string;
   expiresAt: string;
@@ -63,9 +65,18 @@ export function readChallengeResponse(value: unknown): ChallengeResponse | null 
   };
 }
 
-export function otpErrorMessage(status: number, code?: string): string {
+export function otpErrorMessage(status: number, code?: string, retryAfterSeconds?: number): string {
   if (code === 'request_invalid') return 'شمارهٔ موبایل را کامل و درست وارد کنید.';
   if (status === 429 || code === 'request_limited') {
+    // Telling the learner how long to wait turns a dead end into a clear instruction (LB-B08).
+    if (typeof retryAfterSeconds === 'number' && Number.isFinite(retryAfterSeconds)) {
+      const wait = Math.max(1, Math.ceil(retryAfterSeconds));
+      if (wait >= 60) {
+        const minutes = Math.ceil(wait / 60);
+        return `تعداد درخواست‌ها زیاد شده است؛ حدود ${toPersianDigits(minutes)} دقیقهٔ دیگر دوباره تلاش کنید.`;
+      }
+      return `تعداد درخواست‌ها زیاد شده است؛ ${toPersianDigits(wait)} ثانیهٔ دیگر دوباره تلاش کنید.`;
+    }
     return 'تعداد درخواست‌ها زیاد شده است؛ کمی صبر کنید و دوباره تلاش کنید.';
   }
   if (code === 'verification_failed') {
@@ -84,4 +95,18 @@ export function otpErrorMessage(status: number, code?: string): string {
 
 function isIsoDate(value: unknown): value is string {
   return typeof value === 'string' && Number.isFinite(Date.parse(value));
+}
+
+/**
+ * Reads the standard `retry-after` header (seconds) when the server rate-limits a request.
+ *
+ * Defensive by design: a response may legitimately arrive without a `headers` object (non-standard
+ * fetch polyfills and test doubles), and failing to read an optional hint must never break the
+ * error path that shows the learner what went wrong.
+ */
+export function readRetryAfterSeconds(response: Response): number | undefined {
+  const header = response?.headers?.get?.('retry-after');
+  if (!header) return undefined;
+  const seconds = Number.parseInt(header, 10);
+  return Number.isFinite(seconds) && seconds >= 0 ? seconds : undefined;
 }

@@ -74,11 +74,64 @@ test('declared digests match the bytes on disk', () => {
   }
 });
 
-test('the manifest keeps publication blocked and records no public activation', () => {
+test('the manifest keeps media publication blocked at the stage it has actually reached', () => {
   const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
   assert.equal(manifest.publicationBlocked, true);
-  assert.equal(manifest.publicActivationPerformed, false);
   assert.equal(manifest.supersedes.historicalRecordsDeleted, false);
+
+  // Media exposure is a permanent invariant; the release stage is a separate, forward-only fact.
+  // The old schema pinned publicActivationPerformed=false, so it could only describe the
+  // pre-release world and had to become false-by-construction once the release shipped.
+  assert.equal(manifest.lifecycle.mediaPublicExposureBlocked, true);
+  assert.equal(manifest.lifecycle.mediaExposure, 'authenticated_only');
+  assert.ok(!('publicActivationPerformed' in manifest));
+  assert.equal(manifest.lifecycle.stage, 'released_and_serving_learners');
+  assert.equal(manifest.lifecycle.publicAnnouncementPerformed, false);
+});
+
+test('a released stage must carry its Production verification evidence', () => {
+  const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
+  assert.equal(manifest.lifecycle.release.tag, 'v1.0.0');
+  assert.equal(manifest.lifecycle.release.productionVerifiedAuthenticated200, true);
+  assert.equal(manifest.lifecycle.release.productionVerifiedAnonymous401, true);
+});
+
+test('the gate rejects a manifest that unblocks public media exposure', () => {
+  const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
+  manifest.lifecycle.mediaPublicExposureBlocked = false;
+  const result = withRestored(manifestPath, () => {
+    writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
+    return runGate();
+  });
+  assert.equal(result.code, 1);
+  assert.match(result.output, /mediaPublicExposureBlocked must be true/);
+});
+
+test('the gate rejects a backwards lifecycle stage history', () => {
+  const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
+  manifest.lifecycle.stage = 'canonical_repository_media_complete';
+  manifest.lifecycle.stageHistory = [
+    'canonical_repository_media_complete',
+    'released_and_serving_learners',
+    'canonical_repository_media_complete',
+  ];
+  const result = withRestored(manifestPath, () => {
+    writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
+    return runGate();
+  });
+  assert.equal(result.code, 1);
+  assert.match(result.output, /must move forward/);
+});
+
+test('the gate rejects a released claim with no Production evidence', () => {
+  const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
+  manifest.lifecycle.release.productionVerifiedAnonymous401 = false;
+  const result = withRestored(manifestPath, () => {
+    writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
+    return runGate();
+  });
+  assert.equal(result.code, 1);
+  assert.match(result.output, /anonymous media access was verified refused/);
 });
 
 test('the integrity gate passes on the committed tree', () => {
