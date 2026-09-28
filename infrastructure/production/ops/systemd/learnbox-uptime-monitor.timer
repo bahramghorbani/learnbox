@@ -1,0 +1,12 @@
+# LearnBox uptime monitor schedule (LB-B02).
+# Install: /etc/systemd/system/learnbox-uptime-monitor.timer
+[Unit]
+Description=LearnBox uptime check every 5 minutes
+
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=5min
+AccuracySec=30s
+
+[Install]
+WantedBy=timers.target

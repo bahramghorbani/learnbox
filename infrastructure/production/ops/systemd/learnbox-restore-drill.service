@@ -1,0 +1,14 @@
+# LearnBox restore drill (LB-B01) — proves the newest backup is restorable.
+# Install: /etc/systemd/system/learnbox-restore-drill.service
+[Unit]
+Description=LearnBox restore drill into a disposable scratch database
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+User=ubuntu
+ExecStart=/home/ubuntu/learnbox/ops/learnbox-restore-drill.sh
+TimeoutStartSec=900
+StandardOutput=journal
+StandardError=journal

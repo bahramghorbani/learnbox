@@ -1,0 +1,13 @@
+# Weekly LearnBox restore drill (LB-B01).
+# Install: /etc/systemd/system/learnbox-restore-drill.timer
+[Unit]
+Description=Weekly LearnBox restore drill
+
+[Timer]
+# Mondays 03:30 UTC, after the nightly backup has completed.
+OnCalendar=Mon *-*-* 03:30:00 UTC
+Persistent=true
+RandomizedDelaySec=600
+
+[Install]
+WantedBy=timers.target

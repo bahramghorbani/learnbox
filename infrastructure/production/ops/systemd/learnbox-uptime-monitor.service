@@ -1,0 +1,12 @@
+# LearnBox uptime/readiness monitor (LB-B02).
+# Install: /etc/systemd/system/learnbox-uptime-monitor.service
+[Unit]
+Description=LearnBox uptime and readiness check
+After=docker.service
+
+[Service]
+Type=oneshot
+User=ubuntu
+ExecStart=/home/ubuntu/learnbox/ops/learnbox-uptime-monitor.sh
+StandardOutput=journal
+StandardError=journal

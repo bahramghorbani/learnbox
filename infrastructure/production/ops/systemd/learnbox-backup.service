@@ -1,0 +1,14 @@
+# LearnBox automated database backup (LB-B01).
+# Install: /etc/systemd/system/learnbox-backup.service
+[Unit]
+Description=LearnBox database backup
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+User=ubuntu
+ExecStart=/home/ubuntu/learnbox/ops/learnbox-backup.sh
+# The script alerts on its own failure path; this keeps a systemd-visible record too.
+StandardOutput=journal
+StandardError=journal
