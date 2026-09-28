@@ -29,7 +29,8 @@ export type DeletionRefusal = { readonly status: 'refused'; readonly reason: 'pr
 
 export type DeletionOutcome =
   | { readonly status: 'deleted'; readonly deletionId: string; readonly counts: DeletionCounts }
-  | { readonly status: 'already_deleted' }
+  /** A retry of a completed deletion: carries the ORIGINAL deletion id, never a new one. */
+  | { readonly status: 'already_deleted'; readonly deletionId: string }
   | DeletionRefusal;
 
 /** Statically guarantee no protected table can ever reach a DELETE statement. */
@@ -58,11 +59,25 @@ export async function deleteAccount(
     readonly subjectHash: string;
     readonly actor: DeletionActor;
     readonly requestedAt: Date;
+    /** Client-supplied idempotency key; a repeat returns the first outcome. */
+    readonly requestId: string;
   },
 ): Promise<DeletionOutcome> {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
+
+    // 0. Idempotency first: if this exact request already completed, return the original result.
+    //    This must precede the user lookup, because after a successful deletion the user row is
+    //    gone and an unkeyed retry would otherwise be indistinguishable from a bogus request.
+    const prior = await client.query<{ id: string }>(
+      'SELECT id FROM account_deletion_events WHERE request_id = $1',
+      [input.requestId],
+    );
+    if ((prior.rowCount ?? 0) > 0) {
+      await client.query('ROLLBACK');
+      return { status: 'already_deleted', deletionId: prior.rows[0].id };
+    }
 
     // Lock the account row so two concurrent deletion requests cannot interleave.
     const user = await client.query<{ id: string }>(
@@ -138,15 +153,16 @@ export async function deleteAccount(
 
     const audit = await client.query<{ id: string }>(
       `INSERT INTO account_deletion_events
-         (subject_hash, prior_user_id, requested_at, status, actor, policy_version,
+         (subject_hash, prior_user_id, requested_at, status, actor, request_id, policy_version,
           review_events_removed, schedules_removed, sessions_removed, purchases_preserved)
-       VALUES ($1, $2, $3, 'completed', $4, $5, $6, $7, $8, $9)
+       VALUES ($1, $2, $3, 'completed', $4, $5, $6, $7, $8, $9, $10)
        RETURNING id`,
       [
         input.subjectHash,
         input.userId,
         input.requestedAt.toISOString(),
         input.actor,
+        input.requestId,
         ACCOUNT_DELETION_POLICY_VERSION,
         deletionCounts.reviewEventsRemoved,
         deletionCounts.schedulesRemoved,

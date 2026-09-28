@@ -46,6 +46,11 @@ CREATE TABLE account_deletion_events (
   status account_deletion_status NOT NULL,
   actor account_deletion_actor NOT NULL,
 
+  -- Idempotency key supplied by the client. A retry after a dropped connection must return the
+  -- ORIGINAL deletion result rather than erroring or attempting a second pass, so the learner sees
+  -- one truthful outcome. Unique per deletion event.
+  request_id TEXT NOT NULL,
+
   -- Which written policy the deletion was executed under, so retention semantics stay auditable
   -- when the policy later changes.
   policy_version TEXT NOT NULL,
@@ -60,6 +65,10 @@ CREATE TABLE account_deletion_events (
 -- Supports "has this phone been deleted before?" during a support or restoration dispute.
 CREATE INDEX account_deletion_events_subject_idx
   ON account_deletion_events (subject_hash, completed_at DESC);
+
+-- Enforces idempotency: the same client request can only ever produce one deletion event.
+CREATE UNIQUE INDEX account_deletion_events_request_idx
+  ON account_deletion_events (request_id);
 
 CREATE TABLE purchase_ownership_claims (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

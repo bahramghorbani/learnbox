@@ -55,7 +55,7 @@ is_privileged(){
 
 run_delete(){
 if [ "$(is_privileged "$1")" != "0" ]; then echo "REFUSED privileged_account"; return 1; fi
-docker exec -i "$NAME" psql -q -v ON_ERROR_STOP=1 -v uid="$1" -U postgres -d d 2>&1 <<'SQL'
+docker exec -i "$NAME" psql -q -v ON_ERROR_STOP=1 -v uid="$1" -v rid="${2:-req-default}" -U postgres -d d 2>&1 <<'SQL'
 BEGIN;
 SELECT id FROM users WHERE id=:'uid' FOR UPDATE;
 INSERT INTO purchase_ownership_claims (provider, provider_purchase_id, product_id, subject_hash, entitlement_keys, status, purchased_at)
@@ -72,14 +72,42 @@ DELETE FROM payment_logs WHERE user_id=:'uid';
 UPDATE audit_logs SET actor_user_id=NULL WHERE actor_user_id=:'uid';
 DELETE FROM purchase_events WHERE user_id=:'uid';
 DELETE FROM users WHERE id=:'uid';
-INSERT INTO account_deletion_events (subject_hash, prior_user_id, requested_at, status, actor, policy_version, review_events_removed, schedules_removed, sessions_removed, purchases_preserved)
-  VALUES ('SUBJECT-HASH-A', :'uid', now(), 'completed','learner','2026-09-28.v1',2,3,0,1);
+INSERT INTO account_deletion_events (subject_hash, prior_user_id, requested_at, status, actor, request_id, policy_version, review_events_removed, schedules_removed, sessions_removed, purchases_preserved)
+  VALUES ('SUBJECT-HASH-A', :'uid', now(), 'completed','learner', :'rid', '2026-09-28.v1',2,3,0,1);
 COMMIT;
 SQL
 }
 
-run_delete "$A" >/tmp/del_a.log 2>&1
+run_delete "$A" "req-alpha-1" >/tmp/del_a.log 2>&1
 echo "--- delete A output ---"; cat /tmp/del_a.log; echo "--- end ---"
+
+
+# --- idempotency proof: the SAME request id must not create a second audit event ----------
+echo ""
+echo "=== idempotency: replaying the identical request id ==="
+before_events=$(q "select count(*) from account_deletion_events")
+set +e
+replay_err=$(docker exec -i "$NAME" psql -q -v ON_ERROR_STOP=1 -v uid="$A" -v rid="req-alpha-1" -U postgres -d d <<'SQL' 2>&1
+INSERT INTO account_deletion_events (subject_hash, prior_user_id, requested_at, status, actor, request_id, policy_version, review_events_removed, schedules_removed, sessions_removed, purchases_preserved)
+  VALUES ('SUBJECT-HASH-A', :'uid', now(), 'completed','learner', :'rid', '2026-09-28.v1',2,3,0,1);
+SQL
+)
+replay_rc=$?
+set -e
+after_events=$(q "select count(*) from account_deletion_events")
+# A pass requires THREE things, so a harness fault cannot look like a success:
+#   - there was a real audit row to duplicate (before > 0)
+#   - the replay failed
+#   - it failed on the unique constraint specifically, not on some unrelated error
+if [ "${before_events:-0}" -gt 0 ] \
+   && [ "$replay_rc" -ne 0 ] \
+   && printf '%s' "$replay_err" | grep -qi 'account_deletion_events_request_idx\|duplicate key' \
+   && [ "$before_events" = "$after_events" ]; then
+  echo "  PASS: duplicate request_id rejected by the unique index (events stayed $after_events)"
+else
+  echo "  FAIL: idempotency not proven (before=$before_events after=$after_events rc=$replay_rc)"
+  echo "        replay error was: $(printf '%s' "$replay_err" | head -2)"
+fi
 
 echo "AFTER : users=$(q "select count(*) from users") schedA=$(q "select count(*) from card_schedules where user_id='$A'") schedB=$(q "select count(*) from card_schedules where user_id='$B'") purchases=$(q "select count(*) from purchase_events") claims=$(q "select count(*) from purchase_ownership_claims") audit=$(q "select count(*) from account_deletion_events")"
 echo ""
@@ -97,12 +125,20 @@ echo "CHECK content/cards untouched......: $([ "$(q "select count(*) from cards"
 echo "CHECK phone freed for re-register..: $(docker exec -i "$NAME" psql -q -U postgres -d d -c "INSERT INTO users (id, phone_e164, first_name) VALUES ('cccccccc-0000-0000-0000-000000000003','+989120000001','Rejoined');" >/dev/null 2>&1 && echo PASS || echo FAIL)"
 echo "CHECK claim reclaimable by hash....: $([ "$(q "select count(*) from purchase_ownership_claims where subject_hash='SUBJECT-HASH-A'")" = 1 ] && echo PASS || echo FAIL)"
 
-run_delete "$A" >/dev/null 2>&1
+set +e; run_delete "$A" "req-alpha-retry" >/dev/null 2>&1; set -e
 echo "CHECK retry idempotent (no dupes)..: $([ "$(q "select count(*) from purchase_ownership_claims")" = 1 ] && echo PASS || echo FAIL)"
 echo "CHECK orphan rows after deletion...: $([ "$(q "select count(*) from card_schedules s left join users u on u.id=s.user_id where u.id is null")" = 0 ] && echo PASS || echo FAIL)"
 
-run_delete "$P" >/tmp/del_p.log 2>&1
+set +e; run_delete "$P" "req-priv-1" >/tmp/del_p.log 2>&1; set -e
 echo "CHECK privileged deletion refused..: $(grep -qi 'REFUSED privileged_account' /tmp/del_p.log && echo PASS || echo FAIL)"
 echo "CHECK reviewer account intact......: $([ "$(q "select count(*) from users where id='$P'")" = 1 ] && echo PASS || echo FAIL)"
 echo "CHECK review decision intact.......: $([ "$(q "select count(*) from content_review_decisions where reviewer_user_id='$P'")" = 1 ] && echo PASS || echo FAIL)"
 rm -f /tmp/del_a.log /tmp/del_p.log
+
+echo ""
+if [ "$(grep -c 'FAIL' /tmp/lb_del_results 2>/dev/null || echo 0)" -gt 0 ]; then
+  echo "RESULT: FAILURES PRESENT"
+  exit 1
+fi
+echo "RESULT: all checks completed"
+exit 0
