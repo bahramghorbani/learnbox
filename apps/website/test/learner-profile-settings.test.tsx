@@ -141,11 +141,16 @@ describe('ProfileScreen', () => {
 
     const links = Array.from(rendered.container.querySelectorAll('a'));
     const privacy = links.find((link) => link.textContent?.includes('حریم خصوصی'));
-    const support = links.find((link) => link.textContent?.includes('پشتیبانی'));
+    // Two support paths are offered: Telegram (the faster route, and the escape path when OTP SMS
+    // does not arrive) and email. Both must be real, reachable links.
+    const telegramSupport = links.find((link) => link.textContent?.includes('پشتیبانی در تلگرام'));
+    const emailSupport = links.find((link) => link.textContent?.includes('پشتیبانی با ایمیل'));
     expect(privacy?.getAttribute('href')).toBe('https://learnboxapp.com/privacy');
     expect(privacy?.getAttribute('target')).toBe('_blank');
     expect(privacy?.getAttribute('rel')).toContain('noreferrer');
-    expect(support?.getAttribute('href')).toBe('mailto:hi@learnboxapp.com');
+    expect(telegramSupport?.getAttribute('href')).toBe('https://t.me/learnboxsupportbot');
+    expect(telegramSupport?.getAttribute('rel')).toContain('noreferrer');
+    expect(emailSupport?.getAttribute('href')).toBe('mailto:hi@learnboxapp.com');
   });
 
   it('exposes no sign-out, deletion, purchase, reminder or fake-account controls', async () => {
@@ -428,7 +433,9 @@ describe('learner Profile and Settings shell flows', () => {
       await Promise.resolve();
     });
 
+    // Rendered as Persian digits; neither form may remain after navigating away.
     expect(rendered.text()).not.toContain('0912***4567');
+    expect(rendered.text()).not.toContain('۰۹۱۲***۴۵۶۷');
   });
 
   it('clears identity offline and rereads it only on reconnect while eligible', async () => {
@@ -476,7 +483,8 @@ describe('learner Profile and Settings shell flows', () => {
     rendered = await renderLearner({ otpUiFlag: 'true', profileIdentityFlag: 'true' });
     await rendered.signInLocally();
     await rendered.clickButton('پروفایل');
-    expect(rendered.text()).toContain('0912***4567');
+    // The masked phone is displayed in Persian digits, matching the rest of the RTL interface.
+    expect(rendered.text()).toContain('۰۹۱۲***۴۵۶۷');
 
     Object.defineProperty(window.navigator, 'onLine', { configurable: true, value: false });
     await act(async () => window.dispatchEvent(new Event('offline')));
@@ -486,7 +494,7 @@ describe('learner Profile and Settings shell flows', () => {
     Object.defineProperty(window.navigator, 'onLine', { configurable: true, value: true });
     await act(async () => window.dispatchEvent(new Event('online')));
     expect(profileReads).toBe(2);
-    expect(rendered.text()).toContain('0913***4567');
+    expect(rendered.text()).toContain('۰۹۱۳***۴۵۶۷');
   });
 
   it('keeps disabled identity composition neutral without fetching', async () => {

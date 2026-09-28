@@ -1,3 +1,5 @@
+import { toPersianDigits } from '../app/persian-digits';
+
 export type ChallengeResponse = {
   challengeId: string;
   expiresAt: string;
@@ -93,10 +95,6 @@ export function otpErrorMessage(status: number, code?: string, retryAfterSeconds
 
 function isIsoDate(value: unknown): value is string {
   return typeof value === 'string' && Number.isFinite(Date.parse(value));
-}
-
-function toPersianDigits(value: number): string {
-  return String(value).replace(/\d/g, (digit) => '۰۱۲۳۴۵۶۷۸۹'[Number(digit)] ?? digit);
 }
 
 /**

@@ -2,6 +2,7 @@ import type { RefObject } from 'react';
 
 import { LearnerNav, type LearnerDestination } from './LearnerNav';
 import { toPersianDigits } from '../persian-digits';
+import { supportLinkFor } from '../../lib/support-contact';
 
 export type LearnerLearningGoal = 'life' | 'career' | 'travel';
 
@@ -67,7 +68,7 @@ export function ProfileScreen({
         <h2 id="profile-account-title">حساب</h2>
         <div className="profile-card">
           <strong className="profile-account-name">
-            {identity.status === 'ok' ? identity.maskedPhone : 'حساب LearnBox'}
+            {identity.status === 'ok' ? toPersianDigits(identity.maskedPhone) : 'حساب LearnBox'}
           </strong>
           {identity.status === 'loading' ? (
             <p className="profile-card-note" role="status">
@@ -161,9 +162,25 @@ export function ProfileScreen({
               ↗
             </span>
           </a>
+          <a
+            className="profile-row"
+            href={supportLinkFor('profile')}
+            target="_blank"
+            rel="noreferrer"
+          >
+            <span className="profile-row-copy">
+              <strong>پشتیبانی در تلگرام</strong>
+              <small className="profile-row-url" dir="ltr">
+                @learnboxsupportbot
+              </small>
+            </span>
+            <span className="profile-row-arrow" aria-hidden="true">
+              ↗
+            </span>
+          </a>
           <a className="profile-row" href={supportEmail}>
             <span className="profile-row-copy">
-              <strong>پشتیبانی</strong>
+              <strong>پشتیبانی با ایمیل</strong>
               <small className="profile-row-url" dir="ltr">
                 hi@learnboxapp.com
               </small>

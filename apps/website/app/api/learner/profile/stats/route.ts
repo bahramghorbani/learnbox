@@ -1,5 +1,6 @@
 import { Pool } from 'pg';
 import { readLearnerSession } from '../../../../../lib/server-session';
+import { maskIranianPhone } from '../../../../../lib/phone-mask';
 import { requireVerifiedDatabaseTls } from '../../../../../../api/dist/database/migration-runner.js';
 
 export const runtime = 'nodejs';
@@ -141,10 +142,8 @@ export async function GET(request: Request): Promise<Response> {
       [userId],
     );
 
-    // Mask phone
-    const phone = user.phone_e164 as string;
-    const phoneMatch = /^\+989(\d{2})\d{3}(\d{4})$/.exec(phone);
-    const maskedPhone = phoneMatch ? `۰۹${phoneMatch[1]}****${phoneMatch[2]}` : null;
+    // Canonical mask shared with /api/learner/profile; converted to Persian digits for display.
+    const maskedPhone = maskIranianPhone(user.phone_e164 as string);
 
     const stats = cardStats.rows[0];
 
