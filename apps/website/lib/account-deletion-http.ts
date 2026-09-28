@@ -61,6 +61,25 @@ function json(body: Record<string, unknown>, status: number): Response {
   return Response.json(body, { status, headers: HEADERS });
 }
 
+/**
+ * Sessions are stateless signed cookies, so a cookie minted before deletion stays cryptographically
+ * valid until it expires. Deleting the account must therefore also expire the cookie on the client,
+ * otherwise the browser keeps presenting a credential for an account that no longer exists.
+ */
+function deletedResponse(
+  body: Record<string, unknown>,
+  environment: Record<string, string | undefined>,
+): Response {
+  const secure = environment.NODE_ENV === 'production' ? '; Secure' : '';
+  return Response.json(body, {
+    status: 200,
+    headers: {
+      ...HEADERS,
+      'set-cookie': `learnbox_alpha_session=; Path=/; Max-Age=0; HttpOnly${secure}; SameSite=Lax`,
+    },
+  });
+}
+
 export async function handleAccountDeletionPost(
   request: Request,
   dependencies: AccountDeletionDependencies,
@@ -117,6 +136,6 @@ export async function handleAccountDeletionPost(
   }
 
   // A retry reports the same success with the original id: the learner's account IS deleted, so
-  // claiming anything else would be untrue.
-  return json({ status: 'deleted', deletionId: outcome.deletionId }, 200);
+  // claiming anything else would be untrue. The session cookie is expired in both cases.
+  return deletedResponse({ status: 'deleted', deletionId: outcome.deletionId }, environment);
 }

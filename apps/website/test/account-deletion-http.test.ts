@@ -200,6 +200,22 @@ describe('account deletion boundary', () => {
     expect(await response.json()).toEqual({ status: 'deleted', deletionId: 'del_first' });
   });
 
+  it('expires the session cookie so a stateless session cannot outlive the account', async () => {
+    const response = await handleAccountDeletionPost(
+      request({ confirmPhone: '09121234567', requestId: 'req-1' }),
+      deps(),
+      () => 'user-1',
+      { ...ENV, NODE_ENV: 'production' },
+    );
+
+    expect(response.status).toBe(200);
+    const cookie = response.headers.get('set-cookie') ?? '';
+    expect(cookie).toContain('learnbox_alpha_session=;');
+    expect(cookie).toContain('Max-Age=0');
+    expect(cookie).toContain('HttpOnly');
+    expect(cookie).toContain('Secure');
+  });
+
   it('never leaks the registered phone number in any response', async () => {
     const responses = await Promise.all([
       handleAccountDeletionPost(

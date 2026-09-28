@@ -45,7 +45,10 @@ export function accountDeletionDependenciesFromEnvironment(
   environment: Environment = process.env,
 ): AccountDeletionDependencies | null {
   const databaseUrl = environment.DATABASE_URL ?? '';
-  const phoneSecret = environment.LEARNBOX_OTP_PHONE_HMAC_SECRET ?? '';
+  // MUST be the same secret the OTP flow hashes phones with (LEARNBOX_OTP_SECRET). Using any
+  // other secret would yield a subject hash that never matches the OTP records, so a later
+  // purchase-ownership claim for this phone could never be resolved.
+  const phoneSecret = environment.LEARNBOX_OTP_SECRET ?? '';
   // Without the phone secret the audit record could not be written with a stable, non-reversible
   // subject reference, so deletion is reported unavailable rather than performed unaudited.
   if (!/^postgres(ql)?:\/\//.test(databaseUrl) || phoneSecret.length < 32) return null;
