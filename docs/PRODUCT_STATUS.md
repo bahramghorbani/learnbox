@@ -115,6 +115,10 @@ Starter pack and 105/105 canonical media. Android/Cafe Bazaar, every payment pat
 and native iOS are v1.1 or later. `BACKLOG.md` owns the normalized v1.1 backlog and candidate
 boundary; `ROADMAP.md` retains the historical v1.0 gate sequence.
 
+The shipped application is recorded as annotated Git tag `v1.0.0` with a corresponding GitHub
+Release. The repository is private by security decision: protected learning media is tracked in
+Git, and repository privacy is what prevents anonymous retrieval of it (LB-B10).
+
 Rows in the inventory above that still read "gated", "planned" or "not enabled" describe
 capabilities beyond the shipped v1 scope unless this section says otherwise.
 
