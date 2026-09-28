@@ -15,6 +15,8 @@
 | Canonical media                | 105/105 verified assets                                                   |
 | Release blockers at activation | none                                                                      |
 | Production drift at activation | zero                                                                      |
+| Release record                 | annotated tag `v1.0.0` + GitHub Release, targeting `2acdcef4`             |
+| Repository visibility          | private (security decision, 2026-09-28)                                   |
 
 Repository `main` may advance beyond the Production application SHA through documentation-only
 commits. That is intentional and is **not** application drift: compare the Production application
@@ -73,3 +75,9 @@ repository was "a tested product foundation, not a released application" applied
 - Main remains buildable through reviewed PRs.
 - Rollback images, environment backups and the database backup are preserved; do not delete
   recovery evidence without explicit owner authorization naming the artifacts.
+- The repository is private because protected learning media is tracked in Git. Do not make it
+  public again: anonymous retrieval of protected media through GitHub was a confirmed P0 (LB-B10)
+  and repository privacy is what contains it. The media blobs remain in Git history.
+- The repository is private because protected learning media is tracked in Git. Do not make it
+  public again: anonymous retrieval of protected media through GitHub was a confirmed P0 (LB-B10)
+  and repository privacy is what contains it. The media blobs remain in Git history.
