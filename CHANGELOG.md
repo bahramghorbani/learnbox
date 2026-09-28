@@ -1,8 +1,10 @@
 # Changelog
 
-## v1.1.0 — Option B (implemented on `release/v1.1.0`, not deployed)
+## v1.1.0 — Option B (released 2026-09-28)
 
-Production still runs v1.0 at `2acdcef4`; database migration `0019` is not applied there.
+Released as commit `46cc45e24bfd54fc1f3f23dd0429c2d4ebb3744f`, tag `v1.1.0`, image
+`sha256:a985b81d463b15694282355e7b87a0a91a885fdd470bdf12b45e31caee76ef7c`. Database migration
+`0019` is applied: two tables added, no existing row changed.
 
 ### Learner-facing
 

@@ -4,65 +4,41 @@
 
 ## Active work
 
-**v1.1.0 Option B — implemented on `release/v1.1.0`, not deployed.**
+**None.** v1.1.0 is released and closed. The next release has not been scoped.
 
-Production still runs the v1.0 release: application SHA
-`2acdcef4bc4e06c020f08de1fd16e4fbad2e1ea3`, image digest
-`sha256:4e008803b22c63cc08ccbce4514834ceddeed0209f44c8e296c7efb665ae3bef`. Nothing in this
-branch has reached Production, and migration `0019` has not been applied there.
+## v1.1.0 Option B — released
 
-Owner-selected scope (`LearnBox_v1.1_Option_B_Hermes_Directive.txt`): LB-B01, LB-B02, LB-B04,
-LB-B03, LB-B08, LB-B09, LB-B21. Out of scope and untouched: LB-B05, LB-B06, LB-B10 residual,
-LB-B11–LB-B20, Android, payments, premium packs, iOS, notifications, media migration, audio
-regeneration and Git history cleanup.
+Shipped to Production on 2026-09-28 and merged to `main` in PR #303.
 
-### Delivered in this branch
+|                    |                                                                           |
+| ------------------ | ------------------------------------------------------------------------- |
+| Application commit | `46cc45e24bfd54fc1f3f23dd0429c2d4ebb3744f`                                |
+| Tag                | `v1.1.0` (annotated, fixed to the commit above)                           |
+| Image digest       | `sha256:a985b81d463b15694282355e7b87a0a91a885fdd470bdf12b45e31caee76ef7c` |
+| Database           | migration `0019` applied, forward-only                                    |
 
-- **LB-B01 / LB-B08 — support and contact path.** `@learnboxsupportbot` for learner support and
-  as the escape path when OTP SMS does not arrive, surfaced in the profile alongside email.
-- **LB-B02 — operations.** Daily database backup, uptime monitoring, error capture with secret
-  redaction, and a weekly restore drill, each as a systemd timer with `@learnboxmonitoringbot`
-  alerting. Monitoring and support bots are kept separate: separate tokens, separate chats,
-  operational alerts never reach the learner-facing bot.
-- **LB-B03 — learner profile.** One canonical phone-mask helper. Two endpoints had disagreed about
-  the same field, one of them emitting a Persian prefix welded onto Latin digits, which renders as
-  visibly broken text in a right-to-left interface.
-- **LB-B04 — account deletion.** UI, API, and a SQL orchestrator that removes learner data while
-  keeping a privacy-minimized deletion audit record and a purchase-ownership claim. Idempotent via
-  a `request_id` unique index, so a retry cannot produce a second deletion.
-- **LB-B09 — lifecycle integrity.** Media exposure and release stage are modelled and validated
-  independently in the canonical Starter media manifest.
-- **LB-B21 — this document and the other canonical current docs.**
+The tag, the OCI `org.opencontainers.image.revision` label, the runtime `APP_SOURCE_SHA` and the deployed source agree on one commit. Provenance was previously unverifiable: `APP_VERSION` was passed as a build argument the Dockerfile never declared, so it was silently discarded and images carried no labels.
 
-### Not yet proven
+Delivered: LB-B01 support channel, LB-B02 operations timers and `/api/health`, LB-B03 learner profile with one canonical phone mask, LB-B04 account deletion, LB-B08 truthful privacy notice, LB-B09 media manifest lifecycle model, LB-B21 documentation reconciliation. Untouched and still out of scope: LB-B05, LB-B06, the LB-B10 residual, LB-B11–LB-B20, Android, payments, premium packs, iOS, notifications, media migration, audio regeneration and Git history cleanup.
 
-- **Account deletion is not Production-proven.** The path is covered by unit tests and an 18-check
-  integration proof against a copy of the Production database, but it has not run end-to-end in
-  Production with a dedicated test account. It stays unproven until it has.
-- **`/api/health` monitoring is availability-only.** The endpoint ships in this branch and is not
-  deployed, so the uptime monitor currently checks reachability. After deploy, set
-  `LEARNBOX_MONITOR_HEALTH_PATH=/api/health` and re-verify end to end.
-- **Scheduled runs are enabled, not yet observed.** An active timer is not a successful execution.
-  Backup and restore drill are proven by manual runs; the first real scheduled run of each must be
-  recorded separately.
+Migration `0019` added `account_deletion_events` and `purchase_ownership_claims` (34 → 36 tables) and changed no row of existing data: users 2, review events 62, card schedules 31, identical before and after.
 
-## What closed with v1
+### Account deletion — Production-proven
 
-The pre-activation owner gates that this document previously tracked are resolved:
+Proven end-to-end in Production with a dedicated disposable account. No real account was used and no real learner data was touched.
 
-- the 35-item human review, starter media canonicalization (35/35 cards, 105/105 assets) and the
-  authenticated learning loop shipped in the activated release;
-- public activation completed with zero drift and no release blockers;
-- rollback images, environment backups and the database backup are preserved.
+Full UI/API/DB path returns 200; a mismatched phone confirmation is rejected with 403; the session cookie is expired on success and the prior cookie is then rejected with 401; learner rows are removed; the audit record is retained with counters matching exactly what was seeded and with no phone number, only a non-reversible `subject_hash`; the same phone can register again into a clean account; a recreated account resolves to the same `subject_hash`, so purchase reclaim remains possible; a duplicate `request_id` is rejected by the live unique index.
 
-Historical gate-by-gate detail remains in `ROADMAP.md` and the validation records under
-`content/packs/learnbox-start/validation/` as history; it no longer describes pending work.
+One privacy-minimized audit row remains from that exercise. It contains no phone number and no learner content. It is retained deliberately as legitimate deletion audit evidence and is **not** a permanent exception: it is subject to the same retention policy as every other deletion audit record. Its `request_id` is the literal `e2e-del-1`, which no learner row can collide with because the client generates `crypto.randomUUID()` values — so release provenance is already recorded non-sensitively in the existing schema, and no schema change was made for it.
+
+## Pending evidence
+
+**Scheduled backup and restore drill have never actually executed.** Both timers are enabled and active, and both jobs are proven by manual runs — a full backup (34 tables, verified gzip) and an isolated restore drill (0 orphans). But `ExecMainStartTimestamp` is empty for both units.
+
+An active timer is not a successful execution. Neither may be reported as successful until it has genuinely run, and the result of the first real run of each must be recorded separately. The uptime monitor and the error scan, by contrast, have both really executed and succeeded.
 
 ## Standing constraints
 
-1. Keep Production change, database mutation, credential rotation and SMS configuration behind
-   their existing owner gates; v1 being live does not open them.
-2. Preserve rollback and backup evidence; deletion requires explicit owner authorization naming
-   the specific artifacts.
-3. The repository stays private, `v1.0.0` does not move, history is not rewritten, media is not
-   purged, and protected-media authentication is not weakened.
+1. Keep Production change, database mutation, credential rotation and SMS configuration behind their existing owner gates; a live release does not open them.
+2. Preserve rollback and backup evidence; deletion requires explicit owner authorization naming the specific artifacts.
+3. The repository stays private, `v1.0.0` and `v1.1.0` do not move, history is not rewritten, media is not purged, and protected-media authentication is not weakened.

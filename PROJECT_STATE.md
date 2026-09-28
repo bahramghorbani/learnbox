@@ -79,11 +79,14 @@ repository was "a tested product foundation, not a released application" applied
   public again: anonymous retrieval of protected media through GitHub was a confirmed P0 (LB-B10)
   and repository privacy is what contains it. The media blobs remain in Git history.
 
-## v1.1.0 Option B — implemented, not deployed
+## v1.1.0 Option B — released
 
-Branch `release/v1.1.0` carries the owner-selected v1.1 scope: LB-B01, LB-B02, LB-B03, LB-B04,
-LB-B08, LB-B09, LB-B21. Production is unchanged and still runs v1.0 at `2acdcef4`; migration
-`0019` is not applied there.
+Tag `v1.1.0` marks the released application commit `46cc45e24bfd54fc1f3f23dd0429c2d4ebb3744f`,
+deployed to Production on 2026-09-28 as image
+`sha256:a985b81d463b15694282355e7b87a0a91a885fdd470bdf12b45e31caee76ef7c` and merged to `main`
+in PR #303. The tag, the image's OCI revision label and the container's runtime `APP_SOURCE_SHA`
+all name that one commit. Migration `0019` is applied; it added two tables (34 → 36) and changed
+no row of existing data. Scope delivered: LB-B01, LB-B02, LB-B03, LB-B04, LB-B08, LB-B09, LB-B21.
 
 - **Operations (LB-B02).** Daily database backup, uptime monitoring, error capture with proven
   secret redaction, and a weekly restore drill run as systemd timers, alerting through
@@ -94,8 +97,10 @@ LB-B08, LB-B09, LB-B21. Production is unchanged and still runs v1.0 at `2acdcef4
 - **Account deletion (LB-B04).** Deletion removes learner data while preserving a
   privacy-minimized deletion audit record and a purchase-ownership claim, and is idempotent
   through a `request_id` unique index. It is covered by unit tests and an 18-check integration
-  proof against a copy of the Production database. It is **not Production-proven**: that requires
-  an end-to-end run in Production with a dedicated test account.
+  proof against a copy of the Production database, and it is **Production-proven**: a full
+  end-to-end run was executed in Production with a dedicated disposable account, re-proving session
+  invalidation, re-registration of the same phone, learner-data removal, audit-record retention and
+  the purchase-ownership claim. No real account was used.
 - **Lifecycle integrity (LB-B09).** The canonical Starter media manifest now models media exposure
   and release stage independently. `mediaPublicExposureBlocked` and `mediaExposure`
   `authenticated_only` are permanent invariants enforced at every stage; the release stage is
