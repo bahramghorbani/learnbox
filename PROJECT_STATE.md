@@ -6,15 +6,15 @@
 
 **Web/PWA v1 is LIVE and CLOSED.** Public activation completed 2026-09-28.
 
-| Fact | Value |
-| --- | --- |
-| Production application source | `2acdcef4bc4e06c020f08de1fd16e4fbad2e1ea3` |
-| Production image digest | `sha256:4e008803b22c63cc08ccbce4514834ceddeed0209f44c8e296c7efb665ae3bef` |
-| Live learner surface | `app.learnboxapp.com` |
-| Starter pack | 35/35 canonical cards |
-| Canonical media | 105/105 verified assets |
-| Release blockers at activation | none |
-| Production drift at activation | zero |
+| Fact                           | Value                                                                     |
+| ------------------------------ | ------------------------------------------------------------------------- |
+| Production application source  | `2acdcef4bc4e06c020f08de1fd16e4fbad2e1ea3`                                |
+| Production image digest        | `sha256:4e008803b22c63cc08ccbce4514834ceddeed0209f44c8e296c7efb665ae3bef` |
+| Live learner surface           | `app.learnboxapp.com`                                                     |
+| Starter pack                   | 35/35 canonical cards                                                     |
+| Canonical media                | 105/105 verified assets                                                   |
+| Release blockers at activation | none                                                                      |
+| Production drift at activation | zero                                                                      |
 
 Repository `main` may advance beyond the Production application SHA through documentation-only
 commits. That is intentional and is **not** application drift: compare the Production application
