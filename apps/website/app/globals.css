@@ -675,6 +675,20 @@ button {
   outline: 3px solid #25213b;
   outline-offset: 4px;
 }
+/* LB-B08: support escape path shown under the resend control on the code screen. */
+.auth-support-link {
+  display: block;
+  width: fit-content;
+  margin: 14px auto 0;
+  color: #5543a7;
+  font-size: 14px;
+  font-weight: 700;
+  text-underline-offset: 4px;
+}
+.auth-support-link:focus-visible {
+  outline: 3px solid #25213b;
+  outline-offset: 4px;
+}
 .auth-prototype-notice {
   margin: 20px 6px 0;
   border: 1px solid #ded7ff;
