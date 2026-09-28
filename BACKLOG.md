@@ -5,6 +5,11 @@ recorded as annotated tag `v1.0.0` and a GitHub Release. The repository is **pri
 decision (LB-B10 containment).
 This document is the authoritative backlog and v1.1 candidate boundary.
 
+**Scope planning:** a decision-support deep-dive of all 21 items, with three v1.1 scope options
+and a recommendation, is recorded as a planning snapshot in
+[`docs/planning/V1_1_SCOPE_ANALYSIS.md`](docs/planning/V1_1_SCOPE_ANALYSIS.md). That document is
+analysis only; this file remains the authoritative backlog.
+
 Priority is planning input, not authorization to work. Nothing here is approved for implementation
 until the owner selects the v1.1 scope. Effort is deliberately not estimated.
 
