@@ -1,5 +1,47 @@
 # Changelog
 
+## v1.1.0 — Option B (implemented on `release/v1.1.0`, not deployed)
+
+Production still runs v1.0 at `2acdcef4`; database migration `0019` is not applied there.
+
+### Learner-facing
+
+- Account deletion from Settings: phone-confirmed, CSRF-protected, POST-only. Deletion removes
+  learner data while preserving a privacy-minimized deletion audit record and a purchase-ownership
+  claim, is idempotent through a `request_id` unique index, and expires the session cookie so a
+  stateless session cannot outlive the account. **Not Production-proven** — requires post-deploy
+  end-to-end verification with a dedicated test account.
+- Telegram support route (`@learnboxsupportbot`) in the profile, also serving as the OTP delivery
+  escape path.
+- Privacy notice rewritten against the real system: hashed short-lived OTPs, per-phone and per-IP
+  rate limiting, 30-day backup retention, and the honest statement that deletion does not
+  immediately purge backups.
+- Learner profile identity: one canonical masked-phone helper shared by every endpoint, rendered in
+  Persian digits. Two endpoints had previously disagreed about the same field, and one emitted
+  mixed Persian/Latin digits.
+- Review-sync status now describes actual behaviour instead of claiming automatic sync is disabled
+  while it was in fact running.
+
+### Operations
+
+- Daily database backup, uptime monitoring, error capture and a weekly restore drill as systemd
+  timers, alerting through `@learnboxmonitoringbot`. Operational alerting and learner support are
+  strictly separate bots with separate tokens and chats.
+- Secret redaction in error capture proven with planted fake secrets.
+- Uptime monitoring is availability-only until `/api/health` deploys; afterwards set
+  `LEARNBOX_MONITOR_HEALTH_PATH=/api/health` and re-verify.
+- Backup and restore drill are proven by manual runs. An enabled timer is not a successful
+  scheduled execution; the first real scheduled run of each is recorded separately.
+
+### Integrity
+
+- The canonical Starter media manifest now models media exposure and release stage independently.
+  Authenticated-only media exposure is a permanent invariant enforced at every stage; the release
+  stage is forward-only and a released claim must carry its Production verification evidence. The
+  previous two-boolean schema could only ever describe the pre-release world.
+- Canonical current documentation realigned to live reality, with historical incident, recovery and
+  release records preserved as history.
+
 ## 0.1.0 — Foundation
 
 - Initial monorepo, governance, shell applications, learning engine, database draft, and CI.

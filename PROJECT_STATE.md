@@ -78,6 +78,38 @@ repository was "a tested product foundation, not a released application" applied
 - The repository is private because protected learning media is tracked in Git. Do not make it
   public again: anonymous retrieval of protected media through GitHub was a confirmed P0 (LB-B10)
   and repository privacy is what contains it. The media blobs remain in Git history.
-- The repository is private because protected learning media is tracked in Git. Do not make it
-  public again: anonymous retrieval of protected media through GitHub was a confirmed P0 (LB-B10)
-  and repository privacy is what contains it. The media blobs remain in Git history.
+
+## v1.1.0 Option B — implemented, not deployed
+
+Branch `release/v1.1.0` carries the owner-selected v1.1 scope: LB-B01, LB-B02, LB-B03, LB-B04,
+LB-B08, LB-B09, LB-B21. Production is unchanged and still runs v1.0 at `2acdcef4`; migration
+`0019` is not applied there.
+
+- **Operations (LB-B02).** Daily database backup, uptime monitoring, error capture with proven
+  secret redaction, and a weekly restore drill run as systemd timers, alerting through
+  `@learnboxmonitoringbot`. The monitoring bot and the learner-facing `@learnboxsupportbot` are
+  fully separate — separate tokens and chats — and operational alerts never reach learners.
+  Backup and restore drill are proven by manual runs; an active timer is not a successful
+  execution, so the first real scheduled run of each is recorded separately.
+- **Account deletion (LB-B04).** Deletion removes learner data while preserving a
+  privacy-minimized deletion audit record and a purchase-ownership claim, and is idempotent
+  through a `request_id` unique index. It is covered by unit tests and an 18-check integration
+  proof against a copy of the Production database. It is **not Production-proven**: that requires
+  an end-to-end run in Production with a dedicated test account.
+- **Lifecycle integrity (LB-B09).** The canonical Starter media manifest now models media exposure
+  and release stage independently. `mediaPublicExposureBlocked` and `mediaExposure`
+  `authenticated_only` are permanent invariants enforced at every stage; the release stage is
+  forward-only and a released claim must carry its Production verification evidence. The previous
+  two-boolean schema could only describe the pre-release world. Public announcement remains
+  recorded as not performed.
+- **Privacy notice.** Rewritten to describe the real system: phone-based OTP authentication with
+  hashed short-lived codes, per-phone and per-IP rate limiting, 30-day backup retention, and the
+  honest consequence that deletion does not immediately purge backups.
+- **Restore-purchase boundary.** Deletion records a purchase-ownership claim so a later
+  re-registration of the same phone can be reconciled. No payment, entitlement engine or purchase
+  restoration is implemented; that remains out of scope.
+
+Deferred by directive and untouched: LB-B05, LB-B06, LB-B10 residual, LB-B11–LB-B20, Android,
+payments, premium packs, iOS, notifications, Content Factory expansion, media migration, audio
+regeneration, and Git history cleanup (media blobs remain in history; repository privacy contains
+LB-B10).

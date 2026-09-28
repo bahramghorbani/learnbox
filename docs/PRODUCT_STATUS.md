@@ -122,6 +122,25 @@ Git, and repository privacy is what prevents anonymous retrieval of it (LB-B10).
 Rows in the inventory above that still read "gated", "planned" or "not enabled" describe
 capabilities beyond the shipped v1 scope unless this section says otherwise.
 
+## v1.1.0 Option B capability state
+
+Implemented on branch `release/v1.1.0` and **not deployed**. Production still runs v1.0 at
+`2acdcef4`, and migration `0019` is not applied there. These rows describe the branch, not the
+live system.
+
+| Capability                  | Status                    | Evidence and boundary                                                                                                                                                                                                   |
+| --------------------------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Learner support and contact | Implemented, not deployed | `@learnboxsupportbot` for learner support and as the OTP escape path, surfaced in the profile beside email. Kept strictly separate from the operational bot.                                                            |
+| Operational alerting        | Implemented, not deployed | `@learnboxmonitoringbot` receives operational alerts only, with its own token and chat. Secret redaction proven: planted fake secrets did not appear in any alert.                                                      |
+| Database backup             | Manually proven           | Daily systemd timer enabled; manual run captured all 34 tables. An active timer is not a successful execution — the first real scheduled run is recorded separately.                                                    |
+| Restore drill               | Manually proven           | Weekly systemd timer enabled; manual drill restored with zero orphaned rows. First real scheduled run recorded separately.                                                                                              |
+| Uptime monitoring           | Availability-only         | Runs every 5 minutes. `/api/health` ships in this branch and is not deployed, so the monitor currently checks reachability. After deploy, set `LEARNBOX_MONITOR_HEALTH_PATH=/api/health` and re-verify end to end.      |
+| Account deletion            | **Not Production-proven** | UI, API and SQL orchestrator with a privacy-minimized audit record, purchase-ownership claim and `request_id` idempotency. Unit tests plus an 18-check integration proof against a copy of the Production database.     |
+| Learner profile identity    | Implemented, not deployed | One canonical masked-phone helper shared by every endpoint, rendered in Persian digits.                                                                                                                                 |
+| Privacy notice              | Implemented, not deployed | Rewritten against the real system: hashed short-lived OTPs, per-phone and per-IP rate limiting, 30-day backup retention, and the honest statement that deletion does not immediately purge backups.                     |
+| Media lifecycle integrity   | Verified                  | Media exposure and release stage modelled independently; permanent authenticated-only invariant plus a forward-only stage requiring Production evidence. Gate green at 35/35 cards and 105/105 slots; gate tests 11/11. |
+| Purchase restoration        | Not implemented           | Deletion records an ownership claim so a re-registered phone can be reconciled later. No payment, entitlement engine or restoration flow exists; out of scope by directive.                                             |
+
 ## Source-of-truth order
 
 1. This document for user-visible capability/status.
