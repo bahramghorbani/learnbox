@@ -1,15 +1,36 @@
 # LearnBox stable project state
 
-**Last reviewed:** 2026-09-21
+**Last reviewed:** 2026-09-28
+
+## Release position
+
+**Web/PWA v1 is LIVE and CLOSED.** Public activation completed 2026-09-28.
+
+| Fact | Value |
+| --- | --- |
+| Production application source | `2acdcef4bc4e06c020f08de1fd16e4fbad2e1ea3` |
+| Production image digest | `sha256:4e008803b22c63cc08ccbce4514834ceddeed0209f44c8e296c7efb665ae3bef` |
+| Live learner surface | `app.learnboxapp.com` |
+| Starter pack | 35/35 canonical cards |
+| Canonical media | 105/105 verified assets |
+| Release blockers at activation | none |
+| Production drift at activation | zero |
+
+Repository `main` may advance beyond the Production application SHA through documentation-only
+commits. That is intentional and is **not** application drift: compare the Production application
+SHA above, not the repository HEAD. Do not deploy merely to equalize the two.
+
+Android/Cafe Bazaar, every payment path, premium packs and native iOS remain v1.1 or later.
+Future work begins at v1.1; the normalized backlog lives in `BACKLOG.md`.
 
 ## Product
 
-LearnBox is an online-first German vocabulary Leitner product for Persian-speaking learners. Official Web/PWA v1.0 targets 2026-10-12 with 35 free A1 words and no payment requirement. Premium packs and their payment/entitlement paths begin in v1.1. Temporary connectivity loss is tolerated with a durable local queue and idempotent reconnect sync.
+LearnBox is an online-first German vocabulary Leitner product for Persian-speaking learners. Web/PWA v1 shipped with 35 free A1 words and no payment requirement. Premium packs and their payment/entitlement paths begin in v1.1. Temporary connectivity loss is tolerated with a durable local queue and idempotent reconnect sync.
 
 ## Boundaries
 
 - `learnboxapp.com` is an independent informational landing site only.
-- Learner Web is the current online learner surface and interim iOS route.
+- `app.learnboxapp.com` is the LIVE learner Web/PWA surface and interim iOS route.
 - Native Android/Cafe Bazaar is a v1.1 learner surface; native iOS is a later App Store milestone.
 - Admin manages content, AI drafts, media QA, packs, catalog, commerce and operations.
 - API/backend owns identity, learning state, sync, content, purchases and entitlements.
@@ -30,7 +51,10 @@ LearnBox is an online-first German vocabulary Leitner product for Persian-speaki
 
 ## Release position
 
-The repository is a tested product foundation, not a released application. The active target is official public Web/PWA v1.0 by 2026-10-12 after a real closed alpha; production activation and public release remain gated. Android/Cafe Bazaar and every payment path are post-v1.0.
+Superseded by the "Release position" section at the top of this document: Web/PWA v1 is LIVE and
+CLOSED at Production application SHA `2acdcef4`. The historical pre-activation statement that this
+repository was "a tested product foundation, not a released application" applied until
+2026-09-28 and is retained here only as history.
 
 ## Canonical references
 
@@ -41,7 +65,11 @@ The repository is a tested product foundation, not a released application. The a
 
 ## Safety state
 
-- Production services, broad public cohort, live payment, native gateway and store release remain gated.
+- Web/PWA v1 Production is LIVE. Further Production deployment, DB mutation, credential change,
+  SMS configuration change and public-surface change remain owner-gated.
+- Live payment, native gateway and store release remain gated and are v1.1 or later.
 - Preview SSO must not be bypassed with client secrets.
 - No real phone, OTP, receipt, token or provider secret belongs in repository evidence.
 - Main remains buildable through reviewed PRs.
+- Rollback images, environment backups and the database backup are preserved; do not delete
+  recovery evidence without explicit owner authorization naming the artifacts.
