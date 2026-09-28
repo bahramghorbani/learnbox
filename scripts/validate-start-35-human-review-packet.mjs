@@ -399,16 +399,11 @@ export async function assertStart35HumanReviewPacket(packet, sources) {
         `${id} must state repository/migration card-version linkage rather than verified database rows.`,
       );
     }
-    for (const [label, asset] of [
-      ['image', item.image],
-      ['versions.image', item.versions.image],
-      ['versions.wordAudio', item.versions.wordAudio],
-      ['versions.sentenceAudio', item.versions.sentenceAudio],
-    ]) {
-      if (asset.repositoryLocalMedia !== isOriginal) {
-        throw new Error(`${id} ${label} must state repositoryLocalMedia=${isOriginal}.`);
-      }
-    }
+    // repositoryLocalMedia is proven against the files actually committed here.
+    // It is never inferred from the catalog batch: owner-authorized media
+    // completion may legitimately bring a final-catalog asset into this
+    // repository, but a claim must never disagree with disk.
+    const presenceByLabel = new Map();
     for (const [label, assetId, mimeType] of [
       ['image', item.image.selectedAssetId, item.image.expectedMimeType],
       ['wordAudio', item.versions.wordAudio.assetId, 'audio/mpeg'],
@@ -419,12 +414,27 @@ export async function assertStart35HumanReviewPacket(packet, sources) {
         throw new Error(`${id} ${label} carries an unsupported MIME type ${mimeType}.`);
       }
       const directory = mimeType.startsWith('image/') ? 'images' : 'audio';
-      const present = existsSync(resolve(root, contentRoot, directory, `${assetId}${extension}`));
-      if (present !== isOriginal) {
+      presenceByLabel.set(
+        label,
+        existsSync(resolve(root, contentRoot, directory, `${assetId}${extension}`)),
+      );
+    }
+    for (const [label, asset, presenceLabel] of [
+      ['image', item.image, 'image'],
+      ['versions.image', item.versions.image, 'image'],
+      ['versions.wordAudio', item.versions.wordAudio, 'wordAudio'],
+      ['versions.sentenceAudio', item.versions.sentenceAudio, 'sentenceAudio'],
+    ]) {
+      if (asset.repositoryLocalMedia !== presenceByLabel.get(presenceLabel)) {
         throw new Error(
           `${id} ${label} must keep repositoryLocalMedia truthful toward the media files actually in this repository.`,
         );
       }
+    }
+    if (isOriginal && [...presenceByLabel.values()].some((present) => !present)) {
+      throw new Error(
+        `${id} is an original slice item and must keep its media in this repository.`,
+      );
     }
 
     const selectedImage = manifestAssets.find(

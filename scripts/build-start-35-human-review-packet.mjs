@@ -1,9 +1,26 @@
 import { format, resolveConfig } from 'prettier';
+import { existsSync } from 'node:fs';
 import { readFile, writeFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 
 const contentRoot = new URL('../content/packs/learnbox-start/', import.meta.url);
 const packetUrl = new URL('validation/start-a1-35-human-review-packet.json', contentRoot);
+
+// Repository reality is read from disk, never assumed from the catalog batch, so
+// the packet's repositoryLocalMedia claim cannot drift from the committed files.
+const mediaExtensionByMimeType = {
+  'image/jpeg': '.jpg',
+  'image/png': '.png',
+  'audio/mpeg': '.mp3',
+};
+const hasRepositoryLocalMedia = (assetId, mimeType) => {
+  const extension = mediaExtensionByMimeType[mimeType];
+  if (!extension) {
+    throw new Error(`${assetId} carries an unsupported MIME type ${mimeType}.`);
+  }
+  const directory = mimeType.startsWith('image/') ? 'images' : 'audio';
+  return existsSync(new URL(`${directory}/${assetId}${extension}`, contentRoot));
+};
 
 export const packetRepositoryPath =
   'content/packs/learnbox-start/validation/start-a1-35-human-review-packet.json';
@@ -420,9 +437,10 @@ export function buildStart35HumanReviewPacket(sources) {
         selectedAssetId: imageAsset.assetId,
         assetVersion: imageAsset.assetVersion,
         expectedMimeType: imageAsset.expectedMimeType,
-        // Repository reality: the original slice keeps its selected media in this
-        // repository; the final 15 candidates stay outside it until uploaded.
-        repositoryLocalMedia: isOriginal,
+        repositoryLocalMedia: hasRepositoryLocalMedia(
+          imageAsset.assetId,
+          imageAsset.expectedMimeType,
+        ),
         visualConcept: draft.visualConcept,
         visualConceptSource: draftRef,
         visualConceptStatus,
@@ -444,17 +462,20 @@ export function buildStart35HumanReviewPacket(sources) {
           assetVersion: imageAsset.assetVersion,
           storageKey: imageAsset.storageKey,
           supersededAssetId: isOriginal ? `${contentId}-image-v1` : null,
-          repositoryLocalMedia: isOriginal,
+          repositoryLocalMedia: hasRepositoryLocalMedia(
+            imageAsset.assetId,
+            imageAsset.expectedMimeType,
+          ),
         },
         wordAudio: {
           assetId: wordAsset.assetId,
           assetVersion: wordAsset.assetVersion,
-          repositoryLocalMedia: isOriginal,
+          repositoryLocalMedia: hasRepositoryLocalMedia(wordAsset.assetId, 'audio/mpeg'),
         },
         sentenceAudio: {
           assetId: sentenceAsset.assetId,
           assetVersion: sentenceAsset.assetVersion,
-          repositoryLocalMedia: isOriginal,
+          repositoryLocalMedia: hasRepositoryLocalMedia(sentenceAsset.assetId, 'audio/mpeg'),
         },
       },
       checks,

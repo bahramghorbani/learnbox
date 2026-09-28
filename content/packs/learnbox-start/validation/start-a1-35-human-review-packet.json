@@ -737,7 +737,7 @@
         "selectedAssetId": "start-a1-ei-image-v1",
         "assetVersion": "v1",
         "expectedMimeType": "image/jpeg",
-        "repositoryLocalMedia": false,
+        "repositoryLocalMedia": true,
         "visualConcept": "One egg is the clear primary object.",
         "visualConceptSource": "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-ei",
         "visualConceptStatus": "draft_intent_not_verified_depiction",
@@ -757,17 +757,17 @@
           "assetVersion": "v1",
           "storageKey": "start-a1-ei/image/v1",
           "supersededAssetId": null,
-          "repositoryLocalMedia": false
+          "repositoryLocalMedia": true
         },
         "wordAudio": {
           "assetId": "start-a1-ei-word-audio-v1",
           "assetVersion": "v1",
-          "repositoryLocalMedia": false
+          "repositoryLocalMedia": true
         },
         "sentenceAudio": {
           "assetId": "start-a1-ei-sentence-audio-v1",
           "assetVersion": "v1",
-          "repositoryLocalMedia": false
+          "repositoryLocalMedia": true
         }
       },
       "checks": {
@@ -973,7 +973,7 @@
         "selectedAssetId": "start-a1-essen-image-v1",
         "assetVersion": "v1",
         "expectedMimeType": "image/jpeg",
-        "repositoryLocalMedia": false,
+        "repositoryLocalMedia": true,
         "visualConcept": "Bobo eats at a simple table and is the clear action subject.",
         "visualConceptSource": "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-essen",
         "visualConceptStatus": "draft_intent_not_verified_depiction",
@@ -993,17 +993,17 @@
           "assetVersion": "v1",
           "storageKey": "start-a1-essen/image/v1",
           "supersededAssetId": null,
-          "repositoryLocalMedia": false
+          "repositoryLocalMedia": true
         },
         "wordAudio": {
           "assetId": "start-a1-essen-word-audio-v1",
           "assetVersion": "v1",
-          "repositoryLocalMedia": false
+          "repositoryLocalMedia": true
         },
         "sentenceAudio": {
           "assetId": "start-a1-essen-sentence-audio-v1",
           "assetVersion": "v1",
-          "repositoryLocalMedia": false
+          "repositoryLocalMedia": true
         }
       },
       "checks": {
@@ -1090,7 +1090,7 @@
         "selectedAssetId": "start-a1-fenster-image-v1",
         "assetVersion": "v1",
         "expectedMimeType": "image/jpeg",
-        "repositoryLocalMedia": false,
+        "repositoryLocalMedia": true,
         "visualConcept": "An open window in a simple wall is the clear primary object.",
         "visualConceptSource": "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-fenster",
         "visualConceptStatus": "draft_intent_not_verified_depiction",
@@ -1110,17 +1110,17 @@
           "assetVersion": "v1",
           "storageKey": "start-a1-fenster/image/v1",
           "supersededAssetId": null,
-          "repositoryLocalMedia": false
+          "repositoryLocalMedia": true
         },
         "wordAudio": {
           "assetId": "start-a1-fenster-word-audio-v1",
           "assetVersion": "v1",
-          "repositoryLocalMedia": false
+          "repositoryLocalMedia": true
         },
         "sentenceAudio": {
           "assetId": "start-a1-fenster-sentence-audio-v1",
           "assetVersion": "v1",
-          "repositoryLocalMedia": false
+          "repositoryLocalMedia": true
         }
       },
       "checks": {
@@ -1206,7 +1206,7 @@
         "selectedAssetId": "start-a1-gehen-image-v1",
         "assetVersion": "v1",
         "expectedMimeType": "image/jpeg",
-        "repositoryLocalMedia": false,
+        "repositoryLocalMedia": true,
         "visualConcept": "Bobo walks along a street and is the clear action subject.",
         "visualConceptSource": "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-gehen",
         "visualConceptStatus": "draft_intent_not_verified_depiction",
@@ -1226,17 +1226,17 @@
           "assetVersion": "v1",
           "storageKey": "start-a1-gehen/image/v1",
           "supersededAssetId": null,
-          "repositoryLocalMedia": false
+          "repositoryLocalMedia": true
         },
         "wordAudio": {
           "assetId": "start-a1-gehen-word-audio-v1",
           "assetVersion": "v1",
-          "repositoryLocalMedia": false
+          "repositoryLocalMedia": true
         },
         "sentenceAudio": {
           "assetId": "start-a1-gehen-sentence-audio-v1",
           "assetVersion": "v1",
-          "repositoryLocalMedia": false
+          "repositoryLocalMedia": true
         }
       },
       "checks": {
@@ -1439,7 +1439,7 @@
         "selectedAssetId": "start-a1-gross-image-v1",
         "assetVersion": "v1",
         "expectedMimeType": "image/jpeg",
-        "repositoryLocalMedia": false,
+        "repositoryLocalMedia": true,
         "visualConcept": "A large house beside a much smaller tree gives a single clear comparison.",
         "visualConceptSource": "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-gross",
         "visualConceptStatus": "draft_intent_not_verified_depiction",
@@ -1459,17 +1459,17 @@
           "assetVersion": "v1",
           "storageKey": "start-a1-gross/image/v1",
           "supersededAssetId": null,
-          "repositoryLocalMedia": false
+          "repositoryLocalMedia": true
         },
         "wordAudio": {
           "assetId": "start-a1-gross-word-audio-v1",
           "assetVersion": "v1",
-          "repositoryLocalMedia": false
+          "repositoryLocalMedia": true
         },
         "sentenceAudio": {
           "assetId": "start-a1-gross-sentence-audio-v1",
           "assetVersion": "v1",
-          "repositoryLocalMedia": false
+          "repositoryLocalMedia": true
         }
       },
       "checks": {
@@ -1790,7 +1790,7 @@
         "selectedAssetId": "start-a1-kaffee-image-v1",
         "assetVersion": "v1",
         "expectedMimeType": "image/jpeg",
-        "repositoryLocalMedia": false,
+        "repositoryLocalMedia": true,
         "visualConcept": "A cup of coffee is the dominant object; steam makes it readable.",
         "visualConceptSource": "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-kaffee",
         "visualConceptStatus": "draft_intent_not_verified_depiction",
@@ -1810,17 +1810,17 @@
           "assetVersion": "v1",
           "storageKey": "start-a1-kaffee/image/v1",
           "supersededAssetId": null,
-          "repositoryLocalMedia": false
+          "repositoryLocalMedia": true
         },
         "wordAudio": {
           "assetId": "start-a1-kaffee-word-audio-v1",
           "assetVersion": "v1",
-          "repositoryLocalMedia": false
+          "repositoryLocalMedia": true
         },
         "sentenceAudio": {
           "assetId": "start-a1-kaffee-sentence-audio-v1",
           "assetVersion": "v1",
-          "repositoryLocalMedia": false
+          "repositoryLocalMedia": true
         }
       },
       "checks": {
@@ -1906,7 +1906,7 @@
         "selectedAssetId": "start-a1-kalt-image-v1",
         "assetVersion": "v1",
         "expectedMimeType": "image/jpeg",
-        "repositoryLocalMedia": false,
+        "repositoryLocalMedia": true,
         "visualConcept": "A winter window scene with frost makes the cold concept unmistakable.",
         "visualConceptSource": "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-kalt",
         "visualConceptStatus": "draft_intent_not_verified_depiction",
@@ -1926,17 +1926,17 @@
           "assetVersion": "v1",
           "storageKey": "start-a1-kalt/image/v1",
           "supersededAssetId": null,
-          "repositoryLocalMedia": false
+          "repositoryLocalMedia": true
         },
         "wordAudio": {
           "assetId": "start-a1-kalt-word-audio-v1",
           "assetVersion": "v1",
-          "repositoryLocalMedia": false
+          "repositoryLocalMedia": true
         },
         "sentenceAudio": {
           "assetId": "start-a1-kalt-sentence-audio-v1",
           "assetVersion": "v1",
-          "repositoryLocalMedia": false
+          "repositoryLocalMedia": true
         }
       },
       "checks": {
@@ -2373,7 +2373,7 @@
         "selectedAssetId": "start-a1-milch-image-v1",
         "assetVersion": "v1",
         "expectedMimeType": "image/jpeg",
-        "repositoryLocalMedia": false,
+        "repositoryLocalMedia": true,
         "visualConcept": "A glass of milk is the clear primary object.",
         "visualConceptSource": "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-milch",
         "visualConceptStatus": "draft_intent_not_verified_depiction",
@@ -2393,17 +2393,17 @@
           "assetVersion": "v1",
           "storageKey": "start-a1-milch/image/v1",
           "supersededAssetId": null,
-          "repositoryLocalMedia": false
+          "repositoryLocalMedia": true
         },
         "wordAudio": {
           "assetId": "start-a1-milch-word-audio-v1",
           "assetVersion": "v1",
-          "repositoryLocalMedia": false
+          "repositoryLocalMedia": true
         },
         "sentenceAudio": {
           "assetId": "start-a1-milch-sentence-audio-v1",
           "assetVersion": "v1",
-          "repositoryLocalMedia": false
+          "repositoryLocalMedia": true
         }
       },
       "checks": {
@@ -2606,7 +2606,7 @@
         "selectedAssetId": "start-a1-neu-image-v1",
         "assetVersion": "v1",
         "expectedMimeType": "image/jpeg",
-        "repositoryLocalMedia": false,
+        "repositoryLocalMedia": true,
         "visualConcept": "A shiny new bicycle beside an old worn one gives a single clear comparison.",
         "visualConceptSource": "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-neu",
         "visualConceptStatus": "draft_intent_not_verified_depiction",
@@ -2626,17 +2626,17 @@
           "assetVersion": "v1",
           "storageKey": "start-a1-neu/image/v1",
           "supersededAssetId": null,
-          "repositoryLocalMedia": false
+          "repositoryLocalMedia": true
         },
         "wordAudio": {
           "assetId": "start-a1-neu-word-audio-v1",
           "assetVersion": "v1",
-          "repositoryLocalMedia": false
+          "repositoryLocalMedia": true
         },
         "sentenceAudio": {
           "assetId": "start-a1-neu-sentence-audio-v1",
           "assetVersion": "v1",
-          "repositoryLocalMedia": false
+          "repositoryLocalMedia": true
         }
       },
       "checks": {
@@ -2839,7 +2839,7 @@
         "selectedAssetId": "start-a1-stadt-image-v1",
         "assetVersion": "v1",
         "expectedMimeType": "image/jpeg",
-        "repositoryLocalMedia": false,
+        "repositoryLocalMedia": true,
         "visualConcept": "A small city skyline carries the meaning; Bobo may be a small pedestrian.",
         "visualConceptSource": "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-stadt",
         "visualConceptStatus": "draft_intent_not_verified_depiction",
@@ -2859,17 +2859,17 @@
           "assetVersion": "v1",
           "storageKey": "start-a1-stadt/image/v1",
           "supersededAssetId": null,
-          "repositoryLocalMedia": false
+          "repositoryLocalMedia": true
         },
         "wordAudio": {
           "assetId": "start-a1-stadt-word-audio-v1",
           "assetVersion": "v1",
-          "repositoryLocalMedia": false
+          "repositoryLocalMedia": true
         },
         "sentenceAudio": {
           "assetId": "start-a1-stadt-sentence-audio-v1",
           "assetVersion": "v1",
-          "repositoryLocalMedia": false
+          "repositoryLocalMedia": true
         }
       },
       "checks": {
@@ -2955,7 +2955,7 @@
         "selectedAssetId": "start-a1-supermarkt-image-v1",
         "assetVersion": "v1",
         "expectedMimeType": "image/jpeg",
-        "repositoryLocalMedia": false,
+        "repositoryLocalMedia": true,
         "visualConcept": "A supermarket interior with shelves carries the meaning; Bobo shops with a basket.",
         "visualConceptSource": "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-supermarkt",
         "visualConceptStatus": "draft_intent_not_verified_depiction",
@@ -2975,17 +2975,17 @@
           "assetVersion": "v1",
           "storageKey": "start-a1-supermarkt/image/v1",
           "supersededAssetId": null,
-          "repositoryLocalMedia": false
+          "repositoryLocalMedia": true
         },
         "wordAudio": {
           "assetId": "start-a1-supermarkt-word-audio-v1",
           "assetVersion": "v1",
-          "repositoryLocalMedia": false
+          "repositoryLocalMedia": true
         },
         "sentenceAudio": {
           "assetId": "start-a1-supermarkt-sentence-audio-v1",
           "assetVersion": "v1",
-          "repositoryLocalMedia": false
+          "repositoryLocalMedia": true
         }
       },
       "checks": {
@@ -3071,7 +3071,7 @@
         "selectedAssetId": "start-a1-tee-image-v1",
         "assetVersion": "v1",
         "expectedMimeType": "image/jpeg",
-        "repositoryLocalMedia": false,
+        "repositoryLocalMedia": true,
         "visualConcept": "A cup of tea with a tea bag is the dominant object.",
         "visualConceptSource": "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-tee",
         "visualConceptStatus": "draft_intent_not_verified_depiction",
@@ -3091,17 +3091,17 @@
           "assetVersion": "v1",
           "storageKey": "start-a1-tee/image/v1",
           "supersededAssetId": null,
-          "repositoryLocalMedia": false
+          "repositoryLocalMedia": true
         },
         "wordAudio": {
           "assetId": "start-a1-tee-word-audio-v1",
           "assetVersion": "v1",
-          "repositoryLocalMedia": false
+          "repositoryLocalMedia": true
         },
         "sentenceAudio": {
           "assetId": "start-a1-tee-sentence-audio-v1",
           "assetVersion": "v1",
-          "repositoryLocalMedia": false
+          "repositoryLocalMedia": true
         }
       },
       "checks": {
@@ -3304,7 +3304,7 @@
         "selectedAssetId": "start-a1-trinken-image-v1",
         "assetVersion": "v1",
         "expectedMimeType": "image/jpeg",
-        "repositoryLocalMedia": false,
+        "repositoryLocalMedia": true,
         "visualConcept": "Bobo drinks a glass of water and is the clear action subject.",
         "visualConceptSource": "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-trinken",
         "visualConceptStatus": "draft_intent_not_verified_depiction",
@@ -3324,17 +3324,17 @@
           "assetVersion": "v1",
           "storageKey": "start-a1-trinken/image/v1",
           "supersededAssetId": null,
-          "repositoryLocalMedia": false
+          "repositoryLocalMedia": true
         },
         "wordAudio": {
           "assetId": "start-a1-trinken-word-audio-v1",
           "assetVersion": "v1",
-          "repositoryLocalMedia": false
+          "repositoryLocalMedia": true
         },
         "sentenceAudio": {
           "assetId": "start-a1-trinken-sentence-audio-v1",
           "assetVersion": "v1",
-          "repositoryLocalMedia": false
+          "repositoryLocalMedia": true
         }
       },
       "checks": {
@@ -3537,7 +3537,7 @@
         "selectedAssetId": "start-a1-uhr-image-v1",
         "assetVersion": "v1",
         "expectedMimeType": "image/jpeg",
-        "repositoryLocalMedia": false,
+        "repositoryLocalMedia": true,
         "visualConcept": "A wall clock is the only dominant object; the time concept is unambiguous.",
         "visualConceptSource": "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-uhr",
         "visualConceptStatus": "draft_intent_not_verified_depiction",
@@ -3557,17 +3557,17 @@
           "assetVersion": "v1",
           "storageKey": "start-a1-uhr/image/v1",
           "supersededAssetId": null,
-          "repositoryLocalMedia": false
+          "repositoryLocalMedia": true
         },
         "wordAudio": {
           "assetId": "start-a1-uhr-word-audio-v1",
           "assetVersion": "v1",
-          "repositoryLocalMedia": false
+          "repositoryLocalMedia": true
         },
         "sentenceAudio": {
           "assetId": "start-a1-uhr-sentence-audio-v1",
           "assetVersion": "v1",
-          "repositoryLocalMedia": false
+          "repositoryLocalMedia": true
         }
       },
       "checks": {
@@ -4121,7 +4121,7 @@
         "selectedAssetId": "start-a1-zimmer-image-v1",
         "assetVersion": "v1",
         "expectedMimeType": "image/jpeg",
-        "repositoryLocalMedia": false,
+        "repositoryLocalMedia": true,
         "visualConcept": "A simple furnished room is the dominant scene; no Bobo needed.",
         "visualConceptSource": "vocabulary/start-a1-catalog-35-pending-drafts.json#start-a1-zimmer",
         "visualConceptStatus": "draft_intent_not_verified_depiction",
@@ -4141,17 +4141,17 @@
           "assetVersion": "v1",
           "storageKey": "start-a1-zimmer/image/v1",
           "supersededAssetId": null,
-          "repositoryLocalMedia": false
+          "repositoryLocalMedia": true
         },
         "wordAudio": {
           "assetId": "start-a1-zimmer-word-audio-v1",
           "assetVersion": "v1",
-          "repositoryLocalMedia": false
+          "repositoryLocalMedia": true
         },
         "sentenceAudio": {
           "assetId": "start-a1-zimmer-sentence-audio-v1",
           "assetVersion": "v1",
-          "repositoryLocalMedia": false
+          "repositoryLocalMedia": true
         }
       },
       "checks": {

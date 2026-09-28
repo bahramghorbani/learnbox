@@ -436,17 +436,22 @@ test('alt text, visual concept, database and media claims stay explicitly unveri
       'repository_and_migration_baseline_not_live_database',
     );
 
-    for (const asset of [
-      entry.image,
-      entry.versions.image,
-      entry.versions.wordAudio,
-      entry.versions.sentenceAudio,
+    // The claim is truthful toward disk rather than inferred from the batch:
+    // owner-authorized media completion may bring final-catalog assets in.
+    for (const [asset, assetId, mimeType] of [
+      [entry.image, entry.image.selectedAssetId, entry.image.expectedMimeType],
+      [entry.versions.image, entry.image.selectedAssetId, entry.image.expectedMimeType],
+      [entry.versions.wordAudio, entry.versions.wordAudio.assetId, 'audio/mpeg'],
+      [entry.versions.sentenceAudio, entry.versions.sentenceAudio.assetId, 'audio/mpeg'],
     ]) {
-      assert.equal(
-        asset.repositoryLocalMedia,
-        isOriginal,
-        `${entry.contentId} repositoryLocalMedia`,
+      const directory = mimeType.startsWith('image/') ? 'images' : 'audio';
+      const present = existsSync(
+        new URL(
+          `../content/packs/learnbox-start/${directory}/${assetId}${mediaExtensions[mimeType]}`,
+          import.meta.url,
+        ),
       );
+      assert.equal(asset.repositoryLocalMedia, present, `${entry.contentId} repositoryLocalMedia`);
     }
 
     assert.equal(entry.checks.app_flow.evidenceScope, 'unproven_at_release_level');
@@ -474,7 +479,11 @@ test('alt text, visual concept, database and media claims stay explicitly unveri
           import.meta.url,
         ),
       );
-      assert.equal(present, isOriginal, `${entry.contentId} ${assetId} on-disk presence`);
+      // Original-slice media must always stay committed; final-catalog media is
+      // present only after owner-authorized completion, so disk is the source.
+      if (isOriginal) {
+        assert.equal(present, true, `${entry.contentId} ${assetId} on-disk presence`);
+      }
     }
   }
 
@@ -484,8 +493,16 @@ test('alt text, visual concept, database and media claims stay explicitly unveri
   const firstOriginal = committed.items.find(
     (entry) => entry.catalogBatch === 'original_vertical_slice',
   );
-  assert.equal(firstFinal.image.repositoryLocalMedia, false);
   assert.equal(firstOriginal.image.repositoryLocalMedia, true);
+  assert.equal(
+    firstFinal.image.repositoryLocalMedia,
+    existsSync(
+      new URL(
+        `../content/packs/learnbox-start/images/${firstFinal.image.selectedAssetId}${mediaExtensions[firstFinal.image.expectedMimeType]}`,
+        import.meta.url,
+      ),
+    ),
+  );
 });
 
 test('alt-text, database, repository-media and evidence-scope drift fail closed', async () => {
@@ -540,7 +557,7 @@ test('alt-text, database, repository-media and evidence-scope drift fail closed'
     ],
     [
       'finalRepositoryLocalMedia',
-      (t) => (t.items[finalIndex].image.repositoryLocalMedia = true),
+      (t) => (t.items[finalIndex].image.repositoryLocalMedia = false),
       /repositoryLocalMedia/i,
     ],
     [
