@@ -4,27 +4,54 @@
 
 ## Active work
 
-**v1.2.0 — scope frozen, implementation in progress.** The owner approved Option B on 2026-09-29.
-The frozen target and the checkpoint sequence live in `docs/planning/V1_2_SCOPE_FREEZE.md`.
+**No feature work is active.** v1.2.0 is released and closed (below). The only queued item is the
+security-hardening patch `LB-B29` — **recorded, scoped, not started**; implementation needs the
+owner's go-ahead. Deferred but not cancelled: `LB-B19` (reminders), `LB-B28b` (photo upload),
+`LB-B17` (Store).
 
-In scope: `LB-B11` (server-backed progress), `LB-B26` (persistent session), `LB-B27` (logout),
-`LB-B23` (audio must not flip the card), `LB-B22` (login/OTP redesign), `LB-B24` + `LB-B25`
-(scroll/layout and Bobo placement), `LB-B28a` (optional profile fields and prebuilt avatars).
+## v1.2.0 Option B — released
 
-Deferred but not cancelled: `LB-B19` (reminders), `LB-B28b` (photo upload), `LB-B17` (Store).
+Shipped to Production on 2026-09-29. `main` is documentation-only ahead of the shipped commit;
+that is not application drift and must never trigger a deploy.
 
-**Status (2026-09-29):** every in-scope item is merged to `main` (last: `468f054`, PRs #308–#319) and
-verified on a Vercel preview backed by an isolated Neon branch, including a real-SMS OTP login and a
-physical-iPhone (iOS 27.0, Safari) pass of: front audio, card-body flip, back audio, profile fields,
-avatars, the greeting name, the header avatar, the LTR phone number and the streak badge.
-`LB-B23` did reproduce on the first device pass (stuck `:hover` on `.card-face` replaced the back
-face's `rotateY(180deg)`; PR #318) and passed on retest.
+|                    |                                                                            |
+| ------------------ | -------------------------------------------------------------------------- |
+| Application commit | `468f05463df94cf47e088960640c2b6b95f0e370`                                 |
+| Tag                | `v1.2.0` (annotated, fixed to the commit above; **not** on the `main` tip) |
+| GitHub Release     | `v1.2.0` (same convention as `v1.0.0`)                                     |
+| Image digest       | `sha256:358cd50c05b3df7f90691af6e5c84d2b14f046e40cf29d87d57f36c68225d174`  |
+| Database           | `0019` ledger row back-filled, then `0020`–`0022` applied, forward-only    |
 
-Still open before v1.2 can ship: the Production cutover itself, which needs the `0019` ledger
-back-fill (Production's ledger stops at `0018` while the `0019` schema already exists), then
-migrations `0020`–`0022`, and explicit owner approval.
+Provenance chain, verified live after the deploy: tag `v1.2.0` → commit `468f054` (`git archive` of
+the tag is byte-identical to that of the SHA and to the tarball built on the host) → OCI
+`org.opencontainers.image.revision` label → the image the running container uses → runtime
+`APP_SOURCE_SHA`. All agree; the container is healthy with 0 restarts.
 
-No Production deploy is authorized for v1.2 until the full release gates pass.
+Delivered: LB-B11 server/DB-authoritative progress and streak, LB-B26 persistent session (30-day
+absolute, 14-day inactivity, sliding renewal, server-side revocation), LB-B27 sign out, LB-B23 audio
+button no longer flips the card, LB-B22 login/OTP redesign, LB-B24 + LB-B25 layout and Bobo
+placement, LB-B28a optional profile fields and prebuilt avatars.
+
+Database cutover: a fresh backup (`learnbox-20260929T200453Z.sql.gz`) and a successful restore into a
+disposable container came before the first write. The `0019` back-fill ran as one transaction with
+every precondition asserted (file hash, exact ledger `0001`–`0018`, expected columns/enum labels/
+indexes), then the runner applied exactly three migrations; the ledger has 22 rows. No pre-existing
+table changed a row count; the 12 new tables are empty. The `account_deletion_events` audit row is
+untouched.
+
+Production verification: a real-OTP phone login on iOS Safari (greeting, avatar, LTR phone, profile
+save reaching the database), plus a server-side session for a second account: review, idempotent
+replay, foreign-Origin `403`, no-Origin `403`, review-owner mismatch `403`, protected media
+`200 private, no-store` for image/word audio/sentence audio and `401` without a session, logout `204`
+and revocation (the same token then gets `401` on session, today, profile, media and review), and the
+«یادگیرنده عزیز» fallback. The owner's learning data was byte-identical before and after.
+
+Left behind by verification: one `remembered` review for the second (test) account on
+`start-a1-apfel` and two `revoked_sessions` rows for it. Nothing else.
+
+Rollback assets, all retained: image `learnbox-app:rollback-pre-v120-a985b81d` (the v1.1.0 image),
+`.env.bak-pre-v120-deploy`, and the backup above (sha256 `31581bf3…e597b1`). `0020`–`0022` are
+additive, so the v1.1.0 image runs against the new schema.
 
 ## v1.1.0 Option B — released
 
@@ -71,8 +98,14 @@ An active timer is not a successful execution, and neither is a green `Result`: 
 `ExecMainStartTimestamp` distinguishes the two. The uptime monitor and the error scan have both
 really executed and succeeded.
 
+## Open security finding (queued, not started)
+
+`LB-B29`: Origin/CSRF enforcement is not consistent across state-changing routes;
+`PATCH /api/learner/profile/update` and `POST /api/auth/logout` have none. Scope, audit results and
+acceptance criteria are in `BACKLOG.md`. Audit the whole route set before changing any single route.
+
 ## Standing constraints
 
 1. Keep Production change, database mutation, credential rotation and SMS configuration behind their existing owner gates; a live release does not open them.
 2. Preserve rollback and backup evidence; deletion requires explicit owner authorization naming the specific artifacts.
-3. The repository stays private, `v1.0.0` and `v1.1.0` do not move, history is not rewritten, media is not purged, and protected-media authentication is not weakened.
+3. The repository stays private, `v1.0.0`, `v1.1.0` and `v1.2.0` do not move, history is not rewritten, media is not purged, and protected-media authentication is not weakened.
