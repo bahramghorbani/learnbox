@@ -13,6 +13,17 @@ In scope: `LB-B11` (server-backed progress), `LB-B26` (persistent session), `LB-
 
 Deferred but not cancelled: `LB-B19` (reminders), `LB-B28b` (photo upload), `LB-B17` (Store).
 
+**Status (2026-09-29):** every in-scope item is merged to `main` (last: `468f054`, PRs #308–#319) and
+verified on a Vercel preview backed by an isolated Neon branch, including a real-SMS OTP login and a
+physical-iPhone (iOS 27.0, Safari) pass of: front audio, card-body flip, back audio, profile fields,
+avatars, the greeting name, the header avatar, the LTR phone number and the streak badge.
+`LB-B23` did reproduce on the first device pass (stuck `:hover` on `.card-face` replaced the back
+face's `rotateY(180deg)`; PR #318) and passed on retest.
+
+Still open before v1.2 can ship: the Production cutover itself, which needs the `0019` ledger
+back-fill (Production's ledger stops at `0018` while the `0019` schema already exists), then
+migrations `0020`–`0022`, and explicit owner approval.
+
 No Production deploy is authorized for v1.2 until the full release gates pass.
 
 ## v1.1.0 Option B — released
