@@ -1,7 +1,7 @@
 import type { Pool } from 'pg';
 
 /**
- * Server-authoritative learning summary (LB-B25, CP-3).
+ * Server-authoritative learning summary (LB-B11, CP-3).
  *
  * The database — specifically the append-only `review_events` history — is the
  * single source of truth for today's count, the current streak and history

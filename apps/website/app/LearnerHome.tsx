@@ -367,7 +367,7 @@ export function LearnerHome({
   }, [authenticated, isServerOtp, sessionUserId]);
 
   // Server-backed accounts: the database is the source of truth for today's count
-  // and the streak (LB-B25). Local storage is consulted only when the server is
+  // and the streak (LB-B11). Local storage is consulted only when the server is
   // unreachable, and never as the origin of a number.
   const refreshServerSummary = useCallback(async () => {
     if (!isServerOtp || !authenticated || !sessionUserId) return;

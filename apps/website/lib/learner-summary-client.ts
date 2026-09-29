@@ -1,5 +1,5 @@
 /**
- * Client side of the server-authoritative learner summary (LB-B25, CP-3).
+ * Client side of the server-authoritative learner summary (LB-B11, CP-3).
  *
  * Invariant: for a signed-in learner the SERVER is the origin of today's count and
  * the streak. The device copy written here is a cache for offline display only and
