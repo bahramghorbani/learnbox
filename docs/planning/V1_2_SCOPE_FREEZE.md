@@ -133,8 +133,15 @@ the server is the source of truth. Also ensure the storage scope cannot silently
 
 ### CP-4 — LB-B23 fix
 
-Apply the fix identified in CP-0. **The current flip animation must be preserved** (owner
-constraint). Kept separate from CP-5/CP-6 so it is provable that the audio defect itself was fixed.
+**Status: DONE as accessibility-only. LB-B23 REMAINS OPEN.**
+
+CP-0 did not reproduce B23 and the owner cannot confirm whether audio played during the
+unintended flip, so **no mechanism was identified and no B23 fix exists to apply**. Inferring one
+is forbidden. What shipped: `.audio-button` raised from ~34px to a 44x44px minimum (WCAG 2.5.8),
+guarded by `audio-button-target-size.test.ts`. That is described as exactly that: an
+accessibility improvement. **It is not a B23 fix and must not be reported as one.**
+B23 leaves `open` only when a reproduction identifies the mechanism. The flip animation is
+unchanged (owner constraint).
 
 ### CP-5 — LB-B24 + LB-B25 layout, scroll, Bobo
 
