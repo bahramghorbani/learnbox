@@ -69,7 +69,8 @@ if (!routeSource.includes('404')) {
 }
 
 for (const required of [
-  'isTrustedJsonPost',
+  // LB-B29: same-origin JSON enforcement is the shared guard, not a per-handler copy.
+  "guardMutation(request, { method: 'POST'",
   'invite_invalid',
   'invite_limited',
   'invite_unavailable',

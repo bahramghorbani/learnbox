@@ -18,7 +18,7 @@
  * and an opaque deletion id the learner can quote to support.
  */
 
-import { isTrustedJsonMutation } from './trusted-origin';
+import { guardMutation } from './mutation-guard';
 
 export type DeletionOutcome =
   | { status: 'deleted'; deletionId: string }
@@ -86,9 +86,9 @@ export async function handleAccountDeletionPost(
   readSubject: (request: Request) => string | null,
   environment: Record<string, string | undefined> = process.env,
 ): Promise<Response> {
-  if (!isTrustedJsonMutation(request, { environment })) {
-    return json({ error: 'validation' }, 400);
-  }
+  // LB-B29: the shared guard runs first; a rejection is the same `403 request_rejected` everywhere.
+  const rejected = guardMutation(request, { method: 'POST', environment });
+  if (rejected) return rejected;
 
   const subject = readSubject(request);
   if (!subject) return json({ error: 'identityUnavailable' }, 401);

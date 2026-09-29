@@ -90,6 +90,10 @@ describe('account deletion boundary', () => {
     expect(deletedUserId).toBe('user-1');
   });
 
+  // LB-B29: a guard rejection is the shared `403 request_rejected`, and it never reaches the
+  // session, the body or the database. (Before v1.2.1 these were `400 validation`.)
+  const REJECTED = { error: 'request_rejected' };
+
   it('refuses a cross-site request even with a valid session', async () => {
     let called = false;
     const response = await handleAccountDeletionPost(
@@ -103,7 +107,8 @@ describe('account deletion boundary', () => {
       subject,
       ENV,
     );
-    expect(response.status).toBe(400);
+    expect(response.status).toBe(403);
+    expect(await response.json()).toEqual(REJECTED);
     expect(called).toBe(false);
   });
 
@@ -114,7 +119,20 @@ describe('account deletion boundary', () => {
       subject,
       ENV,
     );
-    expect(response.status).toBe(400);
+    expect(response.status).toBe(403);
+    expect(await response.json()).toEqual(REJECTED);
+  });
+
+  it('refuses a form/text content type even from the right origin', async () => {
+    for (const contentType of ['text/plain', 'application/x-www-form-urlencoded', '']) {
+      const response = await handleAccountDeletionPost(
+        request({ confirmPhone: '09121234567', requestId: 'r1' }, { contentType }),
+        deps(),
+        subject,
+        ENV,
+      );
+      expect(response.status).toBe(403);
+    }
   });
 
   it('refuses GET', async () => {
@@ -124,7 +142,37 @@ describe('account deletion boundary', () => {
       subject,
       ENV,
     );
-    expect(response.status).toBe(400);
+    expect(response.status).toBe(403);
+    expect(await response.json()).toEqual(REJECTED);
+  });
+
+  it('rejects before authentication: a foreign origin learns nothing about the session', async () => {
+    const withSession = await handleAccountDeletionPost(
+      request({ confirmPhone: '09121234567', requestId: 'r1' }, { origin: 'https://evil.example' }),
+      deps(),
+      subject,
+      ENV,
+    );
+    const withoutSession = await handleAccountDeletionPost(
+      request({ confirmPhone: '09121234567', requestId: 'r1' }, { origin: 'https://evil.example' }),
+      deps(),
+      () => null,
+      ENV,
+    );
+    expect(withSession.status).toBe(403);
+    expect(withoutSession.status).toBe(403);
+    expect(await withoutSession.json()).toEqual(REJECTED);
+  });
+
+  it('keeps the phone-mismatch 403 distinguishable from a guard rejection', async () => {
+    const response = await handleAccountDeletionPost(
+      request({ confirmPhone: '09129999999', requestId: 'r1' }),
+      deps(),
+      subject,
+      ENV,
+    );
+    expect(response.status).toBe(403);
+    expect(await response.json()).toEqual({ error: 'confirmationMismatch' });
   });
 
   it('requires a session', async () => {

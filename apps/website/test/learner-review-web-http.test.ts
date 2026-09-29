@@ -192,3 +192,53 @@ describe('web review HTTP boundary', () => {
     expect(bad.status).toBe(400);
   });
 });
+
+describe('web review POST — mutation guard (LB-B29)', () => {
+  const URL_ = 'https://learnbox.example/api/learner/reviews';
+  const post = (
+    headers: Record<string, string>,
+    readSubject: () => string | null,
+    deps = dependencies(),
+  ) =>
+    handleWebReviewBatchPost(
+      request(URL_, { method: 'POST', headers, body: validBody }),
+      deps,
+      readSubject,
+    );
+
+  it('rejects a foreign Origin before authentication and never submits', async () => {
+    const deps = dependencies();
+    const headers = { 'content-type': 'application/json', origin: 'https://evil.example' };
+    const withSession = await post(headers, () => subject, deps);
+    const withoutSession = await post(headers, () => null, deps);
+    expect(withSession.status).toBe(403);
+    expect(withoutSession.status).toBe(403);
+    expect(await withoutSession.json()).toEqual({ error: 'request_rejected' });
+    expect(deps.submit).not.toHaveBeenCalled();
+  });
+
+  it('rejects a missing Origin and non-JSON content types', async () => {
+    const deps = dependencies();
+    expect((await post({ 'content-type': 'application/json' }, () => subject, deps)).status).toBe(
+      403,
+    );
+    for (const contentType of ['text/plain', 'application/x-www-form-urlencoded']) {
+      const response = await post(
+        { 'content-type': contentType, origin: 'https://learnbox.example' },
+        () => subject,
+        deps,
+      );
+      expect(response.status).toBe(403);
+    }
+    expect(deps.submit).not.toHaveBeenCalled();
+  });
+
+  it('keeps an unauthenticated same-origin request a plain 401', async () => {
+    const response = await post(
+      { 'content-type': 'application/json', origin: 'https://learnbox.example' },
+      () => null,
+    );
+    expect(response.status).toBe(401);
+    expect(await response.json()).toEqual({ error: 'invalidToken' });
+  });
+});

@@ -1,4 +1,4 @@
-import { hasJsonContentType, isTrustedRequestOrigin } from './trusted-origin';
+import { guardMutation } from './mutation-guard';
 import { inactivityWindowSeconds } from './server-session';
 
 type OtpPurpose = 'sign_in';
@@ -48,7 +48,8 @@ export async function handleOtpRequest(
   request: Request,
   dependencies: OtpHttpDependencies,
 ): Promise<Response> {
-  if (!isTrustedJsonPost(request)) return jsonResponse({ error: 'request_rejected' }, 403);
+  const rejected = guardMutation(request, { method: 'POST' });
+  if (rejected) return rejected;
 
   const body = await readJsonObject(request);
   const phoneE164 = normalizeIranianPhone(body?.phone);
@@ -83,7 +84,8 @@ export async function handleOtpVerification(
   request: Request,
   dependencies: OtpHttpDependencies,
 ): Promise<Response> {
-  if (!isTrustedJsonPost(request)) return jsonResponse({ error: 'request_rejected' }, 403);
+  const rejected = guardMutation(request, { method: 'POST' });
+  if (rejected) return rejected;
 
   const body = await readJsonObject(request);
   const challengeId = typeof body?.challengeId === 'string' ? body.challengeId : '';
@@ -113,12 +115,6 @@ export async function handleOtpVerification(
   } catch {
     return jsonResponse({ error: 'verification_unavailable' }, 503);
   }
-}
-
-function isTrustedJsonPost(request: Request): boolean {
-  if (request.method !== 'POST') return false;
-  if (!hasJsonContentType(request, false)) return false;
-  return isTrustedRequestOrigin(request);
 }
 
 async function readJsonObject(request: Request): Promise<Record<string, unknown> | null> {

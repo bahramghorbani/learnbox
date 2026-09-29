@@ -1,4 +1,4 @@
-import { hasJsonContentType, isTrustedRequestOrigin } from './trusted-origin';
+import { guardMutation } from './mutation-guard';
 
 import type { InviteCheckOutcome } from '../../api/dist/alpha/invite-access.service.js';
 
@@ -17,7 +17,8 @@ export async function handleInviteCheck(
   request: Request,
   dependencies: InviteHttpDependencies,
 ): Promise<Response> {
-  if (!isTrustedJsonPost(request)) return jsonResponse({ error: 'request_rejected' }, 403);
+  const rejected = guardMutation(request, { method: 'POST' });
+  if (rejected) return rejected;
 
   const body = await readJsonObject(request);
   const code = typeof body?.code === 'string' ? body.code : '';
@@ -47,12 +48,6 @@ export async function handleInviteCheck(
   } catch {
     return jsonResponse({ error: 'invite_unavailable' }, 503);
   }
-}
-
-function isTrustedJsonPost(request: Request): boolean {
-  if (request.method !== 'POST') return false;
-  if (!hasJsonContentType(request, false)) return false;
-  return isTrustedRequestOrigin(request);
 }
 
 async function readJsonObject(request: Request): Promise<Record<string, unknown> | null> {
