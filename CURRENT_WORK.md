@@ -4,7 +4,16 @@
 
 ## Active work
 
-**None.** v1.1.0 is released and closed. The next release has not been scoped.
+**v1.2.0 — scope frozen, implementation in progress.** The owner approved Option B on 2026-09-29.
+The frozen target and the checkpoint sequence live in `docs/planning/V1_2_SCOPE_FREEZE.md`.
+
+In scope: `LB-B11` (server-backed progress), `LB-B26` (persistent session), `LB-B27` (logout),
+`LB-B23` (audio must not flip the card), `LB-B22` (login/OTP redesign), `LB-B24` + `LB-B25`
+(scroll/layout and Bobo placement), `LB-B28a` (optional profile fields and prebuilt avatars).
+
+Deferred but not cancelled: `LB-B19` (reminders), `LB-B28b` (photo upload), `LB-B17` (Store).
+
+No Production deploy is authorized for v1.2 until the full release gates pass.
 
 ## v1.1.0 Option B — released
 
