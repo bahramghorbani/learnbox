@@ -1,5 +1,5 @@
 import { Pool } from 'pg';
-import { readLearnerSession } from '../../../../lib/server-session';
+import { authenticateLearner } from '../../../../lib/learner-auth';
 import { requireVerifiedDatabaseTls } from '../../../../../api/dist/database/migration-runner.js';
 
 export const runtime = 'nodejs';
@@ -28,7 +28,7 @@ interface ContentJson {
  * Query params: ?pack=<pack_id> to filter by pack
  */
 export async function GET(request: Request): Promise<Response> {
-  const session = readLearnerSession(request);
+  const session = await authenticateLearner(request);
   if (!session) {
     return Response.json({ error: 'unauthorized' }, { status: 401, headers: privateHeaders });
   }

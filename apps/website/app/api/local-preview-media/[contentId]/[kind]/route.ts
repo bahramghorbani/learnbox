@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { readLearnerSession } from '../../../../../lib/server-session';
+import { authenticateLearner } from '../../../../../lib/learner-auth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -26,7 +26,7 @@ export async function GET(request: Request, context: RouteContext) {
   if (process.env.NODE_ENV !== 'development') {
     return new Response('Not found', { status: 404 });
   }
-  if (!readLearnerSession(request)) {
+  if (!(await authenticateLearner(request))) {
     return new Response('Unauthorized', { status: 401, headers: { 'Cache-Control': 'no-store' } });
   }
 

@@ -1,5 +1,5 @@
 import { Pool } from 'pg';
-import { readLearnerSession } from '../../../lib/server-session';
+import { authenticateLearner } from '../../../lib/learner-auth';
 import { requireVerifiedDatabaseTls } from '../../../../api/dist/database/migration-runner.js';
 
 export const runtime = 'nodejs';
@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 
 /** GET /api/banners — returns active banners for the app */
 export async function GET(request: Request): Promise<Response> {
-  if (!readLearnerSession(request))
+  if (!(await authenticateLearner(request)))
     return Response.json(
       { error: 'unauthorized' },
       { status: 401, headers: { 'Cache-Control': 'no-store' } },

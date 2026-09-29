@@ -2,7 +2,7 @@ import path from 'node:path';
 import { accessSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { NextResponse } from 'next/server';
-import { readLearnerSession } from '../../../../../lib/server-session';
+import { authenticateLearner } from '../../../../../lib/learner-auth';
 import { isPublishedStartContentId } from '../../../../../lib/published-start-card';
 
 export const runtime = 'nodejs';
@@ -53,7 +53,7 @@ export async function GET(
   context: { params: Promise<{ contentId: string; kind: string }> },
 ): Promise<NextResponse> {
   // SECURITY: vocabulary/card content is protected — requires valid authenticated session
-  const session = readLearnerSession(req);
+  const session = await authenticateLearner(req);
   if (!session) {
     return NextResponse.json(
       { error: 'unauthorized' },

@@ -1,5 +1,5 @@
 import { Pool } from 'pg';
-import { readLearnerSession } from '../../../../lib/server-session';
+import { authenticateLearner } from '../../../../lib/learner-auth';
 import { requireVerifiedDatabaseTls } from '../../../../../api/dist/database/migration-runner.js';
 
 export const runtime = 'nodejs';
@@ -32,7 +32,7 @@ type Content = {
 
 /** Authenticated, published DB faces only; draft JSON is never bundled into client JS. */
 export async function GET(request: Request): Promise<Response> {
-  if (!readLearnerSession(request))
+  if (!(await authenticateLearner(request)))
     return Response.json({ error: 'unauthorized' }, { status: 401, headers });
   if (process.env.WEB_LEARNER_STATE_ENABLED !== 'true' || !process.env.DATABASE_URL)
     return Response.json({ error: 'unavailable' }, { status: 503, headers });
