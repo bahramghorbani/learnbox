@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, type Ref } from 'react';
 import { type LearnerSyncState } from '../learner-sync-state';
 import { toPersianDigits } from '../persian-digits';
 import { type StartSliceItem } from '../start-slice';
+import { browserTimeZone } from '../../lib/learner-summary-client';
 import { Bobo } from './Bobo';
 
 interface Banner {
@@ -138,7 +139,10 @@ export function TodayScreen({
       return;
     }
     let cancelled = false;
-    fetch('/api/learner/today', { cache: 'no-store', credentials: 'same-origin' })
+    fetch(`/api/learner/today?tz=${encodeURIComponent(browserTimeZone())}`, {
+      cache: 'no-store',
+      credentials: 'same-origin',
+    })
       .then(async (response) => {
         if (!response.ok) throw new Error('today_metrics_unavailable');
         const payload: unknown = await response.json();
