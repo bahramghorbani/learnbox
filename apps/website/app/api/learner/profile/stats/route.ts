@@ -1,5 +1,5 @@
 import { Pool } from 'pg';
-import { readLearnerSession } from '../../../../../lib/server-session';
+import { authenticateLearner } from '../../../../../lib/learner-auth';
 import { maskIranianPhone } from '../../../../../lib/phone-mask';
 import { requireVerifiedDatabaseTls } from '../../../../../../api/dist/database/migration-runner.js';
 
@@ -17,7 +17,7 @@ function getPool() {
 }
 
 export async function GET(request: Request): Promise<Response> {
-  const session = readLearnerSession(request);
+  const session = await authenticateLearner(request);
   const userId = session?.subject ?? null;
   if (!userId) {
     return Response.json({ error: 'unauthorized' }, { status: 401, headers: privateHeaders });

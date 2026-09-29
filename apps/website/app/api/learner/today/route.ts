@@ -1,5 +1,5 @@
 import { Pool } from 'pg';
-import { readLearnerSession } from '../../../../lib/server-session';
+import { authenticateLearner } from '../../../../lib/learner-auth';
 import { requireVerifiedDatabaseTls } from '../../../../../api/dist/database/migration-runner.js';
 
 export const runtime = 'nodejs';
@@ -22,7 +22,7 @@ function getPool() {
  * - last activity
  */
 export async function GET(request: Request): Promise<Response> {
-  const session = readLearnerSession(request);
+  const session = await authenticateLearner(request);
   if (!session) {
     return Response.json(
       { error: 'unauthorized' },

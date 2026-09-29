@@ -1,6 +1,6 @@
 import { handleAccountDeletionPost } from '../../../../lib/account-deletion-http';
 import { accountDeletionDependenciesFromEnvironment } from '../../../../lib/account-deletion-runtime';
-import { readLearnerSession } from '../../../../lib/server-session';
+import { authenticateLearner } from '../../../../lib/learner-auth';
 
 export const runtime = 'nodejs';
 
@@ -11,6 +11,7 @@ export const runtime = 'nodejs';
  * be triggered by navigation, prefetch or a cross-origin form.
  */
 export async function POST(request: Request): Promise<Response> {
+  const session = await authenticateLearner(request);
   const dependencies = accountDeletionDependenciesFromEnvironment();
   if (!dependencies) {
     return Response.json(
@@ -18,9 +19,5 @@ export async function POST(request: Request): Promise<Response> {
       { status: 503, headers: { 'cache-control': 'no-store' } },
     );
   }
-  return handleAccountDeletionPost(
-    request,
-    dependencies,
-    (r) => readLearnerSession(r)?.subject ?? null,
-  );
+  return handleAccountDeletionPost(request, dependencies, () => session?.subject ?? null);
 }

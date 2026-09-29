@@ -184,11 +184,11 @@ export function readLearnerSession(request: Request, now = Date.now()): LearnerS
   }
 }
 
-export function learnerSessionCookie(value: string, session?: LearnerSession) {
+export function learnerSessionCookie(value: string, session?: LearnerSession, now = Date.now()) {
   // Cookie lifetime tracks the token's own sliding expiry so the browser drops a
   // cookie that the server would reject anyway.
   const maxAge = session
-    ? Math.max(0, session.expiresAt - Math.floor(Date.now() / 1000))
+    ? Math.max(0, session.expiresAt - Math.floor(now / 1000))
     : inactivityWindowSeconds;
   return {
     name: sessionCookieName,

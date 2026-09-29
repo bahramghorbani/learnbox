@@ -1,11 +1,11 @@
 import { handleWebReviewBatchPost } from '../../../../lib/learner-review-web-http';
 import { webReviewDependenciesFromEnvironment } from '../../../../lib/learner-review-web-runtime';
-import { readLearnerSession } from '../../../../lib/server-session';
+import { authenticateLearner } from '../../../../lib/learner-auth';
 
 export const runtime = 'nodejs';
 
 export async function POST(request: Request): Promise<Response> {
-  const subject = readLearnerSession(request)?.subject;
+  const subject = (await authenticateLearner(request))?.subject;
   if (!subject)
     return Response.json(
       { error: 'unauthorized' },
