@@ -1646,6 +1646,9 @@ p {
   align-items: center;
   gap: 8px;
   margin: 11px 0 17px;
+  /* WCAG 2.5.8 target size. Accessibility fix only; makes no claim about LB-B23. */
+  min-height: 44px;
+  min-width: 44px;
   border: 0;
   border-radius: 12px;
   background: #f0eeff;
