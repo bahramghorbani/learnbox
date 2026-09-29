@@ -86,6 +86,16 @@ proven in jsdom, which has no layout engine, and the repository has no browser/e
 geometry plus an unguarded path; silence means the tap missed the control entirely and the fix
 belongs in CP-5's layout work.
 
+**Owner response (2026-09-29): cannot confirm.** The observation is unavailable, so the root cause
+stays unknown and **must not be inferred**. This constrains CP-4:
+
+- The ~34px touch target may be improved on its own merits, as a **UX/accessibility defect**
+  (WCAG 2.5.8 target size). That work is legitimate and independent.
+- Enlarging the target **does not close LB-B23**. No commit, PR, release note or status may claim
+  B23 is fixed on the strength of a touch-target change. B23 stays **open, evidence-first**, until a
+  reproduction identifies the mechanism.
+- If CP-4 ships only the accessibility improvement, it is described as exactly that.
+
 ### CP-1 — LB-B26 session lifetime and renewal
 
 Replace the hardcoded `sessionLifetimeSeconds = 60 * 60 * 8` (`apps/website/lib/server-session.ts:4`)
@@ -94,12 +104,23 @@ with the approved dual-bound policy plus sliding renewal and server-side revocat
 session would leave the symptom reachable.
 **Must re-prove:** authenticated `200`, anonymous `401`, foreign-Origin `403`, logout `204` → `401`.
 
-### CP-2 — LB-B27 logout in Settings
+### CP-2 — LB-B27 logout in Settings — DONE (PR pending)
 
 Wire the UI to the already-proven `POST /api/auth/logout`, and clear device-scoped `learnbox:` keys
 on the way out, reusing the existing `handleAccountDeleted` clearing pattern
 (`LearnerHome.tsx:654`). **Depends on CP-1** — a long-lived session without a logout control is a
 privacy gap on a shared device, so these ship together or not at all.
+
+**Outcome:** `/api/auth/logout` existed but **no client code called it** — the endpoint was dead,
+which is why Settings had no sign-out. Added `LogoutPanel` with a confirmation step (with 30-day
+sessions, an accidental sign-out costs a new SMS code) and wired it through `SettingsScreen`.
+
+A failed revocation does **not** produce a false sign-out: `handleLogout` returns `true` only on a
+`204`, and on failure the learner stays signed in and is told. The deletion and sign-out cleanups
+were byte-identical, so they are now one `clearDeviceLearnerState` helper used by both.
+
+Covered by `test/settings-logout.test.tsx` (6 tests): confirmation required, cancel is inert,
+success path, revocation-failure path, thrown-request path, and hidden in the local prototype.
 
 ### CP-3 — LB-B11 server-backed progress
 
@@ -170,14 +191,25 @@ Every checkpoint, without exception:
 3. Security re-proven in both directions after the session change: authenticated `200`, anonymous
    `401`, foreign-Origin `403`, logout `204` → `401`.
 4. Regression tests for every new path, including scope transition on session expiry.
-5. Migration (CP-7): forward-only, prerequisites verified, pre-migration backup captured, rollback
-   artifacts recorded, row counts unchanged.
-6. Privacy notice updated in the same release as the new personal data; deletion re-verified to
+5. **Every migration in the release** — `0020` (CP-1, session revocation) and the CP-7 profile
+   migration alike — passes the standard migration gates: forward-only, no drop/truncate/reset,
+   prerequisites verified, applies clean AND idempotently on re-run against a disposable database,
+   pre-migration Production backup captured and verified before it is applied, rollback artifacts
+   recorded (image digest, `.env` backup, DB snapshot/branch), and post-migration table and row
+   counts compared against the pre-migration baseline with any delta explained. A migration merged
+   to `main` is NOT an applied migration: Production application happens only inside the deploy
+   gate, never as a side effect of a merge.
+6. **Forced re-login for legacy `v1` sessions is documented in the v1.2 release notes** as a known
+   one-time user-visible effect (owner-accepted 2026-09-29), with its reason: `v1` tokens carry no
+   issue time, so the 30-day absolute bound cannot be reconstructed for them.
+7. Privacy notice updated in the same release as the new personal data; deletion re-verified to
    remove the new columns.
-7. Production identity re-proven: running `APP_SOURCE_SHA` == image OCI revision == Git commit
+8. Production identity re-proven: running `APP_SOURCE_SHA` == image OCI revision == Git commit
    reachable from `main` == release tag.
-8. Canonical docs synced per the standing continuity rule; historical records untouched.
-9. Anything newly discovered receives a new stable ID rather than being silently fixed or dropped.
+9. Canonical docs synced per the standing continuity rule; historical records untouched.
+10. Anything newly discovered receives a new stable ID rather than being silently fixed or dropped.
+11. **LB-B23 is not claimed as fixed** unless a reproduction established its mechanism. A
+    touch-target/accessibility improvement ships described as exactly that.
 
 ---
 

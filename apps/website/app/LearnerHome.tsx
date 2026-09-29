@@ -646,11 +646,15 @@ export function LearnerHome({
   );
 
   /**
-   * After deletion the server session is already void. Clear this device's local learner state too,
-   * so the next person using the device cannot see the deleted learner's goal, streak or queued
-   * review work, then reload into the signed-out experience.
+   * Leave this device with no trace of the previous learner, then reload into the
+   * signed-out experience.
+   *
+   * Shared by account deletion and sign-out (LB-B27): in both cases the server
+   * session is over and the next person using the device must not see the previous
+   * learner's goal, streak or queued review work. Only the device copy is cleared —
+   * for a sign-out the learner's data stays intact on the server.
    */
-  const handleAccountDeleted = useCallback(() => {
+  const clearDeviceLearnerState = useCallback(() => {
     try {
       const storage = window.localStorage;
       for (let index = storage.length - 1; index >= 0; index -= 1) {
@@ -661,6 +665,24 @@ export function LearnerHome({
       // A browser that denies storage access has nothing device-local to clear.
     }
     window.location.replace('/');
+  }, []);
+
+  /**
+   * Ends the server session (LB-B27). Returns false when the server did not
+   * confirm, so the UI can keep the learner signed in rather than faking a
+   * sign-out while the session is still live server-side.
+   */
+  const handleLogout = useCallback(async (): Promise<boolean> => {
+    try {
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'content-type': 'application/json' },
+      });
+      return response.status === 204;
+    } catch {
+      return false;
+    }
   }, []);
 
   const handleToggleSound = useCallback(
@@ -1008,7 +1030,9 @@ export function LearnerHome({
         onChooseGoal={editLearningGoal}
         onToggleSound={handleToggleSound}
         onDeleteAccount={requestAccountDeletion}
-        onAccountDeleted={handleAccountDeleted}
+        onAccountDeleted={clearDeviceLearnerState}
+        onLogout={handleLogout}
+        onLoggedOut={clearDeviceLearnerState}
       />
     );
   }
