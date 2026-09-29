@@ -136,8 +136,38 @@ development. The owner selects the final scope.
 
 ## After v1.1 — next-release candidates and residual risks
 
-v1.1 is closed. Nothing below is authorized or started; it is recorded so the next scoping
-decision begins from facts rather than memory.
+v1.1 is closed. The owner approved the **v1.2.0** scope (Option B) on 2026-09-29; the frozen target
+and checkpoint sequence live in `docs/planning/V1_2_SCOPE_FREEZE.md`. Implementation is authorized;
+a Production deploy is not, until the v1.2 release gates pass.
+
+**Selected for v1.2.0:** `LB-B11`, `LB-B26`, `LB-B27`, `LB-B23`, `LB-B22`, `LB-B24`, `LB-B25`,
+`LB-B28a`.
+**Deferred but not cancelled:** `LB-B19` (reminders — no push infrastructure exists),
+`LB-B28b` (personal photo upload — blocked on the `LB-B06` storage decision),
+`LB-B17` (Store/payments — `/api/store/packs` returns a hardcoded 404 and Production has
+`billing_products = 0`).
+
+### New items recorded from owner feedback (2026-09-29)
+
+| Item                                        | Class     | Note                                                                                                                                                                                       |
+| ------------------------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| LB-B22 login/OTP redesign                   | UX        | `AuthGate.tsx` is functional and proven; presentation is the gap. Preserve OTP rate-limit messaging and the support-bot recovery path.                                                     |
+| LB-B23 audio control flips the card         | BUG       | Reported by the owner. The obvious cause is disproven: both audio controls already sit inside `stopPropagation` guards in the shipped release. Mechanism must be reproduced before fixing. |
+| LB-B24 excessive scroll / layout            | UX        | Cause is cumulative block height and padding on the home screen, not a single value. Fix by information hierarchy, not a global scale tweak.                                               |
+| LB-B25 Bobo placement and surrounding space | UX        | Bobo is currently a standalone centered section; the owner wants it as a motivational complement. Same workstream as LB-B24.                                                               |
+| LB-B26 session does not persist             | BUG-class | Hardcoded 8-hour cookie, no refresh, no env override. Direct cause of the perceived progress loss, so not merely a feature request.                                                        |
+| LB-B27 no logout control                    | FEATURE   | `POST /api/auth/logout` already exists and was proven in v1.1; only the UI is missing. Becomes mandatory once sessions are long-lived.                                                     |
+| LB-B28a profile fields                      | FEATURE   | Optional first/last name, DOB, gender, prebuilt avatar. Requires a forward-only migration and a privacy-notice update in the same PR.                                                      |
+| LB-B28b personal photo upload               | FEATURE   | Deferred. Needs isolated private storage, upload authorization and resize/compression; interacts with LB-B06.                                                                              |
+
+**LB-B11 root cause established (2026-09-29, read-only investigation).** The reported "progress
+resets to zero after re-login" is **not** data loss and **not** an identity defect. Production data
+is intact and per-user, and `ON CONFLICT (phone_e164) … RETURNING id` returns a stable user id. Two
+defects combine: the home screen reads daily count and streak only from device storage
+(`packages/learning-engine` performs no network calls), while `/api/learner/progress` is correct but
+consumed only by the progress screen; and the device storage scope collapses to
+`:account:unverified` when the session expires, so a stale scope renders as zero. No migration and
+no data recovery are required.
 
 ### Carried forward, still open
 
