@@ -4,6 +4,10 @@ const sessionSource = await readFile(
   new URL('../apps/website/lib/server-session.ts', import.meta.url),
   'utf8',
 );
+const learnerAuthSource = await readFile(
+  new URL('../apps/website/lib/learner-auth.ts', import.meta.url),
+  'utf8',
+);
 const developmentRoute = await readFile(
   new URL('../apps/website/app/api/development-session/route.ts', import.meta.url),
   'utf8',
@@ -49,13 +53,29 @@ for (const required of [
   "LEARNBOX_PRIVATE_MEDIA_ATTACHMENT_ENABLED !== 'true'",
   'isStagingPrivateMediaEnvironment()',
   'start-a1-35-final-private-media-attestation.json',
-  'readLearnerSession(request)',
+  'authenticateLearner(request)',
   "access: 'private'",
   "'Cache-Control': 'private, no-store'",
   "'Cross-Origin-Resource-Policy': 'same-origin'",
 ]) {
   if (!mediaRoute.includes(required))
     throw new Error(`Private media delivery safeguard missing: ${required}`);
+}
+
+// The route must not verify the token itself. It must go through the single
+// enforcement point, which is what applies revocation and the production
+// fail-closed policy. A route that called readLearnerSession directly would accept
+// a signed-out session, so that call is forbidden here and required there.
+if (mediaRoute.includes('readLearnerSession(')) {
+  throw new Error('Private media route must use authenticateLearner, not readLearnerSession.');
+}
+for (const required of [
+  'readLearnerSession(request)',
+  'isSessionRevoked(',
+  "process.env.NODE_ENV === 'production'",
+]) {
+  if (!learnerAuthSource.includes(required))
+    throw new Error(`Learner auth enforcement safeguard missing: ${required}`);
 }
 
 if (mediaRoute.includes('.private.blob.vercel-storage.com')) {
