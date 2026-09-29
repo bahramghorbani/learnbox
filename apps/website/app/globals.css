@@ -2627,6 +2627,23 @@ p {
   background: rgba(109, 40, 217, 0.1);
 }
 
+/* Selected predefined avatar (v1.2 profile integration): image on a soft tile, not the gradient. */
+.avatar.avatar-image {
+  background: #f5f3ff;
+  color: inherit;
+  overflow: hidden;
+}
+
+.avatar.avatar-image img {
+  width: 36px;
+  height: auto;
+  object-fit: contain;
+}
+
+.profile-phone {
+  unicode-bidi: isolate;
+}
+
 .avatar {
   width: 44px;
   height: 44px;

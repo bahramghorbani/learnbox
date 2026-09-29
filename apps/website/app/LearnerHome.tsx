@@ -187,6 +187,11 @@ export function LearnerHome({
     | { status: 'unavailable' }
   >({ status: 'unavailable' });
   const profileIdentityReadGenerationRef = useRef(0);
+  // Server-confirmed name/avatar for the Home header. null = not known (fallback greeting/avatar).
+  const [profileCard, setProfileCard] = useState<{
+    firstName: string | null;
+    avatarId: string | null;
+  } | null>(null);
   const gradeSubmissionRef = useRef(false);
   const reviewFlushInFlightRef = useRef(false);
   const reviewFlushQueuedRef = useRef(false);
@@ -244,6 +249,7 @@ export function LearnerHome({
     setServerStateOwner(null);
     setServerLastSyncedAt(null);
     setProfileIdentity({ status: 'unavailable' });
+    setProfileCard(null);
     setPendingReviewCount(0);
     setPendingPersonalWordSyncCount(0);
   }, [isServerOtp, sessionUserId]);
@@ -654,6 +660,33 @@ export function LearnerHome({
       window.removeEventListener('online', goOnline);
     };
   }, [screen, readProfileIdentity]);
+
+  // Home header: greeting name and avatar come from the authenticated server profile only
+  // (never localStorage), and only when the profile-identity flag is on.
+  useEffect(() => {
+    if (!profileIdentityEnabled || !authenticated || !isServerOtp || !sessionUserId) {
+      setProfileCard(null);
+      return;
+    }
+    const expectedUserId = sessionUserId;
+    let cancelled = false;
+    void fetch('/api/learner/profile/details', { cache: 'no-store', credentials: 'same-origin' })
+      .then(async (response) => {
+        if (!response.ok) return;
+        const body = (await response.json()) as {
+          profile?: { firstName?: unknown; avatarId?: unknown };
+        };
+        if (cancelled || activeSessionSubjectRef.current !== expectedUserId) return;
+        setProfileCard({
+          firstName: typeof body.profile?.firstName === 'string' ? body.profile.firstName : null,
+          avatarId: typeof body.profile?.avatarId === 'string' ? body.profile.avatarId : null,
+        });
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [authenticated, isServerOtp, profileIdentityEnabled, sessionUserId]);
 
   const begin = () => {
     const itemsForSession = studyItems;
@@ -1081,6 +1114,9 @@ export function LearnerHome({
         syncsToServer={authenticated && isServerOtp}
         identity={profileIdentity}
         onRetryIdentity={readProfileIdentity}
+        onProfileDetails={(details) =>
+          setProfileCard({ firstName: details.firstName, avatarId: details.avatarId })
+        }
         headingRef={profileHeadingRef}
         goalRowRef={profileGoalRowRef}
         settingsRowRef={profileSettingsRowRef}
@@ -1277,6 +1313,8 @@ export function LearnerHome({
   return (
     <>
       <TodayScreen
+        displayName={profileCard?.firstName ?? null}
+        avatarId={profileCard?.avatarId ?? null}
         reviewCount={remainingTodayReviews}
         syncState={
           isServerOtp
