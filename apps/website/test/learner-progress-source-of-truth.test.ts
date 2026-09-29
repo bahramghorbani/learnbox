@@ -14,7 +14,7 @@ import {
 } from '../lib/learner-summary-client';
 
 /**
- * LB-B25 / CP-3 acceptance — server/DB is the source of truth for progress.
+ * LB-B11 / CP-3 acceptance — server/DB is the source of truth for progress.
  *
  * Runs the REAL summary SQL against a REAL Postgres with every repo migration
  * applied, and the REAL client. Only the HTTP hop is bridged in-process (the route

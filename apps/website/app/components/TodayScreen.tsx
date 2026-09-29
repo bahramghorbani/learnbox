@@ -403,7 +403,16 @@ export function TodayScreen({
             </div>
           </div>
           <div className="goal-info">
-            <div className="goal-title">مرورهای جلسه</div>
+            <div className="goal-head">
+              <div className="goal-title">مرورهای جلسه</div>
+              {/* Bobo is a companion to the primary goal, not a section of its own (LB-B25). */}
+              <Bobo
+                expression={isEmpty || reviewCount >= 7 ? 'celebrate' : 'welcome'}
+                animation={isEmpty ? 'dance' : 'float'}
+                className="bobo bobo-companion"
+                size={44}
+              />
+            </div>
             <div className="goal-sub">
               {canReview
                 ? `${toPersianDigits(reviewCount)} کارت دیگه مونده`
@@ -412,6 +421,13 @@ export function TodayScreen({
                   : syncState === 'error' || syncState === 'offline'
                     ? 'داده‌ها در دسترس نیستند'
                     : 'در حال بارگذاری…'}
+            </div>
+            <div className="goal-motive">
+              {isEmpty
+                ? 'آفرین! امروز کامل کردی!'
+                : reviewCount >= 7
+                  ? 'عالیه! ادامه بده!'
+                  : 'سلام! آماده‌ای شروع کنیم؟'}
             </div>
             <button
               ref={primaryActionRef}
@@ -638,31 +654,6 @@ export function TodayScreen({
             <div className="wod-fa">{wordOfDay.persian}</div>
           </div>
         )}
-
-        {/* Bobo companion */}
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'center',
-            padding: '16px 0 0',
-            flexDirection: 'column',
-            alignItems: 'center',
-          }}
-        >
-          <Bobo
-            expression={isEmpty ? 'celebrate' : reviewCount >= 7 ? 'celebrate' : 'welcome'}
-            animation={isEmpty ? 'dance' : 'float'}
-            speech={
-              isEmpty
-                ? 'آفرین! امروز کامل کردی!'
-                : reviewCount >= 7
-                  ? 'عالیه! ادامه بده!'
-                  : 'سلام! آماده‌ای شروع کنیم؟'
-            }
-            className="bobo bobo-header"
-            priority
-          />
-        </div>
 
         {/* Tip Card */}
         <div className="tip-card" role="note" aria-label="نکته یادگیری">
