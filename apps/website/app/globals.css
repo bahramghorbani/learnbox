@@ -1680,11 +1680,11 @@ p {
   box-shadow: 0 18px 44px #34426f12;
   text-align: center;
   color: var(--ink);
-  transition: transform 0.45s ease;
 }
-.card-face:hover {
-  transform: rotateY(-2deg);
-}
+/* B23: faces of the 3D flip card must never get their own transform. A :hover
+   rotateY(-2deg) here replaced .card-back's rotateY(180deg) (iOS keeps :hover stuck
+   after a tap), so taps on audio buttons landed on the container and flipped the card.
+   Transform belongs to .flip-inner / .card-back only. */
 .card-face h1 {
   margin: 12px 0;
   font:
@@ -3440,6 +3440,8 @@ p {
   perspective: 1200px;
   cursor: pointer;
   user-select: none;
+  touch-action: manipulation; /* no iOS double-tap/300ms handling on rapid flips */
+  -webkit-tap-highlight-color: transparent;
   flex-shrink: 0;
 }
 .flip-inner {

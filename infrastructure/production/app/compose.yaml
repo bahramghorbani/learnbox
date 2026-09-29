@@ -5,6 +5,8 @@ services:
     build:
       context: ../../..
       dockerfile: infrastructure/production/app/Dockerfile
+      args:
+        NEXT_PUBLIC_LEARNBOX_PROFILE_IDENTITY_ENABLED: ${NEXT_PUBLIC_LEARNBOX_PROFILE_IDENTITY_ENABLED:-true}
     image: learnbox-learner-app:${APP_VERSION:-local}
     restart: unless-stopped
     init: true
