@@ -3,6 +3,7 @@ import { useState, type RefObject } from 'react';
 import type { SoundPreferenceDurability } from '../sound-preference';
 import { learnerGoalTitle, type LearnerLearningGoal } from './ProfileScreen';
 import { DeleteAccountPanel, type AccountDeletionResult } from './DeleteAccountPanel';
+import { LogoutPanel } from './LogoutPanel';
 import { supportLinkFor } from '../../lib/support-contact';
 
 interface SettingsScreenProps {
@@ -19,6 +20,9 @@ interface SettingsScreenProps {
     requestId: string;
   }) => Promise<AccountDeletionResult>;
   onAccountDeleted?: () => void;
+  /** Omitted in the local prototype, where there is no server session to end. */
+  onLogout?: () => Promise<boolean>;
+  onLoggedOut?: () => void;
 }
 
 const soundSwitchLabel = 'پخش تلفظ';
@@ -38,6 +42,8 @@ export function SettingsScreen({
   onToggleSound,
   onDeleteAccount,
   onAccountDeleted,
+  onLogout,
+  onLoggedOut,
 }: SettingsScreenProps) {
   const [saveStatus, setSaveStatus] = useState('');
 
@@ -115,6 +121,11 @@ export function SettingsScreen({
           </span>
         </div>
       </div>
+      {onLogout && onLoggedOut ? (
+        <div className="settings-rows">
+          <LogoutPanel onLogout={onLogout} onLoggedOut={onLoggedOut} />
+        </div>
+      ) : null}
       {onDeleteAccount && onAccountDeleted ? (
         <div className="settings-rows settings-rows-danger">
           <DeleteAccountPanel

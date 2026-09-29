@@ -3626,6 +3626,29 @@ p {
   text-align: left;
 }
 
+/* LB-B27: sign out. An ordinary action, so it keeps the neutral row treatment and
+   stays visually distinct from the destructive deletion block below it. The
+   confirmation step expands the row, so it stacks instead of staying a single line. */
+.settings-row-block {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  padding: 18px 0;
+}
+.settings-row-actions {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+.settings-danger-action {
+  color: #b3261e;
+}
+.settings-row-actions button {
+  /* WCAG 2.5.8: a confirmation that signs the learner out must not be a small target. */
+  min-height: 44px;
+  padding: 10px 4px;
+}
+
 /* LB-B04: account deletion. Visually separated and de-emphasised so it cannot be hit casually. */
 .settings-rows-danger {
   margin-top: 32px;
