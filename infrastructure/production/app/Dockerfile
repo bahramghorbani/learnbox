@@ -32,6 +32,12 @@ COPY database/migrations database/migrations
 
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# NEXT_PUBLIC_* values are inlined into the client bundle at build time, so a runtime
+# env var cannot enable the learner profile-details panel (v1.2 CP-7). Pass it as a
+# build arg; compose supplies the release default.
+ARG NEXT_PUBLIC_LEARNBOX_PROFILE_IDENTITY_ENABLED=false
+ENV NEXT_PUBLIC_LEARNBOX_PROFILE_IDENTITY_ENABLED=$NEXT_PUBLIC_LEARNBOX_PROFILE_IDENTITY_ENABLED
+
 RUN pnpm --filter @learnbox/website build
 
 FROM node:22-bookworm-slim AS runner
