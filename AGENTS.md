@@ -20,6 +20,28 @@
   `review_requested` routine-worker task before creating overlapping work. Any capable AI may
   approve and merge an in-scope change after the required checks and CI pass.
 
+## Repository continuity
+
+- Git is the canonical source of project state. A dirty working tree or local-only commit is
+  work-in-progress and must never be a release input: before any build or deploy the tree is clean,
+  the branch is pushed, and the exact release commit exists on the remote.
+- Production must always be traceable to a specific commit through a provable artifact. The image
+  carries the commit as the OCI `org.opencontainers.image.revision` label and exports it at runtime
+  as `APP_SOURCE_SHA`, so `running env == image label == Git commit reachable from main` can be
+  re-verified at any time without trusting deploy notes. A release tag points at the shipped commit
+  and never moves.
+- Check continuity at meaningful checkpoints, not after every small change: a feature or fix
+  reaching a stable state, a change to architecture/schema/API/security/infrastructure, a recorded
+  product decision, before a PR/merge/deploy, after a deploy, and at handoff. Sync only when the
+  check finds real drift.
+- Keep canonical current-state documents honest when reality changes: `CURRENT_WORK.md`,
+  `PROJECT_STATE.md`, `docs/PRODUCT_STATUS.md`, `BACKLOG.md`, and a released version's
+  `CHANGELOG.md` entry. Distinguish proven evidence from pending evidence explicitly.
+- Do not rewrite historical documents. Release records, past reports, decision artifacts and prior
+  changelog entries are evidence; correct current truth going forward instead of retouching them.
+- Documentation-only commits ahead of the deployed application SHA are not application drift and
+  must never trigger a deploy to equalize SHAs.
+
 ## Efficient agent workflow
 
 - Start with [`AI_BOOTSTRAP.md`](./AI_BOOTSTRAP.md), then use
