@@ -152,9 +152,11 @@ decision begins from facts rather than memory.
 
 ### Residual risks carried out of v1.1
 
-1. **Scheduled backup and restore drill have never actually executed.** Both are proven only by
-   manual runs. Until a real scheduled execution is observed, recurring recovery is unproven, and
-   an enabled timer must not be counted as a successful run.
+1. **Recurring restore is still unproven.** The scheduled backup now has a real execution behind
+   it (`2026-09-29 02:31:01 UTC`, 36 tables, verified archive), but the weekly restore drill has
+   never fired; it is proven only by a manual run. Backups that are never restored on schedule are
+   an assumption about recovery, not evidence of it. An enabled timer and a green `Result` are
+   both defaults for a unit that never started and must not be counted as a successful run.
 2. **Recovery depends on artifacts that must not be deleted** — the pre-migration dump, the
    `.env` backup, the rollback image `rollback-pre-v110-2acdcef4` and the non-expiring Neon branch.
    Removing any of them without a replacement removes the ability to roll back.
