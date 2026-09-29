@@ -63,16 +63,6 @@ suite('learner profile fields (real Postgres)', () => {
       await pool.query(readFileSync(join(migrationsDir, file), 'utf8'));
     }
     await pool.query(`INSERT INTO users (id, phone_e164) VALUES ($1, '+491****0002')`, [NEW]);
-
-    // KNOWN SCHEMA DRIFT (reported, not fixed here): Production has `user_packs` and
-    // `payment_logs`, and deleteAccount() clears them, but no repo migration creates them. A
-    // database rebuilt from migrations alone therefore cannot run deleteAccount(). Minimal
-    // stand-ins let this test exercise the real deletion path.
-    for (const table of ['user_packs', 'payment_logs']) {
-      await pool.query(
-        `CREATE TABLE IF NOT EXISTS ${table} (id SERIAL PRIMARY KEY, user_id UUID REFERENCES users(id))`,
-      );
-    }
   });
 
   afterAll(async () => {
