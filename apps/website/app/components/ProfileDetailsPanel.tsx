@@ -34,7 +34,12 @@ const empty: ProfileDetails = {
   avatarId: null,
 };
 
-export function ProfileDetailsPanel() {
+export function ProfileDetailsPanel({
+  onProfile,
+}: {
+  /** Called with the server-confirmed profile after every successful read or save. */
+  onProfile?: (profile: ProfileDetails) => void;
+} = {}) {
   const [load, setLoad] = useState<LoadState>('loading');
   const [save, setSave] = useState<SaveState>('idle');
   const [values, setValues] = useState<ProfileDetails>(empty);
@@ -49,6 +54,7 @@ export function ProfileDetailsPanel() {
         const body = (await response.json()) as { profile?: ProfileDetails };
         if (cancelled) return;
         setValues({ ...empty, ...body.profile });
+        onProfile?.({ ...empty, ...body.profile });
         setLoad('ready');
       })
       .catch(() => {
@@ -81,7 +87,10 @@ export function ProfileDetailsPanel() {
       });
       if (!response.ok) throw new Error(String(response.status));
       const body = (await response.json()) as { profile?: ProfileDetails };
-      if (body.profile) setValues({ ...empty, ...body.profile });
+      if (body.profile) {
+        setValues({ ...empty, ...body.profile });
+        onProfile?.({ ...empty, ...body.profile });
+      }
       setSave('saved');
     } catch {
       setSave('error');

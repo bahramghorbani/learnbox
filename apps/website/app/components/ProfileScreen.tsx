@@ -3,6 +3,7 @@ import type { RefObject } from 'react';
 import { LearnerNav, type LearnerDestination } from './LearnerNav';
 import { ProfileDetailsPanel } from './ProfileDetailsPanel';
 import { toPersianDigits } from '../persian-digits';
+import type { ProfileDetails } from '../../lib/learner-profile-fields';
 import { supportLinkFor } from '../../lib/support-contact';
 
 export type LearnerLearningGoal = 'life' | 'career' | 'travel';
@@ -31,6 +32,8 @@ interface ProfileScreenProps {
    */
   syncsToServer?: boolean;
   identity?: ProfileIdentity;
+  /** Receives the server-confirmed optional details so Home can show name/avatar at once. */
+  onProfileDetails?: (details: ProfileDetails) => void;
   onRetryIdentity?: () => void;
   headingRef?: RefObject<HTMLHeadingElement | null>;
   goalRowRef?: RefObject<HTMLButtonElement | null>;
@@ -50,6 +53,7 @@ export function ProfileScreen({
   pendingReviewCount,
   syncsToServer = false,
   identity = { status: 'unavailable' },
+  onProfileDetails,
   onRetryIdentity,
   headingRef,
   goalRowRef,
@@ -76,7 +80,15 @@ export function ProfileScreen({
         <h2 id="profile-account-title">حساب</h2>
         <div className="profile-card">
           <strong className="profile-account-name">
-            {identity.status === 'ok' ? toPersianDigits(identity.maskedPhone) : 'حساب LearnBox'}
+            {identity.status === 'ok' ? (
+              // Masked mobile numbers are LTR digit runs inside RTL text: without an isolated
+              // LTR run the bidi algorithm reverses the groups (۴۰۰۳***۰۹۳۸۳).
+              <bdi dir="ltr" className="profile-phone">
+                {toPersianDigits(identity.maskedPhone)}
+              </bdi>
+            ) : (
+              'حساب LearnBox'
+            )}
           </strong>
           {identity.status === 'loading' ? (
             <p className="profile-card-note" role="status">
@@ -104,7 +116,9 @@ export function ProfileScreen({
       </section>
       {/* Optional personal fields (LB-B28a): server-backed account AND the profile-identity
           flag on. When the flag is off ('unavailable') this screen must not fetch anything. */}
-      {syncsToServer && identity.status !== 'unavailable' ? <ProfileDetailsPanel /> : null}
+      {syncsToServer && identity.status !== 'unavailable' ? (
+        <ProfileDetailsPanel onProfile={onProfileDetails} />
+      ) : null}
       <section className="profile-section" aria-labelledby="profile-learning-title">
         <h2 id="profile-learning-title">یادگیری</h2>
         <div className="profile-card profile-fact">
