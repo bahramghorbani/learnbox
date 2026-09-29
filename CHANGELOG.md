@@ -1,5 +1,33 @@
 # Changelog
 
+## v1.2.0 — Option B (released 2026-09-29)
+
+Released as commit `468f05463df94cf47e088960640c2b6b95f0e370`, tag `v1.2.0`, image
+`sha256:358cd50c05b3df7f90691af6e5c84d2b14f046e40cf29d87d57f36c68225d174`. Database migrations
+`0020`–`0022` are applied after a back-fill of the `0019` ledger row; no existing row changed.
+
+### Learner-facing
+
+- Persistent sign-in: 30-day absolute and 14-day inactivity limits with sliding renewal; sessions
+  are revoked server-side on sign out. Sessions issued before the release are invalid, so learners
+  sign in once.
+- Sign out from Settings.
+- Progress, daily count and streak are read from the server, so they survive signing in again or on
+  another device.
+- The audio buttons no longer flip the card (a stuck `:hover` on iOS Safari was the cause).
+- Redesigned login and one-time-code screens; a tighter Today layout with Bobo inside the goal card.
+- Optional profile fields and prebuilt avatars: the greeting uses the first name, the header shows
+  the chosen avatar, and the masked phone number reads left to right.
+
+### Not included
+
+Personal photo upload (`LB-B28b`), reminders (`LB-B19`) and the Store (`LB-B17`) are deferred.
+
+### Known issue carried out
+
+`LB-B29`: Origin/CSRF enforcement is not applied uniformly across state-changing routes. Unchanged
+from v1.1.0; mitigated by `SameSite=Lax` cookies. Scheduled for the next patch.
+
 ## v1.1.0 — Option B (released 2026-09-28)
 
 Released as commit `46cc45e24bfd54fc1f3f23dd0429c2d4ebb3744f`, tag `v1.1.0`, image
