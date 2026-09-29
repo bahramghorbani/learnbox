@@ -10,6 +10,7 @@ overrides:
   postcss@<=8.5.11: '>=8.5.12'
   postcss@<=8.5.17: '>=8.5.18'
   sharp@<0.35.0: '>=0.35.0'
+  undici@>=6.0.0 <6.28.1: '>=6.28.1 <7'
 
 importers:
   .:
@@ -4077,10 +4078,10 @@ packages:
       }
     engines: { node: '>=14.0' }
 
-  undici@6.28.0:
+  undici@6.29.0:
     resolution:
       {
-        integrity: sha512-LIY910g9TI13YS95lrMFrs8Rm/u/irgHeTWoKCoteeJ04CUJ92eEfj0rVn+7VKMPBpUPiUoBKfhNyLI23EE/KA==,
+        integrity: sha512-R+RODBqp6i2pPflGdq+xIOUkl+RNfGgHwoinecKu/JCuf2uO06cOKoDbI2P7Dn6KcswdKwrczbU6IYJ6K8X+wg==,
       }
     engines: { node: '>=18.17' }
 
@@ -5311,7 +5312,7 @@ snapshots:
       is-buffer: 2.0.5
       is-node-process: 1.2.0
       throttleit: 2.1.0
-      undici: 6.28.0
+      undici: 6.29.0
 
   '@vercel/blob@2.6.1':
     dependencies:
@@ -5320,7 +5321,7 @@ snapshots:
       is-buffer: 2.0.5
       is-node-process: 1.2.0
       throttleit: 2.1.0
-      undici: 6.28.0
+      undici: 6.29.0
 
   '@vercel/build-utils@13.36.0':
     dependencies:
@@ -6559,7 +6560,7 @@ snapshots:
     dependencies:
       '@fastify/busboy': 2.1.1
 
-  undici@6.28.0: {}
+  undici@6.29.0: {}
 
   undici@7.29.0: {}
 
