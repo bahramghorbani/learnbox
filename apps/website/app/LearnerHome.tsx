@@ -55,6 +55,12 @@ import {
 import { flushWebReviewQueue } from '../lib/learner-review-web-sync';
 import { fetchWebLearnerProfile } from '../lib/learner-profile-web-client';
 import type { LearnerSyncState } from './learner-sync-state';
+import { accountStorageScope, refuseUnresolvedScope } from '../lib/account-storage-scope';
+import {
+  fetchLearnerSummary,
+  loadSummaryCache,
+  saveSummaryCache,
+} from '../lib/learner-summary-client';
 
 type Grade = 'forgot' | 'hard' | 'remembered' | 'mastered';
 type LearningGoal = 'life' | 'career' | 'travel';
@@ -76,21 +82,20 @@ const basePersonalVocabularySyncStorageKey = 'learnbox:personal-vocabulary-sync:
 const baseOnboardingGoalStorageKey = 'learnbox:onboarding-goal:v1:local-prototype';
 const baseReviewSessionStorageKey = 'learnbox:review-session:v1:local-prototype';
 const baseDailyReviewStorageKey = 'learnbox:daily-review:v1:local-prototype';
-import {
-  fetchLearnerSummary,
-  loadSummaryCache,
-  saveSummaryCache,
-} from '../lib/learner-summary-client';
 
 const baseLearningStreakStorageKey = 'learnbox:learning-streak:v1:local-prototype';
 const temporaryDeviceStorage = createMemoryStorage();
 
 function getDeviceStorage(): DeviceStorage {
-  if (typeof window === 'undefined') return temporaryDeviceStorage;
+  // Every device read/write goes through the unresolved-scope guard (see
+  // lib/account-storage-scope.ts), so no code path can use a pre-login shared bucket.
+  if (typeof window === 'undefined') return refuseUnresolvedScope(temporaryDeviceStorage);
   try {
-    return createResilientStorage(window.localStorage, temporaryDeviceStorage);
+    return refuseUnresolvedScope(
+      createResilientStorage(window.localStorage, temporaryDeviceStorage),
+    );
   } catch {
-    return temporaryDeviceStorage;
+    return refuseUnresolvedScope(temporaryDeviceStorage);
   }
 }
 
@@ -210,7 +215,7 @@ export function LearnerHome({
   const remainingTodayReviews = Math.max(0, studyItems.length - reviewedToday);
   // Device queues and personal data must never cross authenticated accounts.
   // Legacy unscoped keys are left intact, not silently claimed by a new user.
-  const storageScope = isServerOtp ? `:account:${sessionUserId ?? 'unverified'}` : '';
+  const storageScope = accountStorageScope(isServerOtp, sessionUserId);
   const reviewSyncStorageKey = baseReviewSyncStorageKey + storageScope;
   const personalVocabularyStorageKey = basePersonalVocabularyStorageKey + storageScope;
   const personalWords =
