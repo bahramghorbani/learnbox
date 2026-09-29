@@ -1,6 +1,7 @@
 import type { RefObject } from 'react';
 
 import { LearnerNav, type LearnerDestination } from './LearnerNav';
+import { ProfileDetailsPanel } from './ProfileDetailsPanel';
 import { toPersianDigits } from '../persian-digits';
 import { supportLinkFor } from '../../lib/support-contact';
 
@@ -101,6 +102,9 @@ export function ProfileScreen({
           ) : null}
         </div>
       </section>
+      {/* Optional personal fields (LB-B28a): server-backed account AND the profile-identity
+          flag on. When the flag is off ('unavailable') this screen must not fetch anything. */}
+      {syncsToServer && identity.status !== 'unavailable' ? <ProfileDetailsPanel /> : null}
       <section className="profile-section" aria-labelledby="profile-learning-title">
         <h2 id="profile-learning-title">یادگیری</h2>
         <div className="profile-card profile-fact">

@@ -3817,3 +3817,76 @@ p {
   margin-top: 16px;
   font-size: 0.9rem;
 }
+
+/* LB-B28a: optional profile fields. */
+.profile-details-form {
+  display: grid;
+  gap: 10px;
+  margin-top: 10px;
+}
+.profile-details-form label:not(.profile-avatar-option) {
+  font-size: 15px;
+  font-weight: 700;
+}
+.profile-details-form input:not([type='radio']),
+.profile-details-form select {
+  min-height: 48px;
+  width: 100%;
+  border: 1.5px solid #d9d7df;
+  border-radius: 14px;
+  padding: 10px 14px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+.profile-details-form input:focus-visible,
+.profile-details-form select:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 2px;
+}
+.profile-field-hint {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.7;
+}
+.profile-avatar-set {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+.profile-avatar-set legend {
+  margin-bottom: 8px;
+  font-size: 15px;
+  font-weight: 700;
+}
+.profile-avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+.profile-avatar-option {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 64px;
+  border: 2px solid transparent;
+  border-radius: 14px;
+  background: var(--surface);
+  cursor: pointer;
+}
+.profile-avatar-option input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.profile-avatar-option:has(input:checked) {
+  border-color: var(--primary);
+  background: #ede9fe;
+}
+.profile-avatar-option:has(input:focus-visible) {
+  outline: 3px solid var(--primary);
+  outline-offset: 2px;
+}
