@@ -574,35 +574,70 @@ button {
   padding-top: 42px;
 }
 .auth-shell {
+  box-sizing: border-box;
   display: flex;
   min-height: 100dvh;
   flex-direction: column;
-  padding-top: 58px;
+  padding-top: 24px;
+  padding-bottom: 24px;
+  background: radial-gradient(120% 60% at 50% -10%, #ede9fe 0%, transparent 70%), var(--bg);
 }
 .auth-brand {
   direction: ltr;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+/* Logo mark: pure CSS so no new asset ships with the login screen. */
+.auth-brand::before {
+  content: '';
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  background: var(--primary-grad);
+  box-shadow: 0 6px 16px rgba(109, 40, 217, 0.28);
 }
 .auth-content {
   flex: 1;
-  padding: 115px 4px 80px;
+  padding: 28px 4px 16px;
+}
+/* Two-step indicator. Text carries the meaning; the bars are decoration. */
+.auth-content > .auth-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 14px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+.auth-step i {
+  display: inline-block;
+  width: 26px;
+  height: 5px;
+  border-radius: 3px;
+  background: #ddd6fe;
+}
+.auth-step i[data-on='true'] {
+  background: var(--primary);
 }
 .auth-content h1 {
-  margin-bottom: 17px;
-  font-size: clamp(37px, 9.5vw, 48px);
-  line-height: 1.35;
+  margin-bottom: 10px;
+  font-size: clamp(26px, 7.4vw, 34px);
+  line-height: 1.4;
 }
 .auth-content > p {
-  margin-bottom: 65px;
+  margin-bottom: 24px;
   color: var(--muted);
-  font-size: 17px;
-  line-height: 1.9;
+  font-size: 16px;
+  line-height: 1.8;
 }
 .auth-form {
   display: grid;
-  gap: 13px;
+  gap: 10px;
 }
 .auth-form label {
-  font-size: 20px;
+  font-size: 17px;
   font-weight: 700;
 }
 .phone-input-row {
@@ -610,14 +645,14 @@ button {
   grid-template-columns: auto 1fr;
   overflow: hidden;
   border: 1.5px solid #d9d7df;
-  border-radius: 22px;
+  border-radius: 18px;
   background: var(--surface);
   box-shadow: 0 10px 25px #34426f08;
 }
 .phone-input-row span {
   align-self: stretch;
   border-left: 1px solid #e6e4eb;
-  padding: 19px 17px;
+  padding: 15px 15px;
   color: var(--ink);
   font:
     400 20px/1.5 -apple-system,
@@ -636,26 +671,34 @@ button {
 }
 .phone-input-row input {
   min-width: 0;
-  padding: 18px;
+  padding: 14px 16px;
   direction: ltr;
   text-align: right;
 }
 .phone-input-row:focus-within,
 .auth-code:focus {
-  box-shadow: 0 0 0 4px #4d6bfe12;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(109, 40, 217, 0.14);
 }
 .auth-code {
   border: 1.5px solid #d9d7df;
-  border-radius: 22px;
-  padding: 18px;
-  letter-spacing: 0.25em;
+  border-radius: 18px;
+  padding: 14px 16px;
+  background: var(--surface);
+  font-size: 26px;
+  letter-spacing: 0.4em;
   text-align: center;
+  direction: ltr;
 }
 .auth-form .primary-button {
-  margin-top: 11px;
+  margin-top: 6px;
+  border-radius: 18px;
+  padding: 16px;
+  min-height: 56px;
+  font-size: 18px;
 }
 .auth-note {
-  margin: 32px 14px 0;
+  margin: 18px 14px 0;
   color: var(--muted);
   font-size: 14px;
   line-height: 1.9;
@@ -669,6 +712,8 @@ button {
   font-size: 14px;
   font-weight: 700;
   text-underline-offset: 4px;
+  min-height: 44px;
+  line-height: 44px;
 }
 .auth-install-link:focus-visible,
 .install-return:focus-visible {
@@ -679,11 +724,13 @@ button {
 .auth-support-link {
   display: block;
   width: fit-content;
-  margin: 14px auto 0;
+  margin: 4px auto 0;
   color: #5543a7;
   font-size: 14px;
   font-weight: 700;
   text-underline-offset: 4px;
+  min-height: 44px;
+  line-height: 44px;
 }
 .auth-support-link:focus-visible {
   outline: 3px solid #25213b;
@@ -706,8 +753,28 @@ button {
   font-size: 14px;
 }
 .auth-back {
-  margin-bottom: 38px;
+  margin-bottom: 8px;
   padding-right: 0;
+  min-height: 44px;
+  min-width: 44px;
+}
+/* Error state ties the message to its field (aria-invalid is set by AuthGate). */
+.phone-input-row:has(input[aria-invalid='true']),
+.auth-code[aria-invalid='true'] {
+  border-color: #bd3f3f;
+}
+.auth-content .text-button:disabled {
+  color: var(--muted);
+  cursor: default;
+}
+/* Resend / back controls share the 44px minimum (WCAG 2.5.8). */
+.auth-content .text-button {
+  min-height: 44px;
+  font-size: 15px;
+}
+.auth-content .auth-form + .text-button {
+  display: block;
+  margin: 6px auto 0;
 }
 .install-shell {
   min-height: 100dvh;

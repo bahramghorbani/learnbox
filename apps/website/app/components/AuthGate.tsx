@@ -160,6 +160,7 @@ export function AuthGate({ mode, onAuthenticated }: AuthGateProps) {
       </header>
       {stage === 'phone' ? (
         <section className="auth-content" aria-labelledby="auth-title">
+          <AuthStep current={1} />
           <h1 id="auth-title">به LearnBox خوش آمدی</h1>
           <p>
             {isLocalPrototype
@@ -183,6 +184,7 @@ export function AuthGate({ mode, onAuthenticated }: AuthGateProps) {
                 }}
                 placeholder="۹۱۲ ۱۲۳ ۴۵۶۷"
                 aria-describedby="auth-error"
+                aria-invalid={error ? true : undefined}
                 disabled={pending}
               />
             </div>
@@ -222,6 +224,7 @@ export function AuthGate({ mode, onAuthenticated }: AuthGateProps) {
           >
             تغییر شماره
           </button>
+          <AuthStep current={2} />
           <h1 id="code-title">
             {isLocalPrototype ? 'کد آزمایشی را وارد کن' : 'کد پیامک‌شده را وارد کن'}
           </h1>
@@ -248,6 +251,7 @@ export function AuthGate({ mode, onAuthenticated }: AuthGateProps) {
               }}
               placeholder="— — — — —"
               aria-describedby="auth-error"
+              aria-invalid={error ? true : undefined}
               disabled={pending}
             />
             {error ? (
@@ -295,6 +299,17 @@ export function AuthGate({ mode, onAuthenticated }: AuthGateProps) {
         </section>
       )}
     </main>
+  );
+}
+
+/** Presentation only: which of the two login steps this is. */
+function AuthStep({ current }: { current: 1 | 2 }) {
+  return (
+    <p className="auth-step">
+      <i data-on="true" aria-hidden="true" />
+      <i data-on={current === 2 ? 'true' : 'false'} aria-hidden="true" />
+      <span>{`مرحلهٔ ${toPersianDigits(current)} از ${toPersianDigits(2)}`}</span>
+    </p>
   );
 }
 
