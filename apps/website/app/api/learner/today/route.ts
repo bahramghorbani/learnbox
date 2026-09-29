@@ -1,5 +1,6 @@
 import { Pool } from 'pg';
 import { authenticateLearner } from '../../../../lib/learner-auth';
+import { readLearnerSummary } from '../../../../lib/learner-summary';
 import { requireVerifiedDatabaseTls } from '../../../../../api/dist/database/migration-runner.js';
 
 export const runtime = 'nodejs';
@@ -34,15 +35,25 @@ export async function GET(request: Request): Promise<Response> {
   const pool = getPool();
 
   try {
-    // 1. Today's reviews
+    // 0. Authoritative count/streak, bucketed in the LEARNER's timezone. Every
+    // surface (Today, Profile, home header) derives these from this one function,
+    // so they can never disagree with each other or with another device.
+    const summary = await readLearnerSummary(
+      pool,
+      userId,
+      new URL(request.url).searchParams.get('tz'),
+    );
+
+    // 1. Today's reviews (same learner-local day as the summary above)
     const todayStats = await pool.query(
       `SELECT
          COUNT(*) as reviewed_today,
          COUNT(*) FILTER (WHERE grade = 'remembered') as correct_today,
          MAX(occurred_at) as last_review_at
        FROM review_events
-       WHERE user_id = $1 AND occurred_at::date = CURRENT_DATE`,
-      [userId],
+       WHERE user_id = $1
+         AND (occurred_at AT TIME ZONE $2)::date = (now() AT TIME ZONE $2)::date`,
+      [userId, summary.timeZone],
     );
 
     const reviewedToday = parseInt(todayStats.rows[0]?.reviewed_today ?? '0', 10);
@@ -103,57 +114,41 @@ export async function GET(request: Request): Promise<Response> {
 
     // 5. Weekly streak (last 7 days)
     const weeklyActivity = await pool.query(
-      `SELECT occurred_at::date as day, COUNT(*) as cnt
+      `SELECT (occurred_at AT TIME ZONE $2)::date as day, COUNT(*) as cnt
        FROM review_events
-       WHERE user_id = $1 AND occurred_at >= CURRENT_DATE - INTERVAL '6 days'
+       WHERE user_id = $1
+         AND (occurred_at AT TIME ZONE $2)::date >= (now() AT TIME ZONE $2)::date - 6
        GROUP BY day
        ORDER BY day`,
-      [userId],
+      [userId, summary.timeZone],
     );
     const weekDays: { day: string; active: boolean }[] = [];
     const persianDayNames = ['ی', 'د', 'س', 'چ', 'پ', 'ج', 'ش'];
-    const activeDays = new Set(
-      weeklyActivity.rows.map((r: { day: string }) => new Date(r.day).toISOString().split('T')[0]),
-    );
+    // Calendar days as plain YYYY-MM-DD in the learner's zone; no server-clock or
+    // UTC conversion, which would shift the day for learners east of UTC.
+    const localDay = (offsetDays: number) => {
+      const key = new Intl.DateTimeFormat('en-CA', {
+        timeZone: summary.timeZone,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      }).format(new Date(Date.now() - offsetDays * 86_400_000));
+      return { key, dow: new Date(`${key}T12:00:00Z`).getUTCDay() };
+    };
+    const ymd = (value: unknown) =>
+      value instanceof Date
+        ? `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}-${String(value.getDate()).padStart(2, '0')}`
+        : String(value).slice(0, 10);
+    const activeDays = new Set(weeklyActivity.rows.map((r: { day: unknown }) => ymd(r.day)));
     for (let i = 6; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      const key = d.toISOString().split('T')[0];
-      const dow = d.getDay();
+      const { key, dow } = localDay(i);
       weekDays.push({
         day: persianDayNames[dow],
         active: activeDays.has(key),
       });
     }
 
-    // Calculate streak
-    let streakDays = 0;
-    const allActivity = await pool.query(
-      `SELECT DISTINCT occurred_at::date as day
-       FROM review_events
-       WHERE user_id = $1
-       ORDER BY day DESC`,
-      [userId],
-    );
-    if (allActivity.rows.length > 0) {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const dates = allActivity.rows.map((r: { day: string }) => {
-        const d = new Date(r.day);
-        d.setHours(0, 0, 0, 0);
-        return d.getTime();
-      });
-      // Check if today or yesterday is active (streak can continue)
-      const todayMs = today.getTime();
-      const yesterdayMs = todayMs - 86400000;
-      if (dates.includes(todayMs) || dates.includes(yesterdayMs)) {
-        let checkDate = dates.includes(todayMs) ? todayMs : yesterdayMs;
-        while (dates.includes(checkDate)) {
-          streakDays++;
-          checkDate -= 86400000;
-        }
-      }
-    }
+    const streakDays = summary.streakDays;
 
     // 6. Due soon cards (top 3 closest to forgetting)
     const dueSoon = await pool.query(
@@ -207,22 +202,7 @@ export async function GET(request: Request): Promise<Response> {
     );
     const totalReviews = parseInt(totalStats.rows[0]?.total_reviews ?? '0', 10);
 
-    // 9. Longest streak
-    let longestStreak = streakDays;
-    if (allActivity.rows.length > 1) {
-      let currentRun = 1;
-      const sortedDates = allActivity.rows
-        .map((r: { day: string }) => new Date(r.day).getTime())
-        .sort((a: number, b: number) => a - b);
-      for (let i = 1; i < sortedDates.length; i++) {
-        if (sortedDates[i] - sortedDates[i - 1] === 86400000) {
-          currentRun++;
-          longestStreak = Math.max(longestStreak, currentRun);
-        } else {
-          currentRun = 1;
-        }
-      }
-    }
+    const longestStreak = summary.longestStreakDays;
 
     return Response.json(
       {

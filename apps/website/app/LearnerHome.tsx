@@ -76,6 +76,12 @@ const basePersonalVocabularySyncStorageKey = 'learnbox:personal-vocabulary-sync:
 const baseOnboardingGoalStorageKey = 'learnbox:onboarding-goal:v1:local-prototype';
 const baseReviewSessionStorageKey = 'learnbox:review-session:v1:local-prototype';
 const baseDailyReviewStorageKey = 'learnbox:daily-review:v1:local-prototype';
+import {
+  fetchLearnerSummary,
+  loadSummaryCache,
+  saveSummaryCache,
+} from '../lib/learner-summary-client';
+
 const baseLearningStreakStorageKey = 'learnbox:learning-streak:v1:local-prototype';
 const temporaryDeviceStorage = createMemoryStorage();
 
@@ -214,6 +220,8 @@ export function LearnerHome({
   const reviewSessionStorageKey = baseReviewSessionStorageKey + storageScope;
   const dailyReviewStorageKey = baseDailyReviewStorageKey + storageScope;
   const learningStreakStorageKey = baseLearningStreakStorageKey + storageScope;
+  // Offline-display cache of the server summary. Never the origin of a number.
+  const summaryCacheStorageKey = `learnbox:summary-cache:v1${storageScope}`;
   const profileIdentityEnabled = profileIdentityFlag === 'true';
   const previousAccountRef = useRef<string | null>(null);
 
@@ -358,18 +366,62 @@ export function LearnerHome({
     };
   }, [authenticated, isServerOtp, sessionUserId]);
 
+  // Server-backed accounts: the database is the source of truth for today's count
+  // and the streak (LB-B25). Local storage is consulted only when the server is
+  // unreachable, and never as the origin of a number.
+  const refreshServerSummary = useCallback(async () => {
+    if (!isServerOtp || !authenticated || !sessionUserId) return;
+    const expectedUserId = sessionUserId;
+    const result = await fetchLearnerSummary();
+    if (activeSessionSubjectRef.current !== expectedUserId) return;
+    const now = new Date();
+    if (result.status === 'ok') {
+      setReviewedToday(result.summary.reviewedToday);
+      setStreakDays(result.summary.streakDays);
+      saveSummaryCache(
+        getDeviceStorage(),
+        summaryCacheStorageKey,
+        result.summary,
+        getLocalDateKey(now),
+      );
+      return;
+    }
+    if (result.status === 'unauthorized') {
+      setAuthenticated(false);
+      setSessionUserId(null);
+      return;
+    }
+    const cached = loadSummaryCache(
+      getDeviceStorage(),
+      summaryCacheStorageKey,
+      getLocalDateKey(now),
+      getPreviousDateKey(now),
+    );
+    if (cached) {
+      setReviewedToday(cached.reviewedToday);
+      setStreakDays(cached.streakDays);
+    }
+  }, [authenticated, isServerOtp, sessionUserId, summaryCacheStorageKey]);
+
   useEffect(() => {
-    if (isServerOtp && (!authenticated || !sessionUserId)) return;
+    if (isServerOtp) {
+      // Clear first: never render a previous account's or a stale value while the
+      // authoritative answer is in flight.
+      setReviewedToday(0);
+      setStreakDays(0);
+      void refreshServerSummary();
+      return;
+    }
     const progress = loadDailyReviewProgress(
       getDeviceStorage(),
       dailyReviewStorageKey,
       getLocalDateKey(),
     );
     setReviewedToday(progress?.reviewedCount ?? 0);
-  }, [authenticated, isServerOtp, sessionUserId, dailyReviewStorageKey]);
+  }, [isServerOtp, refreshServerSummary, dailyReviewStorageKey]);
 
   useEffect(() => {
-    if (isServerOtp && (!authenticated || !sessionUserId)) return;
+    if (isServerOtp) return;
     const now = new Date();
     setStreakDays(
       getCurrentStreakDays(
@@ -378,7 +430,7 @@ export function LearnerHome({
         getPreviousDateKey(now),
       ),
     );
-  }, [authenticated, isServerOtp, sessionUserId, learningStreakStorageKey]);
+  }, [isServerOtp, learningStreakStorageKey]);
 
   useEffect(() => {
     if (isServerOtp && (!authenticated || !sessionUserId)) return;
@@ -515,7 +567,10 @@ export function LearnerHome({
         (result) => {
           if (activeSessionSubjectRef.current !== sessionUserId) return;
           setPendingReviewCount(result.pendingCount);
-          if (result.acknowledged) retryServerStateRead();
+          if (result.acknowledged) {
+            retryServerStateRead();
+            void refreshServerSummary();
+          }
         },
         () => undefined,
       )
@@ -526,7 +581,14 @@ export function LearnerHome({
           requestServerReviewFlushRef.current();
         }
       });
-  }, [authenticated, isServerOtp, sessionUserId, reviewSyncStorageKey, retryServerStateRead]);
+  }, [
+    authenticated,
+    isServerOtp,
+    sessionUserId,
+    reviewSyncStorageKey,
+    retryServerStateRead,
+    refreshServerSummary,
+  ]);
 
   requestServerReviewFlushRef.current = flushServerReviewQueue;
 
@@ -746,13 +808,18 @@ export function LearnerHome({
     setTodayGrades((prev) => [...prev, nextGrade]);
     setReviewedToday((count) => {
       const reviewedCount = count + 1;
-      saveDailyReviewProgress(getDeviceStorage(), dailyReviewStorageKey, {
-        dateKey: getLocalDateKey(),
-        reviewedCount,
-      });
+      // Server accounts show an optimistic count only; the authoritative value
+      // arrives from /api/learner/summary once the review is acknowledged.
+      if (!isServerOtp) {
+        saveDailyReviewProgress(getDeviceStorage(), dailyReviewStorageKey, {
+          dateKey: getLocalDateKey(),
+          reviewedCount,
+        });
+      }
       return reviewedCount;
     });
-    setStreakDays(() => {
+    setStreakDays((current) => {
+      if (isServerOtp) return Math.max(current, 1);
       const now = new Date();
       return recordLearningStreak(
         getDeviceStorage(),

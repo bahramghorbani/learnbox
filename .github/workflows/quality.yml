@@ -9,6 +9,24 @@ permissions:
 jobs:
   quality:
     runs-on: ubuntu-latest
+    # Disposable database for the server-authoritative progress acceptance test
+    # (apps/website/test/learner-progress-source-of-truth.test.ts). It creates and
+    # drops its own throwaway database, applies every repo migration, and hard-fails
+    # in CI if this variable is missing, so the invariant can never be silently skipped.
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgres://postgres:ci@localhost:5432/postgres
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4
