@@ -92,8 +92,11 @@ no row of existing data. Scope delivered: LB-B01, LB-B02, LB-B03, LB-B04, LB-B08
   secret redaction, and a weekly restore drill run as systemd timers, alerting through
   `@learnboxmonitoringbot`. The monitoring bot and the learner-facing `@learnboxsupportbot` are
   fully separate — separate tokens and chats — and operational alerts never reach learners.
-  Backup and restore drill are proven by manual runs; an active timer is not a successful
-  execution, so the first real scheduled run of each is recorded separately.
+  The scheduled backup is proven by a real execution: the first timer-driven run
+  (`2026-09-29 02:31:01 UTC`) produced a 36-table dump with a clean `gzip -t` and an intact
+  dump-complete marker, under a 30-day retention window. The scheduled restore drill has still
+  never executed and stays pending until it does — an active timer and a green `Result` are both
+  defaults for a unit that never started, so only a non-empty `ExecMainStartTimestamp` counts.
 - **Account deletion (LB-B04).** Deletion removes learner data while preserving a
   privacy-minimized deletion audit record and a purchase-ownership claim, and is idempotent
   through a `request_id` unique index. It is covered by unit tests and an 18-check integration

@@ -33,9 +33,23 @@ One privacy-minimized audit row remains from that exercise. It contains no phone
 
 ## Pending evidence
 
-**Scheduled backup and restore drill have never actually executed.** Both timers are enabled and active, and both jobs are proven by manual runs — a full backup (34 tables, verified gzip) and an isolated restore drill (0 orphans). But `ExecMainStartTimestamp` is empty for both units.
+**The scheduled backup has now genuinely executed.** The first real timer-driven run started
+`2026-09-29 02:31:01 UTC` and finished two seconds later, producing
+`learnbox-20260929T023101Z.sql.gz`: 36 tables, 36 data blocks, a clean `gzip -t`, an intact
+`PostgreSQL database dump complete` marker and 812 KB uncompressed. The unit reports
+`ExecMainStatus=0` with `NRestarts=0`, and the script logged `retained=3 pruned=0` against a
+30-day retention window. Recurring backup is therefore proven by execution, not by configuration.
 
-An active timer is not a successful execution. Neither may be reported as successful until it has genuinely run, and the result of the first real run of each must be recorded separately. The uptime monitor and the error scan, by contrast, have both really executed and succeeded.
+**The scheduled restore drill has never executed.** `ExecMainStartTimestamp` is empty for
+`learnbox-restore-drill.service`; the first real run is due `2026-10-05 03:36 UTC`. It is proven
+only by a manual drill (0 orphans), which shows the procedure works but not that the schedule
+fires. Until that run happens, recurring _recovery_ remains unproven even though recurring backup
+no longer is.
+
+An active timer is not a successful execution, and neither is a green `Result`: systemd reports
+`Result=success` and `ExecMainStatus=0` for a unit that has never started. Only a non-empty
+`ExecMainStartTimestamp` distinguishes the two. The uptime monitor and the error scan have both
+really executed and succeeded.
 
 ## Standing constraints
 
