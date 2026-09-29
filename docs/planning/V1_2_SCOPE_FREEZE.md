@@ -63,13 +63,28 @@ Ordered by the approved dependency graph. Each checkpoint is small, independentl
 lands as its own PR. Canonical current-state docs are reconciled **inside the feature PR**, per
 `docs/DOCUMENTATION_GOVERNANCE.md` §Review cadence — a separate post-merge docs PR is exceptional.
 
-### CP-0 — LB-B23 investigation (no production code change)
+### CP-0 — LB-B23 investigation (no production code change) — DONE, DID NOT REPRODUCE
 
 Reproduce the audio/flip defect before touching its code, per the owner's instruction. The obvious
 hypothesis is already disproven: both audio controls sit inside `stopPropagation` guards
 (`LearnerHome.tsx:1092` front, `:1122` back) in the shipped release. Produce a failing test or a
 recorded reproduction that identifies the real mechanism. **Exit:** mechanism named with evidence,
 or the item is reported as not-reproducible and returned to the owner — never "fixed" by guesswork.
+
+**Outcome:** `apps/website/test/lb-b23-audio-flip.test.tsx` drives the real component through
+sign-in → onboarding → review and activates the pronunciation control three ways — click on the
+button, click on a child element (the actual tap target), and keyboard activation. **All pass: the
+card never flips**, and tapping the card body still flips it, so the animation contract is intact.
+The defect does not reproduce through any event path, which rules out event bubbling as the cause.
+
+Remaining hypothesis, geometric rather than behavioural: `.audio-button` is `padding: 9px 12px`
+(≈34px tall, below the 44px touch-target guidance) and its guarded wrappers `.card-ipa-row` /
+`.card-ex-audio` are bare `display: flex; gap: 8px` with no padding, so the guarded region hugs the
+control. A touch landing a few pixels outside it legitimately hits `.flip-container`. This cannot be
+proven in jsdom, which has no layout engine, and the repository has no browser/e2e harness.
+**Owner input requested:** when it flips, does the audio still play? Audio playing implicates
+geometry plus an unguarded path; silence means the tap missed the control entirely and the fix
+belongs in CP-5's layout work.
 
 ### CP-1 — LB-B26 session lifetime and renewal
 

@@ -1,4 +1,5 @@
 import { hasJsonContentType, isTrustedRequestOrigin } from './trusted-origin';
+import { inactivityWindowSeconds } from './server-session';
 
 type OtpPurpose = 'sign_in';
 
@@ -153,7 +154,11 @@ function readClientIp(request: Request): string | null {
 
 function serializeSessionCookie(token: string, request: Request): string {
   const secure = new URL(request.url).protocol === 'https:' ? '; Secure' : '';
-  return `learnbox_alpha_session=${token}; Path=/; Max-Age=28800; HttpOnly${secure}; SameSite=Lax`;
+  // Cookie lifetime follows the session inactivity window (LB-B26). It is the
+  // sliding bound, not the absolute one: an active learner's cookie is re-issued
+  // with a fresh window on each renewal, and the token itself still enforces the
+  // 30-day absolute cap, so a long-lived cookie cannot outlive its session.
+  return `learnbox_alpha_session=${token}; Path=/; Max-Age=${inactivityWindowSeconds}; HttpOnly${secure}; SameSite=Lax`;
 }
 
 function jsonResponse(
