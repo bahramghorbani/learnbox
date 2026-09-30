@@ -168,3 +168,22 @@ been computed) and are committed before the simulator. Later amendments, if any,
 - **A8 (replay detail)** History is applied in `reconciliation_cursor` order with
   `now = occurred_at`, matching `postgres-review-event.store.ts`. Gate G5 compares stability,
   difficulty, lapses, state and due time to the stored row.
+- **A9 (clarification) Ablation outcome.** The ablation rule in Section 6 is evaluated on the A6 axes
+  (knowledge fraction at day 365 and review load). Retention at review is computed and reported next to
+  it. If the two disagree for a component, that component is reported as **unresolved** and is not kept.
+  The "at least two thirds of cells" condition is counted over the 72 M-decay cells, with the bootstrap
+  resampling seeds inside each cell (2,000 resamples, fixed PRNG seed).
+- **A10 (report-only scenario) Return after a gap.** N = 35, model m = 2 d, sigma = 0.5, G = 2.5,
+  daily attendance for 60 days, absence of 14, 30 or 90 days, then daily attendance for 60 more days.
+  Reported per candidate: due cards on return, recovery-mode sessions until the first normal session,
+  sessions until no card is overdue by more than 7 days, and knowledge fraction at return and 30 days
+  later. Not a gate; it feeds the failure-mode review.
+- **A11 (report-only) Scripted single-card traces.** One card, one session per day, fixed answer scripts:
+  K x 12; U x 6; KU alternating x 12; KKU x 8; K x 10 then U x 3; K until Box 5 then U, K, K, K.
+  Reported as Box and interval sequences per candidate. These show the learner-visible behavior of
+  repeated Known, repeated Unknown and mixed histories without any memory model.
+- **A12 (implementation note) Known-clamp is arithmetically near-vacuous.** Before any run, the engine's
+  x1.8 growth cannot skip a Box from a Box with stability below its upper edge, because each Box edge
+  ratio (3, 2.33, 3) exceeds 1.8. The clamp in ENG-CLAMP therefore only acts when growth is amplified
+  (ENG-LATE) and at the Box 5 boundary. It is kept as registered; the analysis must report how often it
+  actually fires.
