@@ -1,3 +1,4 @@
+import { normalizeTimeZone } from '@learnbox/learning-engine';
 import type { Pool } from 'pg';
 
 /**
@@ -54,16 +55,8 @@ SELECT
   coalesce((SELECT sum(reviews) FROM per_day), 0) AS total_reviews
 `;
 
-/** IANA zone name if the runtime recognises it, otherwise UTC. */
-export function normalizeTimeZone(candidate: string | null | undefined): string {
-  if (!candidate || candidate.length > 64) return 'UTC';
-  try {
-    new Intl.DateTimeFormat('en-US', { timeZone: candidate });
-    return candidate;
-  } catch {
-    return 'UTC';
-  }
-}
+// Canonical (LB-B35 CP2): one definition of the learner's time zone, shared with every layer.
+export { normalizeTimeZone };
 
 async function run(pool: Pool, userId: string, timeZone: string, asOf: Date) {
   return pool.query(summarySql, [userId, timeZone, asOf.toISOString()]);

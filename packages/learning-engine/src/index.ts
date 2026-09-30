@@ -1,4 +1,9 @@
-export type ReviewGrade = 'forgot' | 'hard' | 'remembered' | 'mastered';
+import type { ReviewGrade } from './definitions.js';
+
+// Canonical learning-domain definitions (Box, Learned, Mastered, binary response, Accuracy, local day).
+// `ReviewGrade` is owned by definitions.ts; it is re-exported here for existing importers.
+export * from './definitions.js';
+export * from './replay-compat.js';
 export type LearningState =
   'new' | 'learning' | 'review' | 'relearning' | 'mastered' | 'suspended' | 'archived';
 
