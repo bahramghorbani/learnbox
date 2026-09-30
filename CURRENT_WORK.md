@@ -5,8 +5,30 @@
 ## Active work
 
 **No feature work is active.** v1.2.0 and the v1.2.1 security patch (`LB-B29`) are released and
-closed (below). Nothing further is approved for implementation. Deferred but not cancelled:
+closed (below), and the Admin P0 credential cutover (`LB-B30`–`B33`) is complete (next section).
+Nothing further is approved for implementation: P1 compatibility and Admin redesign have **not** started. Deferred but not cancelled:
 `LB-B19` (reminders), `LB-B28b` (photo upload), `LB-B17` (Store).
+
+## Admin P0 (LB-B30–B33) — cut over, Admin still contained
+
+Merged as PR #326 at `e601d8a118ec915d1a3c18cca7fb018025ad9a1c`; executed on Production 2026-09-30.
+Full evidence: [`docs/evidence/ADMIN_P0_CUTOVER_EVIDENCE.md`](docs/evidence/ADMIN_P0_CUTOVER_EVIDENCE.md).
+
+- **Learner:** same v1.2.1 image (`sha256:5370578d187c`); `DATABASE_URL` now the `learnbox_app` role.
+  Production regression matrix 79 PASS / 0 FAIL. Rollback: `.env.bak-pre-p0-dsn` plus image tag
+  `rollback-pre-p0-dsn-5370578d187c`.
+- **Admin:** image `sha256:f9f117bb…` (label, runtime SHA = `e601d8a…`), role `learnbox_admin`,
+  legacy routes disabled, **Caddy 404 and paused Vercel preview retained**. Do not enable the passkey
+  or content-review flags just to satisfy a test matrix.
+- **Production Admin anonymous matrix is 60/93, not 93/93.** All 33 mismatches are expected 404
+  statuses in the disabled configuration; no leak, caching defect or unexpected public route. Guard
+  ordering is **unproven on Production**.
+- **Exposure gate (pending, owner-approved, required before Admin is ever public):** run on the exact
+  intended public configuration and Production candidate; prove Origin/Content-Type/session guard
+  ordering and authenticated/anonymous behaviour.
+- **Test-write provenance:** `review_events` +2 and `revoked_sessions` +4 since Step 0 are the two
+  learner-matrix runs against synthetic user `b4efb0a4…` (one review event and two revocations per
+  run). Kept; not to be deleted to restore counts. Owner `451b0433…` untouched.
 
 ## v1.2.1 LB-B29 — released
 
