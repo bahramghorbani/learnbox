@@ -4,6 +4,7 @@ import { getSharedAdminDatabasePool } from '../../../lib/server/admin-database-p
 import { loadAdminSession } from '../../../lib/server/admin-route-security';
 import { PostgresOwnerAuthStore } from '../../../lib/server/postgres-owner-auth-store';
 import { readAdminAuthConfig } from '../../../lib/server/admin-auth-policy';
+import { legacyAdminRouteGate } from '../../../lib/server/admin-legacy-routes';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -26,7 +27,9 @@ async function requireSession(request: Request) {
 
 // GET - list all packs (or download CSV template with ?template=csv)
 export async function GET(request: Request) {
-  // Template download doesn't need auth
+  const disabled = legacyAdminRouteGate();
+  if (disabled) return disabled;
+  // Template download still requires auth
   const rawUrl = request.url;
   console.log('[admin/packs] GET url:', rawUrl);
   if (rawUrl.includes('template=csv')) {
@@ -62,6 +65,8 @@ schnell,,adjective,A1,سریع|تند,Der Zug ist sehr schnell.,قطار خیل�
 
 // POST - create new pack
 export async function POST(request: Request) {
+  const disabled = legacyAdminRouteGate();
+  if (disabled) return disabled;
   const session = await requireSession(request);
   if (!session) return new Response('Unauthorized', { status: 401 });
 
@@ -115,6 +120,8 @@ export async function POST(request: Request) {
 
 // PATCH - update pack status
 export async function PATCH(request: Request) {
+  const disabled = legacyAdminRouteGate();
+  if (disabled) return disabled;
   const session = await requireSession(request);
   if (!session) return new Response('Unauthorized', { status: 401 });
 

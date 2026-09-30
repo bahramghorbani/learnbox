@@ -1,4 +1,5 @@
 import { Pool } from 'pg';
+import { legacyAdminRouteGate } from '../../../lib/server/admin-legacy-routes';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -11,6 +12,8 @@ function getPool() {
 
 /** GET /api/banners — list all banners (admin) */
 export async function GET(): Promise<Response> {
+  const disabled = legacyAdminRouteGate();
+  if (disabled) return disabled;
   const pool = getPool();
   try {
     const result = await pool.query(
@@ -26,6 +29,8 @@ export async function GET(): Promise<Response> {
 
 /** POST /api/banners — create a banner */
 export async function POST(request: Request): Promise<Response> {
+  const disabled = legacyAdminRouteGate();
+  if (disabled) return disabled;
   const pool = getPool();
   try {
     const body = await request.json();
@@ -72,6 +77,8 @@ export async function POST(request: Request): Promise<Response> {
 
 /** PUT /api/banners — update a banner (expects id in body) */
 export async function PUT(request: Request): Promise<Response> {
+  const disabled = legacyAdminRouteGate();
+  if (disabled) return disabled;
   const pool = getPool();
   try {
     const body = await request.json();
@@ -119,6 +126,8 @@ export async function PUT(request: Request): Promise<Response> {
 
 /** DELETE /api/banners — delete a banner (expects id in query) */
 export async function DELETE(request: Request): Promise<Response> {
+  const disabled = legacyAdminRouteGate();
+  if (disabled) return disabled;
   const pool = getPool();
   try {
     const url = new URL(request.url);

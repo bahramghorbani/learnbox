@@ -3,6 +3,14 @@
 import React, { useState } from 'react';
 import { startRegistration } from '@simplewebauthn/browser';
 
+function readCsrfCookie(): string | undefined {
+  return document.cookie
+    ?.split(';')
+    .map((item) => item.trim())
+    .find((item) => item.startsWith('__Host-learnbox_admin_csrf='))
+    ?.slice('__Host-learnbox_admin_csrf='.length);
+}
+
 export function AddPasskeyButton() {
   const [state, setState] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
@@ -22,7 +30,10 @@ export function AddPasskeyButton() {
       const verifyRes = await fetch('/api/auth/add-passkey/verify', {
         method: 'POST',
         credentials: 'same-origin',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-learnbox-csrf-token': readCsrfCookie() ?? '',
+        },
         body: JSON.stringify({ response: registration }),
       });
       if (!verifyRes.ok) throw new Error('خطا در تأیید');

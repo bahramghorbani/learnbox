@@ -5,6 +5,7 @@ import { loadAdminSession } from '../../../lib/server/admin-route-security';
 import { PostgresOwnerAuthStore } from '../../../lib/server/postgres-owner-auth-store';
 import { readAdminAuthConfig } from '../../../lib/server/admin-auth-policy';
 import { NextRequest } from 'next/server';
+import { legacyAdminRouteGate } from '../../../lib/server/admin-legacy-routes';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -29,6 +30,8 @@ async function requireSession(request: Request) {
 
 // GET /api/transactions — list with search, filter, pagination
 export async function GET(request: NextRequest) {
+  const disabled = legacyAdminRouteGate();
+  if (disabled) return disabled;
   const session = await requireSession(request);
   if (!session) return new Response('Unauthorized', { status: 401 });
 

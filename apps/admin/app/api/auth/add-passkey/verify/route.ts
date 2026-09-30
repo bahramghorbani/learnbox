@@ -1,7 +1,8 @@
 import { Pool } from 'pg';
 import { readAdminDatabaseConfig } from '../../../../../lib/server/admin-database';
 import { getSharedAdminDatabasePool } from '../../../../../lib/server/admin-database-pool';
-import { loadAdminSession } from '../../../../../lib/server/admin-route-security';
+import { guardAdminMutation } from '../../../../../lib/server/admin-mutation-guard';
+import { loadAdminSession, verifyAdminCsrf } from '../../../../../lib/server/admin-route-security';
 import { PostgresOwnerAuthStore } from '../../../../../lib/server/postgres-owner-auth-store';
 import { readAdminAuthConfig } from '../../../../../lib/server/admin-auth-policy';
 import { hashAdminSecret } from '../../../../../lib/server/admin-session';
@@ -25,12 +26,24 @@ function readCookie(request: Request, name: string) {
 
 export async function POST(request: Request) {
   const config = readAdminAuthConfig(process.env);
+  // LB-B30: Origin + Content-Type guard FIRST (before any session or cookie read), then session,
+  // then the per-session CSRF token. This route registers a credential, so all three are required.
+  const rejected = guardAdminMutation(request, config, ['application/json']);
+  if (rejected) return rejected;
   if (!config.enabled) return new Response('Not found', { status: 404 });
 
   const pool = getPool();
   const store = new PostgresOwnerAuthStore(pool);
   const session = await loadAdminSession(request, config, store);
   if (!session) return new Response('Unauthorized', { status: 401 });
+  try {
+    verifyAdminCsrf(request, session.csrfHash, config);
+  } catch {
+    return new Response(JSON.stringify({ error: 'request_rejected' }), {
+      status: 403,
+      headers: { 'content-type': 'application/json', 'cache-control': 'no-store' },
+    });
+  }
 
   const nonce = readCookie(request, '__Host-learnbox_admin_addkey');
   if (!nonce) return new Response('Missing ceremony', { status: 400 });
