@@ -71,7 +71,8 @@ export function runOne(candidate, model, attKind, N, seed, options = {}) {
     retSum: 0, retN: 0, hist: emptyHist(), histN: 0,
     b5Reviews: 0, b5Unknown: 0, b5RetSum: 0, b5CardDays: 0, b5Intervals: [],
     maxInterval: 0, drop2: 0, unknownDrops: 0, changes: 0, reversals: 0,
-    trans: Array.from({ length: 6 }, () => new Array(6).fill(0)),
+    transK: Array.from({ length: 6 }, () => new Array(6).fill(0)),
+    transU: Array.from({ length: 6 }, () => new Array(6).fill(0)),
     snapshots: {},
   };
   const lastDir = new Int8Array(N);
@@ -117,7 +118,7 @@ export function runOne(candidate, model, attKind, N, seed, options = {}) {
     lastAns[i] = day;
     if (preBox === 0) return;
     s.reviews++;
-    s.trans[preBox][postBox]++;
+    (known ? s.transK : s.transU)[preBox][postBox]++;
     if (known) { s.knownTot++; if (preBox < 5 && postBox === preBox) s.knownSame++; }
     else { s.unknownTot++; if (preBox > 1 && postBox === preBox) s.unknownSame++; if (preBox - postBox >= 2) s.drop2++; if (preBox > 1) s.unknownDrops++; }
     if (postBox !== preBox) {

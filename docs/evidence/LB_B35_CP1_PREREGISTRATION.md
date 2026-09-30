@@ -199,3 +199,20 @@ been computed) and are committed before the simulator. Later amendments, if any,
   required). The 9 early rows are recorded as an unresolved data-provenance finding and excluded from G5.**
   This changes a pre-registered gate after seeing its first result, so it is stated openly; it cannot
   favor any candidate because G5 does not involve candidates, only the baseline simulator.
+- **A14 (decision-rule details, written after the grid was computed but before any result was opened).**
+  The raw grid (`grid.json`, 100 seeds, sha256 `8177603e1d68c7ea7891670490fd2519bbfed65df5abc1815e5cb924fe1ac167`)
+  exists; no table, mean or comparison from it has been viewed. Fixed now:
+  (a) **Simplicity order for the Section 6 tie-break**, derived from definitions and not from results:
+  `{LAD-R, LAD-B}` (read only `stability`; no constant beyond the canonical Box edges) `<` `ENG-CLAMP`
+  (reads `stability`; constants 1.8 and 0.35) `<` `{ENG-LATE, ENG-LAPSE}` (additionally read
+  `last_reviewed_at` / `lapses`) `<` `V1` (as shipped, three mutable fields). Among Box-5 axes: F21 `<` G3-365 `=` G3-180.
+  (b) **Ablation** is evaluated for each Box-5 axis separately (F21 and G3-365); a component is kept
+  only if it passes on both. Per cell the paired knowledge-fraction difference is the mean over the 100
+  seeds with a 95 % percentile bootstrap CI (2,000 resamples, PRNG seed 20261001); the cell passes if the
+  mean is at least +0.01, the CI excludes zero and review load is at most 1.05 times the reference.
+  (c) **Dominance** uses "at least as good" to mean "not worse than the tie margin", and "strictly better"
+  to mean "better than the tie margin". Load is `reviews` completed by day 365.
+  (d) **G1** is judged on the definition (is an upper bound on the interval part of the policy?) and the
+  empirical maximum interval is reported beside it; **G3** is executed, not reasoned: all-Known, one
+  session per day, must reach Box 5 by day 90; **G2** is judged from the Known/Unknown transition matrices
+  of the M-const cells; **G4** is judged by whether every read field exists in `card_schedules`.
