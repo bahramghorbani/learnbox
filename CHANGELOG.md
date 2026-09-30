@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.2.1 — LB-B29 shared mutation guard (released 2026-09-30)
+
+Released as commit `4ade0a885fa93a418db8cde94b81a206bcd80860`, tag `v1.2.1`, image
+`sha256:5370578d187cd51cdecf230bc5c0f1e06a6df4c6a6358ce93da62ce7d6b86957`. No database migrations.
+
+- One `guardMutation` for every cookie-authenticated browser mutation: Origin/CSRF and content-type,
+  one rejection contract (`403 request_rejected`, `no-store`), evaluated before authentication.
+- `POST /api/auth/logout` and `PATCH /api/learner/profile/update` previously enforced no Origin check.
+- Account deletion's origin rejection is now `403` (was `400`); the UI distinguishes it from a
+  wrong-phone confirmation.
+- Route-inventory regression test for all mutating routes.
+- `undici` override to >= 6.28.1 (GHSA-rfgv-xxqx-mfg5).
+
 ## v1.2.0 — Option B (released 2026-09-29)
 
 Released as commit `468f05463df94cf47e088960640c2b6b95f0e370`, tag `v1.2.0`, image
