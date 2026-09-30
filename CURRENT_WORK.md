@@ -4,10 +4,38 @@
 
 ## Active work
 
-**No feature work is active.** v1.2.0 is released and closed (below). The only queued item is the
-security-hardening patch `LB-B29` — **recorded, scoped, not started**; implementation needs the
-owner's go-ahead. Deferred but not cancelled: `LB-B19` (reminders), `LB-B28b` (photo upload),
-`LB-B17` (Store).
+**No feature work is active.** v1.2.0 and the v1.2.1 security patch (`LB-B29`) are released and
+closed (below). Nothing further is approved for implementation. Deferred but not cancelled:
+`LB-B19` (reminders), `LB-B28b` (photo upload), `LB-B17` (Store).
+
+## v1.2.1 LB-B29 — released
+
+Shipped to Production on 2026-09-30. Security hardening only: **no migrations, no schema or data
+change.** `main` is documentation-only ahead of the shipped commit; that is not application drift and
+must never trigger a deploy.
+
+|                    |                                                                                |
+| ------------------ | ------------------------------------------------------------------------------ |
+| Application commit | `4ade0a885fa93a418db8cde94b81a206bcd80860`                                     |
+| Tag                | `v1.2.1` (annotated, fixed to the commit above; **not** on the `main` tip)     |
+| GitHub Release     | `v1.2.1`                                                                       |
+| Image digest       | `sha256:5370578d187cd51cdecf230bc5c0f1e06a6df4c6a6358ce93da62ce7d6b86957`      |
+| Database           | unchanged — ledger `0022`, 22 rows, 38 tables                                  |
+| Rollback target    | v1.2.0 image `sha256:358cd50c05b3` (`learnbox-app:rollback-pre-v121-358cd50c`) |
+
+Delivered: one shared `guardMutation` (`apps/website/lib/mutation-guard.ts`) for every
+cookie-authenticated browser mutation, running in the `route.ts` file before authentication and before
+any body read; `logout` and `profile/update` now enforce Origin; a rejected request returns
+`403 request_rejected` + `no-store` and changes nothing; a route-inventory test fails the build on any
+unclassified, unguarded, guard-after-auth or self-implemented-Origin route; `undici` resolves to
+
+> = 6.28.1 (GHSA-rfgv-xxqx-mfg5, PR #323).
+
+Verified live: source/tag/label/image/container/`APP_SOURCE_SHA` agree, container healthy with 0
+restarts; anonymous and authenticated mutation-guard matrix, protected media and logout revocation
+pass on Production; owner row, schedule and review history byte-identical before and after.
+Staging found that the first build guarded the handlers but not the `route.ts` entry points; that was
+fixed before merge and is now covered by the inventory test.
 
 ## v1.2.0 Option B — released
 
@@ -98,14 +126,8 @@ An active timer is not a successful execution, and neither is a green `Result`: 
 `ExecMainStartTimestamp` distinguishes the two. The uptime monitor and the error scan have both
 really executed and succeeded.
 
-## Open security finding (queued, not started)
-
-`LB-B29`: Origin/CSRF enforcement is not consistent across state-changing routes;
-`PATCH /api/learner/profile/update` and `POST /api/auth/logout` have none. Scope, audit results and
-acceptance criteria are in `BACKLOG.md`. Audit the whole route set before changing any single route.
-
 ## Standing constraints
 
 1. Keep Production change, database mutation, credential rotation and SMS configuration behind their existing owner gates; a live release does not open them.
 2. Preserve rollback and backup evidence; deletion requires explicit owner authorization naming the specific artifacts.
-3. The repository stays private, `v1.0.0`, `v1.1.0` and `v1.2.0` do not move, history is not rewritten, media is not purged, and protected-media authentication is not weakened.
+3. The repository stays private, `v1.0.0`, `v1.1.0`, `v1.2.0` and `v1.2.1` do not move, history is not rewritten, media is not purged, and protected-media authentication is not weakened.
