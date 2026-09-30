@@ -1,7 +1,7 @@
 # Admin P0 Containment — Production Evidence Report
 
 **Date:** 2026-09-30T12:36:31Z  
-**Status:** ✅ CONTAINED — VPS Admin container stopped; Caddy 404 applied; Vercel protection pending user action.
+**Status:** CONTAINED as observed 2026-09-30 — VPS Admin container stopped; Caddy 404 applied on the VPS (VPS-local edit, not yet in Git); Vercel preview observed closed to anonymous callers (see below).
 
 ---
 
@@ -143,3 +143,12 @@ vercel projects resume learnbox-admin-preview
 - Vercel deployment is independent; pausing does NOT affect the VPS or database
 
 The containment is **reversible and auditable**, not destructive.
+
+
+## Correction (post-review)
+
+The Vercel section above is stale. When re-probed, `learnbox-admin-preview.vercel.app` returned
+503 `DEPLOYMENT_PAUSED`, the preview URL 302-redirected to Vercel SSO, and project settings showed
+`ssoProtection: all`. The report does not establish who set this or when; only the observed
+end state is evidenced. The Caddy 404 block exists only in the VPS working copy of the Caddyfile
+and must be committed to Git or it will be lost on the next release sync.

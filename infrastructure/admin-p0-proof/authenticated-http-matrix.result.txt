@@ -1,0 +1,50 @@
+PASS valid session: GET /api/auth/session 200 -> 200 {"authenticated":true,"recent":true}
+PASS valid session: GET /api/content/review 200 (server-backed queue) -> 200 {"items":[{"cardVersionId":"7a2a3507-24c5-5c4e-b619-7ecf4ec0
+PASS review queue served from DB (35 needs_review candidates) -> items=35
+PASS review response no-store -> private, no-store, max-age=0
+PASS authenticated owner: legacy GET /api/users closed (404/405, never 2xx) -> 404
+PASS authenticated owner: legacy POST /api/users closed (404/405, never 2xx) -> 405
+PASS authenticated owner: legacy PATCH /api/users closed (404/405, never 2xx) -> 405
+PASS authenticated owner: legacy DELETE /api/users closed (404/405, never 2xx) -> 405
+PASS authenticated owner: legacy GET /api/users/<id> closed (404/405, never 2xx) -> 404
+PASS authenticated owner: legacy POST /api/users/<id> closed (404/405, never 2xx) -> 405
+PASS authenticated owner: legacy PATCH /api/users/<id> closed (404/405, never 2xx) -> 404
+PASS authenticated owner: legacy DELETE /api/users/<id> closed (404/405, never 2xx) -> 405
+PASS authenticated owner: legacy GET /api/banners closed (404/405, never 2xx) -> 404
+PASS authenticated owner: legacy POST /api/banners closed (404/405, never 2xx) -> 404
+PASS authenticated owner: legacy PATCH /api/banners closed (404/405, never 2xx) -> 405
+PASS authenticated owner: legacy DELETE /api/banners closed (404/405, never 2xx) -> 404
+PASS authenticated owner: legacy GET /api/packs closed (404/405, never 2xx) -> 404
+PASS authenticated owner: legacy POST /api/packs closed (404/405, never 2xx) -> 404
+PASS authenticated owner: legacy PATCH /api/packs closed (404/405, never 2xx) -> 404
+PASS authenticated owner: legacy DELETE /api/packs closed (404/405, never 2xx) -> 405
+PASS authenticated owner: legacy GET /api/gateways closed (404/405, never 2xx) -> 404
+PASS authenticated owner: legacy POST /api/gateways closed (404/405, never 2xx) -> 404
+PASS authenticated owner: legacy PATCH /api/gateways closed (404/405, never 2xx) -> 404
+PASS authenticated owner: legacy DELETE /api/gateways closed (404/405, never 2xx) -> 405
+PASS authenticated owner: legacy GET /api/transactions closed (404/405, never 2xx) -> 404
+PASS authenticated owner: legacy POST /api/transactions closed (404/405, never 2xx) -> 405
+PASS authenticated owner: legacy PATCH /api/transactions closed (404/405, never 2xx) -> 405
+PASS authenticated owner: legacy DELETE /api/transactions closed (404/405, never 2xx) -> 405
+PASS reset_progress erased nothing (users still present)
+PASS review check [no CSRF header] rejected -> 400 Invalid request
+PASS review check [wrong CSRF header] rejected -> 400 Invalid request
+PASS review check [another session's CSRF] rejected -> 400 Invalid request
+PASS review check [valid CSRF, foreign origin] rejected -> 400 Invalid request
+PASS review check [valid CSRF, text/plain] rejected -> 400 Invalid request
+PASS review check [valid CSRF + origin + CT + idempotency key] -> 200 applied -> 200 {"status":"applied"}
+PASS ...and the pending check row was updated to passed by learnbox_admin
+PASS replay with same idempotency key is idempotent (still exactly one reviewed row) -> 200 {"status":"idempotent"}
+PASS non-recent session: decision requires re-authentication (428) -> 428 {"code":"reauthentication_required"}
+PASS add-passkey/verify valid session, NO csrf -> rejected -> 403
+PASS add-passkey/verify valid session, wrong csrf -> rejected -> 403
+PASS logout without CSRF rejected, session NOT revoked -> 400
+PASS logout with CSRF -> 204 -> 204
+PASS logout cleared the session cookie -> __Host-learnbox_admin_csrf=; Max-Age=0; Path=/; Secure; SameSite=Strict
+PASS session row revoked in DB
+PASS revoked session can no longer read the queue (401) -> 401
+PASS replayed logout with revoked session rejected -> 400
+PASS idle-expired session (16 min) rejected -> 401
+PASS no decisions / review_events / schedules / users changed by the whole run (audit_logs may gain rows) -> 0|0|0|0|2 -> 0|1|0|0|2
+
+TOTAL 48 PASS 48 FAIL 0
