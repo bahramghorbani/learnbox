@@ -191,6 +191,25 @@ progress, content or users.
 | LB-B34 Admin/learner data and logic unification       | TECH DEBT          | **PLANNED** (P0 complete; not started). Shared repositories/services; database-backed review; remove the payments surface.                                                                              |
 | LB-B13 Admin operations (redesign and feature parity) | PRODUCT DEBT       | **PLANNED** (after LB-B30–B34). Scope waits for the compatibility phase.                                                                                                                                |
 
+### Learning system unification (owner decision 2026-10-01)
+
+Fix and unify the learning system before any new feature, Admin redesign or Store work. One umbrella
+item, no duplicates: LB-B11 was delivered in v1.2.0, so only its remaining inconsistencies (Progress
+bucketing days in UTC, four definitions of "learned") are tracked here; LB-B34 consumes the shared
+module this item produces and the learning-side of Admin is not re-listed. Evidence and pinned defects:
+[`docs/evidence/LB_B35_CP0_CHARACTERIZATION.md`](docs/evidence/LB_B35_CP0_CHARACTERIZATION.md).
+
+| Item                               | Class      | Note                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| ---------------------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| LB-B35 Learning system unification | BUG / DEBT | **CP0 characterization complete (tests and evidence only; no behavior change). CP1 awaits owner approval.** Decided: binary «بلد بودم» / «بلد نبودم»; provisional Learned = Box 4+, Mastered = Box 5; historical projection forgot→unknown, hard/remembered/mastered→known with `review_events` unchanged; remove the onboarding-goal step (no data effect, nothing to migrate). **Scheduler policy is undecided** and is chosen in CP1 from pre-registered criteria. `packages/learning-engine` becomes the only source of learning rules; no SQL or Admin reimplementation. |
+
+Defects reproduced in CP0: four definitions of "learned"; Accuracy undercounts `mastered`/`hard`;
+Today (learner timezone) and Progress (UTC) bucket days differently; no per-user-day new-card cap;
+new-card choice decided by card UUID; resume by index; sign-out wipes unsynced answers (and other
+accounts' queues); a corrupt queue entry deletes the whole queue; a server-rejected answer retries
+forever; difficulty and lapses never affect the interval; lateness is ignored; Admin user detail
+queries columns (`rating`, `created_at`) that do not exist.
+
 ### Carried forward, still open
 
 | Item                                         | Why it is still open                                                                                                                                                                                                                                                              |
