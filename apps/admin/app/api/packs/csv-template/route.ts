@@ -1,7 +1,11 @@
+import { legacyAdminRouteGate } from '../../../../lib/server/admin-legacy-routes';
+
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export function GET() {
+  const disabled = legacyAdminRouteGate();
+  if (disabled) return disabled;
   const csv = `lemma,article,part_of_speech,cefr,meanings,example_de,example_fa
 der Koffer,der,noun,A1,چمدان|ساک,Ich packe meinen Koffer.,من چمدانم را جمع می‌کنم.
 reisen,,verb,A1,سفر کردن|مسافرت کردن,Wir reisen nach Berlin.,ما به برلین سفر می‌کنیم.

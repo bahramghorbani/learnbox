@@ -4,6 +4,7 @@ import { getSharedAdminDatabasePool } from '../../../lib/server/admin-database-p
 import { loadAdminSession } from '../../../lib/server/admin-route-security';
 import { PostgresOwnerAuthStore } from '../../../lib/server/postgres-owner-auth-store';
 import { readAdminAuthConfig } from '../../../lib/server/admin-auth-policy';
+import { legacyAdminRouteGate } from '../../../lib/server/admin-legacy-routes';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -26,6 +27,9 @@ async function requireSession(request: Request) {
 }
 
 export async function GET(request: Request) {
+  const disabled = legacyAdminRouteGate();
+  if (disabled) return disabled;
+
   const session = await requireSession(request);
   if (!session) {
     console.error('[admin/users] session check failed - returning 401');

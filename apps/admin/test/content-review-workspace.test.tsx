@@ -47,9 +47,8 @@ async function renderWorkspace(): Promise<Rendered> {
   };
 }
 
-describe('ContentReviewWorkspace (local admin content preview)', () => {
+describe('ContentReviewWorkspace (unauthenticated shell, LB-B30)', () => {
   beforeEach(() => {
-    // No splash route exists in a unit environment; the splash panel must degrade to unavailable.
     vi.stubGlobal(
       'fetch',
       vi.fn(async () => ({ ok: false, status: 404 }) as unknown as Response),
@@ -60,81 +59,35 @@ describe('ContentReviewWorkspace (local admin content preview)', () => {
     vi.unstubAllGlobals();
   });
 
-  it('shows the complete Start Pack review queue of 35 drafts and keeps publication blocked', async () => {
+  it('renders a content-free shell without a signed-in server session', async () => {
     const rendered = await renderWorkspace();
     try {
       expect(rendered.text).toContain('بازبینی محتوا');
-      expect(rendered.text).toContain('۳۵ کارت در انتظار بررسی');
-      expect(rendered.container.querySelectorAll('[data-review-item]')).toHaveLength(35);
-      expect(
-        rendered.container.querySelectorAll('[data-review-item="start-a1-haus"]'),
-      ).toHaveLength(1);
-      expect(
-        rendered.container.querySelectorAll('[data-review-item="start-a1-supermarkt"]'),
-      ).toHaveLength(1);
-      expect(rendered.text).toContain('انتشار مسدود است');
-      expect(rendered.text).toContain('انتشار بسته هنوز ممکن نیست');
+      expect(rendered.text).toContain('برای مشاهدهٔ محتوای بازبینی باید با ورود امن وارد شوید');
+      expect(rendered.container.querySelector('[data-review-unavailable="true"]')).not.toBeNull();
+      // No learner card content, queue rows, gate, media or release panel may render.
+      expect(rendered.container.querySelectorAll('[data-review-item]')).toHaveLength(0);
+      expect(rendered.container.querySelectorAll('.review-gate-list')).toHaveLength(0);
+      for (const leaked of [
+        'das Haus',
+        'die Häuser',
+        'خانه',
+        'start-a1-',
+        'Das Haus ist klein.',
+        'Goethe A1',
+      ]) {
+        expect(rendered.text).not.toContain(leaked);
+      }
     } finally {
       await rendered.unmount();
     }
   });
 
-  it('derives the review card from the draft record instead of fabricating review state', async () => {
+  it('offers no local approve/return controls that could be mistaken for persisted review', async () => {
     const rendered = await renderWorkspace();
     try {
-      // Real draft content for start-a1-haus (content/packs/learnbox-start).
-      expect(rendered.text).toContain('das Haus');
-      expect(rendered.text).toContain('die Häuser');
-      expect(rendered.text).toContain('haʊs');
-      expect(rendered.text).toContain('خانه');
-      expect(rendered.text).toContain('اسم');
-      expect(rendered.text).toContain('Das Haus ist klein.');
-      expect(rendered.text).toContain('خانه کوچک است.');
-      expect(rendered.text).toContain(
-        'Goethe A1 scope reference; German and Persian linguistic review recorded; remaining release gates pending.',
-      );
-
-      // The draft has no attached media, so no media may be shown as ready.
-      expect(rendered.text).toContain('رسانه‌ای برای این کارت ثبت نشده است');
-      expect(
-        rendered.container.querySelectorAll('[data-media-state="missing"]').length,
-      ).toBeGreaterThan(0);
-      expect(rendered.container.querySelectorAll('[data-media-state="attached"]')).toHaveLength(0);
-
-      // Fabricated review claims must not be rendered for an unreviewed draft.
-      expect(rendered.text).not.toContain('Das Haus ist groß.');
-      expect(rendered.text).not.toContain('۹۲٪');
-      expect(rendered.text).not.toContain('پیشنهاد آزمایشی');
-      expect(rendered.text).not.toContain('وضعیت آمادگی رسانه‌ها برای این کارت');
-      expect(rendered.text).not.toContain('ساختار کارت');
-      expect(rendered.text).not.toContain('پخش تلفظ');
-    } finally {
-      await rendered.unmount();
-    }
-  });
-
-  it('keeps the six-dimensional review gate pending and only previews local actions', async () => {
-    const rendered = await renderWorkspace();
-    try {
-      expect(rendered.text).toContain('گیت بررسی محتوا');
-      expect(
-        rendered.container.querySelectorAll('.review-gate-list [data-outcome="pending"]'),
-      ).toHaveLength(6);
-      expect(
-        rendered.container.querySelectorAll('.review-gate-list [data-outcome="passed"]'),
-      ).toHaveLength(0);
-
-      await rendered.approve();
-
-      // The action is scoped to the local preview label only: the underlying queue item and the
-      // gate stay untouched, so publication remains blocked.
-      const textAfterApprove = rendered.container.textContent ?? '';
-      expect(textAfterApprove).toContain('در پیش‌نمایش تأیید شد');
-      expect(
-        rendered.container.querySelectorAll('.review-gate-list [data-outcome="passed"]'),
-      ).toHaveLength(0);
-      expect(rendered.container.querySelectorAll('[data-review-item]')).toHaveLength(35);
-      expect(rendered.text).toContain('۳۵ کارت در انتظار بررسی');
+      expect(rendered.text).not.toContain('تأیید در پیش‌نمایش');
+      expect(rendered.text).not.toContain('بازگرداندن برای اصلاح');
     } finally {
       await rendered.unmount();
     }
@@ -323,17 +276,18 @@ describe('ServerBackedContentReview (authenticated server mode)', () => {
     }
   });
 
-  it('treats a 404 as the server runtime being disabled and keeps an explicitly labeled local-only mode', async () => {
+  it('treats a 404 as the server runtime being disabled and shows NO content', async () => {
     stubReviewFetch({
       '/api/content/review': () => jsonResponse({}, 404),
     });
     const rendered = await renderServer();
     try {
       expect(rendered.text).toContain('غیرفعال است');
-      expect(rendered.text).toContain('پیش‌نمایش محلی');
-      expect(rendered.text).toContain('۳۵ کارت در انتظار بررسی');
-      expect(rendered.text).toContain('تغییر فقط در پیش‌نمایش محلی ثبت می‌شود');
-      // The local-only fallback is explicitly labeled and never claims persistence.
+      expect(rendered.container.querySelector('[data-review-unavailable="true"]')).not.toBeNull();
+      expect(rendered.container.querySelectorAll('[data-review-item]')).toHaveLength(0);
+      for (const leaked of ['das Haus', 'start-a1-', '۳۵ کارت در انتظار بررسی']) {
+        expect(rendered.text).not.toContain(leaked);
+      }
       expect(rendered.text).not.toContain('ثبت بررسی در سرور انجام شد');
     } finally {
       await rendered.unmount();
@@ -703,7 +657,7 @@ describe('ServerBackedContentReview (authenticated review composition)', () => {
     const disabled = await renderServer();
     try {
       expect(disabled.container.querySelector('[data-review-state="disabled"]')).not.toBeNull();
-      expect(disabled.text).toContain('پیش‌نمایش محلی');
+      expect(disabled.container.querySelector('[data-review-unavailable="true"]')).not.toBeNull();
       expect(disabled.container.querySelector('[data-review-panel]')).toBeNull();
     } finally {
       await disabled.unmount();

@@ -1,0 +1,95 @@
+PASS anon GET / returns 200 shell  -> 200
+PASS anon HTML has no card content (32 real lemmas + draft markers)  -> []
+PASS anon JS chunks (7) carry no card content  -> {}
+PASS anon GET /api/banners is not 200 / no data  -> 404
+PASS no-store on GET / (200)  -> private, no-store, max-age=0
+PASS no-store on GET /api/auth/session (401)  -> private, no-store, max-age=0
+PASS no-store on GET /api/banners (404)  -> private, no-store, max-age=0
+PASS no-store on GET /api/content/review (401)  -> private, no-store, max-age=0
+PASS legacy GET /api/banners fail-closed  -> status=404 cc=private, no-store, max-age=0
+PASS legacy POST /api/banners fail-closed  -> status=404 cc=private, no-store, max-age=0
+PASS legacy PUT /api/banners fail-closed  -> status=404 cc=private, no-store, max-age=0
+PASS legacy PATCH /api/banners fail-closed  -> status=405 cc=private, no-store, max-age=0
+PASS legacy DELETE /api/banners fail-closed  -> status=404 cc=private, no-store, max-age=0
+PASS legacy GET /api/packs fail-closed  -> status=404 cc=private, no-store, max-age=0
+PASS legacy POST /api/packs fail-closed  -> status=404 cc=private, no-store, max-age=0
+PASS legacy PUT /api/packs fail-closed  -> status=405 cc=private, no-store, max-age=0
+PASS legacy PATCH /api/packs fail-closed  -> status=404 cc=private, no-store, max-age=0
+PASS legacy DELETE /api/packs fail-closed  -> status=405 cc=private, no-store, max-age=0
+PASS legacy GET /api/packs/generate fail-closed  -> status=405 cc=private, no-store, max-age=0
+PASS legacy POST /api/packs/generate fail-closed  -> status=404 cc=private, no-store, max-age=0
+PASS legacy PUT /api/packs/generate fail-closed  -> status=405 cc=private, no-store, max-age=0
+PASS legacy PATCH /api/packs/generate fail-closed  -> status=405 cc=private, no-store, max-age=0
+PASS legacy DELETE /api/packs/generate fail-closed  -> status=405 cc=private, no-store, max-age=0
+PASS legacy GET /api/packs/import fail-closed  -> status=405 cc=private, no-store, max-age=0
+PASS legacy POST /api/packs/import fail-closed  -> status=404 cc=private, no-store, max-age=0
+PASS legacy PUT /api/packs/import fail-closed  -> status=405 cc=private, no-store, max-age=0
+PASS legacy PATCH /api/packs/import fail-closed  -> status=405 cc=private, no-store, max-age=0
+PASS legacy DELETE /api/packs/import fail-closed  -> status=405 cc=private, no-store, max-age=0
+PASS legacy GET /api/gateways fail-closed  -> status=404 cc=private, no-store, max-age=0
+PASS legacy POST /api/gateways fail-closed  -> status=404 cc=private, no-store, max-age=0
+PASS legacy PUT /api/gateways fail-closed  -> status=405 cc=private, no-store, max-age=0
+PASS legacy PATCH /api/gateways fail-closed  -> status=404 cc=private, no-store, max-age=0
+PASS legacy DELETE /api/gateways fail-closed  -> status=405 cc=private, no-store, max-age=0
+PASS legacy GET /api/transactions fail-closed  -> status=404 cc=private, no-store, max-age=0
+PASS legacy POST /api/transactions fail-closed  -> status=405 cc=private, no-store, max-age=0
+PASS legacy PUT /api/transactions fail-closed  -> status=405 cc=private, no-store, max-age=0
+PASS legacy PATCH /api/transactions fail-closed  -> status=405 cc=private, no-store, max-age=0
+PASS legacy DELETE /api/transactions fail-closed  -> status=405 cc=private, no-store, max-age=0
+PASS legacy GET /api/users fail-closed  -> status=404 cc=private, no-store, max-age=0
+PASS legacy POST /api/users fail-closed  -> status=405 cc=private, no-store, max-age=0
+PASS legacy PUT /api/users fail-closed  -> status=405 cc=private, no-store, max-age=0
+PASS legacy PATCH /api/users fail-closed  -> status=405 cc=private, no-store, max-age=0
+PASS legacy DELETE /api/users fail-closed  -> status=405 cc=private, no-store, max-age=0
+PASS legacy GET /api/users/00000000-0000-4000-8000-000000000000 fail-closed  -> status=404 cc=private, no-store, max-age=0
+PASS legacy POST /api/users/00000000-0000-4000-8000-000000000000 fail-closed  -> status=405 cc=private, no-store, max-age=0
+PASS legacy PUT /api/users/00000000-0000-4000-8000-000000000000 fail-closed  -> status=405 cc=private, no-store, max-age=0
+PASS legacy PATCH /api/users/00000000-0000-4000-8000-000000000000 fail-closed  -> status=404 cc=private, no-store, max-age=0
+PASS legacy DELETE /api/users/00000000-0000-4000-8000-000000000000 fail-closed  -> status=405 cc=private, no-store, max-age=0
+PASS legacy GET /api/packs/csv-template fail-closed  -> 404
+PASS POST /api/auth/add-passkey/verify [foreign origin] -> 403  -> got 403 cc=private, no-store, max-age=0 body={"error":"request_rejected"}
+PASS POST /api/auth/add-passkey/verify [missing origin] -> 403  -> got 403 cc=private, no-store, max-age=0 body={"error":"request_rejected"}
+PASS POST /api/auth/add-passkey/verify [origin null] -> 403  -> got 403 cc=private, no-store, max-age=0 body={"error":"request_rejected"}
+PASS POST /api/auth/add-passkey/verify [origin prefix trick] -> 403  -> got 403 cc=private, no-store, max-age=0 body={"error":"request_rejected"}
+PASS POST /api/auth/add-passkey/verify [good origin, text/plain] -> 415  -> got 415 cc=private, no-store, max-age=0 body={"error":"content_type_required"}
+PASS POST /api/auth/add-passkey/verify [good origin, form] -> 415  -> got 415 cc=private, no-store, max-age=0 body={"error":"content_type_required"}
+PASS POST /api/auth/add-passkey/verify [good origin, no CT] -> 415  -> got 415 cc=private, no-store, max-age=0 body={"error":"content_type_required"}
+PASS POST /api/auth/logout [foreign origin] -> 400  -> got 400 cc=private, no-store, max-age=0 body=Invalid authentication request
+PASS POST /api/auth/logout [missing origin] -> 400  -> got 400 cc=private, no-store, max-age=0 body=Invalid authentication request
+PASS POST /api/auth/logout [origin null] -> 400  -> got 400 cc=private, no-store, max-age=0 body=Invalid authentication request
+PASS POST /api/auth/logout [origin prefix trick] -> 400  -> got 400 cc=private, no-store, max-age=0 body=Invalid authentication request
+PASS POST /api/auth/logout [good origin, text/plain] -> 400  -> got 400 cc=private, no-store, max-age=0 body=Invalid authentication request
+PASS POST /api/auth/logout [good origin, form] -> 400  -> got 400 cc=private, no-store, max-age=0 body=Invalid authentication request
+PASS POST /api/auth/logout [good origin, no CT] -> 400  -> got 400 cc=private, no-store, max-age=0 body=Invalid authentication request
+PASS POST /api/content/review/check [foreign origin] -> 400  -> got 400 cc=private, no-store, max-age=0 body=Invalid request
+PASS POST /api/content/review/check [missing origin] -> 400  -> got 400 cc=private, no-store, max-age=0 body=Invalid request
+PASS POST /api/content/review/check [origin null] -> 400  -> got 400 cc=private, no-store, max-age=0 body=Invalid request
+PASS POST /api/content/review/check [origin prefix trick] -> 400  -> got 400 cc=private, no-store, max-age=0 body=Invalid request
+PASS POST /api/content/review/check [good origin, text/plain] -> 400  -> got 400 cc=private, no-store, max-age=0 body=Invalid request
+PASS POST /api/content/review/check [good origin, form] -> 400  -> got 400 cc=private, no-store, max-age=0 body=Invalid request
+PASS POST /api/content/review/check [good origin, no CT] -> 400  -> got 400 cc=private, no-store, max-age=0 body=Invalid request
+PASS POST /api/content/review/decision [foreign origin] -> 400  -> got 400 cc=private, no-store, max-age=0 body=Invalid request
+PASS POST /api/content/review/decision [missing origin] -> 400  -> got 400 cc=private, no-store, max-age=0 body=Invalid request
+PASS POST /api/content/review/decision [origin null] -> 400  -> got 400 cc=private, no-store, max-age=0 body=Invalid request
+PASS POST /api/content/review/decision [origin prefix trick] -> 400  -> got 400 cc=private, no-store, max-age=0 body=Invalid request
+PASS POST /api/content/review/decision [good origin, text/plain] -> 400  -> got 400 cc=private, no-store, max-age=0 body=Invalid request
+PASS POST /api/content/review/decision [good origin, form] -> 400  -> got 400 cc=private, no-store, max-age=0 body=Invalid request
+PASS POST /api/content/review/decision [good origin, no CT] -> 400  -> got 400 cc=private, no-store, max-age=0 body=Invalid request
+PASS POST /api/splash/replace [foreign origin] -> 400  -> got 400 cc=private, no-store, max-age=0 body=Invalid request
+PASS POST /api/splash/replace [missing origin] -> 400  -> got 400 cc=private, no-store, max-age=0 body=Invalid request
+PASS POST /api/splash/replace [origin null] -> 400  -> got 400 cc=private, no-store, max-age=0 body=Invalid request
+PASS POST /api/splash/replace [origin prefix trick] -> 400  -> got 400 cc=private, no-store, max-age=0 body=Invalid request
+PASS POST /api/splash/replace [good origin, text/plain] -> 400  -> got 400 cc=private, no-store, max-age=0 body=Invalid request
+PASS POST /api/splash/replace [good origin, form] -> 400  -> got 400 cc=private, no-store, max-age=0 body=Invalid request
+PASS POST /api/splash/replace [good origin, no CT] -> 400  -> got 400 cc=private, no-store, max-age=0 body=Invalid request
+PASS ordering: foreign origin + bogus cookie -> 403 request_rejected (guard first)  -> got 403 {"error":"request_rejected"}
+PASS ordering: good origin + bogus session -> 401 (session layer reached only after guard)  -> got 401
+PASS ordering /api/content/review/check: bad origin -> 400 (guard) but good origin/bogus session -> 401 (session)  -> bad=400 good=401
+PASS ordering /api/content/review/decision: bad origin -> 400 (guard) but good origin/bogus session -> 401 (session)  -> bad=400 good=401
+PASS passkey verify without session -> 401 (never 200)  -> 401
+PASS passkey options anon -> not 200  -> 401
+PASS anon GET /api/content/review not 200, no card data  -> got 401
+PASS anon POST /api/content/review/check not 200, no card data  -> got 401
+PASS anon POST /api/content/review/decision not 200, no card data  -> got 401
+
+TOTAL 93  PASS 93  FAIL 0

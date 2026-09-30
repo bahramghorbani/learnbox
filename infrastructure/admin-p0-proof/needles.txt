@@ -1,0 +1,35 @@
+Apfel
+Bahnhof
+Bett
+Brot
+Ei
+Entschuldigung
+Fenster
+Guten Tag
+Haus
+Kaffee
+Milch
+Schule
+Stadt
+Supermarkt
+Tee
+Tisch
+Tür
+Uhr
+Wasser
+Wie geht es Ihnen?
+Zimmer
+danke
+essen
+gehen
+glücklich
+groß
+kalt
+kaufen
+klein
+lernen
+müde
+neu
+trinken
+warten
+wohnen

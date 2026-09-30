@@ -4,6 +4,7 @@ import { getSharedAdminDatabasePool } from '../../../../lib/server/admin-databas
 import { loadAdminSession } from '../../../../lib/server/admin-route-security';
 import { PostgresOwnerAuthStore } from '../../../../lib/server/postgres-owner-auth-store';
 import { readAdminAuthConfig } from '../../../../lib/server/admin-auth-policy';
+import { legacyAdminRouteGate } from '../../../../lib/server/admin-legacy-routes';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -26,6 +27,9 @@ async function requireSession(request: Request) {
 }
 
 export async function GET(request: Request, { params }: { params: Promise<{ userId: string }> }) {
+  const disabled = legacyAdminRouteGate();
+  if (disabled) return disabled;
+
   const session = await requireSession(request);
   if (!session) return new Response('Unauthorized', { status: 401 });
 
@@ -68,22 +72,19 @@ export async function GET(request: Request, { params }: { params: Promise<{ user
   }
 }
 
-export async function PATCH(request: Request, { params }: { params: Promise<{ userId: string }> }) {
+export async function PATCH(request: Request) {
+  const disabled = legacyAdminRouteGate();
+  if (disabled) return disabled;
   const session = await requireSession(request);
   if (!session) return new Response('Unauthorized', { status: 401 });
 
-  const { userId } = await params;
-  const pool = getPool();
   const body = (await request.json()) as { action: string };
 
   try {
-    if (body.action === 'reset_progress') {
-      await pool.query('DELETE FROM review_events WHERE user_id = $1', [userId]);
-      await pool.query('DELETE FROM card_schedules WHERE user_id = $1', [userId]);
-      await pool.query('DELETE FROM learner_reconciliation_cursors WHERE user_id = $1', [userId]);
-      return Response.json({ status: 'progress_reset' });
-    }
-
+    // LB-B30: the former `reset_progress` action (three unwrapped hard DELETEs that bypassed the
+    // account-deletion safeguards) is removed. Support-initiated erasure must go through the shared
+    // deletion service in the compatibility phase; there is deliberately no replacement here.
+    void body;
     return Response.json({ error: 'unknown_action' }, { status: 400 });
   } catch (error) {
     console.error('[admin/users/action] failed:', error);

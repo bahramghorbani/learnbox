@@ -4,6 +4,7 @@ import { getSharedAdminDatabasePool } from '../../../lib/server/admin-database-p
 import { loadAdminSession } from '../../../lib/server/admin-route-security';
 import { PostgresOwnerAuthStore } from '../../../lib/server/postgres-owner-auth-store';
 import { readAdminAuthConfig } from '../../../lib/server/admin-auth-policy';
+import { legacyAdminRouteGate } from '../../../lib/server/admin-legacy-routes';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -28,6 +29,8 @@ async function requireSession(request: Request) {
 
 // GET /api/gateways — list payment gateways
 export async function GET(request: Request) {
+  const disabled = legacyAdminRouteGate();
+  if (disabled) return disabled;
   const session = await requireSession(request);
   if (!session) return new Response('Unauthorized', { status: 401 });
 
@@ -40,6 +43,8 @@ export async function GET(request: Request) {
 
 // POST /api/gateways — add gateway
 export async function POST(request: Request) {
+  const disabled = legacyAdminRouteGate();
+  if (disabled) return disabled;
   const session = await requireSession(request);
   if (!session) return new Response('Unauthorized', { status: 401 });
 
@@ -57,6 +62,8 @@ export async function POST(request: Request) {
 
 // PATCH /api/gateways — toggle active
 export async function PATCH(request: Request) {
+  const disabled = legacyAdminRouteGate();
+  if (disabled) return disabled;
   const session = await requireSession(request);
   if (!session) return new Response('Unauthorized', { status: 401 });
 

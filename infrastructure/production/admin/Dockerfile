@@ -29,6 +29,10 @@ WORKDIR /app
 COPY --from=builder --chown=nextjs:nodejs /workspace/apps/admin/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /workspace/apps/admin/.next/static ./apps/admin/.next/static
 COPY --from=builder --chown=nextjs:nodejs /workspace/apps/admin/public ./apps/admin/public
+ARG ADMIN_SOURCE_SHA=unknown
+LABEL org.opencontainers.image.revision="${ADMIN_SOURCE_SHA}"
+LABEL org.opencontainers.image.title="learnbox-admin"
+ENV ADMIN_SOURCE_SHA=${ADMIN_SOURCE_SHA}
 USER nextjs
 EXPOSE 3000
 CMD ["node", "apps/admin/server.js"]

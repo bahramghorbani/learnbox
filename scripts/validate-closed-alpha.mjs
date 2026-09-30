@@ -44,23 +44,30 @@ if (
 if (Array.isArray(config.invitationCodes) || Array.isArray(config.inviteCodes)) {
   errors.push('Plaintext invite codes must never be committed to configuration.');
 }
-if (!adminPreview.includes('تأیید در پیش‌نمایش')) {
-  errors.push('Admin preview must not label a local review action as real publication.');
+// LB-B30: the former bundled local-preview UI was removed (it shipped card content in the client
+// bundle). The invariants this gate protects are unchanged: Admin must never imply real
+// publication, never imply an authenticated session it does not have, and never show a fictional
+// editor identity. They are now asserted against the server-backed workspace.
+if (
+  !adminPreview.includes('انتشار همچنان غیرفعال') ||
+  !adminPreview.includes('data-publication="disabled"')
+) {
+  errors.push('Admin review must disclose that publication remains disabled.');
 }
-if (!adminPreview.includes('انتشار واقعی نیازمند ورود امن و ناشر مجاز')) {
-  errors.push('Admin preview must disclose the secure publisher boundary.');
+if (!adminPreview.includes('ورود امن فعال') || !adminPreview.includes('بدون ورود')) {
+  errors.push('Admin review must distinguish an authenticated server session from no sign-in.');
 }
-if (!adminPreview.includes('پیش‌نمایش محلی')) {
-  errors.push('Admin preview must identify itself as a local preview.');
+if (!adminPreview.includes('برای مشاهدهٔ محتوای بازبینی باید با ورود امن وارد شوید')) {
+  errors.push('Admin review must require a secure sign-in before showing any review content.');
 }
-if (!adminPreview.includes('بدون ورود یا دسترسی انتشار')) {
-  errors.push('Admin preview must not imply authenticated publishing access.');
-}
-if (!adminPreview.includes('بازبینی محتوا در این نسخه پیش‌نمایش است')) {
-  errors.push('Admin content review must disclose that it remains a preview.');
-}
-if (!adminPreview.includes('قابلیت‌های حساس فقط پس از ورود امن و فعال‌سازی')) {
-  errors.push('Admin sensitive capabilities must disclose their independent secure activation.');
+if (
+  /from\s+['"][^'"]*(content-models|\.\.\/lib\/(fixtures|drafts)|drafts?\/|manifest)[^'"]*['"]/.test(
+    adminPreview.replace(/import type[^\n]*\n/g, ''),
+  )
+) {
+  errors.push(
+    'Admin review must not import repository card content or manifests into the client bundle.',
+  );
 }
 if (adminPreview.includes('مریم رضایی')) {
   errors.push('Admin preview must not show a fictional authenticated editor identity.');
