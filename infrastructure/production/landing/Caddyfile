@@ -1,17 +1,14 @@
 (landing_site) {
 	encode zstd gzip
-
 	header {
 		-Server
 		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
 	}
-
 	reverse_proxy landing:3000 {
 		health_uri /
 		health_interval 30s
 		health_timeout 5s
 	}
-
 	log {
 		output stdout
 		format json
@@ -20,38 +17,32 @@
 
 (learner_app) {
 	encode zstd gzip
-
 	header {
 		-Server
 		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
 	}
-
 	reverse_proxy learner-app:3000 {
 		health_uri /
 		health_interval 30s
 		health_timeout 5s
 	}
-
 	log {
 		output stdout
 		format json
 	}
 }
 
-(admin_staging) {
+(admin_app) {
 	encode zstd gzip
-
 	header {
 		-Server
 		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
 	}
-
-	reverse_proxy admin-staging:3000 {
+	reverse_proxy admin-app:3000 {
 		health_uri /
 		health_interval 30s
 		health_timeout 5s
 	}
-
 	log {
 		output stdout
 		format json
@@ -67,7 +58,6 @@ www.learnboxapp.com {
 		-Server
 		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
 	}
-
 	redir https://learnboxapp.com{uri} permanent
 }
 
@@ -75,6 +65,15 @@ app.learnboxapp.com {
 	import learner_app
 }
 
-admin-staging.learnboxapp.com {
-	import admin_staging
+# TEMPORARY CONTAINMENT 2026-09-30 (LB-B30/B31): Admin is fixed-404 until proven safe.
+# Owner-approved and reversible: restore the previous block from
+# /home/ubuntu/learnbox/evidence/admin-containment-*/Caddyfile.pre-containment then reload.
+admin.learnboxapp.com {
+	header {
+		-Server
+		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+		Cache-Control "no-store"
+		X-Robots-Tag "noindex"
+	}
+	respond "Not Found" 404
 }
