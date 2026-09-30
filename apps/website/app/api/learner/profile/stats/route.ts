@@ -1,6 +1,13 @@
 import { Pool } from 'pg';
 import { authenticateLearner } from '../../../../../lib/learner-auth';
 import { maskIranianPhone } from '../../../../../lib/phone-mask';
+import {
+  readCurriculumProgress,
+  readLearnedByCefr,
+  readLearnerActivity,
+  readPackProgress,
+  recentDays,
+} from '../../../../../lib/learner-read-model';
 import { requireVerifiedDatabaseTls } from '../../../../../../api/dist/database/migration-runner.js';
 
 export const runtime = 'nodejs';
@@ -35,117 +42,17 @@ export async function GET(request: Request): Promise<Response> {
       return Response.json({ error: 'user_not_found' }, { status: 404, headers: privateHeaders });
     }
 
-    // Card stats by state
-    const cardStats = await pool.query(
-      `SELECT 
-        count(*) FILTER (WHERE state = 'new') as new_cards,
-        count(*) FILTER (WHERE state = 'learning') as learning_cards,
-        count(*) FILTER (WHERE state = 'review') as learned_cards,
-        count(*) as total_cards
-      FROM card_schedules WHERE user_id = $1`,
-      [userId],
-    );
-
-    // Total reviews
-    const reviewCount = await pool.query(
-      'SELECT count(*) as total FROM review_events WHERE user_id = $1',
-      [userId],
-    );
-
-    // Weekly activity (last 7 days)
-    const weeklyActivity = await pool.query(
-      `SELECT 
-        date_trunc('day', occurred_at)::date as day,
-        count(*) as reviews
-      FROM review_events 
-      WHERE user_id = $1 AND occurred_at >= now() - interval '7 days'
-      GROUP BY date_trunc('day', occurred_at)::date
-      ORDER BY day`,
-      [userId],
-    );
-
-    // Streak calculation
-    const streakResult = await pool.query(
-      `WITH daily AS (
-        SELECT DISTINCT date_trunc('day', occurred_at)::date as day
-        FROM review_events WHERE user_id = $1
-      ),
-      numbered AS (
-        SELECT day, day - (ROW_NUMBER() OVER (ORDER BY day))::int as grp
-        FROM daily
-      ),
-      streaks AS (
-        SELECT grp, count(*) as streak_length, max(day) as last_day
-        FROM numbered GROUP BY grp
-      )
-      SELECT streak_length, last_day FROM streaks
-      ORDER BY last_day DESC LIMIT 1`,
-      [userId],
-    );
-    const currentStreak = streakResult.rows[0];
-    const today = new Date().toISOString().split('T')[0];
-    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
-    const lastDay = currentStreak?.last_day?.toISOString?.()?.split?.('T')?.[0] ?? '';
-    const streakDays =
-      lastDay === today || lastDay === yesterday ? Number(currentStreak?.streak_length ?? 0) : 0;
-
-    // Best day ever
-    const bestDay = await pool.query(
-      `SELECT date_trunc('day', occurred_at)::date as day, count(*) as reviews
-      FROM review_events WHERE user_id = $1
-      GROUP BY date_trunc('day', occurred_at)::date
-      ORDER BY reviews DESC LIMIT 1`,
-      [userId],
-    );
-
-    // Longest streak ever
-    const longestStreak = await pool.query(
-      `WITH daily AS (
-        SELECT DISTINCT date_trunc('day', occurred_at)::date as day
-        FROM review_events WHERE user_id = $1
-      ),
-      numbered AS (
-        SELECT day, day - (ROW_NUMBER() OVER (ORDER BY day))::int as grp
-        FROM daily
-      ),
-      streaks AS (
-        SELECT count(*) as streak_length FROM numbered GROUP BY grp
-      )
-      SELECT max(streak_length) as longest FROM streaks`,
-      [userId],
-    );
-
-    // Packs with progress
-    const packs = await pool.query(
-      `SELECT p.id, p.display_name, p.is_free, p.price_tomans, p.target_item_count,
-        count(cs.card_id) FILTER (WHERE cs.state IS NOT NULL) as started_cards,
-        count(cs.card_id) FILTER (WHERE cs.state = 'review') as learned_cards,
-        count(pc.card_id) as total_cards
-      FROM packs p
-      JOIN pack_cards pc ON pc.pack_id = p.id
-      LEFT JOIN card_schedules cs ON cs.card_id = pc.card_id AND cs.user_id = $1
-      WHERE p.status = 'published'
-      GROUP BY p.id, p.display_name, p.is_free, p.price_tomans, p.target_item_count
-      ORDER BY p.created_at`,
-      [userId],
-    );
-
-    // CEFR level estimation
-    const cefrDistribution = await pool.query(
-      `SELECT COALESCE(NULLIF(cv.content_json->>'cefr', ''), 'unknown') AS cefr_level,
-        count(*) as count
-      FROM card_schedules cs
-      JOIN card_versions cv ON cv.card_id = cs.card_id AND cv.status = 'published'
-      WHERE cs.user_id = $1 AND cs.state = 'review'
-      GROUP BY COALESCE(NULLIF(cv.content_json->>'cefr', ''), 'unknown')
-      ORDER BY cefr_level`,
-      [userId],
-    );
+    // Same canonical read model as Today, Progress and Words (LB-B35 CP3); the learner's zone is the
+    // same `tz` the other screens send, and a missing or invalid zone is UTC.
+    const [curriculum, activity, packs, cefr] = await Promise.all([
+      readCurriculumProgress(pool, userId),
+      readLearnerActivity(pool, userId, new URL(request.url).searchParams.get('tz')),
+      readPackProgress(pool, userId),
+      readLearnedByCefr(pool, userId),
+    ]);
 
     // Canonical mask shared with /api/learner/profile; converted to Persian digits for display.
     const maskedPhone = maskIranianPhone(user.phone_e164 as string);
-
-    const stats = cardStats.rows[0];
 
     return Response.json(
       {
@@ -154,34 +61,32 @@ export async function GET(request: Request): Promise<Response> {
           maskedPhone,
           createdAt: user.created_at,
         },
+        timeZone: activity.timeZone,
         stats: {
-          newCards: Number(stats.new_cards),
-          learningCards: Number(stats.learning_cards),
-          learnedCards: Number(stats.learned_cards),
-          totalCards: Number(stats.total_cards),
-          totalReviews: Number(reviewCount.rows[0].total),
-          streakDays,
-          longestStreak: Number(longestStreak.rows[0]?.longest ?? 0),
-          bestDayReviews: Number(bestDay.rows[0]?.reviews ?? 0),
-          bestDayDate: bestDay.rows[0]?.day ?? null,
+          newCards: curriculum.new,
+          learningCards: curriculum.learning,
+          learnedCards: curriculum.learned,
+          masteredCards: curriculum.mastered,
+          totalCards: curriculum.total,
+          totalReviews: activity.totalReviews,
+          streakDays: activity.streak.current,
+          longestStreak: activity.streak.longest,
+          bestDayReviews: activity.bestDay?.reviews ?? 0,
+          bestDayDate: activity.bestDay?.day ?? null,
+          accuracyPercent: activity.accuracyAllTime.percent,
         },
-        weeklyActivity: weeklyActivity.rows.map((r) => ({
-          day: r.day,
-          reviews: Number(r.reviews),
+        weeklyActivity: recentDays(activity, 7).map(({ day, reviews }) => ({ day, reviews })),
+        packs: packs.map((pack) => ({
+          id: pack.id,
+          name: pack.name,
+          isFree: pack.isFree,
+          priceTomans: pack.priceTomans,
+          totalCards: pack.totalCards,
+          startedCards: pack.startedCards,
+          learnedCards: pack.learnedCards,
+          masteredCards: pack.masteredCards,
         })),
-        packs: packs.rows.map((p) => ({
-          id: p.id,
-          name: p.display_name,
-          isFree: p.is_free,
-          priceTomans: p.price_tomans,
-          totalCards: Number(p.total_cards),
-          startedCards: Number(p.started_cards),
-          learnedCards: Number(p.learned_cards),
-        })),
-        cefrDistribution: cefrDistribution.rows.map((r) => ({
-          level: r.cefr_level,
-          count: Number(r.count),
-        })),
+        cefrDistribution: cefr,
       },
       { headers: privateHeaders },
     );

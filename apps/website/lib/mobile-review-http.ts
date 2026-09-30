@@ -1,3 +1,4 @@
+import type { ReviewGrade } from '@learnbox/learning-engine';
 import {
   MobileReviewBatchRequestError,
   parseMobileReviewBatchRequest,
@@ -16,7 +17,7 @@ export type MobileReviewHttpDependencies = {
     userId: string;
     items: Array<{
       contentId: string;
-      grade: 'forgot' | 'hard' | 'remembered' | 'mastered';
+      grade: ReviewGrade;
       occurredAt: Date;
       clientEventId: string;
     }>;

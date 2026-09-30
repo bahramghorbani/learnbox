@@ -11,8 +11,8 @@ import { describe, expect, it } from 'vitest';
  * packages/learning-engine/src/definitions.ts.
  *
  * This test scans production sources for the hand-written forms of those rules. The LEGACY list is the
- * complete set of pre-existing copies found by the CP0/CP2 audit; CP3 must migrate each one and delete
- * it from this list. The list may only shrink: a copy that is not listed — a new redefinition — fails
+ * complete set of pre-existing copies found by the CP0/CP2 audit; CP3 migrated each one and emptied
+ * the list. The list may only shrink: a copy that is not listed — a new redefinition — fails
  * the build, and a listed copy that has already been removed also fails (so the list stays honest).
  */
 const root = join(__dirname, '../../..');
@@ -45,27 +45,14 @@ const PATTERNS: Array<{ rule: string; regex: RegExp }> = [
   { rule: 'local-day-bucket', regex: /date_trunc\(\s*'day'/ },
 ];
 
-/** file → rules it is still allowed to violate until CP3. */
-const LEGACY: Record<string, string[]> = {
-  'apps/website/app/api/learner/words/route.ts': ['box-threshold'],
-  'apps/website/app/api/learner/progress/route.ts': [
-    'box-threshold',
-    'state-as-learned',
-    'local-day-bucket',
-  ],
-  'apps/website/app/api/learner/today/route.ts': ['box-threshold'],
-  'apps/website/app/api/learner/profile/stats/route.ts': ['state-as-learned', 'local-day-bucket'],
-  'apps/website/app/LearnerHome.tsx': ['grade-literal-union'],
-  'apps/api/src/reviews/mobile-review-batch.service.ts': [
-    'grade-literal-union',
-    'grade-literal-set',
-  ],
-  'apps/api/src/reviews/mobile-review-batch.request.ts': ['grade-literal-set'],
-  'apps/website/lib/learner-review-web-sync.ts': ['grade-literal-union'],
-  'apps/website/lib/learner-review-web-client.ts': ['grade-literal-union'],
-  'apps/website/lib/learner-review-web-http.ts': ['grade-literal-union'],
-  'apps/website/lib/mobile-review-http.ts': ['grade-literal-union'],
-};
+/**
+ * file → rules it is still allowed to violate.
+ *
+ * CP3 migrated every copy the CP0/CP2 audit found, so this list is EMPTY and must stay empty: a
+ * hand-written Box threshold, learned-state predicate, grade set or day bucket anywhere in the
+ * scanned sources now fails the build. (An entry may only be added with an owner-approved reason.)
+ */
+const LEGACY: Record<string, string[]> = {};
 
 describe('LB-B35 CP2 — no independent redefinition of Box / Learned / Accuracy / grades / day', () => {
   const found: Record<string, string[]> = {};

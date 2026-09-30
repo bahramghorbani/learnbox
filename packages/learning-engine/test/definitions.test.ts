@@ -253,6 +253,23 @@ describe('LB-B35 CP2 — canonical local-day semantics', () => {
     expect(normalizeTimeZone('Not/AZone')).toBe('UTC');
     expect(normalizeTimeZone('x'.repeat(65))).toBe('UTC');
     expect(normalizeTimeZone('Asia/Tehran')).toBe('Asia/Tehran');
+    expect(normalizeTimeZone('UTC')).toBe('UTC');
+    expect(normalizeTimeZone('America/Argentina/Buenos_Aires')).toBe(
+      'America/Argentina/Buenos_Aires',
+    );
+    // Fixed UTC offsets are not IANA zones: Postgres would read '+03:30' with the opposite sign.
+    for (const offset of [
+      '+03:30',
+      '-05:00',
+      '+0330',
+      '3',
+      'UTC+3',
+      '+03',
+      'Etc/../../x',
+      'Asia//Tehran',
+    ]) {
+      expect(normalizeTimeZone(offset), offset).toBe('UTC');
+    }
   });
 
   it('adds days across month and year boundaries and leap days', () => {

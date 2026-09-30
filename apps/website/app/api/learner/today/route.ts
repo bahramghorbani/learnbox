@@ -1,6 +1,11 @@
 import { Pool } from 'pg';
 import { authenticateLearner } from '../../../../lib/learner-auth';
-import { readLearnerSummary } from '../../../../lib/learner-summary';
+import {
+  dayOfWeekOfKey,
+  readCurriculumProgress,
+  readLearnerActivity,
+  recentDays,
+} from '../../../../lib/learner-read-model';
 import { requireVerifiedDatabaseTls } from '../../../../../api/dist/database/migration-runner.js';
 
 export const runtime = 'nodejs';
@@ -35,33 +40,27 @@ export async function GET(request: Request): Promise<Response> {
   const pool = getPool();
 
   try {
-    // 0. Authoritative count/streak, bucketed in the LEARNER's timezone. Every
-    // surface (Today, Profile, home header) derives these from this one function,
-    // so they can never disagree with each other or with another device.
-    const summary = await readLearnerSummary(
+    // 0. Everything that depends on the learning day (today's count, Accuracy, the week, the
+    // streak) comes from ONE read of the learner's history in the learner's own time zone
+    // (LB-B35 CP3). Progress, Profile and the summary endpoint read the same model.
+    const activity = await readLearnerActivity(
       pool,
       userId,
       new URL(request.url).searchParams.get('tz'),
     );
-
-    // 1. Today's reviews (same learner-local day as the summary above)
-    const todayStats = await pool.query(
-      `SELECT
-         COUNT(*) as reviewed_today,
-         COUNT(*) FILTER (WHERE grade = 'remembered') as correct_today,
-         MAX(occurred_at) as last_review_at
+    const reviewedToday = activity.reviewedToday;
+    const correctToday = activity.accuracyToday.known;
+    // Canonical Accuracy: known answers (hard/remembered/mastered) over all answers. null = no
+    // answer yet; the wire format keeps a number for older clients, which render "—" at 0 reviews.
+    const accuracyPercent = activity.accuracyToday.percent ?? 0;
+    const lastToday = await pool.query(
+      `SELECT MAX(occurred_at) AS last_review_at
        FROM review_events
        WHERE user_id = $1
-         AND (occurred_at AT TIME ZONE $2)::date = (now() AT TIME ZONE $2)::date`,
-      [userId, summary.timeZone],
+         AND (occurred_at AT TIME ZONE $2)::date = $3::date`,
+      [userId, activity.timeZone, activity.today],
     );
-
-    const reviewedToday = parseInt(todayStats.rows[0]?.reviewed_today ?? '0', 10);
-    const correctToday = parseInt(todayStats.rows[0]?.correct_today ?? '0', 10);
-    const lastReviewAt = todayStats.rows[0]?.last_review_at ?? null;
-
-    const accuracyPercent =
-      reviewedToday > 0 ? Math.round((correctToday / reviewedToday) * 100) : 0;
+    const lastReviewAt = lastToday.rows[0]?.last_review_at ?? null;
 
     // 2. Cards due for review (today or overdue)
     const dueCards = await pool.query(
@@ -89,66 +88,18 @@ export async function GET(request: Request): Promise<Response> {
     // Total cards to review today = due + new (capped at daily goal)
     const totalTodayCards = dueCount + newCount;
 
-    // 4. Leitner box counts
-    const leitnerBoxes = await pool.query(
-      `SELECT
-         CASE
-           WHEN stability_days < 1 THEN 1
-           WHEN stability_days < 3 THEN 2
-           WHEN stability_days < 7 THEN 3
-           WHEN stability_days < 21 THEN 4
-           ELSE 5
-         END as box,
-         COUNT(*) as cnt
-       FROM card_schedules
-       WHERE user_id = $1
-       GROUP BY box
-       ORDER BY box`,
-      [userId],
-    );
-    const boxes = [0, 0, 0, 0, 0];
-    for (const row of leitnerBoxes.rows) {
-      const idx = parseInt(row.box, 10) - 1;
-      if (idx >= 0 && idx < 5) boxes[idx] = parseInt(row.cnt, 10);
-    }
+    // 4. Leitner box counts: the same curriculum-scoped canonical projection as every screen.
+    const progress = await readCurriculumProgress(pool, userId);
+    const boxes = [...progress.boxes];
 
-    // 5. Weekly streak (last 7 days)
-    const weeklyActivity = await pool.query(
-      `SELECT (occurred_at AT TIME ZONE $2)::date as day, COUNT(*) as cnt
-       FROM review_events
-       WHERE user_id = $1
-         AND (occurred_at AT TIME ZONE $2)::date >= (now() AT TIME ZONE $2)::date - 6
-       GROUP BY day
-       ORDER BY day`,
-      [userId, summary.timeZone],
-    );
-    const weekDays: { day: string; active: boolean }[] = [];
+    // 5. The last 7 local days (oldest first), each marked active if it holds any review.
     const persianDayNames = ['ی', 'د', 'س', 'چ', 'پ', 'ج', 'ش'];
-    // Calendar days as plain YYYY-MM-DD in the learner's zone; no server-clock or
-    // UTC conversion, which would shift the day for learners east of UTC.
-    const localDay = (offsetDays: number) => {
-      const key = new Intl.DateTimeFormat('en-CA', {
-        timeZone: summary.timeZone,
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-      }).format(new Date(Date.now() - offsetDays * 86_400_000));
-      return { key, dow: new Date(`${key}T12:00:00Z`).getUTCDay() };
-    };
-    const ymd = (value: unknown) =>
-      value instanceof Date
-        ? `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}-${String(value.getDate()).padStart(2, '0')}`
-        : String(value).slice(0, 10);
-    const activeDays = new Set(weeklyActivity.rows.map((r: { day: unknown }) => ymd(r.day)));
-    for (let i = 6; i >= 0; i--) {
-      const { key, dow } = localDay(i);
-      weekDays.push({
-        day: persianDayNames[dow],
-        active: activeDays.has(key),
-      });
-    }
+    const weekDays = recentDays(activity, 7).map(({ day, reviews }) => ({
+      day: persianDayNames[dayOfWeekOfKey(day)],
+      active: reviews > 0,
+    }));
 
-    const streakDays = summary.streakDays;
+    const streakDays = activity.streak.current;
 
     // 6. Due soon cards (top 3 closest to forgetting)
     const dueSoon = await pool.query(
@@ -196,20 +147,17 @@ export async function GET(request: Request): Promise<Response> {
     }
 
     // 8. Total stats (all time)
-    const totalStats = await pool.query(
-      `SELECT COUNT(*) as total_reviews FROM review_events WHERE user_id = $1`,
-      [userId],
-    );
-    const totalReviews = parseInt(totalStats.rows[0]?.total_reviews ?? '0', 10);
-
-    const longestStreak = summary.longestStreakDays;
+    const totalReviews = activity.totalReviews;
+    const longestStreak = activity.streak.longest;
 
     return Response.json(
       {
         reviewedToday,
         correctToday,
         accuracyPercent,
-        studyMinutesToday: null, // Duration is not measured by the review-event schema.
+        // Study time is not measured anywhere (review events carry no duration), so it is
+        // reported as unavailable, never estimated.
+        studyMinutesToday: null,
         totalTodayCards,
         dueCount,
         newCount,

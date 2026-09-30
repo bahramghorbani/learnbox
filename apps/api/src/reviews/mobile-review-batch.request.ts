@@ -1,7 +1,8 @@
+import { isReviewGrade } from '@learnbox/learning-engine';
+
 import type { MobileReviewBatchItem } from './mobile-review-batch.service.js';
 
 const MAX_BATCH_SIZE = 20;
-const GRADES = new Set(['forgot', 'hard', 'remembered', 'mastered']);
 const CURSOR_PATTERN = /^[0-9]+$/;
 
 export interface ParsedMobileReviewBatchRequest {
@@ -45,7 +46,7 @@ function parseItem(value: unknown): MobileReviewBatchItem {
   if (typeof value.contentId !== 'string' || value.contentId.length === 0) {
     throw new MobileReviewBatchRequestError('contentId must be a non-empty string.');
   }
-  if (typeof value.grade !== 'string' || !GRADES.has(value.grade)) {
+  if (typeof value.grade !== 'string' || !isReviewGrade(value.grade)) {
     throw new MobileReviewBatchRequestError('grade is invalid.');
   }
   if (

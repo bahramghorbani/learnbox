@@ -1,6 +1,8 @@
 import { normalizeTimeZone } from '@learnbox/learning-engine';
 import type { Pool } from 'pg';
 
+import { readLearnerActivity } from './learner-read-model';
+
 /**
  * Server-authoritative learning summary (LB-B11, CP-3).
  *
@@ -25,67 +27,23 @@ export interface LearnerSummary {
   timeZone: string;
 }
 
-const summarySql = `
-WITH per_day AS (
-  SELECT (occurred_at AT TIME ZONE $2)::date AS day, count(*) AS reviews
-  FROM review_events
-  WHERE user_id = $1
-  GROUP BY 1
-),
-today AS (SELECT (($3::timestamptz) AT TIME ZONE $2)::date AS d),
-numbered AS (
-  SELECT day, day - (ROW_NUMBER() OVER (ORDER BY day))::int AS grp
-  FROM per_day
-),
-runs AS (
-  SELECT count(*) AS len, max(day) AS last_day
-  FROM numbered
-  GROUP BY grp
-)
-SELECT
-  coalesce((SELECT reviews FROM per_day, today WHERE per_day.day = today.d), 0) AS reviewed_today,
-  coalesce(
-    (SELECT len FROM runs, today
-      WHERE runs.last_day BETWEEN today.d - 1 AND today.d
-      ORDER BY runs.last_day DESC LIMIT 1),
-    0
-  ) AS streak_days,
-  coalesce((SELECT max(len) FROM runs), 0) AS longest_streak_days,
-  (SELECT count(*) FROM per_day) AS active_days,
-  coalesce((SELECT sum(reviews) FROM per_day), 0) AS total_reviews
-`;
-
 // Canonical (LB-B35 CP2): one definition of the learner's time zone, shared with every layer.
 export { normalizeTimeZone };
 
-async function run(pool: Pool, userId: string, timeZone: string, asOf: Date) {
-  return pool.query(summarySql, [userId, timeZone, asOf.toISOString()]);
-}
-
 export async function readLearnerSummary(
-  pool: Pool,
+  pool: Pick<Pool, 'query'>,
   userId: string,
   requestedTimeZone: string | null | undefined,
   asOf: Date = new Date(),
 ): Promise<LearnerSummary> {
-  let timeZone = normalizeTimeZone(requestedTimeZone);
-  let result;
-  try {
-    result = await run(pool, userId, timeZone, asOf);
-  } catch (error) {
-    // Postgres can reject a zone name the JS runtime accepts. Degrade to UTC
-    // rather than failing the learner's whole home screen over a display detail.
-    if ((error as { code?: string }).code !== '22023' || timeZone === 'UTC') throw error;
-    timeZone = 'UTC';
-    result = await run(pool, userId, timeZone, asOf);
-  }
-  const row = result.rows[0] ?? {};
+  // One implementation of the learning day and the streak (LB-B35 CP3): the read model.
+  const activity = await readLearnerActivity(pool, userId, requestedTimeZone, asOf);
   return {
-    reviewedToday: Number(row.reviewed_today ?? 0),
-    streakDays: Number(row.streak_days ?? 0),
-    longestStreakDays: Number(row.longest_streak_days ?? 0),
-    activeDays: Number(row.active_days ?? 0),
-    totalReviews: Number(row.total_reviews ?? 0),
-    timeZone,
+    reviewedToday: activity.reviewedToday,
+    streakDays: activity.streak.current,
+    longestStreakDays: activity.streak.longest,
+    activeDays: activity.streak.activeDays,
+    totalReviews: activity.totalReviews,
+    timeZone: activity.timeZone,
   };
 }

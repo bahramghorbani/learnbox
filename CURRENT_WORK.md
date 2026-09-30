@@ -4,20 +4,16 @@
 
 ## Active work
 
-**No product feature work is active** (LB-B35 CP0/CP1 merged; CP2 awaiting review, below). v1.2.0 and the v1.2.1 security patch (`LB-B29`) are released and
+**No product feature work is active** (LB-B35 CP0–CP2 merged; CP3 awaiting review, below). v1.2.0 and the v1.2.1 security patch (`LB-B29`) are released and
 closed (below), and the Admin P0 credential cutover (`LB-B30`–`B33`) is complete (next section).
 Nothing further is approved for implementation: P1 compatibility and Admin redesign have **not** started. Deferred but not cancelled:
 `LB-B19` (reminders), `LB-B28b` (photo upload), `LB-B17` (Store).
 
-## LB-B35 Learning system unification — CP2 complete, awaiting owner review
+## LB-B35 Learning system unification — CP3 complete, awaiting owner review
 
-- **CP0** (PR #328, `d1f33a8`) and **CP1** (PR #329, `d0d63e4`) merged: characterization tests, simulation and policy evidence.
-- **Owner decisions after CP1:** ENG-CLAMP; Box 5 ×3 capped at 180 days; Unknown = one Box down; difficulty/lapses/lateness
-  removed from scheduling. Not implemented or activated.
-- **CP2** (branch `feat/lb-b35-cp2-canonical-definitions`): `packages/learning-engine/src/definitions.ts` +
-  `replay-compat.ts`, TypeScript↔Postgres agreement tests, a no-redefinition drift guard and a Known-progression
-  characterization. `docs/evidence/LB_B35_CP2_CANONICAL_DEFINITIONS.md`. **No scheduler, schema, migration, API behavior, UI,
-  Admin or Store change and no Production action.** CP3 starts only on an explicit owner signal; open decisions O1–O3 are in the evidence doc.
+- **CP0** (#328), **CP1** (#329), **CP2** (#330) merged. Owner decisions: ENG-CLAMP; Box 5 ×3 capped at 180 days; Unknown = one Box down; difficulty/lapses/lateness removed from scheduling (not implemented or activated).
+- **CP3** (branch `feat/lb-b35-cp3-canonical-read-paths`): Today, Progress, Words, Profile and the summary endpoint read one model (`apps/website/lib/learner-read-model.ts`) built on `definitions.ts`: Accuracy, Learned/Mastered/Box, curriculum denominator, learner-local days, and the future-day streak fix. Legacy grade unions and the fabricated study-minutes card are gone; the drift-guard allowlist is empty. **No scheduler, write path, schema, migration, binary UI, Admin, Store or Production change.** Evidence: `docs/evidence/LB_B35_CP3_CANONICAL_READ_PATHS.md`.
+- **Gates:** O1 (visible Box progress under ENG-CLAMP) is a scheduler-v2 activation gate; O2 (stored IANA zone) lands in a later additive checkpoint; CP4 needs the 2026-10-05 restore drill and explicit owner approval.
 
 ## Admin P0 (LB-B30–B33) — cut over, Admin still contained
 

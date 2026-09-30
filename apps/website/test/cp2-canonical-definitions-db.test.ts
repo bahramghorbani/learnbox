@@ -335,7 +335,7 @@ suite('CP2 — canonical local day and streak: TypeScript equals SQL', () => {
 });
 
 suite('CP2 — streak edge: a review stamped after "today" (ingest allows +5 min clock skew)', () => {
-  it('DEFECT pinned: shipped SQL loses the streak when a skewed event lands on tomorrow; canonical TS ignores future days', async () => {
+  it('FIXED in CP3: a skewed event landing on tomorrow no longer erases the streak', async () => {
     const zone = 'Asia/Tehran';
     const asOf = new Date('2026-10-01T20:26:00Z'); // 23:56 local Oct 1; local midnight (20:30Z) is 4 minutes away
     const user = await newLearner();
@@ -356,8 +356,9 @@ suite('CP2 — streak edge: a review stamped after "today" (ingest allows +5 min
     );
     const shipped = await readLearnerSummary(pool, user, zone, asOf);
     expect(canonical.current).toBe(3);
-    // The shipped query's run ends on a day after "today", so its BETWEEN filter drops the whole run.
-    expect(shipped.streakDays).toBe(0);
+    // v1.2.1 returned 0 here (its BETWEEN filter dropped a run that ended after "today"). The read
+    // model now ignores days after "today", and the summary endpoint uses it.
+    expect(shipped.streakDays).toBe(3);
   });
 });
 

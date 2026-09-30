@@ -1,4 +1,5 @@
 import {
+  type ReviewGrade,
   acknowledgeSyncEvents,
   loadSyncQueue,
   queueForRetry,
@@ -12,7 +13,7 @@ import { submitWebReviewBatch, type WebReviewItem } from './learner-review-web-c
 
 export type QueuedWebReview = {
   cardId: string;
-  grade: 'forgot' | 'hard' | 'remembered' | 'mastered';
+  grade: ReviewGrade;
   reviewedAt: string;
   requiresAttention?: boolean;
 };
