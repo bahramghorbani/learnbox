@@ -4,17 +4,18 @@
 
 ## Active work
 
-**No product feature work is active** (only the LB-B35 CP0 tests/docs below). v1.2.0 and the v1.2.1 security patch (`LB-B29`) are released and
+**No product feature work is active** (only LB-B35 CP0 [merged, PR #328] and CP1 [evidence only, below]). v1.2.0 and the v1.2.1 security patch (`LB-B29`) are released and
 closed (below), and the Admin P0 credential cutover (`LB-B30`–`B33`) is complete (next section).
 Nothing further is approved for implementation: P1 compatibility and Admin redesign have **not** started. Deferred but not cancelled:
 `LB-B19` (reminders), `LB-B28b` (photo upload), `LB-B17` (Store).
 
-## LB-B35 Learning system unification — CP0 characterization (unmerged, tests and docs only)
+## LB-B35 Learning system unification — CP0 merged, CP1 evidence awaiting owner review
 
-Branch `test/lb-b35-cp0-learning-characterization`. Owner-approved scope: CP0 only. Adds tests that pin
-the current learning behavior and reproduced defects, a `review_events` fingerprint helper, and
-`docs/evidence/LB_B35_CP0_CHARACTERIZATION.md`. **No scheduler, schema, API or UI behavior changes and no
-Production action.** CP1 (scheduler policy comparison) has **not** started and needs owner approval.
+- **CP0** (PR #328, merged `d1f33a8`): characterization tests and `docs/evidence/LB_B35_CP0_CHARACTERIZATION.md`.
+- **CP1** (branch `sim/lb-b35-cp1-scheduler-policy`, unmerged, evidence and scratch tooling only): pre-registration,
+  simulator, replay and `docs/evidence/LB_B35_CP1_REPORT.md`. **No scheduler, schema, API, UI, Admin or Store
+  change and no Production action.** The scheduler policy is **not chosen**: the report gives a
+  conditional recommendation and lists owner decisions. CP2 has **not** started and needs an explicit owner signal.
 
 ## Admin P0 (LB-B30–B33) — cut over, Admin still contained
 

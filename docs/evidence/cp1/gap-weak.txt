@@ -1,0 +1,28 @@
+learner model: weak {"type":"decay","m":0.5,"sigma":1,"G":1.5,"pNew":0.5}
+
+== absence 14 days (return on day 74)
+cand              dueOnReturn recoverySessions sessionsToClear(<=7d) K@before K@return K@return+30
+V1                       19.8            48.0                12.3     0.341     0.257       0.391
+LAD-R/G3-365             18.6            58.8                21.1     0.129     0.016       0.120
+LAD-B/G3-365             19.3            59.3                23.0     0.110     0.008       0.097
+ENG-CLAMP/G3-365         19.8            47.6                12.2     0.341     0.258       0.391
+ENG-LATE/G3-365          19.8            59.3                27.6     0.110     0.008       0.103
+ENG-LAPSE/G3-365         19.2            45.9                10.8     0.338     0.262       0.397
+
+== absence 30 days (return on day 90)
+cand              dueOnReturn recoverySessions sessionsToClear(<=7d) K@before K@return K@return+30
+V1                       21.8            47.1                 8.4     0.341     0.226       0.390
+LAD-R/G3-365             18.9            59.1                11.4     0.129     0.007       0.115
+LAD-B/G3-365             19.4            59.5                10.9     0.110     0.003       0.097
+ENG-CLAMP/G3-365         21.8            47.0                 8.4     0.341     0.226       0.390
+ENG-LATE/G3-365          19.9            59.3                11.4     0.110     0.004       0.102
+ENG-LAPSE/G3-365         21.3            45.9                10.0     0.338     0.236       0.395
+
+== absence 90 days (return on day 150)
+cand              dueOnReturn recoverySessions sessionsToClear(<=7d) K@before K@return K@return+30
+V1                       21.8            48.3                 3.8     0.341     0.156       0.385
+LAD-R/G3-365             19.0            59.0                 3.3     0.129     0.001       0.116
+LAD-B/G3-365             19.6            59.5                 3.4     0.110     0.001       0.096
+ENG-CLAMP/G3-365         21.8            47.9                 3.8     0.341     0.156       0.385
+ENG-LATE/G3-365          20.0            59.3                 3.3     0.110     0.001       0.103
+ENG-LAPSE/G3-365         21.3            47.0                 3.8     0.338     0.175       0.389

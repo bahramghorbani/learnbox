@@ -1,0 +1,57 @@
+{
+  "decay_familyBest": {
+    "LAD-R": 0.5,
+    "LAD-B": 0.417,
+    "ENG-CLAMP": 0.583
+  },
+  "decay_all": {
+    "cells": 48,
+    "share": {
+      "LAD-R/F21": 0,
+      "LAD-R/G3-365": 0.5,
+      "LAD-R/G3-180": 0.479,
+      "LAD-B/F21": 0,
+      "LAD-B/G3-365": 0.396,
+      "LAD-B/G3-180": 0.417,
+      "ENG-CLAMP/F21": 0.333,
+      "ENG-CLAMP/G3-365": 0.417,
+      "ENG-CLAMP/G3-180": 0.583
+    }
+  },
+  "decay_perAxis": {
+    "F21": {
+      "LAD-R/F21": 0.5,
+      "LAD-B/F21": 0.5,
+      "ENG-CLAMP/F21": 0.5
+    },
+    "G3-365": {
+      "LAD-R/G3-365": 0.5,
+      "LAD-B/G3-365": 0.417,
+      "ENG-CLAMP/G3-365": 0.729
+    },
+    "G3-180": {
+      "LAD-R/G3-180": 0.5,
+      "LAD-B/G3-180": 0.417,
+      "ENG-CLAMP/G3-180": 0.729
+    }
+  },
+  "const_familyBest": {
+    "LAD-R": null,
+    "LAD-B": null,
+    "ENG-CLAMP": null
+  },
+  "const_all": {
+    "cells": 0,
+    "share": {
+      "LAD-R/F21": null,
+      "LAD-R/G3-365": null,
+      "LAD-R/G3-180": null,
+      "LAD-B/F21": null,
+      "LAD-B/G3-365": null,
+      "LAD-B/G3-180": null,
+      "ENG-CLAMP/F21": null,
+      "ENG-CLAMP/G3-365": null,
+      "ENG-CLAMP/G3-180": null
+    }
+  }
+}

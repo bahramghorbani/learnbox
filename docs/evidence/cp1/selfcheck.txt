@@ -1,0 +1,5 @@
+PASS deterministic (same seed, same output) 
+PASS paired: different candidates share attendance+card params 
+PASS knowledge fraction within [0,1] for all candidates 
+INFO V1 recovery share N=300 p=.85: 0.601  p=.65: 0.780
+INFO LAD-R/F21 recovery share N=300 p=.85: 0.751  p=.65: 0.854

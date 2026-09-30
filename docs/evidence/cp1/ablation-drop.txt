@@ -1,0 +1,16 @@
+
+== floor
+ENG-CLAMP/G3-180   K365 0.870 reviews365 1332 recov 0.206 Unknown-leaves-Box-unchanged (const cells, all boxes): 0.009 G2 unknownRaise 0
+ENG-DROP/G3-180    K365 0.871 reviews365 1333 recov 0.206 Unknown-leaves-Box-unchanged (const cells, all boxes): 0.000 G2 unknownRaise 0
+ENG-CLAMP/G3-365   K365 0.864 reviews365 1323 recov 0.206 Unknown-leaves-Box-unchanged (const cells, all boxes): 0.009 G2 unknownRaise 0
+ENG-DROP/G3-365    K365 0.865 reviews365 1323 recov 0.206 Unknown-leaves-Box-unchanged (const cells, all boxes): 0.000 G2 unknownRaise 0
+ENG-CLAMP/F21      K365 0.889 reviews365 1578 recov 0.239 Unknown-leaves-Box-unchanged (const cells, all boxes): 0.003 G2 unknownRaise 0
+ENG-DROP/F21       K365 0.889 reviews365 1578 recov 0.238 Unknown-leaves-Box-unchanged (const cells, all boxes): 0.000 G2 unknownRaise 0
+
+== orig
+ENG-CLAMP/G3-180   K365 0.335 reviews365 2877 recov 0.672 Unknown-leaves-Box-unchanged (const cells, all boxes): 0.009 G2 unknownRaise 0
+ENG-DROP/G3-180    K365 0.335 reviews365 2877 recov 0.672 Unknown-leaves-Box-unchanged (const cells, all boxes): 0.000 G2 unknownRaise 0
+ENG-CLAMP/G3-365   K365 0.334 reviews365 2875 recov 0.672 Unknown-leaves-Box-unchanged (const cells, all boxes): 0.009 G2 unknownRaise 0
+ENG-DROP/G3-365    K365 0.335 reviews365 2875 recov 0.672 Unknown-leaves-Box-unchanged (const cells, all boxes): 0.000 G2 unknownRaise 0
+ENG-CLAMP/F21      K365 0.336 reviews365 2934 recov 0.704 Unknown-leaves-Box-unchanged (const cells, all boxes): 0.003 G2 unknownRaise 0
+ENG-DROP/F21       K365 0.336 reviews365 2934 recov 0.704 Unknown-leaves-Box-unchanged (const cells, all boxes): 0.000 G2 unknownRaise 0
