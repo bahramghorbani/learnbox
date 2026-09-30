@@ -8,6 +8,7 @@
 ## VPS Production Admin Containment
 
 ### Container State
+
 - **Status:** Stopped (exited 0 at 2026-09-30T12:36Z)
 - **Evidence:** `/home/ubuntu/learnbox/evidence/admin-containment-20260930T123631Z/`
   - `image-id.txt` → `d4f39bfc` (digest: `sha256:d4f39bfccfbd...`)
@@ -18,6 +19,7 @@
   - `image-history.txt` → layer history from `docker image history learnbox-admin:production`
 
 ### Front Door: Caddy 404
+
 - **Route:** `admin.learnboxapp.com` and `admin-staging.learnboxapp.com`
 - **Config:** `/srv/learnbox/releases/0a36cce8a0a2-phase1/infrastructure/production/landing/Caddyfile`
 - **Change:** Added fixed 404 for `admin.*` blocks (no restart required; live reload)
@@ -25,6 +27,7 @@
 - **Rollback:** Remove the handler block from Caddyfile; Caddy live-reloads in <1s
 
 ### Image Preservation
+
 - **Production image:** `learnbox-admin:production` (tagged as `learnbox-admin:evidence-d4f39bfc`)
 - **Action:** NOT deleted, NOT retagged, stored as evidence
 - **Reason:** P0 investigation requires comparing against source commit to determine if provenance is verifiable
@@ -33,6 +36,7 @@
 ---
 
 ## Learner App — No Change
+
 - **Status:** ✅ Untouched. Still running `learnbox-app:production` (v1.2.1, SHA `4ade0a8`)
 - **Health:** `/api/health` returns 200 OK, authenticated protected media working
 
@@ -41,11 +45,13 @@
 ## Vercel Admin Deployment
 
 ### `learnbox-admin-preview.vercel.app`
+
 - **Project:** `learnbox-admin-preview` (exists, deployments listed)
 - **Current state:** Live, 200 OK, unauthenticated card content visible
 - **Action needed:** User to apply reversible Vercel protection or pause via Vercel CLI/dashboard
 
 **Owner decision required:**
+
 ```bash
 # Option A: Pause the deployment (reversible)
 vercel projects pause learnbox-admin-preview
@@ -58,6 +64,7 @@ vercel projects pause learnbox-admin-preview
 ```
 
 **Do not:**
+
 - Delete the project
 - Delete past deployments
 - Modify environment variables
@@ -68,6 +75,7 @@ vercel projects pause learnbox-admin-preview
 ## Proof of Containment
 
 ### No Anonymous Access to Learner Content
+
 ```bash
 # VPS Admin blocked at HTTP layer
 $ curl -sS https://admin.learnboxapp.com/
@@ -100,6 +108,7 @@ $ curl -sS https://app.learnboxapp.com/api/health | jq .
 ## Rollback (manual, if needed)
 
 ### Restart VPS Admin
+
 ```bash
 cd /home/ubuntu/learnbox/admin
 docker compose -p learnbox-admin-production up -d
@@ -108,12 +117,14 @@ docker compose -p learnbox-admin-production up -d --no-build
 ```
 
 ### Restore Caddy routing
+
 ```bash
 # Remove the 404 handler from Caddyfile; Caddy reloads in <1s
 systemctl reload caddy
 ```
 
 ### Restore Vercel (if paused)
+
 ```bash
 vercel projects resume learnbox-admin-preview
 ```
@@ -122,16 +133,16 @@ vercel projects resume learnbox-admin-preview
 
 ## Files Preserved
 
-| Path | Size | Purpose |
-|------|------|---------|
-| `/home/ubuntu/learnbox/evidence/admin-containment-20260930T123631Z/` | ~520 KB | Full evidence snapshot |
-| `image-id.txt` | 72 B | Image SHA for comparison (provenance audit) |
-| `image-inspect.json` | 7.2 KB | OCI metadata; missing `ADMIN_SOURCE_SHA` (finding) |
-| `container-inspect.redacted.json` | 7.2 KB | Final container state (secrets masked) |
-| `container-last500.log` | 3.7 KB | Last output before stop |
-| `admin-compose.yaml` | 592 B | Service definition (backup) |
-| `image-history.txt` | 60 KB | Dockerfile layer history |
-| `learnbox-admin:evidence-d4f39bfc` | 442 MB | Production image (tagged for evidence) |
+| Path                                                                 | Size    | Purpose                                            |
+| -------------------------------------------------------------------- | ------- | -------------------------------------------------- |
+| `/home/ubuntu/learnbox/evidence/admin-containment-20260930T123631Z/` | ~520 KB | Full evidence snapshot                             |
+| `image-id.txt`                                                       | 72 B    | Image SHA for comparison (provenance audit)        |
+| `image-inspect.json`                                                 | 7.2 KB  | OCI metadata; missing `ADMIN_SOURCE_SHA` (finding) |
+| `container-inspect.redacted.json`                                    | 7.2 KB  | Final container state (secrets masked)             |
+| `container-last500.log`                                              | 3.7 KB  | Last output before stop                            |
+| `admin-compose.yaml`                                                 | 592 B   | Service definition (backup)                        |
+| `image-history.txt`                                                  | 60 KB   | Dockerfile layer history                           |
+| `learnbox-admin:evidence-d4f39bfc`                                   | 442 MB  | Production image (tagged for evidence)             |
 
 ---
 
@@ -143,7 +154,6 @@ vercel projects resume learnbox-admin-preview
 - Vercel deployment is independent; pausing does NOT affect the VPS or database
 
 The containment is **reversible and auditable**, not destructive.
-
 
 ## Correction (post-review)
 

@@ -16,7 +16,11 @@ const post = (headers: Record<string, string>) =>
 describe('guardAdminMutation (LB-B30)', () => {
   it('passes a same-origin JSON request', () => {
     expect(
-      guardAdminMutation(post({ origin: 'https://admin.example.test', 'content-type': 'application/json' }), enabled, ['application/json']),
+      guardAdminMutation(
+        post({ origin: 'https://admin.example.test', 'content-type': 'application/json' }),
+        enabled,
+        ['application/json'],
+      ),
     ).toBeNull();
   });
 
@@ -51,7 +55,11 @@ describe('guardAdminMutation (LB-B30)', () => {
   });
 
   it('never reads cookies or the body (pure header check)', () => {
-    const request = post({ origin: 'https://evil.example', 'content-type': 'application/json', cookie: 'x=1' });
+    const request = post({
+      origin: 'https://evil.example',
+      'content-type': 'application/json',
+      cookie: 'x=1',
+    });
     guardAdminMutation(request, enabled, ['application/json']);
     expect(request.bodyUsed).toBe(false);
   });

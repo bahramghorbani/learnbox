@@ -18,10 +18,25 @@ describe('legacy Admin route hard-disable (LB-B30)', () => {
   });
 
   it('only opens outside production with the exact flag value', () => {
-    expect(legacyAdminRoutesEnabled({ NODE_ENV: 'development', LEARNBOX_ADMIN_LEGACY_ROUTES_ENABLED: 'true' })).toBe(true);
-    expect(legacyAdminRouteGate({ NODE_ENV: 'development', LEARNBOX_ADMIN_LEGACY_ROUTES_ENABLED: 'true' })).toBeUndefined();
+    expect(
+      legacyAdminRoutesEnabled({
+        NODE_ENV: 'development',
+        LEARNBOX_ADMIN_LEGACY_ROUTES_ENABLED: 'true',
+      }),
+    ).toBe(true);
+    expect(
+      legacyAdminRouteGate({
+        NODE_ENV: 'development',
+        LEARNBOX_ADMIN_LEGACY_ROUTES_ENABLED: 'true',
+      }),
+    ).toBeUndefined();
     for (const value of ['1', 'TRUE', 'yes', '']) {
-      expect(legacyAdminRoutesEnabled({ NODE_ENV: 'development', LEARNBOX_ADMIN_LEGACY_ROUTES_ENABLED: value })).toBe(false);
+      expect(
+        legacyAdminRoutesEnabled({
+          NODE_ENV: 'development',
+          LEARNBOX_ADMIN_LEGACY_ROUTES_ENABLED: value,
+        }),
+      ).toBe(false);
     }
   });
 });

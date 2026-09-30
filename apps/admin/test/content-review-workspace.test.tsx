@@ -68,7 +68,14 @@ describe('ContentReviewWorkspace (unauthenticated shell, LB-B30)', () => {
       // No learner card content, queue rows, gate, media or release panel may render.
       expect(rendered.container.querySelectorAll('[data-review-item]')).toHaveLength(0);
       expect(rendered.container.querySelectorAll('.review-gate-list')).toHaveLength(0);
-      for (const leaked of ['das Haus', 'die Häuser', 'خانه', 'start-a1-', 'Das Haus ist klein.', 'Goethe A1']) {
+      for (const leaked of [
+        'das Haus',
+        'die Häuser',
+        'خانه',
+        'start-a1-',
+        'Das Haus ist klein.',
+        'Goethe A1',
+      ]) {
         expect(rendered.text).not.toContain(leaked);
       }
     } finally {

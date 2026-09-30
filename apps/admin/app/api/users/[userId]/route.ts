@@ -72,14 +72,12 @@ export async function GET(request: Request, { params }: { params: Promise<{ user
   }
 }
 
-export async function PATCH(request: Request, { params }: { params: Promise<{ userId: string }> }) {
+export async function PATCH(request: Request) {
   const disabled = legacyAdminRouteGate();
   if (disabled) return disabled;
   const session = await requireSession(request);
   if (!session) return new Response('Unauthorized', { status: 401 });
 
-  const { userId } = await params;
-  const pool = getPool();
   const body = (await request.json()) as { action: string };
 
   try {

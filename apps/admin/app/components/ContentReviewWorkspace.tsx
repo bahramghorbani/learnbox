@@ -6,17 +6,7 @@ import type { LearningVocabularyItem } from '@learnbox/content-models';
 
 import { AdminSidebar } from './AdminSidebar';
 import { useAdminWorkspaceAccess } from './AdminAuthGate';
-import { ReviewGateSummary } from './ReviewGateSummary';
-import { ReviewQueueOverview, type ReviewQueueItem } from './ReviewQueueOverview';
 import { SplashReplacementPanel } from './SplashReplacementPanel';
-
-type LocalReviewStatus = 'needs_review' | 'approved' | 'returned';
-
-const statusCopy: Record<LocalReviewStatus, string> = {
-  needs_review: 'نیازمند بررسی',
-  approved: 'در پیش‌نمایش تأیید شد',
-  returned: 'برای اصلاح بازگردانده شد',
-};
 
 const partOfSpeechLabels: Record<LearningVocabularyItem['partOfSpeech'], string> = {
   noun: 'اسم',
@@ -367,8 +357,8 @@ export function ServerBackedContentReview() {
       <h2 id="server-review-title">صف بررسی سرور</h2>
       {phase === 'disabled' ? (
         <p className="admin-preview-notice" role="status" data-review-unavailable="true">
-          ذخیره‌سازی سرور برای بازبینی محتوا غیرفعال است؛ هیچ محتوایی در این حالت نمایش داده نمی‌شود و
-          هیچ تغییری در پایگاه داده ثبت نمی‌شود.
+          ذخیره‌سازی سرور برای بازبینی محتوا غیرفعال است؛ هیچ محتوایی در این حالت نمایش داده نمی‌شود
+          و هیچ تغییری در پایگاه داده ثبت نمی‌شود.
         </p>
       ) : null}
       {phase === 'loading' ? (
