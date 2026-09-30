@@ -216,3 +216,23 @@ been computed) and are committed before the simulator. Later amendments, if any,
   empirical maximum interval is reported beside it; **G3** is executed, not reasoned: all-Known, one
   session per day, must reach Box 5 by day 90; **G2** is judged from the Known/Unknown transition matrices
   of the M-const cells; **G4** is judged by whether every read field exists in `card_schedules`.
+- **A15 (POST-RUN, model-validity correction; disclosed openly).** After the pre-registered grid
+  (`variant=orig`) was run and analysed, implausible values appeared: one M-decay model gave knowledge
+  0.000 and mean retention at review 0.004, and a 5-card curriculum (never above the 12-card cap) gave
+  retention at review 0.27 while attending daily. Diagnosis: the registered rule "after an Unknown the
+  hidden half-life is multiplied by 0.5, without a floor" creates an absorbing state (half-life tends to 0,
+  recall probability tends to 0, the card can never again be answered Known). That is a defect of the
+  learner model, not a property of any scheduler. **Correction chosen by principle, not by candidate:**
+  after an Unknown the half-life is `max(h x 0.5, h0)`, where `h0` is the card's first-exposure
+  half-life (seeing the answer is an exposure; a card cannot be less learnable than a new one).
+  The full grid is re-run unchanged in every other respect (`variant=floor`) and **both** variants are
+  reported, with the same gates and decision rules. The pre-registered variant (`orig`) stays in the report.
+  At the time of this amendment the author had seen the `orig` ranking (ENG-family and V1 ahead of the
+  ladder family on day-365 knowledge); the correction could therefore be biased, which is why it is
+  derived from a stated principle, applied to all candidates, and reported next to the original.
+- **A16 (POST-RUN, report-only) Planner-capacity confound.** In `orig`, review load is within about 1 % across
+  candidates and close to the ceiling (about 12 per attended day), which means the planner's 12-card
+  session cap, not the scheduler, limits load. To separate scheduler quality from that cap, a reduced
+  grid (`variant=floor-uncapped`: every due card is reviewed in the session; new cards still 3 per normal day;
+  N = 35 and 300 x A1, A2 x the 12 M-decay models) is reported alongside. It is **not** part of the
+  decision rule; it tests whether the decision is robust to the planner.

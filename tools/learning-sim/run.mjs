@@ -10,6 +10,8 @@ const DECAY = [];
 for (const m of [0.5, 2]) for (const sigma of [0.5, 1.0]) for (const G of [1.5, 2.5, 4.0]) DECAY.push({ type: 'decay', m, sigma, G, pNew: 0.5, id: `m${m}_s${sigma}_G${G}` });
 const CONST = P_CONST.map((p) => ({ type: 'const', p, id: `p${p}` }));
 const ATT = ['A1', 'A2', 'A3'];
+const VARIANT = process.env.LB_VARIANT || 'orig';
+const UNC = VARIANT === 'floor-uncapped';
 const NS = [35, 300];
 
 function mean(a) { return a.reduce((x, y) => x + y, 0) / a.length; }
@@ -20,10 +22,11 @@ function work(cand, seeds) {
   const add = (m, t) => { if (!m) return t.map((r) => r.slice()); return m.map((r, i) => r.map((v, j) => v + t[i][j])); };
   for (const [kind, models] of [['decay', DECAY], ['const', CONST]]) {
     for (const model of models) for (const att of ATT) for (const N of NS) {
+      if (UNC && (att === 'A3' || kind === 'const')) continue;
       if (kind === 'const' && N !== 35) continue;
       const per = [];
       for (let seed = 1; seed <= seeds; seed++) {
-        const s = runOne(cand, model, att, N, seed);
+        const s = runOne(cand, model, att, N, seed, { variant: VARIANT });
         acc.maxInterval = Math.max(acc.maxInterval, s.maxInterval);
         if (kind === 'const') { acc.transK = add(acc.transK, s.transK); acc.transU = add(acc.transU, s.transU); }
         per.push(s);

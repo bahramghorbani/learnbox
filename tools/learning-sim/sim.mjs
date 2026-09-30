@@ -57,9 +57,12 @@ function histP95(hist, total) {
  */
 export function runOne(candidate, model, attKind, N, seed, options = {}) {
   const days = 365;
+  const floorHl = options.variant === 'floor' || options.variant === 'floor-uncapped';
+  const uncapped = options.variant === 'floor-uncapped';
   const att = options.attendance ?? attendance(attKind, seed, days);
   const cards = Array.from({ length: N }, () => null);
   const hl = new Float64Array(N); // hidden half-life (decay model)
+  const hl0 = new Float64Array(N);
   const lastAns = new Float64Array(N);
   const nAns = new Int32Array(N);
   const intro = [];
@@ -114,7 +117,7 @@ export function runOne(candidate, model, attKind, N, seed, options = {}) {
     nAns[i]++;
     s.answers++;
     if (known) s.knownAns++; else s.unknownAns++;
-    if (model.type === 'decay') hl[i] *= known ? model.G : 0.5;
+    if (model.type === 'decay') hl[i] = known ? hl[i] * model.G : floorHl ? Math.max(hl[i] * 0.5, hl0[i]) : hl[i] * 0.5;
     lastAns[i] = day;
     if (preBox === 0) return;
     s.reviews++;
@@ -137,7 +140,7 @@ export function runOne(candidate, model, attKind, N, seed, options = {}) {
       const dueList = [];
       for (const i of intro) if (cards[i].dueDays <= day) dueList.push(i);
       const now = toDate(day);
-      const plan = createDailySessionPlan({
+      const plan = uncapped ? uncappedPlan(dueList, cards, nextNew, N) : createDailySessionPlan({
         durationMinutes: 5,
         now,
         dueCards: dueList.map((i) => ({
@@ -170,6 +173,7 @@ export function runOne(candidate, model, attKind, N, seed, options = {}) {
         const i = Number(id);
         cards[i] = newCard();
         if (model.type === 'decay') hl[i] = model.m * Math.exp(model.sigma * normal(seed, i, 4000));
+        hl0[i] = hl[i];
         lastAns[i] = day;
         intro.push(i);
         nextNew = Math.max(nextNew, i + 1);
@@ -180,6 +184,15 @@ export function runOne(candidate, model, attKind, N, seed, options = {}) {
   }
   s.introducedFinal = intro.length;
   return s;
+}
+
+function uncappedPlan(dueList, cards, nextNew, N) {
+  const order = [...dueList].sort((a, b) => cards[a].dueDays - cards[b].dueDays || a - b);
+  return {
+    mode: 'normal',
+    reviewCardIds: order.map((i) => String(i).padStart(5, '0')),
+    newCardIds: Array.from({ length: Math.min(3, N - nextNew) }, (_, j) => String(nextNew + j).padStart(5, '0')),
+  };
 }
 
 export { candidates };
