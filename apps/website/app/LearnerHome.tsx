@@ -27,6 +27,7 @@ import { LearnerNav } from './components/LearnerNav';
 import { ProfileScreen } from './components/ProfileScreen';
 import { SettingsScreen } from './components/SettingsScreen';
 import type { AccountDeletionResult } from './components/DeleteAccountPanel';
+import { accountDeletionResultFromResponse } from '../lib/account-deletion-result';
 import {
   loadSoundPreference,
   saveSoundPreference,
@@ -733,14 +734,7 @@ export function LearnerHome({
       } catch {
         return { status: 'unavailable' };
       }
-      if (response.ok) {
-        const body = (await response.json().catch(() => ({}))) as { deletionId?: string };
-        return { status: 'deleted', deletionId: body.deletionId ?? '' };
-      }
-      // 403 is the deliberate phone-confirmation mismatch; 409 is a refusal to delete this account.
-      if (response.status === 403) return { status: 'mismatch' };
-      if (response.status === 409) return { status: 'refused' };
-      return { status: 'unavailable' };
+      return accountDeletionResultFromResponse(response);
     },
     [],
   );

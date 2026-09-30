@@ -1,5 +1,6 @@
 import { Pool } from 'pg';
 
+import { guardMutation } from '../../../../lib/mutation-guard';
 import { readLearnerSession } from '../../../../lib/server-session';
 import { revokeSession } from '../../../../lib/session-revocation';
 import { requireVerifiedDatabaseTls } from '../../../../../api/dist/database/migration-runner.js';
@@ -24,6 +25,11 @@ export async function POST(request: Request): Promise<Response> {
   const isSecure = process.env.NODE_ENV === 'production';
   const cookie = `learnbox_alpha_session=; Path=/; Max-Age=0; HttpOnly${isSecure ? '; Secure' : ''}; SameSite=Lax`;
   const headers = { 'set-cookie': cookie, 'cache-control': 'no-store' };
+
+  // LB-B29: a foreign site must not be able to sign a learner out. The rejection deliberately does
+  // not clear the cookie or revoke anything; only a same-origin request may do either.
+  const rejected = guardMutation(request, { method: 'POST' });
+  if (rejected) return rejected;
 
   const session = readLearnerSession(request);
   if (!session) {

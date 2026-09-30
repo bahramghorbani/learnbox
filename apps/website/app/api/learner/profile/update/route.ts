@@ -1,5 +1,6 @@
 import { Pool } from 'pg';
 import { authenticateLearner } from '../../../../../lib/learner-auth';
+import { guardMutation } from '../../../../../lib/mutation-guard';
 import { applyProfileUpdate, parseProfileUpdate } from '../../../../../lib/learner-profile-fields';
 import { requireVerifiedDatabaseTls } from '../../../../../../api/dist/database/migration-runner.js';
 
@@ -17,6 +18,10 @@ function getPool() {
 }
 
 export async function PATCH(request: Request): Promise<Response> {
+  // LB-B29: same-origin JSON only, decided before the session is read.
+  const rejected = guardMutation(request, { method: 'PATCH' });
+  if (rejected) return rejected;
+
   const session = await authenticateLearner(request);
   const userId = session?.subject ?? null;
   if (!userId) {

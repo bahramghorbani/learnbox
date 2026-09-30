@@ -4,7 +4,7 @@ import {
 } from '../../api/dist/reviews/mobile-review-batch.request.js';
 import type { MobileReviewBatchItemOutcome } from '../../api/dist/reviews/mobile-review-batch.service.js';
 import type { MobileReviewReconciliationResult } from '../../api/dist/reviews/postgres-review-event.store.js';
-import { hasJsonContentType, isTrustedRequestOrigin } from './trusted-origin';
+import { guardMutation } from './mutation-guard';
 
 type BoundaryOptions = { development?: boolean };
 type JsonObject = Record<string, unknown>;
@@ -43,16 +43,16 @@ export async function handleWebReviewBatchPost(
   readSubject: (request: Request) => string | null,
   options: BoundaryOptions = {},
 ): Promise<Response> {
-  if (
-    request.method !== 'POST' ||
-    !isSecure(request, options.development ?? process.env.NODE_ENV === 'development')
-  ) {
+  // LB-B29: method, content type and Origin are settled before the session is even read.
+  const rejected = guardMutation(request, { method: 'POST' });
+  if (rejected) return rejected;
+
+  if (!isSecure(request, options.development ?? process.env.NODE_ENV === 'development')) {
     return error('validation', 400);
   }
 
   const subject = readSubject(request);
   if (!subject) return error('invalidToken', 401);
-  if (!isTrustedSameOriginJsonPost(request)) return error('request_rejected', 403);
 
   const body = await readJsonBody(request);
   if (body === null || (isRecord(body) && 'reconciliationCursor' in body)) {
@@ -99,11 +99,6 @@ export async function handleWebReviewReconciliationGet(
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-function isTrustedSameOriginJsonPost(request: Request): boolean {
-  if (!hasJsonContentType(request, true)) return false;
-  return isTrustedRequestOrigin(request);
 }
 
 function isSecure(request: Request, development: boolean): boolean {

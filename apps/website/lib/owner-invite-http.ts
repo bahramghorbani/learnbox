@@ -1,4 +1,4 @@
-import { hasJsonContentType, isTrustedRequestOrigin } from './trusted-origin';
+import { guardMutation } from './mutation-guard';
 
 type OwnerInviteIssueDependencies = {
   issue(): Promise<{ code: string; expiresAt: Date }>;
@@ -19,9 +19,8 @@ export async function handleOwnerInviteIssue(
   request: Request,
   dependencies: OwnerInviteIssueDependencies,
 ): Promise<Response> {
-  if (!isTrustedJsonPost(request)) {
-    return Response.json({ error: 'request_rejected' }, { status: 403, headers: jsonHeaders });
-  }
+  const rejected = guardMutation(request, { method: 'POST' });
+  if (rejected) return rejected;
 
   try {
     const issued = await dependencies.issue();
@@ -49,10 +48,4 @@ function sanitizeIssueError(error: unknown): OwnerInviteIssueDiagnostic {
 
 function reportOwnerInviteIssue(diagnostic: OwnerInviteIssueDiagnostic): void {
   console.error('owner_invite_issue_failed', diagnostic);
-}
-
-function isTrustedJsonPost(request: Request): boolean {
-  if (request.method !== 'POST') return false;
-  if (!hasJsonContentType(request, false)) return false;
-  return isTrustedRequestOrigin(request);
 }
