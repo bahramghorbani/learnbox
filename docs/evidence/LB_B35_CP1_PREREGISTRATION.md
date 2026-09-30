@@ -134,4 +134,37 @@ card.
 
 ## Amendments
 
-_(none before first comparison run)_
+All amendments below were written **before the first comparison run** (no result of any candidate had
+been computed) and are committed before the simulator. Later amendments, if any, will be marked
+"post-run" and cannot change a gate or decision rule.
+
+- **A1 (metric, report-only) Visible feedback.** Share of Known answers that leave the Box unchanged
+  (excluding Box 5) and share of Unknown answers that leave the Box unchanged (excluding Box 1). Reason:
+  the engine's multiplicative arithmetic can make an answer invisible to a learner who only sees Boxes.
+  Not a gate; reported with the failure-mode list.
+- **A2 (definition) New cards.** A new card enters as Box 1 (stability 1 h, the shipped initial value) and
+  its first answer applies the candidate's normal rule. So for the ladder, Known goes Box 1 to Box 2.
+- **A3 (definition) Sessions.** One session per attended day at a fixed time of day; the real planner
+  (12 due, 3 new, recovery when more than 12 due) runs once per session. A due time within the same day
+  means "next attended session". More sessions per day are not modeled (a documented limitation; the
+  learner app does allow them, see CP0 defect 4).
+- **A4 (definitions) ENG-LATE** uses `max(stability, elapsed since last review)` as the growth base for
+  Known only; Unknown is identical to ENG-CLAMP. **ENG-LAPSE** uses `lapses` before the current answer.
+  **Box-5 axis for engine candidates:** F21 sets stability to exactly 21 on a Known at Box 5; G3-C sets
+  stability to `min(C, stability x 3)`. For ladder candidates Box 5 starts at 21 days and then follows
+  the same axis.
+- **A5 (assumption, now explicit) First exposure.** The first answer to a new card is Known with
+  probability `p_new = 0.5` in the M-decay models (sensitivity 0.2 and 0.8 reported for N = 35). This is
+  an assumption, not a measurement.
+- **A6 (decision axes) Outcome, not activity.** Retention at review rewards short intervals by
+  construction, so it cannot be the outcome axis. The decision axes for Section 6 are:
+  (a) **knowledge fraction** `K(T)/N` at T = day 365, where `K(T)` is the sum over introduced cards of
+  the hidden recall probability `2^(-(T - last answer)/h)` at that moment (higher is better, tie margin
+  1 percentage point), and (b) **review load** (lower is better, tie margin 5 %). Retention at review
+  stays in the report. Day 90 is reported as a sensitivity check of the same rule.
+- **A7 (scope of decision cells) M-const** has constant recall by definition, so its knowledge fraction
+  is uninformative. M-const cells are used only for dynamics metrics (Sections 5.3, 5.5, 5.6, 5.9, A1);
+  the Pareto rule in Section 6 uses the 72 M-decay cells (12 models x 3 attendance patterns x 2 curricula).
+- **A8 (replay detail)** History is applied in `reconciliation_cursor` order with
+  `now = occurred_at`, matching `postgres-review-event.store.ts`. Gate G5 compares stability,
+  difficulty, lapses, state and due time to the stored row.
