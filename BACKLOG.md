@@ -172,6 +172,25 @@ consumed only by the progress screen; and the device storage scope collapses to
 `:account:unverified` when the session expires, so a stale scope renders as zero. No migration and
 no data recovery are required.
 
+### Admin recovery and hardening (audit recorded 2026-09-30)
+
+Admin is brought through the same recovery path as the learner app: Audit → P0 Security →
+Compatibility/Data Unification → Admin Redesign → Feature Parity → Integration/E2E → Production.
+Evidence: [`docs/planning/ADMIN_COMPATIBILITY_GAP_AUDIT.md`](docs/planning/ADMIN_COMPATIBILITY_GAP_AUDIT.md);
+plan (not approved, not implemented): [`docs/planning/ADMIN_P0_PATCH_PLAN.md`](docs/planning/ADMIN_P0_PATCH_PLAN.md).
+Principle: Learner App and Admin are two interfaces over one backend, database, migrations,
+services and business rules; no duplicate business logic, build-time data or second definition of
+progress, content or users.
+
+| Item                                                  | Class              | Note                                                                                                                                                                                                  |
+| ----------------------------------------------------- | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| LB-B30 Admin exposes learner content and banners      | SECURITY/HARDENING | **P0 — OPEN, uncontained.** Anonymous `GET /` serves all 35 Start items in the bundle; `/api/banners` has no authentication. Present on the VPS Admin and on a second public Vercel Admin deployment. |
+| LB-B31 Admin mutation guard and deletion bypass       | SECURITY/HARDENING | **P0 — OPEN, latent** (Admin sign-in is disabled). No Origin/CSRF guard on legacy mutations; `reset_progress` bypasses the account-deletion safeguards; pack publish bypasses the review gate.        |
+| LB-B32 Admin uses the owner database role             | SECURITY/HARDENING | **P0 — OPEN.** Admin and the learner app share one DSN whose role owns every table and can `TRUNCATE` `audit_logs`. Requires separate least-privilege roles (owner-entered secrets).                  |
+| LB-B33 Production Admin provenance unprovable         | TECH DEBT          | **OPEN.** Running image has no revision label; source can only be bounded to `5d1df01..v1.2.1`. Live Caddy config is not reproducible from Git.                                                       |
+| LB-B34 Admin/learner data and logic unification       | TECH DEBT          | **PLANNED** (after P0). Shared repositories/services; database-backed review; remove the payments surface.                                                                                            |
+| LB-B13 Admin operations (redesign and feature parity) | PRODUCT DEBT       | **PLANNED** (after LB-B30–B34). Scope waits for the compatibility phase.                                                                                                                              |
+
 ### Carried forward, still open
 
 | Item                                         | Why it is still open                                                                                                                                                                                                                                                              |
