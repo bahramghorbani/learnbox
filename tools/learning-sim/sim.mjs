@@ -18,7 +18,8 @@ function hash32(a, b, c) {
   return (h + 0.5) / 4294967296;
 }
 const normal = (seed, card, k) =>
-  Math.sqrt(-2 * Math.log(hash32(seed, card, k))) * Math.cos(2 * Math.PI * hash32(seed, card, k + 1));
+  Math.sqrt(-2 * Math.log(hash32(seed, card, k))) *
+  Math.cos(2 * Math.PI * hash32(seed, card, k + 1));
 
 export function attendance(kind, seed, days) {
   const out = new Uint8Array(days);
@@ -32,7 +33,10 @@ export function attendance(kind, seed, days) {
   let block = 1;
   while (d < days) {
     const mean = active ? 10 : 14;
-    const len = Math.max(1, Math.ceil(Math.log(1 - hash32(seed, 910000, block)) / Math.log(1 - 1 / mean)));
+    const len = Math.max(
+      1,
+      Math.ceil(Math.log(1 - hash32(seed, 910000, block)) / Math.log(1 - 1 / mean)),
+    );
     for (let i = 0; i < len && d < days; i++, d++) out[d] = active ? 1 : 0;
     active = !active;
     block++;
@@ -69,11 +73,30 @@ export function runOne(candidate, model, attKind, N, seed, options = {}) {
   let nextNew = 0;
 
   const s = {
-    attended: 0, recovery: 0, answers: 0, reviews: 0, knownAns: 0, unknownAns: 0,
-    knownSame: 0, knownTot: 0, unknownSame: 0, unknownTot: 0,
-    retSum: 0, retN: 0, hist: emptyHist(), histN: 0,
-    b5Reviews: 0, b5Unknown: 0, b5RetSum: 0, b5CardDays: 0, b5Intervals: [],
-    maxInterval: 0, drop2: 0, unknownDrops: 0, changes: 0, reversals: 0,
+    attended: 0,
+    recovery: 0,
+    answers: 0,
+    reviews: 0,
+    knownAns: 0,
+    unknownAns: 0,
+    knownSame: 0,
+    knownTot: 0,
+    unknownSame: 0,
+    unknownTot: 0,
+    retSum: 0,
+    retN: 0,
+    hist: emptyHist(),
+    histN: 0,
+    b5Reviews: 0,
+    b5Unknown: 0,
+    b5RetSum: 0,
+    b5CardDays: 0,
+    b5Intervals: [],
+    maxInterval: 0,
+    drop2: 0,
+    unknownDrops: 0,
+    changes: 0,
+    reversals: 0,
     transK: Array.from({ length: 6 }, () => new Array(6).fill(0)),
     transU: Array.from({ length: 6 }, () => new Array(6).fill(0)),
     snapshots: {},
@@ -98,11 +121,18 @@ export function runOne(candidate, model, attKind, N, seed, options = {}) {
     let overdue = 0;
     for (const i of intro) if (cards[i].dueDays <= day) overdue++;
     s.snapshots[day] = {
-      K: K / N, boxes, introduced: intro.length, dueNow: overdue,
-      reviews: s.reviews, answers: s.answers, recovery: s.recovery, attended: s.attended,
+      K: K / N,
+      boxes,
+      introduced: intro.length,
+      dueNow: overdue,
+      reviews: s.reviews,
+      answers: s.answers,
+      recovery: s.recovery,
+      attended: s.attended,
       p95: histP95(s.hist, s.histN),
       retention: s.retN ? s.retSum / s.retN : null,
-      b5Reviews: s.b5Reviews, b5CardDays: s.b5CardDays,
+      b5Reviews: s.b5Reviews,
+      b5CardDays: s.b5CardDays,
     };
   };
 
@@ -116,14 +146,23 @@ export function runOne(candidate, model, attKind, N, seed, options = {}) {
     if (interval > s.maxInterval) s.maxInterval = interval;
     nAns[i]++;
     s.answers++;
-    if (known) s.knownAns++; else s.unknownAns++;
-    if (model.type === 'decay') hl[i] = known ? hl[i] * model.G : floorHl ? Math.max(hl[i] * 0.5, hl0[i]) : hl[i] * 0.5;
+    if (known) s.knownAns++;
+    else s.unknownAns++;
+    if (model.type === 'decay')
+      hl[i] = known ? hl[i] * model.G : floorHl ? Math.max(hl[i] * 0.5, hl0[i]) : hl[i] * 0.5;
     lastAns[i] = day;
     if (preBox === 0) return;
     s.reviews++;
     (known ? s.transK : s.transU)[preBox][postBox]++;
-    if (known) { s.knownTot++; if (preBox < 5 && postBox === preBox) s.knownSame++; }
-    else { s.unknownTot++; if (preBox > 1 && postBox === preBox) s.unknownSame++; if (preBox - postBox >= 2) s.drop2++; if (preBox > 1) s.unknownDrops++; }
+    if (known) {
+      s.knownTot++;
+      if (preBox < 5 && postBox === preBox) s.knownSame++;
+    } else {
+      s.unknownTot++;
+      if (preBox > 1 && postBox === preBox) s.unknownSame++;
+      if (preBox - postBox >= 2) s.drop2++;
+      if (preBox > 1) s.unknownDrops++;
+    }
     if (postBox !== preBox) {
       s.changes++;
       const dir = postBox > preBox ? 1 : -1;
@@ -134,26 +173,40 @@ export function runOne(candidate, model, attKind, N, seed, options = {}) {
   };
 
   for (let day = 0; day <= days; day++) {
-    if (CHECKPOINTS.includes(day)) snapshot(day);
+    if (CHECKPOINTS.includes(day) || (options.snap || []).includes(day)) snapshot(day);
     if (day === days) break;
     if (att[day]) {
       const dueList = [];
       for (const i of intro) if (cards[i].dueDays <= day) dueList.push(i);
       const now = toDate(day);
-      const plan = uncapped ? uncappedPlan(dueList, cards, nextNew, N) : createDailySessionPlan({
-        durationMinutes: 5,
-        now,
-        dueCards: dueList.map((i) => ({
-          cardId: String(i).padStart(5, '0'), state: cards[i].state, dueAt: toDate(cards[i].dueDays),
-          stabilityDays: cards[i].stab, lapses: cards[i].lapses, importance: 1,
-        })),
-        newCards: Array.from({ length: Math.min(3, N - nextNew) }, (_, j) => ({
-          cardId: String(nextNew + j).padStart(5, '0'), importance: 1,
-        })),
-        suggestedNewCards: 3,
-      });
+      const plan = uncapped
+        ? uncappedPlan(dueList, cards, nextNew, N)
+        : createDailySessionPlan({
+            durationMinutes: 5,
+            now,
+            dueCards: dueList.map((i) => ({
+              cardId: String(i).padStart(5, '0'),
+              state: cards[i].state,
+              dueAt: toDate(cards[i].dueDays),
+              stabilityDays: cards[i].stab,
+              lapses: cards[i].lapses,
+              importance: 1,
+            })),
+            newCards: Array.from({ length: Math.min(3, N - nextNew) }, (_, j) => ({
+              cardId: String(nextNew + j).padStart(5, '0'),
+              importance: 1,
+            })),
+            suggestedNewCards: 3,
+          });
       s.attended++;
       if (plan.mode === 'recovery') s.recovery++;
+      if (options.trace)
+        options.trace.push({
+          day,
+          mode: plan.mode,
+          due: dueList.length,
+          maxOver: dueList.reduce((m, i) => Math.max(m, day - cards[i].dueDays), 0),
+        });
       for (const id of plan.reviewCardIds) {
         const i = Number(id);
         const c = cards[i];
@@ -162,8 +215,12 @@ export function runOne(candidate, model, attKind, N, seed, options = {}) {
         s.histN++;
         const preBox = boxOf(c.stab);
         const p = recallP(i, day);
-        s.retSum += p; s.retN++;
-        if (preBox === 5) { s.b5Reviews++; s.b5RetSum += p; }
+        s.retSum += p;
+        s.retN++;
+        if (preBox === 5) {
+          s.b5Reviews++;
+          s.b5RetSum += p;
+        }
         const known = recall(i, day, nAns[i]);
         if (preBox === 5 && !known) s.b5Unknown++;
         if (preBox === 5) s.b5Intervals.push(c.dueDays - c.lastDays);
@@ -191,7 +248,9 @@ function uncappedPlan(dueList, cards, nextNew, N) {
   return {
     mode: 'normal',
     reviewCardIds: order.map((i) => String(i).padStart(5, '0')),
-    newCardIds: Array.from({ length: Math.min(3, N - nextNew) }, (_, j) => String(nextNew + j).padStart(5, '0')),
+    newCardIds: Array.from({ length: Math.min(3, N - nextNew) }, (_, j) =>
+      String(nextNew + j).padStart(5, '0'),
+    ),
   };
 }
 

@@ -53,7 +53,7 @@ function ladder(unknownRule) {
   };
 }
 
-function engine({ late = false, lapse = false }) {
+function engine({ late = false, lapse = false, drop = false }) {
   return (card, known, nowDays, axis) => {
     const b = boxOf(card.stab);
     let stab;
@@ -70,6 +70,8 @@ function engine({ late = false, lapse = false }) {
       const factor = 0.35 * (lapse ? 0.85 ** card.lapses : 1);
       const floor = b >= 2 ? LOWER[b - 2] : MIN_STAB;
       stab = Math.max(card.stab * factor, floor);
+      // POST-HOC (A17): an Unknown must lower the Box by exactly one (Box 1 stays in Box 1).
+      if (drop && b >= 2) stab = Math.min(stab, UPPER[b - 2] - 1e-9);
     }
     finish(card, stab, known, nowDays);
   };
@@ -103,6 +105,8 @@ export const POLICIES = {
   'ENG-CLAMP': { answer: engine({}), axes: true },
   'ENG-LATE': { answer: engine({ late: true }), axes: true },
   'ENG-LAPSE': { answer: engine({ lapse: true }), axes: true },
+  // post-hoc, report-only (amendment A17); excluded from candidates() unless LB_EXTRA=1
+  'ENG-DROP': { answer: engine({ drop: true }), axes: true, extra: true },
 };
 
 export const AXES = {
@@ -114,7 +118,7 @@ export const AXES = {
 export function candidates() {
   const out = [{ policy: 'V1', axis: null, id: 'V1' }];
   for (const [policy, def] of Object.entries(POLICIES)) {
-    if (!def.axes) continue;
+    if (!def.axes || (def.extra && !process.env.LB_EXTRA)) continue;
     for (const axis of Object.keys(AXES)) out.push({ policy, axis, id: `${policy}/${axis}` });
   }
   return out;

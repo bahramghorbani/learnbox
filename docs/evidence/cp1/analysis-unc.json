@@ -1,0 +1,1028 @@
+{
+  "gates": {
+    "ENG-CLAMP/F21": {
+      "G1": {
+        "pass": true
+      },
+      "G2": {
+        "pass": true,
+        "note": "not evaluated in reduced grid"
+      },
+      "G3": {
+        "pass": true
+      },
+      "G4": {
+        "pass": true
+      },
+      "passAll": true
+    },
+    "ENG-CLAMP/G3-180": {
+      "G1": {
+        "pass": true
+      },
+      "G2": {
+        "pass": true,
+        "note": "not evaluated in reduced grid"
+      },
+      "G3": {
+        "pass": true
+      },
+      "G4": {
+        "pass": true
+      },
+      "passAll": true
+    },
+    "ENG-CLAMP/G3-365": {
+      "G1": {
+        "pass": true
+      },
+      "G2": {
+        "pass": true,
+        "note": "not evaluated in reduced grid"
+      },
+      "G3": {
+        "pass": true
+      },
+      "G4": {
+        "pass": true
+      },
+      "passAll": true
+    },
+    "ENG-LAPSE/F21": {
+      "G1": {
+        "pass": true
+      },
+      "G2": {
+        "pass": true,
+        "note": "not evaluated in reduced grid"
+      },
+      "G3": {
+        "pass": true
+      },
+      "G4": {
+        "pass": true
+      },
+      "passAll": true
+    },
+    "ENG-LAPSE/G3-180": {
+      "G1": {
+        "pass": true
+      },
+      "G2": {
+        "pass": true,
+        "note": "not evaluated in reduced grid"
+      },
+      "G3": {
+        "pass": true
+      },
+      "G4": {
+        "pass": true
+      },
+      "passAll": true
+    },
+    "ENG-LAPSE/G3-365": {
+      "G1": {
+        "pass": true
+      },
+      "G2": {
+        "pass": true,
+        "note": "not evaluated in reduced grid"
+      },
+      "G3": {
+        "pass": true
+      },
+      "G4": {
+        "pass": true
+      },
+      "passAll": true
+    },
+    "ENG-LATE/F21": {
+      "G1": {
+        "pass": true
+      },
+      "G2": {
+        "pass": true,
+        "note": "not evaluated in reduced grid"
+      },
+      "G3": {
+        "pass": true
+      },
+      "G4": {
+        "pass": true
+      },
+      "passAll": true
+    },
+    "ENG-LATE/G3-180": {
+      "G1": {
+        "pass": true
+      },
+      "G2": {
+        "pass": true,
+        "note": "not evaluated in reduced grid"
+      },
+      "G3": {
+        "pass": true
+      },
+      "G4": {
+        "pass": true
+      },
+      "passAll": true
+    },
+    "ENG-LATE/G3-365": {
+      "G1": {
+        "pass": true
+      },
+      "G2": {
+        "pass": true,
+        "note": "not evaluated in reduced grid"
+      },
+      "G3": {
+        "pass": true
+      },
+      "G4": {
+        "pass": true
+      },
+      "passAll": true
+    },
+    "LAD-B/F21": {
+      "G1": {
+        "pass": true
+      },
+      "G2": {
+        "pass": true,
+        "note": "not evaluated in reduced grid"
+      },
+      "G3": {
+        "pass": true
+      },
+      "G4": {
+        "pass": true
+      },
+      "passAll": true
+    },
+    "LAD-B/G3-180": {
+      "G1": {
+        "pass": true
+      },
+      "G2": {
+        "pass": true,
+        "note": "not evaluated in reduced grid"
+      },
+      "G3": {
+        "pass": true
+      },
+      "G4": {
+        "pass": true
+      },
+      "passAll": true
+    },
+    "LAD-B/G3-365": {
+      "G1": {
+        "pass": true
+      },
+      "G2": {
+        "pass": true,
+        "note": "not evaluated in reduced grid"
+      },
+      "G3": {
+        "pass": true
+      },
+      "G4": {
+        "pass": true
+      },
+      "passAll": true
+    },
+    "LAD-R/F21": {
+      "G1": {
+        "pass": true
+      },
+      "G2": {
+        "pass": true,
+        "note": "not evaluated in reduced grid"
+      },
+      "G3": {
+        "pass": true
+      },
+      "G4": {
+        "pass": true
+      },
+      "passAll": true
+    },
+    "LAD-R/G3-180": {
+      "G1": {
+        "pass": true
+      },
+      "G2": {
+        "pass": true,
+        "note": "not evaluated in reduced grid"
+      },
+      "G3": {
+        "pass": true
+      },
+      "G4": {
+        "pass": true
+      },
+      "passAll": true
+    },
+    "LAD-R/G3-365": {
+      "G1": {
+        "pass": true
+      },
+      "G2": {
+        "pass": true,
+        "note": "not evaluated in reduced grid"
+      },
+      "G3": {
+        "pass": true
+      },
+      "G4": {
+        "pass": true
+      },
+      "passAll": true
+    },
+    "V1": {
+      "G1": {
+        "pass": false
+      },
+      "G2": {
+        "pass": true,
+        "note": "not evaluated in reduced grid"
+      },
+      "G3": {
+        "pass": true
+      },
+      "G4": {
+        "pass": true
+      },
+      "passAll": false
+    }
+  },
+  "cells": {},
+  "decision": {
+    "cellsUsed": 48,
+    "survivors": [
+      "ENG-CLAMP/F21",
+      "ENG-CLAMP/G3-180",
+      "ENG-CLAMP/G3-365",
+      "ENG-LAPSE/F21",
+      "ENG-LAPSE/G3-180",
+      "ENG-LAPSE/G3-365",
+      "ENG-LATE/F21",
+      "ENG-LATE/G3-180",
+      "ENG-LATE/G3-365",
+      "LAD-B/F21",
+      "LAD-B/G3-180",
+      "LAD-B/G3-365",
+      "LAD-R/F21",
+      "LAD-R/G3-180",
+      "LAD-R/G3-365"
+    ],
+    "shareNotDominated_day365_all16": {
+      "ENG-CLAMP/F21": 0.333,
+      "ENG-CLAMP/G3-180": 0.375,
+      "ENG-CLAMP/G3-365": 0.396,
+      "ENG-LAPSE/F21": 0.333,
+      "ENG-LAPSE/G3-180": 0.438,
+      "ENG-LAPSE/G3-365": 0.396,
+      "ENG-LATE/F21": 0,
+      "ENG-LATE/G3-180": 0.063,
+      "ENG-LATE/G3-365": 0,
+      "LAD-B/F21": 0,
+      "LAD-B/G3-180": 0.417,
+      "LAD-B/G3-365": 0.396,
+      "LAD-R/F21": 0,
+      "LAD-R/G3-180": 0.479,
+      "LAD-R/G3-365": 0.5,
+      "V1": 0.458
+    },
+    "shareNotDominated_day365_survivors": {
+      "ENG-CLAMP/F21": 0.333,
+      "ENG-CLAMP/G3-180": 0.375,
+      "ENG-CLAMP/G3-365": 0.396,
+      "ENG-LAPSE/F21": 0.333,
+      "ENG-LAPSE/G3-180": 0.521,
+      "ENG-LAPSE/G3-365": 0.417,
+      "ENG-LATE/F21": 0,
+      "ENG-LATE/G3-180": 0.063,
+      "ENG-LATE/G3-365": 0,
+      "LAD-B/F21": 0,
+      "LAD-B/G3-180": 0.417,
+      "LAD-B/G3-365": 0.396,
+      "LAD-R/F21": 0,
+      "LAD-R/G3-180": 0.479,
+      "LAD-R/G3-365": 0.5
+    },
+    "shareNotDominated_day90_survivors": {
+      "ENG-CLAMP/F21": 0.688,
+      "ENG-CLAMP/G3-180": 0.583,
+      "ENG-CLAMP/G3-365": 0.583,
+      "ENG-LAPSE/F21": 0.688,
+      "ENG-LAPSE/G3-180": 0.688,
+      "ENG-LAPSE/G3-365": 0.688,
+      "ENG-LATE/F21": 0.021,
+      "ENG-LATE/G3-180": 0.083,
+      "ENG-LATE/G3-365": 0.083,
+      "LAD-B/F21": 0.313,
+      "LAD-B/G3-180": 0.396,
+      "LAD-B/G3-365": 0.396,
+      "LAD-R/F21": 0.542,
+      "LAD-R/G3-180": 0.458,
+      "LAD-R/G3-365": 0.458
+    },
+    "share_day365_axis_F21": {
+      "ENG-CLAMP/F21": 0.5,
+      "ENG-LAPSE/F21": 0.5,
+      "ENG-LATE/F21": 0.146,
+      "LAD-B/F21": 0.5,
+      "LAD-R/F21": 0.5
+    },
+    "share_day365_axis_G3-365": {
+      "ENG-CLAMP/G3-365": 0.5,
+      "ENG-LAPSE/G3-365": 0.729,
+      "ENG-LATE/G3-365": 0.021,
+      "LAD-B/G3-365": 0.417,
+      "LAD-R/G3-365": 0.5
+    },
+    "share_day365_axis_G3-180": {
+      "ENG-CLAMP/G3-180": 0.396,
+      "ENG-LAPSE/G3-180": 0.729,
+      "ENG-LATE/G3-180": 0.063,
+      "LAD-B/G3-180": 0.417,
+      "LAD-R/G3-180": 0.5
+    },
+    "meanByCandidate": {
+      "ENG-CLAMP/F21": {
+        "K365": 0.9245,
+        "K90": 0.764,
+        "load365": 8964,
+        "ret365": 0.6371,
+        "recovery365": 0,
+        "p95overdue365": 1.62
+      },
+      "ENG-CLAMP/G3-180": {
+        "K365": 0.8953,
+        "K90": 0.7626,
+        "load365": 7583,
+        "ret365": 0.5722,
+        "recovery365": 0,
+        "p95overdue365": 1.67
+      },
+      "ENG-CLAMP/G3-365": {
+        "K365": 0.8849,
+        "K90": 0.7626,
+        "load365": 7550,
+        "ret365": 0.5691,
+        "recovery365": 0,
+        "p95overdue365": 1.68
+      },
+      "ENG-LAPSE/F21": {
+        "K365": 0.9248,
+        "K90": 0.765,
+        "load365": 9000,
+        "ret365": 0.6391,
+        "recovery365": 0,
+        "p95overdue365": 1.62
+      },
+      "ENG-LAPSE/G3-180": {
+        "K365": 0.9039,
+        "K90": 0.7641,
+        "load365": 7619,
+        "ret365": 0.5751,
+        "recovery365": 0,
+        "p95overdue365": 1.67
+      },
+      "ENG-LAPSE/G3-365": {
+        "K365": 0.8919,
+        "K90": 0.7641,
+        "load365": 7583,
+        "ret365": 0.5717,
+        "recovery365": 0,
+        "p95overdue365": 1.68
+      },
+      "ENG-LATE/F21": {
+        "K365": 0.7675,
+        "K90": 0.6323,
+        "load365": 12766,
+        "ret365": 0.486,
+        "recovery365": 0,
+        "p95overdue365": 1.59
+      },
+      "ENG-LATE/G3-180": {
+        "K365": 0.7292,
+        "K90": 0.6253,
+        "load365": 11772,
+        "ret365": 0.4089,
+        "recovery365": 0,
+        "p95overdue365": 1.64
+      },
+      "ENG-LATE/G3-365": {
+        "K365": 0.7183,
+        "K90": 0.6253,
+        "load365": 11744,
+        "ret365": 0.4048,
+        "recovery365": 0,
+        "p95overdue365": 1.64
+      },
+      "LAD-B/F21": {
+        "K365": 0.7717,
+        "K90": 0.6362,
+        "load365": 12057,
+        "ret365": 0.5188,
+        "recovery365": 0,
+        "p95overdue365": 1.5
+      },
+      "LAD-B/G3-180": {
+        "K365": 0.7239,
+        "K90": 0.6019,
+        "load365": 10970,
+        "ret365": 0.43,
+        "recovery365": 0,
+        "p95overdue365": 1.58
+      },
+      "LAD-B/G3-365": {
+        "K365": 0.7217,
+        "K90": 0.6019,
+        "load365": 10962,
+        "ret365": 0.4294,
+        "recovery365": 0,
+        "p95overdue365": 1.58
+      },
+      "LAD-R/F21": {
+        "K365": 0.8625,
+        "K90": 0.6839,
+        "load365": 10795,
+        "ret365": 0.5608,
+        "recovery365": 0,
+        "p95overdue365": 1.55
+      },
+      "LAD-R/G3-180": {
+        "K365": 0.8091,
+        "K90": 0.6486,
+        "load365": 9580,
+        "ret365": 0.4707,
+        "recovery365": 0,
+        "p95overdue365": 1.6
+      },
+      "LAD-R/G3-365": {
+        "K365": 0.8054,
+        "K90": 0.6486,
+        "load365": 9569,
+        "ret365": 0.4701,
+        "recovery365": 0,
+        "p95overdue365": 1.6
+      },
+      "V1": {
+        "K365": 0.907,
+        "K90": 0.7625,
+        "load365": 7700,
+        "ret365": 0.5779,
+        "recovery365": 0,
+        "p95overdue365": 1.67
+      }
+    },
+    "byAttN": {
+      "A1/N35": {
+        "ENG-CLAMP/F21": {
+          "K365": 0.943,
+          "load": 2008,
+          "recovery": 0
+        },
+        "ENG-CLAMP/G3-180": {
+          "K365": 0.914,
+          "load": 1645,
+          "recovery": 0
+        },
+        "ENG-CLAMP/G3-365": {
+          "K365": 0.893,
+          "load": 1621,
+          "recovery": 0
+        },
+        "ENG-LAPSE/F21": {
+          "K365": 0.944,
+          "load": 2015,
+          "recovery": 0
+        },
+        "ENG-LAPSE/G3-180": {
+          "K365": 0.925,
+          "load": 1654,
+          "recovery": 0
+        },
+        "ENG-LAPSE/G3-365": {
+          "K365": 0.901,
+          "load": 1627,
+          "recovery": 0
+        },
+        "ENG-LATE/F21": {
+          "K365": 0.791,
+          "load": 3143,
+          "recovery": 0
+        },
+        "ENG-LATE/G3-180": {
+          "K365": 0.753,
+          "load": 2888,
+          "recovery": 0
+        },
+        "ENG-LATE/G3-365": {
+          "K365": 0.734,
+          "load": 2871,
+          "recovery": 0
+        },
+        "LAD-B/F21": {
+          "K365": 0.787,
+          "load": 2977,
+          "recovery": 0
+        },
+        "LAD-B/G3-180": {
+          "K365": 0.742,
+          "load": 2696,
+          "recovery": 0
+        },
+        "LAD-B/G3-365": {
+          "K365": 0.742,
+          "load": 2695,
+          "recovery": 0
+        },
+        "LAD-R/F21": {
+          "K365": 0.884,
+          "load": 2579,
+          "recovery": 0
+        },
+        "LAD-R/G3-180": {
+          "K365": 0.834,
+          "load": 2260,
+          "recovery": 0
+        },
+        "LAD-R/G3-365": {
+          "K365": 0.832,
+          "load": 2260,
+          "recovery": 0
+        },
+        "V1": {
+          "K365": 0.923,
+          "load": 1662,
+          "recovery": 0
+        }
+      },
+      "A1/N300": {
+        "ENG-CLAMP/F21": {
+          "K365": 0.938,
+          "load": 16184,
+          "recovery": 0
+        },
+        "ENG-CLAMP/G3-180": {
+          "K365": 0.902,
+          "load": 13524,
+          "recovery": 0
+        },
+        "ENG-CLAMP/G3-365": {
+          "K365": 0.896,
+          "load": 13466,
+          "recovery": 0
+        },
+        "ENG-LAPSE/F21": {
+          "K365": 0.938,
+          "load": 16244,
+          "recovery": 0
+        },
+        "ENG-LAPSE/G3-180": {
+          "K365": 0.91,
+          "load": 13581,
+          "recovery": 0
+        },
+        "ENG-LAPSE/G3-365": {
+          "K365": 0.904,
+          "load": 13518,
+          "recovery": 0
+        },
+        "ENG-LATE/F21": {
+          "K365": 0.784,
+          "load": 24475,
+          "recovery": 0
+        },
+        "ENG-LATE/G3-180": {
+          "K365": 0.744,
+          "load": 22581,
+          "recovery": 0
+        },
+        "ENG-LATE/G3-365": {
+          "K365": 0.736,
+          "load": 22522,
+          "recovery": 0
+        },
+        "LAD-B/F21": {
+          "K365": 0.781,
+          "load": 23102,
+          "recovery": 0
+        },
+        "LAD-B/G3-180": {
+          "K365": 0.731,
+          "load": 21061,
+          "recovery": 0
+        },
+        "LAD-B/G3-365": {
+          "K365": 0.726,
+          "load": 21043,
+          "recovery": 0
+        },
+        "LAD-R/F21": {
+          "K365": 0.877,
+          "load": 20323,
+          "recovery": 0
+        },
+        "LAD-R/G3-180": {
+          "K365": 0.818,
+          "load": 18022,
+          "recovery": 0
+        },
+        "LAD-R/G3-365": {
+          "K365": 0.812,
+          "load": 17996,
+          "recovery": 0
+        },
+        "V1": {
+          "K365": 0.919,
+          "load": 13750,
+          "recovery": 0
+        }
+      },
+      "A2/N35": {
+        "ENG-CLAMP/F21": {
+          "K365": 0.913,
+          "load": 2027,
+          "recovery": 0
+        },
+        "ENG-CLAMP/G3-180": {
+          "K365": 0.887,
+          "load": 1698,
+          "recovery": 0
+        },
+        "ENG-CLAMP/G3-365": {
+          "K365": 0.875,
+          "load": 1680,
+          "recovery": 0
+        },
+        "ENG-LAPSE/F21": {
+          "K365": 0.913,
+          "load": 2036,
+          "recovery": 0
+        },
+        "ENG-LAPSE/G3-180": {
+          "K365": 0.896,
+          "load": 1708,
+          "recovery": 0
+        },
+        "ENG-LAPSE/G3-365": {
+          "K365": 0.881,
+          "load": 1688,
+          "recovery": 0
+        },
+        "ENG-LATE/F21": {
+          "K365": 0.752,
+          "load": 2800,
+          "recovery": 0
+        },
+        "ENG-LATE/G3-180": {
+          "K365": 0.715,
+          "load": 2562,
+          "recovery": 0
+        },
+        "ENG-LATE/G3-365": {
+          "K365": 0.703,
+          "load": 2553,
+          "recovery": 0
+        },
+        "LAD-B/F21": {
+          "K365": 0.764,
+          "load": 2648,
+          "recovery": 0
+        },
+        "LAD-B/G3-180": {
+          "K365": 0.721,
+          "load": 2387,
+          "recovery": 0
+        },
+        "LAD-B/G3-365": {
+          "K365": 0.721,
+          "load": 2386,
+          "recovery": 0
+        },
+        "LAD-R/F21": {
+          "K365": 0.85,
+          "load": 2389,
+          "recovery": 0
+        },
+        "LAD-R/G3-180": {
+          "K365": 0.804,
+          "load": 2098,
+          "recovery": 0
+        },
+        "LAD-R/G3-365": {
+          "K365": 0.802,
+          "load": 2098,
+          "recovery": 0
+        },
+        "V1": {
+          "K365": 0.896,
+          "load": 1713,
+          "recovery": 0
+        }
+      },
+      "A2/N300": {
+        "ENG-CLAMP/F21": {
+          "K365": 0.904,
+          "load": 15637,
+          "recovery": 0
+        },
+        "ENG-CLAMP/G3-180": {
+          "K365": 0.879,
+          "load": 13464,
+          "recovery": 0
+        },
+        "ENG-CLAMP/G3-365": {
+          "K365": 0.876,
+          "load": 13435,
+          "recovery": 0
+        },
+        "ENG-LAPSE/F21": {
+          "K365": 0.904,
+          "load": 15707,
+          "recovery": 0
+        },
+        "ENG-LAPSE/G3-180": {
+          "K365": 0.884,
+          "load": 13532,
+          "recovery": 0
+        },
+        "ENG-LAPSE/G3-365": {
+          "K365": 0.882,
+          "load": 13501,
+          "recovery": 0
+        },
+        "ENG-LATE/F21": {
+          "K365": 0.742,
+          "load": 20646,
+          "recovery": 0
+        },
+        "ENG-LATE/G3-180": {
+          "K365": 0.704,
+          "load": 19055,
+          "recovery": 0
+        },
+        "ENG-LATE/G3-365": {
+          "K365": 0.7,
+          "load": 19032,
+          "recovery": 0
+        },
+        "LAD-B/F21": {
+          "K365": 0.756,
+          "load": 19502,
+          "recovery": 0
+        },
+        "LAD-B/G3-180": {
+          "K365": 0.701,
+          "load": 17736,
+          "recovery": 0
+        },
+        "LAD-B/G3-365": {
+          "K365": 0.698,
+          "load": 17723,
+          "recovery": 0
+        },
+        "LAD-R/F21": {
+          "K365": 0.839,
+          "load": 17890,
+          "recovery": 0
+        },
+        "LAD-R/G3-180": {
+          "K365": 0.781,
+          "load": 15941,
+          "recovery": 0
+        },
+        "LAD-R/G3-365": {
+          "K365": 0.776,
+          "load": 15923,
+          "recovery": 0
+        },
+        "V1": {
+          "K365": 0.891,
+          "load": 13676,
+          "recovery": 0
+        }
+      },
+      "A3/N35": {
+        "ENG-CLAMP/F21": {
+          "K365": null,
+          "load": null,
+          "recovery": null
+        },
+        "ENG-CLAMP/G3-180": {
+          "K365": null,
+          "load": null,
+          "recovery": null
+        },
+        "ENG-CLAMP/G3-365": {
+          "K365": null,
+          "load": null,
+          "recovery": null
+        },
+        "ENG-LAPSE/F21": {
+          "K365": null,
+          "load": null,
+          "recovery": null
+        },
+        "ENG-LAPSE/G3-180": {
+          "K365": null,
+          "load": null,
+          "recovery": null
+        },
+        "ENG-LAPSE/G3-365": {
+          "K365": null,
+          "load": null,
+          "recovery": null
+        },
+        "ENG-LATE/F21": {
+          "K365": null,
+          "load": null,
+          "recovery": null
+        },
+        "ENG-LATE/G3-180": {
+          "K365": null,
+          "load": null,
+          "recovery": null
+        },
+        "ENG-LATE/G3-365": {
+          "K365": null,
+          "load": null,
+          "recovery": null
+        },
+        "LAD-B/F21": {
+          "K365": null,
+          "load": null,
+          "recovery": null
+        },
+        "LAD-B/G3-180": {
+          "K365": null,
+          "load": null,
+          "recovery": null
+        },
+        "LAD-B/G3-365": {
+          "K365": null,
+          "load": null,
+          "recovery": null
+        },
+        "LAD-R/F21": {
+          "K365": null,
+          "load": null,
+          "recovery": null
+        },
+        "LAD-R/G3-180": {
+          "K365": null,
+          "load": null,
+          "recovery": null
+        },
+        "LAD-R/G3-365": {
+          "K365": null,
+          "load": null,
+          "recovery": null
+        },
+        "V1": {
+          "K365": null,
+          "load": null,
+          "recovery": null
+        }
+      },
+      "A3/N300": {
+        "ENG-CLAMP/F21": {
+          "K365": null,
+          "load": null,
+          "recovery": null
+        },
+        "ENG-CLAMP/G3-180": {
+          "K365": null,
+          "load": null,
+          "recovery": null
+        },
+        "ENG-CLAMP/G3-365": {
+          "K365": null,
+          "load": null,
+          "recovery": null
+        },
+        "ENG-LAPSE/F21": {
+          "K365": null,
+          "load": null,
+          "recovery": null
+        },
+        "ENG-LAPSE/G3-180": {
+          "K365": null,
+          "load": null,
+          "recovery": null
+        },
+        "ENG-LAPSE/G3-365": {
+          "K365": null,
+          "load": null,
+          "recovery": null
+        },
+        "ENG-LATE/F21": {
+          "K365": null,
+          "load": null,
+          "recovery": null
+        },
+        "ENG-LATE/G3-180": {
+          "K365": null,
+          "load": null,
+          "recovery": null
+        },
+        "ENG-LATE/G3-365": {
+          "K365": null,
+          "load": null,
+          "recovery": null
+        },
+        "LAD-B/F21": {
+          "K365": null,
+          "load": null,
+          "recovery": null
+        },
+        "LAD-B/G3-180": {
+          "K365": null,
+          "load": null,
+          "recovery": null
+        },
+        "LAD-B/G3-365": {
+          "K365": null,
+          "load": null,
+          "recovery": null
+        },
+        "LAD-R/F21": {
+          "K365": null,
+          "load": null,
+          "recovery": null
+        },
+        "LAD-R/G3-180": {
+          "K365": null,
+          "load": null,
+          "recovery": null
+        },
+        "LAD-R/G3-365": {
+          "K365": null,
+          "load": null,
+          "recovery": null
+        },
+        "V1": {
+          "K365": null,
+          "load": null,
+          "recovery": null
+        }
+      }
+    }
+  },
+  "ablation": {
+    "lateness": {
+      "F21": {
+        "cellsPassing": 0,
+        "of": 48,
+        "needed": 32,
+        "ciPositive": 0,
+        "ciNegative": 48,
+        "meanDiffK365": -0.1569,
+        "minDiff": -0.5948,
+        "maxDiff": 0
+      },
+      "G3-365": {
+        "cellsPassing": 0,
+        "of": 48,
+        "needed": 32,
+        "ciPositive": 0,
+        "ciNegative": 48,
+        "meanDiffK365": -0.1666,
+        "minDiff": -0.4386,
+        "maxDiff": -0.0022
+      },
+      "kept": false
+    },
+    "lapses": {
+      "F21": {
+        "cellsPassing": 0,
+        "of": 48,
+        "needed": 32,
+        "ciPositive": 34,
+        "ciNegative": 1,
+        "meanDiffK365": 0.0004,
+        "minDiff": 0,
+        "maxDiff": 0.0032
+      },
+      "G3-365": {
+        "cellsPassing": 11,
+        "of": 48,
+        "needed": 32,
+        "ciPositive": 21,
+        "ciNegative": 23,
+        "meanDiffK365": 0.007,
+        "minDiff": 0,
+        "maxDiff": 0.0533
+      },
+      "kept": false
+    }
+  },
+  "box5": {},
+  "dynamics": {}
+}

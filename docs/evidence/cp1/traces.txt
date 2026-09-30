@@ -1,0 +1,48 @@
+
+## V1
+  K x12                    day   66 K→B1(108m) K→B1(194m) K→B1(350m) K→B1(630m) K→B1(1134m) K→B2(1.4d) K→B2(2.6d) K→B3(4.6d) K→B4(8.3d) K→B4(15d) K→B5(27d) K→B5(48d)
+  U x6                     day    5 U→B1(21m) U→B1(10m) U→B1(10m) U→B1(10m) U→B1(10m) U→B1(10m)
+  KU x12                   day   11 K→B1(108m) U→B1(38m) K→B1(68m) U→B1(24m) K→B1(43m) U→B1(15m) K→B1(27m) U→B1(10m) K→B1(18m) U→B1(10m) K→B1(18m) U→B1(10m)
+  KKU x8                   day   10 K→B1(108m) K→B1(194m) U→B1(68m) K→B1(122m) K→B1(220m) U→B1(77m) K→B1(139m) K→B1(250m) U→B1(87m) K→B1(157m) K→B1(283m)
+  K x10 then U x3          day   47 K→B1(108m) K→B1(194m) K→B1(350m) K→B1(630m) K→B1(1134m) K→B2(1.4d) K→B2(2.6d) K→B3(4.6d) K→B4(8.3d) K→B4(15d) U→B3(5.2d) U→B2(1.8d) U→B1(919m)
+  K to Box5 then U,K,K,K   day  691 K→B1(108m) K→B1(194m) K→B1(350m) K→B1(630m) K→B1(1134m) K→B2(1.4d) K→B2(2.6d) K→B3(4.6d) K→B4(8.3d) K→B4(15d) K→B5(27d) K→B5(48d) K→B5(87d) K→B5(156d) U→B5(55d) K→B5(98d) K→B5(177d) K→B5(319d)
+
+## LAD-R/G3-365
+  K x12                    day 2109 K→B2(1d) K→B3(3d) K→B4(7d) K→B5(21d) K→B5(63d) K→B5(189d) K→B5(365d) K→B5(365d) K→B5(365d) K→B5(365d) K→B5(365d) K→B5(365d)
+  U x6                     day    5 U→B1(10m) U→B1(10m) U→B1(10m) U→B1(10m) U→B1(10m) U→B1(10m)
+  KU x12                   day   11 K→B2(1d) U→B1(10m) K→B2(1d) U→B1(10m) K→B2(1d) U→B1(10m) K→B2(1d) U→B1(10m) K→B2(1d) U→B1(10m) K→B2(1d) U→B1(10m)
+  KKU x8                   day   16 K→B2(1d) K→B3(3d) U→B1(10m) K→B2(1d) K→B3(3d) U→B1(10m) K→B2(1d) K→B3(3d) U→B1(10m) K→B2(1d) K→B3(3d)
+  K x10 then U x3          day 1746 K→B2(1d) K→B3(3d) K→B4(7d) K→B5(21d) K→B5(63d) K→B5(189d) K→B5(365d) K→B5(365d) K→B5(365d) K→B5(365d) U→B1(10m) U→B1(10m) U→B1(10m)
+  K to Box5 then U,K,K,K   day 3209 K→B2(1d) K→B3(3d) K→B4(7d) K→B5(21d) K→B5(63d) K→B5(189d) K→B5(365d) K→B5(365d) K→B5(365d) K→B5(365d) K→B5(365d) K→B5(365d) K→B5(365d) K→B5(365d) U→B1(10m) K→B2(1d) K→B3(3d) K→B4(7d)
+
+## LAD-B/G3-365
+  K x12                    day 2109 K→B2(1d) K→B3(3d) K→B4(7d) K→B5(21d) K→B5(63d) K→B5(189d) K→B5(365d) K→B5(365d) K→B5(365d) K→B5(365d) K→B5(365d) K→B5(365d)
+  U x6                     day    5 U→B1(10m) U→B1(10m) U→B1(10m) U→B1(10m) U→B1(10m) U→B1(10m)
+  KU x12                   day   11 K→B2(1d) U→B1(10m) K→B2(1d) U→B1(10m) K→B2(1d) U→B1(10m) K→B2(1d) U→B1(10m) K→B2(1d) U→B1(10m) K→B2(1d) U→B1(10m)
+  KKU x8                   day   74 K→B2(1d) K→B3(3d) U→B2(1d) K→B3(3d) K→B4(7d) U→B3(3d) K→B4(7d) K→B5(21d) U→B4(7d) K→B5(21d) K→B5(63d)
+  K x10 then U x3          day 1754 K→B2(1d) K→B3(3d) K→B4(7d) K→B5(21d) K→B5(63d) K→B5(189d) K→B5(365d) K→B5(365d) K→B5(365d) K→B5(365d) U→B4(7d) U→B3(3d) U→B2(1d)
+  K to Box5 then U,K,K,K   day 3295 K→B2(1d) K→B3(3d) K→B4(7d) K→B5(21d) K→B5(63d) K→B5(189d) K→B5(365d) K→B5(365d) K→B5(365d) K→B5(365d) K→B5(365d) K→B5(365d) K→B5(365d) K→B5(365d) U→B4(7d) K→B5(21d) K→B5(63d) K→B5(189d)
+
+## ENG-CLAMP/G3-365
+  K x12                    day   66 K→B1(108m) K→B1(194m) K→B1(350m) K→B1(630m) K→B1(1134m) K→B2(1.4d) K→B2(2.6d) K→B3(4.6d) K→B4(8.3d) K→B4(15d) K→B5(27d) K→B5(80d)
+  U x6                     day    5 U→B1(21m) U→B1(10m) U→B1(10m) U→B1(10m) U→B1(10m) U→B1(10m)
+  KU x12                   day   11 K→B1(108m) U→B1(38m) K→B1(68m) U→B1(24m) K→B1(43m) U→B1(15m) K→B1(27m) U→B1(10m) K→B1(18m) U→B1(10m) K→B1(18m) U→B1(10m)
+  KKU x8                   day   10 K→B1(108m) K→B1(194m) U→B1(68m) K→B1(122m) K→B1(220m) U→B1(77m) K→B1(139m) K→B1(250m) U→B1(87m) K→B1(157m) K→B1(283m)
+  K x10 then U x3          day   47 K→B1(108m) K→B1(194m) K→B1(350m) K→B1(630m) K→B1(1134m) K→B2(1.4d) K→B2(2.6d) K→B3(4.6d) K→B4(8.3d) K→B4(15d) U→B3(5.2d) U→B2(1.8d) U→B1(919m)
+  K to Box5 then U,K,K,K   day 1612 K→B1(108m) K→B1(194m) K→B1(350m) K→B1(630m) K→B1(1134m) K→B2(1.4d) K→B2(2.6d) K→B3(4.6d) K→B4(8.3d) K→B4(15d) K→B5(27d) K→B5(80d) K→B5(241d) K→B5(365d) U→B5(128d) K→B5(365d) K→B5(365d) K→B5(365d)
+
+## ENG-LATE/G3-365
+  K x12                    day 1476 K→B1(108m) K→B2(1.8d) K→B3(3.6d) K→B4(7.2d) K→B4(14d) K→B5(27d) K→B5(81d) K→B5(243d) K→B5(365d) K→B5(365d) K→B5(365d) K→B5(365d)
+  U x6                     day    5 U→B1(21m) U→B1(10m) U→B1(10m) U→B1(10m) U→B1(10m) U→B1(10m)
+  KU x12                   day   16 K→B1(108m) U→B1(38m) K→B2(1.8d) U→B1(907m) K→B2(1.8d) U→B1(907m) K→B2(1.8d) U→B1(907m) K→B2(1.8d) U→B1(907m) K→B2(1.8d) U→B1(907m)
+  KKU x8                   day   33 K→B1(108m) K→B2(1.8d) U→B1(907m) K→B2(1.8d) K→B3(3.6d) U→B2(1.3d) K→B3(3.6d) K→B4(7.2d) U→B3(3d) K→B3(5.4d) K→B4(11d)
+  K x10 then U x3          day 1284 K→B1(108m) K→B2(1.8d) K→B3(3.6d) K→B4(7.2d) K→B4(14d) K→B5(27d) K→B5(81d) K→B5(243d) K→B5(365d) K→B5(365d) U→B5(128d) U→B5(45d) U→B4(16d)
+  K to Box5 then U,K,K,K   day 3429 K→B1(108m) K→B2(1.8d) K→B3(3.6d) K→B4(7.2d) K→B4(14d) K→B5(27d) K→B5(81d) K→B5(243d) K→B5(365d) K→B5(365d) K→B5(365d) K→B5(365d) K→B5(365d) K→B5(365d) U→B5(128d) K→B5(365d) K→B5(365d) K→B5(365d)
+
+## ENG-LAPSE/G3-365
+  K x12                    day   66 K→B1(108m) K→B1(194m) K→B1(350m) K→B1(630m) K→B1(1134m) K→B2(1.4d) K→B2(2.6d) K→B3(4.6d) K→B4(8.3d) K→B4(15d) K→B5(27d) K→B5(80d)
+  U x6                     day    5 U→B1(21m) U→B1(10m) U→B1(10m) U→B1(10m) U→B1(10m) U→B1(10m)
+  KU x12                   day   11 K→B1(108m) U→B1(38m) K→B1(68m) U→B1(20m) K→B1(36m) U→B1(10m) K→B1(18m) U→B1(10m) K→B1(18m) U→B1(10m) K→B1(18m) U→B1(10m)
+  KKU x8                   day   10 K→B1(108m) K→B1(194m) U→B1(68m) K→B1(122m) K→B1(220m) U→B1(66m) K→B1(118m) K→B1(212m) U→B1(54m) K→B1(97m) K→B1(174m)
+  K x10 then U x3          day   47 K→B1(108m) K→B1(194m) K→B1(350m) K→B1(630m) K→B1(1134m) K→B2(1.4d) K→B2(2.6d) K→B3(4.6d) K→B4(8.3d) K→B4(15d) U→B3(5.2d) U→B2(1.5d) U→B1(564m)
+  K to Box5 then U,K,K,K   day 1612 K→B1(108m) K→B1(194m) K→B1(350m) K→B1(630m) K→B1(1134m) K→B2(1.4d) K→B2(2.6d) K→B3(4.6d) K→B4(8.3d) K→B4(15d) K→B5(27d) K→B5(80d) K→B5(241d) K→B5(365d) U→B5(128d) K→B5(365d) K→B5(365d) K→B5(365d)
