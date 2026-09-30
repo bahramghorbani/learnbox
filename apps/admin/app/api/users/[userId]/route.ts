@@ -27,6 +27,9 @@ async function requireSession(request: Request) {
 }
 
 export async function GET(request: Request, { params }: { params: Promise<{ userId: string }> }) {
+  const disabled = legacyAdminRouteGate();
+  if (disabled) return disabled;
+
   const session = await requireSession(request);
   if (!session) return new Response('Unauthorized', { status: 401 });
 

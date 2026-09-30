@@ -34,7 +34,10 @@ const INVENTORY: Record<string, Entry> = {
     category: 'delegated',
     guardIn: 'lib/server/admin-auth-routes.ts',
   },
-  'app/api/auth/logout/route.ts': { category: 'delegated', guardIn: 'lib/server/admin-auth-routes.ts' },
+  'app/api/auth/logout/route.ts': {
+    category: 'delegated',
+    guardIn: 'lib/server/admin-auth-routes.ts',
+  },
   'app/api/auth/reauth/verify/route.ts': {
     category: 'delegated',
     guardIn: 'lib/server/admin-auth-routes.ts',
@@ -57,6 +60,24 @@ const INVENTORY: Record<string, Entry> = {
   'app/api/packs/generate/route.ts': { category: 'hard-disabled' },
   'app/api/packs/import/route.ts': { category: 'hard-disabled' },
   'app/api/users/[userId]/route.ts': { category: 'hard-disabled' },
+};
+
+/**
+ * Routes with no mutating method. Each is either a hard-disabled legacy route (gate first, GET
+ * included) or a read that goes through the shared server module/session layer.
+ */
+const READ_ONLY: Record<string, 'hard-disabled' | 'session-layer'> = {
+  'app/api/users/route.ts': 'hard-disabled',
+  'app/api/transactions/route.ts': 'hard-disabled',
+  'app/api/packs/csv-template/route.ts': 'hard-disabled',
+  'app/api/auth/add-passkey/options/route.ts': 'session-layer',
+  'app/api/auth/bootstrap/options/route.ts': 'session-layer',
+  'app/api/auth/login/options/route.ts': 'session-layer',
+  'app/api/auth/reauth/options/route.ts': 'session-layer',
+  'app/api/auth/session/route.ts': 'session-layer',
+  'app/api/content/review/route.ts': 'session-layer',
+  'app/api/splash/current/route.ts': 'session-layer',
+  'app/api/splash/preview/route.ts': 'session-layer',
 };
 
 function walk(dir: string): string[] {
@@ -103,12 +124,17 @@ describe('Admin mutation route inventory (LB-B30)', () => {
       if (entry.category !== 'hard-disabled') continue;
       const source = read(file);
       const handlers = [
-        ...source.matchAll(/export\s+(?:async\s+)?function\s+(POST|PUT|PATCH|DELETE)\s*\([^)]*\)\s*(?::\s*\w+)?[^{]*\{/g),
+        ...source.matchAll(
+          /export\s+(?:async\s+)?function\s+(POST|PUT|PATCH|DELETE)\s*\([^)]*\)\s*(?::\s*\w+)?[^{]*\{/g,
+        ),
       ];
       expect(handlers.length, `${file} exports a mutating handler`).toBeGreaterThan(0);
       for (const match of handlers) {
         const start = (match.index ?? 0) + match[0].length;
-        const body = source.slice(start, start + 140).replace(/\s+/g, ' ').trim();
+        const body = source
+          .slice(start, start + 140)
+          .replace(/\s+/g, ' ')
+          .trim();
         expect(body.startsWith(gate), `${file} ${match[1]} must start with the legacy gate`).toBe(
           true,
         );
@@ -126,12 +152,17 @@ describe('Admin mutation route inventory (LB-B30)', () => {
     ]) {
       const source = read(file);
       const handlers = [
-        ...source.matchAll(/export\s+(?:async\s+)?function\s+(GET|POST|PUT|PATCH|DELETE)\b[^{]*\{/g),
+        ...source.matchAll(
+          /export\s+(?:async\s+)?function\s+(GET|POST|PUT|PATCH|DELETE)\b[^{]*\{/g,
+        ),
       ];
       expect(handlers.length).toBeGreaterThan(0);
       for (const match of handlers) {
         const start = (match.index ?? 0) + match[0].length;
-        const body = source.slice(start, start + 140).replace(/\s+/g, ' ').trim();
+        const body = source
+          .slice(start, start + 140)
+          .replace(/\s+/g, ' ')
+          .trim();
         expect(body.startsWith(gate), `${file} ${match[1]}`).toBe(true);
       }
     }
@@ -141,7 +172,64 @@ describe('Admin mutation route inventory (LB-B30)', () => {
     // The comment documenting the removal is okay; the actual SQL queries are forbidden.
     const offenders = walk(join(ROOT, 'app'))
       .concat(walk(join(ROOT, 'lib')))
-      .filter((f) => /DELETE FROM (review_events|card_schedules|user_streak)/.test(readFileSync(f, 'utf8')));
+      .filter((f) =>
+        /DELETE FROM (review_events|card_schedules|user_streak)/.test(readFileSync(f, 'utf8')),
+      );
     expect(offenders.map((f) => relative(ROOT, f))).toEqual([]);
+  });
+
+  it('classifies EVERY route file under app/api, whatever its methods', () => {
+    const all = walk(API)
+      .map((f) => relative(ROOT, f))
+      .sort();
+    expect(all).toEqual([...Object.keys(INVENTORY), ...Object.keys(READ_ONLY)].sort());
+  });
+
+  it('gates EVERY exported handler (GET included) of every hard-disabled route as its FIRST statement', () => {
+    const gate = 'const disabled = legacyAdminRouteGate(); if (disabled) return disabled;';
+    const disabledFiles = [
+      ...Object.entries(INVENTORY)
+        .filter(([, e]) => e.category === 'hard-disabled')
+        .map(([f]) => f),
+      ...Object.entries(READ_ONLY)
+        .filter(([, c]) => c === 'hard-disabled')
+        .map(([f]) => f),
+      'app/api/gateways/route.ts',
+      'app/api/banners/route.ts',
+    ];
+    for (const file of new Set(disabledFiles)) {
+      const source = read(file);
+      const handlers = [
+        ...source.matchAll(
+          /export\s+(?:async\s+)?function\s+(GET|HEAD|POST|PUT|PATCH|DELETE)\s*\([^)]*\)[^{]*\{/g,
+        ),
+      ];
+      expect(handlers.length, `${file} exports handlers`).toBeGreaterThan(0);
+      for (const match of handlers) {
+        const start = (match.index ?? 0) + match[0].length;
+        const body = source
+          .slice(start, start + 140)
+          .replace(/\s+/g, ' ')
+          .trim();
+        expect(body.startsWith(gate), `${file} ${match[1]} must start with the legacy gate`).toBe(
+          true,
+        );
+      }
+    }
+  });
+
+  it('routes that are not hard-disabled never carry raw legacy SQL against learner tables', () => {
+    // Known, session-gated exception (deferred to the compatibility phase, LB-B31): the passkey
+    // registration options route reads admin_owner/admin_passkey_credentials inline and issues a
+    // WebAuthn challenge (a write) from a GET. It is authenticated and never touches learner data.
+    const KNOWN_INLINE_SQL = new Set(['app/api/auth/add-passkey/options/route.ts']);
+    for (const [file, category] of Object.entries(READ_ONLY)) {
+      if (category !== 'session-layer' || KNOWN_INLINE_SQL.has(file)) continue;
+      const source = read(file);
+      expect(source, `${file} must not hold raw SQL`).not.toMatch(
+        /\b(SELECT|INSERT INTO|UPDATE|DELETE FROM)\b/,
+      );
+      expect(source, `${file} must not import pg directly`).not.toMatch(/from 'pg'/);
+    }
   });
 });
