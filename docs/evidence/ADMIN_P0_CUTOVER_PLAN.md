@@ -1,6 +1,9 @@
-# Admin P0 (LB-B30) Production cutover plan: DRAFT for owner approval
+# Admin P0 (LB-B30) Production cutover plan: HISTORICAL DRAFT
 
-Status: **not executed, not approved in this form.** Written from staging evidence
+> **Superseded.** Executed 2026-09-30 from merged SHA `e601d8a…`; the record of what actually happened is
+> `ADMIN_P0_CUTOVER_EVIDENCE.md`. This draft is kept unchanged below as the plan of record.
+
+Status at drafting: **not executed, not approved in this form.** Written from staging evidence
 (`ADMIN_P0_STAGING_EVIDENCE.md`). Production facts below marked VERIFY were not re-read in this
 session and must be captured in the pre-cutover checkpoint before any change.
 
