@@ -1,10 +1,15 @@
 import { handleWebReviewBatchPost } from '../../../../lib/learner-review-web-http';
 import { webReviewDependenciesFromEnvironment } from '../../../../lib/learner-review-web-runtime';
 import { authenticateLearner } from '../../../../lib/learner-auth';
+import { guardMutation } from '../../../../lib/mutation-guard';
 
 export const runtime = 'nodejs';
 
 export async function POST(request: Request): Promise<Response> {
+  // LB-B29: same-origin JSON only, decided before the session is read.
+  const rejected = guardMutation(request, { method: 'POST' });
+  if (rejected) return rejected;
+
   const subject = (await authenticateLearner(request))?.subject;
   if (!subject)
     return Response.json(

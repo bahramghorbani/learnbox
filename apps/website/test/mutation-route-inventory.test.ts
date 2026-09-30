@@ -159,6 +159,19 @@ describe('mutation route inventory (LB-B29)', () => {
           expect(exported).toEqual([declared]);
         });
 
+        if (entry.category === 'guarded') {
+          // Staging caught this: a handler-level guard is bypassed when the route file reads the
+          // session (or short-circuits on a header) before delegating to that handler.
+          it('runs the guard in the route file before any session read there', () => {
+            const source = read(file);
+            const authAt = source.search(/authenticateLearner\(|readLearnerSession\(/);
+            if (authAt === -1) return;
+            const guardAt = source.indexOf('guardMutation(request');
+            expect(guardAt).toBeGreaterThan(-1);
+            expect(guardAt).toBeLessThan(authAt);
+          });
+        }
+
         if (entry.authMarker) {
           it('runs the guard before authentication or body reading', () => {
             const source = read(guardFile);
