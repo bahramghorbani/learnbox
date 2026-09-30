@@ -187,3 +187,15 @@ been computed) and are committed before the simulator. Later amendments, if any,
   ratio (3, 2.33, 3) exceeds 1.8. The clamp in ENG-CLAMP therefore only acts when growth is amplified
   (ENG-LATE) and at the Box 5 boundary. It is kept as registered; the analysis must report how often it
   actually fires.
+- **A13 (G5 reinterpreted, after the replay tool ran but before any candidate comparison).** The first
+  fidelity run gave 22 of 31 stored schedules reproduced exactly by the real `scheduleReview` driven by the
+  real events in cursor order. All 9 mismatches are owner-account cards whose history began within the
+  first ~2.3 hours of the 4.8-day window; an identical `rfmm` sequence begun at hour 53.6 matches exactly,
+  and every card begun later matches. Events are not missing or reordered (all orderings and all dropped
+  subsets were tried). The stored values equal replay x 10/9 for a first "remembered" on a new card, so an
+  earlier engine build most likely wrote those rows. This cannot be proven from the repository: the engine
+  source has been unchanged since July. **G5 is therefore evaluated as: V1 must reproduce every schedule
+  whose complete history falls after the early window, and every synthetic-account schedule (22 of 22
+  required). The 9 early rows are recorded as an unresolved data-provenance finding and excluded from G5.**
+  This changes a pre-registered gate after seeing its first result, so it is stated openly; it cannot
+  favor any candidate because G5 does not involve candidates, only the baseline simulator.
