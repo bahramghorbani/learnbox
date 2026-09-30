@@ -4,10 +4,17 @@
 
 ## Active work
 
-**No feature work is active.** v1.2.0 and the v1.2.1 security patch (`LB-B29`) are released and
+**No product feature work is active** (only the LB-B35 CP0 tests/docs below). v1.2.0 and the v1.2.1 security patch (`LB-B29`) are released and
 closed (below), and the Admin P0 credential cutover (`LB-B30`–`B33`) is complete (next section).
 Nothing further is approved for implementation: P1 compatibility and Admin redesign have **not** started. Deferred but not cancelled:
 `LB-B19` (reminders), `LB-B28b` (photo upload), `LB-B17` (Store).
+
+## LB-B35 Learning system unification — CP0 characterization (unmerged, tests and docs only)
+
+Branch `test/lb-b35-cp0-learning-characterization`. Owner-approved scope: CP0 only. Adds tests that pin
+the current learning behavior and reproduced defects, a `review_events` fingerprint helper, and
+`docs/evidence/LB_B35_CP0_CHARACTERIZATION.md`. **No scheduler, schema, API or UI behavior changes and no
+Production action.** CP1 (scheduler policy comparison) has **not** started and needs owner approval.
 
 ## Admin P0 (LB-B30–B33) — cut over, Admin still contained
 
