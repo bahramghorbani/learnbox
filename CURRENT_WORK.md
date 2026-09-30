@@ -4,18 +4,20 @@
 
 ## Active work
 
-**No product feature work is active** (only LB-B35 CP0 [merged, PR #328] and CP1 [evidence only, below]). v1.2.0 and the v1.2.1 security patch (`LB-B29`) are released and
+**No product feature work is active** (LB-B35 CP0/CP1 merged; CP2 awaiting review, below). v1.2.0 and the v1.2.1 security patch (`LB-B29`) are released and
 closed (below), and the Admin P0 credential cutover (`LB-B30`–`B33`) is complete (next section).
 Nothing further is approved for implementation: P1 compatibility and Admin redesign have **not** started. Deferred but not cancelled:
 `LB-B19` (reminders), `LB-B28b` (photo upload), `LB-B17` (Store).
 
-## LB-B35 Learning system unification — CP0 merged, CP1 evidence awaiting owner review
+## LB-B35 Learning system unification — CP2 complete, awaiting owner review
 
-- **CP0** (PR #328, merged `d1f33a8`): characterization tests and `docs/evidence/LB_B35_CP0_CHARACTERIZATION.md`.
-- **CP1** (branch `sim/lb-b35-cp1-scheduler-policy`, unmerged, evidence and scratch tooling only): pre-registration,
-  simulator, replay and `docs/evidence/LB_B35_CP1_REPORT.md`. **No scheduler, schema, API, UI, Admin or Store
-  change and no Production action.** The scheduler policy is **not chosen**: the report gives a
-  conditional recommendation and lists owner decisions. CP2 has **not** started and needs an explicit owner signal.
+- **CP0** (PR #328, `d1f33a8`) and **CP1** (PR #329, `d0d63e4`) merged: characterization tests, simulation and policy evidence.
+- **Owner decisions after CP1:** ENG-CLAMP; Box 5 ×3 capped at 180 days; Unknown = one Box down; difficulty/lapses/lateness
+  removed from scheduling. Not implemented or activated.
+- **CP2** (branch `feat/lb-b35-cp2-canonical-definitions`): `packages/learning-engine/src/definitions.ts` +
+  `replay-compat.ts`, TypeScript↔Postgres agreement tests, a no-redefinition drift guard and a Known-progression
+  characterization. `docs/evidence/LB_B35_CP2_CANONICAL_DEFINITIONS.md`. **No scheduler, schema, migration, API behavior, UI,
+  Admin or Store change and no Production action.** CP3 starts only on an explicit owner signal; open decisions O1–O3 are in the evidence doc.
 
 ## Admin P0 (LB-B30–B33) — cut over, Admin still contained
 
