@@ -190,10 +190,16 @@ export function accuracyFromAnswers(answers: Iterable<string>): Accuracy {
 /**
  * A "learning day" is the calendar day in the LEARNER's IANA time zone, never the server's and never
  * UTC. The zone is supplied per request (there is no stored per-user zone yet); an unknown or
- * missing zone degrades to UTC rather than failing.
+ * missing zone, or one that is not an IANA name (including a fixed UTC offset), degrades to UTC
+ * rather than failing.
  */
 export function normalizeTimeZone(candidate: string | null | undefined): string {
   if (!candidate || candidate.length > 64) return 'UTC';
+  // IANA names only (`Asia/Tehran`, `UTC`, `Etc/GMT+3`): they start with a letter. Fixed-offset
+  // strings (`+03:30`, `-0500`) are refused on purpose. Modern runtimes accept them in `Intl`, but
+  // Postgres reads the same text as a POSIX zone with the OPPOSITE sign, so TypeScript and SQL
+  // would put the same review on different local days. (LB-B35 CP3; owner decision O2.)
+  if (!IANA_SHAPE.test(candidate)) return 'UTC';
   try {
     new Intl.DateTimeFormat('en-US', { timeZone: candidate });
     return candidate;
@@ -201,6 +207,7 @@ export function normalizeTimeZone(candidate: string | null | undefined): string 
     return 'UTC';
   }
 }
+const IANA_SHAPE = /^[A-Za-z][A-Za-z0-9_+-]*(?:\/[A-Za-z0-9_+-]+)*$/;
 
 /** `YYYY-MM-DD` of `instant` in `timeZone`. Equals Postgres `(ts AT TIME ZONE tz)::date`. */
 export function localDayKey(instant: Date, timeZone: string): string {

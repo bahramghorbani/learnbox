@@ -21,13 +21,14 @@ interface WordItem {
   state: string;
   stabilityDays: number;
   reviewCount: number;
-  forgotCount: number;
+  unknownCount: number;
   dueAt: string | null;
   lastReviewedAt: string | null;
 }
 
 interface WordsSummary {
   total: number;
+  learned: number;
   mastered: number;
   learning: number;
   new: number;
@@ -106,6 +107,7 @@ export function WordsScreen({ onNavigate, onStartReview }: WordsScreenProps) {
   const [words, setWords] = useState<WordItem[]>([]);
   const [summary, setSummary] = useState<WordsSummary>({
     total: 0,
+    learned: 0,
     mastered: 0,
     learning: 0,
     new: 0,
@@ -133,7 +135,7 @@ export function WordsScreen({ onNavigate, onStartReview }: WordsScreenProps) {
         );
         setPacks(json.packs ?? []);
         setWords(json.words ?? []);
-        setSummary(json.summary ?? { total: 0, mastered: 0, learning: 0, new: 0 });
+        setSummary(json.summary ?? { total: 0, learned: 0, mastered: 0, learning: 0, new: 0 });
       } else {
         console.error('[words] API error:', res.status);
       }
@@ -153,7 +155,7 @@ export function WordsScreen({ onNavigate, onStartReview }: WordsScreenProps) {
     : words;
   const sortedWords = sortWords(filteredWords, sortMode);
   const progressPercent =
-    summary.total > 0 ? Math.round((summary.mastered / summary.total) * 100) : 0;
+    summary.total > 0 ? Math.round((summary.learned / summary.total) * 100) : 0;
 
   return (
     <main className="app-shell words-shell" data-testid="learnbox-words-v2">
@@ -169,8 +171,8 @@ export function WordsScreen({ onNavigate, onStartReview }: WordsScreenProps) {
             <div className="words-v2-progress-fill" style={{ width: `${progressPercent}%` }} />
           </div>
           <p className="words-v2-progress-text">
-            {toPersianDigits(summary.mastered)} از {toPersianDigits(summary.total)} واژه مسلط شده (
-            {toPersianDigits(progressPercent)}٪)
+            {toPersianDigits(summary.learned)} از {toPersianDigits(summary.total)} واژه یاد گرفته
+            شده ({toPersianDigits(progressPercent)}٪)
           </p>
           <div className="words-v2-summary-chips">
             <span className="words-chip words-chip-new">جدید: {toPersianDigits(summary.new)}</span>
@@ -178,7 +180,7 @@ export function WordsScreen({ onNavigate, onStartReview }: WordsScreenProps) {
               یادگیری: {toPersianDigits(summary.learning)}
             </span>
             <span className="words-chip words-chip-mastered">
-              مسلط: {toPersianDigits(summary.mastered)}
+              یاد گرفته: {toPersianDigits(summary.learned)}
             </span>
           </div>
         </div>
@@ -336,7 +338,7 @@ export function WordsScreen({ onNavigate, onStartReview }: WordsScreenProps) {
                 <span className="words-v2-stat-icon">❌</span>
                 <span>فراموش شده</span>
                 <span className="words-v2-stat-value">
-                  {toPersianDigits(selectedWord.forgotCount)} بار
+                  {toPersianDigits(selectedWord.unknownCount)} بار
                 </span>
               </div>
               <div className="words-v2-stat-row">

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { browserTimeZone } from '../../lib/learner-summary-client';
 
 import { toPersianDigits } from '../persian-digits';
 import { LearnerNav, type LearnerDestination } from './LearnerNav';
@@ -17,26 +18,35 @@ const WEEK_DAYS = ['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج'];
 
 type ProgressData = {
   leitnerBoxes: Record<'box1' | 'box2' | 'box3' | 'box4' | 'box5', number>;
-  cardStates: { total: number; mastered: number; learning: number };
+  cardStates: {
+    total: number;
+    new: number;
+    learning: number;
+    learned: number;
+    mastered: number;
+  };
   weeklyActivity: Array<{ day: string; reviews: number }>;
   totals: { reviews: number };
   streak: { current: number };
   cefr: Array<{ level: string; count: number }>;
 };
 
+/**
+ * The server returns the last seven LEARNER-LOCAL days, oldest first and zero-filled (LB-B35 CP3),
+ * so the bars are a straight map: the browser does no day arithmetic of its own. The weekday label
+ * comes from the calendar date in the key (no time zone involved).
+ */
 function buildWeeklyBars(
   activity: ProgressData['weeklyActivity'],
 ): Array<{ label: string; count: number; height: number }> {
-  const today = new Date();
-  const byDate = new Map(activity.map(({ day, reviews }) => [day.slice(0, 10), reviews]));
   const maxCount = Math.max(1, ...activity.map(({ reviews }) => reviews));
-  return Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(today);
-    d.setDate(today.getDate() - (6 - i));
-    const dow = d.getDay();
-    const label = WEEK_DAYS[dow === 6 ? 0 : dow];
-    const count = byDate.get(d.toISOString().slice(0, 10)) ?? 0;
-    return { label, count, height: Math.round((count / maxCount) * 100) };
+  return activity.map(({ day, reviews }) => {
+    const weekday = new Date(`${day.slice(0, 10)}T12:00:00Z`).getUTCDay(); // 0 = Sunday
+    return {
+      label: WEEK_DAYS[(weekday + 1) % 7],
+      count: reviews,
+      height: Math.round((reviews / maxCount) * 100),
+    };
   });
 }
 
@@ -55,7 +65,10 @@ export function ProgressScreen({
   const [loadState, setLoadState] = useState<'loading' | 'ready' | 'error'>('loading');
   useEffect(() => {
     const controller = new AbortController();
-    fetch('/api/learner/progress', { cache: 'no-store', signal: controller.signal })
+    fetch(`/api/learner/progress?tz=${encodeURIComponent(browserTimeZone())}`, {
+      cache: 'no-store',
+      signal: controller.signal,
+    })
       .then((response) => {
         if (!response.ok) throw new Error('progress unavailable');
         return response.json();
@@ -99,7 +112,7 @@ export function ProgressScreen({
   const leitnerLabels = ['جعبه ۱', 'جعبه ۲', 'جعبه ۳', 'جعبه ۴', 'جعبه ۵'];
 
   // Mastery ring
-  const learned = data?.cardStates.mastered ?? 0;
+  const learned = data?.cardStates.learned ?? 0;
   const wordTotal = data?.cardStates.total ?? 0;
   const masteryPct = wordTotal > 0 ? Math.round((learned / wordTotal) * 100) : 0;
   const masteryCircumference = 314;
@@ -187,7 +200,7 @@ export function ProgressScreen({
               </svg>
               <div className="mastery-center" aria-hidden="true">
                 <div className="mastery-pct">{toPersianDigits(masteryPct)}٪</div>
-                <div className="mastery-lbl">تسلط</div>
+                <div className="mastery-lbl">یادگیری</div>
               </div>
             </div>
             <div className="mastery-info">

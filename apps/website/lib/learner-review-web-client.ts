@@ -1,8 +1,9 @@
+import type { ReviewGrade } from '@learnbox/learning-engine';
 import type { MobileReviewBatchItemOutcome } from '../../api/dist/reviews/mobile-review-batch.service.js';
 
 export type WebReviewItem = {
   contentId: string;
-  grade: 'forgot' | 'hard' | 'remembered' | 'mastered';
+  grade: ReviewGrade;
   occurredAt: string;
   clientEventId: string;
 };

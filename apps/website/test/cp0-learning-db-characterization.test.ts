@@ -147,10 +147,13 @@ beforeAll(async () => {
   vi.stubEnv('DATABASE_URL', 'postgres://unused/unused');
   const { Pool } = await vi.importActual<typeof import('pg')>('pg');
   admin = new Pool({ connectionString: url, max: 1 });
+  // A pooled client closed server-side during teardown (DROP DATABASE ... FORCE) is not a test failure.
+  admin.on('error', () => undefined);
   await admin.query(`CREATE DATABASE ${dbName}`);
   const scoped = new URL(url as string);
   scoped.pathname = `/${dbName}`;
   pool = new Pool({ connectionString: scoped.toString(), max: 4 });
+  pool.on('error', () => undefined);
   h.shared = pool;
   for (const file of readdirSync(migrationsDir)
     .filter((f) => /^\d{4}_.+\.sql$/.test(f))
@@ -199,7 +202,7 @@ afterAll(async () => {
 });
 
 suite('CP0 — four different answers to "how many words has the learner learned?"', () => {
-  it('DEFECT: Words, Progress ring, pack progress and profile stats disagree on the same learner', async () => {
+  it('FIXED in CP3: Words, Progress, pack progress, Profile and Today give one answer for the same learner', async () => {
     const user = await newLearner();
     await putSchedule(user, 'a', 'review', 10); // Box 4
     await putSchedule(user, 'b', 'mastered', 30); // Box 5
@@ -212,65 +215,59 @@ suite('CP0 — four different answers to "how many words has the learner learned
     const progress = await call<{
       cardStates: Record<string, number>;
       leitnerBoxes: Record<string, number>;
-      packs: Array<{ totalCards: number; startedCards: number; learnedCards: number }>;
-      cefr: Array<{ level: string; count: number }>;
+      packs: Array<Record<string, number>>;
     }>(progressRoute, user);
-    const stats = await call<{
-      stats: Record<string, number>;
-      cefr?: unknown;
-    }>(statsRoute, user);
+    const stats = await call<{ stats: Record<string, number> }>(statsRoute, user);
     const today = await call<{ leitnerBoxes: number[] }>(todayRoute, user);
 
-    // Words: "mastered" means Box >= 4.
-    // Words counts every published card (8 start + 1 non-start = 9), not the pack.
-    expect(words.summary).toMatchObject({ total: 9, mastered: 3, learning: 2, new: 4 });
-    // Progress: "mastered" means state = 'mastered'; "learned" (pack) means review OR mastered.
-    expect(progress.cardStates).toEqual({ new: 0, learning: 2, review: 2, mastered: 1, total: 5 });
-    expect(progress.packs[0]).toMatchObject({ totalCards: 9, startedCards: 5, learnedCards: 3 });
-    // Profile stats: "learned" means state = 'review' ONLY; "learning" excludes relearning.
+    // Canonical: Learned = Box 4+ (a, b, c), Mastered = Box 5 (b, c), Learning = Box 1-3 (d, e),
+    // New = in the curriculum without a schedule. Curriculum = 9 published pack cards.
+    const expected = { total: 9, learned: 3, mastered: 2, learning: 2, new: 4 };
+    expect(words.summary).toMatchObject(expected);
+    expect(progress.cardStates).toEqual(expected);
     expect(stats.stats).toMatchObject({
-      newCards: 0,
-      learningCards: 1,
-      learnedCards: 2,
-      totalCards: 5,
+      totalCards: 9,
+      learnedCards: 3,
+      masteredCards: 2,
+      learningCards: 2,
+      newCards: 4,
     });
-    // Box counts agree between the two routes that compute them (two copies of the thresholds).
+    expect(progress.packs[0]).toMatchObject({
+      totalCards: 9,
+      startedCards: 5,
+      learnedCards: 3,
+      masteredCards: 2,
+    });
     expect(progress.leitnerBoxes).toEqual({ box1: 1, box2: 1, box3: 0, box4: 1, box5: 2 });
     expect(today.leitnerBoxes).toEqual([1, 1, 0, 1, 2]);
 
-    // The same five scheduled cards are therefore "learned/mastered" as 3, 1, 3 or 2
-    // depending on the screen.
-    const answers = {
-      wordsMastered: words.summary.mastered,
-      progressRingMastered: progress.cardStates.mastered,
-      progressPackLearned: progress.packs[0].learnedCards,
-      profileStatsLearned: stats.stats.learnedCards,
-    };
-    expect(answers).toEqual({
-      wordsMastered: 3,
-      progressRingMastered: 1,
-      progressPackLearned: 3,
-      profileStatsLearned: 2,
-    });
-    expect(new Set(Object.values(answers)).size).toBeGreaterThan(1);
+    // Every screen's "learned" is the same number.
+    const learned = [
+      words.summary.learned,
+      progress.cardStates.learned,
+      progress.packs[0].learnedCards,
+      stats.stats.learnedCards,
+    ];
+    expect(new Set(learned).size).toBe(1);
 
     // Reading never writes.
     expect(await reviewEventsFingerprint(pool, user)).toEqual(before);
   });
 
-  it('DEFECT: the Progress mastery ring denominator is the number of SCHEDULED cards, not the pack', async () => {
+  it('FIXED in CP3: the Progress ring denominator is the curriculum, not the number of scheduled cards', async () => {
     const user = await newLearner();
     await putSchedule(user, 'a', 'mastered', 30);
     const progress = await call<{
-      cardStates: { mastered: number; total: number };
+      cardStates: { learned: number; total: number };
       packs: Array<{ totalCards: number }>;
     }>(progressRoute, user);
-    // ProgressScreen computes the ring as cardStates.mastered / cardStates.total.
-    expect(progress.cardStates.mastered / progress.cardStates.total).toBe(1); // "100% mastered"
-    expect(progress.packs[0].totalCards).toBe(9); // ...of a pack with 9 cards
+    // ProgressScreen computes the ring as cardStates.learned / cardStates.total: 1 of 9, not 1 of 1.
+    expect(progress.cardStates.total).toBe(9);
+    expect(progress.cardStates.learned / progress.cardStates.total).toBeCloseTo(1 / 9, 5);
+    expect(progress.cardStates.total).toBe(progress.packs[0].totalCards);
   });
 
-  it('DEFECT: a card reachable with remembered-only answers is Box 5 but never state=mastered', async () => {
+  it('FIXED in CP3: a card reachable with remembered-only answers is Box 5, and Progress counts it as mastered', async () => {
     const user = await newLearner();
     // Real ingest path, remembered only, each answer on time against the card's own due date.
     let at = new Date(Date.now() - 88 * DAY);
@@ -283,17 +280,19 @@ suite('CP0 — four different answers to "how many words has the learner learned
     }
     const schedule = await scheduleFor(user, 'a');
     expect(schedule!.stability_days).toBeGreaterThanOrEqual(21); // Box 5
-    expect(schedule!.state).toBe('review'); // never 'mastered': that needs the `mastered` grade
-    const progress = await call<{ cardStates: { mastered: number; review: number } }>(
+    // The stored `state` column still says 'review' (this checkpoint changes no write path), but
+    // no screen reads it any more: Mastered is Box 5, whatever `state` says.
+    expect(schedule!.state).toBe('review');
+    const progress = await call<{ cardStates: { mastered: number; learned: number } }>(
       progressRoute,
       user,
     );
-    expect(progress.cardStates).toMatchObject({ mastered: 0, review: 1 });
+    expect(progress.cardStates).toMatchObject({ mastered: 1, learned: 1 });
   });
 });
 
 suite('CP0 — Accuracy', () => {
-  it('DEFECT: /today counts only "remembered" as correct; "mastered" and "hard" count as wrong', async () => {
+  it('FIXED in CP3: /today counts hard, remembered and mastered as known', async () => {
     const user = await newLearner();
     const now = Date.now();
     await submit(user, 'a', 'mastered', new Date(now - 4000));
@@ -306,18 +305,18 @@ suite('CP0 — Accuracy', () => {
       accuracyPercent: number;
     }>(todayRoute, user, '?tz=UTC');
     expect(today.reviewedToday).toBe(4);
-    expect(today.correctToday).toBe(1);
-    expect(today.accuracyPercent).toBe(25); // 3 of 4 answers were "knew it" => 75% under the approved projection
+    expect(today.correctToday).toBe(3);
+    expect(today.accuracyPercent).toBe(75); // 3 of 4 answers were "knew it" under the approved projection
   });
 
-  it('DEFECT: a learner who answers only "mastered" sees 0% accuracy', async () => {
+  it('FIXED in CP3: a learner who answers only "mastered" sees 100% accuracy', async () => {
     const user = await newLearner();
     const now = Date.now();
     await submit(user, 'a', 'mastered', new Date(now - 3000));
     await submit(user, 'b', 'mastered', new Date(now - 2000));
     await submit(user, 'c', 'mastered', new Date(now - 1000));
     const today = await call<{ accuracyPercent: number }>(todayRoute, user, '?tz=UTC');
-    expect(today.accuracyPercent).toBe(0);
+    expect(today.accuracyPercent).toBe(100);
   });
 
   it('historical projection to apply later: forgot -> unknown; hard/remembered/mastered -> known', async () => {
@@ -360,7 +359,7 @@ suite('CP0 — day bucketing, timezone and streak', () => {
     return { user, base };
   }
 
-  it('Today (learner timezone) and Progress (UTC) bucket the SAME events into different days', async () => {
+  it('FIXED in CP3: Today, Progress and Profile bucket the SAME events into the same learner-local days', async () => {
     const { user } = await seedStraddlingLearner();
 
     const utcSummary = await readLearnerSummary(pool, user, 'UTC');
@@ -383,24 +382,32 @@ suite('CP0 — day bucketing, timezone and streak', () => {
     expect(todayTehran.weekDays.filter((d) => d.active)).toHaveLength(2);
     expect(todayUtc.weekDays.filter((d) => d.active)).toHaveLength(1);
 
-    // DEFECT: Progress ignores the learner's timezone entirely (it does not even read `tz`)
-    // and buckets by the database session zone, so the same learner shows 1 active day there.
-    const progressTehran = await call<{ weeklyActivity: Array<{ day: unknown; reviews: number }> }>(
+    // Progress and Profile read the same model and honour the same `tz`.
+    const progressTehran = await call<{ weeklyActivity: Array<{ day: string; reviews: number }> }>(
       progressRoute,
       user,
       '?tz=Asia/Tehran',
     );
-    const progressPlain = await call<{ weeklyActivity: Array<{ day: unknown; reviews: number }> }>(
+    const progressUtc = await call<{ weeklyActivity: Array<{ day: string; reviews: number }> }>(
       progressRoute,
       user,
+      '?tz=UTC',
     );
-    expect(progressTehran.weeklyActivity).toEqual(progressPlain.weeklyActivity);
-    expect(progressTehran.weeklyActivity).toHaveLength(1);
-    expect(progressTehran.weeklyActivity[0].reviews).toBe(3);
-
-    // Profile stats also buckets by UTC.
-    const stats = await call<{ weeklyActivity: Array<{ reviews: number }> }>(statsRoute, user);
-    expect(stats.weeklyActivity).toHaveLength(1);
+    const statsTehran = await call<{ weeklyActivity: Array<{ day: string; reviews: number }> }>(
+      statsRoute,
+      user,
+      '?tz=Asia/Tehran',
+    );
+    const active = (rows: Array<{ reviews: number }>) => rows.filter((row) => row.reviews > 0);
+    expect(active(progressTehran.weeklyActivity)).toHaveLength(2);
+    expect(active(progressUtc.weeklyActivity)).toHaveLength(1);
+    expect(active(progressUtc.weeklyActivity)[0].reviews).toBe(3);
+    // The two Tehran days split the three events 1 + 2; Today, Progress and Profile agree.
+    expect(active(progressTehran.weeklyActivity).map((row) => row.reviews)).toEqual([1, 2]);
+    expect(statsTehran.weeklyActivity).toEqual(progressTehran.weeklyActivity);
+    expect(todayTehran.weekDays.map((day) => day.active)).toEqual(
+      progressTehran.weeklyActivity.map((row) => row.reviews > 0),
+    );
   });
 
   it('an unknown or oversized timezone name silently degrades to UTC', async () => {

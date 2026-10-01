@@ -1,4 +1,4 @@
-import { scheduleReview } from '@learnbox/learning-engine';
+import { isReviewGrade, scheduleReview, type ReviewGrade } from '@learnbox/learning-engine';
 
 import type {
   PostgresReviewEventStore,
@@ -30,7 +30,7 @@ export class MobileReviewBatchError extends Error {
 
 export interface MobileReviewBatchItem {
   contentId: string;
-  grade: 'forgot' | 'hard' | 'remembered' | 'mastered';
+  grade: ReviewGrade;
   occurredAt: Date;
   clientEventId: string;
 }
@@ -71,8 +71,6 @@ interface ClockSkewOutcome {
 export type MobileReviewBatchItemOutcome =
   AcknowledgedOutcome | IdempotencyConflictOutcome | ValidationOutcome | ClockSkewOutcome;
 
-const GRADES = new Set(['forgot', 'hard', 'remembered', 'mastered']);
-
 function clockSkewStatus(
   item: Pick<MobileReviewBatchItem, 'occurredAt'>,
   now: Date,
@@ -101,7 +99,7 @@ function validateBatch(items: MobileReviewBatchItem[]): void {
         'client_event_id must be text between 1 and 128 characters.',
       );
     }
-    if (!GRADES.has(item.grade)) {
+    if (!isReviewGrade(item.grade)) {
       throw new MobileReviewBatchError('validation', `Unknown review grade.`);
     }
     if (!(item.occurredAt instanceof Date) || Number.isNaN(item.occurredAt.getTime())) {

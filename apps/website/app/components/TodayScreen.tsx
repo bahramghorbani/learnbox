@@ -63,12 +63,6 @@ export interface TodayScreenProps {
   studyItems?: StartSliceItem[];
   soundEnabled?: boolean;
   onToggleSound?: () => void;
-  /** Leitner box distribution [box1, box2, box3, box4, box5] — from parent */
-  leitnerDist?: number[];
-  /** Accuracy percentage 0-100 — from parent */
-  accuracy?: number;
-  /** Approximate study minutes today — from parent */
-  studyMinutes?: number;
   /** Navigate to a screen (for banner links) */
   onNavigate?: (screen: string) => void;
 }
@@ -129,9 +123,6 @@ export function TodayScreen({
   studyItems,
   soundEnabled = true,
   onToggleSound,
-  leitnerDist,
-  accuracy,
-  studyMinutes,
   onNavigate,
 }: TodayScreenProps) {
   const [bannerIdx, setBannerIdx] = useState(0);
@@ -181,8 +172,7 @@ export function TodayScreen({
   const circumference = 264;
   const ringOffset = circumference - ringPct * circumference;
 
-  const boxes = visibleMetrics?.leitnerBoxes ??
-    (testLocalMetrics ? leitnerDist : undefined) ?? [0, 0, 0, 0, 0];
+  const boxes = visibleMetrics?.leitnerBoxes ?? [0, 0, 0, 0, 0];
   const boxMax = Math.max(...boxes, 1);
 
   const weekDays =
@@ -195,8 +185,7 @@ export function TodayScreen({
   const tipText = TIPS[new Date().getDate() % TIPS.length];
   const wordOfDay = pickWordOfDay(studyItems);
 
-  const realAccuracy = visibleMetrics?.accuracyPercent ?? (testLocalMetrics ? accuracy : undefined);
-  const realMinutes = testLocalMetrics ? studyMinutes : null;
+  const realAccuracy = visibleMetrics?.accuracyPercent;
 
   // Fetch banners from API
   useEffect(() => {
@@ -489,24 +478,6 @@ export function TodayScreen({
               {effectiveReviewed == null ? '—' : toPersianDigits(effectiveReviewed)}
             </div>
             <div className="stat-lbl">مرور</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-icon" style={{ color: 'var(--accent)' }} aria-hidden="true">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 256 256"
-                width="24"
-                height="24"
-                fill="currentColor"
-              >
-                <circle cx="128" cy="128" r="96" opacity="0.2" />
-                <path d="M128,24A104,104,0,1,0,232,128,104.12,104.12,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm64-88a8,8,0,0,1-8,8H128a8,8,0,0,1-8-8V72a8,8,0,0,1,16,0v48h48A8,8,0,0,1,192,128Z" />
-              </svg>
-            </div>
-            <div className="stat-value">
-              {realMinutes == null ? '—' : toPersianDigits(realMinutes)}
-            </div>
-            <div className="stat-lbl">دقیقه</div>
           </div>
           <div className="stat-card">
             <div className="stat-icon" style={{ color: 'var(--success)' }} aria-hidden="true">
