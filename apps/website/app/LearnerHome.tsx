@@ -8,7 +8,7 @@ import {
   loadSyncQueue,
   loadSyncQueueResilient,
   quarantineCount,
-  resolveResumeIndex,
+  decideResume,
   createMemoryStorage,
   createResilientStorage,
   getCurrentStreakDays,
@@ -307,12 +307,27 @@ export function LearnerHome({
     const storage = getDeviceStorage();
     setPendingReviewCount(loadSyncQueue<QueuedReview>(storage, reviewSyncStorageKey).length);
     const savedSession = loadReviewSession(storage, reviewSessionStorageKey);
-    const resumeAt = resumeByCardEnabled
-      ? resolveResumeIndex(
-          savedSession,
-          studyItems.map((item) => item.id),
-        )
-      : savedSession && savedSession.nextCardIndex < studyItems.length
+    if (resumeByCardEnabled) {
+      // The queue is authoritative only once the server state has loaded. Before that an empty queue
+      // means "unknown": keep the record (never clear it) and re-run when the queue arrives.
+      const decision = decideResume(
+        savedSession,
+        studyItems.map((item) => item.id),
+        // Server-OTP: the queue exists only once the server read has landed. Device-local modes have a
+        // static queue (nothing to wait for).
+        !isServerOtp || serverSyncState === 'server-backed',
+      );
+      if (decision.action === 'wait') return;
+      if (decision.action === 'resume') {
+        setResumableSessionIndex(decision.index);
+        return;
+      }
+      if (savedSession) clearReviewSession(storage, reviewSessionStorageKey);
+      setResumableSessionIndex(null);
+      return;
+    }
+    const resumeAt =
+      savedSession && savedSession.nextCardIndex < studyItems.length
         ? savedSession.nextCardIndex
         : null;
     if (resumeAt !== null) {
@@ -326,6 +341,8 @@ export function LearnerHome({
     isServerOtp,
     sessionUserId,
     studyItems.length,
+    // Only the flag-on path reacts to the queue arriving; flag-off keeps the v1.2.1 dependency list.
+    resumeByCardEnabled ? serverSyncState : null,
     reviewSyncStorageKey,
     reviewSessionStorageKey,
   ]);

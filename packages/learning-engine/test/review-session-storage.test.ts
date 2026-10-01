@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  decideResume,
   createMemoryStorage,
   loadReviewSession,
   resolveResumeIndex,
@@ -59,5 +60,44 @@ describe('resume by card identity (LB-B35 CP4)', () => {
       storage.setItem('k', JSON.stringify(bad));
       expect(loadReviewSession(storage, 'k')).toBeNull();
     }
+  });
+});
+
+describe('resume decision with a not-yet-loaded queue (LB-B35 CP4 defect found in staging)', () => {
+  const saved = { nextCardIndex: 3, nextCardId: 'bett' };
+  const queue = ['apfel', 'bahnhof', 'bett', 'brot', 'danke'];
+
+  it('keeps the record while the queue has not loaded (empty queue means unknown, not "nothing due")', () => {
+    expect(decideResume(saved, [], false)).toEqual({ action: 'wait' });
+    expect(decideResume({ nextCardIndex: 2 }, [], false)).toEqual({ action: 'wait' });
+  });
+
+  it('card identity wins over a stale position once the queue has loaded', () => {
+    expect(decideResume(saved, queue, true)).toEqual({ action: 'resume', index: 2 });
+  });
+
+  it('follows the card after a reorder', () => {
+    expect(decideResume(saved, ['bett', 'apfel', 'bahnhof'], true)).toEqual({
+      action: 'resume',
+      index: 0,
+    });
+  });
+
+  it('follows the card after earlier cards disappear', () => {
+    expect(decideResume(saved, ['bett', 'brot'], true)).toEqual({ action: 'resume', index: 0 });
+  });
+
+  it('clears only when a LOADED queue no longer contains the card', () => {
+    expect(decideResume(saved, ['apfel', 'brot'], true)).toEqual({ action: 'clear' });
+    expect(decideResume(saved, [], true)).toEqual({ action: 'clear' });
+  });
+
+  it('legacy index-only record: honoured by index, cleared when out of range', () => {
+    expect(decideResume({ nextCardIndex: 2 }, queue, true)).toEqual({ action: 'resume', index: 2 });
+    expect(decideResume({ nextCardIndex: 9 }, queue, true)).toEqual({ action: 'clear' });
+  });
+
+  it('no record: nothing to resume', () => {
+    expect(decideResume(null, queue, true)).toEqual({ action: 'clear' });
   });
 });

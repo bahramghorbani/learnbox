@@ -29,6 +29,28 @@ export function resolveResumeIndex(
   return saved.nextCardIndex < queueCardIds.length ? saved.nextCardIndex : null;
 }
 
+export type ResumeDecision =
+  { action: 'wait' } | { action: 'resume'; index: number } | { action: 'clear' };
+
+/**
+ * LB-B35 CP4 — what to do with a saved resume record, given what is known about the queue.
+ *
+ * `queueLoaded` is false while the server queue has not arrived yet (first render, offline, still
+ * fetching). An empty queue in that state means "unknown", not "nothing due": the saved record must
+ * be kept, never cleared, or a reload before the fetch completes silently loses the resume point.
+ * Only a LOADED queue can invalidate a record.
+ */
+export function decideResume(
+  saved: ReviewSessionProgress | null,
+  queueCardIds: readonly string[],
+  queueLoaded: boolean,
+): ResumeDecision {
+  if (!saved) return { action: 'clear' };
+  if (!queueLoaded && queueCardIds.length === 0) return { action: 'wait' };
+  const index = resolveResumeIndex(saved, queueCardIds);
+  return index === null ? { action: 'clear' } : { action: 'resume', index };
+}
+
 /** Stores only the next card index needed to resume a device-local review session. */
 export function loadReviewSession(
   storage: DeviceStorage,
