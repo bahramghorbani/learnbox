@@ -84,10 +84,16 @@ export async function flushWebReviewQueue(input: {
   const result = await submit(due.map((event) => toWireItem(event, input.binaryWire === true)));
   const currentQueue = readQueue;
   if (result.status !== 'ok') {
+    // LB-B35 CP7: a deterministic server refusal (422 `schedulerRejected`) must NOT consume a retry
+    // slot or arm a backoff timer -- the same bytes can never be accepted until an operator fixes
+    // the server. The events stay queued, unchanged and lossless, awaiting an explicit later sync.
     const deferred = new Set(due.map((event) => event.clientEventId));
-    const next = currentQueue().map((event) =>
-      deferred.has(event.clientEventId) ? retryAfter(event, now) : event,
-    );
+    const next =
+      result.status === 'rejected'
+        ? currentQueue()
+        : currentQueue().map((event) =>
+            deferred.has(event.clientEventId) ? retryAfter(event, now) : event,
+          );
     saveSyncQueue(input.storage, input.key, next);
     return {
       pendingCount: next.length,

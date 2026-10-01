@@ -5,6 +5,7 @@ import {
   handleWebReviewReconciliationGet,
   type WebReviewDependencies,
 } from '../lib/learner-review-web-http';
+import { MobileReviewBatchError } from '../../api/dist/reviews/mobile-review-batch.service.js';
 
 const subject = '00000000-0000-4000-8000-000000000000';
 
@@ -240,5 +241,72 @@ describe('web review POST — mutation guard (LB-B29)', () => {
     );
     expect(response.status).toBe(401);
     expect(await response.json()).toEqual({ error: 'invalidToken' });
+  });
+});
+
+describe('CP7 scheduler failure semantics at the HTTP boundary', () => {
+  const post = (deps: WebReviewDependencies) =>
+    handleWebReviewBatchPost(
+      request('https://learnbox.example/api/learner/reviews', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', origin: 'https://learnbox.example' },
+        body: validBody,
+      }),
+      deps,
+      () => subject,
+    );
+
+  it('a deterministic schedulerRejected becomes 422 and leaks no schema internals', async () => {
+    const cause = new Error(
+      'LEARNBOX_SCHEDULER_V2=true was refused: review_events.engine_version is missing. ' +
+        'Apply migration 0023_learning_persistence.',
+    );
+    const response = await post(
+      dependencies({
+        submit: vi.fn(async () => {
+          throw new MobileReviewBatchError('schedulerRejected', 'refused', { cause });
+        }),
+      }),
+    );
+    expect(response.status).toBe(422);
+    const text = await response.text();
+    expect(JSON.parse(text)).toEqual({ error: 'schedulerRejected' });
+    // The operator diagnostic must never cross the boundary.
+    expect(text).not.toContain('engine_version');
+    expect(text).not.toContain('0023');
+    expect(text).not.toContain('LEARNBOX_SCHEDULER_V2');
+  });
+
+  it('a transient failure is still 503 serverUnavailable', async () => {
+    const response = await post(
+      dependencies({
+        submit: vi.fn(async () => {
+          throw new MobileReviewBatchError('serverUnavailable', 'interrupted', {
+            cause: new Error('connection terminated'),
+          });
+        }),
+      }),
+    );
+    expect(response.status).toBe(503);
+    expect(await response.json()).toEqual({ error: 'serverUnavailable' });
+  });
+
+  it('NEGATIVE PROOF: 422 and 503 are different statuses, so flattening them would fail', async () => {
+    const rejected = await post(
+      dependencies({
+        submit: vi.fn(async () => {
+          throw new MobileReviewBatchError('schedulerRejected', 'refused');
+        }),
+      }),
+    );
+    const unavailable = await post(
+      dependencies({
+        submit: vi.fn(async () => {
+          throw new Error('plain outage');
+        }),
+      }),
+    );
+    expect(rejected.status).not.toBe(unavailable.status);
+    expect(unavailable.status).toBe(503);
   });
 });

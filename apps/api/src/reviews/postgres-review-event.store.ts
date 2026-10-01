@@ -121,25 +121,27 @@ export class PostgresReviewEventStore implements ReviewEventStore {
       // binary answer (flag LEARNBOX_BINARY_REVIEW), so with every flag off this is exactly the v1.2.1
       // statement and runs on a database that has not been migrated yet.
       const withResponse = input.response !== undefined;
+      // LB-B35 CP7: `engine_version` is named ONLY when scheduler V2 stamped the event (flag
+      // LEARNBOX_SCHEDULER_V2, which fails closed without 0023). Unset keeps the exact v1.2.1 statement.
+      const withEngine = input.engineVersion !== undefined;
       const claimed = await client.query<ReviewEventRow>(
-        `INSERT INTO review_events (id, user_id, card_id, grade, occurred_at, client_event_id, applied_at${withResponse ? ', response' : ''})
+        `INSERT INTO review_events (id, user_id, card_id, grade, occurred_at, client_event_id, applied_at${withResponse ? ', response' : ''}${withEngine ? ', engine_version' : ''})
          VALUES (gen_random_uuid(), $1, $2, $3, $4, $5,
                  GREATEST(
                    COALESCE((SELECT MAX(applied_at) FROM review_events prior
                               WHERE prior.user_id = $1 AND prior.card_id = $2), now()),
-                   LEAST($4, now()))${withResponse ? ', $6' : ''})
+                   LEAST($4, now()))${withResponse ? ', $6' : ''}${withEngine ? `, $${withResponse ? 7 : 6}` : ''})
          ON CONFLICT (user_id, client_event_id) DO NOTHING
          RETURNING id, user_id, card_id, grade, occurred_at, client_event_id`,
-        withResponse
-          ? [
-              input.userId,
-              input.cardId,
-              input.grade,
-              input.occurredAt,
-              input.clientEventId,
-              input.response,
-            ]
-          : [input.userId, input.cardId, input.grade, input.occurredAt, input.clientEventId],
+        [
+          input.userId,
+          input.cardId,
+          input.grade,
+          input.occurredAt,
+          input.clientEventId,
+          ...(withResponse ? [input.response] : []),
+          ...(withEngine ? [input.engineVersion] : []),
+        ],
       );
 
       if (claimed.rows.length === 0) {

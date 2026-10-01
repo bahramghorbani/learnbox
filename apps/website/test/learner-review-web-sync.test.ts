@@ -216,3 +216,56 @@ describe('web review queue sync', () => {
     });
   });
 });
+
+describe('CP7: a deterministic server rejection is never retried', () => {
+  const stored = () => [{ ...queued, nextAttemptAt: now.toISOString() }];
+
+  it('does not consume an attempt or arm a backoff timer, and loses nothing', async () => {
+    const storage = createMemoryStorage();
+    storage.setItem(key, JSON.stringify(stored()));
+    let calls = 0;
+    const submit = async () => {
+      calls += 1;
+      return { status: 'rejected' as const };
+    };
+
+    await flushWebReviewQueue({ storage, key, now, submit });
+    const after = loadSyncQueue<QueuedWebReview>(storage, key);
+
+    expect(calls).toBe(1);
+    expect(after).toHaveLength(1);
+    // attempts must NOT increase and nextAttemptAt must NOT be pushed into the future:
+    // the event is preserved verbatim for an explicit later sync, not a timed retry.
+    expect(after[0]!.attempts).toBe(0);
+    expect(after[0]!.nextAttemptAt.getTime()).toBe(now.getTime());
+    expect(after[0]!.payload).toEqual(queued.payload);
+  });
+
+  it('CONTRAST: a transient unavailable DOES consume an attempt and back off', async () => {
+    const storage = createMemoryStorage();
+    storage.setItem(key, JSON.stringify(stored()));
+    const submit = async () => ({ status: 'unavailable' as const });
+
+    await flushWebReviewQueue({ storage, key, now, submit });
+    const after = loadSyncQueue<QueuedWebReview>(storage, key);
+
+    expect(after).toHaveLength(1);
+    expect(after[0]!.attempts).toBe(1);
+    expect(after[0]!.nextAttemptAt.getTime()).toBeGreaterThan(now.getTime());
+  });
+
+  it('NEGATIVE PROOF: repeated rejections never escalate attempts, so no quarantine/backoff drift', async () => {
+    const storage = createMemoryStorage();
+    storage.setItem(key, JSON.stringify(stored()));
+    const submit = async () => ({ status: 'rejected' as const });
+
+    for (let i = 0; i < 5; i += 1) {
+      await flushWebReviewQueue({ storage, key, now, submit });
+    }
+    const after = loadSyncQueue<QueuedWebReview>(storage, key);
+    expect(after).toHaveLength(1);
+    // Under the pre-fix behaviour this would be 5 with an exponential nextAttemptAt.
+    expect(after[0]!.attempts).toBe(0);
+    expect(after[0]!.nextAttemptAt.getTime()).toBe(now.getTime());
+  });
+});

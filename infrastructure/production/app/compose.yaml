@@ -39,6 +39,8 @@ services:
       LEARNBOX_SERVER_SESSION_PLAN: ${LEARNBOX_SERVER_SESSION_PLAN:-false}
       LEARNBOX_BINARY_REVIEW: ${LEARNBOX_BINARY_REVIEW:-false}
       LEARNBOX_TODAY_WORKLOAD: ${LEARNBOX_TODAY_WORKLOAD:-false}
+      # LB-B35 CP7: GR-1.8 scheduler. Default off; REQUIRES migration 0023 (fails closed without it).
+      LEARNBOX_SCHEDULER_V2: ${LEARNBOX_SCHEDULER_V2:-false}
     healthcheck:
       test:
         [
