@@ -34,6 +34,11 @@ export type WebReviewSyncResult = {
   acknowledged: boolean;
   /** Only set with `quarantineKey`: answers parked on this device, never deleted automatically. */
   quarantinedCount?: number;
+  /**
+   * CP5-D: the server answered 401 — there is no valid session any more. Purely informational: the
+   * queue is left exactly as it was (every answer stays, retried later) and nothing is deleted.
+   */
+  sessionEnded?: boolean;
 };
 
 /** The key holding quarantined answers for the queue stored at `queueKey`. */
@@ -84,7 +89,13 @@ export async function flushWebReviewQueue(input: {
       deferred.has(event.clientEventId) ? retryAfter(event, now) : event,
     );
     saveSyncQueue(input.storage, input.key, next);
-    return { pendingCount: next.length, attentionCount: 0, acknowledged: false, ...quarantined() };
+    return {
+      pendingCount: next.length,
+      attentionCount: 0,
+      acknowledged: false,
+      ...(result.status === 'unauthorized' ? { sessionEnded: true } : {}),
+      ...quarantined(),
+    };
   }
 
   const outcomesById = new Map(result.outcomes.map((outcome) => [outcome.clientEventId, outcome]));

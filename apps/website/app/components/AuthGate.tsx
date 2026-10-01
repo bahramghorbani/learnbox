@@ -19,11 +19,17 @@ import { supportLabelFor, supportLinkFor } from '../../lib/support-contact';
 interface AuthGateProps {
   mode: LearnerAuthMode;
   onAuthenticated: () => void;
+  /**
+   * CP5-D: set when the server ended a signed-in session (not for a first visit and not for an explicit
+   * logout). `unsentCount` answers are kept on this device and sent after the learner signs in again.
+   * The session-policy numbers are deliberately never shown.
+   */
+  sessionEnded?: { unsentCount: number } | null;
 }
 
 const otpLength = 5;
 
-export function AuthGate({ mode, onAuthenticated }: AuthGateProps) {
+export function AuthGate({ mode, onAuthenticated, sessionEnded }: AuthGateProps) {
   const [stage, setStage] = useState<'phone' | 'code'>('phone');
   const [phone, setPhone] = useState('');
   const [code, setCode] = useState('');
@@ -158,6 +164,18 @@ export function AuthGate({ mode, onAuthenticated }: AuthGateProps) {
       <header className="auth-brand">
         <span className="brand">LearnBox</span>
       </header>
+      {sessionEnded ? (
+        <div className="session-ended-notice" role="alert" data-testid="session-ended-notice">
+          <strong>نشست شما تمام شد</strong>
+          <p>برای ادامه، دوباره وارد شو.</p>
+          {sessionEnded.unsentCount > 0 ? (
+            <p>
+              {sessionEnded.unsentCount.toLocaleString('fa-IR')} پاسخ ارسال‌نشده روی همین دستگاه نگه
+              داشته شده و بعد از ورود دوباره فرستاده می‌شود.
+            </p>
+          ) : null}
+        </div>
+      ) : null}
       {stage === 'phone' ? (
         <section className="auth-content" aria-labelledby="auth-title">
           <AuthStep current={1} />

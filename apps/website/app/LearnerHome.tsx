@@ -98,6 +98,10 @@ const binaryReviewUiEnabled = process.env.NEXT_PUBLIC_LEARNBOX_BINARY_REVIEW_UI 
 // Profile or Settings. Nothing is written, sent or deleted for a goal; a value already on the device
 // is left untouched as unused legacy local data. Direct process.env reference so Next inlines it.
 const goalUxRemoved = process.env.NEXT_PUBLIC_LEARNBOX_GOAL_UX_REMOVED === 'true';
+// LB-B35 CP5-D (default off): when the server ends a signed-in session, show a clear Persian
+// "session ended, sign in again" notice with the number of unsent answers kept on this device.
+// Nothing is deleted. Direct process.env reference so Next inlines it at build time.
+const sessionExpiryUxEnabled = process.env.NEXT_PUBLIC_LEARNBOX_SESSION_EXPIRY_UX === 'true';
 const baseReviewSyncStorageKey = 'learnbox:review-sync:v1:local-prototype';
 const basePersonalVocabularyStorageKey = 'learnbox:personal-vocabulary:v1:local-prototype';
 const basePersonalVocabularySyncStorageKey = 'learnbox:personal-vocabulary-sync:v1:local-prototype';
@@ -178,6 +182,7 @@ export function LearnerHome({
       : { items: [], unavailableContentIds: [] };
   const [authChecked, setAuthChecked] = useState(false);
   const [onboarded, setOnboarded] = useState(false);
+  const [sessionEnded, setSessionEnded] = useState<{ unsentCount: number } | null>(null);
   const [onboardedKey, setOnboardedKey] = useState<string | null>(null);
   const [learningGoal, setLearningGoal] = useState<LearningGoal>('life');
   const [soundEnabled, setSoundEnabled] = useState(true);
@@ -260,6 +265,21 @@ export function LearnerHome({
   const summaryCacheStorageKey = `learnbox:summary-cache:v1${storageScope}`;
   const profileIdentityEnabled = profileIdentityFlag === 'true';
   const previousAccountRef = useRef<string | null>(null);
+  // The queue key is account-scoped and changes once the session user clears, so the unsent count is
+  // read for the account whose session just ended. Read-only: the queue is never touched.
+  const noteSessionEnded = useCallback((userId: string | null) => {
+    if (!sessionExpiryUxEnabled || !userId || typeof window === 'undefined') return;
+    let unsentCount = 0;
+    try {
+      unsentCount = loadSyncQueue<QueuedReview>(
+        getDeviceStorage(),
+        baseReviewSyncStorageKey + accountStorageScope(true, userId),
+      ).length;
+    } catch {
+      unsentCount = 0;
+    }
+    setSessionEnded({ unsentCount });
+  }, []);
 
   useEffect(() => {
     if (!isServerOtp || previousAccountRef.current === sessionUserId) return;
@@ -448,6 +468,7 @@ export function LearnerHome({
       return;
     }
     if (result.status === 'unauthorized') {
+      noteSessionEnded(expectedUserId);
       setAuthenticated(false);
       setSessionUserId(null);
       return;
@@ -462,7 +483,7 @@ export function LearnerHome({
       setReviewedToday(cached.reviewedToday);
       setStreakDays(cached.streakDays);
     }
-  }, [authenticated, isServerOtp, sessionUserId, summaryCacheStorageKey]);
+  }, [authenticated, isServerOtp, sessionUserId, summaryCacheStorageKey, noteSessionEnded]);
 
   useEffect(() => {
     if (isServerOtp) {
@@ -566,6 +587,7 @@ export function LearnerHome({
       setServerSnapshot(null);
       setServerStateOwner(null);
       if (result.status === 'unauthorized') {
+        noteSessionEnded(expectedUserId);
         setAuthenticated(false);
         setSessionUserId(null);
         setServerSyncState('local-only');
@@ -575,7 +597,7 @@ export function LearnerHome({
         typeof navigator !== 'undefined' && navigator.onLine === false ? 'offline' : 'error',
       );
     },
-    [],
+    [noteSessionEnded],
   );
 
   useEffect(() => {
@@ -635,6 +657,12 @@ export function LearnerHome({
         (result) => {
           if (activeSessionSubjectRef.current !== sessionUserId) return;
           setPendingReviewCount(result.pendingCount);
+          if (result.sessionEnded && sessionExpiryUxEnabled) {
+            noteSessionEnded(sessionUserId);
+            setAuthenticated(false);
+            setSessionUserId(null);
+            return;
+          }
           if (result.acknowledged) {
             retryServerStateRead();
             void refreshServerSummary();
@@ -656,6 +684,7 @@ export function LearnerHome({
     reviewSyncStorageKey,
     retryServerStateRead,
     refreshServerSummary,
+    noteSessionEnded,
   ]);
 
   requestServerReviewFlushRef.current = flushServerReviewQueue;
@@ -1017,7 +1046,16 @@ export function LearnerHome({
   }
 
   if (!authenticated) {
-    return <AuthGate mode={authMode} onAuthenticated={() => setAuthenticated(true)} />;
+    return (
+      <AuthGate
+        mode={authMode}
+        sessionEnded={sessionEnded}
+        onAuthenticated={() => {
+          setSessionEnded(null);
+          setAuthenticated(true);
+        }}
+      />
+    );
   }
   if (isServerOtp && (!sessionUserId || onboardedKey !== onboardingGoalStorageKey)) {
     return null;
