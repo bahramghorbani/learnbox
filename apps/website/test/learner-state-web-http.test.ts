@@ -180,3 +180,28 @@ describe('web learner state HTTP boundary', () => {
     expect(await response.json()).toEqual({ error: 'serverUnavailable' });
   });
 });
+
+describe('web learner state HTTP boundary — device zone (LB-B35 CP4)', () => {
+  const subject = '00000000-0000-4000-8000-000000000000';
+  const call = (url: string, deps: WebLearnerStateDependencies) =>
+    handleWebLearnerStateGet(
+      get(url, { headers: { 'x-test-subject': subject } }),
+      deps,
+      readSubject,
+    );
+
+  it('forwards the device zone only when the client sent one', async () => {
+    const deps = dependencies();
+    await call('https://learnbox.example/api/learner/state?tz=Asia%2FTehran', deps);
+    expect(deps.readLearnerState).toHaveBeenCalledWith(subject, {
+      requestedTimeZone: 'Asia/Tehran',
+    });
+  });
+
+  it('with no zone the call is exactly the v1.2.1 call: user id only', async () => {
+    const deps = dependencies();
+    await call('https://learnbox.example/api/learner/state', deps);
+    expect(deps.readLearnerState).toHaveBeenCalledWith(subject);
+    expect((deps.readLearnerState as ReturnType<typeof vi.fn>).mock.calls[0]).toHaveLength(1);
+  });
+});

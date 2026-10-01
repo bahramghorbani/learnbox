@@ -6,6 +6,9 @@ import {
   hasPersonalVocabularyDuplicate,
   loadPersonalVocabulary,
   loadSyncQueue,
+  loadSyncQueueResilient,
+  quarantineCount,
+  decideResume,
   createMemoryStorage,
   createResilientStorage,
   getCurrentStreakDays,
@@ -54,7 +57,7 @@ import {
   fetchWebLearnerState,
   type WebLearnerStateResult,
 } from '../lib/learner-state-web-client';
-import { flushWebReviewQueue } from '../lib/learner-review-web-sync';
+import { flushWebReviewQueue, quarantineKeyFor } from '../lib/learner-review-web-sync';
 import { fetchWebLearnerProfile } from '../lib/learner-profile-web-client';
 import type { LearnerSyncState } from './learner-sync-state';
 import { accountStorageScope, refuseUnresolvedScope } from '../lib/account-storage-scope';
@@ -78,6 +81,11 @@ type QueuedPersonalVocabulary = PersonalVocabularyEntry & {
   savedAt: string;
 };
 
+// LB-B35 CP4 (default off): per-item queue parsing, bounded rejection retries with quarantine, and the
+// flush-before-logout choice. Direct process.env reference so Next inlines it at build time.
+const queueQuarantineEnabled = process.env.NEXT_PUBLIC_LEARNBOX_QUEUE_QUARANTINE === 'true';
+// LB-B35 CP4 (default off): resume a review session by card identity instead of by queue index.
+const resumeByCardEnabled = process.env.NEXT_PUBLIC_LEARNBOX_SERVER_SESSION_PLAN === 'true';
 const baseReviewSyncStorageKey = 'learnbox:review-sync:v1:local-prototype';
 const basePersonalVocabularyStorageKey = 'learnbox:personal-vocabulary:v1:local-prototype';
 const basePersonalVocabularySyncStorageKey = 'learnbox:personal-vocabulary-sync:v1:local-prototype';
@@ -299,8 +307,31 @@ export function LearnerHome({
     const storage = getDeviceStorage();
     setPendingReviewCount(loadSyncQueue<QueuedReview>(storage, reviewSyncStorageKey).length);
     const savedSession = loadReviewSession(storage, reviewSessionStorageKey);
-    if (savedSession && savedSession.nextCardIndex < studyItems.length) {
-      setResumableSessionIndex(savedSession.nextCardIndex);
+    if (resumeByCardEnabled) {
+      // The queue is authoritative only once the server state has loaded. Before that an empty queue
+      // means "unknown": keep the record (never clear it) and re-run when the queue arrives.
+      const decision = decideResume(
+        savedSession,
+        studyItems.map((item) => item.id),
+        // Server-OTP: the queue exists only once the server read has landed. Device-local modes have a
+        // static queue (nothing to wait for).
+        !isServerOtp || serverSyncState === 'server-backed',
+      );
+      if (decision.action === 'wait') return;
+      if (decision.action === 'resume') {
+        setResumableSessionIndex(decision.index);
+        return;
+      }
+      if (savedSession) clearReviewSession(storage, reviewSessionStorageKey);
+      setResumableSessionIndex(null);
+      return;
+    }
+    const resumeAt =
+      savedSession && savedSession.nextCardIndex < studyItems.length
+        ? savedSession.nextCardIndex
+        : null;
+    if (resumeAt !== null) {
+      setResumableSessionIndex(resumeAt);
       return;
     }
     if (savedSession) clearReviewSession(storage, reviewSessionStorageKey);
@@ -310,6 +341,8 @@ export function LearnerHome({
     isServerOtp,
     sessionUserId,
     studyItems.length,
+    // Only the flag-on path reacts to the queue arriving; flag-off keeps the v1.2.1 dependency list.
+    resumeByCardEnabled ? serverSyncState : null,
     reviewSyncStorageKey,
     reviewSessionStorageKey,
   ]);
@@ -572,6 +605,7 @@ export function LearnerHome({
       storage: getDeviceStorage(),
       key: reviewSyncStorageKey,
       ownerId: sessionUserId,
+      ...(queueQuarantineEnabled ? { quarantineKey: quarantineKeyFor(reviewSyncStorageKey) } : {}),
     })
       .then(
         (result) => {
@@ -687,6 +721,17 @@ export function LearnerHome({
     };
   }, [authenticated, isServerOtp, profileIdentityEnabled, sessionUserId]);
 
+  /** Records where to resume. With the flag on it also stores the card's identity. */
+  const persistResumePoint = (nextIndex: number) => {
+    const nextCardId = studyItems[nextIndex]?.id;
+    saveReviewSession(
+      getDeviceStorage(),
+      reviewSessionStorageKey,
+      resumeByCardEnabled && nextCardId
+        ? { nextCardIndex: nextIndex, nextCardId }
+        : { nextCardIndex: nextIndex },
+    );
+  };
   const begin = () => {
     const itemsForSession = studyItems;
     const nextIndex = resumableSessionIndex ?? 0;
@@ -696,7 +741,7 @@ export function LearnerHome({
     setFlipped(false);
     setGrade(null);
     setSessionIndex(nextIndex);
-    saveReviewSession(getDeviceStorage(), reviewSessionStorageKey, { nextCardIndex: nextIndex });
+    persistResumePoint(nextIndex);
     setResumableSessionIndex(nextIndex);
   };
   const completeOnboarding = () => {
@@ -758,6 +803,32 @@ export function LearnerHome({
     }
     window.location.replace('/');
   }, []);
+
+  /**
+   * Safe logout (LB-B35 CP4): try to send every unsent answer while the session is still valid and
+   * report how many remain. Quarantined answers count too — they are also unsent learner data.
+   */
+  const flushUnsentBeforeLogout = useCallback(async (): Promise<number> => {
+    if (typeof window === 'undefined') return 0;
+    const storage = getDeviceStorage();
+    if (sessionUserId) {
+      await flushWebReviewQueue({
+        storage,
+        key: reviewSyncStorageKey,
+        ownerId: sessionUserId,
+        quarantineKey: quarantineKeyFor(reviewSyncStorageKey),
+        // Logging out is an explicit "send now": ignore the retry back-off for this one attempt.
+        now: new Date(Date.now() + 24 * 3_600_000),
+      }).catch(() => undefined);
+    }
+    return (
+      loadSyncQueueResilient<QueuedReview>(
+        storage,
+        reviewSyncStorageKey,
+        quarantineKeyFor(reviewSyncStorageKey),
+      ).length + quarantineCount(storage, quarantineKeyFor(reviewSyncStorageKey))
+    );
+  }, [sessionUserId, reviewSyncStorageKey]);
 
   /**
    * Ends the server session (LB-B27). Returns false when the server did not
@@ -860,7 +931,7 @@ export function LearnerHome({
 
     if (sessionIndex < studyItems.length - 1) {
       const nextIndex = sessionIndex + 1;
-      saveReviewSession(getDeviceStorage(), reviewSessionStorageKey, { nextCardIndex: nextIndex });
+      persistResumePoint(nextIndex);
       setResumableSessionIndex(nextIndex);
       setSessionIndex(nextIndex);
       setFlipped(false);
@@ -1132,6 +1203,7 @@ export function LearnerHome({
         onAccountDeleted={clearDeviceLearnerState}
         onLogout={handleLogout}
         onLoggedOut={clearDeviceLearnerState}
+        onFlushUnsent={queueQuarantineEnabled ? flushUnsentBeforeLogout : undefined}
       />
     );
   }

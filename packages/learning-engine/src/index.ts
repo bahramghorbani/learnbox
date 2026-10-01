@@ -29,6 +29,17 @@ export {
 } from './offline-sync.js';
 export { loadSyncQueue, saveSyncQueue, type SyncQueueStorage } from './offline-sync-storage.js';
 export {
+  MAX_REJECTED_ATTEMPTS,
+  discardQuarantine,
+  loadQuarantine,
+  loadSyncQueueResilient,
+  quarantineCount,
+  quarantineRejectedEvent,
+  shouldQuarantineRejected,
+  type QuarantineEntry,
+  type QuarantineReason,
+} from './offline-sync-quarantine.js';
+export {
   createMemoryStorage,
   createResilientStorage,
   type DeviceStorage,
@@ -36,6 +47,9 @@ export {
 export {
   clearReviewSession,
   loadReviewSession,
+  resolveResumeIndex,
+  decideResume,
+  type ResumeDecision,
   saveReviewSession,
   type ReviewSessionProgress,
 } from './review-session-storage.js';

@@ -7,6 +7,8 @@ services:
       dockerfile: infrastructure/production/app/Dockerfile
       args:
         NEXT_PUBLIC_LEARNBOX_PROFILE_IDENTITY_ENABLED: ${NEXT_PUBLIC_LEARNBOX_PROFILE_IDENTITY_ENABLED:-true}
+        NEXT_PUBLIC_LEARNBOX_QUEUE_QUARANTINE: ${NEXT_PUBLIC_LEARNBOX_QUEUE_QUARANTINE:-false}
+        NEXT_PUBLIC_LEARNBOX_SERVER_SESSION_PLAN: ${NEXT_PUBLIC_LEARNBOX_SERVER_SESSION_PLAN:-false}
     image: learnbox-learner-app:${APP_VERSION:-local}
     restart: unless-stopped
     init: true
@@ -28,6 +30,11 @@ services:
       BLOB_READ_WRITE_TOKEN: ${BLOB_READ_WRITE_TOKEN:-}
       LEARNBOX_PRIVATE_MEDIA_ATTACHMENT_ENABLED: ${LEARNBOX_PRIVATE_MEDIA_ATTACHMENT_ENABLED:-false}
       LEARNBOX_DYNAMIC_SPLASH_ENABLED: ${LEARNBOX_DYNAMIC_SPLASH_ENABLED:-false}
+      # LB-B35 CP4 server flags. All default off; each is activated separately and only after review.
+      LEARNBOX_TZ_PERSIST: ${LEARNBOX_TZ_PERSIST:-false}
+      LEARNBOX_QUEUE_QUARANTINE: ${LEARNBOX_QUEUE_QUARANTINE:-false}
+      LEARNBOX_SERVER_SESSION_PLAN: ${LEARNBOX_SERVER_SESSION_PLAN:-false}
+      LEARNBOX_BINARY_REVIEW: ${LEARNBOX_BINARY_REVIEW:-false}
     healthcheck:
       test:
         [

@@ -4,7 +4,10 @@ type BoundaryOptions = { development?: boolean };
 type JsonObject = Record<string, unknown>;
 
 export type WebLearnerStateDependencies = {
-  readLearnerState(userId: string): Promise<LearnerStateSnapshot>;
+  readLearnerState(
+    userId: string,
+    options?: { requestedTimeZone?: string | null },
+  ): Promise<LearnerStateSnapshot>;
 };
 
 const JSON_HEADERS = {
@@ -34,7 +37,12 @@ export async function handleWebLearnerStateGet(
   if (!subject) return error('invalidToken', 401);
 
   try {
-    const state = await dependencies.readLearnerState(subject);
+    // The device zone is passed only when the client sent one. With no `tz` the call is exactly the
+    // v1.2.1 call (userId only), so flag-off behaviour and the existing boundary contract are unchanged.
+    const requestedTimeZone = new URL(request.url).searchParams.get('tz');
+    const state = requestedTimeZone
+      ? await dependencies.readLearnerState(subject, { requestedTimeZone })
+      : await dependencies.readLearnerState(subject);
     return json(serialize(state), 200);
   } catch {
     return error('serverUnavailable', 503);

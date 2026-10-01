@@ -1,9 +1,16 @@
-import { scheduleReview, type CardSchedule, type ReviewGrade } from './index.js';
+import {
+  scheduleReview,
+  type BinaryResponse,
+  type CardSchedule,
+  type ReviewGrade,
+} from './index.js';
 
 export interface ReviewEventInput {
   userId: string;
   cardId: string;
   grade: ReviewGrade;
+  /** Canonical binary answer. Absent for legacy four-grade clients (stored NULL, projected on read). */
+  response?: BinaryResponse;
   occurredAt: Date;
   clientEventId: string;
 }

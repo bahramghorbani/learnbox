@@ -1,3 +1,4 @@
+import { SESSION_CAPACITY_CARDS } from './definitions.js';
 import type { LearningState } from './index.js';
 
 export interface RecoveryCandidate {
@@ -17,9 +18,9 @@ export interface RecoveryPlan {
 }
 
 const maxCardsByDuration: Record<RecoveryPlan['durationMinutes'], number> = {
-  5: 12,
-  10: 24,
-  15: 36,
+  5: SESSION_CAPACITY_CARDS,
+  10: SESSION_CAPACITY_CARDS * 2,
+  15: SESSION_CAPACITY_CARDS * 3,
 };
 
 function riskScore(candidate: RecoveryCandidate, now: Date): number {

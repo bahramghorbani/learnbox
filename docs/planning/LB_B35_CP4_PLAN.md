@@ -58,7 +58,7 @@ Profile and later Admin.
 ## 6. Server-side daily new-card cap and resume-by-card-ID
 
 - `GET /api/learner/session/today` (flag-gated) creates the day's plan atomically with
-  `INSERT … ON CONFLICT DO NOTHING`: 12 due + 3 new (constants in `definitions.ts`), recovery mode above 12
+  `INSERT … ON CONFLICT DO NOTHING`: 12 TOTAL (due + new), at most 3 new per day (constants in `definitions.ts`), recovery mode above 12
   overdue. The cap is enforced on the server by the frozen plan, not by the client. A second device or a
   refresh receives the same plan.
 - Resume = the first card in the plan with no `review_events` row since the plan was created, so card IDs
@@ -98,7 +98,14 @@ restore check.
 
 ## Open for the owner
 
-- Learner-facing wording: the earlier decision said «بلد نبودم», the latest message says «بلد نیستم». Confirm one.
+- Learner-facing wording: RESOLVED by the owner 2026-10-01: «بلد بودم» / «بلد نیستم» (internal values `known` / `unknown`).
 - O1 stays an activation gate for scheduler v2 (CP6). The expected learner-visible progression under ENG-CLAMP
   is already characterized (`cp2-progression-invariant.test.ts`: 5 consecutive Known answers can leave a card
   in Box 1). It is reported again with stricter alternatives at the CP6 gate.
+
+## Correction recorded during implementation (2026-10-01)
+
+Earlier wording said "12 due + 3 new". Characterization (`apps/api/test/cp4-session-capacity-characterization.test.ts`)
+shows the shipped behaviour is **12 cards in total**, with new cards filling only the spare room and capped at 3. CP4 keeps exactly that: `SESSION_CAPACITY_CARDS = 12` and `DAILY_NEW_CARD_ALLOWANCE = 3` are now canonical
+constants in `definitions.ts`, and the session planner reads them instead of local literals. The session
+capacity was NOT changed.

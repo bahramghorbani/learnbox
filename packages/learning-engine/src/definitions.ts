@@ -20,7 +20,7 @@
 export const REVIEW_GRADES = ['forgot', 'hard', 'remembered', 'mastered'] as const;
 export type ReviewGrade = (typeof REVIEW_GRADES)[number];
 
-/** The learner-facing answer: «بلد بودم» = known, «بلد نبودم» = unknown. */
+/** The learner-facing answer: «بلد بودم» = known, «بلد نیستم» = unknown. */
 export const BINARY_RESPONSES = ['known', 'unknown'] as const;
 export type BinaryResponse = (typeof BINARY_RESPONSES)[number];
 
@@ -35,6 +35,21 @@ export const HISTORICAL_GRADE_PROJECTION: Readonly<Record<ReviewGrade, BinaryRes
     remembered: 'known',
     mastered: 'known',
   });
+
+/**
+ * Compatibility grade stored next to a binary answer (plan §3). The `grade` column keeps its four-value
+ * CHECK, so a binary answer is written with the legacy grade that projects back to the same response.
+ * It is a compatibility artefact for v1.2.1 readers, Admin and code rollback — NOT a rating the learner
+ * chose. Pinned by a test: `toBinaryResponse(shadowGradeFor(r)) === r`.
+ */
+export const BINARY_SHADOW_GRADE: Readonly<Record<BinaryResponse, ReviewGrade>> = Object.freeze({
+  known: 'remembered',
+  unknown: 'forgot',
+});
+
+export function shadowGradeFor(response: BinaryResponse): ReviewGrade {
+  return BINARY_SHADOW_GRADE[response];
+}
 
 export function isReviewGrade(value: unknown): value is ReviewGrade {
   return typeof value === 'string' && (REVIEW_GRADES as readonly string[]).includes(value);
@@ -208,6 +223,44 @@ export function normalizeTimeZone(candidate: string | null | undefined): string 
   }
 }
 const IANA_SHAPE = /^[A-Za-z][A-Za-z0-9_+-]*(?:\/[A-Za-z0-9_+-]+)*$/;
+
+// ---------------------------------------------------------------------------------------------
+// Session capacity and the daily new-card allowance (LB-B35 CP4)
+// ---------------------------------------------------------------------------------------------
+
+/**
+ * The 5-minute session holds at most this many cards IN TOTAL: due reviews plus new cards. It is the
+ * product's existing capacity (v1.2.1) and is NOT "12 due + 3 new". Changing it is a product decision.
+ */
+export const SESSION_CAPACITY_CARDS = 12;
+
+/**
+ * At most this many NEW cards are introduced per learner-local day, however many times the plan is
+ * read, however many sessions are started and from whichever device. New cards only fill spare
+ * session capacity, so one session never holds more than SESSION_CAPACITY_CARDS in total.
+ */
+export const DAILY_NEW_CARD_ALLOWANCE = 3;
+
+/**
+ * Which zone a learner's local day is computed in (owner decision O2, LB-B35 CP4).
+ *
+ * Order: the zone stored on the account, then the zone the device reports, then UTC. Each candidate
+ * must be a valid IANA name; an invalid stored value is skipped, never trusted. `persist` is the one
+ * place that says whether the device zone should be written back: only when the account has NO valid
+ * stored zone yet and the device reports a valid, non-UTC-by-default one. After that only an explicit
+ * profile change updates it, so an ordinary request from a traveller never moves the learner's day.
+ * Changing the zone changes how days are bucketed, never any stored timestamp.
+ */
+export function resolveLearnerTimeZone(
+  stored: string | null | undefined,
+  requested: string | null | undefined,
+): { timeZone: string; source: 'stored' | 'request' | 'default'; persist: string | null } {
+  const isValid = (zone: string | null | undefined): zone is string =>
+    !!zone && normalizeTimeZone(zone) === zone;
+  if (isValid(stored)) return { timeZone: stored, source: 'stored', persist: null };
+  if (isValid(requested)) return { timeZone: requested, source: 'request', persist: requested };
+  return { timeZone: 'UTC', source: 'default', persist: null };
+}
 
 /** `YYYY-MM-DD` of `instant` in `timeZone`. Equals Postgres `(ts AT TIME ZONE tz)::date`. */
 export function localDayKey(instant: Date, timeZone: string): string {

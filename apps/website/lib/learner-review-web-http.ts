@@ -16,6 +16,7 @@ export type WebReviewDependencies = {
     items: Array<{
       contentId: string;
       grade: ReviewGrade;
+      response?: 'known' | 'unknown';
       occurredAt: Date;
       clientEventId: string;
     }>;
@@ -61,7 +62,9 @@ export async function handleWebReviewBatchPost(
   }
 
   try {
-    const parsed = parseMobileReviewBatchRequest(body, subject);
+    const parsed = parseMobileReviewBatchRequest(body, subject, {
+      binaryResponses: process.env.LEARNBOX_BINARY_REVIEW === 'true',
+    });
     const outcomes = await dependencies.submit({ userId: parsed.userId, items: parsed.items });
     return json({ outcomes }, 200);
   } catch (cause) {

@@ -20,8 +20,25 @@ export function webReviewDependenciesFromEnvironment(
   if (!config) return null;
   const store = new PostgresReviewEventStore(reviewPool(config.databaseUrl));
   const service = new MobileReviewBatchService(store);
+  // LB-B35 CP4: record bounded rejection reasons (default off).
+  const recordRejections = environment.LEARNBOX_QUEUE_QUARANTINE === 'true';
   return {
-    submit: (input) => service.submit(input),
+    submit: async (input) => {
+      const outcomes = await service.submit(input);
+      if (recordRejections) {
+        await store.recordRejections(
+          input.userId,
+          outcomes.flatMap((outcome) =>
+            outcome.status === 'validation' ||
+            outcome.status === 'idempotencyConflict' ||
+            outcome.status === 'clockSkew'
+              ? [{ clientEventId: outcome.clientEventId, reason: outcome.status }]
+              : [],
+          ),
+        );
+      }
+      return outcomes;
+    },
     readReconciliation: (input) => store.readReconciliation(input.userId, input.after),
   };
 }

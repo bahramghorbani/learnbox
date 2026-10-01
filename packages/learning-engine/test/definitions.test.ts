@@ -8,6 +8,9 @@ import {
   LEARNED_MIN_BOX,
   MASTERED_MIN_BOX,
   REVIEW_GRADES,
+  BINARY_SHADOW_GRADE,
+  shadowGradeFor,
+  resolveLearnerTimeZone,
   accuracyCountsSql,
   accuracyFromAnswers,
   addDaysToDayKey,
@@ -382,5 +385,68 @@ describe('LB-B35 CP2 — streak ignores days after today', () => {
       longest: 2,
       activeDays: 2,
     });
+  });
+});
+
+describe('resolveLearnerTimeZone (LB-B35 CP4, owner decision O2)', () => {
+  it('prefers the stored zone and never persists over it', () => {
+    expect(resolveLearnerTimeZone('Asia/Tehran', 'Europe/Berlin')).toEqual({
+      timeZone: 'Asia/Tehran',
+      source: 'stored',
+      persist: null,
+    });
+  });
+
+  it('falls back to a valid device zone and asks to persist it once', () => {
+    expect(resolveLearnerTimeZone(null, 'Europe/Berlin')).toEqual({
+      timeZone: 'Europe/Berlin',
+      source: 'request',
+      persist: 'Europe/Berlin',
+    });
+    expect(resolveLearnerTimeZone(undefined, 'Asia/Tehran').persist).toBe('Asia/Tehran');
+  });
+
+  it('skips an invalid stored zone instead of trusting it', () => {
+    expect(resolveLearnerTimeZone('Not/AZone', 'Asia/Tehran').source).toBe('request');
+    expect(resolveLearnerTimeZone('+03:30', null)).toEqual({
+      timeZone: 'UTC',
+      source: 'default',
+      persist: null,
+    });
+  });
+
+  it('missing, invalid, offset-style or oversized zones resolve to UTC and persist nothing', () => {
+    for (const bad of [
+      null,
+      undefined,
+      '',
+      '+03:30',
+      '-0500',
+      'Nope/Nope',
+      'x'.repeat(65),
+      '../etc',
+    ]) {
+      expect(resolveLearnerTimeZone(null, bad)).toEqual({
+        timeZone: 'UTC',
+        source: 'default',
+        persist: null,
+      });
+    }
+  });
+});
+
+describe('binary shadow grade (LB-B35 CP4)', () => {
+  it('projects back to the response it was derived from, for every binary response', () => {
+    for (const response of BINARY_RESPONSES) {
+      expect(toBinaryResponse(shadowGradeFor(response))).toBe(response);
+    }
+  });
+
+  it('is a legacy grade the database CHECK accepts, and the mapping is exactly the plan', () => {
+    expect(BINARY_SHADOW_GRADE).toEqual({ known: 'remembered', unknown: 'forgot' });
+    for (const response of BINARY_RESPONSES) {
+      expect(REVIEW_GRADES).toContain(shadowGradeFor(response));
+    }
+    expect(Object.isFrozen(BINARY_SHADOW_GRADE)).toBe(true);
   });
 });

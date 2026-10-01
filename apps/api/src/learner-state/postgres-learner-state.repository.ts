@@ -1,6 +1,7 @@
 import type { Pool } from 'pg';
 
 import type {
+  DailyPlanStore,
   LearnerNewCardCandidate,
   LearnerScheduleRow,
   LearnerStateRepository,
@@ -25,7 +26,7 @@ const START_CONTENT_ID_PATTERN = 'start-a1-%';
 const MAX_NEW_CARD_CANDIDATES = 12;
 
 /** Read-only learner state projection. No writes; the review write path owns mutations. */
-export class PostgresLearnerStateRepository implements LearnerStateRepository {
+export class PostgresLearnerStateRepository implements LearnerStateRepository, DailyPlanStore {
   constructor(private readonly pool: Pool) {}
 
   async findSchedules(userId: string): Promise<LearnerScheduleRow[]> {
@@ -99,5 +100,67 @@ export class PostgresLearnerStateRepository implements LearnerStateRepository {
       [userId],
     );
     return result.rows[0]?.cursor ?? '0';
+  }
+
+  // --- DailyPlanStore (LB-B35 CP4; only used behind LEARNBOX_SERVER_SESSION_PLAN) -----------------
+
+  async readStoredTimeZone(userId: string): Promise<string | null> {
+    const result = await this.pool.query<{ timezone: string | null }>(
+      'SELECT timezone FROM users WHERE id = $1',
+      [userId],
+    );
+    return result.rows[0]?.timezone ?? null;
+  }
+
+  async persistTimeZone(userId: string, timeZone: string): Promise<void> {
+    await this.pool.query('UPDATE users SET timezone = $2 WHERE id = $1 AND timezone IS NULL', [
+      userId,
+      timeZone,
+    ]);
+  }
+
+  async readAllowance(userId: string, localDay: string): Promise<string[] | null> {
+    const result = await this.pool.query<{ new_card_ids: string[] }>(
+      'SELECT new_card_ids FROM learner_daily_plans WHERE user_id = $1 AND local_day = $2::date',
+      [userId, localDay],
+    );
+    return result.rows[0]?.new_card_ids ?? null;
+  }
+
+  async freezeAllowance(
+    userId: string,
+    localDay: string,
+    timeZone: string,
+    cardIds: string[],
+  ): Promise<string[]> {
+    await this.pool.query(
+      `INSERT INTO learner_daily_plans (user_id, local_day, time_zone, new_card_ids)
+       VALUES ($1, $2::date, $3, $4::uuid[])
+       ON CONFLICT (user_id, local_day) DO NOTHING`,
+      [userId, localDay, timeZone, cardIds],
+    );
+    return (await this.readAllowance(userId, localDay)) ?? [];
+  }
+
+  async findNewCardsByIds(userId: string, cardIds: string[]): Promise<LearnerNewCardCandidate[]> {
+    if (cardIds.length === 0) return [];
+    const result = await this.pool.query<NewCardRow>(
+      `SELECT c.id AS card_id, c.content_id
+         FROM cards c
+         LEFT JOIN card_schedules s ON s.user_id = $1 AND s.card_id = c.id
+        WHERE c.id = ANY($2::uuid[])
+          AND s.card_id IS NULL
+          AND EXISTS (
+            SELECT 1 FROM card_versions cv
+             WHERE cv.card_id = c.id AND cv.status IN ('approved', 'published')
+          )
+        ORDER BY c.content_id`,
+      [userId, cardIds],
+    );
+    return result.rows.map((row) => ({
+      cardId: row.card_id,
+      contentId: row.content_id,
+      importance: 1,
+    }));
   }
 }

@@ -2,6 +2,53 @@ import type { DeviceStorage } from './device-storage.js';
 
 export interface ReviewSessionProgress {
   nextCardIndex: number;
+  /**
+   * LB-B35 CP4: identity of the card to resume at. Optional so a record written by v1.2.1 (index only)
+   * still loads, and so a v1.2.1 reader still accepts a record that carries it.
+   */
+  nextCardId?: string;
+}
+
+/**
+ * Where to resume in a (possibly rebuilt) queue.
+ *  - the saved card is still queued  -> its CURRENT position (the order may have changed)
+ *  - the saved card is no longer queued (answered elsewhere, or no longer due) -> the start, so no unseen
+ *    card is skipped
+ *  - a legacy record with no card identity -> the saved index if it still exists (v1.2.1 behaviour), else
+ *    the start
+ */
+export function resolveResumeIndex(
+  saved: ReviewSessionProgress | null,
+  queueCardIds: readonly string[],
+): number | null {
+  if (!saved || queueCardIds.length === 0) return null;
+  if (saved.nextCardId !== undefined) {
+    const at = queueCardIds.indexOf(saved.nextCardId);
+    return at >= 0 ? at : null;
+  }
+  return saved.nextCardIndex < queueCardIds.length ? saved.nextCardIndex : null;
+}
+
+export type ResumeDecision =
+  { action: 'wait' } | { action: 'resume'; index: number } | { action: 'clear' };
+
+/**
+ * LB-B35 CP4 — what to do with a saved resume record, given what is known about the queue.
+ *
+ * `queueLoaded` is false while the server queue has not arrived yet (first render, offline, still
+ * fetching). An empty queue in that state means "unknown", not "nothing due": the saved record must
+ * be kept, never cleared, or a reload before the fetch completes silently loses the resume point.
+ * Only a LOADED queue can invalidate a record.
+ */
+export function decideResume(
+  saved: ReviewSessionProgress | null,
+  queueCardIds: readonly string[],
+  queueLoaded: boolean,
+): ResumeDecision {
+  if (!saved) return { action: 'clear' };
+  if (!queueLoaded && queueCardIds.length === 0) return { action: 'wait' };
+  const index = resolveResumeIndex(saved, queueCardIds);
+  return index === null ? { action: 'clear' } : { action: 'resume', index };
 }
 
 /** Stores only the next card index needed to resume a device-local review session. */
@@ -40,6 +87,10 @@ function isReviewSessionProgress(value: unknown): value is ReviewSessionProgress
   return (
     typeof candidate.nextCardIndex === 'number' &&
     Number.isSafeInteger(candidate.nextCardIndex) &&
-    candidate.nextCardIndex >= 0
+    candidate.nextCardIndex >= 0 &&
+    (candidate.nextCardId === undefined ||
+      (typeof candidate.nextCardId === 'string' &&
+        candidate.nextCardId.length > 0 &&
+        candidate.nextCardId.length <= 200))
   );
 }

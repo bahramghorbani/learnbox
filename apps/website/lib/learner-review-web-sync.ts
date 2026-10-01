@@ -2,9 +2,13 @@ import {
   type ReviewGrade,
   acknowledgeSyncEvents,
   loadSyncQueue,
+  loadSyncQueueResilient,
   queueForRetry,
+  quarantineRejectedEvent,
+  shouldQuarantineRejected,
   retryAfter,
   saveSyncQueue,
+  quarantineCount,
   type PendingSyncEvent,
   type SyncQueueStorage,
 } from '@learnbox/learning-engine';
@@ -22,7 +26,13 @@ export type WebReviewSyncResult = {
   pendingCount: number;
   attentionCount: number;
   acknowledged: boolean;
+  /** Only set with `quarantineKey`: answers parked on this device, never deleted automatically. */
+  quarantinedCount?: number;
 };
+
+/** The key holding quarantined answers for the queue stored at `queueKey`. */
+export const quarantineKeyFor = (queueKey: string) =>
+  queueKey.replace('learnbox:review-sync:', 'learnbox:review-quarantine:');
 
 const MAX_BATCH_SIZE = 20;
 
@@ -35,25 +45,34 @@ export async function flushWebReviewQueue(input: {
   storage: SyncQueueStorage;
   key: string;
   ownerId?: string;
+  /** `LEARNBOX_QUEUE_QUARANTINE` (default off = v1.2.1: whole-queue reset, unbounded retry). */
+  quarantineKey?: string;
   now?: Date;
   submit?: (items: WebReviewItem[]) => ReturnType<typeof submitWebReviewBatch>;
 }): Promise<WebReviewSyncResult> {
   const now = input.now ?? new Date();
-  const queue = loadSyncQueue<QueuedWebReview>(input.storage, input.key);
+  const quarantineKey = input.quarantineKey;
+  const readQueue = () =>
+    quarantineKey
+      ? loadSyncQueueResilient<QueuedWebReview>(input.storage, input.key, quarantineKey, now)
+      : loadSyncQueue<QueuedWebReview>(input.storage, input.key);
+  const quarantined = () =>
+    quarantineKey ? { quarantinedCount: quarantineCount(input.storage, quarantineKey) } : {};
+  const queue = readQueue();
   const due = queueForRetry(queue, now).slice(0, MAX_BATCH_SIZE);
   if (due.length === 0)
-    return { pendingCount: queue.length, attentionCount: 0, acknowledged: false };
+    return { pendingCount: queue.length, attentionCount: 0, acknowledged: false, ...quarantined() };
 
   const submit = input.submit ?? ((items) => submitWebReviewBatch(items, fetch, input.ownerId));
   const result = await submit(due.map(toWireItem));
-  const currentQueue = () => loadSyncQueue<QueuedWebReview>(input.storage, input.key);
+  const currentQueue = readQueue;
   if (result.status !== 'ok') {
     const deferred = new Set(due.map((event) => event.clientEventId));
     const next = currentQueue().map((event) =>
       deferred.has(event.clientEventId) ? retryAfter(event, now) : event,
     );
     saveSyncQueue(input.storage, input.key, next);
-    return { pendingCount: next.length, attentionCount: 0, acknowledged: false };
+    return { pendingCount: next.length, attentionCount: 0, acknowledged: false, ...quarantined() };
   }
 
   const outcomesById = new Map(result.outcomes.map((outcome) => [outcome.clientEventId, outcome]));
@@ -77,11 +96,27 @@ export async function flushWebReviewQueue(input: {
       )
       .map((event) => event.clientEventId),
   );
-  const next = acknowledgedQueue.map((event) =>
-    retryIds.has(event.clientEventId) ? retryAfter(event, now) : event,
-  );
+  // Bounded rejection handling: a validation / idempotency-conflict event that has used its retries is
+  // parked in quarantine (kept, visible, never auto-deleted) instead of retrying forever.
+  const parked = new Set<string>();
+  if (quarantineKey) {
+    for (const event of acknowledgedQueue) {
+      const status = outcomesById.get(event.clientEventId)?.status;
+      if (
+        (status === 'validation' || status === 'idempotencyConflict') &&
+        shouldQuarantineRejected(event)
+      ) {
+        quarantineRejectedEvent(input.storage, quarantineKey, event, status, now);
+        parked.add(event.clientEventId);
+      }
+    }
+  }
+  const next = acknowledgedQueue
+    .filter((event) => !parked.has(event.clientEventId))
+    .map((event) => (retryIds.has(event.clientEventId) ? retryAfter(event, now) : event));
   saveSyncQueue(input.storage, input.key, next);
   return {
+    ...quarantined(),
     pendingCount: next.length,
     attentionCount: result.outcomes.filter(
       (outcome) => outcome.status === 'validation' || outcome.status === 'idempotencyConflict',

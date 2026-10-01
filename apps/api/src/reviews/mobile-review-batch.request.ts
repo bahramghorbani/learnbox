@@ -1,4 +1,4 @@
-import { isReviewGrade } from '@learnbox/learning-engine';
+import { isBinaryResponse, isReviewGrade, shadowGradeFor } from '@learnbox/learning-engine';
 
 import type { MobileReviewBatchItem } from './mobile-review-batch.service.js';
 
@@ -36,7 +36,34 @@ function exactKeys(
   );
 }
 
-function parseItem(value: unknown): MobileReviewBatchItem {
+export interface ParseOptions {
+  /**
+   * `LEARNBOX_BINARY_REVIEW` (CP5, default off). When on, an item may carry `response` ('known' |
+   * 'unknown') INSTEAD of `grade`; the grade stored is the compatibility shadow grade. When off the wire
+   * format is exactly v1.2.1: four grades, exact keys, `response` rejected.
+   */
+  binaryResponses?: boolean;
+}
+
+function parseItem(value: unknown, options: ParseOptions): MobileReviewBatchItem {
+  if (options.binaryResponses && isRecord(value) && 'response' in value) {
+    if (
+      !exactKeys(value, ['clientEventId', 'contentId', 'response', 'occurredAt']) ||
+      !isBinaryResponse(value.response)
+    ) {
+      throw new MobileReviewBatchRequestError('Each review item has an invalid shape.');
+    }
+    const { response } = value;
+    return parseItem(
+      {
+        clientEventId: value.clientEventId,
+        contentId: value.contentId,
+        grade: shadowGradeFor(response),
+        occurredAt: value.occurredAt,
+      },
+      {},
+    );
+  }
   if (
     !isRecord(value) ||
     !exactKeys(value, ['clientEventId', 'contentId', 'grade', 'occurredAt'])
@@ -73,9 +100,18 @@ function parseItem(value: unknown): MobileReviewBatchItem {
   };
 }
 
+function parseBinaryItem(value: unknown): MobileReviewBatchItem {
+  const item = parseItem(value, { binaryResponses: true });
+  if (isRecord(value) && isBinaryResponse(value.response)) {
+    return { ...item, response: value.response };
+  }
+  return item;
+}
+
 export function parseMobileReviewBatchRequest(
   payload: unknown,
   userId: string,
+  options: ParseOptions = {},
 ): ParsedMobileReviewBatchRequest {
   if (!isRecord(payload) || !exactKeys(payload, ['items'], ['reconciliationCursor'])) {
     throw new MobileReviewBatchRequestError('Review batch payload has an invalid shape.');
@@ -95,7 +131,9 @@ export function parseMobileReviewBatchRequest(
       'reconciliationCursor must be a non-negative decimal string.',
     );
   }
-  const items = payload.items.map(parseItem);
+  const items = payload.items.map((item) =>
+    options.binaryResponses ? parseBinaryItem(item) : parseItem(item, options),
+  );
   if (new Set(items.map((item) => item.clientEventId)).size !== items.length) {
     throw new MobileReviewBatchRequestError('Duplicate client event id within one batch.');
   }
