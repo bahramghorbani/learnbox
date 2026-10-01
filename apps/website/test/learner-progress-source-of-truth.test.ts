@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { Pool } from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
+import { guardForcedTeardown } from './support/forced-teardown-guard';
 import { readLearnerSummary } from '../lib/learner-summary';
 import {
   fetchLearnerSummary,
@@ -36,6 +37,7 @@ const dbName = `cp3_${Math.random().toString(36).slice(2, 10)}`;
 
 let pool: Pool;
 let admin: Pool;
+let teardown: ReturnType<typeof guardForcedTeardown>;
 
 const migrationsDir = join(__dirname, '../../../database/migrations');
 
@@ -92,10 +94,12 @@ suite('server-authoritative learner progress (real Postgres)', () => {
 
   beforeAll(async () => {
     admin = new Pool({ connectionString: url, max: 1 });
+    guardForcedTeardown(admin);
     await admin.query(`CREATE DATABASE ${dbName}`);
     const scoped = new URL(url as string);
     scoped.pathname = `/${dbName}`;
     pool = new Pool({ connectionString: scoped.toString(), max: 2 });
+    teardown = guardForcedTeardown(pool);
     for (const file of readdirSync(migrationsDir)
       .filter((f) => /^\d{4}_.+\.sql$/.test(f))
       .sort()) {
@@ -140,6 +144,7 @@ suite('server-authoritative learner progress (real Postgres)', () => {
   });
 
   afterAll(async () => {
+    teardown?.beginTeardown();
     await pool?.end();
     await admin?.query(`DROP DATABASE IF EXISTS ${dbName} WITH (FORCE)`);
     await admin?.end();

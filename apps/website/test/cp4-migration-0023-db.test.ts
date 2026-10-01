@@ -6,6 +6,7 @@ import { Pool } from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { deleteAccount } from '../lib/account-deletion-store';
+import { guardForcedTeardown } from './support/forced-teardown-guard';
 import { reviewEventsFingerprint } from './support/review-events-fingerprint';
 
 /**
@@ -26,6 +27,7 @@ const sql = (f: string) => readFileSync(join(dir, f), 'utf8');
 
 let admin: Pool;
 let pool: Pool;
+let teardown: ReturnType<typeof guardForcedTeardown>;
 
 const snapshotTables = async () =>
   (
@@ -45,10 +47,12 @@ suite('CP4 migration 0023 (real Postgres)', () => {
 
   beforeAll(async () => {
     admin = new Pool({ connectionString: url, max: 1 });
+    guardForcedTeardown(admin);
     await admin.query(`CREATE DATABASE ${dbName}`);
     const scoped = new URL(url as string);
     scoped.pathname = `/${dbName}`;
     pool = new Pool({ connectionString: scoped.toString(), max: 4 });
+    teardown = guardForcedTeardown(pool);
     for (const f of before) await pool.query(sql(f));
     // Legacy data written by v1.2.1 BEFORE the migration.
     await pool.query(`INSERT INTO users (id, phone_e164, first_name) VALUES ($1, $2, 'Old')`, [
@@ -71,6 +75,7 @@ suite('CP4 migration 0023 (real Postgres)', () => {
   });
 
   afterAll(async () => {
+    teardown?.beginTeardown();
     await pool?.end();
     await admin?.query(`DROP DATABASE IF EXISTS ${dbName} WITH (FORCE)`).catch(() => undefined);
     await admin?.end().catch(() => undefined);
