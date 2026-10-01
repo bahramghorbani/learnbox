@@ -66,7 +66,7 @@ test('the Dockerfile guards and links the API migration runner dependencies', ()
   assert.match(dockerfile, /test -e apps\/api\/node_modules\/pg\/package\.json/);
 });
 
-test('every LB-B35 CP4/CP5 flag is reachable in the image and defaults to off', () => {
+test('every LB-B35 CP4/CP5/CP7 flag is reachable in the image and defaults to off', () => {
   const configuration = renderedCompose();
   const service = configuration.services['learner-app'];
   for (const flag of [
@@ -75,6 +75,7 @@ test('every LB-B35 CP4/CP5 flag is reachable in the image and defaults to off', 
     'LEARNBOX_SERVER_SESSION_PLAN',
     'LEARNBOX_BINARY_REVIEW',
     'LEARNBOX_TODAY_WORKLOAD',
+    'LEARNBOX_SCHEDULER_V2',
   ]) {
     assert.equal(
       service.environment[flag],

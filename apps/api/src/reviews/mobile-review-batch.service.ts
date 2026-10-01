@@ -1,6 +1,8 @@
 import {
   isReviewGrade,
+  scheduleBinaryReview,
   scheduleReview,
+  SCHEDULER_V2_ENGINE_VERSION,
   type BinaryResponse,
   type ReviewGrade,
 } from '@learnbox/learning-engine';
@@ -119,11 +121,29 @@ function validateBatch(items: MobileReviewBatchItem[]): void {
   }
 }
 
+/**
+ * LB-B35 CP7 (flag `LEARNBOX_SCHEDULER_V2`, default off). With `schedulerV2` unset or false the service runs
+ * exactly the v1.2.1 path: `scheduleReview` and no engine stamp. With it true the preflight runs before every
+ * item is processed and any failure refuses the batch (never a silent fallback to v1).
+ */
+export interface MobileReviewBatchOptions {
+  schedulerV2?: boolean;
+  /** Required when `schedulerV2` is true; rejects when the schema is not ready. */
+  schedulerV2Preflight?: () => Promise<void>;
+}
+
 export class MobileReviewBatchService {
   constructor(
     private readonly store: PostgresReviewEventStore,
     private readonly now: () => Date = () => new Date(),
-  ) {}
+    private readonly options: MobileReviewBatchOptions = {},
+  ) {
+    if (options.schedulerV2 && !options.schedulerV2Preflight) {
+      throw new Error(
+        'Scheduler V2 requires a schema preflight; refusing to construct the service.',
+      );
+    }
+  }
 
   async submit(request: MobileReviewBatchRequest): Promise<MobileReviewBatchItemOutcome[]> {
     validateBatch(request.items);
@@ -131,6 +151,7 @@ export class MobileReviewBatchService {
 
     const outcomes: MobileReviewBatchItemOutcome[] = [];
     try {
+      if (this.options.schedulerV2) await this.options.schedulerV2Preflight!();
       for (const item of request.items) {
         outcomes.push(await this.processItem(request.userId, item));
       }
@@ -178,7 +199,16 @@ export class MobileReviewBatchService {
     if (!approvedSchedule) return { status: 'validation', clientEventId: item.clientEventId };
     const { schedule } = approvedSchedule;
 
-    const nextSchedule = scheduleReview(schedule, item.grade, item.occurredAt);
+    // v2 is binary: a legacy grade is projected inside scheduleBinaryReview. An invariant violation throws
+    // here, BEFORE writeAtomically, so an invalid transition is never persisted (the batch is refused).
+    const useV2 = this.options.schedulerV2 === true;
+    const nextSchedule = useV2
+      ? scheduleBinaryReview(
+          schedule,
+          { grade: item.grade, ...(item.response ? { response: item.response } : {}) },
+          item.occurredAt,
+        )
+      : scheduleReview(schedule, item.grade, item.occurredAt);
     try {
       const result = await this.store.writeAtomically(
         {
@@ -186,6 +216,7 @@ export class MobileReviewBatchService {
           cardId,
           grade: item.grade,
           ...(item.response ? { response: item.response } : {}),
+          ...(useV2 ? { engineVersion: SCHEDULER_V2_ENGINE_VERSION } : {}),
           occurredAt: item.occurredAt,
           clientEventId: item.clientEventId,
         },

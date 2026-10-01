@@ -11,6 +11,8 @@ export interface ReviewEventInput {
   grade: ReviewGrade;
   /** Canonical binary answer. Absent for legacy four-grade clients (stored NULL, projected on read). */
   response?: BinaryResponse;
+  /** Scheduler that produced the schedule written with this event; unset = legacy scheduler v1 (NULL). */
+  engineVersion?: number;
   occurredAt: Date;
   clientEventId: string;
 }

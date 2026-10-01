@@ -1,0 +1,28 @@
+KILLED (7 tests fail)        ENG-CLAMP regression: Unknown not clamped into Box b-1
+KILLED (4 tests fail)        Unknown floor removed (can drop 2 Boxes)
+KILLED (9 tests fail)        Box-1 graduation removed (Known can stall in Box 1)
+KILLED (5 tests fail)        Known factor 1.8 -> 1.5
+KILLED (4 tests fail)        Known factor 1.8 -> 3 (clamp is then the only guard)
+KILLED (4 tests fail)        Box-5 cap 180 -> 365
+KILLED (2 tests fail)        Box-5 growth x3 -> x2
+KILLED (7 tests fail)        edge margin 1e-9 -> 0 (lands ON the edge)
+KILLED (1 tests fail)        runtime assertion disabled
+KILLED (1 tests fail)        legacy 'hard' no longer projects to known
+KILLED (5 tests fail)        compat state influences scheduling (relearning cards frozen)
+KILLED (2 tests fail)        lateness becomes an input
+KILLED (2 tests fail)        compat state: new + Unknown -> relearning
+KILLED (1 tests fail)        compat state: Box-5 Known not mastered
+KILLED (1 tests fail)        invalid stored stability accepted
+KILLED (1 tests fail)        non-finite proposal accepted by the gate
+KILLED (6 tests fail)        Unknown in Box 1 leaves Box 1
+KILLED (3 tests fail)        flag off still uses the V2 path
+KILLED (2 tests fail)        preflight skipped
+KILLED (1 tests fail)        engine stamp dropped under V2
+KILLED (3 tests fail)        engine stamp leaks when flag off
+KILLED (1 tests fail)        V2 constructible without a preflight
+KILLED (1 tests fail)        preflight tolerates a missing column
+KILLED (1 tests fail)        preflight tolerates a wrong column type
+KILLED (1 tests fail)        preflight skips the constraint check
+KILLED (1 tests fail)        a failed preflight is cached forever
+KILLED (1 tests fail)        flag accepts 'TRUE'/'1'
+mutants: 27  survivors/skips: 0

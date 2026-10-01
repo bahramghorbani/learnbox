@@ -4,6 +4,10 @@ import { Pool } from 'pg';
 import { MobileSessionContract } from '../../api/dist/auth/mobile-session.js';
 import { PostgresReviewEventStore } from '../../api/dist/reviews/postgres-review-event.store.js';
 import { MobileReviewBatchService } from '../../api/dist/reviews/mobile-review-batch.service.js';
+import {
+  createSchedulerV2Preflight,
+  isSchedulerV2Enabled,
+} from '../../api/dist/reviews/scheduler-v2-preflight.js';
 import { requireVerifiedDatabaseTls } from '../../api/dist/database/migration-runner.js';
 
 import type {
@@ -43,8 +47,13 @@ export function mobileReviewHttpDependenciesFromEnvironment(
     key: config.sessionSecret,
     random: { bytes: randomBytes },
   });
+  const pool = reviewPool(config.databaseUrl);
+  // LB-B35 CP7 (default off): scheduler V2 fails closed unless the 0023 schema is present.
+  const schedulerV2 = isSchedulerV2Enabled(environment);
   const service = new MobileReviewBatchService(
-    new PostgresReviewEventStore(reviewPool(config.databaseUrl)),
+    new PostgresReviewEventStore(pool),
+    undefined,
+    schedulerV2 ? { schedulerV2, schedulerV2Preflight: createSchedulerV2Preflight(pool) } : {},
   );
   return {
     verifyAccessToken(token: string): AccessVerification {

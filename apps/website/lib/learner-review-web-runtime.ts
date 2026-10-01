@@ -2,6 +2,10 @@ import { Pool } from 'pg';
 
 import { requireVerifiedDatabaseTls } from '../../api/dist/database/migration-runner.js';
 import { MobileReviewBatchService } from '../../api/dist/reviews/mobile-review-batch.service.js';
+import {
+  createSchedulerV2Preflight,
+  isSchedulerV2Enabled,
+} from '../../api/dist/reviews/scheduler-v2-preflight.js';
 import { PostgresReviewEventStore } from '../../api/dist/reviews/postgres-review-event.store.js';
 
 import type { WebReviewDependencies } from './learner-review-web-http';
@@ -18,8 +22,15 @@ export function webReviewDependenciesFromEnvironment(
 ): WebReviewDependencies | null {
   const config = readWebLearnerStateRuntimeConfig(environment);
   if (!config) return null;
-  const store = new PostgresReviewEventStore(reviewPool(config.databaseUrl));
-  const service = new MobileReviewBatchService(store);
+  const pool = reviewPool(config.databaseUrl);
+  const store = new PostgresReviewEventStore(pool);
+  // LB-B35 CP7 (default off): scheduler V2 fails closed unless the 0023 schema is present.
+  const schedulerV2 = isSchedulerV2Enabled(environment);
+  const service = new MobileReviewBatchService(
+    store,
+    undefined,
+    schedulerV2 ? { schedulerV2, schedulerV2Preflight: createSchedulerV2Preflight(pool) } : {},
+  );
   // LB-B35 CP4: record bounded rejection reasons (default off).
   const recordRejections = environment.LEARNBOX_QUEUE_QUARANTINE === 'true';
   return {
