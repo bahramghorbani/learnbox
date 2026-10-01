@@ -5,10 +5,10 @@ Branch `feat/lb-b35-cp5-learner-ui`, draft PR #336. Base `main` = `9c274f69` (PR
 
 ## 1. Source and image identity
 
-- Final source SHA: `5e469b276feccb23aaaf4d024b8ca150c25e5da6` (`APP_SOURCE_SHA` inside both candidate images was read back from the running container and matches).
-- Checkpoints: CP5-A `56eb9f1` (Today workload) · CP5-B (binary buttons) · CP5-C `a15f582` (goal removal) · CP5-D (session-expiry UX) · final `5e469b27` (Today screen shows the canonical remaining count).
-- Staging images (local, disposable, never pushed): baseline `cp5-stg-main-9c274f69` (`c78da5183667`), candidate flags-off `cp5-stg-off-5e469b27` (`c17e9adbc74c`), candidate all-flags `cp5-stg-all-5e469b27` (`d04dfd296d86`).
-- The API matrix in §5 ran on the earlier candidate `325ea7ef` images. Between `325ea7ef` and `5e469b27` the only runtime change is `app/components/TodayScreen.tsx` (client rendering); no route, service, SQL or scheduler file changed. The matrix was therefore not re-run (owner instruction); §8 spot-checks the final images instead.
+- Final runtime SHA: `e3c33a36213d0fd4608a2423117b729056138fec` (`APP_SOURCE_SHA` read back from the running container matches). The PR head is this SHA plus docs-only commits (this file); the PR's CI results for the exact merged head are recorded in the PR.
+- Checkpoints: CP5-A `56eb9f1` (Today workload) · CP5-B (binary buttons) · CP5-C `a15f582` (goal removal) · CP5-D (session-expiry UX) · `5e469b27` (Today screen shows the canonical remaining count) · final runtime `e3c33a36` (owner-required keyboard operation of the flip card).
+- Final staging image (local, disposable, never pushed): `cp5-stg-all-e3c33a36` (`680f90930904`), run against the restored CP4 final dump (180 users, migration `0023`). Earlier images: baseline `cp5-stg-main-9c274f69` (`c78da5183667`), candidate flags-off `cp5-stg-off-5e469b27` (`c17e9adbc74c`), candidate all-flags `cp5-stg-all-5e469b27` (`d04dfd296d86`).
+- The API matrix in §5 ran on the earlier candidate `325ea7ef` images. Between `325ea7ef` and `e3c33a36` the only runtime changes are `app/components/TodayScreen.tsx`, the flip-card markup/key handler in `app/LearnerHome.tsx` and one `:focus-visible` rule in `app/globals.css` (all client rendering); no route, service, SQL or scheduler file changed. The matrix was therefore not re-run (owner instruction); §8 spot-checks the final images instead.
 
 ## 2. Flags (all default OFF; compose, Dockerfile and `app.env.example` carry them)
 
@@ -64,7 +64,8 @@ PASS:
 Findings, not hidden:
 
 - On an iPhone-size viewport the two answer buttons start below the fold (top at 835 px of 844); the learner must scroll to reach them. They are reachable and tappable (56 px high). Not changed.
-- **Keyboard:** the flip card is a plain `div` with an `onClick` only (no `tabindex`/`role`, Enter does nothing). A keyboard-only user cannot flip the card and so cannot reach the answer buttons. The same markup exists on `main` (`LearnerHome.tsx:1267` at `9c274f6`), so this is a pre-existing gap, not a CP5 regression, and **it is not fixed**. Once flipped, tab order is sane (audio, «بلد بودم», «بلد نیستم»), and the answer area is a labelled group («پاسخ شما»).
+- **Keyboard (fixed in `e3c33a36`, owner-approved pre-merge fix):** previously the flip card was a plain `div` with only `onClick`, so a keyboard-only user could not flip it or reach the answer buttons (the same markup exists on `main`, so it was not a CP5 regression). The `.flip-container` element is now `role="button"` with `tabindex=0`, a Persian `aria-label` carrying the German word plus the current action (front: «Apfel. برای دیدن معنی، فعال کن»; back: «Apfel؛ سیب. برای برگشتن به روی کارت، فعال کن»), Enter/Space toggle the flip exactly as click does (default prevented, auto-repeat ignored, only when the card itself is the event target so the nested pronunciation buttons are unaffected) and a `.flip-container:focus-visible` rule gives a 3px solid outline. Click/tap behaviour and the animation are unchanged. Once flipped, tab order is sane (audio, «بلد بودم», «بلد نیستم») and the answer area is a labelled group («پاسخ شما»).
+- **Focused browser verification on `e3c33a36`** (Chrome, 390×844, touch emulation, real `Input.dispatchKeyEvent` / touch / mouse events, all-flags image): Tab from the session header reaches the flip card second (after «خروج از جلسه»), `:focus-visible` is true with a solid 3px outline; Enter flips (answer buttons appear), Space flips back, Space flips again, with no page scroll (scrollY 0); Tab then reaches the pronunciation buttons and «بلد بودم», and Enter on it POSTs `response: known` and advances 1→2 of 8 to the next unflipped card; a touch tap on the card flips it; a touch tap on «بلد نیستم» POSTs `response: unknown` and advances 2→3 of 8; a mouse click flips; none of the four legacy grade labels is present; Enter and Space on the pronunciation button (front and back face, tested one key at a time) never flip the card.
 
 ## 9. Goal-removal evidence
 
@@ -73,7 +74,7 @@ Tests `cp5-goal-removal.test.tsx` (flag on: no gate, no Profile/Settings row, no
 ## 10. Session-expiry / unsynced-review evidence
 
 Tests: a 401 on the review POST ends the session, keeps the device queue untouched, shows the notice with the unsent count, and sends nothing to another account; removing that branch makes the review-POST test fail. Browser result in §8.
-**Retry / Stay / Discard:** CP5-D implements none of these as separate controls. There is exactly one path: sign in again; unsent answers stay on the device and are sent after login. There is **no Discard action**; this was not built and so is not tested. Whether one is wanted is an owner decision.
+**Retry / Stay / Discard:** CP5-D deliberately has exactly one path: sign in again; unsent answers stay on the device and are sent after login. **No Discard action exists, by owner decision** — session expiry is not a user-initiated logout, so a destructive discard is not offered there. Explicit discard semantics remain only in the separate user-initiated logout flow, unchanged.
 
 ## 11. `card_schedules.state` and Mobile
 
@@ -86,13 +87,13 @@ Tests: a 401 on the review POST ends the session, keeps the device queue untouch
 
 ## 13. Automated tests
 
-Website suite at the final head before push: 108 files passed, 2 skipped; 885 tests passed, 8 skipped. Deployment-boundary test 5/5. tsc clean. Required CI on runtime head `5e469b27`: quality, mobile, production-stack and secrets all COMPLETED SUCCESS. This evidence file is added in a docs-only commit on top; CI for that final PR head is recorded in the PR.
+Website suite at runtime head `e3c33a36`, against a real Postgres (`TEST_DATABASE_URL`): 109 files passed, 2 skipped; 892 tests passed, 8 skipped (the 8 skips are unchanged from before). `tsc --noEmit` clean. New `test/cp5-flip-keyboard.test.tsx` (7 tests: role/tabindex/accessible name and state, click/tap flip both ways, Enter and Space flip both ways, key default-prevented and other keys ignored, held-key repeat ignored, nested pronunciation keys do not flip, `:focus-visible` rule present) was run red first (5 of 7 failed on the old markup). Mutation checks: removing the target guard, the repeat guard, or `preventDefault` each fails exactly one test. The existing LB-B23 audio-flip tests still pass. Required CI on runtime head `e3c33a36`: quality, mobile, production-stack and secrets all COMPLETED SUCCESS.
 
 ## 14. Limitations / not tested
 
 - Only Chrome with iPhone-size emulation was used; no real iPhone/Safari, no VoiceOver/TalkBack screen-reader pass, no contrast audit.
-- Keyboard-only flip is not possible (pre-existing, §8); not fixed.
-- The API matrix was run on `325ea7ef`, not re-run on `5e469b27` (client-only delta); only the browser and flag-off checks in §7–§8 ran on the final images.
+- A complete screen-reader / contrast / accessibility audit has **not** been done; only keyboard operation of the flip card was fixed and verified. The rest remains separate B14 work. Below-the-fold answer buttons on a 390×844 viewport remain a documented UX finding, not changed.
+- The API matrix was run on `325ea7ef` and not re-run (client-only delta since); only the browser checks in §8 ran on `e3c33a36`, and the flag-off rollback in §7 ran on `5e469b27`.
 - Browser sessions used minted test cookies for synthetic users, not a real SMS/OTP login (OTP login was proven in earlier checkpoints, not here).
 - Session expiry was simulated by deleting the cookie; the 30-day / 14-day server expiry itself was not exercised in the browser.
 - The Today screen still labels its ring denominator as answered + remaining; behaviour with >12 overdue was verified in jsdom and API, not in the browser.
