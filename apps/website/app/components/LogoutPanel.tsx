@@ -2,13 +2,19 @@
 
 import { useState } from 'react';
 
-type LogoutState = 'idle' | 'confirming' | 'pending' | 'failed';
+type LogoutState = 'idle' | 'confirming' | 'pending' | 'failed' | 'unsent';
 
 interface LogoutPanelProps {
   /** Ends the server session. Resolves true when the session was actually revoked. */
   onLogout: () => Promise<boolean>;
   /** Clears device-local learner state and returns to the signed-out experience. */
   onLoggedOut: () => void;
+  /**
+   * LB-B35 CP4 (safe logout; absent = v1.2.1). Tries to send every unsent answer BEFORE the session is
+   * ended (the flush needs the session) and resolves with how many are still unsent. When any remain the
+   * learner chooses; nothing on the device is discarded silently.
+   */
+  onFlushUnsent?: () => Promise<number>;
 }
 
 /**
@@ -22,10 +28,11 @@ interface LogoutPanelProps {
  * session, the learner stays signed in and is told, rather than being dropped into
  * a signed-out-looking UI while the session is still live server-side.
  */
-export function LogoutPanel({ onLogout, onLoggedOut }: LogoutPanelProps) {
+export function LogoutPanel({ onLogout, onLoggedOut, onFlushUnsent }: LogoutPanelProps) {
   const [state, setState] = useState<LogoutState>('idle');
+  const [unsent, setUnsent] = useState(0);
 
-  const handleConfirm = () => {
+  const endSession = () => {
     setState('pending');
     void onLogout()
       .then((revoked) => {
@@ -39,6 +46,68 @@ export function LogoutPanel({ onLogout, onLoggedOut }: LogoutPanelProps) {
         setState('failed');
       });
   };
+
+  const handleConfirm = () => {
+    if (!onFlushUnsent) {
+      endSession();
+      return;
+    }
+    setState('pending');
+    void onFlushUnsent()
+      .then((remaining) => {
+        if (remaining > 0) {
+          setUnsent(remaining);
+          setState('unsent');
+          return;
+        }
+        endSession();
+      })
+      .catch(() => {
+        // The count is unknown, so assume answers may remain rather than risk losing them.
+        setUnsent(1);
+        setState('unsent');
+      });
+  };
+
+  if (state === 'unsent') {
+    return (
+      <div className="settings-row settings-row-block">
+        <span className="settings-row-copy">
+          <strong>پاسخ‌های ارسال‌نشده</strong>
+          <small data-testid="logout-unsent-count">
+            {unsent.toLocaleString('fa-IR')} پاسخ هنوز به حساب شما فرستاده نشده است. اگر اکنون خارج
+            شوید و آن‌ها را نگه ندارید، از این دستگاه پاک می‌شوند.
+          </small>
+        </span>
+        <div className="settings-row-actions">
+          <button
+            className="text-button"
+            type="button"
+            onClick={handleConfirm}
+            data-testid="logout-retry-send"
+          >
+            تلاش دوباره برای ارسال
+          </button>
+          <button
+            className="text-button settings-danger-action"
+            type="button"
+            onClick={endSession}
+            data-testid="logout-discard-and-exit"
+          >
+            خروج و حذف این پاسخ‌ها
+          </button>
+          <button
+            className="text-button"
+            type="button"
+            onClick={() => setState('idle')}
+            data-testid="logout-stay"
+          >
+            ماندن در حساب
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (state === 'confirming' || state === 'pending' || state === 'failed') {
     return (

@@ -23,6 +23,7 @@ interface SettingsScreenProps {
   /** Omitted in the local prototype, where there is no server session to end. */
   onLogout?: () => Promise<boolean>;
   onLoggedOut?: () => void;
+  onFlushUnsent?: () => Promise<number>;
 }
 
 const soundSwitchLabel = 'پخش تلفظ';
@@ -44,6 +45,7 @@ export function SettingsScreen({
   onAccountDeleted,
   onLogout,
   onLoggedOut,
+  onFlushUnsent,
 }: SettingsScreenProps) {
   const [saveStatus, setSaveStatus] = useState('');
 
@@ -123,7 +125,11 @@ export function SettingsScreen({
       </div>
       {onLogout && onLoggedOut ? (
         <div className="settings-rows">
-          <LogoutPanel onLogout={onLogout} onLoggedOut={onLoggedOut} />
+          <LogoutPanel
+            onLogout={onLogout}
+            onLoggedOut={onLoggedOut}
+            onFlushUnsent={onFlushUnsent}
+          />
         </div>
       ) : null}
       {onDeleteAccount && onAccountDeleted ? (

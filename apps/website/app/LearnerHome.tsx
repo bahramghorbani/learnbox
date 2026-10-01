@@ -6,6 +6,8 @@ import {
   hasPersonalVocabularyDuplicate,
   loadPersonalVocabulary,
   loadSyncQueue,
+  loadSyncQueueResilient,
+  quarantineCount,
   createMemoryStorage,
   createResilientStorage,
   getCurrentStreakDays,
@@ -54,7 +56,7 @@ import {
   fetchWebLearnerState,
   type WebLearnerStateResult,
 } from '../lib/learner-state-web-client';
-import { flushWebReviewQueue } from '../lib/learner-review-web-sync';
+import { flushWebReviewQueue, quarantineKeyFor } from '../lib/learner-review-web-sync';
 import { fetchWebLearnerProfile } from '../lib/learner-profile-web-client';
 import type { LearnerSyncState } from './learner-sync-state';
 import { accountStorageScope, refuseUnresolvedScope } from '../lib/account-storage-scope';
@@ -78,6 +80,9 @@ type QueuedPersonalVocabulary = PersonalVocabularyEntry & {
   savedAt: string;
 };
 
+// LB-B35 CP4 (default off): per-item queue parsing, bounded rejection retries with quarantine, and the
+// flush-before-logout choice. Direct process.env reference so Next inlines it at build time.
+const queueQuarantineEnabled = process.env.NEXT_PUBLIC_LEARNBOX_QUEUE_QUARANTINE === 'true';
 const baseReviewSyncStorageKey = 'learnbox:review-sync:v1:local-prototype';
 const basePersonalVocabularyStorageKey = 'learnbox:personal-vocabulary:v1:local-prototype';
 const basePersonalVocabularySyncStorageKey = 'learnbox:personal-vocabulary-sync:v1:local-prototype';
@@ -572,6 +577,7 @@ export function LearnerHome({
       storage: getDeviceStorage(),
       key: reviewSyncStorageKey,
       ownerId: sessionUserId,
+      ...(queueQuarantineEnabled ? { quarantineKey: quarantineKeyFor(reviewSyncStorageKey) } : {}),
     })
       .then(
         (result) => {
@@ -758,6 +764,32 @@ export function LearnerHome({
     }
     window.location.replace('/');
   }, []);
+
+  /**
+   * Safe logout (LB-B35 CP4): try to send every unsent answer while the session is still valid and
+   * report how many remain. Quarantined answers count too — they are also unsent learner data.
+   */
+  const flushUnsentBeforeLogout = useCallback(async (): Promise<number> => {
+    if (typeof window === 'undefined') return 0;
+    const storage = getDeviceStorage();
+    if (sessionUserId) {
+      await flushWebReviewQueue({
+        storage,
+        key: reviewSyncStorageKey,
+        ownerId: sessionUserId,
+        quarantineKey: quarantineKeyFor(reviewSyncStorageKey),
+        // Logging out is an explicit "send now": ignore the retry back-off for this one attempt.
+        now: new Date(Date.now() + 24 * 3_600_000),
+      }).catch(() => undefined);
+    }
+    return (
+      loadSyncQueueResilient<QueuedReview>(
+        storage,
+        reviewSyncStorageKey,
+        quarantineKeyFor(reviewSyncStorageKey),
+      ).length + quarantineCount(storage, quarantineKeyFor(reviewSyncStorageKey))
+    );
+  }, [sessionUserId, reviewSyncStorageKey]);
 
   /**
    * Ends the server session (LB-B27). Returns false when the server did not
@@ -1132,6 +1164,7 @@ export function LearnerHome({
         onAccountDeleted={clearDeviceLearnerState}
         onLogout={handleLogout}
         onLoggedOut={clearDeviceLearnerState}
+        onFlushUnsent={queueQuarantineEnabled ? flushUnsentBeforeLogout : undefined}
       />
     );
   }
