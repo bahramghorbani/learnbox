@@ -65,3 +65,26 @@ test('the Dockerfile guards and links the API migration runner dependencies', ()
   assert.match(dockerfile, /ln -s \.\.\/website\/node_modules apps\/api\/node_modules/);
   assert.match(dockerfile, /test -e apps\/api\/node_modules\/pg\/package\.json/);
 });
+
+test('every LB-B35 CP4 flag is reachable in the image and defaults to off', () => {
+  const configuration = renderedCompose();
+  const service = configuration.services['learner-app'];
+  for (const flag of [
+    'LEARNBOX_TZ_PERSIST',
+    'LEARNBOX_QUEUE_QUARANTINE',
+    'LEARNBOX_SERVER_SESSION_PLAN',
+    'LEARNBOX_BINARY_REVIEW',
+  ]) {
+    assert.equal(service.environment[flag], 'false', `${flag} must be passed to the container, off`);
+  }
+  // Client flags are inlined at build time: they must be build args, not runtime env.
+  for (const flag of [
+    'NEXT_PUBLIC_LEARNBOX_QUEUE_QUARANTINE',
+    'NEXT_PUBLIC_LEARNBOX_SERVER_SESSION_PLAN',
+  ]) {
+    assert.equal(service.build.args[flag], 'false', `${flag} must be a build arg, off`);
+    const dockerfile = readFileSync(resolve(appInfrastructure, 'Dockerfile'), 'utf8');
+    assert.match(dockerfile, new RegExp(`ARG ${flag}=false`));
+    assert.match(dockerfile, new RegExp(`ENV ${flag}=\\$${flag}`));
+  }
+});
