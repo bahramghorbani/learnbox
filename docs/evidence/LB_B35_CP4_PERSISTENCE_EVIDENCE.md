@@ -1,6 +1,6 @@
 # LB-B35 CP4 — learning persistence: evidence
 
-Status: implemented on branch `feat/lb-b35-cp4-learning-persistence`, **staging/review gate**. Nothing here
+Status: implemented on branch `feat/lb-b35-cp4-additive-persistence`, **staging/review gate**. Nothing here
 is applied to Production. Every behavioural change is behind a flag that is **off by default**.
 Scheduler v2 is not activated and ENG-CLAMP / progression behaviour is unchanged (O1 stays open).
 
