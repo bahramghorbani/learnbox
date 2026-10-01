@@ -1,0 +1,6 @@
+ENG-CLAMP  {"knownLowers":0,"knownRaisesGT1":0,"knownStuckBelow5":2080,"unknownRaises":0,"unknownDropNot1":742,"unknownBox1Moves":0,"b5Over180":0,"n":4036}
+ENG-DROP   {"knownLowers":0,"knownRaisesGT1":0,"knownStuckBelow5":2080,"unknownRaises":0,"unknownDropNot1":0,"unknownBox1Moves":0,"b5Over180":0,"n":4036}
+GR-1.8     {"knownLowers":0,"knownRaisesGT1":0,"knownStuckBelow5":480,"unknownRaises":0,"unknownDropNot1":0,"unknownBox1Moves":0,"b5Over180":0,"n":4036}
+GR-2.5     {"knownLowers":0,"knownRaisesGT1":0,"knownStuckBelow5":142,"unknownRaises":0,"unknownDropNot1":0,"unknownBox1Moves":0,"b5Over180":0,"n":4036}
+GR-3       {"knownLowers":0,"knownRaisesGT1":0,"knownStuckBelow5":0,"unknownRaises":0,"unknownDropNot1":0,"unknownBox1Moves":0,"b5Over180":0,"n":4036}
+LAD-B      {"knownLowers":0,"knownRaisesGT1":0,"knownStuckBelow5":0,"unknownRaises":0,"unknownDropNot1":0,"unknownBox1Moves":0,"b5Over180":0,"n":4036}

@@ -77,6 +77,36 @@ function engine({ late = false, lapse = false, drop = false }) {
   };
 }
 
+/**
+ * LB-B35 CP6 (report-only, extra=true): Box-targeted engine family. Every member shares ENG-DROP's
+ * Unknown rule (exactly one Box down, Box 1 stays) and the Box-5 rule (x3, capped by the axis). They differ
+ * only in how Known grows stability below Box 5:
+ *   factor   - multiplier (ENG-CLAMP uses 1.8);
+ *   graduate - a Known from Box 1 lifts stability to at least 1 day, i.e. the card enters Box 2.
+ * The one-Box-per-Known ceiling (clamp) is unchanged.
+ */
+function boxTargeted({ factor, graduate }) {
+  return (card, known, nowDays, axis) => {
+    const b = boxOf(card.stab);
+    let stab;
+    if (known) {
+      if (b === 5) {
+        stab = boxFive(axis, 5, card.stab * factor, card.stab);
+      } else {
+        let base = card.stab * factor;
+        if (graduate && b === 1) base = Math.max(base, 1);
+        stab = Math.min(base, UPPER[b] - 1e-9);
+        if (boxOf(stab) === 5) stab = boxFive(axis, b, stab, stab);
+      }
+    } else {
+      const floor = b >= 2 ? LOWER[b - 2] : MIN_STAB;
+      stab = Math.max(card.stab * 0.35, floor);
+      if (b >= 2) stab = Math.min(stab, UPPER[b - 2] - 1e-9);
+    }
+    finish(card, stab, known, nowDays);
+  };
+}
+
 // V1: the shipped engine, Known -> remembered, Unknown -> forgot, nothing else.
 function v1(card, known, nowDays) {
   const next = scheduleReview(
@@ -107,6 +137,11 @@ export const POLICIES = {
   'ENG-LAPSE': { answer: engine({ lapse: true }), axes: true },
   // post-hoc, report-only (amendment A17); excluded from candidates() unless LB_EXTRA=1
   'ENG-DROP': { answer: engine({ drop: true }), axes: true, extra: true },
+  // CP6 (report-only)
+  'GR-1.8': { answer: boxTargeted({ factor: 1.8, graduate: true }), axes: true, extra: true },
+  'GR-2.2': { answer: boxTargeted({ factor: 2.2, graduate: true }), axes: true, extra: true },
+  'GR-2.5': { answer: boxTargeted({ factor: 2.5, graduate: true }), axes: true, extra: true },
+  'GR-3': { answer: boxTargeted({ factor: 3, graduate: true }), axes: true, extra: true },
 };
 
 export const AXES = {

@@ -1,0 +1,7 @@
+ENG-CLAMP/G3-180   boxes 1111122344555555  maxStall 5  firstAt {"2":"a6/d5","3":"a8/d10","4":"a9/d15","5":"a11/d39"}
+ENG-DROP/G3-180    boxes 1111122344555555  maxStall 5  firstAt {"2":"a6/d5","3":"a8/d10","4":"a9/d15","5":"a11/d39"}
+GR-1.8/G3-180      boxes 2233445555555555  maxStall 1  firstAt {"2":"a1/d0","3":"a3/d3","4":"a5/d13","5":"a7/d43"}
+GR-2.2/G3-180      boxes 2234555555555555  maxStall 1  firstAt {"2":"a1/d0","3":"a3/d4","4":"a4/d9","5":"a5/d20"}
+GR-2.5/G3-180      boxes 2234555555555555  maxStall 1  firstAt {"2":"a1/d0","3":"a3/d4","4":"a4/d11","5":"a5/d27"}
+GR-3/G3-180        boxes 2345555555555555  maxStall 0  firstAt {"2":"a1/d0","3":"a2/d1","4":"a3/d4","5":"a4/d13"}
+LAD-B/G3-180       boxes 2345555555555555  maxStall 0  firstAt {"2":"a1/d0","3":"a2/d1","4":"a3/d4","5":"a4/d11"}

@@ -1,0 +1,5 @@
+ENG-DROP   Known#/elapsed at first entry of Box 2,3,4,5: {"2":"#6 @ 1.7d","3":"#8 @ 5.6d","4":"#9 @ 10.2d","5":"#11 @ 33.4d"}  | first five gaps: 1.8h, 3.2h, 5.8h, 10.5h, 18.9h
+GR-1.8     Known#/elapsed at first entry of Box 2,3,4,5: {"2":"#1 @ 0h","3":"#3 @ 2.8d","4":"#5 @ 11.9d","5":"#7 @ 41.3d"}  | first five gaps: 1d, 1.8d, 3.2d, 5.8d, 10.5d
+GR-2.5     Known#/elapsed at first entry of Box 2,3,4,5: {"2":"#1 @ 0h","3":"#3 @ 3.5d","4":"#4 @ 9.8d","5":"#5 @ 25.4d"}  | first five gaps: 1d, 2.5d, 6.3d, 15.6d, 39.1d
+GR-3       Known#/elapsed at first entry of Box 2,3,4,5: {"2":"#1 @ 0h","3":"#2 @ 1d","4":"#3 @ 4d","5":"#4 @ 13d"}  | first five gaps: 1d, 3d, 9d, 27d, 81d
+LAD-B      Known#/elapsed at first entry of Box 2,3,4,5: {"2":"#1 @ 0h","3":"#2 @ 1d","4":"#3 @ 4d","5":"#4 @ 11d"}  | first five gaps: 1d, 3d, 7d, 21d, 63d
