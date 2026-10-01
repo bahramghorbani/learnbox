@@ -25,6 +25,8 @@ import {
   type PendingSyncEvent,
   type PersonalVocabularyEntry,
   type ReviewGrade,
+  type BinaryResponse,
+  shadowGradeFor,
 } from '@learnbox/learning-engine';
 
 import { LearnerNav } from './components/LearnerNav';
@@ -74,6 +76,8 @@ type WordSourceFilter = 'all' | 'official' | 'personal';
 type QueuedReview = {
   cardId: string;
   grade: Grade;
+  /** CP5-B: the binary answer; `grade` then holds its lossless shadow grade. */
+  response?: BinaryResponse;
   reviewedAt: string;
 };
 
@@ -86,6 +90,10 @@ type QueuedPersonalVocabulary = PersonalVocabularyEntry & {
 const queueQuarantineEnabled = process.env.NEXT_PUBLIC_LEARNBOX_QUEUE_QUARANTINE === 'true';
 // LB-B35 CP4 (default off): resume a review session by card identity instead of by queue index.
 const resumeByCardEnabled = process.env.NEXT_PUBLIC_LEARNBOX_SERVER_SESSION_PLAN === 'true';
+// LB-B35 CP5-B (default off): the learner answers with exactly two buttons, «بلد بودم» / «بلد نیستم»
+// (known / unknown). Direct process.env reference so Next inlines it at build time. Web only; the
+// mobile client and the four-grade API are unchanged.
+const binaryReviewUiEnabled = process.env.NEXT_PUBLIC_LEARNBOX_BINARY_REVIEW_UI === 'true';
 const baseReviewSyncStorageKey = 'learnbox:review-sync:v1:local-prototype';
 const basePersonalVocabularyStorageKey = 'learnbox:personal-vocabulary:v1:local-prototype';
 const basePersonalVocabularySyncStorageKey = 'learnbox:personal-vocabulary-sync:v1:local-prototype';
@@ -114,6 +122,11 @@ const grades: Array<{ id: Grade; label: string; detail: string }> = [
   { id: 'hard', label: 'سخت بود', detail: 'با فاصلهٔ کوتاه‌تری برمی‌گردد.' },
   { id: 'remembered', label: 'یادم آمد', detail: 'آفرین، فاصلهٔ مرور بیشتر می‌شود.' },
   { id: 'mastered', label: 'کاملاً بلد بودم', detail: 'عالیه، این واژه دیرتر برمی‌گردد.' },
+];
+
+const binaryAnswers: Array<{ id: BinaryResponse; label: string; detail: string }> = [
+  { id: 'known', label: 'بلد بودم', detail: 'آفرین، این واژه دیرتر برمی‌گردد.' },
+  { id: 'unknown', label: 'بلد نیستم', detail: 'اشکالی ندارد، زودتر دوباره می‌بینیمش.' },
 ];
 
 type LearnerHomeProps = {
@@ -178,6 +191,7 @@ export function LearnerHome({
   >('today');
   const [flipped, setFlipped] = useState(false);
   const [grade, setGrade] = useState<Grade | null>(null);
+  const [binaryAnswer, setBinaryAnswer] = useState<BinaryResponse | null>(null);
   const [sessionItems, setSessionItems] = useState<StartSliceItem[] | null>(null);
   const [sessionIndex, setSessionIndex] = useState(0);
   const [reviewedToday, setReviewedToday] = useState(0);
@@ -602,6 +616,7 @@ export function LearnerHome({
     }
     reviewFlushInFlightRef.current = true;
     void flushWebReviewQueue({
+      binaryWire: binaryReviewUiEnabled,
       storage: getDeviceStorage(),
       key: reviewSyncStorageKey,
       ownerId: sessionUserId,
@@ -813,6 +828,7 @@ export function LearnerHome({
     const storage = getDeviceStorage();
     if (sessionUserId) {
       await flushWebReviewQueue({
+        binaryWire: binaryReviewUiEnabled,
         storage,
         key: reviewSyncStorageKey,
         ownerId: sessionUserId,
@@ -877,7 +893,8 @@ export function LearnerHome({
     saveSyncQueue(storage, personalVocabularySyncStorageKey, nextQueue);
     setPendingPersonalWordSyncCount(nextQueue.length);
   };
-  const recordGrade = (nextGrade: Grade) => {
+  const recordAnswer = (answer: { grade: Grade; response?: BinaryResponse }) => {
+    const nextGrade = answer.grade;
     if (gradeSubmissionRef.current) return;
     gradeSubmissionRef.current = true;
     setIsRecordingGrade(true);
@@ -895,6 +912,7 @@ export function LearnerHome({
             // The review API accepts the immutable public contentId, not the DB UUID.
             cardId: studyItems[sessionIndex].id,
             grade: nextGrade,
+            ...(answer.response ? { response: answer.response } : {}),
             reviewedAt: new Date().toISOString(),
           },
           attempts: 0,
@@ -906,6 +924,7 @@ export function LearnerHome({
       if (isServerOtp) flushServerReviewQueue();
     }
     setGrade(nextGrade);
+    setBinaryAnswer(answer.response ?? null);
     setReviewedToday((count) => {
       const reviewedCount = count + 1;
       // Server accounts show an optimistic count only; the authoritative value
@@ -1209,7 +1228,9 @@ export function LearnerHome({
   }
 
   if (screen === 'complete') {
-    const response = grades.find((item) => item.id === grade);
+    const response = binaryAnswer
+      ? binaryAnswers.find((item) => item.id === binaryAnswer)
+      : grades.find((item) => item.id === grade);
     const plusOffer = resolveSupportivePlusOffer({
       activeDays: streakDays,
       learningCycleWords: reviewedToday,
@@ -1349,24 +1370,51 @@ export function LearnerHome({
         </div>
         {flipped && (
           <>
-            <p className="instruction">چقدر یادت آمد؟</p>
-            <div
-              className="grade-grid"
-              role="group"
-              aria-label="درجهٔ یادآوری"
-              aria-busy={isRecordingGrade}
-            >
-              {grades.map((item) => (
-                <button
-                  key={item.id}
-                  className={`grade grade-${item.id}`}
-                  onClick={() => recordGrade(item.id)}
-                  disabled={isRecordingGrade}
+            {binaryReviewUiEnabled ? (
+              <>
+                <p className="instruction">این واژه را بلد بودی؟</p>
+                <div
+                  className="grade-grid grade-grid-binary"
+                  role="group"
+                  aria-label="پاسخ شما"
+                  aria-busy={isRecordingGrade}
                 >
-                  {item.label}
-                </button>
-              ))}
-            </div>
+                  {binaryAnswers.map((item) => (
+                    <button
+                      key={item.id}
+                      className={`grade grade-${item.id}`}
+                      onClick={() =>
+                        recordAnswer({ grade: shadowGradeFor(item.id), response: item.id })
+                      }
+                      disabled={isRecordingGrade}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="instruction">چقدر یادت آمد؟</p>
+                <div
+                  className="grade-grid"
+                  role="group"
+                  aria-label="درجهٔ یادآوری"
+                  aria-busy={isRecordingGrade}
+                >
+                  {grades.map((item) => (
+                    <button
+                      key={item.id}
+                      className={`grade grade-${item.id}`}
+                      onClick={() => recordAnswer({ grade: item.id })}
+                      disabled={isRecordingGrade}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
           </>
         )}
       </main>

@@ -1,4 +1,5 @@
 import {
+  type BinaryResponse,
   type ReviewGrade,
   acknowledgeSyncEvents,
   loadSyncQueue,
@@ -18,6 +19,11 @@ import { submitWebReviewBatch, type WebReviewItem } from './learner-review-web-c
 export type QueuedWebReview = {
   cardId: string;
   grade: ReviewGrade;
+  /**
+   * CP5-B: the learner's binary answer. `grade` stays populated with its lossless shadow grade
+   * (known→remembered, unknown→forgot) so the queue is valid under v1.2.1 and under a flag rollback.
+   */
+  response?: BinaryResponse;
   reviewedAt: string;
   requiresAttention?: boolean;
 };
@@ -47,6 +53,12 @@ export async function flushWebReviewQueue(input: {
   ownerId?: string;
   /** `LEARNBOX_QUEUE_QUARANTINE` (default off = v1.2.1: whole-queue reset, unbounded retry). */
   quarantineKey?: string;
+  /**
+   * CP5-B (`NEXT_PUBLIC_LEARNBOX_BINARY_REVIEW_UI`, default off): send queued binary answers as
+   * `response`. Off, every answer — including one queued while the flag was on — is sent as its
+   * `grade`, which every server version accepts. Legacy four-grade entries are never converted.
+   */
+  binaryWire?: boolean;
   now?: Date;
   submit?: (items: WebReviewItem[]) => ReturnType<typeof submitWebReviewBatch>;
 }): Promise<WebReviewSyncResult> {
@@ -64,7 +76,7 @@ export async function flushWebReviewQueue(input: {
     return { pendingCount: queue.length, attentionCount: 0, acknowledged: false, ...quarantined() };
 
   const submit = input.submit ?? ((items) => submitWebReviewBatch(items, fetch, input.ownerId));
-  const result = await submit(due.map(toWireItem));
+  const result = await submit(due.map((event) => toWireItem(event, input.binaryWire === true)));
   const currentQueue = readQueue;
   if (result.status !== 'ok') {
     const deferred = new Set(due.map((event) => event.clientEventId));
@@ -125,11 +137,13 @@ export async function flushWebReviewQueue(input: {
   };
 }
 
-function toWireItem(event: PendingSyncEvent<QueuedWebReview>): WebReviewItem {
-  return {
+function toWireItem(event: PendingSyncEvent<QueuedWebReview>, binaryWire: boolean): WebReviewItem {
+  const base = {
     clientEventId: event.clientEventId,
     contentId: event.payload.cardId,
-    grade: event.payload.grade,
     occurredAt: event.payload.reviewedAt,
   };
+  return binaryWire && event.payload.response
+    ? { ...base, response: event.payload.response }
+    : { ...base, grade: event.payload.grade };
 }

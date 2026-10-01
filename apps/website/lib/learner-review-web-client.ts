@@ -1,12 +1,14 @@
-import type { ReviewGrade } from '@learnbox/learning-engine';
+import type { BinaryResponse, ReviewGrade } from '@learnbox/learning-engine';
 import type { MobileReviewBatchItemOutcome } from '../../api/dist/reviews/mobile-review-batch.service.js';
 
-export type WebReviewItem = {
-  contentId: string;
-  grade: ReviewGrade;
-  occurredAt: string;
-  clientEventId: string;
-};
+/**
+ * One answer on the wire. v1.2.1 / legacy clients send `grade` (four values). With the binary UI
+ * (CP5-B, server flag `LEARNBOX_BINARY_REVIEW`) the web client sends `response` ('known' | 'unknown')
+ * instead — exactly one of the two, never both: the server rejects mixed items.
+ */
+export type WebReviewItem =
+  | { contentId: string; grade: ReviewGrade; occurredAt: string; clientEventId: string }
+  | { contentId: string; response: BinaryResponse; occurredAt: string; clientEventId: string };
 
 export type WebReviewSubmitResult =
   | { status: 'ok'; outcomes: MobileReviewBatchItemOutcome[] }
