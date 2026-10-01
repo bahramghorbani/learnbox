@@ -13,7 +13,7 @@ Nothing further is approved for implementation: P1 compatibility and Admin redes
 
 - **CP0** (#328), **CP1** (#329), **CP2** (#330) merged. Owner decisions: ENG-CLAMP; Box 5 ×3 capped at 180 days; Unknown = one Box down; difficulty/lapses/lateness removed from scheduling (not implemented or activated).
 - **CP3** (branch `feat/lb-b35-cp3-canonical-read-paths`): Today, Progress, Words, Profile and the summary endpoint read one model (`apps/website/lib/learner-read-model.ts`) built on `definitions.ts`: Accuracy, Learned/Mastered/Box, curriculum denominator, learner-local days, and the future-day streak fix. Legacy grade unions and the fabricated study-minutes card are gone; the drift-guard allowlist is empty. **No scheduler, write path, schema, migration, binary UI, Admin, Store or Production change.** Evidence: `docs/evidence/LB_B35_CP3_CANONICAL_READ_PATHS.md`.
-- **Gates:** O1 (visible Box progress under ENG-CLAMP) is a scheduler-v2 activation gate; O2 (stored IANA zone) lands in a later additive checkpoint; CP4 needs the 2026-10-05 restore drill and explicit owner approval.
+- **Gates:** O1 (visible Box progress under ENG-CLAMP) is a scheduler-v2 activation gate; O2 (stored IANA zone) lands in CP4's additive migration. **Restore gate satisfied 2026-10-01 by evidence** (`docs/evidence/RESTORE_GATE_RECONCILIATION_2026-10-01.md`); only the timer-fires item stays open, checked after 2026-10-05. CP4 plan awaits owner review (`docs/planning/LB_B35_CP4_PLAN.md`); no implementation yet.
 
 ## Admin P0 (LB-B30–B33) — cut over, Admin still contained
 
