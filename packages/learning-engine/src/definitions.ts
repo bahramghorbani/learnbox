@@ -36,6 +36,21 @@ export const HISTORICAL_GRADE_PROJECTION: Readonly<Record<ReviewGrade, BinaryRes
     mastered: 'known',
   });
 
+/**
+ * Compatibility grade stored next to a binary answer (plan §3). The `grade` column keeps its four-value
+ * CHECK, so a binary answer is written with the legacy grade that projects back to the same response.
+ * It is a compatibility artefact for v1.2.1 readers, Admin and code rollback — NOT a rating the learner
+ * chose. Pinned by a test: `toBinaryResponse(shadowGradeFor(r)) === r`.
+ */
+export const BINARY_SHADOW_GRADE: Readonly<Record<BinaryResponse, ReviewGrade>> = Object.freeze({
+  known: 'remembered',
+  unknown: 'forgot',
+});
+
+export function shadowGradeFor(response: BinaryResponse): ReviewGrade {
+  return BINARY_SHADOW_GRADE[response];
+}
+
 export function isReviewGrade(value: unknown): value is ReviewGrade {
   return typeof value === 'string' && (REVIEW_GRADES as readonly string[]).includes(value);
 }

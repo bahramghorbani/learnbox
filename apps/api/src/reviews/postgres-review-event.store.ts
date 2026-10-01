@@ -117,16 +117,29 @@ export class PostgresReviewEventStore implements ReviewEventStore {
     const client = await this.pool.connect();
     try {
       await client.query('BEGIN');
+      // The `response` column exists only after migration 0023. It is named in the statement ONLY for a
+      // binary answer (flag LEARNBOX_BINARY_REVIEW), so with every flag off this is exactly the v1.2.1
+      // statement and runs on a database that has not been migrated yet.
+      const withResponse = input.response !== undefined;
       const claimed = await client.query<ReviewEventRow>(
-        `INSERT INTO review_events (id, user_id, card_id, grade, occurred_at, client_event_id, applied_at)
+        `INSERT INTO review_events (id, user_id, card_id, grade, occurred_at, client_event_id, applied_at${withResponse ? ', response' : ''})
          VALUES (gen_random_uuid(), $1, $2, $3, $4, $5,
                  GREATEST(
                    COALESCE((SELECT MAX(applied_at) FROM review_events prior
                               WHERE prior.user_id = $1 AND prior.card_id = $2), now()),
-                   LEAST($4, now())))
+                   LEAST($4, now()))${withResponse ? ', $6' : ''})
          ON CONFLICT (user_id, client_event_id) DO NOTHING
          RETURNING id, user_id, card_id, grade, occurred_at, client_event_id`,
-        [input.userId, input.cardId, input.grade, input.occurredAt, input.clientEventId],
+        withResponse
+          ? [
+              input.userId,
+              input.cardId,
+              input.grade,
+              input.occurredAt,
+              input.clientEventId,
+              input.response,
+            ]
+          : [input.userId, input.cardId, input.grade, input.occurredAt, input.clientEventId],
       );
 
       if (claimed.rows.length === 0) {
@@ -218,6 +231,31 @@ export class PostgresReviewEventStore implements ReviewEventStore {
           reconciliationCursor: row.cursor,
         }
       : null;
+  }
+
+  /**
+   * LB-B35 CP4 (flag LEARNBOX_QUEUE_QUARANTINE): records WHY an event was rejected, as a bounded reason
+   * code only — no answer payload, no free text. Best-effort by contract: it must never turn a
+   * rejected-item response into a failed request, so any error is swallowed after being reported.
+   */
+  async recordRejections(
+    userId: string,
+    rejections: ReadonlyArray<{
+      clientEventId: string;
+      reason: 'validation' | 'idempotencyConflict' | 'clockSkew';
+    }>,
+  ): Promise<void> {
+    if (rejections.length === 0) return;
+    try {
+      await this.pool.query(
+        `INSERT INTO review_event_rejections (user_id, client_event_id, reason)
+         SELECT $1, t.client_event_id, t.reason
+           FROM unnest($2::text[], $3::text[]) AS t(client_event_id, reason)`,
+        [userId, rejections.map((r) => r.clientEventId), rejections.map((r) => r.reason)],
+      );
+    } catch {
+      // Observability only; the learner's answer handling is unaffected.
+    }
   }
 
   /** Resolves a canonical content id to the DB card uuid; null when unknown. */

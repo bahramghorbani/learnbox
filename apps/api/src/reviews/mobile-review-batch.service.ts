@@ -1,4 +1,9 @@
-import { isReviewGrade, scheduleReview, type ReviewGrade } from '@learnbox/learning-engine';
+import {
+  isReviewGrade,
+  scheduleReview,
+  type BinaryResponse,
+  type ReviewGrade,
+} from '@learnbox/learning-engine';
 
 import type {
   PostgresReviewEventStore,
@@ -31,6 +36,8 @@ export class MobileReviewBatchError extends Error {
 export interface MobileReviewBatchItem {
   contentId: string;
   grade: ReviewGrade;
+  /** Set only for a binary answer; `grade` then holds the compatibility shadow grade. */
+  response?: BinaryResponse;
   occurredAt: Date;
   clientEventId: string;
 }
@@ -178,6 +185,7 @@ export class MobileReviewBatchService {
           userId,
           cardId,
           grade: item.grade,
+          ...(item.response ? { response: item.response } : {}),
           occurredAt: item.occurredAt,
           clientEventId: item.clientEventId,
         },

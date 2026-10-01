@@ -71,7 +71,9 @@ CREATE TABLE IF NOT EXISTS learner_daily_plans (
 CREATE TABLE IF NOT EXISTS review_event_rejections (
     id              bigserial   PRIMARY KEY,
     user_id         uuid        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    client_event_id uuid        NOT NULL,
+    -- Same type and bound as review_events.client_event_id (TEXT, 1-128 since 0013); a uuid here would
+    -- make recording a rejection fail for any non-UUID client event id.
+    client_event_id text        NOT NULL CHECK (char_length(client_event_id) BETWEEN 1 AND 128),
     reason          text        NOT NULL CHECK (reason IN ('validation', 'idempotencyConflict', 'clockSkew')),
     received_at     timestamptz NOT NULL DEFAULT now()
 );

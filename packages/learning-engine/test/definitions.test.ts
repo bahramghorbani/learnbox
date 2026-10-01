@@ -8,6 +8,8 @@ import {
   LEARNED_MIN_BOX,
   MASTERED_MIN_BOX,
   REVIEW_GRADES,
+  BINARY_SHADOW_GRADE,
+  shadowGradeFor,
   resolveLearnerTimeZone,
   accuracyCountsSql,
   accuracyFromAnswers,
@@ -430,5 +432,21 @@ describe('resolveLearnerTimeZone (LB-B35 CP4, owner decision O2)', () => {
         persist: null,
       });
     }
+  });
+});
+
+describe('binary shadow grade (LB-B35 CP4)', () => {
+  it('projects back to the response it was derived from, for every binary response', () => {
+    for (const response of BINARY_RESPONSES) {
+      expect(toBinaryResponse(shadowGradeFor(response))).toBe(response);
+    }
+  });
+
+  it('is a legacy grade the database CHECK accepts, and the mapping is exactly the plan', () => {
+    expect(BINARY_SHADOW_GRADE).toEqual({ known: 'remembered', unknown: 'forgot' });
+    for (const response of BINARY_RESPONSES) {
+      expect(REVIEW_GRADES).toContain(shadowGradeFor(response));
+    }
+    expect(Object.isFrozen(BINARY_SHADOW_GRADE)).toBe(true);
   });
 });
