@@ -147,10 +147,13 @@ beforeAll(async () => {
   vi.stubEnv('DATABASE_URL', 'postgres://unused/unused');
   const { Pool } = await vi.importActual<typeof import('pg')>('pg');
   admin = new Pool({ connectionString: url, max: 1 });
+  // A pooled client closed server-side during teardown (DROP DATABASE ... FORCE) is not a test failure.
+  admin.on('error', () => undefined);
   await admin.query(`CREATE DATABASE ${dbName}`);
   const scoped = new URL(url as string);
   scoped.pathname = `/${dbName}`;
   pool = new Pool({ connectionString: scoped.toString(), max: 4 });
+  pool.on('error', () => undefined);
   h.shared = pool;
   for (const file of readdirSync(migrationsDir)
     .filter((f) => /^\d{4}_.+\.sql$/.test(f))
