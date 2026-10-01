@@ -20,8 +20,8 @@ written; mobile legacy four-grade compatibility intact. Box edges stay at stored
 - `ENG-DROP` — the current selection (ENG-CLAMP + the A17 refinement approved in CP1): Known ×1.8, clamped to at most one Box.
 - `GR-1.8` — ENG-DROP, plus a Known from Box 1 lifts the card to at least 1 day (enters Box 2).
 - `GR-2.5` — as GR-1.8 with Known factor 2.5.
-- `GR-3`   — as GR-1.8 with Known factor 3 (every Known = +1 Box from a new card).
-- `LAD-B`  — the CP1 fixed ladder (1 / 3 / 7 / 21 days; Unknown = one Box down) as the strict reference.
+- `GR-3` — as GR-1.8 with Known factor 3 (every Known = +1 Box from a new card).
+- `LAD-B` — the CP1 fixed ladder (1 / 3 / 7 / 21 days; Unknown = one Box down) as the strict reference.
 
 `GR-2.2` is run only in the deterministic sweep (it behaves like GR-2.5). No further candidates are added after seeing results.
 

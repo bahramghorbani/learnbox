@@ -1,0 +1,6 @@
+rows 31 Box histogram (stored, v1.2.1 thresholds): [31,0,0,0,0] stab range 0.0069 - 0.4050
+ENG-DROP   next Known raises the Box for 0 of 31 rows; next Unknown lowers the Box for 0 ; Box histogram after one Known: [31,0,0,0,0]
+GR-1.8     next Known raises the Box for 31 of 31 rows; next Unknown lowers the Box for 0 ; Box histogram after one Known: [0,31,0,0,0]
+GR-2.5     next Known raises the Box for 31 of 31 rows; next Unknown lowers the Box for 0 ; Box histogram after one Known: [0,31,0,0,0]
+GR-3       next Known raises the Box for 31 of 31 rows; next Unknown lowers the Box for 0 ; Box histogram after one Known: [0,31,0,0,0]
+LAD-B      next Known raises the Box for 31 of 31 rows; next Unknown lowers the Box for 0 ; Box histogram after one Known: [0,31,0,0,0]

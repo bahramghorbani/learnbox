@@ -89,7 +89,8 @@ if (isMainThread) {
   mkdirSync(outdir, { recursive: true });
   const ids = process.env.LB_IDS ? process.env.LB_IDS.split(',') : null; // CP6: explicit candidate list
   const all = candidates().filter(
-    (c) => (!process.env.LB_ONLY || c.policy === process.env.LB_ONLY) && (!ids || ids.includes(c.id)),
+    (c) =>
+      (!process.env.LB_ONLY || c.policy === process.env.LB_ONLY) && (!ids || ids.includes(c.id)),
   );
   const results = [];
   let next = 0;
