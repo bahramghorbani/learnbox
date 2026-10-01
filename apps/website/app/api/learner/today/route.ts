@@ -6,6 +6,11 @@ import {
   readLearnerActivity,
   recentDays,
 } from '../../../../lib/learner-read-model';
+import {
+  countUnseenCatalogCards,
+  readTodayWorkload,
+  todayWorkloadEnabled,
+} from '../../../../lib/learner-workload';
 import { requireVerifiedDatabaseTls } from '../../../../../api/dist/database/migration-runner.js';
 
 export const runtime = 'nodejs';
@@ -71,22 +76,19 @@ export async function GET(request: Request): Promise<Response> {
     );
     const dueCount = parseInt(dueCards.rows[0]?.due_count ?? '0', 10);
 
-    // 3. New cards (published but no schedule yet)
-    const newCards = await pool.query(
-      `SELECT COUNT(*) as new_count
-       FROM card_versions cv
-       JOIN pack_cards pc ON pc.card_id = cv.card_id
-       WHERE cv.status = 'published'
-         AND NOT EXISTS (
-           SELECT 1 FROM card_schedules cs
-           WHERE cs.card_id = cv.card_id AND cs.user_id = $1
-         )`,
-      [userId],
-    );
-    const newCount = parseInt(newCards.rows[0]?.new_count ?? '0', 10);
-
-    // Total cards to review today = due + new (capped at daily goal)
-    const totalTodayCards = dueCount + newCount;
+    // 3. Workload. v1.2.1 (flag off): `newCount` = every unseen published card and
+    // `totalTodayCards` = due + that, which is a catalogue size, not the learner's work for today.
+    // LB-B35 CP5-A (LEARNBOX_TODAY_WORKLOAD): both are derived from the real session plan.
+    const workloadOn = todayWorkloadEnabled(process.env);
+    const workload = workloadOn
+      ? await readTodayWorkload(pool, userId, {
+          requestedTimeZone: new URL(request.url).searchParams.get('tz'),
+        })
+      : null;
+    const newCount = workload
+      ? workload.newCardsToday
+      : await countUnseenCatalogCards(pool, userId);
+    const totalTodayCards = workload ? workload.cardsForToday : dueCount + newCount;
 
     // 4. Leitner box counts: the same curriculum-scoped canonical projection as every screen.
     const progress = await readCurriculumProgress(pool, userId);
@@ -161,6 +163,15 @@ export async function GET(request: Request): Promise<Response> {
         totalTodayCards,
         dueCount,
         newCount,
+        ...(workload
+          ? {
+              cardsForToday: workload.cardsForToday,
+              reviewCardsToday: workload.reviewCardsToday,
+              newCardsToday: workload.newCardsToday,
+              planMode: workload.planMode,
+              unseenCatalogCount: workload.unseenCatalogCount,
+            }
+          : {}),
         dailyGoal: null, // No persisted per-learner goal exists yet.
         leitnerBoxes: boxes,
         weekDays,
