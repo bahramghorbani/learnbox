@@ -20,7 +20,7 @@
 export const REVIEW_GRADES = ['forgot', 'hard', 'remembered', 'mastered'] as const;
 export type ReviewGrade = (typeof REVIEW_GRADES)[number];
 
-/** The learner-facing answer: «بلد بودم» = known, «بلد نبودم» = unknown. */
+/** The learner-facing answer: «بلد بودم» = known, «بلد نیستم» = unknown. */
 export const BINARY_RESPONSES = ['known', 'unknown'] as const;
 export type BinaryResponse = (typeof BINARY_RESPONSES)[number];
 

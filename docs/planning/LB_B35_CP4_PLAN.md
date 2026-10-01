@@ -98,7 +98,7 @@ restore check.
 
 ## Open for the owner
 
-- Learner-facing wording: the earlier decision said «بلد نبودم», the latest message says «بلد نیستم». Confirm one.
+- Learner-facing wording: RESOLVED by the owner 2026-10-01: «بلد بودم» / «بلد نیستم» (internal values `known` / `unknown`).
 - O1 stays an activation gate for scheduler v2 (CP6). The expected learner-visible progression under ENG-CLAMP
   is already characterized (`cp2-progression-invariant.test.ts`: 5 consecutive Known answers can leave a card
   in Box 1). It is reported again with stricter alternatives at the CP6 gate.
