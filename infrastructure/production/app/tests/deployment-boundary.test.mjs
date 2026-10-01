@@ -66,7 +66,7 @@ test('the Dockerfile guards and links the API migration runner dependencies', ()
   assert.match(dockerfile, /test -e apps\/api\/node_modules\/pg\/package\.json/);
 });
 
-test('every LB-B35 CP4 flag is reachable in the image and defaults to off', () => {
+test('every LB-B35 CP4/CP5 flag is reachable in the image and defaults to off', () => {
   const configuration = renderedCompose();
   const service = configuration.services['learner-app'];
   for (const flag of [
@@ -74,6 +74,7 @@ test('every LB-B35 CP4 flag is reachable in the image and defaults to off', () =
     'LEARNBOX_QUEUE_QUARANTINE',
     'LEARNBOX_SERVER_SESSION_PLAN',
     'LEARNBOX_BINARY_REVIEW',
+    'LEARNBOX_TODAY_WORKLOAD',
   ]) {
     assert.equal(
       service.environment[flag],
@@ -85,6 +86,9 @@ test('every LB-B35 CP4 flag is reachable in the image and defaults to off', () =
   for (const flag of [
     'NEXT_PUBLIC_LEARNBOX_QUEUE_QUARANTINE',
     'NEXT_PUBLIC_LEARNBOX_SERVER_SESSION_PLAN',
+    'NEXT_PUBLIC_LEARNBOX_BINARY_REVIEW_UI',
+    'NEXT_PUBLIC_LEARNBOX_GOAL_UX_REMOVED',
+    'NEXT_PUBLIC_LEARNBOX_SESSION_EXPIRY_UX',
   ]) {
     assert.equal(service.build.args[flag], 'false', `${flag} must be a build arg, off`);
     const dockerfile = readFileSync(resolve(appInfrastructure, 'Dockerfile'), 'utf8');

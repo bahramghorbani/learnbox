@@ -7,12 +7,13 @@ import { LogoutPanel } from './LogoutPanel';
 import { supportLinkFor } from '../../lib/support-contact';
 
 interface SettingsScreenProps {
-  goal: LearnerLearningGoal;
+  /** Omitted (with onChooseGoal) when the learning-goal UX is removed (CP5-C). */
+  goal?: LearnerLearningGoal;
   headingRef?: RefObject<HTMLHeadingElement | null>;
   goalRowRef?: RefObject<HTMLButtonElement | null>;
   soundEnabled: boolean;
   onBack: () => void;
-  onChooseGoal: () => void;
+  onChooseGoal?: () => void;
   onToggleSound: (enabled: boolean) => Promise<SoundPreferenceDurability>;
   /** Omitted in the local prototype, where there is no server account to delete. */
   onDeleteAccount?: (input: {
@@ -91,23 +92,25 @@ export function SettingsScreen({
             <span className="settings-switch-track" aria-hidden="true" />
           </label>
         </div>
-        <button
-          className="settings-row settings-row-action"
-          type="button"
-          ref={goalRowRef}
-          onClick={onChooseGoal}
-        >
-          <span className="settings-row-copy">
-            <strong>هدف یادگیری</strong>
-            <small>
-              <span>{learnerGoalTitle[goal]}</span>
-              <span className="device-local-badge">فقط در این دستگاه</span>
-            </small>
-          </span>
-          <span className="profile-row-arrow" aria-hidden="true">
-            ←
-          </span>
-        </button>
+        {onChooseGoal ? (
+          <button
+            className="settings-row settings-row-action"
+            type="button"
+            ref={goalRowRef}
+            onClick={onChooseGoal}
+          >
+            <span className="settings-row-copy">
+              <strong>هدف یادگیری</strong>
+              <small>
+                <span>{goal ? learnerGoalTitle[goal] : null}</span>
+                <span className="device-local-badge">فقط در این دستگاه</span>
+              </small>
+            </span>
+            <span className="profile-row-arrow" aria-hidden="true">
+              ←
+            </span>
+          </button>
+        ) : null}
         <div className="settings-row">
           <span className="settings-row-copy">
             <strong>اندازهٔ متن</strong>

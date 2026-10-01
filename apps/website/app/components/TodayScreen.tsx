@@ -27,6 +27,11 @@ interface TodayServerMetrics {
   streakDays: number;
   leitnerBoxes: number[];
   weekDays: Array<{ day: string; active: boolean }>;
+  /**
+   * CP5 (server flag LEARNBOX_TODAY_WORKLOAD): cards still left in today's canonical session plan.
+   * Absent when the flag is off, in which case the legacy count is used unchanged.
+   */
+  cardsForToday?: number;
 }
 
 function isTodayServerMetrics(value: unknown): value is TodayServerMetrics {
@@ -166,7 +171,19 @@ export function TodayScreen({
   const effectiveReviewed =
     visibleMetrics?.reviewedToday ?? (testLocalMetrics ? reviewedToday : undefined);
   const effectiveStreak = visibleMetrics?.streakDays ?? (testLocalMetrics ? streakDays : undefined);
-  const totalItems = studyItems?.length ?? 0;
+  // CP5: the server plan already excludes answered cards, so `reviewCount` (plan − reviewedToday) would
+  // subtract them twice. When the server reports the canonical remaining workload, that is the one
+  // learner-visible number; the ring total is answered + remaining.
+  const canonicalRemaining =
+    visibleMetrics !== null &&
+    Number.isSafeInteger(visibleMetrics.cardsForToday) &&
+    (visibleMetrics.cardsForToday as number) >= 0
+      ? (visibleMetrics.cardsForToday as number)
+      : null;
+  const remainingCount = canonicalRemaining ?? reviewCount;
+  const planItemCount = studyItems?.length ?? 0;
+  const totalItems =
+    canonicalRemaining !== null ? (effectiveReviewed ?? 0) + canonicalRemaining : planItemCount;
   const completed = Math.min(effectiveReviewed ?? 0, totalItems);
   const ringPct = totalItems > 0 ? completed / totalItems : 0;
   const circumference = 264;
@@ -241,11 +258,12 @@ export function TodayScreen({
   const canReview =
     (syncState === 'server-backed' ||
       (process.env.NODE_ENV === 'test' && syncState === 'local-only')) &&
-    reviewCount > 0;
+    (canonicalRemaining !== null ? canonicalRemaining > 0 && planItemCount > 0 : reviewCount > 0);
   const isEmpty =
     (syncState === 'server-backed' ||
       (process.env.NODE_ENV === 'test' && syncState === 'local-only')) &&
-    reviewCount === 0;
+    remainingCount === 0 &&
+    (canonicalRemaining !== null || reviewCount === 0);
 
   return (
     <div className="home-screen" data-testid="learnbox-today">
@@ -411,7 +429,7 @@ export function TodayScreen({
               <div className="goal-title">مرورهای جلسه</div>
               {/* Bobo is a companion to the primary goal, not a section of its own (LB-B25). */}
               <Bobo
-                expression={isEmpty || reviewCount >= 7 ? 'celebrate' : 'welcome'}
+                expression={isEmpty || remainingCount >= 7 ? 'celebrate' : 'welcome'}
                 animation={isEmpty ? 'dance' : 'float'}
                 className="bobo bobo-companion"
                 size={44}
@@ -419,7 +437,7 @@ export function TodayScreen({
             </div>
             <div className="goal-sub">
               {canReview
-                ? `${toPersianDigits(reviewCount)} کارت دیگه مونده`
+                ? `${toPersianDigits(remainingCount)} کارت دیگه مونده`
                 : isEmpty
                   ? 'فعلاً کارتی در صف مرور نیست'
                   : syncState === 'error' || syncState === 'offline'
@@ -429,7 +447,7 @@ export function TodayScreen({
             <div className="goal-motive">
               {isEmpty
                 ? 'آفرین! امروز کامل کردی!'
-                : reviewCount >= 7
+                : remainingCount >= 7
                   ? 'عالیه! ادامه بده!'
                   : 'سلام! آماده‌ای شروع کنیم؟'}
             </div>

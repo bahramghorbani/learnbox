@@ -25,6 +25,8 @@ import {
   type PendingSyncEvent,
   type PersonalVocabularyEntry,
   type ReviewGrade,
+  type BinaryResponse,
+  shadowGradeFor,
 } from '@learnbox/learning-engine';
 
 import { LearnerNav } from './components/LearnerNav';
@@ -74,6 +76,8 @@ type WordSourceFilter = 'all' | 'official' | 'personal';
 type QueuedReview = {
   cardId: string;
   grade: Grade;
+  /** CP5-B: the binary answer; `grade` then holds its lossless shadow grade. */
+  response?: BinaryResponse;
   reviewedAt: string;
 };
 
@@ -86,6 +90,18 @@ type QueuedPersonalVocabulary = PersonalVocabularyEntry & {
 const queueQuarantineEnabled = process.env.NEXT_PUBLIC_LEARNBOX_QUEUE_QUARANTINE === 'true';
 // LB-B35 CP4 (default off): resume a review session by card identity instead of by queue index.
 const resumeByCardEnabled = process.env.NEXT_PUBLIC_LEARNBOX_SERVER_SESSION_PLAN === 'true';
+// LB-B35 CP5-B (default off): the learner answers with exactly two buttons, «بلد بودم» / «بلد نیستم»
+// (known / unknown). Direct process.env reference so Next inlines it at build time. Web only; the
+// mobile client and the four-grade API are unchanged.
+const binaryReviewUiEnabled = process.env.NEXT_PUBLIC_LEARNBOX_BINARY_REVIEW_UI === 'true';
+// LB-B35 CP5-C (default off): the learning-goal UX is removed — no onboarding gate, no goal row in
+// Profile or Settings. Nothing is written, sent or deleted for a goal; a value already on the device
+// is left untouched as unused legacy local data. Direct process.env reference so Next inlines it.
+const goalUxRemoved = process.env.NEXT_PUBLIC_LEARNBOX_GOAL_UX_REMOVED === 'true';
+// LB-B35 CP5-D (default off): when the server ends a signed-in session, show a clear Persian
+// "session ended, sign in again" notice with the number of unsent answers kept on this device.
+// Nothing is deleted. Direct process.env reference so Next inlines it at build time.
+const sessionExpiryUxEnabled = process.env.NEXT_PUBLIC_LEARNBOX_SESSION_EXPIRY_UX === 'true';
 const baseReviewSyncStorageKey = 'learnbox:review-sync:v1:local-prototype';
 const basePersonalVocabularyStorageKey = 'learnbox:personal-vocabulary:v1:local-prototype';
 const basePersonalVocabularySyncStorageKey = 'learnbox:personal-vocabulary-sync:v1:local-prototype';
@@ -114,6 +130,11 @@ const grades: Array<{ id: Grade; label: string; detail: string }> = [
   { id: 'hard', label: 'سخت بود', detail: 'با فاصلهٔ کوتاه‌تری برمی‌گردد.' },
   { id: 'remembered', label: 'یادم آمد', detail: 'آفرین، فاصلهٔ مرور بیشتر می‌شود.' },
   { id: 'mastered', label: 'کاملاً بلد بودم', detail: 'عالیه، این واژه دیرتر برمی‌گردد.' },
+];
+
+const binaryAnswers: Array<{ id: BinaryResponse; label: string; detail: string }> = [
+  { id: 'known', label: 'بلد بودم', detail: 'آفرین، این واژه دیرتر برمی‌گردد.' },
+  { id: 'unknown', label: 'بلد نیستم', detail: 'اشکالی ندارد، زودتر دوباره می‌بینیمش.' },
 ];
 
 type LearnerHomeProps = {
@@ -161,6 +182,7 @@ export function LearnerHome({
       : { items: [], unavailableContentIds: [] };
   const [authChecked, setAuthChecked] = useState(false);
   const [onboarded, setOnboarded] = useState(false);
+  const [sessionEnded, setSessionEnded] = useState<{ unsentCount: number } | null>(null);
   const [onboardedKey, setOnboardedKey] = useState<string | null>(null);
   const [learningGoal, setLearningGoal] = useState<LearningGoal>('life');
   const [soundEnabled, setSoundEnabled] = useState(true);
@@ -178,6 +200,7 @@ export function LearnerHome({
   >('today');
   const [flipped, setFlipped] = useState(false);
   const [grade, setGrade] = useState<Grade | null>(null);
+  const [binaryAnswer, setBinaryAnswer] = useState<BinaryResponse | null>(null);
   const [sessionItems, setSessionItems] = useState<StartSliceItem[] | null>(null);
   const [sessionIndex, setSessionIndex] = useState(0);
   const [reviewedToday, setReviewedToday] = useState(0);
@@ -242,6 +265,21 @@ export function LearnerHome({
   const summaryCacheStorageKey = `learnbox:summary-cache:v1${storageScope}`;
   const profileIdentityEnabled = profileIdentityFlag === 'true';
   const previousAccountRef = useRef<string | null>(null);
+  // The queue key is account-scoped and changes once the session user clears, so the unsent count is
+  // read for the account whose session just ended. Read-only: the queue is never touched.
+  const noteSessionEnded = useCallback((userId: string | null) => {
+    if (!sessionExpiryUxEnabled || !userId || typeof window === 'undefined') return;
+    let unsentCount = 0;
+    try {
+      unsentCount = loadSyncQueue<QueuedReview>(
+        getDeviceStorage(),
+        baseReviewSyncStorageKey + accountStorageScope(true, userId),
+      ).length;
+    } catch {
+      unsentCount = 0;
+    }
+    setSessionEnded({ unsentCount });
+  }, []);
 
   useEffect(() => {
     if (!isServerOtp || previousAccountRef.current === sessionUserId) return;
@@ -430,6 +468,7 @@ export function LearnerHome({
       return;
     }
     if (result.status === 'unauthorized') {
+      noteSessionEnded(expectedUserId);
       setAuthenticated(false);
       setSessionUserId(null);
       return;
@@ -444,7 +483,7 @@ export function LearnerHome({
       setReviewedToday(cached.reviewedToday);
       setStreakDays(cached.streakDays);
     }
-  }, [authenticated, isServerOtp, sessionUserId, summaryCacheStorageKey]);
+  }, [authenticated, isServerOtp, sessionUserId, summaryCacheStorageKey, noteSessionEnded]);
 
   useEffect(() => {
     if (isServerOtp) {
@@ -477,6 +516,11 @@ export function LearnerHome({
 
   useEffect(() => {
     if (isServerOtp && (!authenticated || !sessionUserId)) return;
+    if (goalUxRemoved) {
+      setOnboarded(true);
+      setOnboardedKey(onboardingGoalStorageKey);
+      return;
+    }
     const storedGoal = readStoredLearningGoal(getDeviceStorage(), onboardingGoalStorageKey);
     setLearningGoal(storedGoal ?? 'life');
     setOnboarded(storedGoal !== null);
@@ -543,6 +587,7 @@ export function LearnerHome({
       setServerSnapshot(null);
       setServerStateOwner(null);
       if (result.status === 'unauthorized') {
+        noteSessionEnded(expectedUserId);
         setAuthenticated(false);
         setSessionUserId(null);
         setServerSyncState('local-only');
@@ -552,7 +597,7 @@ export function LearnerHome({
         typeof navigator !== 'undefined' && navigator.onLine === false ? 'offline' : 'error',
       );
     },
-    [],
+    [noteSessionEnded],
   );
 
   useEffect(() => {
@@ -602,6 +647,7 @@ export function LearnerHome({
     }
     reviewFlushInFlightRef.current = true;
     void flushWebReviewQueue({
+      binaryWire: binaryReviewUiEnabled,
       storage: getDeviceStorage(),
       key: reviewSyncStorageKey,
       ownerId: sessionUserId,
@@ -611,6 +657,12 @@ export function LearnerHome({
         (result) => {
           if (activeSessionSubjectRef.current !== sessionUserId) return;
           setPendingReviewCount(result.pendingCount);
+          if (result.sessionEnded && sessionExpiryUxEnabled) {
+            noteSessionEnded(sessionUserId);
+            setAuthenticated(false);
+            setSessionUserId(null);
+            return;
+          }
           if (result.acknowledged) {
             retryServerStateRead();
             void refreshServerSummary();
@@ -632,6 +684,7 @@ export function LearnerHome({
     reviewSyncStorageKey,
     retryServerStateRead,
     refreshServerSummary,
+    noteSessionEnded,
   ]);
 
   requestServerReviewFlushRef.current = flushServerReviewQueue;
@@ -813,6 +866,7 @@ export function LearnerHome({
     const storage = getDeviceStorage();
     if (sessionUserId) {
       await flushWebReviewQueue({
+        binaryWire: binaryReviewUiEnabled,
         storage,
         key: reviewSyncStorageKey,
         ownerId: sessionUserId,
@@ -877,7 +931,8 @@ export function LearnerHome({
     saveSyncQueue(storage, personalVocabularySyncStorageKey, nextQueue);
     setPendingPersonalWordSyncCount(nextQueue.length);
   };
-  const recordGrade = (nextGrade: Grade) => {
+  const recordAnswer = (answer: { grade: Grade; response?: BinaryResponse }) => {
+    const nextGrade = answer.grade;
     if (gradeSubmissionRef.current) return;
     gradeSubmissionRef.current = true;
     setIsRecordingGrade(true);
@@ -895,6 +950,7 @@ export function LearnerHome({
             // The review API accepts the immutable public contentId, not the DB UUID.
             cardId: studyItems[sessionIndex].id,
             grade: nextGrade,
+            ...(answer.response ? { response: answer.response } : {}),
             reviewedAt: new Date().toISOString(),
           },
           attempts: 0,
@@ -906,6 +962,7 @@ export function LearnerHome({
       if (isServerOtp) flushServerReviewQueue();
     }
     setGrade(nextGrade);
+    setBinaryAnswer(answer.response ?? null);
     setReviewedToday((count) => {
       const reviewedCount = count + 1;
       // Server accounts show an optimistic count only; the authoritative value
@@ -989,7 +1046,16 @@ export function LearnerHome({
   }
 
   if (!authenticated) {
-    return <AuthGate mode={authMode} onAuthenticated={() => setAuthenticated(true)} />;
+    return (
+      <AuthGate
+        mode={authMode}
+        sessionEnded={sessionEnded}
+        onAuthenticated={() => {
+          setSessionEnded(null);
+          setAuthenticated(true);
+        }}
+      />
+    );
   }
   if (isServerOtp && (!sessionUserId || onboardedKey !== onboardingGoalStorageKey)) {
     return null;
@@ -1170,7 +1236,7 @@ export function LearnerHome({
   if (screen === 'profile') {
     return (
       <ProfileScreen
-        goal={learningGoal}
+        goal={goalUxRemoved ? undefined : learningGoal}
         pendingReviewCount={pendingReviewCount}
         // Server sync runs exactly when the session is a real server-backed OTP session.
         syncsToServer={authenticated && isServerOtp}
@@ -1182,7 +1248,7 @@ export function LearnerHome({
         headingRef={profileHeadingRef}
         goalRowRef={profileGoalRowRef}
         settingsRowRef={profileSettingsRowRef}
-        onChooseGoal={editLearningGoal}
+        onChooseGoal={goalUxRemoved ? undefined : editLearningGoal}
         onNavigate={(destination) => setScreen(destination)}
         onOpenSettings={openSettings}
       />
@@ -1192,12 +1258,12 @@ export function LearnerHome({
   if (screen === 'settings') {
     return (
       <SettingsScreen
-        goal={learningGoal}
+        goal={goalUxRemoved ? undefined : learningGoal}
         headingRef={settingsHeadingRef}
         goalRowRef={settingsGoalRowRef}
         soundEnabled={soundEnabled}
         onBack={closeSettings}
-        onChooseGoal={editLearningGoal}
+        onChooseGoal={goalUxRemoved ? undefined : editLearningGoal}
         onToggleSound={handleToggleSound}
         onDeleteAccount={requestAccountDeletion}
         onAccountDeleted={clearDeviceLearnerState}
@@ -1209,7 +1275,9 @@ export function LearnerHome({
   }
 
   if (screen === 'complete') {
-    const response = grades.find((item) => item.id === grade);
+    const response = binaryAnswer
+      ? binaryAnswers.find((item) => item.id === binaryAnswer)
+      : grades.find((item) => item.id === grade);
     const plusOffer = resolveSupportivePlusOffer({
       activeDays: streakDays,
       learningCycleWords: reviewedToday,
@@ -1264,7 +1332,25 @@ export function LearnerHome({
           <span style={{ width: `${(completedCount / studyItems.length) * 100}%` }} />
         </div>
         <p className="session-remaining">{remainingCount} کارت برای تمرین امروز مانده است.</p>
-        <div className="flip-container" onClick={() => setFlipped(!flipped)}>
+        <div
+          className="flip-container"
+          role="button"
+          tabIndex={0}
+          aria-label={
+            flipped
+              ? `${currentItem.german}؛ ${currentItem.persian}. برای برگشتن به روی کارت، فعال کن`
+              : `${currentItem.german}. برای دیدن معنی، فعال کن`
+          }
+          onClick={() => setFlipped(!flipped)}
+          onKeyDown={(event) => {
+            // Only the card itself: Enter/Space inside the nested pronunciation buttons must not flip it.
+            if (event.target !== event.currentTarget) return;
+            if (event.key !== 'Enter' && event.key !== ' ') return;
+            event.preventDefault();
+            if (event.repeat) return;
+            setFlipped((value) => !value);
+          }}
+        >
           <div className={`flip-inner${flipped ? ' flipped' : ''}`} style={{ minHeight: '340px' }}>
             <div className="card-face card-front">
               <StartMediaVisual contentId={currentItem.id} mode={startMediaMode} />
@@ -1349,24 +1435,51 @@ export function LearnerHome({
         </div>
         {flipped && (
           <>
-            <p className="instruction">چقدر یادت آمد؟</p>
-            <div
-              className="grade-grid"
-              role="group"
-              aria-label="درجهٔ یادآوری"
-              aria-busy={isRecordingGrade}
-            >
-              {grades.map((item) => (
-                <button
-                  key={item.id}
-                  className={`grade grade-${item.id}`}
-                  onClick={() => recordGrade(item.id)}
-                  disabled={isRecordingGrade}
+            {binaryReviewUiEnabled ? (
+              <>
+                <p className="instruction">این واژه را بلد بودی؟</p>
+                <div
+                  className="grade-grid grade-grid-binary"
+                  role="group"
+                  aria-label="پاسخ شما"
+                  aria-busy={isRecordingGrade}
                 >
-                  {item.label}
-                </button>
-              ))}
-            </div>
+                  {binaryAnswers.map((item) => (
+                    <button
+                      key={item.id}
+                      className={`grade grade-${item.id}`}
+                      onClick={() =>
+                        recordAnswer({ grade: shadowGradeFor(item.id), response: item.id })
+                      }
+                      disabled={isRecordingGrade}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="instruction">چقدر یادت آمد؟</p>
+                <div
+                  className="grade-grid"
+                  role="group"
+                  aria-label="درجهٔ یادآوری"
+                  aria-busy={isRecordingGrade}
+                >
+                  {grades.map((item) => (
+                    <button
+                      key={item.id}
+                      className={`grade grade-${item.id}`}
+                      onClick={() => recordAnswer({ grade: item.id })}
+                      disabled={isRecordingGrade}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
           </>
         )}
       </main>

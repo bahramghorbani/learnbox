@@ -1866,6 +1866,18 @@ p {
   border-color: #bae0bf;
   background: #f8fff8;
 }
+.grade-known {
+  border-color: #bae0bf;
+  background: #f8fff8;
+}
+.grade-unknown {
+  border-color: #ffbec5;
+  background: #fff8f8;
+}
+.grade-grid-binary .grade {
+  min-height: 56px;
+  font-size: 1.05rem;
+}
 .grade:disabled {
   cursor: wait;
   opacity: 0.72;
@@ -3460,6 +3472,11 @@ p {
   touch-action: manipulation; /* no iOS double-tap/300ms handling on rapid flips */
   -webkit-tap-highlight-color: transparent;
   flex-shrink: 0;
+}
+.flip-container:focus-visible {
+  outline: 3px solid #25213b;
+  outline-offset: 4px;
+  border-radius: 22px;
 }
 .flip-inner {
   position: relative;
