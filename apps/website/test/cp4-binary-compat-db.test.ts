@@ -40,12 +40,9 @@ if (!url && process.env.CI) throw new Error('TEST_DATABASE_URL is required in CI
 const suite = url ? describe : describe.skip;
 const dbName = `cp4rev_${Math.random().toString(36).slice(2, 10)}`;
 const migrationsDir = join(__dirname, '../../../database/migrations');
-const DAY = 86_400_000;
-
 let pool: PgPool;
 let admin: PgPool;
 const cards: string[] = [];
-let draftCard = '';
 
 async function newLearner(): Promise<string> {
   const id = randomUUID();
@@ -100,7 +97,6 @@ beforeAll(async () => {
   ].entries()) {
     cards.push(await make(name, 'cp4-pack', i + 1));
   }
-  draftCard = await make('cp4-draft-card', 'cp4-draft', 1);
 });
 
 afterEach(() => {
@@ -115,35 +111,6 @@ afterAll(async () => {
   await admin?.end();
   vi.unstubAllEnvs();
 });
-
-import { LearnerStateService } from '../../api/dist/learner-state/learner-state.service.js';
-import { PostgresLearnerStateRepository } from '../../api/dist/learner-state/postgres-learner-state.repository.js';
-import { handleWebLearnerStateGet } from '../lib/learner-state-web-http';
-import { webLearnerStateDependenciesFromEnvironment } from '../lib/learner-state-web-runtime';
-import { reviewEventsFingerprint } from './support/review-events-fingerprint';
-
-const T0 = new Date('2026-10-01T09:00:00Z');
-const service = (now: Date) => {
-  const repo = new PostgresLearnerStateRepository(pool as never);
-  return new LearnerStateService(repo, () => now, repo);
-};
-const flagOff = (now: Date) =>
-  new LearnerStateService(new PostgresLearnerStateRepository(pool as never), () => now);
-const answer = async (user: string, card: string, at: Date) => {
-  await pool.query(
-    `INSERT INTO card_schedules (user_id, card_id, state, stability_days, due_at)
-     VALUES ($1, $2, 'learning', 0.04, $3) ON CONFLICT DO NOTHING`,
-    [user, card, new Date(at.getTime() + 3_600_000)],
-  );
-  await review(user, card, 'remembered', at);
-};
-const plans = async (user: string) =>
-  (
-    await pool.query(
-      `SELECT local_day::text AS day, time_zone, new_card_ids FROM learner_daily_plans WHERE user_id = $1 ORDER BY local_day`,
-      [user],
-    )
-  ).rows;
 
 const apply0023 = () =>
   pool.query(readFileSync(join(migrationsDir, '0023_learning_persistence.sql'), 'utf8'));
@@ -218,9 +185,13 @@ suite('CP4 — migration 0023 applied: legacy and binary answers coexist', () =>
     await apply0023();
     await apply0023(); // idempotent
     const after = await rows(user);
-    expect(after.map(({ response: _r, engine_version: _e, ...rest }) => rest)).toEqual(
-      before.map((r) => r),
-    );
+    const legacyColumns = (row: Record<string, unknown>) => {
+      const copy = { ...row };
+      delete copy.response;
+      delete copy.engine_version;
+      return copy;
+    };
+    expect(after.map(legacyColumns)).toEqual(before);
     expect(after[0].response).toBeNull();
     expect(after[0].engine_version).toBeNull();
   });

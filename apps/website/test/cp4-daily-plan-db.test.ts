@@ -40,12 +40,9 @@ if (!url && process.env.CI) throw new Error('TEST_DATABASE_URL is required in CI
 const suite = url ? describe : describe.skip;
 const dbName = `cp4plan_${Math.random().toString(36).slice(2, 10)}`;
 const migrationsDir = join(__dirname, '../../../database/migrations');
-const DAY = 86_400_000;
-
 let pool: PgPool;
 let admin: PgPool;
 const cards: string[] = [];
-let draftCard = '';
 
 async function newLearner(): Promise<string> {
   const id = randomUUID();
@@ -62,25 +59,6 @@ async function review(user: string, card: string, grade: string, at: string | Da
      VALUES ($1, $2, $3, $4, $5, $6)`,
     [randomUUID(), user, card, grade, at, randomUUID()],
   );
-}
-
-async function schedule(user: string, card: string, stabilityDays: number, state = 'review') {
-  await pool.query(
-    `INSERT INTO card_schedules (user_id, card_id, state, stability_days, due_at)
-     VALUES ($1, $2, $3::learning_state, $4, now() + interval '1 day')`,
-    [user, card, state, stabilityDays],
-  );
-}
-
-async function call<T = Record<string, unknown>>(
-  handler: (request: Request) => Promise<Response>,
-  user: string,
-  query = '',
-): Promise<T> {
-  h.session = { subject: user };
-  const response = await handler(new Request(`https://cp3.test/api/learner/x${query}`));
-  expect(response.status).toBe(200);
-  return (await response.json()) as T;
 }
 
 beforeAll(async () => {
@@ -127,7 +105,6 @@ beforeAll(async () => {
   ].entries()) {
     cards.push(await make(name, 'cp4-pack', i + 1));
   }
-  draftCard = await make('cp4-draft-card', 'cp4-draft', 1);
 });
 
 afterEach(() => {

@@ -46,12 +46,9 @@ if (!url && process.env.CI) throw new Error('TEST_DATABASE_URL is required in CI
 const suite = url ? describe : describe.skip;
 const dbName = `cp4tz_${Math.random().toString(36).slice(2, 10)}`;
 const migrationsDir = join(__dirname, '../../../database/migrations');
-const DAY = 86_400_000;
-
 let pool: PgPool;
 let admin: PgPool;
 const cards: string[] = [];
-let draftCard = '';
 
 async function newLearner(): Promise<string> {
   const id = randomUUID();
@@ -67,14 +64,6 @@ async function review(user: string, card: string, grade: string, at: string | Da
     `INSERT INTO review_events (id, user_id, card_id, grade, occurred_at, client_event_id)
      VALUES ($1, $2, $3, $4, $5, $6)`,
     [randomUUID(), user, card, grade, at, randomUUID()],
-  );
-}
-
-async function schedule(user: string, card: string, stabilityDays: number, state = 'review') {
-  await pool.query(
-    `INSERT INTO card_schedules (user_id, card_id, state, stability_days, due_at)
-     VALUES ($1, $2, $3::learning_state, $4, now() + interval '1 day')`,
-    [user, card, state, stabilityDays],
   );
 }
 
@@ -128,7 +117,6 @@ beforeAll(async () => {
   for (const [i, name] of ['cp4-a', 'cp4-b', 'cp4-c', 'cp4-d'].entries()) {
     cards.push(await make(name, 'cp4-pack', i + 1));
   }
-  draftCard = await make('cp4-draft-card', 'cp4-draft', 1);
 });
 
 afterEach(() => {
@@ -158,7 +146,7 @@ const stamps = async (user: string) =>
 const BEFORE_MIDNIGHT = '2026-09-29T20:29:59Z';
 const AFTER_MIDNIGHT = '2026-09-29T20:30:00Z';
 
-describe('CP4 timezone persistence', () => {
+suite('CP4 timezone persistence', () => {
   it('flag OFF (default): the stored column is never read or written — v1.2.1 behaviour', async () => {
     vi.stubEnv('LEARNBOX_TZ_PERSIST', '');
     const user = await newLearner();
