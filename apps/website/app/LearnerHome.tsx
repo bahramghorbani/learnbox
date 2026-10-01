@@ -94,6 +94,10 @@ const resumeByCardEnabled = process.env.NEXT_PUBLIC_LEARNBOX_SERVER_SESSION_PLAN
 // (known / unknown). Direct process.env reference so Next inlines it at build time. Web only; the
 // mobile client and the four-grade API are unchanged.
 const binaryReviewUiEnabled = process.env.NEXT_PUBLIC_LEARNBOX_BINARY_REVIEW_UI === 'true';
+// LB-B35 CP5-C (default off): the learning-goal UX is removed — no onboarding gate, no goal row in
+// Profile or Settings. Nothing is written, sent or deleted for a goal; a value already on the device
+// is left untouched as unused legacy local data. Direct process.env reference so Next inlines it.
+const goalUxRemoved = process.env.NEXT_PUBLIC_LEARNBOX_GOAL_UX_REMOVED === 'true';
 const baseReviewSyncStorageKey = 'learnbox:review-sync:v1:local-prototype';
 const basePersonalVocabularyStorageKey = 'learnbox:personal-vocabulary:v1:local-prototype';
 const basePersonalVocabularySyncStorageKey = 'learnbox:personal-vocabulary-sync:v1:local-prototype';
@@ -491,6 +495,11 @@ export function LearnerHome({
 
   useEffect(() => {
     if (isServerOtp && (!authenticated || !sessionUserId)) return;
+    if (goalUxRemoved) {
+      setOnboarded(true);
+      setOnboardedKey(onboardingGoalStorageKey);
+      return;
+    }
     const storedGoal = readStoredLearningGoal(getDeviceStorage(), onboardingGoalStorageKey);
     setLearningGoal(storedGoal ?? 'life');
     setOnboarded(storedGoal !== null);
@@ -1189,7 +1198,7 @@ export function LearnerHome({
   if (screen === 'profile') {
     return (
       <ProfileScreen
-        goal={learningGoal}
+        goal={goalUxRemoved ? undefined : learningGoal}
         pendingReviewCount={pendingReviewCount}
         // Server sync runs exactly when the session is a real server-backed OTP session.
         syncsToServer={authenticated && isServerOtp}
@@ -1201,7 +1210,7 @@ export function LearnerHome({
         headingRef={profileHeadingRef}
         goalRowRef={profileGoalRowRef}
         settingsRowRef={profileSettingsRowRef}
-        onChooseGoal={editLearningGoal}
+        onChooseGoal={goalUxRemoved ? undefined : editLearningGoal}
         onNavigate={(destination) => setScreen(destination)}
         onOpenSettings={openSettings}
       />
@@ -1211,12 +1220,12 @@ export function LearnerHome({
   if (screen === 'settings') {
     return (
       <SettingsScreen
-        goal={learningGoal}
+        goal={goalUxRemoved ? undefined : learningGoal}
         headingRef={settingsHeadingRef}
         goalRowRef={settingsGoalRowRef}
         soundEnabled={soundEnabled}
         onBack={closeSettings}
-        onChooseGoal={editLearningGoal}
+        onChooseGoal={goalUxRemoved ? undefined : editLearningGoal}
         onToggleSound={handleToggleSound}
         onDeleteAccount={requestAccountDeletion}
         onAccountDeleted={clearDeviceLearnerState}

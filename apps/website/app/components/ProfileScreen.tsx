@@ -23,7 +23,8 @@ type ProfileIdentity =
   | { status: 'unavailable' };
 
 interface ProfileScreenProps {
-  goal: LearnerLearningGoal | null;
+  /** Omitted (with onChooseGoal) when the learning-goal UX is removed (CP5-C). */
+  goal?: LearnerLearningGoal | null;
   pendingReviewCount: number;
   /**
    * True when this session posts review answers to the server. The status note must describe what
@@ -38,7 +39,7 @@ interface ProfileScreenProps {
   headingRef?: RefObject<HTMLHeadingElement | null>;
   goalRowRef?: RefObject<HTMLButtonElement | null>;
   settingsRowRef?: RefObject<HTMLButtonElement | null>;
-  onChooseGoal: () => void;
+  onChooseGoal?: () => void;
   onNavigate: (destination: LearnerDestination) => void;
   onOpenSettings: () => void;
 }
@@ -72,8 +73,9 @@ export function ProfileScreen({
           پروفایل
         </h1>
         <p>
-          شناسهٔ حساب از سرور می‌آید؛ هدف یادگیری و وضعیت پاسخ‌های در انتظار بررسی فقط روی این
-          دستگاه نگه‌داری می‌شوند.
+          {onChooseGoal
+            ? 'شناسهٔ حساب از سرور می‌آید؛ هدف یادگیری و وضعیت پاسخ‌های در انتظار بررسی فقط روی این دستگاه نگه‌داری می‌شوند.'
+            : 'شناسهٔ حساب از سرور می‌آید؛ وضعیت پاسخ‌های در انتظار بررسی فقط روی این دستگاه نگه‌داری می‌شود.'}
         </p>
       </section>
       <section className="profile-section" aria-labelledby="profile-account-title">
@@ -119,27 +121,29 @@ export function ProfileScreen({
       {syncsToServer && identity.status !== 'unavailable' ? (
         <ProfileDetailsPanel onProfile={onProfileDetails} />
       ) : null}
-      <section className="profile-section" aria-labelledby="profile-learning-title">
-        <h2 id="profile-learning-title">یادگیری</h2>
-        <div className="profile-card profile-fact">
-          <span className="profile-fact-label">هدف یادگیری</span>
-          {goal ? (
-            <>
-              <strong className="profile-fact-value">{learnerGoalTitle[goal]}</strong>
-              <span className="device-local-badge">فقط در این دستگاه</span>
-            </>
-          ) : (
-            <button
-              className="text-button profile-choose-goal"
-              type="button"
-              ref={goalRowRef}
-              onClick={onChooseGoal}
-            >
-              انتخاب هدف
-            </button>
-          )}
-        </div>
-      </section>
+      {onChooseGoal ? (
+        <section className="profile-section" aria-labelledby="profile-learning-title">
+          <h2 id="profile-learning-title">یادگیری</h2>
+          <div className="profile-card profile-fact">
+            <span className="profile-fact-label">هدف یادگیری</span>
+            {goal ? (
+              <>
+                <strong className="profile-fact-value">{learnerGoalTitle[goal]}</strong>
+                <span className="device-local-badge">فقط در این دستگاه</span>
+              </>
+            ) : (
+              <button
+                className="text-button profile-choose-goal"
+                type="button"
+                ref={goalRowRef}
+                onClick={onChooseGoal}
+              >
+                انتخاب هدف
+              </button>
+            )}
+          </div>
+        </section>
+      ) : null}
       <section className="profile-section" aria-labelledby="profile-status-title">
         <h2 id="profile-status-title">وضعیت</h2>
         <div className="profile-card profile-fact">
@@ -172,7 +176,9 @@ export function ProfileScreen({
           >
             <span className="profile-row-copy">
               <strong>تنظیمات</strong>
-              <small>هدف یادگیری و اطلاعات دستگاه</small>
+              <small>
+                {onChooseGoal ? 'هدف یادگیری و اطلاعات دستگاه' : 'صدا و اطلاعات دستگاه'}
+              </small>
             </span>
             <span className="profile-row-arrow" aria-hidden="true">
               ←

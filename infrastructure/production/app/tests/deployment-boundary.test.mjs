@@ -87,6 +87,7 @@ test('every LB-B35 CP4/CP5 flag is reachable in the image and defaults to off', 
     'NEXT_PUBLIC_LEARNBOX_QUEUE_QUARANTINE',
     'NEXT_PUBLIC_LEARNBOX_SERVER_SESSION_PLAN',
     'NEXT_PUBLIC_LEARNBOX_BINARY_REVIEW_UI',
+    'NEXT_PUBLIC_LEARNBOX_GOAL_UX_REMOVED',
   ]) {
     assert.equal(service.build.args[flag], 'false', `${flag} must be a build arg, off`);
     const dockerfile = readFileSync(resolve(appInfrastructure, 'Dockerfile'), 'utf8');
