@@ -156,7 +156,8 @@ suite('CP7 — schema preflight fails closed', () => {
     );
     await expect(
       service.submit({ userId: user, items: [answer('cp7-a', 'known', NOW)] }),
-    ).rejects.toMatchObject({ code: 'serverUnavailable' });
+      // LB-B35 CP7: deterministic preflight refusal -> non-retryable `schedulerRejected`.
+    ).rejects.toMatchObject({ code: 'schedulerRejected', retryable: false });
     expect((await pool.query(`SELECT count(*)::int AS n FROM review_events`)).rows[0].n).toBe(0);
     expect((await pool.query(`SELECT count(*)::int AS n FROM card_schedules`)).rows[0].n).toBe(0);
     await pool.end();
@@ -447,7 +448,8 @@ suite('CP7 — V2 on a migrated database', () => {
     const schedBefore = await schedRow(pool, user, card);
     await expect(
       corrupt.submit({ userId: user, items: [answer('cp7-a', 'known', NOW)] }),
-    ).rejects.toMatchObject({ code: 'serverUnavailable' });
+      // LB-B35 CP7: invariant violation is deterministic -> non-retryable `schedulerRejected`.
+    ).rejects.toMatchObject({ code: 'schedulerRejected', retryable: false });
     expect(await eventRows(pool, user)).toEqual(eventsBefore);
     expect(await schedRow(pool, user, card)).toEqual(schedBefore);
     await pool.end();
@@ -604,11 +606,14 @@ suite('CP7 — the real runtime entry points honour LEARNBOX_SCHEDULER_V2 (web a
     const { pool } = await makeDb(false);
     const user = await newLearner(pool);
     const { web, mobile } = await entries(pool, 'true');
+    // LB-B35 CP7: both real entry points refuse deterministically and non-retryably.
     await expect(web.submit(input(user, 'w-1'))).rejects.toMatchObject({
-      code: 'serverUnavailable',
+      code: 'schedulerRejected',
+      retryable: false,
     });
     await expect(mobile.submit(input(user, 'm-1'))).rejects.toMatchObject({
-      code: 'serverUnavailable',
+      code: 'schedulerRejected',
+      retryable: false,
     });
     expect((await pool.query('SELECT count(*)::int AS n FROM review_events')).rows[0].n).toBe(0);
     expect((await pool.query('SELECT count(*)::int AS n FROM card_schedules')).rows[0].n).toBe(0);

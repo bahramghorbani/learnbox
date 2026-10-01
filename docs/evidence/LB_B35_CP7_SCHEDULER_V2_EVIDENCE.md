@@ -53,11 +53,24 @@ decided; 12 invalid transitions each throw `SchedulerInvariantError`; the single
 
 ### 2.4 Mutation evidence
 
-`tools/cp7/mutation-harness.py` applies 27 single defects and runs the relevant suite (raw output: `docs/evidence/cp7/mutation-run.txt`):
-**27 of 27 killed, 0 survivors, 0 skips.** It includes the ENG-CLAMP regression (7 tests fail), Unknown floor removed, graduation removed,
-factor and cap changes, margin 1e-9 → 0, assertion disabled, legacy `hard` mis-projected, state/lateness leaking into scheduling, flag-off
-using V2, preflight skipped, stamp dropped or leaking, V2 constructible without preflight, wrong type/missing column/missing constraint
-tolerated, failed preflight cached, and the flag accepting `TRUE`/`1`.
+`tools/cp7/mutation-harness.py` applies 35 single defects and runs the relevant suite (raw output: `docs/evidence/cp7/mutation-run.txt`):
+**35 of 35 killed, 0 survivors, 0 skips.** Scheduler mutants include the ENG-CLAMP regression (7 tests fail), Unknown floor removed,
+graduation removed, factor and cap changes, margin 1e-9 → 0, assertion disabled, legacy `hard` mis-projected, state/lateness leaking into
+scheduling, flag-off using V2, preflight skipped, stamp dropped or leaking, V2 constructible without preflight, wrong type/missing
+column/missing constraint tolerated, failed preflight cached, and the flag accepting `TRUE`/`1`.
+
+Eight further mutants guard the §2.9 failure semantics, so a regression to the pre-fix behaviour cannot pass the suite:
+
+| Mutation                                                     | Killed by                                    |
+| ------------------------------------------------------------ | -------------------------------------------- |
+| Deterministic errors collapse back to `serverUnavailable`    | service-boundary code/`retryable` assertions |
+| `cause` discarded                                            | the operator-diagnostic assertion            |
+| `schedulerRejected` marked retryable                         | the per-code retryability test               |
+| Invariant violations no longer deterministic                 | the invariant service-boundary test          |
+| Client-facing message interpolates the raw error             | the no-internals-leaked assertion            |
+| HTTP boundary answers 503 instead of 422                     | the HTTP-boundary status tests               |
+| Client maps 422 back to `unavailable`                        | the client status-mapping tests              |
+| Sync retries a deterministic rejection (the original defect) | the attempts/backoff preservation tests      |
 
 ### 2.5 Real Postgres (20 tests, `apps/website/test/cp7-scheduler-v2-db.test.ts`)
 
@@ -77,11 +90,22 @@ nor `response` when unset.
 
 ### 2.7 Migration and preflight
 
-On a migrated database the preflight passes. Without 0023 it names the missing column and the fix (“Apply migration 0023… never falls back to
-V1 silently”). Incompatible shapes are refused: dropped constraint, a constraint that excludes 2, wrong column type. With the flag true and no
-0023, both the web and the mobile entry points refuse the review and persist nothing. A failed preflight is retried on the next call, so
-applying 0023 re-enables V2 without a restart. The constraint reader was written against the real Postgres normalisation
+On a migrated database the preflight passes. Without 0023 the preflight error names the missing column and the fix (“Apply migration 0023…
+never falls back to V1 silently”). Incompatible shapes are refused: dropped constraint, a constraint that excludes 2, wrong column type. With
+the flag true and no 0023, both the web and the mobile entry points refuse the review and persist nothing. A failed preflight is retried on the
+next call, so applying 0023 re-enables V2 without a restart. The constraint reader was written against the real Postgres normalisation
 (`(engine_version >= 1) AND (engine_version <= 100)`) after a first version rejected the real schema (see §3).
+
+**Where that operator message is actually visible (corrected).** An earlier revision of this document claimed “a clear operator error” without
+naming the boundary, which overstated it: the service originally flattened every non-idempotency failure into
+`serverUnavailable` / “Review batch interrupted.” and discarded the cause, so the preflight text reached neither the operator log nor the
+client. That is fixed in this checkpoint (see §2.9); the precise scope of each message is now:
+
+- **Preflight function** — full diagnostic: the missing/incompatible column, the “apply 0023” instruction, and the no-silent-fallback statement.
+- **Server log** — `[reviews] schedulerRejected SchedulerV2PreflightError: <full text>`, via an injectable sink.
+- **`MobileReviewBatchError.cause`** — the original error object, unmodified, for any server-side handler.
+- **HTTP response** — only `{"error":"schedulerRejected"}` with status 422. No column name, migration number, flag name or stack ever crosses
+  the boundary; asserted by negative tests.
 
 ### 2.8 Rollback rehearsal
 
@@ -90,24 +114,52 @@ from the stored larger stability (×1.8 exactly), the Box does not drop at the s
 Unknown under V1 afterwards is valid; re-enabling V2 continues from what is stored. Documented consequence: cards advanced under V2 keep a
 larger stability after rollback and are reviewed later than V1 alone would have scheduled; there is no automatic demotion.
 
+### 2.9 Deterministic failure semantics (preflight and invariant) vs transient
+
+Scheduler V2 has two deterministic failure modes — a schema preflight refusal and a Box-transition invariant violation. Both are raised before
+any write. They are now distinguished from a transient outage end to end, because retrying either can never succeed until an operator acts:
+
+| Failure               | Service code        | `retryable` | HTTP | Client status | Queue effect                                                   |
+| --------------------- | ------------------- | ----------- | ---- | ------------- | -------------------------------------------------------------- |
+| Preflight refusal     | `schedulerRejected` | `false`     | 422  | `rejected`    | event preserved, **no** attempt consumed, **no** backoff armed |
+| Invariant violation   | `schedulerRejected` | `false`     | 422  | `rejected`    | same                                                           |
+| Transient store fault | `serverUnavailable` | `true`      | 503  | `unavailable` | attempt incremented, exponential backoff                       |
+
+The original error is preserved as `cause` and logged server-side. The pre-fix client behaviour requeued **every** non-`ok` result through
+`retryAfter`, so a deterministic refusal would have retried on an exponential backoff indefinitely (capped at 5 minutes) and burned attempts
+toward quarantine; a rejection now leaves `attempts` and `nextAttemptAt` byte-identical, proven over five consecutive rejections.
+
+Safety properties are unchanged and re-asserted at the service boundary: nothing is persisted on either failure, there is no partial write
+(`writeAtomically` and `ensureApprovedSchedule` are never reached), and there is still no silent fallback to V1.
+
 ## 3. Defects found and changed assumptions
 
 1. **Preflight rejected the real 0023 schema** (my bug, caught by the Postgres suite before any push): it parsed `BETWEEN 1 AND n`, but
    Postgres stores the constraint as `(engine_version >= 1) AND (engine_version <= 100)`. Fixed; both spellings are now read, anything
    unrecognised fails closed, and the reader has its own unit tests.
-2. **Two mutants survived the first harness run** (runtime assertion disabled; Known may skip a Box). Cause: the clamp makes the assertion
+2. **Scheduler V2 failure semantics were undiagnosable and wrongly retryable** (found by a second-pass review of the first green head, fixed
+   in this checkpoint). `MobileReviewBatchService.submit` flattened every non-idempotency failure into
+   `MobileReviewBatchError('serverUnavailable', 'Review batch interrupted.')` and dropped the original error, and the class had no `cause`
+   field. Consequences: the preflight's “apply migration 0023” text reached neither the operator log nor any caller, and a deterministic
+   refusal was indistinguishable from a transient outage — the web sync requeued it through `retryAfter`, retrying bytes that could never be
+   accepted on an exponential backoff indefinitely and burning attempts toward quarantine. The fail-closed property itself was never broken
+   (nothing was persisted, no silent V1 fallback), so this was a diagnosability and retry-semantics defect, not a safety one. Fixed per §2.9;
+   the §2.7 wording that called this “a clear operator error” was corrected because it described the preflight function rather than the
+   externally relevant boundary.
+
+3. **Two mutants survived the first harness run** (runtime assertion disabled; Known may skip a Box). Cause: the clamp makes the assertion
    unreachable from `scheduleBinaryReview` at factor 1.8, so no test could reach it. Fixed by extracting the single output gate
    `finalizeBinarySchedule` and testing it with invalid proposals; the wrong-type and constraint preflight mutants likewise got direct tests.
    The final run has 0 survivors.
-3. **The gate did not reject a NaN proposal** (found by the new gate test): `boxFromStabilityDays` throws a `RangeError` for NaN rather than a
+4. **The gate did not reject a NaN proposal** (found by the new gate test): `boxFromStabilityDays` throws a `RangeError` for NaN rather than a
    `SchedulerInvariantError`. The gate now checks finite-and-positive first.
-4. **CI-only failure, Node-version dependence in my own test (first push, `quality`):** the flag-off digest test generated its inputs with
+5. **CI-only failure, Node-version dependence in my own test (first push, `quality`):** the flag-off digest test generated its inputs with
    `10 ** x`, which V8 rounds differently on Node 22 (CI) and the newer local Node, so the generated inputs, and so the pinned digest, differed
    per runtime. Local `pnpm check` could not see it. I reproduced it with a Node 22 container, replaced the generator with an integer LCG and
    exact IEEE operations only, regenerated the digest from pristine `main`, and confirmed it equal on Node 22, Node 26 and the branch. The
    sweep grid no longer uses `**` either (4,546 points unchanged). V1 itself was never at fault: its output is identical across runtimes.
-5. **Sweep size**: the first sweep had 3,646 points; the owner-required 4,000 was met by raising the grid, and the test asserts the count.
-6. **Assumption changed:** the plan treated the 10,000-input equivalence as a single engine test. It is now both an engine-level digest
+6. **Sweep size**: the first sweep had 3,646 points; the owner-required 4,000 was met by raising the grid, and the test asserts the count.
+7. **Assumption changed:** the plan treated the 10,000-input equivalence as a single engine test. It is now both an engine-level digest
    (12,000) and a service-level equivalence (10,000), because the flag lives in the service.
 
 Not done by design: recall probe (deferred), `state` retirement, Production anything, mobile UX.

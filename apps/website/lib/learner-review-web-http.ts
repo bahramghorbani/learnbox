@@ -3,7 +3,10 @@ import {
   MobileReviewBatchRequestError,
   parseMobileReviewBatchRequest,
 } from '../../api/dist/reviews/mobile-review-batch.request.js';
-import type { MobileReviewBatchItemOutcome } from '../../api/dist/reviews/mobile-review-batch.service.js';
+import {
+  MobileReviewBatchError,
+  type MobileReviewBatchItemOutcome,
+} from '../../api/dist/reviews/mobile-review-batch.service.js';
 import type { MobileReviewReconciliationResult } from '../../api/dist/reviews/postgres-review-event.store.js';
 import { guardMutation } from './mutation-guard';
 
@@ -69,6 +72,11 @@ export async function handleWebReviewBatchPost(
     return json({ outcomes }, 200);
   } catch (cause) {
     if (cause instanceof MobileReviewBatchRequestError) return error('validation', 400);
+    // LB-B35 CP7: a deterministic scheduler refusal is 422 `schedulerRejected`, never a retryable
+    // 503. Only the code crosses the boundary; the operator detail stays in the server log.
+    if (cause instanceof MobileReviewBatchError && cause.code === 'schedulerRejected') {
+      return error('schedulerRejected', 422);
+    }
     return error('serverUnavailable', 503);
   }
 }
@@ -155,7 +163,8 @@ async function readJsonBody(request: Request): Promise<unknown> {
 }
 
 function error(
-  code: 'validation' | 'invalidToken' | 'request_rejected' | 'serverUnavailable',
+  code:
+    'validation' | 'invalidToken' | 'request_rejected' | 'schedulerRejected' | 'serverUnavailable',
   status: number,
 ): Response {
   return json({ error: code }, status);

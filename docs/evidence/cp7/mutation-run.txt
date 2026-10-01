@@ -16,7 +16,7 @@ KILLED (1 tests fail)        invalid stored stability accepted
 KILLED (1 tests fail)        non-finite proposal accepted by the gate
 KILLED (6 tests fail)        Unknown in Box 1 leaves Box 1
 KILLED (3 tests fail)        flag off still uses the V2 path
-KILLED (2 tests fail)        preflight skipped
+KILLED (3 tests fail)        preflight skipped
 KILLED (1 tests fail)        engine stamp dropped under V2
 KILLED (3 tests fail)        engine stamp leaks when flag off
 KILLED (1 tests fail)        V2 constructible without a preflight
@@ -25,4 +25,12 @@ KILLED (1 tests fail)        preflight tolerates a wrong column type
 KILLED (1 tests fail)        preflight skips the constraint check
 KILLED (1 tests fail)        a failed preflight is cached forever
 KILLED (1 tests fail)        flag accepts 'TRUE'/'1'
-mutants: 27  survivors/skips: 0
+KILLED (4 tests fail)        FLATTEN REGRESSION: deterministic errors collapse back to serverUnavailable
+KILLED (3 tests fail)        cause discarded (operator loses the diagnostic)
+KILLED (4 tests fail)        schedulerRejected wrongly marked retryable
+KILLED (2 tests fail)        invariant violations no longer classified as deterministic
+KILLED (1 tests fail)        client message leaks the operator diagnostic
+KILLED (2 tests fail)        HTTP boundary returns a retryable 503 for a deterministic refusal
+KILLED (2 tests fail)        client maps the deterministic 422 back to the retryable unavailable
+KILLED (2 tests fail)        sync retries a deterministic rejection (the original infinite-retry defect)
+mutants: 35  survivors/skips: 0

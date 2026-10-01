@@ -13,6 +13,8 @@ export type WebReviewItem =
 export type WebReviewSubmitResult =
   | { status: 'ok'; outcomes: MobileReviewBatchItemOutcome[] }
   | { status: 'unauthorized' }
+  // LB-B35 CP7: the server refused deterministically (422). Retrying cannot help.
+  | { status: 'rejected' }
   | { status: 'unavailable' };
 
 type ReconciliationEvent = {
@@ -55,6 +57,7 @@ export async function submitWebReviewBatch(
     return { status: 'unavailable' };
   }
   if (response.status === 401) return { status: 'unauthorized' };
+  if (response.status === 422) return { status: 'rejected' };
   if (response.status !== 200) return { status: 'unavailable' };
   try {
     const body = (await response.json()) as unknown;

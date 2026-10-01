@@ -3,7 +3,10 @@ import {
   MobileReviewBatchRequestError,
   parseMobileReviewBatchRequest,
 } from '../../api/dist/reviews/mobile-review-batch.request.js';
-import type { MobileReviewBatchItemOutcome } from '../../api/dist/reviews/mobile-review-batch.service.js';
+import {
+  MobileReviewBatchError,
+  type MobileReviewBatchItemOutcome,
+} from '../../api/dist/reviews/mobile-review-batch.service.js';
 
 type JsonObject = Record<string, unknown>;
 type BoundaryOptions = { development?: boolean };
@@ -73,7 +76,11 @@ export async function handleMobileReviewPost(
   try {
     const outcomes = await dependencies.submit({ userId: parsed.userId, items: parsed.items });
     return json({ outcomes }, 200);
-  } catch {
+  } catch (cause) {
+    // LB-B35 CP7: deterministic scheduler refusal -> 422, not a retryable 503.
+    if (cause instanceof MobileReviewBatchError && cause.code === 'schedulerRejected') {
+      return error('schedulerRejected', 422);
+    }
     return error('serverUnavailable', 503);
   }
 }
@@ -164,7 +171,7 @@ function isSecure(request: Request, development: boolean): boolean {
   );
 }
 function error(
-  code: 'validation' | 'invalidToken' | 'serverUnavailable',
+  code: 'validation' | 'invalidToken' | 'schedulerRejected' | 'serverUnavailable',
   status: number,
 ): Response {
   return json({ error: code }, status);

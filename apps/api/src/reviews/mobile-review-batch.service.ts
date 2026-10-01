@@ -23,15 +23,32 @@ const OCCURRED_AT_PAST_WINDOW_MS = 90 * 24 * 60 * 60 * 1000;
 /** Future tolerance before a device timestamp is treated as clock skew. */
 const OCCURRED_AT_SKEW_TOLERANCE_MS = 5 * 60 * 1000;
 
-export type MobileReviewBatchErrorCode = 'validation' | 'serverUnavailable';
+/**
+ * `serverUnavailable` is TRANSIENT and may be retried. `schedulerRejected` is DETERMINISTIC
+ * (LB-B35 CP7): the scheduler V2 schema preflight refused, or a Box-transition invariant was
+ * violated. Retrying a `schedulerRejected` request can never succeed, so clients must not.
+ */
+export type MobileReviewBatchErrorCode = 'validation' | 'serverUnavailable' | 'schedulerRejected';
+
+/** Deterministic codes: a byte-identical retry cannot change the outcome. */
+const NON_RETRYABLE_CODES: readonly MobileReviewBatchErrorCode[] = [
+  'validation',
+  'schedulerRejected',
+];
 
 export class MobileReviewBatchError extends Error {
   constructor(
     readonly code: MobileReviewBatchErrorCode,
     message: string,
+    options?: { cause?: unknown },
   ) {
-    super(message);
+    super(message, options?.cause === undefined ? undefined : { cause: options.cause });
     this.name = 'MobileReviewBatchError';
+  }
+
+  /** False for deterministic failures, so a caller never schedules a retry that cannot succeed. */
+  get retryable(): boolean {
+    return !NON_RETRYABLE_CODES.includes(this.code);
   }
 }
 
@@ -130,6 +147,11 @@ export interface MobileReviewBatchOptions {
   schedulerV2?: boolean;
   /** Required when `schedulerV2` is true; rejects when the schema is not ready. */
   schedulerV2Preflight?: () => Promise<void>;
+  /**
+   * Server-side sink for the full operator diagnostic. The client never receives it: the HTTP
+   * boundary returns only the error code. Defaults to `console.error`.
+   */
+  logger?: (event: { code: MobileReviewBatchErrorCode; detail: string }) => void;
 }
 
 export class MobileReviewBatchService {
@@ -159,9 +181,35 @@ export class MobileReviewBatchService {
       if (error instanceof Error && error.name === 'ReviewIdempotencyConflictError') {
         throw error;
       }
-      throw new MobileReviewBatchError('serverUnavailable', 'Review batch interrupted.');
+      if (error instanceof MobileReviewBatchError) throw error;
+      // LB-B35 CP7: a scheduler-V2 preflight refusal or a Box-transition invariant violation is
+      // DETERMINISTIC. Both are raised before any write, so nothing is persisted either way, but
+      // they must not masquerade as a transient outage that the client will retry forever.
+      const deterministic =
+        error instanceof Error &&
+        (error.name === 'SchedulerV2PreflightError' || error.name === 'SchedulerInvariantError');
+      const code: MobileReviewBatchErrorCode = deterministic
+        ? 'schedulerRejected'
+        : 'serverUnavailable';
+      this.log(code, error);
+      throw new MobileReviewBatchError(
+        code,
+        deterministic
+          ? 'Review batch refused: the server scheduler configuration is not usable.'
+          : 'Review batch interrupted.',
+        { cause: error },
+      );
     }
     return outcomes;
+  }
+
+  /** Full detail stays server-side; the client only ever sees the code. */
+  private log(code: MobileReviewBatchErrorCode, error: unknown): void {
+    const detail = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
+    const sink =
+      this.options.logger ??
+      ((event) => console.error('[reviews] %s %s', event.code, event.detail));
+    sink({ code, detail });
   }
 
   private async processItem(

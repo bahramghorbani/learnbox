@@ -19,9 +19,20 @@ API = ROOT / 'apps/api'
 SV2 = ENGINE / 'src/scheduler-v2.ts'
 SVC = API / 'src/reviews/mobile-review-batch.service.ts'
 PRE = API / 'src/reviews/scheduler-v2-preflight.ts'
+WEBC = ROOT / 'apps/website/lib/learner-review-web-client.ts'
+WEBS = ROOT / 'apps/website/lib/learner-review-web-sync.ts'
+WEBH = ROOT / 'apps/website/lib/learner-review-web-http.ts'
 
 ENGINE_TEST = ('packages/learning-engine', 'test/cp7-scheduler-v2.test.ts', None)
 API_TEST = ('apps/api', 'test/cp7-scheduler-v2-service.test.ts', 'tsc')
+# The website compiles against apps/api/dist, so a service mutation must be rebuilt before the
+# web-boundary suite can observe it.
+WEB_TEST = (
+    'apps/website',
+    'test/learner-review-web-http.test.ts test/learner-review-web-client.test.ts '
+    'test/learner-review-web-sync.test.ts',
+    'build-api',
+)
 
 # (file, label, find, replace, which test)
 MUTANTS = [
@@ -88,6 +99,27 @@ MUTANTS = [
      API_TEST),
     (PRE, "flag accepts 'TRUE'/'1'", "return environment.LEARNBOX_SCHEDULER_V2 === 'true';",
      "return /^(true|1)$/i.test(environment.LEARNBOX_SCHEDULER_V2 ?? '');", API_TEST),
+    # --- LB-B35 CP7 failure-semantics fix (deterministic vs transient) ---
+    (SVC, 'FLATTEN REGRESSION: deterministic errors collapse back to serverUnavailable',
+     "const code: MobileReviewBatchErrorCode = deterministic\n        ? 'schedulerRejected'\n        : 'serverUnavailable';",
+     "const code: MobileReviewBatchErrorCode = 'serverUnavailable';", API_TEST),
+    (SVC, 'cause discarded (operator loses the diagnostic)',
+     '        { cause: error },', '        {},', API_TEST),
+    (SVC, 'schedulerRejected wrongly marked retryable',
+     "  'schedulerRejected',\n];", '];', API_TEST),
+    (SVC, 'invariant violations no longer classified as deterministic',
+     "        (error.name === 'SchedulerV2PreflightError' || error.name === 'SchedulerInvariantError');",
+     "        error.name === 'SchedulerV2PreflightError';", API_TEST),
+    (SVC, 'client message leaks the operator diagnostic',
+     "          ? 'Review batch refused: the server scheduler configuration is not usable.'",
+     '          ? `Review batch refused: ${String(error)}`', API_TEST),
+    (WEBH, 'HTTP boundary returns a retryable 503 for a deterministic refusal',
+     "      return error('schedulerRejected', 422);", "      return error('serverUnavailable', 503);", WEB_TEST),
+    (WEBC, 'client maps the deterministic 422 back to the retryable unavailable',
+     "  if (response.status === 422) return { status: 'rejected' };", '  /* removed */', WEB_TEST),
+    (WEBS, 'sync retries a deterministic rejection (the original infinite-retry defect)',
+     "      result.status === 'rejected'\n        ? currentQueue()\n        : currentQueue().map((event) =>",
+     '      false\n        ? currentQueue()\n        : currentQueue().map((event) =>', WEB_TEST),
 ]
 
 originals = {}
@@ -108,6 +140,8 @@ def run(test):
     cmd = f'cd {ROOT / cwd} && '
     if pre == 'tsc':
         cmd += 'pnpm -s exec tsc -p . --noEmit >/dev/null 2>&1; '
+    if pre == 'build-api':
+        cmd = f'cd {ROOT / "apps/api"} && pnpm -s build >/dev/null 2>&1; ' + cmd
     cmd += f'./node_modules/.bin/vitest run {spec}'
     r = subprocess.run(cmd, shell=True, capture_output=True, text=True)
     out = r.stdout + r.stderr

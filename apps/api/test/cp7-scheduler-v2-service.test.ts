@@ -1,7 +1,14 @@
-import { scheduleBinaryReview, scheduleReview, type CardSchedule } from '@learnbox/learning-engine';
+import {
+  scheduleBinaryReview,
+  scheduleReview,
+  SchedulerInvariantError,
+  type CardSchedule,
+} from '@learnbox/learning-engine';
 import { describe, expect, it, vi } from 'vitest';
 
 import {
+  MobileReviewBatchError,
+  type MobileReviewBatchErrorCode,
   MobileReviewBatchService,
   type MobileReviewBatchItem,
 } from '../src/reviews/mobile-review-batch.service.js';
@@ -261,8 +268,10 @@ describe('MobileReviewBatchService flag handling', () => {
         throw new SchedulerV2PreflightError(['review_events.engine_version is missing']);
       },
     });
+    // LB-B35 CP7 fix: a deterministic preflight refusal is now `schedulerRejected`, not a
+    // retryable `serverUnavailable`, and the original cause is preserved for the operator.
     await expect(svc.submit({ userId: 'u', items: [item()] })).rejects.toMatchObject({
-      code: 'serverUnavailable',
+      code: 'schedulerRejected',
     });
     expect(writeAtomically).not.toHaveBeenCalled();
     expect(
@@ -282,8 +291,10 @@ describe('MobileReviewBatchService flag handling', () => {
       schedulerV2: true,
       schedulerV2Preflight: async () => undefined,
     });
+    // LB-B35 CP7 fix: an invariant violation is deterministic -> `schedulerRejected`, non-retryable.
     await expect(svc.submit({ userId: 'u', items: [item()] })).rejects.toMatchObject({
-      code: 'serverUnavailable',
+      code: 'schedulerRejected',
+      retryable: false,
     });
     expect(writeAtomically).not.toHaveBeenCalled();
   });
@@ -336,5 +347,108 @@ describe('flag-off service equivalence to v1.2.1 over 10,000 inputs', () => {
       checked++;
     }
     expect(checked).toBe(10_000);
+  });
+});
+
+describe('CP7 failure semantics at the SERVICE boundary (not just the preflight function)', () => {
+  const req = { userId: 'u1', items: [item()] };
+
+  function logging() {
+    const seen: Array<{ code: string; detail: string }> = [];
+    return {
+      seen,
+      logger: (e: { code: MobileReviewBatchErrorCode; detail: string }) => seen.push(e),
+    };
+  }
+
+  it('a preflight refusal surfaces as non-retryable schedulerRejected, keeps the cause, logs the detail, and writes nothing', async () => {
+    const { store, writeAtomically } = fakeStore();
+    const { seen, logger } = logging();
+    const preflightError = new SchedulerV2PreflightError([
+      'review_events.engine_version is missing',
+    ]);
+    const service = new MobileReviewBatchService(store, () => NOW, {
+      schedulerV2: true,
+      schedulerV2Preflight: () => Promise.reject(preflightError),
+      logger,
+    });
+
+    const thrown = await service.submit(req).catch((e: unknown) => e);
+    expect(thrown).toBeInstanceOf(MobileReviewBatchError);
+    const err = thrown as MobileReviewBatchError;
+    expect(err.code).toBe('schedulerRejected');
+    expect(err.retryable).toBe(false);
+    // The operator detail is preserved for the server, not flattened away.
+    expect(err.cause).toBe(preflightError);
+    expect((err.cause as Error).message).toContain('0023_learning_persistence');
+    // ...but the client-facing message carries no schema internals.
+    expect(err.message).not.toContain('engine_version');
+    expect(err.message).not.toContain('0023');
+    expect(seen).toEqual([
+      { code: 'schedulerRejected', detail: expect.stringContaining('SchedulerV2PreflightError') },
+    ]);
+    // Safety preserved: nothing persisted, no partial write, no V1 fallback.
+    expect(writeAtomically).not.toHaveBeenCalled();
+    expect(store.ensureApprovedSchedule).not.toHaveBeenCalled();
+  });
+
+  it('an invariant violation surfaces as non-retryable schedulerRejected and never persists', async () => {
+    const { store, writeAtomically } = fakeStore();
+    const invariant = new SchedulerInvariantError('Unknown must drop exactly one Box');
+    (store as unknown as { ensureApprovedSchedule: unknown }).ensureApprovedSchedule = vi.fn(() => {
+      throw invariant;
+    });
+    const { seen, logger } = logging();
+    const service = new MobileReviewBatchService(store, () => NOW, {
+      schedulerV2: true,
+      schedulerV2Preflight: () => Promise.resolve(),
+      logger,
+    });
+
+    const err = (await service.submit(req).catch((e: unknown) => e)) as MobileReviewBatchError;
+    expect(err.code).toBe('schedulerRejected');
+    expect(err.retryable).toBe(false);
+    expect(err.cause).toBe(invariant);
+    expect(seen[0]!.detail).toContain('SchedulerInvariantError');
+    expect(writeAtomically).not.toHaveBeenCalled();
+  });
+
+  it('a transient store fault stays retryable serverUnavailable and is still distinguishable', async () => {
+    const { store } = fakeStore();
+    const outage = new Error('connection terminated unexpectedly');
+    (store as unknown as { ensureApprovedSchedule: unknown }).ensureApprovedSchedule = vi.fn(() => {
+      throw outage;
+    });
+    const { seen, logger } = logging();
+    const service = new MobileReviewBatchService(store, () => NOW, { logger });
+
+    const err = (await service.submit(req).catch((e: unknown) => e)) as MobileReviewBatchError;
+    expect(err.code).toBe('serverUnavailable');
+    expect(err.retryable).toBe(true);
+    expect(err.cause).toBe(outage);
+    expect(seen[0]!.code).toBe('serverUnavailable');
+  });
+
+  it('NEGATIVE PROOF: flattening both failures to serverUnavailable makes these assertions fail', async () => {
+    // Mirrors the pre-fix behaviour exactly: one catch-all, cause discarded.
+    const flatten = async (thrower: () => Promise<never>) => {
+      try {
+        await thrower();
+        throw new Error('unreachable');
+      } catch {
+        return new MobileReviewBatchError('serverUnavailable', 'Review batch interrupted.');
+      }
+    };
+    const flat = await flatten(() => Promise.reject(new SchedulerV2PreflightError(['x'])));
+    // Each of these is exactly what the fix added; all three fail under the old flattening.
+    expect(flat.code).not.toBe('schedulerRejected');
+    expect(flat.retryable).toBe(true);
+    expect(flat.cause).toBeUndefined();
+  });
+
+  it('the deterministic code is excluded from retry by the error itself, for every code', () => {
+    expect(new MobileReviewBatchError('schedulerRejected', 'm').retryable).toBe(false);
+    expect(new MobileReviewBatchError('validation', 'm').retryable).toBe(false);
+    expect(new MobileReviewBatchError('serverUnavailable', 'm').retryable).toBe(true);
   });
 });
