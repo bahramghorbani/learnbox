@@ -3473,6 +3473,11 @@ p {
   -webkit-tap-highlight-color: transparent;
   flex-shrink: 0;
 }
+.flip-container:focus-visible {
+  outline: 3px solid #25213b;
+  outline-offset: 4px;
+  border-radius: 22px;
+}
 .flip-inner {
   position: relative;
   width: 100%;

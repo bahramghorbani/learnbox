@@ -1332,7 +1332,25 @@ export function LearnerHome({
           <span style={{ width: `${(completedCount / studyItems.length) * 100}%` }} />
         </div>
         <p className="session-remaining">{remainingCount} کارت برای تمرین امروز مانده است.</p>
-        <div className="flip-container" onClick={() => setFlipped(!flipped)}>
+        <div
+          className="flip-container"
+          role="button"
+          tabIndex={0}
+          aria-label={
+            flipped
+              ? `${currentItem.german}؛ ${currentItem.persian}. برای برگشتن به روی کارت، فعال کن`
+              : `${currentItem.german}. برای دیدن معنی، فعال کن`
+          }
+          onClick={() => setFlipped(!flipped)}
+          onKeyDown={(event) => {
+            // Only the card itself: Enter/Space inside the nested pronunciation buttons must not flip it.
+            if (event.target !== event.currentTarget) return;
+            if (event.key !== 'Enter' && event.key !== ' ') return;
+            event.preventDefault();
+            if (event.repeat) return;
+            setFlipped((value) => !value);
+          }}
+        >
           <div className={`flip-inner${flipped ? ' flipped' : ''}`} style={{ minHeight: '340px' }}>
             <div className="card-face card-front">
               <StartMediaVisual contentId={currentItem.id} mode={startMediaMode} />
