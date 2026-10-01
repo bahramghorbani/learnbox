@@ -10,6 +10,7 @@ import {
   localDayKey,
   masteredPredicateSql,
   normalizeTimeZone,
+  resolveLearnerTimeZone,
   summarizeBoxCounts,
   type Accuracy,
   type BoxCounts,
@@ -209,6 +210,33 @@ async function queryActivityDays(
 }
 
 /**
+ * `LEARNBOX_TZ_PERSIST` (default off): the account's stored zone is authoritative, and a NULL one is
+ * filled once from the first valid zone the device reports. Off = the request zone only, exactly as
+ * v1.2.1, and the `users.timezone` column is never touched (so the code also runs before migration 0023).
+ */
+export const timeZonePersistenceEnabled = (
+  environment: Record<string, string | undefined> = process.env,
+) => environment.LEARNBOX_TZ_PERSIST === 'true';
+
+async function resolveZone(
+  pool: Pick<Pool, 'query'>,
+  userId: string,
+  requested: string | null | undefined,
+): Promise<string> {
+  if (!timeZonePersistenceEnabled()) return normalizeTimeZone(requested);
+  const row = await pool.query('SELECT timezone FROM users WHERE id = $1', [userId]);
+  const resolved = resolveLearnerTimeZone(row.rows[0]?.timezone ?? null, requested);
+  if (resolved.persist) {
+    // Fill-once: never overwrite a zone another request stored first.
+    await pool.query('UPDATE users SET timezone = $2 WHERE id = $1 AND timezone IS NULL', [
+      userId,
+      resolved.persist,
+    ]);
+  }
+  return resolved.timeZone;
+}
+
+/**
  * Days are bucketed in the learner's IANA zone. A zone the JS runtime accepts but Postgres rejects
  * (SQLSTATE 22023) degrades to UTC rather than failing the whole screen over a display detail.
  */
@@ -218,7 +246,7 @@ export async function readLearnerActivity(
   requestedTimeZone: string | null | undefined,
   asOf: Date = new Date(),
 ): Promise<LearnerActivity> {
-  let timeZone = normalizeTimeZone(requestedTimeZone);
+  let timeZone = await resolveZone(pool, userId, requestedTimeZone);
   let days: DayActivity[];
   try {
     days = await queryActivityDays(pool, userId, timeZone);

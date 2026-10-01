@@ -209,6 +209,27 @@ export function normalizeTimeZone(candidate: string | null | undefined): string 
 }
 const IANA_SHAPE = /^[A-Za-z][A-Za-z0-9_+-]*(?:\/[A-Za-z0-9_+-]+)*$/;
 
+/**
+ * Which zone a learner's local day is computed in (owner decision O2, LB-B35 CP4).
+ *
+ * Order: the zone stored on the account, then the zone the device reports, then UTC. Each candidate
+ * must be a valid IANA name; an invalid stored value is skipped, never trusted. `persist` is the one
+ * place that says whether the device zone should be written back: only when the account has NO valid
+ * stored zone yet and the device reports a valid, non-UTC-by-default one. After that only an explicit
+ * profile change updates it, so an ordinary request from a traveller never moves the learner's day.
+ * Changing the zone changes how days are bucketed, never any stored timestamp.
+ */
+export function resolveLearnerTimeZone(
+  stored: string | null | undefined,
+  requested: string | null | undefined,
+): { timeZone: string; source: 'stored' | 'request' | 'default'; persist: string | null } {
+  const isValid = (zone: string | null | undefined): zone is string =>
+    !!zone && normalizeTimeZone(zone) === zone;
+  if (isValid(stored)) return { timeZone: stored, source: 'stored', persist: null };
+  if (isValid(requested)) return { timeZone: requested, source: 'request', persist: requested };
+  return { timeZone: 'UTC', source: 'default', persist: null };
+}
+
 /** `YYYY-MM-DD` of `instant` in `timeZone`. Equals Postgres `(ts AT TIME ZONE tz)::date`. */
 export function localDayKey(instant: Date, timeZone: string): string {
   const parts = new Intl.DateTimeFormat('en-US', {
