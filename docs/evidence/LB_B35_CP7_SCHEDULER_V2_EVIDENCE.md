@@ -69,8 +69,8 @@ nor re-stamps. Legacy four-grade events schedule as their projection under V2 an
 
 ### 2.6 Flag-off equivalence to V1
 
-`scheduleReview` over 12,000 deterministic inputs hashes to `bd8db83b643a4b4fa0989ec946cb342b6b79053d782f155b82da6fef51c076dd`, captured
-from the unmodified engine **before** any CP7 change and re-checked after. The service path over 10,000 further inputs (both flag-off
+`scheduleReview` over 12,000 deterministic inputs hashes to `5cd3080ab280b3ea65bebf07866f0b4303fb7c5b216a35b75f8aca5fe5cb36a2`, generated
+from a build of pristine `origin/main` (before CP7) and verified identical on Node 22 and Node 26 and on the CP7 branch. The service path over 10,000 further inputs (both flag-off
 spellings) writes exactly `scheduleReview(stored, grade, now)` with no engine stamp. On a database **without** 0023, flag unset/false/empty
 works through the real web and mobile entry points and stores no engine column. The INSERT text is asserted to contain neither `engine_version`
 nor `response` when unset.
@@ -101,8 +101,13 @@ larger stability after rollback and are reviewed later than V1 alone would have 
    The final run has 0 survivors.
 3. **The gate did not reject a NaN proposal** (found by the new gate test): `boxFromStabilityDays` throws a `RangeError` for NaN rather than a
    `SchedulerInvariantError`. The gate now checks finite-and-positive first.
-4. **Sweep size**: the first sweep had 3,646 points; the owner-required 4,000 was met by raising the grid, and the test asserts the count.
-5. **Assumption changed:** the plan treated the 10,000-input equivalence as a single engine test. It is now both an engine-level digest
+4. **CI-only failure, Node-version dependence in my own test (first push, `quality`):** the flag-off digest test generated its inputs with
+   `10 ** x`, which V8 rounds differently on Node 22 (CI) and the newer local Node, so the generated inputs, and so the pinned digest, differed
+   per runtime. Local `pnpm check` could not see it. I reproduced it with a Node 22 container, replaced the generator with an integer LCG and
+   exact IEEE operations only, regenerated the digest from pristine `main`, and confirmed it equal on Node 22, Node 26 and the branch. The
+   sweep grid no longer uses `**` either (4,546 points unchanged). V1 itself was never at fault: its output is identical across runtimes.
+5. **Sweep size**: the first sweep had 3,646 points; the owner-required 4,000 was met by raising the grid, and the test asserts the count.
+6. **Assumption changed:** the plan treated the 10,000-input equivalence as a single engine test. It is now both an engine-level digest
    (12,000) and a service-level equivalence (10,000), because the flag lives in the service.
 
 Not done by design: recall probe (deferred), `state` retirement, Production anything, mobile UX.

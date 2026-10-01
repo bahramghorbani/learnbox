@@ -54,7 +54,13 @@ function refBox(before: Box, r: BinaryResponse, stability: number): Box {
 /** Dense sweep: log-spaced points + every Box edge at tiny offsets + the cap region. */
 function stabilityPoints(): number[] {
   const pts = new Set<number>();
-  for (let i = 0; i < 4500; i++) pts.add(10 ** (-2.85 + (i / 4499) * 5.2)); // 0.0014 .. ~224 d
+  // Geometric grid by repeated exact IEEE multiplication (no `**`: V8 rounds it differently per Node
+  // version, which would change the point set between local and CI). 0.0014 .. ~224 days.
+  let g = 0.0014125375446227544;
+  for (let i = 0; i < 4500; i++) {
+    pts.add(g);
+    g *= 1.0026649009615933;
+  }
   for (const edge of [1, 3, 7, 21]) {
     for (const d of [-1e-3, -1e-6, -1e-9, -1e-12, 0, 1e-12, 1e-9, 1e-6, 1e-3]) pts.add(edge + d);
   }
@@ -238,7 +244,7 @@ describe('repeated Unknown and mixed sequences', () => {
     const rnd = () => (seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 4294967296;
     const digest = createHash('sha256');
     for (let run = 0; run < 1000; run++) {
-      let s = fresh(rnd() < 0.5 ? 0.0416666667 : 10 ** (rnd() * 3.2 - 2), {
+      let s = fresh(rnd() < 0.5 ? 0.0416666667 : 0.01 * (1 + rnd() * 99) * (1 + rnd() * 9), {
         state: rnd() < 0.3 ? 'new' : 'review',
       });
       let now = T0;
@@ -407,9 +413,18 @@ describe('runtime transition assertions refuse invalid transitions', () => {
 });
 
 describe('scheduler V1 is untouched (flag-off equivalence input)', () => {
-  it('scheduleReview over 12,000 deterministic inputs hashes to the digest pinned before CP7', () => {
-    let s = 123456789;
-    const rnd = () => (s = (Math.imul(s, 1664525) + 1013904223) >>> 0) / 4294967296;
+  it('scheduleReview over 12,000 deterministic inputs hashes to the digest generated from pristine main', () => {
+    // Portable generator: integer LCG and exact IEEE operations only. `**`/Math.pow/log/exp are NOT used
+    // because V8 rounds them differently across Node versions (Node 22 in CI vs a newer local Node), which
+    // would change the generated INPUTS and make the pin meaningless. The digest below was produced by
+    // building `packages/learning-engine` from origin/main (before CP7) and is identical on Node 22 and 26.
+    let seed = 123456789;
+    const rnd = () => (seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 4294967296;
+    const pow2 = (k: number) => {
+      let v = 1;
+      for (let i = 0; i < Math.abs(k); i++) v = k >= 0 ? v * 2 : v / 2;
+      return v;
+    };
     const states = [
       'new',
       'learning',
@@ -420,12 +435,16 @@ describe('scheduler V1 is untouched (flag-off equivalence input)', () => {
       'archived',
     ] as const;
     const grades = ['forgot', 'hard', 'remembered', 'mastered'] as const;
+    const special = [0.0001, 0.007, 1, 3, 7, 21, 180, 400, 4000];
     const h = createHash('sha256');
     for (let i = 0; i < 12000; i++) {
-      const stab = 10 ** (rnd() * 4.2 - 2.9);
+      const stab =
+        i % 50 === 0
+          ? special[(i / 50) % special.length]!
+          : pow2(Math.floor(rnd() * 14) - 9) * (1 + rnd());
       const sched: CardSchedule = {
         state: states[Math.floor(rnd() * 7)]!,
-        stabilityDays: i % 50 === 0 ? [0.0001, 1, 3, 7, 21, 180, 400, 4000][i % 8]! : stab,
+        stabilityDays: stab,
         difficulty: 1 + rnd() * 9,
         lapses: Math.floor(rnd() * 20),
         dueAt: new Date(Date.UTC(2026, 0, 1) + Math.floor(rnd() * 4e8)),
@@ -451,7 +470,7 @@ describe('scheduler V1 is untouched (flag-off equivalence input)', () => {
       );
     }
     expect(h.digest('hex')).toBe(
-      'bd8db83b643a4b4fa0989ec946cb342b6b79053d782f155b82da6fef51c076dd',
+      '5cd3080ab280b3ea65bebf07866f0b4303fb7c5b216a35b75f8aca5fe5cb36a2',
     );
   });
 });
