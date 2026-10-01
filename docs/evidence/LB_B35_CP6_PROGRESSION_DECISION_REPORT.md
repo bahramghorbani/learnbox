@@ -1,6 +1,6 @@
 # LB-B35 CP6 — Scheduler / Progression Decision & Validation (decision report)
 
-Status: **evidence + decision report. Nothing is implemented, built into the product, or activated.** Scheduler v1 is
+Status: **evidence + decision report, with the owner decisions of 2026-10-01 recorded in §8. Nothing is implemented, built into the product, or activated.** Scheduler v1 is
 unchanged. No Production, Admin or Store change. Pre-registration: `LB_B35_CP6_PREREGISTRATION.md` (committed before the grid was run).
 Raw outputs: `docs/evidence/cp6/` (`traces.txt`, `sweep.txt`, `continuous.txt`, `invariants.txt`, `compat.txt`, `tables.md`; grid sha256 in `grid-sha256.txt`).
 
@@ -114,3 +114,17 @@ Production rollout, to be executed only after the learning policy is settled: fr
 - Attendance patterns A1–A3 are synthetic; the simulated year has up to 300 cards per learner (a stress case) and 35 in the main tables.
 - Candidates were fixed before the grid ran; the sweep for GR-2.2 is deterministic only.
 - No UI or API was built; the below-fold button and mobile findings are unchanged.
+
+## 8. Owner decisions (2026-10-01)
+
+1. **Selected: Option 2, GR-1.8.** Known ×1.8; a Known from a new/Box-1 card lifts it to at least 1 day (Box 2); at most one Box up per Known.
+2. **ENG-DROP replaces ENG-CLAMP.** An Unknown moves a card exactly one Box down from Boxes 2–5; Box 1 stays Box 1.
+3. **Box transitions become an explicit scheduler invariant.** The scheduler must not rely only on deriving Box from stability thresholds after scheduling.
+4. **Forward-only activation.** An existing Box-1 card moves to Box 2 on its first future Known. No existing schedule and no review history is rewritten at activation.
+5. Unchanged: Learned = Box 4+, Mastered = Box 5, Box-5 growth capped at 180 days, difficulty / lapse penalty / lateness are not scheduler inputs, `card_schedules.state` is still written, mobile legacy compatibility is kept.
+6. **Post-launch recall probe: telemetry only.** It must never tune, select or change scheduler policy. Any future scheduler change needs its own evidence checkpoint and an owner decision.
+
+### Evidence that must stay attached to this decision
+
+- **GR-1.8 scored lower than ENG-DROP in the simulation.** Modelled day-365 knowledge: 0.242 vs 0.308 (Δ −0.067, 95% CI ±0.006; attendance A2, 35 cards, 12 learner models × 100 seeds); the same ordering held under attendance A1 and A3 and with 300 cards (`cp6/tables.md`). Box-5 retention at review was 0.96 vs 0.98.
+- **No real learner-retention dataset establishes that GR-1.8 (or any option) is pedagogically better.** The learner model is an assumption that favours multiplicative schedulers; the only real data is 58 events from one user. The selection is an owner product decision (visible progress), made with this cost known. The simulation is decision support only.
