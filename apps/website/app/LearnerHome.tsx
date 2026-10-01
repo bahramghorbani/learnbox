@@ -8,6 +8,7 @@ import {
   loadSyncQueue,
   loadSyncQueueResilient,
   quarantineCount,
+  resolveResumeIndex,
   createMemoryStorage,
   createResilientStorage,
   getCurrentStreakDays,
@@ -83,6 +84,8 @@ type QueuedPersonalVocabulary = PersonalVocabularyEntry & {
 // LB-B35 CP4 (default off): per-item queue parsing, bounded rejection retries with quarantine, and the
 // flush-before-logout choice. Direct process.env reference so Next inlines it at build time.
 const queueQuarantineEnabled = process.env.NEXT_PUBLIC_LEARNBOX_QUEUE_QUARANTINE === 'true';
+// LB-B35 CP4 (default off): resume a review session by card identity instead of by queue index.
+const resumeByCardEnabled = process.env.NEXT_PUBLIC_LEARNBOX_SERVER_SESSION_PLAN === 'true';
 const baseReviewSyncStorageKey = 'learnbox:review-sync:v1:local-prototype';
 const basePersonalVocabularyStorageKey = 'learnbox:personal-vocabulary:v1:local-prototype';
 const basePersonalVocabularySyncStorageKey = 'learnbox:personal-vocabulary-sync:v1:local-prototype';
@@ -304,8 +307,16 @@ export function LearnerHome({
     const storage = getDeviceStorage();
     setPendingReviewCount(loadSyncQueue<QueuedReview>(storage, reviewSyncStorageKey).length);
     const savedSession = loadReviewSession(storage, reviewSessionStorageKey);
-    if (savedSession && savedSession.nextCardIndex < studyItems.length) {
-      setResumableSessionIndex(savedSession.nextCardIndex);
+    const resumeAt = resumeByCardEnabled
+      ? resolveResumeIndex(
+          savedSession,
+          studyItems.map((item) => item.id),
+        )
+      : savedSession && savedSession.nextCardIndex < studyItems.length
+        ? savedSession.nextCardIndex
+        : null;
+    if (resumeAt !== null) {
+      setResumableSessionIndex(resumeAt);
       return;
     }
     if (savedSession) clearReviewSession(storage, reviewSessionStorageKey);
@@ -693,6 +704,17 @@ export function LearnerHome({
     };
   }, [authenticated, isServerOtp, profileIdentityEnabled, sessionUserId]);
 
+  /** Records where to resume. With the flag on it also stores the card's identity. */
+  const persistResumePoint = (nextIndex: number) => {
+    const nextCardId = studyItems[nextIndex]?.id;
+    saveReviewSession(
+      getDeviceStorage(),
+      reviewSessionStorageKey,
+      resumeByCardEnabled && nextCardId
+        ? { nextCardIndex: nextIndex, nextCardId }
+        : { nextCardIndex: nextIndex },
+    );
+  };
   const begin = () => {
     const itemsForSession = studyItems;
     const nextIndex = resumableSessionIndex ?? 0;
@@ -702,7 +724,7 @@ export function LearnerHome({
     setFlipped(false);
     setGrade(null);
     setSessionIndex(nextIndex);
-    saveReviewSession(getDeviceStorage(), reviewSessionStorageKey, { nextCardIndex: nextIndex });
+    persistResumePoint(nextIndex);
     setResumableSessionIndex(nextIndex);
   };
   const completeOnboarding = () => {
@@ -892,7 +914,7 @@ export function LearnerHome({
 
     if (sessionIndex < studyItems.length - 1) {
       const nextIndex = sessionIndex + 1;
-      saveReviewSession(getDeviceStorage(), reviewSessionStorageKey, { nextCardIndex: nextIndex });
+      persistResumePoint(nextIndex);
       setResumableSessionIndex(nextIndex);
       setSessionIndex(nextIndex);
       setFlipped(false);

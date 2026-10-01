@@ -47,6 +47,7 @@ export {
 export {
   clearReviewSession,
   loadReviewSession,
+  resolveResumeIndex,
   saveReviewSession,
   type ReviewSessionProgress,
 } from './review-session-storage.js';
