@@ -4,16 +4,18 @@
 
 ## Active work
 
-**No product feature work is active** (LB-B35 CP0–CP2 merged; CP3 awaiting review, below). v1.2.0 and the v1.2.1 security patch (`LB-B29`) are released and
+**No product feature work is active** (LB-B35 CP0–CP4 merged and closed; CP5 awaiting owner approval, below). v1.2.0 and the v1.2.1 security patch (`LB-B29`) are released and
 closed (below), and the Admin P0 credential cutover (`LB-B30`–`B33`) is complete (next section).
 Nothing further is approved for implementation: P1 compatibility and Admin redesign have **not** started. Deferred but not cancelled:
 `LB-B19` (reminders), `LB-B28b` (photo upload), `LB-B17` (Store).
 
-## LB-B35 Learning system unification — CP3 complete, awaiting owner review
+## LB-B35 Learning system unification — CP0–CP4 merged and closed; CP5 not started
 
-- **CP0** (#328), **CP1** (#329), **CP2** (#330) merged. Owner decisions: ENG-CLAMP; Box 5 ×3 capped at 180 days; Unknown = one Box down; difficulty/lapses/lateness removed from scheduling (not implemented or activated).
-- **CP3** (branch `feat/lb-b35-cp3-canonical-read-paths`): Today, Progress, Words, Profile and the summary endpoint read one model (`apps/website/lib/learner-read-model.ts`) built on `definitions.ts`: Accuracy, Learned/Mastered/Box, curriculum denominator, learner-local days, and the future-day streak fix. Legacy grade unions and the fabricated study-minutes card are gone; the drift-guard allowlist is empty. **No scheduler, write path, schema, migration, binary UI, Admin, Store or Production change.** Evidence: `docs/evidence/LB_B35_CP3_CANONICAL_READ_PATHS.md`.
-- **Gates:** O1 (visible Box progress under ENG-CLAMP) is a scheduler-v2 activation gate; O2 (stored IANA zone) lands in CP4's additive migration. **Restore gate satisfied 2026-10-01 by evidence** (`docs/evidence/RESTORE_GATE_RECONCILIATION_2026-10-01.md`); only the timer-fires item stays open, checked after 2026-10-05. CP4 plan awaits owner review (`docs/planning/LB_B35_CP4_PLAN.md`); no implementation yet.
+- **CP0** (#328), **CP1** (#329), **CP2** (#330), **CP3** (#331), **CP4 plan** (#332) and **CP4 implementation** (#333) are merged. Owner decisions: ENG-CLAMP; Box 5 ×3 capped at 180 days; Unknown = one Box down; difficulty/lapses/lateness removed from scheduling (not implemented or activated).
+- **CP4 closure.** PR #333 final head `f04031cafebff7dd4b6a25295b3be57636dfdd52`, squash-merge `9c9c69ce08603ea289fbf2f676a112f049909f00`; required checks `mobile`, `production-stack`, `quality`, `secrets` all SUCCESS on that head. CP4 development and staging verification are **CLOSED**; the tested source was `9c83bbfb…` and the final delta was documentation-only. Evidence: `docs/evidence/LB_B35_CP4_PERSISTENCE_EVIDENCE.md` (section 9 carries the staging report, limitations and deferred findings). Release-tag provenance: `docs/evidence/RELEASE_PROVENANCE_RECONCILIATION_2026-10-01.md`.
+- **Production state is unchanged.** Migration `0023` is **NOT applied to Production** (read-only check 2026-10-01: no `response`/`engine_version`/`users.timezone`, no `learner_daily_plans`/`review_event_rejections`); Production still runs the v1.2.1 learner image `sha256:5370578d187c` (`APP_SOURCE_SHA` `4ade0a88…`). **All CP4 flags are inactive in Production** (the CP4 build never shipped).
+- **Remaining Production gate for `0023`:** explicit owner approval; a fresh pre-migration dump with a restore check; the repository migration runner; the section 3 before/after fingerprints repeated on Production; flags left OFF at migration time; learner image rebuilt with the CP4 build args only under a separate decision.
+- **Still blocked / pending:** O1 and scheduler v2 stay an activation gate (not authorized); **R8** (timer fires) is pending independently, checked via `ExecMainStartTimestamp` after 2026-10-05 03:36 UTC; Admin stays contained; Store deferred. `Today.newCount` semantics is a recorded finding for a later checkpoint.
 
 ## Admin P0 (LB-B30–B33) — cut over, Admin still contained
 
