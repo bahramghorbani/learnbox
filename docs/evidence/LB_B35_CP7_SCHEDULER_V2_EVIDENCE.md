@@ -132,6 +132,14 @@ toward quarantine; a rejection now leaves `attempts` and `nextAttemptAt` byte-id
 Safety properties are unchanged and re-asserted at the service boundary: nothing is persisted on either failure, there is no partial write
 (`writeAtomically` and `ensureApprovedSchedule` are never reached), and there is still no silent fallback to V1.
 
+**Residual limitation (web fixed, Dart client NOT changed).** `http_review_sync_transport.dart` maps every non-200 to
+`MobileReviewTransportException('serverUnavailable')`, and `review_sync_coordinator.dart` turns any throw into `RetryableFailure`, so a native
+client still treats the new 422 as retryable. This is deliberately left alone: the owner constraint for this work stream is to keep the
+Dart/mobile client unchanged, and fixing it belongs with the deferred mobile binary UX. It is low severity and currently unreachable in
+practice — the coordinator has no internal retry timer (it retries only when the app next triggers a sync), queued events are never lost, and
+`LEARNBOX_SCHEDULER_V2` is OFF everywhere including Production. The server-side guarantees (nothing persisted, non-retryable classification,
+operator diagnostic logged) hold for mobile requests regardless of what the client does with the status.
+
 ## 3. Defects found and changed assumptions
 
 1. **Preflight rejected the real 0023 schema** (my bug, caught by the Postgres suite before any push): it parsed `BETWEEN 1 AND n`, but
