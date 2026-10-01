@@ -2,7 +2,7 @@
 // 1) Box is derived from stored stability: no row moves Box at activation (checked below).
 // 2) What the NEXT Known / Unknown does to each real row under each candidate.
 import { readFileSync } from 'node:fs';
-import { applyAnswer, boxOf, candidates, DAY_MS } from './policies.mjs';
+import { applyAnswer, boxOf, candidates } from './policies.mjs';
 const rows = readFileSync(process.argv[2], 'utf8')
   .split('\n')
   .slice(1)

@@ -24,7 +24,7 @@ const pair = (id, pred, get) => {
   const d = a.map((x, i) => x - b[i]);
   return { m: mean(a), diff: mean(d), half: (1.96 * sd(d)) / Math.sqrt(d.length) };
 };
-const row = (label, id, pred, get, d = 3, rel = false) => {
+const row = (label, id, pred, get, d = 3) => {
   const p = pair(id, pred, get);
   return id === BASE
     ? `${f(p.m, d)}`
