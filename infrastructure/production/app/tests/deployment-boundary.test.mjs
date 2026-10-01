@@ -75,7 +75,11 @@ test('every LB-B35 CP4 flag is reachable in the image and defaults to off', () =
     'LEARNBOX_SERVER_SESSION_PLAN',
     'LEARNBOX_BINARY_REVIEW',
   ]) {
-    assert.equal(service.environment[flag], 'false', `${flag} must be passed to the container, off`);
+    assert.equal(
+      service.environment[flag],
+      'false',
+      `${flag} must be passed to the container, off`,
+    );
   }
   // Client flags are inlined at build time: they must be build args, not runtime env.
   for (const flag of [
