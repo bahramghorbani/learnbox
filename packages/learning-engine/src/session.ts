@@ -1,3 +1,4 @@
+import { SESSION_CAPACITY_CARDS } from './definitions.js';
 import { createRecoveryPlan, type RecoveryCandidate, type RecoveryPlan } from './recovery.js';
 
 export interface NewCardCandidate {
@@ -21,9 +22,9 @@ export interface DailySessionPlan {
 }
 
 const capacityByDuration: Record<RecoveryPlan['durationMinutes'], number> = {
-  5: 12,
-  10: 24,
-  15: 36,
+  5: SESSION_CAPACITY_CARDS,
+  10: SESSION_CAPACITY_CARDS * 2,
+  15: SESSION_CAPACITY_CARDS * 3,
 };
 
 const isDueAndActive = (card: RecoveryCandidate, now: Date) =>

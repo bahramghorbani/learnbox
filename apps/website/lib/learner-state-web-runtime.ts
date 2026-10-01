@@ -31,11 +31,16 @@ export function webLearnerStateDependenciesFromEnvironment(
 ): WebLearnerStateDependencies | null {
   const config = readWebLearnerStateRuntimeConfig(environment);
   if (!config) return null;
+  const repository = new PostgresLearnerStateRepository(statePool(config.databaseUrl));
+  // LEARNBOX_SERVER_SESSION_PLAN (default off): the server owns the day's new-card allowance. Off =
+  // v1.2.1 behaviour exactly, and the daily-plan tables (migration 0023) are never touched.
   const service = new LearnerStateService(
-    new PostgresLearnerStateRepository(statePool(config.databaseUrl)),
+    repository,
+    () => new Date(),
+    environment.LEARNBOX_SERVER_SESSION_PLAN === 'true' ? repository : null,
   );
   return {
-    readLearnerState: (userId) => service.readLearnerState(userId),
+    readLearnerState: (userId, options) => service.readLearnerState(userId, options),
   };
 }
 

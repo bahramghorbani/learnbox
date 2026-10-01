@@ -1,7 +1,9 @@
+import { DAILY_NEW_CARD_ALLOWANCE, SESSION_CAPACITY_CARDS } from '@learnbox/learning-engine';
 import { describe, expect, it } from 'vitest';
 
 import { LearnerStateService } from '../src/learner-state/learner-state.service.js';
 import type {
+  DailyPlanStore,
   LearnerNewCardCandidate,
   LearnerScheduleRow,
   LearnerStateRepository,
@@ -128,5 +130,169 @@ describe('CP4 step 0 — existing session capacity semantics (v1.2.1 behaviour, 
     const a = (await read(w.repository)).plan.newCardIds;
     const b = (await read(w.repository)).plan.newCardIds;
     expect(b).toEqual(a);
+  });
+});
+
+/** In-memory DailyPlanStore with the same contract as the Postgres one (insert-if-absent, then read). */
+function planStore(
+  w: ReturnType<typeof world>,
+  options: { zone?: string | null } = {},
+): DailyPlanStore & { frozen: Map<string, string[]>; zone: string | null; inserts: number } {
+  const frozen = new Map<string, string[]>();
+  const store = {
+    frozen,
+    zone: options.zone ?? null,
+    inserts: 0,
+    async readStoredTimeZone() {
+      return store.zone;
+    },
+    async persistTimeZone(_user: string, zone: string) {
+      if (store.zone === null) store.zone = zone;
+    },
+    async readAllowance(_user: string, day: string) {
+      return frozen.get(day) ?? null;
+    },
+    async freezeAllowance(_user: string, day: string, _zone: string, ids: string[]) {
+      if (!frozen.has(day)) {
+        frozen.set(day, ids);
+        store.inserts += 1;
+      }
+      return frozen.get(day)!;
+    },
+    async findNewCardsByIds(_user: string, ids: string[]) {
+      return ids
+        .filter((id) => !w.schedules.has(id))
+        .map((id) => ({ cardId: id, contentId: `start-a1-${id.slice(-4)}`, importance: 1 }));
+    },
+  };
+  return store;
+}
+const readPlanned = (
+  w: ReturnType<typeof world>,
+  store: DailyPlanStore,
+  now = NOW,
+  tz: string | null = 'UTC',
+) =>
+  new LearnerStateService(w.repository, () => now, store).readLearnerState('user', {
+    requestedTimeZone: tz,
+  });
+
+describe("CP4 — the invariant: the server owns the day's new-card allowance", () => {
+  it('constants: session capacity stays 12 TOTAL and the allowance is 3 new cards per day', () => {
+    expect(SESSION_CAPACITY_CARDS).toBe(12);
+    expect(DAILY_NEW_CARD_ALLOWANCE).toBe(3);
+  });
+
+  it('repeated sessions on one learner-local day never grant more than 3 new cards', async () => {
+    const w = world(0);
+    const store = planStore(w);
+    const granted = new Set<string>();
+    for (let session = 0; session < 6; session += 1) {
+      const { plan, newCards } = await readPlanned(w, store);
+      for (const id of plan.newCardIds) granted.add(id);
+      expect(plan.newCardIds.length).toBeLessThanOrEqual(3);
+      expect(newCards.map((c) => c.cardId)).toEqual(plan.newCardIds);
+      for (const id of plan.newCardIds) w.answer(id, NOW);
+    }
+    expect(granted.size).toBe(3); // was 15 without the allowance
+    expect(store.inserts).toBe(1);
+  });
+
+  it('a refresh, or a second device, receives the SAME allowance', async () => {
+    const w = world(0);
+    const store = planStore(w);
+    const a = (await readPlanned(w, store)).plan.newCardIds;
+    const b = (await readPlanned(w, store)).plan.newCardIds;
+    expect(b).toEqual(a);
+    expect(a).toHaveLength(3);
+  });
+
+  it('answered new cards leave the offer but are NOT replaced by fresh ones the same day', async () => {
+    const w = world(0);
+    const store = planStore(w);
+    const first = (await readPlanned(w, store)).plan.newCardIds;
+    w.answer(first[0], NOW);
+    const later = (await readPlanned(w, store, new Date(NOW.getTime() + 60_000))).plan.newCardIds;
+    expect(later).toEqual(first.slice(1));
+  });
+
+  it('the next learner-local day grants a fresh allowance of 3', async () => {
+    const w = world(0);
+    const store = planStore(w);
+    const day1 = (await readPlanned(w, store)).plan.newCardIds;
+    for (const id of day1) w.answer(id, NOW);
+    const tomorrow = new Date(NOW.getTime() + 24 * 3_600_000);
+    const day2 = (await readPlanned(w, store, tomorrow)).plan.newCardIds;
+    expect(day2).toHaveLength(3);
+    expect(day2.some((id) => day1.includes(id))).toBe(false);
+  });
+
+  it("the day boundary is the learner's: Tehran midnight is 20:30Z, not 00:00Z", async () => {
+    const w = world(0);
+    const store = planStore(w, { zone: 'Asia/Tehran' });
+    const beforeMidnight = new Date('2026-09-29T20:29:59Z');
+    const afterMidnight = new Date('2026-09-29T20:30:00Z');
+    const a = (await readPlanned(w, store, beforeMidnight, 'UTC')).plan.newCardIds;
+    for (const id of a) w.answer(id, beforeMidnight);
+    const same = (await readPlanned(w, store, beforeMidnight, 'UTC')).plan.newCardIds;
+    const next = (await readPlanned(w, store, afterMidnight, 'UTC')).plan.newCardIds;
+    expect(same).toEqual([]);
+    expect(next).toHaveLength(3);
+    expect([...store.frozen.keys()]).toEqual(['2026-09-29', '2026-09-30']);
+  });
+
+  it('due work is predictable: a due card is never hidden by the allowance, capacity stays 12 total', async () => {
+    for (const due of [0, 5, 10, 11, 12]) {
+      const w = world(due);
+      const { plan } = await readPlanned(w, planStore(w));
+      expect(plan.mode).toBe('normal');
+      expect(plan.reviewCardIds).toHaveLength(due);
+      expect(plan.reviewCardIds.length + plan.newCardIds.length).toBeLessThanOrEqual(12);
+    }
+  });
+
+  it("recovery mode (>12 due) offers no new cards and does NOT spend the day's allowance", async () => {
+    const w = world(13);
+    const store = planStore(w);
+    const recovery = await readPlanned(w, store);
+    expect(recovery.plan.mode).toBe('recovery');
+    expect(recovery.plan.newCardIds).toEqual([]);
+    expect(store.inserts).toBe(0);
+    // Backlog cleared later the same day: the learner still has today\'s allowance.
+    for (let i = 0; i < 13; i += 1) w.schedules.delete(cardId(i));
+    expect((await readPlanned(w, store)).plan.newCardIds).toHaveLength(3);
+  });
+
+  it('a nearly full session shrinks the allowance it can show, never the freeze (3 stay reserved)', async () => {
+    const w = world(11); // 1 spare slot
+    const store = planStore(w);
+    const { plan } = await readPlanned(w, store);
+    expect(plan.newCardIds).toHaveLength(1);
+    expect(plan.reviewCardIds.length + plan.newCardIds.length).toBe(12);
+    expect(store.frozen.get('2026-10-01')).toHaveLength(3);
+  });
+
+  it('with no flag/store the service behaves exactly as before (v1.2.1)', async () => {
+    const w = world(0);
+    const service = new LearnerStateService(w.repository, () => NOW);
+    const first = (await service.readLearnerState('user')).plan.newCardIds;
+    for (const id of first) w.answer(id, NOW);
+    expect((await service.readLearnerState('user')).plan.newCardIds).toHaveLength(3);
+  });
+
+  it('an empty catalogue freezes nothing', async () => {
+    const w = world(0, 0);
+    const store = planStore(w);
+    expect((await readPlanned(w, store)).plan.newCardIds).toEqual([]);
+    expect(store.inserts).toBe(0);
+  });
+
+  it('stored zone wins over the device zone; a NULL stored zone is filled once', async () => {
+    const w = world(0);
+    const store = planStore(w, { zone: null });
+    await readPlanned(w, store, NOW, 'Asia/Tehran');
+    expect(store.zone).toBe('Asia/Tehran');
+    await readPlanned(w, store, NOW, 'Europe/Berlin');
+    expect(store.zone).toBe('Asia/Tehran');
   });
 });

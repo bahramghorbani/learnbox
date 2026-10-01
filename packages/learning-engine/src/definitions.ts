@@ -209,6 +209,23 @@ export function normalizeTimeZone(candidate: string | null | undefined): string 
 }
 const IANA_SHAPE = /^[A-Za-z][A-Za-z0-9_+-]*(?:\/[A-Za-z0-9_+-]+)*$/;
 
+// ---------------------------------------------------------------------------------------------
+// Session capacity and the daily new-card allowance (LB-B35 CP4)
+// ---------------------------------------------------------------------------------------------
+
+/**
+ * The 5-minute session holds at most this many cards IN TOTAL: due reviews plus new cards. It is the
+ * product's existing capacity (v1.2.1) and is NOT "12 due + 3 new". Changing it is a product decision.
+ */
+export const SESSION_CAPACITY_CARDS = 12;
+
+/**
+ * At most this many NEW cards are introduced per learner-local day, however many times the plan is
+ * read, however many sessions are started and from whichever device. New cards only fill spare
+ * session capacity, so one session never holds more than SESSION_CAPACITY_CARDS in total.
+ */
+export const DAILY_NEW_CARD_ALLOWANCE = 3;
+
 /**
  * Which zone a learner's local day is computed in (owner decision O2, LB-B35 CP4).
  *
