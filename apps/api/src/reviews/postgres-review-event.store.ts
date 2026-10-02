@@ -87,7 +87,16 @@ const CURSOR_COLUMN = 'COALESCE(e.reconciliation_cursor, 0) AS cursor';
 
 /** PostgreSQL adapter. Callers must pass a current schedule projection. */
 export class PostgresReviewEventStore implements ReviewEventStore {
-  constructor(private readonly pool: Pool) {}
+  /**
+   * `verifyBinaryReviewSchema` is the LB-B35 CP9 (N1) fail-closed preflight, injected rather than
+   * constructed here so tests and the flag-off path stay free of it. Omitted => no binary-review
+   * write can occur (the caller only sets `response` when LEARNBOX_BINARY_REVIEW is on), so the
+   * v1.2.1 behaviour is byte-identical.
+   */
+  constructor(
+    private readonly pool: Pool,
+    private readonly verifyBinaryReviewSchema?: () => Promise<void>,
+  ) {}
 
   async findByClientEventId(clientEventId: string): Promise<ReviewEventWriteResult | null> {
     const result = await this.pool.query<ReviewEventRow & ScheduleRow & ReconciliationCursorRow>(
@@ -114,6 +123,13 @@ export class PostgresReviewEventStore implements ReviewEventStore {
     input: ReviewEventInput,
     nextSchedule: CardSchedule,
   ): Promise<ReviewEventWriteResult> {
+    // LB-B35 CP9 (N1): a binary answer needs `review_events.response` (migration 0023). Assert the
+    // schema can accept it BEFORE opening the transaction, so a pre-0023 database is refused
+    // deterministically with nothing persisted, instead of failing inside the INSERT and surfacing as
+    // a retryable 503 that the client would retry forever. Flag off => `response` unset => never runs.
+    if (input.response !== undefined && this.verifyBinaryReviewSchema) {
+      await this.verifyBinaryReviewSchema();
+    }
     const client = await this.pool.connect();
     try {
       await client.query('BEGIN');

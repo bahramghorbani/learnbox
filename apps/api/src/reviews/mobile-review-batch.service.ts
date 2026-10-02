@@ -185,9 +185,13 @@ export class MobileReviewBatchService {
       // LB-B35 CP7: a scheduler-V2 preflight refusal or a Box-transition invariant violation is
       // DETERMINISTIC. Both are raised before any write, so nothing is persisted either way, but
       // they must not masquerade as a transient outage that the client will retry forever.
+      // LB-B35 CP9 (N1): the binary-review schema preflight joins them for the same reason — a
+      // pre-0023 database cannot be fixed by retrying the request.
       const deterministic =
         error instanceof Error &&
-        (error.name === 'SchedulerV2PreflightError' || error.name === 'SchedulerInvariantError');
+        (error.name === 'SchedulerV2PreflightError' ||
+          error.name === 'SchedulerInvariantError' ||
+          error.name === 'BinaryReviewPreflightError');
       const code: MobileReviewBatchErrorCode = deterministic
         ? 'schedulerRejected'
         : 'serverUnavailable';

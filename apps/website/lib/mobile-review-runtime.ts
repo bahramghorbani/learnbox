@@ -8,6 +8,10 @@ import {
   createSchedulerV2Preflight,
   isSchedulerV2Enabled,
 } from '../../api/dist/reviews/scheduler-v2-preflight.js';
+import {
+  createBinaryReviewPreflight,
+  isBinaryReviewEnabled,
+} from '../../api/dist/reviews/binary-review-preflight.js';
 import { requireVerifiedDatabaseTls } from '../../api/dist/database/migration-runner.js';
 
 import type {
@@ -51,7 +55,17 @@ export function mobileReviewHttpDependenciesFromEnvironment(
   // LB-B35 CP7 (default off): scheduler V2 fails closed unless the 0023 schema is present.
   const schedulerV2 = isSchedulerV2Enabled(environment);
   const service = new MobileReviewBatchService(
-    new PostgresReviewEventStore(pool),
+    // LB-B35 CP9 (N1, default off): defence-in-depth. The same fail-closed binary-review schema
+    // preflight as the Web path is attached here so this store can never persist a binary answer on
+    // a pre-0023 schema. NOTE it is currently unreachable via the mobile HTTP route: that boundary
+    // (mobile-review-http.ts) does not pass `binaryResponses`, so a mobile item carrying `response`
+    // is rejected 400 before reaching the store. That wiring gap predates CP9 (identical in v1.2.1)
+    // and enabling mobile binary review is deliberately OUT of CP9 scope (D16 / no native changes).
+    // Keep the preflight here so the gap cannot become a persistence bug if the route is ever wired.
+    new PostgresReviewEventStore(
+      pool,
+      isBinaryReviewEnabled(environment) ? createBinaryReviewPreflight(pool) : undefined,
+    ),
     undefined,
     schedulerV2 ? { schedulerV2, schedulerV2Preflight: createSchedulerV2Preflight(pool) } : {},
   );

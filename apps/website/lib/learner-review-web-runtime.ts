@@ -6,6 +6,10 @@ import {
   createSchedulerV2Preflight,
   isSchedulerV2Enabled,
 } from '../../api/dist/reviews/scheduler-v2-preflight.js';
+import {
+  createBinaryReviewPreflight,
+  isBinaryReviewEnabled,
+} from '../../api/dist/reviews/binary-review-preflight.js';
 import { PostgresReviewEventStore } from '../../api/dist/reviews/postgres-review-event.store.js';
 
 import type { WebReviewDependencies } from './learner-review-web-http';
@@ -23,7 +27,12 @@ export function webReviewDependenciesFromEnvironment(
   const config = readWebLearnerStateRuntimeConfig(environment);
   if (!config) return null;
   const pool = reviewPool(config.databaseUrl);
-  const store = new PostgresReviewEventStore(pool);
+  // LB-B35 CP9 (N1, default off): binary review fails closed unless the 0023 `response` column is
+  // present. Attached ONLY when the flag is on, so the flag-off store is exactly v1.2.1.
+  const store = new PostgresReviewEventStore(
+    pool,
+    isBinaryReviewEnabled(environment) ? createBinaryReviewPreflight(pool) : undefined,
+  );
   // LB-B35 CP7 (default off): scheduler V2 fails closed unless the 0023 schema is present.
   const schedulerV2 = isSchedulerV2Enabled(environment);
   const service = new MobileReviewBatchService(
