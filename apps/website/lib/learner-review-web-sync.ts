@@ -39,6 +39,14 @@ export type WebReviewSyncResult = {
    * queue is left exactly as it was (every answer stays, retried later) and nothing is deleted.
    */
   sessionEnded?: boolean;
+  /**
+   * LB-B35 CP12: the server deterministically refused the batch (422 `schedulerRejected`). These
+   * exact bytes can never be accepted until an operator fixes the server, so — unlike a transient
+   * failure — retrying is pointless and no backoff is armed. The answers stay queued, unchanged and
+   * lossless; this flag exists only so the learner can be told the truth instead of being promised
+   * a sync that will never happen. Distinct from `sessionEnded` (401, re-login fixes it).
+   */
+  syncBlocked?: boolean;
 };
 
 /** The key holding quarantined answers for the queue stored at `queueKey`. */
@@ -99,6 +107,7 @@ export async function flushWebReviewQueue(input: {
       pendingCount: next.length,
       attentionCount: 0,
       acknowledged: false,
+      ...(result.status === 'rejected' ? { syncBlocked: true } : {}),
       ...(result.status === 'unauthorized' ? { sessionEnded: true } : {}),
       ...quarantined(),
     };

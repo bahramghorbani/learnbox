@@ -269,3 +269,125 @@ describe('CP7: a deterministic server rejection is never retried', () => {
     expect(after[0]!.nextAttemptAt.getTime()).toBe(now.getTime());
   });
 });
+
+describe('CP12: syncBlocked distinguishes a terminal refusal from transient/auth failure', () => {
+  const stored = () => [{ ...queued, nextAttemptAt: now.toISOString() }];
+
+  it('rejected (422): syncBlocked=true, queue byte-identical, attempts unchanged, no retry armed', async () => {
+    const storage = createMemoryStorage();
+    const before = JSON.stringify(stored());
+    storage.setItem(key, before);
+    const submit = async () => ({ status: 'rejected' as const });
+
+    const result = await flushWebReviewQueue({ storage, key, now, submit });
+
+    expect(result.syncBlocked).toBe(true);
+    // Not conflated with session expiry, and the answers are still counted as pending.
+    expect(result.sessionEnded).toBeUndefined();
+    expect(result.acknowledged).toBe(false);
+    expect(result.pendingCount).toBe(1);
+
+    const after = loadSyncQueue<QueuedWebReview>(storage, key);
+    expect(after).toHaveLength(1);
+    expect(after[0]!.attempts).toBe(0);
+    expect(after[0]!.nextAttemptAt.getTime()).toBe(now.getTime());
+    expect(after[0]!.payload).toEqual(queued.payload);
+    // The stored answer itself must be untouched, not merely equal in the fields we remembered
+    // to assert: compare the whole serialized record.
+    expect(JSON.parse(storage.getItem(key)!)).toEqual(JSON.parse(before));
+  });
+
+  it('unavailable (503): syncBlocked stays unset so the retryable path is unchanged', async () => {
+    const storage = createMemoryStorage();
+    storage.setItem(key, JSON.stringify(stored()));
+    const submit = async () => ({ status: 'unavailable' as const });
+
+    const result = await flushWebReviewQueue({ storage, key, now, submit });
+
+    expect(result.syncBlocked).toBeUndefined();
+    expect(result.sessionEnded).toBeUndefined();
+    const after = loadSyncQueue<QueuedWebReview>(storage, key);
+    expect(after[0]!.attempts).toBe(1);
+    expect(after[0]!.nextAttemptAt.getTime()).toBeGreaterThan(now.getTime());
+  });
+
+  it('unauthorized (401): sessionEnded only — never syncBlocked', async () => {
+    const storage = createMemoryStorage();
+    storage.setItem(key, JSON.stringify(stored()));
+    const submit = async () => ({ status: 'unauthorized' as const });
+
+    const result = await flushWebReviewQueue({ storage, key, now, submit });
+
+    expect(result.sessionEnded).toBe(true);
+    expect(result.syncBlocked).toBeUndefined();
+    expect(loadSyncQueue<QueuedWebReview>(storage, key)).toHaveLength(1);
+  });
+
+  it('success: syncBlocked stays unset', async () => {
+    const storage = createMemoryStorage();
+    storage.setItem(key, JSON.stringify(stored()));
+    const submit = async () => ({
+      status: 'ok' as const,
+      outcomes: [
+        {
+          clientEventId: queued.clientEventId,
+          status: 'acknowledged' as const,
+          eventId: 'e1',
+          idempotent: false,
+          reconciliationCursor: '1',
+        },
+      ],
+    });
+
+    const result = await flushWebReviewQueue({ storage, key, now, submit });
+
+    expect(result.syncBlocked).toBeUndefined();
+    expect(result.acknowledged).toBe(true);
+    expect(loadSyncQueue<QueuedWebReview>(storage, key)).toHaveLength(0);
+  });
+
+  it('a later non-rejected flush does not report blocked (the UI flag can clear)', async () => {
+    const storage = createMemoryStorage();
+    storage.setItem(key, JSON.stringify(stored()));
+
+    const blocked = await flushWebReviewQueue({
+      storage,
+      key,
+      now,
+      submit: async () => ({ status: 'rejected' as const }),
+    });
+    expect(blocked.syncBlocked).toBe(true);
+
+    const recovered = await flushWebReviewQueue({
+      storage,
+      key,
+      now,
+      submit: async () => ({ status: 'unavailable' as const }),
+    });
+    expect(recovered.syncBlocked).toBeUndefined();
+  });
+
+  it('nothing due: no submit happens and no blocked state is invented', async () => {
+    const storage = createMemoryStorage();
+    storage.setItem(
+      key,
+      JSON.stringify([
+        { ...queued, nextAttemptAt: new Date(now.getTime() + 60_000).toISOString() },
+      ]),
+    );
+    let calls = 0;
+    const result = await flushWebReviewQueue({
+      storage,
+      key,
+      now,
+      submit: async () => {
+        calls += 1;
+        return { status: 'rejected' as const };
+      },
+    });
+
+    expect(calls).toBe(0);
+    expect(result.syncBlocked).toBeUndefined();
+    expect(result.pendingCount).toBe(1);
+  });
+});
