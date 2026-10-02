@@ -4,6 +4,7 @@ import type { ReviewGrade } from './definitions.js';
 // `ReviewGrade` is owned by definitions.ts; it is re-exported here for existing importers.
 export * from './definitions.js';
 export * from './replay-compat.js';
+export * from './review-sync-wire-contract.js';
 export * from './scheduler-v2.js';
 export type LearningState =
   'new' | 'learning' | 'review' | 'relearning' | 'mastered' | 'suspended' | 'archived';

@@ -1,0 +1,59 @@
+{
+  "schedulerRejected": {
+    "status": 422,
+    "body": {
+      "error": "schedulerRejected"
+    },
+    "terminal": true,
+    "retryable": false
+  },
+  "nonRejections": [
+    {
+      "code": "validation",
+      "status": 400,
+      "retryable": true
+    },
+    {
+      "code": "invalidToken",
+      "status": 401,
+      "retryable": true
+    },
+    {
+      "code": "serverUnavailable",
+      "status": 503,
+      "retryable": true
+    }
+  ],
+  "nearMisses": [
+    {
+      "label": "correct code on the wrong status",
+      "status": 503,
+      "rawBody": "{\"error\":\"schedulerRejected\"}"
+    },
+    {
+      "label": "rejection status with an unknown code",
+      "status": 422,
+      "rawBody": "{\"error\":\"someOtherCode\"}"
+    },
+    {
+      "label": "rejection status with an extra key",
+      "status": 422,
+      "rawBody": "{\"error\":\"schedulerRejected\",\"detail\":\"extra\"}"
+    },
+    {
+      "label": "rejection status with wrong letter case",
+      "status": 422,
+      "rawBody": "{\"error\":\"schedulerrejected\"}"
+    },
+    {
+      "label": "rejection status with a non-JSON body",
+      "status": 422,
+      "rawBody": "not json"
+    },
+    {
+      "label": "rejection status with an empty body",
+      "status": 422,
+      "rawBody": ""
+    }
+  ]
+}

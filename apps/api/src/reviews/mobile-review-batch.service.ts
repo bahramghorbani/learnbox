@@ -2,6 +2,7 @@ import {
   isReviewGrade,
   scheduleBinaryReview,
   scheduleReview,
+  SCHEDULER_REJECTED_CODE,
   SCHEDULER_V2_ENGINE_VERSION,
   type BinaryResponse,
   type ReviewGrade,
@@ -28,12 +29,13 @@ const OCCURRED_AT_SKEW_TOLERANCE_MS = 5 * 60 * 1000;
  * (LB-B35 CP7): the scheduler V2 schema preflight refused, or a Box-transition invariant was
  * violated. Retrying a `schedulerRejected` request can never succeed, so clients must not.
  */
-export type MobileReviewBatchErrorCode = 'validation' | 'serverUnavailable' | 'schedulerRejected';
+export type MobileReviewBatchErrorCode =
+  'validation' | 'serverUnavailable' | typeof SCHEDULER_REJECTED_CODE;
 
 /** Deterministic codes: a byte-identical retry cannot change the outcome. */
 const NON_RETRYABLE_CODES: readonly MobileReviewBatchErrorCode[] = [
   'validation',
-  'schedulerRejected',
+  SCHEDULER_REJECTED_CODE,
 ];
 
 export class MobileReviewBatchError extends Error {
@@ -193,7 +195,7 @@ export class MobileReviewBatchService {
           error.name === 'SchedulerInvariantError' ||
           error.name === 'BinaryReviewPreflightError');
       const code: MobileReviewBatchErrorCode = deterministic
-        ? 'schedulerRejected'
+        ? SCHEDULER_REJECTED_CODE
         : 'serverUnavailable';
       this.log(code, error);
       throw new MobileReviewBatchError(
