@@ -1,0 +1,285 @@
+CP8 AUTHORITATIVE REMEDIATED RUN
+run_id=r2-20261001T234638Z
+started_utc=2026-10-01T23:46:38Z
+candidate_sha=f1a85fd5cf7e1ea9dbbc017da7fee0d2ccefc643
+worktree_clean_tracked=yes
+node=v26.4.0
+ledger=/tmp/cp8/ledger-r2-20261001T234638Z.jsonl
+
+########## 0. isolated staging database identity (Production must be untouched) ##########
+db=learnbox_staging port=5432 container=lb-cp8-pg
+dsn_host=localhost:55443 (isolated docker container, not Production)
+
+########## 1. rebuild baseline: repository migration path 0001 -> 0022 ##########
+applied 0001_initial.sql
+applied 0002_card_schedules.sql
+applied 0003_content_review.sql
+applied 0004_billing_foundation.sql
+applied 0005_entitlement_tiers.sql
+applied 0006_content_review_quality_gates.sql
+applied 0007_otp_challenges.sql
+applied 0008_otp_request_events.sql
+applied 0009_owner_passkey_auth.sql
+applied 0010_invite_access.sql
+applied 0011_owner_splash_replacement.sql
+applied 0012_mobile_learner_sessions.sql
+applied 0013_native_review_transport.sql
+applied 0014_learner_reconciliation_cursor.sql
+applied 0015_event_reconciliation_cursor.sql
+applied 0016_admin_owner_user_binding.sql
+applied 0017_start_catalog_review_candidates.sql
+applied 0018_pack_membership_schema.sql
+applied 0019_account_deletion.sql
+applied 0020_session_revocation.sql
+applied 0021_learner_profile_fields.sql
+applied 0022_reconcile_production_schema.sql
+exit_migrations_0001_0022=0
+
+########## 2. seed synthetic fixtures ##########
+seeded learners=4 cards=5 schedules=5 legacy_events=1
+exit_seed=0
+
+########## 3. fingerprint the PRE-0023 baseline ##########
+To eliminate this warning, add "type": "module" to /Volumes/LearnBox-Dev/LearnBox-final/lb-recovery-candidate-20260926/apps/website/package.json.
+PRE  counts={"users":4,"cards":40,"card_versions":40,"card_schedules":5,"review_events":1}
+PRE  surface={"columns":"NONE","users_timezone":"NONE","tables":"NONE","constraints":"NONE"}
+PRE  digest_shape=response=absent,engine_version=absent
+PASS  pre-0023: review_events.response / engine_version are absent  :: columns=NONE
+PASS  pre-0023: the 0023 tables are absent  :: tables=NONE
+PASS  pre-0023: the 0023 check constraints are absent  :: constraints=NONE
+PASS  pre-0023: baseline digest was computed in the pre-0023 shape  :: response=absent,engine_version=absent
+
+CP8_MIGRATION_PRE_TOTAL=4 PASSED=4 FAILED=0
+exit_fingerprint_pre=0
+
+########## 4. apply ONLY migration 0023 (repository migration runner) ##########
+applied 0023_learning_persistence.sql
+exit_migration_0023=0
+
+########## 5. prove 0023 is additive and changed no existing data ##########
+To eliminate this warning, add "type": "module" to /Volumes/LearnBox-Dev/LearnBox-final/lb-recovery-candidate-20260926/apps/website/package.json.
+POST counts={"users":4,"cards":40,"card_versions":40,"card_schedules":5,"review_events":1}
+POST surface={"columns":"engine_version:smallint,response:text","users_timezone":"timezone","tables":"learner_daily_plans,review_event_rejections","constraints":"review_events_engine_version_valid,review_events_response_valid"}
+POST digest_shape=response=present,engine_version=present
+PASS  0023: baseline is from this run (no stale fingerprint)  :: baseline_run=r2-20261001T234638Z this_run=r2-20261001T234638Z
+PASS  0023: row counts unchanged for every data table  :: {"users":4,"cards":40,"card_versions":40,"card_schedules":5,"review_events":1} -> {"users":4,"cards":40,"card_versions":40,"card_schedules":5,"review_events":1}
+PASS  0023: legacy review_events columns are byte-identical  :: IDENTICAL
+PASS  0023: card_schedules digest (all 8 correctness columns) is identical  :: IDENTICAL
+PASS  0023: is additive — response and engine_version exist with the expected types  :: columns=engine_version:smallint,response:text
+PASS  0023: adds users.timezone  :: users_timezone=timezone
+PASS  0023: adds learner_daily_plans and review_event_rejections  :: tables=learner_daily_plans,review_event_rejections
+PASS  0023: adds both review_events check constraints  :: constraints=review_events_engine_version_valid,review_events_response_valid
+PASS  0023: the digest instrument switched to the post-0023 shape (comparison is honest)  :: response=present,engine_version=present
+PASS  0023: no unintended backfill (response and engine_version NULL on all pre-existing events)  :: rows=1 response_nonnull=0 engine_version_nonnull=0
+
+CP8_MIGRATION_POST_TOTAL=10 PASSED=10 FAILED=0
+exit_migration_post=0
+
+########## 6. re-apply 0023 and prove it is a no-op ##########
+applied 0023_learning_persistence.sql
+exit_migration_reapply_exec=0
+To eliminate this warning, add "type": "module" to /Volumes/LearnBox-Dev/LearnBox-final/lb-recovery-candidate-20260926/apps/website/package.json.
+REAPPLY counts={"users":4,"cards":40,"card_versions":40,"card_schedules":5,"review_events":1}
+REAPPLY surface={"columns":"engine_version:smallint,response:text","users_timezone":"timezone","tables":"learner_daily_plans,review_event_rejections","constraints":"review_events_engine_version_valid,review_events_response_valid"}
+REAPPLY digest_shape=response=present,engine_version=present
+PASS  0023 re-apply: baseline is from this run (no stale fingerprint)  :: baseline_run=r2-20261001T234638Z this_run=r2-20261001T234638Z
+PASS  0023 re-apply: row counts unchanged for every data table  :: {"users":4,"cards":40,"card_versions":40,"card_schedules":5,"review_events":1} -> {"users":4,"cards":40,"card_versions":40,"card_schedules":5,"review_events":1}
+PASS  0023 re-apply: legacy review_events columns are byte-identical  :: IDENTICAL
+PASS  0023 re-apply: card_schedules digest (all 8 correctness columns) is identical  :: IDENTICAL
+post_fingerprint_run=r2-20261001T234638Z (matches this run)
+PASS  0023 re-apply: FULL digest incl. response + engine_version is unchanged vs post-0023  :: IDENTICAL
+PASS  0023 re-apply: schema surface is unchanged vs post-0023  :: IDENTICAL
+PASS  0023 re-apply: no unintended backfill (response and engine_version NULL on all pre-existing events)  :: rows=1 response_nonnull=0 engine_version_nonnull=0
+
+CP8_MIGRATION_REAPPLY_TOTAL=7 PASSED=7 FAILED=0
+exit_migration_reapply=0
+
+########## 7. V1 equivalence, V2 activation, provenance, idempotency ##########
+To eliminate this warning, add "type": "module" to /Volumes/LearnBox-Dev/LearnBox-final/lb-recovery-candidate-20260926/apps/website/package.json.
+PASS  flag OFF: request accepted through the real web path  :: status=200
+PASS  flag OFF: Box-1 card follows V1 arithmetic (x1.8), NOT GR-1.8 graduation  :: 0.0416666667 -> 0.07500000006 (V1 expects 0.07500000006, V2 would give 1)
+PASS  flag OFF: V2 graduation did NOT happen (card stays in Box 1)  :: box=1 stability=0.07500000006
+PASS  flag OFF: event written with engine_version NULL (V1 provenance)  :: rows=1 engine_version=null
+PASS  flag OFF: binary response still recorded (CP4/0023 column in use)  :: response=known
+PASS  activation alone rewrites no existing schedule  :: schedule digest identical
+PASS  activation alone writes no review event  :: events 2 -> 2
+PASS  V2: existing Box-1 card advances on its next future Known  :: status=200
+PASS  V2: Box-1 graduates to exactly 1.0 day (GR-1.8 base), not V1 x1.8  :: 0.0416666667 -> 1 (V1 would be 0.0750)
+PASS  V2: Box advances exactly one step (1 -> 2)  :: box 1 -> 2
+PASS  V2: event stamped engine_version=2  :: engine_version=2
+PASS  V2: known carries shadow legacy grade=remembered and response=known  :: response=known grade=remembered
+PASS  V2: unknown accepted  :: status=200
+PASS  V2: unknown drops exactly one Box (ENG-DROP)  :: box 2 -> 1 (stability 1.8 -> 0.63)
+PASS  V2: unknown stored as response=unknown with shadow legacy grade=forgot  :: response=unknown grade=forgot
+pin_source=docs/evidence/cp6/traces.txt pin_steps=B2:1 B2:1.8 B3:3.2 B3:5.8 B4:10 B4:19 B5:34 B5:102 B5:180 B5:180
+PASS  V2: pinned CP6 trace parsed from the committed artifact (not retyped) and has 10 steps  :: parsed=10
+PASS  V2: hardcoded expectation reproduces the committed CP6 pin EXACTLY at the pin's precision  :: 1==1 1.8==1.8 3.2==3.2 5.8==5.8 10==10 19==19 34==34 102==102 180==180 180==180
+PASS  V2: pinned CP6 progression trace reproduced end-to-end through the real path  :: B2:1.000 B2:1.800 B3:3.240 B3:5.832 B4:10.498 B4:18.896 B5:34.012 B5:102.037 B5:180.000 B5:180.000
+PASS  V2: observed Box sequence matches the committed CP6 pin Box-for-Box  :: observed=2233445555 pin=2233445555
+PASS  V2: Box-5 180-day cap holds; no value exceeds the cap  :: max=180 final=180
+PASS  V2: no Known transition skips a Box or moves backwards  :: 2->2->3->3->4->4->5->5->5->5
+PASS  engine_version = 2 appears ONLY on events written under V2  :: unexpected_v2=none
+PASS  every event written under V2 is stamped 2  :: missing=none
+PASS  no event carries an out-of-range engine_version  :: bad=0
+PASS  replaying an identical event writes nothing new  :: events 14 -> 14 status=200 outcome=acknowledged
+PASS  replay does not re-advance the schedule  :: schedule digest identical
+
+CP8_E2E_TOTAL=26 PASSED=26 FAILED=0
+exit_e2e=0
+
+########## 8. fail-closed, transient, client classification, queue and session safety ##########
+To eliminate this warning, add "type": "module" to /Volumes/LearnBox-Dev/LearnBox-final/lb-recovery-candidate-20260926/apps/website/package.json.
+[reviews] schedulerRejected SchedulerV2PreflightError: LEARNBOX_SCHEDULER_V2=true was refused: the database does not satisfy the scheduler V2 schema requirements (review_events.engine_version is missing). Apply migration 0023_learning_persistence to this database, or set LEARNBOX_SCHEDULER_V2=false. Scheduler V2 never falls back to V1 silently.
+PASS  missing 0023 column => preflight fails closed with HTTP 422 schedulerRejected  :: status=422 body={"error":"schedulerRejected"}
+PASS  preflight refusal persists nothing (no event row, no schedule change)  :: events 14 -> 14, schedules identical
+PASS  preflight refusal leaks no implementation detail to the client  :: body={"error":"schedulerRejected"}
+PASS  flag OFF is unaffected by the missing 0023 column (V1 still serves)  :: status=200
+PASS  temporary DDL is restored by finally (schema back to post-0023 shape)  :: engine_version present=true
+PASS  after restore: full digest (incl. response + engine_version) of pre-existing rows unchanged  :: IDENTICAL
+[reviews] schedulerRejected SchedulerV2PreflightError: LEARNBOX_SCHEDULER_V2=true was refused: the database does not satisfy the scheduler V2 schema requirements (review_events.engine_version is integer, expected smallint). Apply migration 0023_learning_persistence to this database, or set LEARNBOX_SCHEDULER_V2=false. Scheduler V2 never falls back to V1 silently.
+PASS  wrong 0023 column type => still fails closed with 422  :: status=422 body={"error":"schedulerRejected"}
+PASS  wrong-type refusal persists no event  :: events 15 -> 15
+PASS  column type restored to smallint by finally  :: data_type=smallint
+[reviews] schedulerRejected SchedulerInvariantError: Scheduler V2 refused an invalid stored stability (NaN).
+PASS  scheduler invariant violation => HTTP 422 schedulerRejected (non-retryable)  :: status=422 body={"error":"schedulerRejected"}
+PASS  invariant violation persists no event row  :: events 15 -> 15
+PASS  invariant violation leaves the offending schedule untouched (no partial write)  :: stability_days=NaN
+PASS  transient fault test actually exercised the injected fault (not the real dependency)  :: stub_called=true
+PASS  transient infrastructure failure => HTTP 503 serverUnavailable (retryable)  :: status=503 body={"error":"serverUnavailable"}
+PASS  transient failure persists nothing  :: events 15 -> 15
+PASS  web client maps 422 to terminal `rejected` (never retried)  :: status=rejected
+PASS  web client maps 503 to retryable `unavailable`  :: status=unavailable
+PASS  web client maps 401 to `unauthorized` (session ended, not data loss)  :: status=unauthorized
+PASS  queue fixture is well-formed and loads as a real persisted queue  :: loaded=1
+PASS  deterministic rejection leaves the queued answer in place (stable over 5 flushes)  :: pendingCount=1 stored=1
+PASS  deterministic rejection consumes no retry attempt and arms no backoff  :: attempts=0 nextAttemptAt unchanged
+PASS  transient failure DOES consume an attempt and arm backoff (discriminating contrast)  :: attempts=1 nextAttemptAt=2026-10-01T23:46:44.184Z
+PASS  acknowledged answer is removed from the queue (discriminating contrast)  :: pendingCount=0 stored=0
+PASS  logout / session expiry does not lose pending reviews  :: pendingCount=1 sessionEnded=true
+
+CP8_FAILCLOSED_TOTAL=24 PASSED=24 FAILED=0
+exit_failclosed=0
+
+########## 9. boundary sweep at every Box edge ##########
+To eliminate this warning, add "type": "module" to /Volumes/LearnBox-Dev/LearnBox-final/lb-recovery-candidate-20260926/apps/website/package.json.
+PASS  V2: Unknown drops exactly one Box at every Box boundary, and Box 1 never drops below 1  :: 11 cases: 0.5:B1->B1(exp B1) 1:B2->B1(exp B1) 1.5:B2->B1(exp B1) 2.9:B2->B1(exp B1) 3:B3->B2(exp B2) 6.9:B3->B2(exp B2) 7:B4->B3(exp B3) 20.9:B4->B3(exp B3) 21:B5->B4(exp B4) 100:B5->B4(exp B4) 180:B5->B4(exp B4)
+PASS  V2: Box-5 180-day cap is never exceeded across 12 consecutive Known answers  :: max=180 final=180 violations=0
+PASS  V2: no Known transition skips a Box or moves backwards, at every Box boundary  :: 9 cases: 0.5:B1->B2 1:B2->B2 2.9:B2->B3 3:B3->B3 6.9:B3->B4 7:B4->B4 20.9:B4->B5 21:B5->B5 180:B5->B5
+sweep_submissions=32
+
+CP8_SWEEP_TOTAL=3 PASSED=3 FAILED=0
+exit_sweep=0
+
+########## 10. rollback rehearsal ##########
+To eliminate this warning, add "type": "module" to /Volumes/LearnBox-Dev/LearnBox-final/lb-recovery-candidate-20260926/apps/website/package.json.
+PASS  rollback fixture starts in Box 1 (the only V1/V2 discriminating state)  :: baseline stability=0.0416666667 box=1
+PASS  rollback: the V2 write is genuinely V2 (Box-1 graduates to exactly 1.0, V1 cannot do this)  :: 0.0416666667 -> 1 (V1 would have given 0.0750)
+PASS  rollback: the V2 write is stamped engine_version=2  :: engine_version=2
+PASS  rollback: new writes are accepted again with the flag OFF  :: status=200
+PASS  rollback: post-rollback arithmetic is self-consistent with V1 (NON-discriminating: V2 from stability 1.0 yields the same 1.8; see the Box-1 check below for discrimination)  :: 1 -> 1.8 (V1 expects 1.800000)
+PASS  rollback: the post-rollback event has engine_version NULL (V1 provenance)  :: engine_version=null
+PASS  rollback: fresh fixture starts in Box 1 (discriminating state)  :: stability=0.0416666667 box=1
+PASS  rollback: DISCRIMINATING — fresh Box-1 card follows V1 (x1.8) and does NOT graduate  :: 0.0416666667 -> 0.07500000006 (V1 expects 0.0750000001, V2 would give 1.0 and Box 2); box=1
+PASS  rollback: the discriminating post-rollback event is also stamped V1 (engine_version NULL)  :: engine_version=null
+PASS  rollback: no existing event row is rewritten (V2-stamped row count unchanged)  :: engine_version=2 rows 45 -> 45
+PASS  rollback: exactly the two post-rollback events were appended, nothing deleted  :: events 48 -> 50 (+2 appended)
+PASS  rollback: prior history (incl. response + engine_version) is byte-identical  :: IDENTICAL
+PASS  rollback: MEASURED — stability accumulated under V2 is retained after rollback  :: actual=1.800000 vs V1-only path=0.135000 (residue=+1.665000 days, box 1 -> 2)
+
+CP8_ROLLBACK_TOTAL=13 PASSED=13 FAILED=0
+exit_rollback=0
+
+########## 11. final state + write accounting ##########
+To eliminate this warning, add "type": "module" to /Volumes/LearnBox-Dev/LearnBox-final/lb-recovery-candidate-20260926/apps/website/package.json.
+events_in_db=50
+  seeded=1
+  ledgered_inserts=49
+  unexplained_events=0
+  ledgered_but_absent=0
+  accounting: 1 seeded + 49 harness = 50 (db has 50)
+  explicit_event_deletions=0 (none: the harness deletes nothing)
+ledgered_inserts_tagged=49/49
+engine_version2_rows=45 unexplained=0
+  ledgered_v2_without_db_stamp=0
+  v1_writes_wrongly_stamped_v2=0
+schedules_in_db=9
+  ok 11111111-1111-4111-8111-111111111111|cp8-haus: untouched at seeded value 1
+  ok 11111111-1111-4111-8111-111111111111|cp8-lampe: 55 ledgered mutation(s), 0.0416666667 -> 180
+  ok 22222222-2222-4222-8222-222222222222|cp8-buch: 1 ledgered mutation(s), 1.8 -> 0.63
+  ok 22222222-2222-4222-8222-222222222222|cp8-tisch: 2 ledgered mutation(s), new -> NaN
+  ok 33333333-3333-4333-8333-333333333333|cp8-buch: 3 ledgered mutation(s), new -> 1.8
+  ok 33333333-3333-4333-8333-333333333333|cp8-haus: 11 ledgered mutation(s), new -> 180
+  ok 33333333-3333-4333-8333-333333333333|cp8-lampe: 2 ledgered mutation(s), new -> 0.07500000006
+  ok 33333333-3333-4333-8333-333333333333|cp8-tisch: untouched at seeded value 34.012
+  ok 44444444-4444-4444-8444-444444444444|cp8-stuhl: 1 ledgered mutation(s), 0.0416666667 -> 1
+ddl_apply=2 ddl_restore=2
+final_schema_surface=engine_version:smallint,response:text
+
+ACCOUNTING_FAILURES=0
+ACCOUNTING_VERDICT=EVERY_WRITE_ACCOUNTED
+exit_accounting=0
+
+########## 12. final database state (verbatim) ##########
+event: cp8-legacy-1 engine_version=NULL response=NULL grade=remembered
+event: cp8-r2-fc-offbroken engine_version=NULL response=known grade=remembered
+event: cp8-r2-rb-fresh-v1 engine_version=NULL response=known grade=remembered
+event: cp8-r2-rb-v1 engine_version=NULL response=known grade=remembered
+event: cp8-r2-rb-v2 engine_version=2 response=known grade=remembered
+event: cp8-r2-sweep-cap-12 engine_version=2 response=known grade=remembered
+event: cp8-r2-sweep-cap-13 engine_version=2 response=known grade=remembered
+event: cp8-r2-sweep-cap-14 engine_version=2 response=known grade=remembered
+event: cp8-r2-sweep-cap-15 engine_version=2 response=known grade=remembered
+event: cp8-r2-sweep-cap-16 engine_version=2 response=known grade=remembered
+event: cp8-r2-sweep-cap-17 engine_version=2 response=known grade=remembered
+event: cp8-r2-sweep-cap-18 engine_version=2 response=known grade=remembered
+event: cp8-r2-sweep-cap-19 engine_version=2 response=known grade=remembered
+event: cp8-r2-sweep-cap-20 engine_version=2 response=known grade=remembered
+event: cp8-r2-sweep-cap-21 engine_version=2 response=known grade=remembered
+event: cp8-r2-sweep-cap-22 engine_version=2 response=known grade=remembered
+event: cp8-r2-sweep-cap-23 engine_version=2 response=known grade=remembered
+event: cp8-r2-sweep-k-24 engine_version=2 response=known grade=remembered
+event: cp8-r2-sweep-k-25 engine_version=2 response=known grade=remembered
+event: cp8-r2-sweep-k-26 engine_version=2 response=known grade=remembered
+event: cp8-r2-sweep-k-27 engine_version=2 response=known grade=remembered
+event: cp8-r2-sweep-k-28 engine_version=2 response=known grade=remembered
+event: cp8-r2-sweep-k-29 engine_version=2 response=known grade=remembered
+event: cp8-r2-sweep-k-30 engine_version=2 response=known grade=remembered
+event: cp8-r2-sweep-k-31 engine_version=2 response=known grade=remembered
+event: cp8-r2-sweep-k-32 engine_version=2 response=known grade=remembered
+event: cp8-r2-sweep-u-1 engine_version=2 response=unknown grade=forgot
+event: cp8-r2-sweep-u-10 engine_version=2 response=unknown grade=forgot
+event: cp8-r2-sweep-u-11 engine_version=2 response=unknown grade=forgot
+event: cp8-r2-sweep-u-2 engine_version=2 response=unknown grade=forgot
+event: cp8-r2-sweep-u-3 engine_version=2 response=unknown grade=forgot
+event: cp8-r2-sweep-u-4 engine_version=2 response=unknown grade=forgot
+event: cp8-r2-sweep-u-5 engine_version=2 response=unknown grade=forgot
+event: cp8-r2-sweep-u-6 engine_version=2 response=unknown grade=forgot
+event: cp8-r2-sweep-u-7 engine_version=2 response=unknown grade=forgot
+event: cp8-r2-sweep-u-8 engine_version=2 response=unknown grade=forgot
+event: cp8-r2-sweep-u-9 engine_version=2 response=unknown grade=forgot
+event: cp8-r2-trace-0 engine_version=2 response=known grade=remembered
+event: cp8-r2-trace-1 engine_version=2 response=known grade=remembered
+event: cp8-r2-trace-2 engine_version=2 response=known grade=remembered
+event: cp8-r2-trace-3 engine_version=2 response=known grade=remembered
+event: cp8-r2-trace-4 engine_version=2 response=known grade=remembered
+event: cp8-r2-trace-5 engine_version=2 response=known grade=remembered
+event: cp8-r2-trace-6 engine_version=2 response=known grade=remembered
+event: cp8-r2-trace-7 engine_version=2 response=known grade=remembered
+event: cp8-r2-trace-8 engine_version=2 response=known grade=remembered
+event: cp8-r2-trace-9 engine_version=2 response=known grade=remembered
+event: cp8-r2-v1-box1 engine_version=NULL response=known grade=remembered
+event: cp8-r2-v2-box1 engine_version=2 response=known grade=remembered
+event: cp8-r2-v2-unknown engine_version=2 response=unknown grade=forgot
+sched: user=11111111 card=cp8-haus stability=1 state=review
+sched: user=11111111 card=cp8-lampe stability=180 state=mastered
+sched: user=22222222 card=cp8-buch stability=0.63 state=relearning
+sched: user=22222222 card=cp8-tisch stability=NaN state=new
+sched: user=33333333 card=cp8-buch stability=1.8 state=review
+sched: user=33333333 card=cp8-haus stability=180 state=mastered
+sched: user=33333333 card=cp8-lampe stability=0.07500000006 state=learning
+sched: user=33333333 card=cp8-tisch stability=34.012 state=review
+sched: user=44444444 card=cp8-stuhl stability=1 state=learning
+
+finished_utc=2026-10-01T23:46:42Z
+AUTHORITATIVE_RUN_EXIT_SUM=0
+AUTHORITATIVE_RUN_VERDICT=ALL_GREEN

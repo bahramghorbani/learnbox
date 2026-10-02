@@ -26,3 +26,9 @@ ios/Pods/
 .mcp.json
 .codex/
 .vscode/mcp.json
+
+# CP8 evidence harness: reproducible build output, never committed.
+# Regenerate with tools/cp8/build-harness-bundles.sh
+apps/website/dist-cp8/
+# CP8 first-pass harness, superseded in full and NOT authoritative evidence.
+tools/cp8/superseded/

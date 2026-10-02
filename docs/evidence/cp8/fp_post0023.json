@@ -1,0 +1,22 @@
+{
+  "run": "r2-20261001T234638Z",
+  "counts": {
+    "users": 4,
+    "cards": 40,
+    "card_versions": 40,
+    "card_schedules": 5,
+    "review_events": 1
+  },
+  "surface": {
+    "columns": "engine_version:smallint,response:text",
+    "users_timezone": "timezone",
+    "tables": "learner_daily_plans,review_event_rejections",
+    "constraints": "review_events_engine_version_valid,review_events_response_valid"
+  },
+  "digest_shape": "response=present,engine_version=present",
+  "digests": {
+    "review_events_full": "e214c13013dd6c89daf63d657c8b4e36",
+    "review_events_legacy": "ef46519455862518f2f0dbe840e96000",
+    "card_schedules": "c62762b1c13b9d9789dc6db2f3a6b538"
+  }
+}
