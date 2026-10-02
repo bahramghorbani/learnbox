@@ -9,6 +9,53 @@ closed (below), and the Admin P0 credential cutover (`LB-B30`–`B33`) is comple
 Nothing further is approved for implementation: P1 compatibility and Admin redesign have **not** started. Deferred but not cancelled:
 `LB-B19` (reminders), `LB-B28b` (photo upload), `LB-B17` (Store).
 
+## LB-B35 CP15 — Scheduler V2 Contract & Client-Parity Readiness — CLOSED 2026-10-03
+
+**Owner closed CP15 on 2026-10-03** without expanding it into native implementation.
+
+**Established:**
+
+- **`schedulerRejected` 422 contract: CLOSED / mutation-proven.** One canonical definition
+  (`packages/learning-engine/src/review-sync-wire-contract.ts`), four TypeScript boundaries bound to
+  it, and a generated fixture (`apps/mobile/test/fixtures/review_sync_wire_contract.json`) consumed by
+  a Dart conformance test.
+- **Contract drift protection: CLOSED.** `verify:review-sync-wire-contract` runs inside `pnpm check`
+  (required job `quality`); the Dart test runs in required job `mobile`. Mutations M1/M2/M3/M5/M6 each
+  fail CI, including the case where a rename is propagated to the fixture.
+- **Native binary semantic direction: OWNER DECISION RESOLVED — adopt known/unknown** (Decision A,
+  2026-10-03), with mandatory backward compatibility.
+- **Native implementation/parity: NOT YET IMPLEMENTED** — deferred to CP16.
+- **Scheduler V2: OFF / NOT AUTHORIZED.** `LEARNBOX_SCHEDULER_V2` remains ABSENT.
+- **Production: UNCHANGED** (`sha256:cb3090da…`, `APP_SOURCE_SHA=d4ea6558…`, RestartCount 0, healthy).
+  Production was not deployed or modified to close CP15.
+
+**Test-record correction (not a product defect).** A verification chain appeared to fail with exit 1.
+Cause: the harness filtered Node's `--test` output with `grep -E '^# (pass|fail)'`, but the reporter
+prefixes summary lines with `ℹ`, so the grep matched nothing, returned 1, and `&&` aborted the chain
+before the remaining tests ran. Re-run directly, the attribution tests are **6/6 passing, exit 0**.
+No product code was implicated.
+
+**Commits:** `a919ab88` (contract + attribution tooling), `e98fc76` (pin-test hardening + verified
+adversarial findings), plus this closure commit. Branch `feat/lb-b35-cp15-contract-parity`.
+
+**Evidence:** `docs/planning/LB_B35_CP15_CONTRACT_PARITY_READINESS.md`.
+
+## LB-B35 CP16 — Native Binary Review Migration — PROPOSED (design only, awaiting owner review)
+
+Narrowly scoped successor implementing Decision A. **Design is written and must be reviewed before any
+implementation:** `docs/planning/LB_B35_CP16_NATIVE_BINARY_REVIEW_MIGRATION.md`.
+
+Key finding from driving the **real compiled parser**: the wire protocol already supports mixed
+clients. `response` (CP5 `LEARNBOX_BINARY_REVIEW`) is already an optional per-event discriminator, and
+`review_events.response` (migration 0023) already stores `NULL` for legacy rows — so **no new version
+discriminator is required**. A batch containing one legacy four-grade event and one binary event is
+accepted, and the two remain distinguishable after parsing.
+
+The blocker is client-side, and **B-3 is a data-loss bug that exists today**: `review_queue.dart`
+discards the _entire_ offline queue when any single event fails to parse or when `schemaVersion`
+changes, so introducing the `response` field would itself destroy queued reviews on upgrade. CP16 must
+fix B-3 **before** changing the queue format. Scheduler V2 is **not** activated by CP16.
+
 ## LB-B35 CP9 Production cutover — CLOSED 2026-10-02 (server-side complete; D-3 since PASSED in CP14)
 
 > **Superseded status note (CP14, 2026-10-02).** This section records CP9 **as it stood at CP9

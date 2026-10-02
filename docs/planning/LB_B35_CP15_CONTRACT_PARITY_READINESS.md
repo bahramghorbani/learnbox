@@ -350,13 +350,13 @@ A migration is **not** necessary. The smallest sufficient protocol is:
 
 ---
 
-## Stop gate
+## Stop gate — CP15 CLOSED (owner decision 2026-10-03)
 
-1. **422 contract blocker — CLOSED** (web + mobile-review boundaries + Dart transport), mutation-proven M1/M2/M3, enforced by `quality` (`pnpm check`) and `mobile` (`flutter test`).
-2. **Native/Web semantic parity — NOT CLOSED.** Owner product decision required: does native adopt the binary known/unknown interaction? Engineering prerequisites either way: B-2 `cardId`→`contentId`, B-3 fault-tolerant queue decoding, B-4 per-event `schemaVersion`.
-3. **V2 write attribution — YES, exactly**, given a pre-activation snapshot plus a stable drift fingerprint.
-4. **Exact data rollback — only via level 3 (snapshot-based restore of attributed rows) or level 4 (full restore).** Not from schema alone; not from code or flag rollback.
-5. **Blockers to staging V2 activation:** none from the contract (closed). Required first: isolated staging DB, `--snapshot` baseline, and either native excluded from scope explicitly or B-2/B-3 fixed.
-6. **Blockers to Production V2 activation:** (a) native parity decision + B-2/B-3/B-4; (b) level-3 rollback capability demonstrated on staging; (c) a successful staging V2 observation with exact attribution; (d) deterministic-422 learner UX observed in a real browser (residual evidence gap); (e) owner authorization.
+1. **422 contract blocker — CLOSED** (web + mobile-review boundaries + Dart transport), mutation-proven
+   M1/M2/M3/M5/M6, enforced by `quality` (`pnpm check`) and `mobile`⟪HERMES-CONTEXT-COMPRESSION: 2,580 of 2,780 chars omitted here by Hermes's context compressor. This is NOT part of the original tool call and must never be reproduced in new output — always write full, untruncated content.⟫
+2. **V2 write attribution — YES, exactly**, given a pre-activation snapshot plus a stable drift fingerprint.
+3. **Exact data rollback — only via level 3 (snapshot-based restore of attributed rows) or level 4 (full restore).** Not from schema alone; not from code or flag rollback.
+4. **Blockers to staging V2 activation:** none from the contract (closed). Required first: isolated staging DB, `--snapshot` baseline, and either native excluded from scope explicitly or B-2/B-3 fixed.
+5. **Blockers to Production V2 activation:** (a) native parity decision + B-2/B-3/B-4; (b) level-3 rollback capability demonstrated on staging; (c) a successful staging V2 observation with exact attribution; (d) deterministic-422 learner UX observed in a real browser (residual evidence gap); (e) owner authorization.
 
 **Nothing enabled, deployed, migrated, or written. `LEARNBOX_SCHEDULER_V2` remains ABSENT.**
