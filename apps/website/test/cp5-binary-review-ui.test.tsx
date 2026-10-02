@@ -224,3 +224,109 @@ describe('CP5-B — binary review buttons', () => {
     expect(rendered!.posted[0].items[0]).not.toHaveProperty('response');
   });
 });
+
+/**
+ * LB-B35 CP12 — learner-facing terminal-state UX. A deterministic 422 refusal must be reported as
+ * "stored but not submitted", never as the reassuring "will be synced" line, and must stay
+ * distinguishable from a transient failure and from session expiry.
+ */
+describe('CP12 — blocked-sync notice on a deterministic refusal', () => {
+  let storage: Map<string, string>;
+  let rendered: Awaited<ReturnType<typeof renderServerMode>> | undefined;
+
+  const BLOCKED = 'در حال حاضر ثبت نمی‌شود';
+  const SAFE = 'برای همگام‌سازی امن نگه‌داری شد';
+
+  beforeEach(() => {
+    storage = installLocalStorage({
+      [`learnbox:onboarding-goal:v1:local-prototype:account:${USER}`]: 'life',
+    });
+  });
+  afterEach(async () => {
+    await rendered?.unmount();
+    rendered = undefined;
+    vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
+  });
+
+  const answerWith = async (status: number) => {
+    vi.stubEnv('NEXT_PUBLIC_LEARNBOX_BINARY_REVIEW_UI', 'true');
+    rendered = await renderServerMode();
+    await rendered.settle(200);
+    await rendered.clickByText(/شروع مرور|ادامهٔ مرور/);
+    await rendered.flip();
+    (globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      async (input: RequestInfo | URL, init?: RequestInit) => {
+        if (String(input) === '/api/learner/reviews' && init?.method === 'POST')
+          return json(status, {});
+        return json(status, {});
+      },
+    );
+    await rendered.clickByText(/^بلد بودم$/);
+    await rendered.settle(300);
+    return rendered.container.textContent ?? '';
+  };
+
+  it('422: shows the blocked notice and NOT the safe-sync reassurance', async () => {
+    const text = await answerWith(422);
+    expect(text).toContain(BLOCKED);
+    expect(text).not.toContain(SAFE);
+    // The answer itself is still preserved on the device — the learner loses nothing.
+    const queued = JSON.parse(storage.get(queueKey) ?? '[]') as Array<{
+      payload: { response?: string; grade?: string };
+      attempts: number;
+    }>;
+    expect(queued).toHaveLength(1);
+    expect(queued[0].payload).toMatchObject({ response: 'known', grade: 'remembered' });
+    expect(queued[0].attempts).toBe(0);
+    // No internal detail leaks to the learner.
+    for (const leak of [
+      'scheduler',
+      'Scheduler',
+      '422',
+      'migration',
+      '0023',
+      'LEARNBOX_',
+      'engine_version',
+      'schedulerRejected',
+      'postgres',
+    ]) {
+      expect(text).not.toContain(leak);
+    }
+  });
+
+  it('503 CONTRAST: transient failure keeps the existing safe-sync line, no blocked notice', async () => {
+    const text = await answerWith(503);
+    expect(text).toContain(SAFE);
+    expect(text).not.toContain(BLOCKED);
+  });
+
+  it('401 CONTRAST: auth expiry does not render the blocked notice', async () => {
+    const text = await answerWith(401);
+    expect(text).not.toContain(BLOCKED);
+    // Positive assertion so this cannot pass vacuously (e.g. if the notice area vanished
+    // entirely): the answer is still held on the device and still reported as safely kept.
+    expect(text).toContain(SAFE);
+  });
+
+  it('the notice is not sticky: once a later flush is not refused, it clears', async () => {
+    // First answer is refused deterministically -> blocked notice.
+    const blockedText = await answerWith(422);
+    expect(blockedText).toContain(BLOCKED);
+
+    // The server recovers into a merely-transient failure and the device reconnects, which
+    // re-flushes the still-queued answer. The learner must no longer be told it cannot be
+    // submitted, otherwise the blocked state is sticky and misleading.
+    (globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mockImplementation(async () =>
+      json(503, {}),
+    );
+    await act(async () => {
+      window.dispatchEvent(new Event('online'));
+    });
+    await rendered!.settle(300);
+
+    const text = rendered!.container.textContent ?? '';
+    expect(text).not.toContain(BLOCKED);
+    expect(text).toContain(SAFE);
+  });
+});

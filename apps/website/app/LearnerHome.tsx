@@ -206,6 +206,12 @@ export function LearnerHome({
   const [reviewedToday, setReviewedToday] = useState(0);
   const [streakDays, setStreakDays] = useState(0);
   const [pendingReviewCount, setPendingReviewCount] = useState(0);
+  /**
+   * LB-B35 CP12: the server deterministically refused the queued answers (422). They are kept on
+   * this device, but promising a sync would be a lie — so the learner is told plainly instead.
+   * Cleared as soon as any later flush stops being refused.
+   */
+  const [reviewSyncBlocked, setReviewSyncBlocked] = useState(false);
   const [resumableSessionIndex, setResumableSessionIndex] = useState<number | null>(null);
   const [completedSessions, setCompletedSessions] = useState(0);
   const [plusOfferDismissed, setPlusOfferDismissed] = useState(false);
@@ -663,6 +669,9 @@ export function LearnerHome({
             setSessionUserId(null);
             return;
           }
+          // Deterministic refusal (422) is terminal until an operator fixes the server; a transient
+          // failure is not. Only the former suppresses the "will be synced" reassurance.
+          setReviewSyncBlocked(result.syncBlocked === true);
           if (result.acknowledged) {
             retryServerStateRead();
             void refreshServerSummary();
@@ -1305,7 +1314,9 @@ export function LearnerHome({
           </button>
           {pendingReviewCount ? (
             <p className="sync-status" role="status">
-              {pendingReviewCount} پاسخ برای همگام‌سازی امن نگه‌داری شد.
+              {reviewSyncBlocked
+                ? 'پاسخ‌های شما روی همین دستگاه ذخیره شده است، ولی در حال حاضر ثبت نمی‌شود. لطفاً بعداً دوباره تلاش کنید.'
+                : `${pendingReviewCount} پاسخ برای همگام‌سازی امن نگه‌داری شد.`}
             </p>
           ) : null}
         </section>
