@@ -111,6 +111,15 @@ class HttpReviewSyncTransport
         )
         .timeout(timeout);
     if (response.statusCode != 200) {
+      // LB-B35 CP10 (D16): the boundary answers a deterministic scheduler
+      // refusal with 422 `{"error":"schedulerRejected"}`. Retrying it can never
+      // succeed, so it must not be reported as the transient
+      // `serverUnavailable`. Only the exact contract is treated as terminal;
+      // any other 422 shape keeps the retryable classification so an
+      // unrecognised response can never strand a queued learner answer.
+      if (response.statusCode == 422 && _isSchedulerRejection(response.body)) {
+        throw const MobileReviewTransportException('schedulerRejected');
+      }
       throw const MobileReviewTransportException('serverUnavailable');
     }
     final decoded = jsonDecode(response.body);
@@ -240,10 +249,36 @@ ReviewReconciliationPage _parseReconciliationPage(String body) {
   );
 }
 
+/// Recognises exactly the deterministic scheduler-refusal contract.
+///
+/// The boundary sends `{"error":"schedulerRejected"}` and nothing else, so the
+/// match is deliberately strict: a single key, the exact code, and a document
+/// that parses. Anything else (unknown code, extra keys, wrong case, non-JSON)
+/// is not the contract and must stay retryable.
+bool _isSchedulerRejection(String body) {
+  final Object? decoded;
+  try {
+    decoded = jsonDecode(body);
+  } catch (_) {
+    return false;
+  }
+  return decoded is Map<String, dynamic> &&
+      decoded.length == 1 &&
+      decoded['error'] == 'schedulerRejected';
+}
+
 class MobileReviewTransportException implements Exception {
   const MobileReviewTransportException(this.code);
 
   final String code;
+
+  /// Whether retrying the same request could plausibly succeed.
+  ///
+  /// `schedulerRejected` is a deterministic server refusal: the request is
+  /// well-formed but the scheduler will refuse it identically every time, so a
+  /// retry is pointless and must not consume retry budget. Every other code
+  /// keeps its pre-existing transient/retryable treatment.
+  bool get retryable => code != 'schedulerRejected';
 
   @override
   String toString() => 'MobileReviewTransportException($code)';

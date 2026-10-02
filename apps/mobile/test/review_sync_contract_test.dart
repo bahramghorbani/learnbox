@@ -10,6 +10,7 @@ import 'package:learnbox/features/sync/review_sync_result.dart'
         Reconciled,
         ReviewSyncResult,
         RetryableFailure,
+        SchedulerRejected,
         Synchronized;
 import 'package:learnbox/features/sync/review_sync_transport.dart';
 
@@ -119,7 +120,8 @@ void main() {
         case AuthenticationRequired() ||
               NothingPending() ||
               RetryableFailure() ||
-              Reconciled():
+              Reconciled() ||
+              SchedulerRejected():
           fail('Expected a Synchronized result.');
       }
     });
@@ -133,7 +135,8 @@ void main() {
         case AuthenticationRequired() ||
               NothingPending() ||
               Synchronized() ||
-              Reconciled():
+              Reconciled() ||
+              SchedulerRejected():
           fail('Expected a RetryableFailure result.');
       }
     });
@@ -155,8 +158,25 @@ void main() {
         case AuthenticationRequired() ||
               NothingPending() ||
               RetryableFailure() ||
-              Synchronized():
+              Synchronized() ||
+              SchedulerRejected():
           fail('Expected a Reconciled result.');
+      }
+    });
+
+    test('SchedulerRejected is terminal and exposes remainingCount', () {
+      const result = ReviewSyncResult.schedulerRejected(remainingCount: 4);
+      expect(result, isA<SchedulerRejected>());
+      expect(result, isNot(isA<RetryableFailure>()));
+      switch (result) {
+        case SchedulerRejected(:final remainingCount):
+          expect(remainingCount, 4);
+        case AuthenticationRequired() ||
+              NothingPending() ||
+              RetryableFailure() ||
+              Synchronized() ||
+              Reconciled():
+          fail('Expected a SchedulerRejected result.');
       }
     });
   });

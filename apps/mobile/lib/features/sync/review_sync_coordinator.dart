@@ -1,4 +1,5 @@
 import 'package:learnbox/features/review/review_queue.dart';
+import 'package:learnbox/features/sync/http_review_sync_transport.dart';
 import 'package:learnbox/features/sync/mobile_identity_state.dart';
 import 'package:learnbox/features/sync/reconciliation_cursor_store.dart';
 import 'package:learnbox/features/sync/review_acknowledgement.dart';
@@ -103,6 +104,15 @@ class ReviewSyncCoordinator {
         remainingCount: remaining,
         cursor: response.reconciliationCursor,
       );
+    } on MobileReviewTransportException catch (error) {
+      // LB-B35 CP10 (D16): a deterministic scheduler refusal is terminal. It
+      // must not be reported as retryable, must not consume retry budget and
+      // must not enter automatic retry or backoff. The queue is left intact so
+      // the unsynced answers are preserved for the application to resolve.
+      if (!error.retryable) {
+        return SchedulerRejected(remainingCount: await _queue.pendingCount());
+      }
+      return RetryableFailure(remainingCount: await _queue.pendingCount());
     } catch (_) {
       return RetryableFailure(remainingCount: await _queue.pendingCount());
     }
