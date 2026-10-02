@@ -1,10 +1,12 @@
 # LearnBox stable project state
 
-**Last reviewed:** 2026-09-28
+**Last reviewed:** 2026-10-02
 
 ## Release position
 
 **Web/PWA v1 is LIVE and CLOSED.** Public activation completed 2026-09-28.
+
+### At v1.0.0 public activation (2026-09-28, historical record)
 
 | Fact                           | Value                                                                     |
 | ------------------------------ | ------------------------------------------------------------------------- |
@@ -18,9 +20,31 @@
 | Release record                 | annotated tag `v1.0.0` + GitHub Release, targeting `2acdcef4`             |
 | Repository visibility          | private (security decision, 2026-09-28)                                   |
 
+### Production as deployed today (reconciled at CP11, 2026-10-02)
+
+Production has since advanced through the v1.2.1 security patch and the **LB-B35 CP9 server-side
+cutover**. These are the current live facts; the table above is the v1.0.0 activation record and must
+not be read as current.
+
+| Fact                                    | Value                                                                                      |
+| --------------------------------------- | ------------------------------------------------------------------------------------------ |
+| Production application source           | `8b7b32905ccbae09977cd0c102df62cf79e58bd5`                                                 |
+| Production image digest                 | `sha256:6318eb286ec3187bd3857389bab5e2b9de6b105ba76307f936d1257b958dfa0c`                  |
+| Migration ledger applied                | `0001`–`0023` (includes `0023_learning_persistence`)                                       |
+| Server flags ON                         | `TZ_PERSIST`, `SERVER_SESSION_PLAN`, `TODAY_WORKLOAD`, `QUEUE_QUARANTINE`, `BINARY_REVIEW` |
+| `LEARNBOX_SCHEDULER_V2`                 | **ABSENT / not authorized**                                                                |
+| `NEXT_PUBLIC_LEARNBOX_BINARY_REVIEW_UI` | `false` (baked into the artifact; learner UI is legacy four-grade)                         |
+| Latest release tag                      | `v1.0.0` still targets `2acdcef4` and is **not** moved                                     |
+
 Repository `main` may advance beyond the Production application SHA through documentation-only
 commits. That is intentional and is **not** application drift: compare the Production application
 SHA above, not the repository HEAD. Do not deploy merely to equalize the two.
+
+**Source-continuity note (CP11, 2026-10-02).** The CP9 runtime source deployed as `8b7b3290` was
+restored to `main` by the runtime-continuity PR #345 after it was found to exist only on an unpushed
+local branch. Production was **not** rebuilt, redeployed or reconfigured to achieve this; only the
+repository was brought forward. `main` and the Production SHA are therefore still expected to differ,
+and that difference must not be "fixed" by a deployment.
 
 Android/Cafe Bazaar, every payment path, premium packs and native iOS remain v1.1 or later.
 Future work begins at v1.1; the normalized backlog lives in `BACKLOG.md`.
