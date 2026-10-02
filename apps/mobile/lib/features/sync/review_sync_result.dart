@@ -30,6 +30,17 @@ sealed class ReviewSyncResult {
     required int remainingCount,
     String? cursor,
   }) = Reconciled;
+
+  /// The server deterministically refused the batch (LB-B35 CP10 / D16).
+  ///
+  /// Distinct from [RetryableFailure]: the request was well-formed but the
+  /// scheduler refuses it identically every time, so an automatic retry can
+  /// never succeed. [remainingCount] events stay queued, so no learner answer
+  /// is discarded and the application can surface or resolve the terminal
+  /// condition without losing work.
+  const factory ReviewSyncResult.schedulerRejected({
+    required int remainingCount,
+  }) = SchedulerRejected;
 }
 
 class AuthenticationRequired extends ReviewSyncResult {
@@ -70,4 +81,16 @@ class Reconciled extends ReviewSyncResult {
   /// Validated `nextCursor` persisted for the read (ADR 0014); null when the
   /// read did not persist one.
   final String? cursor;
+}
+
+/// Terminal, non-retryable deterministic refusal by the server scheduler.
+///
+/// The queued events are intentionally retained: a deterministic refusal is a
+/// reason to stop retrying automatically, never a reason to drop a learner's
+/// unsynced answer.
+class SchedulerRejected extends ReviewSyncResult {
+  const SchedulerRejected({required this.remainingCount});
+
+  /// Events still pending locally; a deterministic refusal removes none.
+  final int remainingCount;
 }
