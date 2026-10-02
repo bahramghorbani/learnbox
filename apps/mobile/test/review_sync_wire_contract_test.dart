@@ -65,8 +65,16 @@ void main() {
       expect(rejectionStatus, 422);
       expect(rejection['body'], isA<Map<String, dynamic>>());
       expect((rejection['body'] as Map<String, dynamic>).length, 1);
+      expect((rejection['body'] as Map<String, dynamic>).keys.single, 'error');
+      // Pinned to the literal ON PURPOSE. The Dart transport cannot import the canonical
+      // TypeScript constant, so http_review_sync_transport.dart hardcodes this string at its
+      // match site. Asserting the value here (not just isA<String>()) means a renamed contract
+      // fails with "the native client's hardcoded expectation must be updated" instead of
+      // silently satisfying a vacuous type check.
       expect(
-          (rejection['body'] as Map<String, dynamic>)['error'], isA<String>());
+        (rejection['body'] as Map<String, dynamic>)['error'],
+        'schedulerRejected',
+      );
       expect(rejection['terminal'], isTrue);
       expect(rejection['retryable'], isFalse);
       expect(fixture['nearMisses'], isA<List<dynamic>>());

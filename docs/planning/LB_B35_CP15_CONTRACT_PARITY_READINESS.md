@@ -86,16 +86,46 @@ After reverting all three, the full suite is green again.
 An adversarial reviewer attacked the acceptance criterion. I verified every material claim myself
 rather than adopting it; two findings were real and are now **fixed**, two were partly overstated.
 
+**CRITICAL-4 (real, MEDIUM → FIXED): the fixture pin test was vacuous.**
+`apps/mobile/test/review_sync_wire_contract_test.dart:69` asserted the body's `error` field was
+`isA<String>()` — so a fixture carrying `{"error":"schedulerDenied"}` would have satisfied it. The
+conformance tests were the real guard, but the _pin_ test was weaker than its own comment claimed.
+It now asserts the literal value and the single key name, with a comment explaining the literal is
+deliberate: Dart cannot import the canonical constant, so this is the tripwire for the transport's
+own hardcoded match site.
+
+**CRITICAL-1/CRITICAL-2 (stale): "the fixture and Dart test are untracked, so both CI jobs fail."**
+True at review time — the reviewer read the working tree before I committed. Both files are tracked
+in `a919ab88`, and neither is gitignored. The reviewer's underlying architectural point is correct
+and worth recording: the `mobile` job has no Node/pnpm step and never regenerates the fixture, so
+the mechanism depends on the fixture being **committed**. That is the intended design, and it is now
+satisfied.
+
+**LOW (verified, downgraded): unscoped `findByClientEventId`.**
+`postgres-review-event.store.ts:101` queries `WHERE client_event_id = $1` without a `user_id` scope.
+The reviewer correctly hedged that its reachability was unconfirmed — I checked: the live batch path
+uses the scoped `findByLearnerAndClientEventId` (`mobile-review-batch.service.ts:235`), and
+`recordReviewEvent` (the only caller of the unscoped variant) has **no non-test caller** in
+`apps/` or `packages/`. Unreachable in production; worth deleting or scoping, not a blocker.
+
+**Operational finding (verified, wrong path cited): preflight success is memoised per process.**
+The reviewer cited `packages/learning-engine/src/scheduler-v2-preflight.ts`, which does not exist;
+the real file is `apps/api/src/reviews/scheduler-v2-preflight.ts:97`. The behaviour is as described:
+a successful preflight is cached for the process lifetime, a failed one is not. **Consequence for
+rollback level 2:** setting `LEARNBOX_SCHEDULER_V2=false` does not take effect in a running process
+that has already memoised a successful preflight — flag rollback requires a container restart. This
+is recorded in the rollback table below.
+
 **F2 (real, HIGH → FIXED): the service layer was a fourth, unbound definition site.**
 `apps/api/src/reviews/mobile-review-batch.service.ts` held three independent `'schedulerRejected'`
 literals (the error-code union, `NON_RETRYABLE_CODES`, and the throw site) and did **not** import
-the canonical module. I confirmed by mutation (M4) that renaming them *was* caught — but only
+the canonical module. I confirmed by mutation (M4) that renaming them _was_ caught — but only
 incidentally, by a literal in an unrelated existing test (`TS2345`), which is fragile evidence. All
 three now derive from `SCHEDULER_REJECTED_CODE`.
 
 **F3 (real, MEDIUM → FIXED): a fourth consumer classified by status only.**
 `apps/website/lib/learner-review-web-client.ts:60` matched a bare `422` and never reads the body, so
-a *status* change would have broken it silently. It now imports `SCHEDULER_REJECTED_STATUS`.
+a _status_ change would have broken it silently. It now imports `SCHEDULER_REJECTED_STATUS`.
 
 **F4 (real, LOW → FIXED): the drift gate depended on implicit script ordering.**
 `verify:review-sync-wire-contract` relied on an earlier `pnpm check` step having built the engine.
@@ -108,6 +138,7 @@ the branch was uncommitted; both are now committed and neither is gitignored.
 
 **Re-proof after the fixes (M5).** With all four TypeScript sites deriving from the canonical
 constant, renaming only the canonical constant:
+
 - M5a — fixture not regenerated → `quality` fails (`out of sync`)
 - M5b — fixture regenerated → `mobile` fails (`Expected: … retryable: false`, and the coordinator
   no longer reports `SchedulerRejected`)
@@ -289,9 +320,14 @@ events, **0 already V2-attributed**; verify → `rowsBefore 31 / rowsAfter 31 / 
 | Level                         | Mechanism                                                                                                         | Restores schedules?                    | Cost                                                 |
 | ----------------------------- | ----------------------------------------------------------------------------------------------------------------- | -------------------------------------- | ---------------------------------------------------- |
 | **1. Code rollback**          | re-pin the previous image digest                                                                                  | **No**                                 | seconds; CP14-proven                                 |
-| **2. Flag rollback**          | unset `LEARNBOX_SCHEDULER_V2`                                                                                     | **No** — stops _future_ V2 writes only | seconds                                              |
+| **2. Flag rollback**          | unset `LEARNBOX_SCHEDULER_V2` **and restart the container**                                                       | **No** — stops _future_ V2 writes only | seconds, **restart required** (see note)             |
 | **3. Schedule/data rollback** | restore affected `card_schedules` rows from a pre-activation snapshot, scoped by `review_events.engine_version=2` | **Yes, for attributable rows**         | needs the snapshot taken **first**; requires a write |
 | **4. Full DB restore**        | restore the whole database from backup                                                                            | Yes                                    | loses all post-backup writes across all tables       |
+
+> **Level 2 is not instantaneous.** `apps/api/src/reviews/scheduler-v2-preflight.ts:97` memoises a
+> _successful_ preflight for the process lifetime (a failed one is never cached). A process that has
+> already served one V2 review keeps its cached decision, so unsetting the flag alone does not stop
+> V2 writes in that process — the container must be restarted. Treat level 2 as "flag + restart".
 
 Levels 1 and 2 stop the bleeding; **neither heals it**. Only level 3 (and only with a
 pre-activation snapshot) achieves exact schedule restoration, and `replay-compat.ts` does not do it
