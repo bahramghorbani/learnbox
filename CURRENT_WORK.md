@@ -4,7 +4,7 @@
 
 ## Active work
 
-**No product feature work is active** (LB-B35 CP0–CP5 merged and closed; CP6 decision merged; CP7 implementation merged and closed; CP8 staging-activation evidence PASS and CLOSED, web only, below). CP9 (server-side Production cutover) is **CLOSED** as of 2026-10-02 with **D-3 deferred** (see the CP9 section below); CP10 (D16 native 422 handling) is **CLOSED**; CP11 (documentation/evidence continuity) is this pass. v1.2.0 and the v1.2.1 security patch (`LB-B29`) are released and
+**No product feature work is active** (LB-B35 CP0–CP5 merged and closed; CP6 decision merged; CP7 implementation merged and closed; CP8 staging-activation evidence PASS and CLOSED, web only, below). CP9 (server-side Production cutover) is **CLOSED** as of 2026-10-02 with **D-3 deferred** (see the CP9 section below); CP10 (D16 native 422 handling) is **CLOSED**; CP11 (documentation/evidence continuity) is **CLOSED**; CP12 (Binary Review UI activation readiness) has its implementation **MERGED but NOT ACTIVATED** (see the CP12 section below). v1.2.0 and the v1.2.1 security patch (`LB-B29`) are released and
 closed (below), and the Admin P0 credential cutover (`LB-B30`–`B33`) is complete (next section).
 Nothing further is approved for implementation: P1 compatibility and Admin redesign have **not** started. Deferred but not cancelled:
 `LB-B19` (reminders), `LB-B28b` (photo upload), `LB-B17` (Store).
@@ -58,6 +58,55 @@ R1 `/home/ubuntu/learnbox/backups/cp9-20261002T103329Z.dump` (480780 B);
 R3 `compose.yaml.cp9-pre`; R5 `.env` ladder (5 steps) in `/home/ubuntu/learnbox/cp9-stage5/`.
 
 **Evidence:** `docs/evidence/LB_B35_CP9_IMPLEMENTATION_EVIDENCE.md` §11–§19.
+
+## LB-B35 CP12 Binary Review UI activation readiness — implementation MERGED, NOT ACTIVATED 2026-10-02
+
+**Classification: the merge changes repository state only.** The Binary Review learner UI is **NOT
+activated**, and **D-3 has NOT passed**. `NEXT_PUBLIC_LEARNBOX_BINARY_REVIEW_UI` is inlined by Next
+at build time and remains `false` in the deployed artifact, so merging cannot and did not change
+learner-visible Production behaviour.
+
+**Merged:** PR #347, approved head `ae37dc635f96641ddaa425b6041c961cc309c7b3` → squash merge
+`51c6b552263d92cdeb644c863bbb0802624bd8b9` (now `main`). Merged with `--match-head-commit` head
+pinning; merged-main tree `dbc1ca447f33fcd2d077f5f325146957d5ca38aa` is **byte-identical** to the
+approved PR-head tree (verified by tree-hash comparison, not by diff alone). Required CI 4/4 SUCCESS
+on the PR head and again 4/4 on the merge commit.
+
+**Scope:** 4 files, all under `apps/website` (+249/−1). Product logic is two lines:
+`learner-review-web-sync.ts` reports `syncBlocked: true` on the terminal `rejected` (422
+`schedulerRejected`) outcome only, and `LearnerHome.tsx` renders a plain Persian notice instead of
+the «همگام‌سازی امن نگه‌داری شد» reassurance, clearing as soon as a later flush is not refused.
+Previously a deterministic 422 was indistinguishable from a transient failure, so the learner was
+told an answer would sync when it never could.
+
+**Deliberately unchanged:** queue bytes, retry-attempt accounting and backoff arming on the rejected
+path (no attempt consumed, no retry scheduled); the 401 session-ended path; the 503 transient path;
+the four-grade flow; `start-media.ts`; Scheduler V2; CP10/D16 native handling (blob-identical across
+the merge). No `apps/api`, `apps/mobile`, `apps/admin`, `packages/`, `database/`,
+`infrastructure/`, `.github/` or dependency change.
+
+**Evidence:** 943 passed / 8 skipped (951) with the DB-backed suites **executed against a real
+Postgres 17** — reproduced independently in CI, which runs its own `postgres:17-alpine` service.
+Without `TEST_DATABASE_URL` those 14 suites silently skip (781/160), which would have made the
+Scheduler-V2 independence evidence vacuous. The 2 residual skips need a production dataset and
+separate DB roles, unrelated. Non-vacuity confirmed with 5 targeted mutants (flag never set, flag on
+every failure, retry leakage, sticky state, inverted notice) — all killed; sticky state survived the
+first pass and exposed a real gap, which added the reconnect test.
+
+**Scheduler V2 independence:** zero server or HTTP-boundary reads of
+`NEXT_PUBLIC_LEARNBOX_BINARY_REVIEW_UI`; `useV2 = options.schedulerV2 === true`. `LEARNBOX_SCHEDULER_V2`
+remains **ABSENT in Production**.
+
+**Production re-verified untouched after merge (read-only):** digest
+`sha256:6318eb286ec3187bd3857389bab5e2b9de6b105ba76307f936d1257b958dfa0c`,
+`APP_SOURCE_SHA=8b7b32905ccbae09977cd0c102df62cf79e58bd5`, `RestartCount=0`, `StartedAt`
+`2026-10-02T14:27:34Z` unchanged, health 200, `LEARNBOX_SCHEDULER_V2` absent. No build, deployment
+or restart occurred.
+
+**Still required before D-3, each a separate owner gate:** build a replacement `linux/amd64` artifact
+from merged `main` with `NEXT_PUBLIC_LEARNBOX_BINARY_REVIEW_UI=true` and every other currently-live
+build arg preserved (notably `NEXT_PUBLIC_LEARNBOX_PROFILE_IDENTITY_ENABLED=true`); deploy it;
+enable the UI; then perform the D-3 real-browser observation. None of these is authorized.
 
 ## LB-B35 CP11 source-continuity incident — runtime source restored 2026-10-02
 
