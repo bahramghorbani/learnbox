@@ -4,10 +4,87 @@
 
 ## Active work
 
-**No product feature work is active** (LB-B35 CP0–CP5 merged and closed; CP6 decision merged; CP7 implementation merged and closed; CP8 staging-activation evidence PASS and CLOSED, web only, below). CP9 is **not started and not approved**. v1.2.0 and the v1.2.1 security patch (`LB-B29`) are released and
+**No product feature work is active** (LB-B35 CP0–CP5 merged and closed; CP6 decision merged; CP7 implementation merged and closed; CP8 staging-activation evidence PASS and CLOSED, web only, below). CP9 (server-side Production cutover) is **CLOSED** as of 2026-10-02 with **D-3 deferred** (see the CP9 section below); CP10 (D16 native 422 handling) is **CLOSED**; CP11 (documentation/evidence continuity) is this pass. v1.2.0 and the v1.2.1 security patch (`LB-B29`) are released and
 closed (below), and the Admin P0 credential cutover (`LB-B30`–`B33`) is complete (next section).
 Nothing further is approved for implementation: P1 compatibility and Admin redesign have **not** started. Deferred but not cancelled:
 `LB-B19` (reminders), `LB-B28b` (photo upload), `LB-B17` (Store).
+
+## LB-B35 CP9 Production cutover — CLOSED 2026-10-02 (server-side complete; D-3 DEFERRED)
+
+**Result: CLOSED.** Stages 0–6 executed against Production. Stage 7 / Scheduler V2 **not authorized,
+not started**.
+
+**Production state at closure (re-verified 2026-10-02 at CP11):** image digest
+`sha256:6318eb286ec3187bd3857389bab5e2b9de6b105ba76307f936d1257b958dfa0c`,
+`APP_SOURCE_SHA=8b7b32905ccbae09977cd0c102df62cf79e58bd5`, migration ledger **0023**, container
+healthy, health 200. Exactly five server flags ON: `LEARNBOX_TZ_PERSIST`,
+`LEARNBOX_SERVER_SESSION_PLAN`, `LEARNBOX_TODAY_WORKLOAD`, `LEARNBOX_QUEUE_QUARANTINE`,
+`LEARNBOX_BINARY_REVIEW`. `LEARNBOX_SCHEDULER_V2` **ABSENT**.
+`NEXT_PUBLIC_LEARNBOX_BINARY_REVIEW_UI=false` baked into the deployed artifact (owner decision D-2).
+
+**Zero learner-data movement across the whole cutover:** users 2, cards 35, schedules 31, events 90,
+`events_md5 273f88ec…`, `scheds_md5 5f6282e2…`, `learner_daily_plans` 0, `review_event_rejections` 0.
+No learner history was created, modified or deleted to produce evidence.
+
+**D-3 is DEFERRED, not waived and not passed.** Blocker **D-H**: because
+`NEXT_PUBLIC_LEARNBOX_BINARY_REVIEW_UI` is inlined by Next at build time and the approved artifact
+was built with `false`, the binary branch is dead-code-eliminated — `grade-grid-binary` appears in
+**0** served JS bundles (only an unused CSS rule) and the binary instruction string in **0** files.
+The deployed learner UI is the legacy four-grade UI, so the real Production web client cannot emit
+binary `known`/`unknown`. **No Production browser binary-review observation has been performed.**
+The 21/21 isolated E2E/store/wire proof is valid evidence for the **server-side** binary path only
+and is **not** a substitute for D-3.
+
+**Mandatory future gate — Binary UI Activation.** D-3 is deferred to the release that actually ships
+`NEXT_PUBLIC_LEARNBOX_BINARY_REVIEW_UI=true`. That checkpoint **must not be called PASS until D-3
+actually passes**; its ten mandatory requirements (structural proof of the binary UI in the built
+artifact, full verification of the new digest, explicit owner digest approval, N=20 real-browser
+reviews exercising both known and unknown, full accounting, unchanged control account) are recorded
+in `docs/evidence/LB_B35_CP9_IMPLEMENTATION_EVIDENCE.md` §19.
+
+**Owner-approved accounts for that future observation (baselines preserved, do NOT delete or reset):**
+test `b4efb0a4…` (Mona) — 32 events, md5 `d105b78e…`, 15 schedules md5 `8793e62b…`;
+control `451b0433…` (Bahram) — 58 events, md5 `3da4b653…`, 16 schedules md5 `a6cd0e28…`.
+
+**Deferred findings carried forward (not fixed in CP9, do not remediate without approval):**
+**P1** `learnbox_migrator` cannot `ALTER TABLE` (needs ownership; `neondb_owner` owns all tables) —
+Stage 4 used a one-time elevated DSN. **P2** `learnbox_app` holds UPDATE/DELETE on
+`users`/`review_events`/`card_schedules`, wider than the append-only intent; pre-dates CP9.
+**D16** native 422 `schedulerRejected` handling is **CLOSED in CP10** (below); it no longer blocks,
+but the remaining Scheduler V2 readiness items do.
+
+**Rollback (available):** R0 image `learnbox-app:rollback-v121-20261002T103214Z`;
+R1 `/home/ubuntu/learnbox/backups/cp9-20261002T103329Z.dump` (480780 B);
+R3 `compose.yaml.cp9-pre`; R5 `.env` ladder (5 steps) in `/home/ubuntu/learnbox/cp9-stage5/`.
+
+**Evidence:** `docs/evidence/LB_B35_CP9_IMPLEMENTATION_EVIDENCE.md` §11–§19.
+
+## LB-B35 CP11 source-continuity incident — runtime source restored 2026-10-02
+
+CP9's cutover was executed from a local branch (`feat/lb-b35-cp9-n1-preflight`) that was **never
+pushed**, so for a period Production ran runtime source that did not exist on `origin/main`. This was
+found while preparing CP11 and treated as a source-continuity incident.
+
+- **Forensic audit (read-only)** confirmed the material was legitimate, secret-free and complete:
+  all runtime changes sit in the single deployed commit `8b7b3290…`; the deployed artifact is
+  reproducible from it **byte-for-byte** (27/27 compiled API modules md5-identical, 0 files present
+  in the image but absent from source); the staging DSN lived only in `tools/cp8/cp9-probe-run.sh`,
+  which was correctly gitignored and **never committed**.
+- **Root cause:** the CP9 branch was closed and CP10 was branched from `main` eleven minutes later
+  with no intervening `push`, orphaning the work on a local ref. A process slip, not a decision.
+- **Remediation:** the five runtime files plus their proving test were **forward-ported onto current
+  `main`** (PR #345, head `d58076cd…`, squash merge `49958941…`) — the historical branch was **not**
+  merged, so CP10 was preserved byte-for-byte. The five runtime files on `main` are byte-identical to
+  their `8b7b3290…` originals. The test file carries two disclosed test-only fixes (an unused-variable
+  lint error and a `TS2339` union-cast error) that CP9 never hit because the branch never ran CI.
+- **No Production change.** Merging the continuity PR did **not** and must **not** trigger a build,
+  deploy, restart, flag change or migration. Production already contains this runtime; the repository
+  was brought forward to match Production, never the reverse. **Do not attempt to equalize
+  Production's SHA with `main`.**
+- `.dockerignore` (added on the CP9 branch _after_ the deployed commit) is deliberately **excluded**
+  and reserved for a separate build-hygiene checkpoint.
+- The historical CP9 branch and its preservation bundle are **retained** until the owner formally
+  closes this incident.
 
 ## LB-B35 Learning system unification — CP0–CP7 merged and closed; CP8 evidence PASS and CLOSED (web only)
 
@@ -25,9 +102,18 @@ Nothing further is approved for implementation: P1 compatibility and Admin redes
 - **Native binary review remains DISABLED.** The uploaded payload stays legacy four-grade (`clientEventId`, `cardId`, `grade`, `occurredAt`); `PendingReviewEvent` has no `response` field and `ReviewGrade` has exactly four values. CP10 added no binary capability.
 - **Production was NOT changed by CP10.** No rebuild, no deploy, no flag change, no migration, no Production configuration or database change; verification was read-only.
 - **Scheduler V2 is NOT ready for activation.** CP10 removed the D16 compatibility blocker only. Remaining readiness items stay open: (1) the **native sync path is currently dormant** — production wires `DisabledReviewSyncTransport` with `MobileIdentityState.signedOut` and `synchronize()` has no production caller, so the fix is correct but unexercised end-to-end; (2) **learner-facing handling of a terminal `schedulerRejected` is not yet defined or proven** — `SchedulerRejected` is returned but nothing consumes it, and no UX decision has been made; (3) the **server-side 422 contract should be pinned end-to-end before activation** — the strict matcher degrades safely to retryable if the body shape changes, which would silently regress D16. Any Scheduler V2 activation remains a separate owner decision.
-- **Production state (CP9 closure).** Note: the Production facts recorded in this file below predate CP9 closure; CP9 evidence lives on the unmerged `feat/lb-b35-cp9-n1-preflight` branch, so lines describing `0023` as unapplied and the v1.2.1 image are stale on `main` and need a separate continuity pass (not in CP10 scope).
-- **Production state is unchanged.** Migration `0023` is **NOT applied to Production** (read-only check 2026-10-01: no `response`/`engine_version`/`users.timezone`, no `learner_daily_plans`/`review_event_rejections`); Production still runs the v1.2.1 learner image `sha256:5370578d187c` (`APP_SOURCE_SHA` `4ade0a88…`). **All CP4 flags are inactive in Production** (the CP4 build never shipped).
-- **Remaining Production gate for `0023`:** explicit owner approval; a fresh pre-migration dump with a restore check; the repository migration runner; the section 3 before/after fingerprints repeated on Production; flags left OFF at migration time; learner image rebuilt with the CP4 build args only under a separate decision.
+- **Production state (reconciled at CP11, 2026-10-02).** Migration `0023` **IS applied to
+  Production** (ledger `0023`), and Production runs the CP9 learner image
+  `sha256:6318eb286ec3187bd3857389bab5e2b9de6b105ba76307f936d1257b958dfa0c`
+  (`APP_SOURCE_SHA` `8b7b3290…`), not the v1.2.1 image. Five server flags are ON
+  (`LEARNBOX_TZ_PERSIST`, `LEARNBOX_SERVER_SESSION_PLAN`, `LEARNBOX_TODAY_WORKLOAD`,
+  `LEARNBOX_QUEUE_QUARANTINE`, `LEARNBOX_BINARY_REVIEW`); `LEARNBOX_SCHEDULER_V2` is **ABSENT**. The
+  learner **Binary Review UI is dormant** (`NEXT_PUBLIC_LEARNBOX_BINARY_REVIEW_UI=false` baked into
+  the artifact, branch dead-code-eliminated) and **native binary review remains disabled**, so
+  server capability does **not** mean learner-visible capability. Earlier statements in this file
+  describing `0023` as unapplied and the v1.2.1 image as live were pre-CP9 and are superseded here;
+  the v1.2.1 release record below is retained as **historical evidence**, not a current-state claim.
+- **The `0023` Production gate is CLOSED (CP9, 2026-10-02).** Migration `0023` was applied to Production under owner approval with a pre-migration dump and restore check; this gate is historical and no longer pending. What remains gated is **activation**, not schema: see the Binary UI activation gate and the Scheduler V2 readiness items above.
 - **Still blocked / pending:** O1 and scheduler v2 stay an activation gate (not authorized); **R8** (timer fires) is pending independently, checked via `ExecMainStartTimestamp` after 2026-10-05 03:36 UTC; Admin stays contained; Store deferred. `Today.newCount` semantics is a recorded finding for a later checkpoint.
 
 ## Admin P0 (LB-B30–B33) — cut over, Admin still contained
@@ -56,6 +142,11 @@ Full evidence: [`docs/evidence/ADMIN_P0_CUTOVER_EVIDENCE.md`](docs/evidence/ADMI
 Shipped to Production on 2026-09-30. Security hardening only: **no migrations, no schema or data
 change.** `main` is documentation-only ahead of the shipped commit; that is not application drift and
 must never trigger a deploy.
+
+**Superseded as the live artifact by the CP9 cutover (2026-10-02).** The table below is the v1.2.1
+release record and is accurate as history; it is **not** the currently deployed state. Production now
+runs `8b7b3290…` / `sha256:6318eb28…` on migration ledger `0023` — see the CP9 closure section above
+and `PROJECT_STATE.md`. The `v1.2.1` tag and image remain the documented rollback lineage.
 
 |                    |                                                                                |
 | ------------------ | ------------------------------------------------------------------------------ |
