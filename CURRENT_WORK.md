@@ -4,12 +4,18 @@
 
 ## Active work
 
-**No product feature work is active** (LB-B35 CP0–CP5 merged and closed; CP6 decision merged; CP7 implementation merged and closed; CP8 staging-activation evidence PASS and CLOSED, web only, below). CP9 (server-side Production cutover) is **CLOSED** as of 2026-10-02 with **D-3 deferred** (see the CP9 section below); CP10 (D16 native 422 handling) is **CLOSED**; CP11 (documentation/evidence continuity) is **CLOSED**; CP12 (Binary Review UI activation readiness) has its implementation **MERGED but NOT ACTIVATED** (see the CP12 section below). v1.2.0 and the v1.2.1 security patch (`LB-B29`) are released and
+**No product feature work is active** (LB-B35 CP0–CP5 merged and closed; CP6 decision merged; CP7 implementation merged and closed; CP8 staging-activation evidence PASS and CLOSED, web only, below). CP9 (server-side Production cutover) is **CLOSED** as of 2026-10-02; its deferred **D-3** gate has since **PASSED in CP14** (see the CP14 section below); CP10 (D16 native 422 handling) is **CLOSED**; CP11 (documentation/evidence continuity) is **CLOSED**; CP12 (Binary Review UI activation readiness) is **CLOSED** — implementation merged (`51c6b552`) and **now ACTIVE in Production** via CP14; CP13 (replacement artifact build + verification) is **CLOSED**; CP14 (controlled Production deployment + D-3 real-browser observation) is **CLOSED and PASSED** as of 2026-10-02. **The learner Binary Review UI is ACTIVE IN PRODUCTION.** v1.2.0 and the v1.2.1 security patch (`LB-B29`) are released and
 closed (below), and the Admin P0 credential cutover (`LB-B30`–`B33`) is complete (next section).
 Nothing further is approved for implementation: P1 compatibility and Admin redesign have **not** started. Deferred but not cancelled:
 `LB-B19` (reminders), `LB-B28b` (photo upload), `LB-B17` (Store).
 
-## LB-B35 CP9 Production cutover — CLOSED 2026-10-02 (server-side complete; D-3 DEFERRED)
+## LB-B35 CP9 Production cutover — CLOSED 2026-10-02 (server-side complete; D-3 since PASSED in CP14)
+
+> **Superseded status note (CP14, 2026-10-02).** This section records CP9 **as it stood at CP9
+> closure** and is retained for history. Two of its statements are no longer current: the deferred
+> **D-3** gate has since **PASSED** in CP14, and `NEXT_PUBLIC_LEARNBOX_BINARY_REVIEW_UI` is now
+> **`true`** in the deployed artifact. For current Production truth see
+> **LB-B35 CP14** below and `docs/PRODUCT_STATUS.md`.
 
 **Result: CLOSED.** Stages 0–6 executed against Production. Stage 7 / Scheduler V2 **not authorized,
 not started**.
@@ -26,25 +32,33 @@ healthy, health 200. Exactly five server flags ON: `LEARNBOX_TZ_PERSIST`,
 `events_md5 273f88ec…`, `scheds_md5 5f6282e2…`, `learner_daily_plans` 0, `review_event_rejections` 0.
 No learner history was created, modified or deleted to produce evidence.
 
-**D-3 is DEFERRED, not waived and not passed.** Blocker **D-H**: because
-`NEXT_PUBLIC_LEARNBOX_BINARY_REVIEW_UI` is inlined by Next at build time and the approved artifact
-was built with `false`, the binary branch is dead-code-eliminated — `grade-grid-binary` appears in
-**0** served JS bundles (only an unused CSS rule) and the binary instruction string in **0** files.
-The deployed learner UI is the legacy four-grade UI, so the real Production web client cannot emit
-binary `known`/`unknown`. **No Production browser binary-review observation has been performed.**
-The 21/21 isolated E2E/store/wire proof is valid evidence for the **server-side** binary path only
-and is **not** a substitute for D-3.
+**D-3 was DEFERRED at CP9 closure; it has since PASSED in CP14 (2026-10-02).** The CP9 blocker was
+**D-H**: because `NEXT_PUBLIC_LEARNBOX_BINARY_REVIEW_UI` is inlined by Next at build time and the
+approved CP9 artifact was built with `false`, the binary branch was dead-code-eliminated —
+`grade-grid-binary` appeared in **0** served JS bundles (only an unused CSS rule) and the binary
+instruction string in **0** files. At CP9 the deployed learner UI was the legacy four-grade UI, so
+the Production web client could not emit binary `known`/`unknown`, and **no Production browser
+binary-review observation had been performed at that time**. The 21/21 isolated E2E/store/wire proof
+was valid evidence for the **server-side** binary path only and was never a substitute for D-3.
+**CP13 rebuilt the artifact with the flag `true` and CP14 deployed it and executed D-3 in the real
+Production browser — see the CP14 section.**
 
-**Mandatory future gate — Binary UI Activation.** D-3 is deferred to the release that actually ships
-`NEXT_PUBLIC_LEARNBOX_BINARY_REVIEW_UI=true`. That checkpoint **must not be called PASS until D-3
-actually passes**; its ten mandatory requirements (structural proof of the binary UI in the built
-artifact, full verification of the new digest, explicit owner digest approval, N=20 real-browser
-reviews exercising both known and unknown, full accounting, unchanged control account) are recorded
-in `docs/evidence/LB_B35_CP9_IMPLEMENTATION_EVIDENCE.md` §19.
+**Mandatory future gate — Binary UI Activation: SATISFIED in CP13 + CP14 (2026-10-02).** D-3 was
+deferred to the release that actually ships `NEXT_PUBLIC_LEARNBOX_BINARY_REVIEW_UI=true`; that
+release is the CP13 artifact deployed in CP14, and **D-3 PASSED**. The ten mandatory requirements
+recorded in `docs/evidence/LB_B35_CP9_IMPLEMENTATION_EVIDENCE.md` §19 were met, with one
+owner-approved amendment: the sample size was **owner-reduced from N=20 to N=6 online + M=1
+offline** (pre-registered before the first click) because exact per-row attribution — not volume —
+is what proves the path, and the owner directed that unnecessary learner history not be manufactured.
+`NEXT_PUBLIC_LEARNBOX_BINARY_REVIEW_UI=false` above describes the **CP9** artifact; the artifact
+running in Production since CP14 has it **`true`**.
 
-**Owner-approved accounts for that future observation (baselines preserved, do NOT delete or reset):**
-test `b4efb0a4…` (Mona) — 32 events, md5 `d105b78e…`, 15 schedules md5 `8793e62b…`;
+**Owner-approved accounts for the D-3 observation (baselines preserved, do NOT delete or reset):**
+test `b4efb0a4…` (Mona) — CP9 baseline 32 events, md5 `d105b78e…`, 15 schedules md5 `8793e62b…`;
 control `451b0433…` (Bahram) — 58 events, md5 `3da4b653…`, 16 schedules md5 `a6cd0e28…`.
+**Post-CP14:** Mona now has **39** events (32 + 7 legitimate D-3 reviews) and 15 schedules, of which
+7 were updated by D-3; **Bahram remains unchanged at 58 events, `events_md5 3da4b653…`.** Mona's
+seven D-3 review events are valid Production learner history and **must not be altered or deleted.**
 
 **Deferred findings carried forward (not fixed in CP9, do not remediate without approval):**
 **P1** `learnbox_migrator` cannot `ALTER TABLE` (needs ownership; `neondb_owner` owns all tables) —
@@ -59,12 +73,19 @@ R3 `compose.yaml.cp9-pre`; R5 `.env` ladder (5 steps) in `/home/ubuntu/learnbox/
 
 **Evidence:** `docs/evidence/LB_B35_CP9_IMPLEMENTATION_EVIDENCE.md` §11–§19.
 
-## LB-B35 CP12 Binary Review UI activation readiness — implementation MERGED, NOT ACTIVATED 2026-10-02
+## LB-B35 CP12 Binary Review UI activation readiness — CLOSED; now ACTIVE in Production via CP14
 
-**Classification: the merge changes repository state only.** The Binary Review learner UI is **NOT
-activated**, and **D-3 has NOT passed**. `NEXT_PUBLIC_LEARNBOX_BINARY_REVIEW_UI` is inlined by Next
-at build time and remains `false` in the deployed artifact, so merging cannot and did not change
-learner-visible Production behaviour.
+> **Superseded status note (CP14, 2026-10-02).** The paragraph below records CP12 **at its merge**,
+> when the merge changed repository state only. That is no longer current Production truth: the CP12
+> implementation is **ACTIVE IN PRODUCTION** since CP14 and **D-3 has PASSED**. The one CP12 item
+> that remains unproven in a Production browser is the deterministic-422 `syncBlocked` notice, which
+> is **TEST-COVERED ONLY** — see the CP14 section.
+
+**Classification at merge time (historical).** The merge changed repository state only. The Binary
+Review learner UI was **not activated** at that point, and **D-3 had not passed**.
+`NEXT_PUBLIC_LEARNBOX_BINARY_REVIEW_UI` is inlined by Next at build time and was `false` in the
+then-deployed artifact, so merging could not and did not change learner-visible Production behaviour.
+**CP13 rebuilt the artifact with the flag `true`; CP14 deployed it.**
 
 **Merged:** PR #347, approved head `ae37dc635f96641ddaa425b6041c961cc309c7b3` → squash merge
 `51c6b552263d92cdeb644c863bbb0802624bd8b9` (now `main`). Merged with `--match-head-commit` head
@@ -103,10 +124,136 @@ remains **ABSENT in Production**.
 `2026-10-02T14:27:34Z` unchanged, health 200, `LEARNBOX_SCHEDULER_V2` absent. No build, deployment
 or restart occurred.
 
-**Still required before D-3, each a separate owner gate:** build a replacement `linux/amd64` artifact
-from merged `main` with `NEXT_PUBLIC_LEARNBOX_BINARY_REVIEW_UI=true` and every other currently-live
-build arg preserved (notably `NEXT_PUBLIC_LEARNBOX_PROFILE_IDENTITY_ENABLED=true`); deploy it;
-enable the UI; then perform the D-3 real-browser observation. None of these is authorized.
+**Required before D-3 — ALL COMPLETED (CP13 + CP14, 2026-10-02):** a replacement `linux/amd64`
+artifact was built from merged `main` with `NEXT_PUBLIC_LEARNBOX_BINARY_REVIEW_UI=true` and every
+other live build arg preserved (CP13); it was deployed by immutable digest and the UI is live (CP14);
+the D-3 real-browser observation was performed and **PASSED** (CP14). Each step was separately
+owner-authorized.
+
+## LB-B35 CP13 Binary UI replacement artifact — CLOSED (built + verified, not deployed) 2026-10-02
+
+**Result: artifact approved.** Build-and-verification checkpoint only; no Production change occurred.
+
+**Source:** `d4ea6558b708d055cda8c3aca5010064b1cec58c` (`main` after docs PR #348). Its runtime tree
+is **byte-identical** to the CP12 merge `51c6b552…` across all five runtime subtrees (`apps`,
+`packages`, `database`, `infrastructure`, `.github`); the only differences versus `51c6b552` are two
+`.md` files, so the docs PR provably cannot affect deployed behaviour.
+
+**Artifact:** `sha256:cb3090dada7b599ec2771fb6612fb14958bff24ab85fa72e8c4ee5ba05d10cc7`, 518 MB,
+`linux/amd64` (confirmed by `Architecture=amd64` **and** ELF `e_machine=0x3e`/EM_X86_64, not by
+Docker metadata alone). Build matrix: `PROFILE_IDENTITY_ENABLED=true`, `BINARY_REVIEW_UI=true`
+(the only flip versus CP9), `QUEUE_QUARANTINE=false`, `SESSION_EXPIRY_UX=false`,
+`SERVER_SESSION_PLAN=false`, `GOAL_UX_REMOVED=false`, `APP_SOURCE_SHA=d4ea6558…`.
+
+**Verified:** `grade-grid-binary` present in client **and** server bundles; `binaryAnswers` exactly
+2 (`known`, `unknown`); four-grade instruction «چقدر یادت آمد؟» **0** hits; plain `grade-grid` **0**;
+`/api/learner/profile/details` in 5 bundles; **zero** residual `process.env.NEXT_PUBLIC_*`; **zero**
+server-side `LEARNBOX_*` baked into the image (Production `.env` stays authoritative);
+`LEARNBOX_SCHEDULER_V2` absent from client and image; CP10/D16 mobile transport blob identical;
+CP12 `syncBlocked` present. Boot proved in isolation (own network + throwaway Postgres): health 200
+`{"status":"ok"}`, `restarts=0`. Tests **943 passed / 8 skipped (951)** with 10 DB-backed suites
+confirmed executed against real Postgres 17.
+
+**Method lesson — differential control build.** A second image was built from the same source with
+`BINARY_REVIEW_UI=false`. The Persian labels «بلد بودم»/«بلد نیستم» survive in **both** images
+(they are referenced outside the JSX branch), so **labels alone prove nothing about flag state**.
+Only the branch-only `grade-grid-binary` class and the four-grade instruction string discriminate.
+Also confirmed: `engine_version` appears in server bundles in **both** images — pre-existing
+V2-aware SQL, gated and dormant, not introduced by CP13.
+
+## LB-B35 CP14 Production deployment + D-3 — CLOSED and PASSED 2026-10-02
+
+**Result: PASS.** The CP13 artifact is deployed to Production and the **D-3 real-browser observation
+PASSED**. No rollback was triggered; no rollback criterion was met.
+
+**Canonical classification:**
+
+| Item                                                      | Status                                                |
+| --------------------------------------------------------- | ----------------------------------------------------- |
+| Binary Review UI                                          | **ACTIVE IN PRODUCTION**                              |
+| D-3 real-browser observation                              | **PASSED**                                            |
+| End-to-end binary review path                             | **PRODUCTION-PROVEN**                                 |
+| Binary mapping (`known`→`remembered`, `unknown`→`forgot`) | **PRODUCTION-PROVEN**                                 |
+| Offline queue / reconnect for binary review               | **PRODUCTION-PROVEN**                                 |
+| Duplicate/loss protection in the observed path            | **PRODUCTION-PROVEN**                                 |
+| Scheduler V2                                              | **OFF / NOT AUTHORIZED**                              |
+| `review_events.engine_version`                            | **NULL for all 97 events**                            |
+| CP12 deterministic-422 blocked-sync UX                    | **TEST-COVERED ONLY — NOT Production-browser-proven** |
+| 401 / session-expiry learner UX                           | **TEST-COVERED ONLY — NOT Production-browser-proven** |
+
+**Final Production state:** image
+`sha256:cb3090dada7b599ec2771fb6612fb14958bff24ab85fa72e8c4ee5ba05d10cc7`,
+`APP_SOURCE_SHA=d4ea6558b708d055cda8c3aca5010064b1cec58c`, migration ledger **23 /
+`0023_learning_persistence`**, container healthy, `RestartCount=0`, health 200 with `database: ok`.
+Exactly the five pre-existing server flags ON (`LEARNBOX_TZ_PERSIST`,
+`LEARNBOX_SERVER_SESSION_PLAN`, `LEARNBOX_TODAY_WORKLOAD`, `LEARNBOX_QUEUE_QUARANTINE`,
+`LEARNBOX_BINARY_REVIEW`); **`LEARNBOX_SCHEDULER_V2` ABSENT**;
+`NEXT_PUBLIC_LEARNBOX_BINARY_REVIEW_UI=true` baked ON. Production DB: **2 users / 35 cards /
+31 schedules / 97 review events**. Anonymous boundary unchanged (`/api/learner/today` 401,
+`/api/learner/profile/details` 401, `/api/health` 200). Zero errors in the deployment/D-3 log window.
+
+**Deployment discipline.** The approved artifact was **transferred, never rebuilt** (`docker save`
+→ `scp` → `docker load`; tar SHA-256 identical on both ends) and the host-side digest, platform and
+OCI source revision were re-verified **after** load. Compose pins the **immutable digest**, never a
+mutable tag. A ten-point gate (digest, `APP_SOURCE_SHA`, health, restart stability, flag set,
+`SCHEDULER_V2` absence, security probes, DB fingerprints, served-bundle binary branch, log errors)
+was passed **before** any D-3 click.
+
+**D-3 execution.** Real Production browser at `app.learnboxapp.com` (DNS confirmed → the VPS, not
+Vercel), real SMS OTP authentication as Mona, real learner workflow — no direct API calls, synthetic
+SQL, in-process substitution or staging results. **Pre-answer UI proof:** 1 binary container,
+**exactly 2** controls («بلد بودم», «بلد نیستم»), **0** plain four-grade grids, four-grade
+instruction absent. **Sample pre-registered before the first click:** N=6 online (3 known / 3
+unknown) + M=1 offline = **7**.
+
+| #   | content              | chosen          | persisted | grade      | `engine_version` | cursor |
+| --- | -------------------- | --------------- | --------- | ---------- | ---------------- | ------ |
+| 1   | `start-a1-klein`     | known           | known     | remembered | NULL             | 33     |
+| 2   | `start-a1-neu`       | unknown         | unknown   | forgot     | NULL             | 34     |
+| 3   | `start-a1-schule`    | known           | known     | remembered | NULL             | 35     |
+| 4   | `start-a1-stadt`     | unknown         | unknown   | forgot     | NULL             | 36     |
+| 5   | `start-a1-bahnhof`   | known           | known     | remembered | NULL             | 37     |
+| 6   | `start-a1-danke`     | unknown         | unknown   | forgot     | NULL             | 38     |
+| 7   | `start-a1-guten-tag` | known (offline) | known     | remembered | NULL             | 39     |
+
+**Mapping is exact and total:** `known`×4 → `remembered`×4, `unknown`×3 → `forgot`×3; no other
+combination exists. Every outcome `acknowledged` with `idempotent:false`; duplicate
+`client_event_id` count **0**. Schedules: exactly **7** touched, all Mona's — `known` → `review`,
+`unknown` → `relearning` with lapse increments.
+
+**Offline/reconnect proof:** answered with `navigator.onLine=false` — **zero** network calls fired,
+the answer queued locally and progress advanced; on reconnect it flushed as a **single** event
+(cursor 39), neither lost nor duplicated. A full page reload afterwards showed the reviews persisted
+server-side.
+
+**Global reconciliation:** baseline `2/35/31/90` + **7** explicitly attributed D-3 writes = final
+`2/35/31/97`. `engine_version` **NULL for 97/97** rows. **No writes outside Mona.** Migration ledger
+unchanged. **Bahram control byte-identical before and after:** 58 events,
+`events_md5 3da4b6537766f8b285ef256a46f477a7`,
+`sched_md5 3c1c93e32fbb3636e91c3e1b7d60299c` — no clicks, no writes.
+
+**Mona's seven D-3 review events are valid Production learner history and evidence of the activated
+feature. They must not be altered, reverted or deleted.**
+
+**Stated limitations (not glossed).** The CP12 deterministic-422 `syncBlocked` terminal UX is
+**test-covered only**: no 422 was artificially forced in Production by owner instruction, and the
+offline cycle exercised the _transient_ queue path, a different branch. The 401/session-expiry
+learner UX is **test-covered only**: `SESSION_EXPIRY_UX` remains `false` and untouched. Content
+identity was recorded via `content_id`; the binary controls carry no `data-testid`, so UI proof rests
+on the branch-only class plus the instruction string rather than labels.
+
+**Retained for rollback — do NOT delete:** rollback image
+`sha256:6318eb286ec3187bd3857389bab5e2b9de6b105ba76307f936d1257b958dfa0c`, present on the
+Production host and tagged `learnbox-app:cp14-rollback`; compose/`.env` backups in
+`/home/ubuntu/learnbox/backups/cp14-20261002T212538Z`.
+
+**Schema note (corrects an earlier working error):** `engine_version` belongs to **`review_events`**,
+**not** `card_schedules`. `card_schedules` is keyed `(user_id, card_id)` and carries
+`due_at`/`state`/`stability_days`/`lapses`. Migration `0023` adds `engine_version` to
+`review_events` only. Repository schema documentation was audited and already stated this correctly.
+
+**Scheduler V2 remains OFF and NOT AUTHORIZED.** No V2 flag, build, deploy, DB write or migration
+may occur without a new owner authorization.
 
 ## LB-B35 CP11 source-continuity incident — runtime source restored 2026-10-02
 
