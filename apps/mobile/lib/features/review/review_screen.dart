@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import 'binary_response.dart';
+import 'binary_review_ui_config.dart';
 import 'completion_screen.dart';
 import 'pronunciation_player.dart';
 import 'review_grade.dart';
@@ -16,12 +18,19 @@ class ReviewScreen extends StatefulWidget {
     required this.cards,
     required this.reviewQueue,
     required this.pronunciationPlayer,
+    this.binaryReviewUi,
     super.key,
   });
 
   final List<StartCard> cards;
   final ReviewQueue reviewQueue;
   final PronunciationPlayer pronunciationPlayer;
+
+  /// Overrides the build-time binary-review gate. Tests only; production passes
+  /// null so [BinaryReviewUiConfig] (default off) decides.
+  final bool? binaryReviewUi;
+
+  bool get showsBinaryReview => binaryReviewUi ?? BinaryReviewUiConfig.enabled;
 
   @override
   State<ReviewScreen> createState() => _ReviewScreenState();
@@ -73,7 +82,21 @@ class _ReviewScreenState extends State<ReviewScreen> {
     super.dispose();
   }
 
-  Future<void> _grade(ReviewGrade grade) async {
+  Future<void> _grade(ReviewGrade grade) => _save(
+        (occurredAt) => widget.reviewQueue.record(_card.id, grade, occurredAt),
+      );
+
+  /// Record an explicit binary answer (CP16 / Decision A).
+  ///
+  /// Routed through [ReviewQueue.recordBinary] — never through [_grade] — so the
+  /// learner's explicit known/unknown is persisted as such and is never
+  /// indistinguishable from a legacy four-grade answer.
+  Future<void> _respond(BinaryResponse response) => _save(
+        (occurredAt) =>
+            widget.reviewQueue.recordBinary(_card.id, response, occurredAt),
+      );
+
+  Future<void> _save(Future<void> Function(DateTime occurredAt) persist) async {
     if (_isSaving) {
       return;
     }
@@ -84,7 +107,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
     unawaited(_stopPlayback());
 
     try {
-      await widget.reviewQueue.record(_card.id, grade, DateTime.now());
+      await persist(DateTime.now());
     } catch (_) {
       if (mounted) {
         setState(() {
@@ -309,10 +332,16 @@ class _ReviewScreenState extends State<ReviewScreen> {
                   ),
                   const SizedBox(height: 12),
                 ],
-                _GradeButtons(
-                  enabled: !_isSaving,
-                  onGrade: _grade,
-                ),
+                if (widget.showsBinaryReview)
+                  _BinaryResponseButtons(
+                    enabled: !_isSaving,
+                    onRespond: _respond,
+                  )
+                else
+                  _GradeButtons(
+                    enabled: !_isSaving,
+                    onGrade: _grade,
+                  ),
               ],
             ],
           ),
@@ -391,6 +420,53 @@ const _gradeLabels = {
   'سخت بود': ReviewGrade.hard,
   'بلد بودم': ReviewGrade.remembered,
   'خیلی آسان بود': ReviewGrade.mastered,
+};
+
+/// The binary interaction (CP16 / Decision A).
+///
+/// Labels and ordering mirror Web's binary review exactly («بلد بودم» first,
+/// «بلد نیستم» second) so the same learner meets the same two choices on both
+/// clients. Reuses [_GradeButtons]' layout behaviour — a column of
+/// full-width buttons — which already survives the narrow large-text and
+/// landscape parity tests.
+class _BinaryResponseButtons extends StatelessWidget {
+  const _BinaryResponseButtons(
+      {required this.enabled, required this.onRespond});
+
+  final bool enabled;
+  final ValueChanged<BinaryResponse> onRespond;
+
+  @override
+  Widget build(BuildContext context) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (final entry in _binaryLabels.entries) ...[
+            if (entry.key != _binaryLabels.keys.first)
+              const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                ),
+                onPressed: enabled ? () => onRespond(entry.value) : null,
+                child: Text(
+                  entry.key,
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+          ],
+        ],
+      );
+}
+
+const _binaryLabels = {
+  'بلد بودم': BinaryResponse.known,
+  'بلد نیستم': BinaryResponse.unknown,
 };
 
 String _persianDigits(int value) => value
