@@ -19,10 +19,22 @@ class ReviewUploadResponse {
     required List<String> acknowledgedClientEventIds,
     this.reconciliationCursor,
     this.binaryReview = BinaryReviewRuntimeConfig.unknown,
-  }) : acknowledgedClientEventIds =
-            List<String>.unmodifiable(acknowledgedClientEventIds);
+    List<String> rejectedClientEventIds = const <String>[],
+  })  : acknowledgedClientEventIds =
+            List<String>.unmodifiable(acknowledgedClientEventIds),
+        rejectedClientEventIds =
+            List<String>.unmodifiable(rejectedClientEventIds);
 
   final List<String> acknowledgedClientEventIds;
+
+  /// Events the server rejected **terminally** (CP17 F1 per-item salvage).
+  ///
+  /// Review finding H3: salvage only ends head-of-line blocking if the client
+  /// also retires the salvaged event. These ids were judged permanently
+  /// unprocessable — resending them cannot succeed — so the queue must drop
+  /// them rather than keep offering them in every future batch. Retryable
+  /// conditions are never reported here; they surface as transport exceptions.
+  final List<String> rejectedClientEventIds;
 
   /// Authoritative per-learner projection version after the batch (ADR 0014),
   /// as a non-negative decimal string; null when no outcome was acknowledged.

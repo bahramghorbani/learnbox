@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
+import 'features/review/binary_review_ui_config.dart';
 import 'features/review/learner_home_shell.dart';
 import 'features/review/personal_vocabulary_store.dart';
 import 'features/review/pronunciation_player.dart';
@@ -20,6 +21,7 @@ class LearnBoxApp extends StatefulWidget {
     this.pronunciationPlayer = const MethodChannelPronunciationPlayer(),
     this.soundPreferenceStore,
     this.reviewSyncCoordinator,
+    this.binaryReviewSwitch,
     this.authEnabled = false,
     this.authScreenBuilder,
     super.key,
@@ -36,6 +38,9 @@ class LearnBoxApp extends StatefulWidget {
   final SoundPreferenceStore? soundPreferenceStore;
 
   final ReviewSyncCoordinator? reviewSyncCoordinator;
+
+  /// Runtime binary-review switch published by sync (CP17 F2 / review H2).
+  final BinaryReviewSwitch? binaryReviewSwitch;
   final bool authEnabled;
   final WidgetBuilder? authScreenBuilder;
   final Duration splashDuration;
@@ -86,6 +91,7 @@ class _LearnBoxAppState extends State<LearnBoxApp> {
             reviewQueue: widget.reviewQueue,
             personalVocabularyStore: widget.personalVocabularyStore,
             pronunciationPlayer: widget.pronunciationPlayer,
+            binaryReviewSwitch: widget.binaryReviewSwitch,
             authEnabled: widget.authEnabled,
             authScreenBuilder: widget.authScreenBuilder,
             splashDuration: widget.splashDuration,
@@ -100,6 +106,7 @@ class LearnBoxLaunchScreen extends StatefulWidget {
     required this.reviewQueue,
     this.personalVocabularyStore,
     required this.pronunciationPlayer,
+    this.binaryReviewSwitch,
     this.authEnabled = false,
     this.authScreenBuilder,
     required this.splashDuration,
@@ -110,6 +117,9 @@ class LearnBoxLaunchScreen extends StatefulWidget {
   final ReviewQueue reviewQueue;
   final PersonalVocabularyStore? personalVocabularyStore;
   final PronunciationPlayer pronunciationPlayer;
+
+  /// Runtime binary-review switch published by sync (CP17 F2 / review H2).
+  final BinaryReviewSwitch? binaryReviewSwitch;
   final bool authEnabled;
   final WidgetBuilder? authScreenBuilder;
   final Duration splashDuration;
@@ -149,6 +159,7 @@ class _LearnBoxLaunchScreenState extends State<LearnBoxLaunchScreen> {
         reviewQueue: widget.reviewQueue,
         personalVocabularyStore: widget.personalVocabularyStore,
         pronunciationPlayer: widget.pronunciationPlayer,
+        binaryReviewSwitch: widget.binaryReviewSwitch,
       );
     }
 

@@ -209,3 +209,58 @@ describe('CP17 — operator evidence is defined for every stage', () => {
     }
   });
 });
+
+describe('CP17 review — the kill switch must survive a dirty system (M1)', () => {
+  it('permits creating -> draining even when blockers are present', () => {
+    // The emergency stop is not a privilege granted by a clean preflight. Before the
+    // fix, blockers were collected before the exception was consulted and the
+    // exception itself sat in the retreat branch, so this transition was vetoed
+    // exactly when it mattered most.
+    const dirty = assessRollout(
+      server({ acceptanceEnabled: false, creationEnabled: true, binarySchemaApplied: false }),
+      client({
+        binaryUiCompiledIn: true,
+        honoursRuntimeKillSwitch: false,
+        realTransportWired: false,
+      }),
+      fleet({ binaryEventsCreated: true, binaryEventsQueued: true }),
+    );
+    expect(dirty.blockers.length).toBeGreaterThan(0);
+    const transition = canAdvance('creating', 'draining', dirty);
+    expect(transition.allowed).toBe(true);
+    expect(transition.reasons).toEqual([]);
+  });
+
+  it('still refuses to skip stages and to retreat past the boundary', () => {
+    const crossed = assessRollout(
+      server({ acceptanceEnabled: true, creationEnabled: true }),
+      client({ binaryUiCompiledIn: true }),
+      fleet({ binaryEventsCreated: true }),
+    );
+    expect(canAdvance('creating', 'armed', crossed).allowed).toBe(false);
+    expect(canAdvance('dormant', 'creating', crossed).allowed).toBe(false);
+  });
+});
+
+describe('CP17 review — stage labels may not contradict the boundary (M4)', () => {
+  it('reports draining, never creating, once events exist and creation is off', () => {
+    const result = assessRollout(
+      server({ acceptanceEnabled: true, creationEnabled: false }),
+      client({ binaryUiCompiledIn: true }),
+      fleet({ binaryEventsCreated: true, binaryEventsQueued: true }),
+    );
+    expect(result.stage).toBe('draining');
+    expect(result.pointOfNoReturnCrossed).toBe(true);
+  });
+
+  it('never reports a pre-boundary stage after the boundary is crossed', () => {
+    for (const creationEnabled of [true, false]) {
+      const result = assessRollout(
+        server({ acceptanceEnabled: true, creationEnabled }),
+        client({ binaryUiCompiledIn: true }),
+        fleet({ binaryEventsCreated: true }),
+      );
+      expect(['creating', 'draining']).toContain(result.stage);
+    }
+  });
+});

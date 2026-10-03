@@ -1,3 +1,4 @@
+import 'package:learnbox/features/review/binary_review_ui_config.dart';
 import 'package:learnbox/features/review/review_queue.dart';
 import 'package:learnbox/features/sync/http_review_sync_transport.dart';
 import 'package:learnbox/features/sync/mobile_identity_state.dart';
@@ -17,17 +18,20 @@ class ReviewSyncCoordinator {
     required ReviewSyncTransport transport,
     ReconciliationCursorStore? reconciliationCursorStore,
     ReviewReconciliationTransport? reconciliationTransport,
+    BinaryReviewSwitch? binaryReviewSwitch,
   })  : _queue = queue,
         _identityState = identityState,
         _transport = transport,
         _reconciliationCursorStore = reconciliationCursorStore,
-        _reconciliationTransport = reconciliationTransport;
+        _reconciliationTransport = reconciliationTransport,
+        _binaryReviewSwitch = binaryReviewSwitch;
 
   final ReviewQueue _queue;
   final MobileIdentityState Function() _identityState;
   final ReviewSyncTransport _transport;
   final ReconciliationCursorStore? _reconciliationCursorStore;
   final ReviewReconciliationTransport? _reconciliationTransport;
+  final BinaryReviewSwitch? _binaryReviewSwitch;
   Future<ReviewSyncResult>? _inFlight;
 
   static const _batchSize = 20;
@@ -70,8 +74,27 @@ class ReviewSyncCoordinator {
         batch,
         reconciliationCursor: storedCursor,
       );
+      // Review finding H2: publish the server's switch so the UI can withdraw the
+      // binary interaction at runtime. Done before any early return below, because a
+      // batch that acknowledges nothing is exactly when an operator has just killed
+      // the feature and the UI most needs to hear about it.
+      _binaryReviewSwitch?.adopt(response.binaryReview);
+
+      // Review finding H3: retire terminally-rejected events. Without this the
+      // salvaged event stays queued, keeps occupying one of the 20 batch slots and
+      // reproduces the head-of-line blocking F1 was meant to remove. The ids are
+      // validated against the uploaded batch first: a server may only retire an
+      // event this client actually sent. Quarantined, not silently dropped — the
+      // learner's answer remains recoverable as forensic evidence.
+      final rejected = response.rejectedClientEventIds
+          .where((id) => batch.any((event) => event.clientEventId == id))
+          .toList(growable: false);
+      if (rejected.isNotEmpty) {
+        await _queue.quarantineByClientEventId(rejected);
+      }
+
       final acknowledged = validateAcknowledgements(batch, response);
-      if (acknowledged.isEmpty) {
+      if (acknowledged.isEmpty && rejected.isEmpty) {
         return RetryableFailure(remainingCount: pendingEvents.length);
       }
 

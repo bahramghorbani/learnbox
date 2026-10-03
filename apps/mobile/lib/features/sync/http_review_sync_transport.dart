@@ -137,10 +137,21 @@ class HttpReviewSyncTransport
     final binaryReview =
         BinaryReviewRuntimeConfig.fromJson(decoded['binaryReview']);
     final acknowledged = <String>[];
+    // Review finding H3: collect terminally rejected ids so the coordinator can
+    // retire them. Only the server's `validation` verdict is terminal; any other
+    // non-acknowledged status is treated as "say nothing", leaving the event queued.
+    final rejected = <String>[];
     String? acknowledgedCursor;
     for (final outcome in decoded['outcomes'] as List<Object?>) {
-      if (outcome is! Map<String, dynamic> ||
-          outcome['status'] != 'acknowledged') {
+      if (outcome is! Map<String, dynamic>) continue;
+      if (outcome['status'] == 'validation') {
+        final rejectedId = outcome['clientEventId'];
+        if (rejectedId is String && rejectedId.isNotEmpty) {
+          rejected.add(rejectedId);
+        }
+        continue;
+      }
+      if (outcome['status'] != 'acknowledged') {
         continue;
       }
       final clientEventId = outcome['clientEventId'];
@@ -159,6 +170,7 @@ class HttpReviewSyncTransport
       acknowledgedClientEventIds: acknowledged,
       reconciliationCursor: acknowledgedCursor,
       binaryReview: binaryReview,
+      rejectedClientEventIds: rejected,
     );
   }
 

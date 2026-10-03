@@ -152,6 +152,35 @@ class ReviewQueue {
         return List<Object?>.unmodifiable(_quarantine);
       });
 
+  /// Retire events the server rejected terminally, preserving them as evidence.
+  ///
+  /// CP17 review finding H3. A terminally-rejected event must leave the pending
+  /// queue — otherwise it is re-sent in every batch forever and head-of-line
+  /// blocking survives the F1 salvage fix — but it must not simply vanish: the
+  /// learner really answered, so the serialized event is moved into the
+  /// quarantine evidence store. Uses the same mutation lock as [acknowledge] so
+  /// a concurrent enqueue cannot be lost.
+  Future<void> quarantineByClientEventId(Iterable<String> ids) async {
+    final rejected = ids.toSet();
+    if (rejected.isEmpty) return;
+    await _serializeMutation(() async {
+      final events = await _load();
+      final kept = <PendingReviewEvent>[];
+      final removed = <Object?>[];
+      for (final event in events) {
+        if (rejected.contains(event.clientEventId)) {
+          removed.add(event.toJson());
+        } else {
+          kept.add(event);
+        }
+      }
+      if (removed.isEmpty) return;
+      _quarantine = _capQuarantine([..._quarantine, ...removed]);
+      await _persistQuarantine();
+      await _write(kept);
+    });
+  }
+
   Future<void> acknowledge(Iterable<String> ids) async {
     final acknowledged = ids.toSet();
     await _serializeMutation(() async {

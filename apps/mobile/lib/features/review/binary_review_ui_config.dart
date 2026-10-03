@@ -1,5 +1,8 @@
 /// Build-time gate for the native binary review interaction (CP16 / Decision A).
-///
+library;
+
+import 'package:flutter/foundation.dart';
+
 /// Mirrors Web's `NEXT_PUBLIC_LEARNBOX_BINARY_REVIEW_UI`. Default **off**: a build
 /// that does not pass the define keeps the historical four-grade interaction, so
 /// the migration is independently deployable and reversible by rebuild.
@@ -101,4 +104,25 @@ class BinaryReviewRuntimeConfig {
 
   @override
   int get hashCode => Object.hash(creationEnabled, acceptanceEnabled);
+}
+
+/// Last switch state the server advertised, held where the UI can read it.
+///
+/// CP17 review finding H2: the switch previously reached [ReviewUploadResponse] and
+/// stopped there, so a build whose compile-time define was `true` kept offering the
+/// binary interaction after the operator disabled creation — the kill switch existed on
+/// the wire but not in the product. This notifier is the one place the UI consults, and
+/// the sync coordinator publishes into it on every successful upload.
+///
+/// Deliberately in-memory and process-scoped: it must not outlive a server that has been
+/// repaired, and a restart re-learns the truth on the first sync. Until that first sync
+/// the value is [BinaryReviewRuntimeConfig.unknown], which defers to the compile-time
+/// gate, so this can never *enable* a feature the build did not ship.
+class BinaryReviewSwitch extends ValueNotifier<BinaryReviewRuntimeConfig> {
+  BinaryReviewSwitch([super.value = BinaryReviewRuntimeConfig.unknown]);
+
+  /// Adopt what the server just advertised.
+  void adopt(BinaryReviewRuntimeConfig next) {
+    if (next != value) value = next;
+  }
 }

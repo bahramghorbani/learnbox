@@ -157,7 +157,14 @@ function deriveStage(
   client: ClientBuildState,
   fleet: FleetState,
 ): RolloutStage {
-  if (fleet.binaryEventsCreated && !server.creationEnabled) return 'draining';
+  // CP17 review finding M4: stage labels must never contradict the boundary. Once binary
+  // events exist the fleet is past the one-way door, so the only honest labels are
+  // `creating` (still producing) or `draining` (stopped producing). Reporting
+  // `serverReady`/`armed`/`dormant` while `pointOfNoReturnCrossed` is true would hand an
+  // operator evidence that is internally inconsistent.
+  if (fleet.binaryEventsCreated) {
+    return server.creationEnabled && client.binaryUiCompiledIn ? 'creating' : 'draining';
+  }
   if (server.creationEnabled && client.binaryUiCompiledIn) return 'creating';
   if (client.binaryUiCompiledIn) return 'armed';
   if (server.acceptanceEnabled) return 'serverReady';
@@ -190,10 +197,20 @@ export function canAdvance(
   to: RolloutStage,
   assessment: RolloutAssessment,
 ): StageTransition {
-  const reasons: string[] = [];
   const fromIndex = STAGE_ORDER.indexOf(from);
   const toIndex = STAGE_ORDER.indexOf(to);
 
+  // CP17 review finding M1: `draining` sits AFTER `creating` in stage order, so
+  // `creating -> draining` is a forward index step. Testing it inside the retreat
+  // branch made the exception dead code, and the unconditional blocker check below
+  // would then veto the one transition that must never be vetoed. The kill switch is
+  // therefore decided first, before blockers are even consulted: an emergency stop is
+  // not a privilege granted by a clean preflight.
+  if (from === 'creating' && to === 'draining') {
+    return { allowed: true, reasons: [] };
+  }
+
+  const reasons: string[] = [];
   if (assessment.blockers.length > 0) {
     reasons.push(...assessment.blockers);
   }
@@ -203,9 +220,7 @@ export function canAdvance(
       reasons.push(`Cannot skip stages: ${from} -> ${to}.`);
     }
   } else if (toIndex < fromIndex) {
-    // The kill-switch retreat is always allowed: it is the emergency mechanism.
-    const isKillSwitchRetreat = from === 'creating' && to === 'draining';
-    if (!isKillSwitchRetreat && assessment.pointOfNoReturnCrossed) {
+    if (assessment.pointOfNoReturnCrossed) {
       reasons.push(
         'The one-way boundary has been crossed (binary events exist): retreat to ' +
           `${to} is unsafe. Only forward recovery or the kill switch is available.`,

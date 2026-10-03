@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../ui/learner_bottom_navigation.dart';
+import 'binary_review_ui_config.dart';
 import 'personal_vocabulary_store.dart';
 import 'profile_screen.dart';
 import 'pronunciation_player.dart';
@@ -16,6 +17,7 @@ class LearnerHomeShell extends StatefulWidget {
     required this.reviewQueue,
     required this.pronunciationPlayer,
     this.personalVocabularyStore,
+    this.binaryReviewSwitch,
     super.key,
   });
 
@@ -23,6 +25,9 @@ class LearnerHomeShell extends StatefulWidget {
   final ReviewQueue reviewQueue;
   final PronunciationPlayer pronunciationPlayer;
   final PersonalVocabularyStore? personalVocabularyStore;
+
+  /// Runtime binary-review switch published by sync (CP17 F2 / review H2).
+  final BinaryReviewSwitch? binaryReviewSwitch;
 
   @override
   State<LearnerHomeShell> createState() => _LearnerHomeShellState();
@@ -38,6 +43,7 @@ class _LearnerHomeShellState extends State<LearnerHomeShell> {
               startPackRepository: widget.startPackRepository,
               reviewQueue: widget.reviewQueue,
               pronunciationPlayer: widget.pronunciationPlayer,
+              binaryReviewSwitch: widget.binaryReviewSwitch,
             ),
           LearnerDestination.words => WordsScreen(
               startPackRepository: widget.startPackRepository,
