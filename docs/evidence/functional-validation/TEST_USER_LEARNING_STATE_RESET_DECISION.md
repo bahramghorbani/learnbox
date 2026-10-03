@@ -124,6 +124,42 @@ preferred: it needs no privilege change to a production role.
 This mirrors the already-recorded CP9 deferral **P1** (migrator lacks `ALTER`) — the role split is
 intentionally narrow, and reset is simply not a capability it was granted.
 
+### Owner resolutions (recorded 2026-10-03, after the decision was merged)
+
+**FV-1 resolved — recovery mechanism.** The preferred pre-reset recovery point is an
+**owner-created Neon snapshot/branch**. A verified logical `COPY` export with md5 fingerprints may
+**additionally** be retained as secondary evidence, but it **does not replace** the Neon recovery
+point. The reset must not proceed unless the Neon recovery point exists and the owner confirms it.
+
+**FV-2 resolved — execution identity.** The eventual scoped reset is executed as **`neondb_owner`
+through the Neon administrative surface**, rather than broadening `learnbox_app` or
+`learnbox_migrator` Production privileges merely to perform the validation reset. No Production
+role or grant change is authorized.
+
+**FV-3 RESOLVED — Variant 1 approved (owner decision, 2026-10-03). Reset Mona only.**
+
+- **Account A / fresh-user: Mona `b4efb0a4-d829-4f33-b686-0f498fbef62c` → learner state IS reset.**
+- **Account B / isolation control: Bahram `451b0433-7204-44e9-957f-250cac59e28e` → MUST remain
+  COMPLETELY UNTOUCHED.**
+
+This is the **later owner decision and it narrows the execution scope**. It **supersedes the broader
+wording in §1 above**, which said both existing test users would be reset. That historical wording
+is **not to be reinterpreted or applied** — Variant 1 governs execution. Reset scope is therefore
+**56 rows, all Mona's**, not 97+.
+
+Bahram's current non-zero state is **intentional and valuable isolation evidence**: 58 review
+events, 16 card schedules, 1 reconciliation cursor, and the associated pre-reset fingerprints
+(`review_events` `f50d09c9b0e5ac609adae8901197f1da`, `card_schedules`
+`6c7fe96a66c9b8794efea569e66cc846`, cursors `0912c7f1aa9d5d5425eb01004c802461`, combined digest
+`f6f477b2f42a957a15092871655eb277`). These must remain **byte-identical** through Mona's reset and
+the subsequent Functional Validation unless the owner separately authorizes activity on Bahram. A
+count-only comparison is explicitly insufficient where a stable fingerprint can be computed.
+
+Variant 2 (reset both) is **REJECTED**, retained as historical context only in
+`LEARNER_STATE_RESET_RUNBOOK.md` §14.
+
+Execution steps are prepared in `LEARNER_STATE_RESET_RUNBOOK.md` (prepared, **not executed**).
+
 ## 6. Post-reset verification (required before the device test begins)
 
 Database, for **both** accounts:
