@@ -4,6 +4,18 @@
 
 ## Active work
 
+**Functional Validation — test-user learning-state reset: DECISION RECORDED, NOT EXECUTED**
+(2026-10-03). The owner's decision to reset both test users to fresh learners before the final
+real-device acceptance test is recorded in
+`docs/evidence/functional-validation/TEST_USER_LEARNING_STATE_RESET_DECISION.md`. Live schema
+inspection was read-only; **no Production data has been modified**. Execution is gated on owner
+approval immediately before the device test, and on two blockers found during inspection:
+**FV-1** `pg_dump` is impossible (Neon managed; all tables owned by `neondb_owner`) so the backup
+must be a verified logical `COPY` export plus md5 fingerprints, or an owner-taken Neon snapshot;
+**FV-2** neither `learnbox_app` nor `learnbox_migrator` can delete `learner_daily_plans` /
+`review_event_rejections`, so the reset must run as `neondb_owner` or require an explicit,
+owner-approved grant. Accounts and auth identities are retained in all cases.
+
 **No product feature work is active** (LB-B35 CP0–CP5 merged and closed; CP6 decision merged; CP7 implementation merged and closed; CP8 staging-activation evidence PASS and CLOSED, web only, below). CP9 (server-side Production cutover) is **CLOSED** as of 2026-10-02; its deferred **D-3** gate has since **PASSED in CP14** (see the CP14 section below); CP10 (D16 native 422 handling) is **CLOSED**; CP11 (documentation/evidence continuity) is **CLOSED**; CP12 (Binary Review UI activation readiness) is **CLOSED** — implementation merged (`51c6b552`) and **now ACTIVE in Production** via CP14; CP13 (replacement artifact build + verification) is **CLOSED**; CP14 (controlled Production deployment + D-3 real-browser observation) is **CLOSED and PASSED** as of 2026-10-02. **The learner Binary Review UI is ACTIVE IN PRODUCTION.** v1.2.0 and the v1.2.1 security patch (`LB-B29`) are released and
 closed (below), and the Admin P0 credential cutover (`LB-B30`–`B33`) is complete (next section).
 Nothing further is approved for implementation: P1 compatibility and Admin redesign have **not** started. Deferred but not cancelled:
