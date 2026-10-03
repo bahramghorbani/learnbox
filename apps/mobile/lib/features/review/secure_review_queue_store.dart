@@ -1,5 +1,6 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
+import 'review_queue.dart';
 import 'review_queue_store.dart';
 
 class SecureReviewQueueStore implements ReviewQueueStore {
@@ -26,6 +27,16 @@ class SecureReviewQueueStore implements ReviewQueueStore {
   Future<void> write(String serializedEvents) =>
       _storage.write(key: storageKey, value: serializedEvents);
 }
+
+/// The production review queue, wired to both durable stores.
+///
+/// This factory exists so the composition is reachable from tests: mutant M21
+/// showed that dropping the quarantine store in `main()` left every suite green,
+/// because nothing could observe `main()`. Build the queue here, assert here.
+ReviewQueue createProductionReviewQueue() => ReviewQueue(
+      store: SecureReviewQueueStore(),
+      quarantineStore: SecureReviewQuarantineStore(),
+    );
 
 /// Durable store for CP17 quarantine evidence, separate from the pending queue.
 ///

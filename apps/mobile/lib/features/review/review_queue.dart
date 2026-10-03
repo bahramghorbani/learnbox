@@ -71,6 +71,16 @@ class ReviewQueue {
   /// When no quarantine store is supplied the evidence is kept in memory for
   /// the lifetime of the queue only; it is never written into the envelope.
   final ReviewQueueStore? _quarantineStore;
+
+  /// Whether quarantine evidence will outlive this queue instance.
+  ///
+  /// Exposed so the *production composition* is assertable: mutant M21 removed
+  /// the durable store from the factory and every suite stayed green, because
+  /// nothing could observe how production wired itself. Memory-only quarantine
+  /// is acceptable in tests and fatal in production, so the difference must be
+  /// visible to a test.
+  bool get hasDurableQuarantine => _quarantineStore != null;
+
   final ReviewEventIdFactory _idFactory;
   Future<void> _mutationTail = Future<void>.value();
   List<Object?> _quarantine = const [];

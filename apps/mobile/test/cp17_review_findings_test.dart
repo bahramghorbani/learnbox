@@ -4,6 +4,9 @@ import 'package:learnbox/features/review/pending_review_event.dart';
 import 'package:learnbox/features/review/review_grade.dart';
 import 'package:learnbox/features/review/review_queue.dart';
 import 'package:learnbox/features/review/review_queue_store.dart';
+import 'package:learnbox/features/review/pronunciation_player.dart';
+import 'package:learnbox/features/review/review_screen.dart';
+import 'package:learnbox/features/review/secure_review_queue_store.dart';
 import 'package:learnbox/features/sync/mobile_identity_state.dart';
 import 'package:learnbox/features/sync/review_sync_coordinator.dart';
 import 'package:learnbox/features/sync/review_sync_transport.dart';
@@ -12,8 +15,25 @@ import 'package:learnbox/features/sync/review_sync_transport.dart';
 ///
 /// Each test pins a defect the adversarial review found in the first CP17
 /// candidate. These are behavioural: every one failed before its fix.
+class _SilentPlayer implements PronunciationPlayer {
+  @override
+  Future<void> playAsset(String assetPath) async {}
+
+  @override
+  Future<void> stop() async {}
+}
+
+/// A ReviewScreen built only to read its gate; no cards are needed because
+/// [ReviewScreen.showsBinaryReview] is a pure function of the two flags.
+ReviewScreen _gate({bool? local, BinaryReviewSwitch? sw}) => ReviewScreen(
+      cards: const [],
+      reviewQueue: ReviewQueue(store: _MemoryStore()),
+      pronunciationPlayer: _SilentPlayer(),
+      binaryReviewUi: local,
+      binaryReviewSwitch: sw,
+    );
+
 class _MemoryStore implements ReviewQueueStore {
-  _MemoryStore([this._value]);
   String? _value;
   @override
   Future<String?> read() async => _value;
@@ -80,15 +100,25 @@ void main() {
       expect(await queue.quarantinedEntries(), hasLength(1));
     });
 
-    test('a server may not retire an event that was not in the batch',
+    test(
+        'a server may not retire a queued event that lay beyond the batch window',
         () async {
-      final queue = _queueWithIds(['mine']);
-      await queue.record('card-mine', ReviewGrade.remembered, _at);
+      // The batch is capped at 20, so a 21-event queue sends only the first 20.
+      // Event 21 exists in the queue but was never uploaded. A server naming it
+      // must not be able to retire it: that would discard a learner answer the
+      // server has never actually evaluated. This is why the rejected ids are
+      // filtered against the uploaded batch and not merely handed to the queue --
+      // the queue cannot distinguish "unknown id" from "known but unsent".
+      final ids = List<String>.generate(21, (i) => 'e$i');
+      final queue = _queueWithIds(ids);
+      for (final id in ids) {
+        await queue.record('card-$id', ReviewGrade.remembered, _at);
+      }
 
       final transport = _RecordingTransport(
         (events) => ReviewUploadResponse(
           acknowledgedClientEventIds: const [],
-          rejectedClientEventIds: const ['not-sent'],
+          rejectedClientEventIds: const ['e20'],
         ),
       );
       final coordinator = ReviewSyncCoordinator(
@@ -99,7 +129,12 @@ void main() {
 
       await coordinator.synchronize();
 
-      expect(await queue.pendingCount(), 1);
+      expect(transport.batches.single.length, 20,
+          reason: 'the batch must be capped below the queue depth');
+      expect(transport.batches.single.map((e) => e.clientEventId),
+          isNot(contains('e20')));
+      expect(await queue.pendingCount(), 21,
+          reason: 'an unsent event must survive a server naming it');
       expect(await queue.quarantinedEntries(), isEmpty);
     });
   });
@@ -192,6 +227,55 @@ void main() {
       );
       expect(await second.quarantinedEntries(), hasLength(1));
       expect(await second.pendingCount(), 0);
+    });
+  });
+
+  group('M20 - creation disable dominates a local UI enable', () {
+    test('an explicit local true cannot override creationEnabled=false', () {
+      // The kill switch is the operator's, not the build's. If an explicit local
+      // enable could win, the one control that must work when the system is
+      // unhealthy would be the one control a stale build can veto.
+      final sw = BinaryReviewSwitch();
+      sw.adopt(const BinaryReviewRuntimeConfig(
+        creationEnabled: false,
+        acceptanceEnabled: true,
+      ));
+
+      final ungated = _gate(local: true);
+      expect(ungated.showsBinaryReview, isTrue,
+          reason: 'with no switch present the local override still decides');
+
+      final gated = _gate(local: true, sw: sw);
+      expect(gated.showsBinaryReview, isFalse,
+          reason: 'creation disabled must dominate an explicit local enable');
+    });
+
+    test('enabling creation does not force the UI on when capability is off',
+        () {
+      // Creation is permission, not capability: a server cannot add an
+      // interaction to a build that never shipped it.
+      final sw = BinaryReviewSwitch();
+      sw.adopt(const BinaryReviewRuntimeConfig(
+        creationEnabled: true,
+        acceptanceEnabled: true,
+      ));
+
+      final gated = _gate(local: false, sw: sw);
+      expect(gated.showsBinaryReview, isFalse);
+    });
+  });
+
+  group('M21 - production composition keeps durable quarantine', () {
+    test('the production queue is built with a durable quarantine store', () {
+      // Operational invariant: quarantine evidence must outlive the queue
+      // instance. Mutant M21 dropped the store from the factory and every suite
+      // stayed green because main() is unobservable; this makes it observable.
+      expect(createProductionReviewQueue().hasDurableQuarantine, isTrue,
+          reason: 'production quarantine evidence must survive a restart');
+    });
+
+    test('a memory-only queue is honestly reported as non-durable', () {
+      expect(ReviewQueue(store: _MemoryStore()).hasDurableQuarantine, isFalse);
     });
   });
 }

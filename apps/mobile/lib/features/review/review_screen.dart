@@ -39,10 +39,13 @@ class ReviewScreen extends StatefulWidget {
   /// the interaction, never add it to a build that did not ship it.
   final BinaryReviewSwitch? binaryReviewSwitch;
 
+  /// The runtime switch is dominant: it gates the build-time value *and* any
+  /// explicit [binaryReviewUi] override. Found by mutant M20 — with the override
+  /// short-circuiting first, an explicit `true` silently outranked an operator
+  /// who had just disabled creation, which is exactly backwards for a kill switch.
   bool get showsBinaryReview =>
-      binaryReviewUi ??
-      (BinaryReviewUiConfig.enabled &&
-          (binaryReviewSwitch?.value.creationEnabled ?? true));
+      (binaryReviewUi ?? BinaryReviewUiConfig.enabled) &&
+      (binaryReviewSwitch?.value.creationEnabled ?? true);
 
   @override
   State<ReviewScreen> createState() => _ReviewScreenState();
