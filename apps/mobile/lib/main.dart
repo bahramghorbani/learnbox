@@ -6,7 +6,6 @@ import 'features/identity/mobile_auth_config.dart';
 import 'features/identity/mobile_preview_auth_runtime.dart';
 import 'features/review/binary_review_ui_config.dart';
 import 'features/review/bundled_start_pack_repository.dart';
-import 'features/review/review_queue.dart';
 import 'features/review/secure_review_queue_store.dart';
 import 'features/sync/review_sync_coordinator.dart';
 
@@ -19,12 +18,11 @@ Future<void> main() async {
       await rootBundle.loadString('assets/content/start-a1-v1.json');
   final startPackRepository =
       BundledStartPackRepository.fromJsonString(startPackJson);
-  final reviewQueue = ReviewQueue(
-    store: SecureReviewQueueStore(),
-    // Review finding H4: without a durable store the F3 quarantine evidence is
-    // memory-only and lost on restart, defeating the forensic recovery CP17 relies on.
-    quarantineStore: SecureReviewQuarantineStore(),
-  );
+  // Review finding H4 / mutant M21: production composes its queue through the
+  // shared factory so the composition is covered by a test. Inlining it here
+  // again would recreate the blind spot where dropping the durable quarantine
+  // store left every suite green.
+  final reviewQueue = createProductionReviewQueue();
   // Review finding H2: one switch instance, written by sync, read by the UI gate.
   final binaryReviewSwitch = BinaryReviewSwitch();
   const mobileAuthConfig = MobileAuthConfig.defaults();
