@@ -183,32 +183,102 @@ void main() {
     expect(await queue.pendingCount(), 0);
   });
 
-  test('malformed stored structures fail closed and are overwritten', () async {
-    const malformedValues = [
-      '{not-json',
-      '{"schemaVersion":2,"events":[]}',
-      '{"schemaVersion":1,"events":['
-          '{"clientEventId":"valid","cardId":"start-a1-haus","grade":"hard",'
-          '"occurredAt":"2026-08-13T09:00:00.000Z"},'
-          '{"clientEventId":"broken","cardId":"start-a1-tisch","grade":"unknown",'
-          '"occurredAt":"2026-08-13T10:00:00.000Z"}'
-          ']}',
-      '{"schemaVersion":1,"events":['
-          '{"id":"legacy-event","cardId":"start-a1-haus","grade":"hard",'
-          '"occurredAt":"2026-08-13T09:00:00.000Z"}'
-          ']}',
-    ];
-
-    for (final malformed in malformedValues) {
+  test('unreadable storage is quarantined, never silently discarded', () async {
+    // Nothing salvageable: the bytes must survive as evidence.
+    for (final malformed in ['{not-json', '{"schemaVersion":1}']) {
       final store = InMemoryReviewQueueStore(initialValue: malformed);
       final queue = ReviewQueue(store: store);
 
       expect(await queue.pendingCount(), 0, reason: malformed);
-      expect(jsonDecode(store.value!), {
-        'schemaVersion': 1,
-        'events': <Object?>[],
-      });
+      expect(
+        await queue.quarantinedEntries(),
+        isNotEmpty,
+        reason: 'evidence must be preserved for $malformed',
+      );
     }
+  });
+
+  test('B-3: one malformed event cannot destroy its valid neighbours',
+      () async {
+    final store = InMemoryReviewQueueStore(
+      initialValue: '{"schemaVersion":1,"events":['
+          '{"clientEventId":"valid","cardId":"start-a1-haus","grade":"hard",'
+          '"occurredAt":"2026-08-13T09:00:00.000Z"},'
+          '{"clientEventId":"broken","cardId":"start-a1-tisch",'
+          '"grade":"not-a-grade","occurredAt":"2026-08-13T10:00:00.000Z"}'
+          ']}',
+    );
+    final queue = ReviewQueue(store: store);
+
+    final pending = await queue.pendingEvents();
+    expect(pending.map((e) => e.clientEventId), ['valid']);
+    expect(await queue.quarantinedEntries(), hasLength(1));
+  });
+
+  test('B-3: a legacy queue survives an upgrade that adds an unknown field',
+      () async {
+    // Written by a NEWER build: extra event key + unknown envelope key.
+    final store = InMemoryReviewQueueStore(
+      initialValue: '{"schemaVersion":1,"events":['
+          '{"clientEventId":"legacy-1","cardId":"start-a1-haus","grade":"hard",'
+          '"occurredAt":"2026-08-13T09:00:00.000Z","response":"known"}'
+          '],"unknownEnvelopeKey":true}',
+    );
+    final queue = ReviewQueue(store: store);
+
+    final pending = await queue.pendingEvents();
+    expect(pending, hasLength(1));
+    expect(pending.single.clientEventId, 'legacy-1');
+    expect(pending.single.grade, ReviewGrade.hard);
+    expect(await queue.quarantinedEntries(), isEmpty);
+  });
+
+  test('B-3: an unknown future schemaVersion does not wipe pending reviews',
+      () async {
+    final store = InMemoryReviewQueueStore(
+      initialValue: '{"schemaVersion":99,"events":['
+          '{"clientEventId":"future-1","cardId":"start-a1-haus","grade":"hard",'
+          '"occurredAt":"2026-08-13T09:00:00.000Z"}'
+          ']}',
+    );
+    final queue = ReviewQueue(store: store);
+
+    expect((await queue.pendingEvents()).single.clientEventId, 'future-1');
+    expect(await queue.quarantinedEntries(), isEmpty);
+  });
+
+  test('B-3: clientEventId and occurredAt survive a queue migration unchanged',
+      () async {
+    const id = 'stable-id-must-not-change';
+    const occurredAt = '2026-08-13T09:00:00.000Z';
+    final store = InMemoryReviewQueueStore(
+      initialValue: '{"schemaVersion":1,"events":['
+          '{"clientEventId":"$id","cardId":"start-a1-haus","grade":"hard",'
+          '"occurredAt":"$occurredAt","unknownField":1}'
+          ']}',
+    );
+
+    final restored = (await ReviewQueue(store: store).pendingEvents()).single;
+    expect(restored.clientEventId, id);
+    expect(restored.occurredAt.toIso8601String(), occurredAt);
+
+    // Survives a second lifecycle (the migration rewrite) with the same id.
+    final again = (await ReviewQueue(store: store).pendingEvents()).single;
+    expect(again.clientEventId, id);
+    expect(again.occurredAt.toIso8601String(), occurredAt);
+  });
+
+  test('B-3: a healthy legacy queue stays downgrade-readable at version 1',
+      () async {
+    final store = InMemoryReviewQueueStore();
+    final queue = ReviewQueue(store: store, idFactory: () => 'id-1');
+    await queue.record(
+      'start-a1-haus',
+      ReviewGrade.hard,
+      DateTime.utc(2026, 8, 13, 9),
+    );
+
+    expect(jsonDecode(store.value!)['schemaVersion'], 1);
   });
 
   test('acknowledge removes only exact matching IDs', () async {

@@ -94,7 +94,8 @@ class HttpReviewSyncTransport
       throw const MobileReviewTransportException('authenticationRequired');
     }
     final body = <String, Object>{
-      'items': events.map((event) => event.toJson()).toList(growable: false),
+      'items':
+          events.map((event) => event.toWireJson()).toList(growable: false),
     };
     if (reconciliationCursor != null) {
       final parsedCursor = parseReconciliationCursor(reconciliationCursor);
