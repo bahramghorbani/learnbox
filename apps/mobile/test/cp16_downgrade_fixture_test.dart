@@ -85,8 +85,12 @@ void main() {
       }),
     );
 
-    File('test/fixtures/cp16_downgrade_queue_states.json')
-        .writeAsStringSync(const JsonEncoder.withIndent('  ').convert(fixture));
+    // Prettier formats this committed fixture, and the repo-wide `format:check`
+    // gate runs over it. Emit exactly what Prettier produces (2-space indent and
+    // a trailing newline) so regenerating the fixture cannot break CI.
+    File('test/fixtures/cp16_downgrade_queue_states.json').writeAsStringSync(
+      '${const JsonEncoder.withIndent('  ').convert(fixture)}\n',
+    );
 
     for (final entry in fixture.entries) {
       expect(entry.value, isNotEmpty, reason: entry.key);
