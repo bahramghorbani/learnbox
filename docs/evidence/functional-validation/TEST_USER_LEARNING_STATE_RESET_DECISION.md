@@ -124,6 +124,25 @@ preferred: it needs no privilege change to a production role.
 This mirrors the already-recorded CP9 deferral **P1** (migrator lacks `ALTER`) — the role split is
 intentionally narrow, and reset is simply not a capability it was granted.
 
+### Owner resolutions (recorded 2026-10-03, after the decision was merged)
+
+**FV-1 resolved — recovery mechanism.** The preferred pre-reset recovery point is an
+**owner-created Neon snapshot/branch**. A verified logical `COPY` export with md5 fingerprints may
+**additionally** be retained as secondary evidence, but it **does not replace** the Neon recovery
+point. The reset must not proceed unless the Neon recovery point exists and the owner confirms it.
+
+**FV-2 resolved — execution identity.** The eventual scoped reset is executed as **`neondb_owner`
+through the Neon administrative surface**, rather than broadening `learnbox_app` or
+`learnbox_migrator` Production privileges merely to perform the validation reset. No Production
+role or grant change is authorized.
+
+**FV-3 opened — role assignment ambiguity, blocks execution.** The owner's role assignment names
+Bahram as the _untouched_/isolation control, while §1 above states both users are reset. This
+changes the delete scope by 58 events / 16 schedules. Resolved at the runbook review gate; see
+`LEARNER_STATE_RESET_RUNBOOK.md` §FV-3.
+
+Execution steps are prepared in `LEARNER_STATE_RESET_RUNBOOK.md` (prepared, **not executed**).
+
 ## 6. Post-reset verification (required before the device test begins)
 
 Database, for **both** accounts:
