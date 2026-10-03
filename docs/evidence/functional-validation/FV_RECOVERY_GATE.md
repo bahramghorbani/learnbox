@@ -1,6 +1,6 @@
 # FV Recovery Gate — Neon recovery point: creation + verification procedure
 
-> **SUPERSEDED IN PART — read this first.** This document was written on 2026-10-03 *before* Hermes
+> **SUPERSEDED IN PART — read this first.** This document was written on 2026-10-03 _before_ Hermes
 > had Neon control-plane access. §1 and §3 claim Hermes cannot create the recovery point and that
 > the owner must do it manually in the console. **That is no longer true.** A project-scoped Neon
 > API key was subsequently authorized (profile `learnbox`, project `divine-silence-09471885`), and
@@ -29,13 +29,13 @@ Per FV-1, the Neon snapshot/branch is the **primary** recovery point. The logica
 
 Verified by probe, not assumed:
 
-| Credential / tool | Local (Hermes) | Production host |
-| ----------------- | -------------- | --------------- |
-| `NEON_API_KEY`    | ABSENT         | ABSENT          |
-| `NEON_TOKEN`      | ABSENT         | ABSENT          |
-| `NEON_PROJECT_ID` | ABSENT         | ABSENT          |
-| `neonctl` CLI     | ABSENT         | ABSENT          |
-| Neon creds in `secrets/db-roles.env`, `app/.env` | — | none present |
+| Credential / tool                                | Local (Hermes) | Production host |
+| ------------------------------------------------ | -------------- | --------------- |
+| `NEON_API_KEY`                                   | ABSENT         | ABSENT          |
+| `NEON_TOKEN`                                     | ABSENT         | ABSENT          |
+| `NEON_PROJECT_ID`                                | ABSENT         | ABSENT          |
+| `neonctl` CLI                                    | ABSENT         | ABSENT          |
+| Neon creds in `secrets/db-roles.env`, `app/.env` | —              | none present    |
 
 The only Production DB credentials available are the `learnbox_app` and `learnbox_migrator`
 connection strings. Neither can create a snapshot or branch — that is a control-plane operation
@@ -49,19 +49,19 @@ recovery points itself, provision a Neon API key through the secure secret flow 
 
 ## 2. Target identity (read live from Production, 2026-10-03 20:11 UTC)
 
-| Field | Value |
-| ----- | ----- |
-| Neon project ID | `divine-silence-09471885` |
-| Branch ID (root) | `br-long-frog-assrohg5` |
-| Endpoint ID | `ep-jolly-hill-asbffbzx` |
-| Host | `ep-jolly-hill-asbffbzx.c-4.eu-central-1.aws.neon.tech` |
-| Database | `neondb` |
-| Timeline ID | `5ec2b617eb25a644f2f6d140c71605eb` |
-| Tenant ID | `643e5c2825d227c879f6e368fe832033` |
-| Postgres version | 17.11 |
-| Region | `eu-central-1` (AWS) |
-| LSN at capture | `0/60C81E0` |
-| Server time at capture | `2026-10-03 20:11:13 UTC` |
+| Field                  | Value                                                   |
+| ---------------------- | ------------------------------------------------------- |
+| Neon project ID        | `divine-silence-09471885`                               |
+| Branch ID (root)       | `br-long-frog-assrohg5`                                 |
+| Endpoint ID            | `ep-jolly-hill-asbffbzx`                                |
+| Host                   | `ep-jolly-hill-asbffbzx.c-4.eu-central-1.aws.neon.tech` |
+| Database               | `neondb`                                                |
+| Timeline ID            | `5ec2b617eb25a644f2f6d140c71605eb`                      |
+| Tenant ID              | `643e5c2825d227c879f6e368fe832033`                      |
+| Postgres version       | 17.11                                                   |
+| Region                 | `eu-central-1` (AWS)                                    |
+| LSN at capture         | `0/60C81E0`                                             |
+| Server time at capture | `2026-10-03 20:11:13 UTC`                               |
 
 The branch is a **root** branch, which matters: Neon supports instant restore (PITR) only on root
 branches. This is the good case — our recovery target supports both snapshot and PITR.
@@ -158,17 +158,17 @@ Captured read-only on the Production host; row counts re-verified unchanged afte
 
 Location (Production host): `/home/ubuntu/learnbox/evidence/fv-recovery-gate-20261003T201213Z/`
 
-| File | Rows | md5 |
-| ---- | ---- | --- |
-| `mona_review_events.csv` | 39 | `a4bf65120d19d72d89e6e605d0580ff7` |
-| `mona_card_schedules.csv` | 15 | `2eba74ab48e301dae63ced3bd234eea0` |
-| `mona_learner_daily_plans.csv` | 1 | `c7ef63b14b003c444668b48a641ad500` |
-| `mona_learner_reconciliation_cursors.csv` | 1 | `ea16c448b52f89f1d543566446f367d5` |
-| `mona_review_event_rejections.csv` | 0 | `f5efdefde4eb65d86e8564c9975505bf` |
-| `mona_mobile_learner_sessions.csv` | 0 | `1fd47d652cd56131d796a0c32ebb8a2f` |
-| `bahram_review_events.csv` | 58 | `076e03770bf43b2e0377266c31858081` |
-| `bahram_card_schedules.csv` | 16 | `d6e29302cbd96a29110251d459553397` |
-| `bahram_learner_reconciliation_cursors.csv` | 1 | `39134f462567cb85567df1c43a638a56` |
+| File                                        | Rows | md5                                |
+| ------------------------------------------- | ---- | ---------------------------------- |
+| `mona_review_events.csv`                    | 39   | `a4bf65120d19d72d89e6e605d0580ff7` |
+| `mona_card_schedules.csv`                   | 15   | `2eba74ab48e301dae63ced3bd234eea0` |
+| `mona_learner_daily_plans.csv`              | 1    | `c7ef63b14b003c444668b48a641ad500` |
+| `mona_learner_reconciliation_cursors.csv`   | 1    | `ea16c448b52f89f1d543566446f367d5` |
+| `mona_review_event_rejections.csv`          | 0    | `f5efdefde4eb65d86e8564c9975505bf` |
+| `mona_mobile_learner_sessions.csv`          | 0    | `1fd47d652cd56131d796a0c32ebb8a2f` |
+| `bahram_review_events.csv`                  | 58   | `076e03770bf43b2e0377266c31858081` |
+| `bahram_card_schedules.csv`                 | 16   | `d6e29302cbd96a29110251d459553397` |
+| `bahram_learner_reconciliation_cursors.csv` | 1    | `39134f462567cb85567df1c43a638a56` |
 
 Manifest: `MANIFEST.md5` = `941110c8fa3af1cae706625703e72cab`
 
@@ -180,24 +180,24 @@ rather than restore it.
 
 ## 6. Recovery point record (fill at creation time)
 
-| Field | Value |
-| ----- | ----- |
-| Recovery point identifier/name | `__________` (owner reports) |
-| Type | snapshot \| branch (owner reports) |
-| Source project | `divine-silence-09471885` |
-| Source branch | `br-long-frog-assrohg5` (root) |
-| Source endpoint | `ep-jolly-hill-asbffbzx` |
-| Creation timestamp (UTC) | `__________` |
-| Plan / history window | `__________` |
-| Schema/migration state | 23 applied, head `0023_learning_persistence`, checksum `ef364bd5…9b4e` |
-| Schema fingerprint | `0348784c84461e1bb7068411a8d33bcf` |
-| Learner counts | `users=2 review_events=97 card_schedules=31 learner_daily_plans=1` |
-| Mona baseline | 39 / 15 / 1 / 1 / 0 / 0 |
-| Bahram baseline | 58 / 16 / 1; digest `f6f477b2f42a957a15092871655eb277` |
-| Bahram xmin evidence | events `b9b103fa7525cc76a332ceac1bc3ec25`, schedules `a733156634d5c6c24fdefa05874d2e8d` |
-| Catalog fingerprint | `cards` 35, md5 `8cd0abc62c29f6d3c83574d8e7bd8e2d` |
-| `revoked_sessions` | 7, md5 `6c89b1a2ed6caab532d69030aab8a0be` |
-| Restore capability verified | §4b run on a restored branch: PASS / FAIL |
+| Field                          | Value                                                                                   |
+| ------------------------------ | --------------------------------------------------------------------------------------- |
+| Recovery point identifier/name | `__________` (owner reports)                                                            |
+| Type                           | snapshot \| branch (owner reports)                                                      |
+| Source project                 | `divine-silence-09471885`                                                               |
+| Source branch                  | `br-long-frog-assrohg5` (root)                                                          |
+| Source endpoint                | `ep-jolly-hill-asbffbzx`                                                                |
+| Creation timestamp (UTC)       | `__________`                                                                            |
+| Plan / history window          | `__________`                                                                            |
+| Schema/migration state         | 23 applied, head `0023_learning_persistence`, checksum `ef364bd5…9b4e`                  |
+| Schema fingerprint             | `0348784c84461e1bb7068411a8d33bcf`                                                      |
+| Learner counts                 | `users=2 review_events=97 card_schedules=31 learner_daily_plans=1`                      |
+| Mona baseline                  | 39 / 15 / 1 / 1 / 0 / 0                                                                 |
+| Bahram baseline                | 58 / 16 / 1; digest `f6f477b2f42a957a15092871655eb277`                                  |
+| Bahram xmin evidence           | events `b9b103fa7525cc76a332ceac1bc3ec25`, schedules `a733156634d5c6c24fdefa05874d2e8d` |
+| Catalog fingerprint            | `cards` 35, md5 `8cd0abc62c29f6d3c83574d8e7bd8e2d`                                      |
+| `revoked_sessions`             | 7, md5 `6c89b1a2ed6caab532d69030aab8a0be`                                               |
+| Restore capability verified    | §4b run on a restored branch: PASS / FAIL                                               |
 
 ---
 
