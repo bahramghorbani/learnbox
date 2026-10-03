@@ -42,11 +42,68 @@ adversarial findings), plus this closure commit. Branch `feat/lb-b35-cp15-contra
 
 **Evidence:** `docs/planning/LB_B35_CP15_CONTRACT_PARITY_READINESS.md`.
 
-## LB-B35 CP17 — Native Binary Rollout Readiness — AT OWNER GATE 2026-10-03
+## LB-B35 CP17 — Native Binary Rollout Readiness — MERGED / CLOSED — NOT ROLLED OUT 2026-10-03
 
-**Readiness only. Rollout NOT authorized.** Candidate
-`10bf37e31b6dcdca244d935cd8c2fb16f74745c6`, base `5a12fcf5`, PR open and
-**unmerged**. Full evidence: `docs/evidence/cp17/CP17_NATIVE_BINARY_ROLLOUT_READINESS.md`.
+**Owner approved repository merge only on 2026-10-03.** PR **#353** squash-merged
+with head pinning: reviewed head `22c1351bcc7fcd15248284539bb598670121177a`
+(code candidate `10bf37e31b6dcdca244d935cd8c2fb16f74745c6`, `apps/` and
+`packages/` byte-identical between the two), base `5a12fcf5`, merge commit
+**`e79b1f4fe083920c2578b50cbed4a6954e71bf12` = current `main`**. The merged
+`main` tree `f481db38fe5642966f4b36d75d1ec8fc663654a1` is **byte-identical to the
+reviewed head tree**, so the mutation and suite evidence below transfers without
+re-running. Required CI was 4/4 green on the exact head; the
+`learnbox-admin-preview` Vercel failure is pre-existing, non-required, and
+Admin stays deliberately contained.
+
+**The merge authorizes nothing beyond the repository.** It did NOT deploy, did
+NOT change Production configuration, did NOT set
+`LEARNBOX_BINARY_REVIEW_CREATION`, did NOT distribute a Native build, did NOT
+enable the Native Binary UI or the real Native transport, and did NOT activate
+Scheduler V2. Production re-verified read-only after merge and unchanged: digest
+`sha256:cb3090da…`, `APP_SOURCE_SHA=d4ea6558…`, `RestartCount=0`,
+`LEARNBOX_BINARY_REVIEW=true`, `LEARNBOX_BINARY_REVIEW_CREATION` absent,
+Scheduler V2 absent, health 200.
+
+**Final evidence (candidate `10bf37e3`, tree-identical to merged `main`):**
+mutation **23 applicable / 23 killed / 0 survived / 0 aborted / 0 timed out**,
+8/8 fingerprints restored byte-identical; suites learning-engine **188**, api
+**178**, website **809** (+160 skipped), mobile **356**; `flutter analyze`,
+`dart format`, `prettier --check` and `tsc -b` all clean with per-gate exit codes
+captured. Independent reviewer of record: Codex `provider=openai-codex`,
+`model=gpt-6-sol`, attribution mechanically verified.
+
+**Final dispositions:** F1 server-side root cause FIXED · F2 end-to-end UI
+consumption FIXED · F3 persistent production composition FIXED · F5 flag-blind
+boundary FIXED (retryable 503) · H1 rollout decision, not a repository defect ·
+H2/H3/H4 confirmed and FIXED with regressions · H5 REJECTED after reproduction
+against CP10/D16 · M1/M4 parent-discovered, FIXED with regressions · **M18 filter
+KEPT** (load-bearing: batch caps at 20 while the queue is unbounded, so "unknown
+id" and "known but unsent" are different states) · **M20 FIXED** (creation
+disable dominant) · **M21 FIXED** (production composes through the one covered
+factory) · **R2 FIXED** (a creation disable survives server silence).
+
+Full evidence: `docs/evidence/cp17/CP17_NATIVE_BINARY_ROLLOUT_READINESS.md`,
+`docs/evidence/cp17/mutation-run-authoritative.txt`,
+`docs/evidence/cp17/independent-review-2-narrow.md`.
+
+### Blockers carried into the next checkpoint (rollout remains NOT authorized)
+
+1. **`LEARNBOX_BINARY_REVIEW_CREATION=false` must be set explicitly in Production**
+   before any binary-capable Native build is distributed. "Absent follows
+   acceptance" is a safe library default, not an interlock: absent is
+   indistinguishable from unconfigured and acceptance is already `true`.
+2. **The Production Native path still wires `DisabledReviewSyncTransport`** and
+   must be deliberately resolved and field-ready.
+3. **Learner-facing Native binary behaviour/parity is unproven on a real device**
+   through the intended production transport.
+4. **The first genuinely created binary event remains the downgrade point of no
+   return**; quarantine evidence alone does not cross it.
+5. **Creation disable must remain dominant** over any local/compiled UI enable.
+6. **Acceptance must remain available during drain-only mode** so already-created
+   binary events can still synchronize.
+7. Pre-first-sync the runtime switch is `unknown` and defers to the compile-time
+   gate — harmless while the UI ships default OFF, and precisely why blocker 1 is
+   mandatory rather than advisory.
 
 **Corrected facts that durable state must carry (each cost a wrong first diagnosis):**
 
