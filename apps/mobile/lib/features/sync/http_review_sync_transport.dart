@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:learnbox/features/identity/mobile_session_store.dart';
+import 'package:learnbox/features/review/binary_review_ui_config.dart';
 import 'package:learnbox/features/review/pending_review_event.dart';
 import 'package:learnbox/features/sync/reconciliation_cursor_store.dart';
 import 'package:learnbox/features/sync/review_sync_transport.dart';
@@ -124,11 +125,17 @@ class HttpReviewSyncTransport
       throw const MobileReviewTransportException('serverUnavailable');
     }
     final decoded = jsonDecode(response.body);
+    // CP17 F2: the response now also carries the `binaryReview` runtime switch. Accept the
+    // documented optional key instead of requiring exactly one key, but keep the parse strict
+    // about everything else: unknown keys are still refused, so an unrecognised response can
+    // never be mistaken for a successful sync.
     if (decoded is! Map<String, dynamic> ||
-        decoded.length != 1 ||
-        decoded['outcomes'] is! List) {
+        decoded['outcomes'] is! List ||
+        decoded.keys.any((key) => key != 'outcomes' && key != 'binaryReview')) {
       throw const MobileReviewTransportException('validation');
     }
+    final binaryReview =
+        BinaryReviewRuntimeConfig.fromJson(decoded['binaryReview']);
     final acknowledged = <String>[];
     String? acknowledgedCursor;
     for (final outcome in decoded['outcomes'] as List<Object?>) {
@@ -151,6 +158,7 @@ class HttpReviewSyncTransport
     return ReviewUploadResponse(
       acknowledgedClientEventIds: acknowledged,
       reconciliationCursor: acknowledgedCursor,
+      binaryReview: binaryReview,
     );
   }
 

@@ -94,23 +94,39 @@ export async function handleMobileReviewPost(
     throw parseError;
   }
 
-  // A terminally-invalid item is reported per-item so the client can retire exactly that
-  // event. It is never silently dropped and never submitted to the scheduler.
+  // A terminally-invalid item is reported per-item using the SAME outcome vocabulary the
+  // service already emits (`validation`), so the client needs no new status handling and the
+  // event is retired exactly like any other validation failure. It is never silently dropped
+  // and never submitted to the scheduler.
   const rejectedOutcomes = parsed.rejected.map((item) => ({
-    status: 'rejected' as const,
+    status: 'validation' as const,
     clientEventId: item.clientEventId,
-    reason: 'validation' as const,
   }));
+
+  // CP17 F2: advertise the runtime kill switch on every sync response. Creation and
+  // acceptance are separate signals so disabling the feature never strands already-queued
+  // binary events. `LEARNBOX_BINARY_REVIEW` governs acceptance (what the server will take);
+  // `LEARNBOX_BINARY_REVIEW_CREATION` governs whether clients may create new binary events
+  // and defaults to acceptance, so an operator can kill creation while queues still drain.
+  const acceptanceEnabled =
+    options.binaryResponses ?? process.env.LEARNBOX_BINARY_REVIEW === 'true';
+  const creationOverride = process.env.LEARNBOX_BINARY_REVIEW_CREATION;
+  const binaryReview = {
+    // Creation can never exceed acceptance: offering an interaction the server would
+    // refuse is exactly the serverUnavailable retry loop CP16 review flagged.
+    creationEnabled: acceptanceEnabled && creationOverride !== 'false',
+    acceptanceEnabled,
+  };
 
   if (parsed.items.length === 0) {
     // Nothing valid to submit: answer with the per-item verdicts rather than calling the
     // scheduler with an empty batch.
-    return json({ outcomes: rejectedOutcomes }, 200);
+    return json({ outcomes: rejectedOutcomes, binaryReview }, 200);
   }
 
   try {
     const outcomes = await dependencies.submit({ userId: parsed.userId, items: parsed.items });
-    return json({ outcomes: [...outcomes, ...rejectedOutcomes] }, 200);
+    return json({ outcomes: [...outcomes, ...rejectedOutcomes], binaryReview }, 200);
   } catch (cause) {
     // LB-B35 CP7: deterministic scheduler refusal -> 422, not a retryable 503.
     if (cause instanceof MobileReviewBatchError && cause.code === SCHEDULER_REJECTED_CODE) {

@@ -111,7 +111,7 @@ describe('CP17 F1 — one invalid item must not poison the whole batch', () => {
     expect(byId.get('evt-binary-1')).toBe('acknowledged');
     // The bad event must be reported terminally — never silently dropped,
     // and never left to be retried forever.
-    expect(byId.get('evt-bad-1')).toBe('rejected');
+    expect(byId.get('evt-bad-1')).toBe('validation');
 
     // Only the two valid events may reach the scheduler.
     const submitted = deps.submit.mock.calls[0]?.[0] as { items: Array<{ clientEventId: string }> };
@@ -129,7 +129,7 @@ describe('CP17 F1 — one invalid item must not poison the whole batch', () => {
       outcomes: Array<{ clientEventId: string; status: string }>;
     };
     expect(body.outcomes).toEqual([
-      expect.objectContaining({ clientEventId: 'evt-bad-1', status: 'rejected' }),
+      expect.objectContaining({ status: 'validation', clientEventId: 'evt-bad-1' }),
     ]);
     // Nothing valid to submit: the scheduler must not be called at all.
     expect(deps.submit).not.toHaveBeenCalled();

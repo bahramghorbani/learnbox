@@ -16,3 +16,89 @@ class BinaryReviewUiConfig {
   /// True only for an exact `true`, so a typo fails safe to four grades.
   static bool get enabled => _define == 'true';
 }
+
+/// CP17 F2 — runtime kill switch for the binary review interaction.
+///
+/// [BinaryReviewUiConfig] alone is compile-time, so once a binary-capable build
+/// is distributed the only way to withdraw the feature is a store rebuild and
+/// review cycle. That is not an adequate emergency control. This adds a
+/// server-advertised runtime override, deliberately kept to the smallest shape
+/// that gives real operational rollback: no remote-config system and no new
+/// endpoint, just two booleans carried on the review-sync response the client
+/// already performs.
+///
+/// The two signals are **separate on purpose**, because conflating them is what
+/// turns a kill switch into data loss:
+///
+/// * [creationEnabled] — may the client OFFER the binary interaction and create
+///   new binary events? Turning this off is the kill switch: it stops the
+///   feature spreading immediately, on the next sync, with no rebuild.
+/// * [acceptanceEnabled] — will the server still ACCEPT binary events already
+///   queued on devices? This must stay **on** while any device may still hold
+///   binary events, so existing queues can drain. Withdrawing acceptance while
+///   binary events are outstanding converts real learner reviews into
+///   retry-forever traffic.
+///
+/// The safe emergency sequence is therefore: creation off, acceptance stays on,
+/// let the queues drain, and only then consider withdrawing acceptance.
+///
+/// Absent or unparseable server state never silently enables the feature: the
+/// client falls back to the compile-time gate for creation, and assumes
+/// acceptance is still available so queued events keep draining.
+class BinaryReviewRuntimeConfig {
+  const BinaryReviewRuntimeConfig({
+    required this.creationEnabled,
+    required this.acceptanceEnabled,
+  });
+
+  /// The state assumed before the server has said anything.
+  ///
+  /// Creation defers to the compile-time gate; acceptance is optimistic so a
+  /// client that has not yet synced still attempts to drain its queue.
+  static const unknown = BinaryReviewRuntimeConfig(
+    creationEnabled: null,
+    acceptanceEnabled: true,
+  );
+
+  /// `null` means "the server has not spoken"; the compile-time gate decides.
+  final bool? creationEnabled;
+
+  final bool acceptanceEnabled;
+
+  /// Whether the binary interaction should be offered to the learner now.
+  ///
+  /// A server `false` is authoritative and overrides the compile-time define —
+  /// that is the entire point of the kill switch. A server `true` cannot enable
+  /// the feature in a build that did not ship it, because such a build genuinely
+  /// has no binary interaction to show.
+  bool get showsBinaryReview =>
+      BinaryReviewUiConfig.enabled && (creationEnabled ?? true);
+
+  /// Parse the `binaryReview` block of a sync response.
+  ///
+  /// Hostile or garbage input must never flip the switch into a less safe state,
+  /// so anything unrecognised degrades to [unknown].
+  static BinaryReviewRuntimeConfig fromJson(Object? value) {
+    if (value is! Map<String, dynamic>) return unknown;
+    final creation = value['creationEnabled'];
+    final acceptance = value['acceptanceEnabled'];
+    return BinaryReviewRuntimeConfig(
+      creationEnabled: creation is bool ? creation : null,
+      acceptanceEnabled: acceptance is bool ? acceptance : true,
+    );
+  }
+
+  Map<String, Object?> toJson() => {
+        if (creationEnabled != null) 'creationEnabled': creationEnabled,
+        'acceptanceEnabled': acceptanceEnabled,
+      };
+
+  @override
+  bool operator ==(Object other) =>
+      other is BinaryReviewRuntimeConfig &&
+      other.creationEnabled == creationEnabled &&
+      other.acceptanceEnabled == acceptanceEnabled;
+
+  @override
+  int get hashCode => Object.hash(creationEnabled, acceptanceEnabled);
+}

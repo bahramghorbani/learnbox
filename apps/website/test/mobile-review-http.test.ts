@@ -147,6 +147,8 @@ describe('mobile review HTTP boundary', () => {
           reconciliationCursor: '1',
         },
       ],
+      // CP17 F2: every sync response now advertises the runtime kill switch.
+      binaryReview: { creationEnabled: false, acceptanceEnabled: false },
     });
     expect(deps.submit).toHaveBeenCalledWith({
       userId: 'learner-1',
@@ -267,7 +269,8 @@ describe('mobile review HTTP boundary', () => {
       expect(response.status).toBe(200);
       expect(response.headers.get('cache-control')).toBe('no-store');
       expect(await response.json()).toEqual({
-        outcomes: [{ status: 'rejected', clientEventId: 'evt-1', reason: 'validation' }],
+        outcomes: [{ status: 'validation', clientEventId: 'evt-1' }],
+        binaryReview: { creationEnabled: false, acceptanceEnabled: false },
       });
       expect(deps.submit).not.toHaveBeenCalled();
     }
