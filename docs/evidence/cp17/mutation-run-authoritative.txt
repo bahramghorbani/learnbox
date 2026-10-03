@@ -1,0 +1,134 @@
+=== canonical baseline (from HEAD 10bf37e) ===
+  1126f649480c29bb  packages/learning-engine/src/native-binary-rollout.ts
+  73bb839148a79f4b  apps/api/src/reviews/mobile-review-batch.request.ts
+  56d89486fc72965a  apps/website/lib/mobile-review-http.ts
+  aa276a39c8d29bd5  apps/mobile/lib/features/review/review_queue.dart
+  2796772ca284ceba  apps/mobile/lib/features/sync/review_sync_coordinator.dart
+  a3306a88dcc3d47a  apps/mobile/lib/features/review/review_screen.dart
+  2e0ab1f8859696d5  apps/mobile/lib/main.dart
+  c8c4566585ffa161  apps/mobile/lib/features/review/secure_review_queue_store.dart
+  5e73e1a13ccbced7  apps/mobile/lib/features/review/binary_review_ui_config.dart
+
+=== PHASE 0: clean-baseline timing (mobile) ===
+  baseline mobile suite PASSED in 6s (timeout bound 300s)
+
+######## M1-M8 : rollout state machine (suite: engine) ########
+--- M1 server-before-client check disabled
+    applied   : 2c23077b2cfc694b (canonical 1126f649480c29bb)
+    killed    : suite failed as required
+    restored  : byte-identical to canonical
+--- M2 pre-0023 schema guard disabled
+    applied   : da425ddf5a0f852c (canonical 1126f649480c29bb)
+    killed    : suite failed as required
+    restored  : byte-identical to canonical
+--- M3 creation-above-acceptance guard disabled
+    applied   : e70a55270432886d (canonical 1126f649480c29bb)
+    killed    : suite failed as required
+    restored  : byte-identical to canonical
+--- M4 real-transport guard disabled
+    applied   : 6d9dacbbd5cf7284 (canonical 1126f649480c29bb)
+    killed    : suite failed as required
+    restored  : byte-identical to canonical
+--- M5 runtime kill-switch guard disabled
+    applied   : d7e711e38625aa47 (canonical 1126f649480c29bb)
+    killed    : suite failed as required
+    restored  : byte-identical to canonical
+--- M6 acceptance-regression drift guard disabled
+    applied   : f2eb752b6d70df04 (canonical 1126f649480c29bb)
+    killed    : suite failed as required
+    restored  : byte-identical to canonical
+--- M7 point-of-no-return forced false
+    applied   : 9763627e3721c304 (canonical 1126f649480c29bb)
+    killed    : suite failed as required
+    restored  : byte-identical to canonical
+--- M8 stage skipping permitted
+    applied   : 3adbe280f5c98ad4 (canonical 1126f649480c29bb)
+    killed    : suite failed as required
+    restored  : byte-identical to canonical
+
+######## M9-M13 : per-item salvage + capability (suites: website/api) ########
+--- M9 salvage reverts to whole-batch throw
+    applied   : d840bd35ad768aa2 (canonical 73bb839148a79f4b)
+    killed    : suite failed as required
+    restored  : byte-identical to canonical
+--- M10 capability error downgraded to validation
+    applied   : 9551bdd5a3288364 (canonical 73bb839148a79f4b)
+    killed    : suite failed as required
+    restored  : byte-identical to canonical
+--- M11 duplicate guard disabled (salvaging parser)
+    applied   : 29e089b8f728744d (canonical 73bb839148a79f4b)
+    killed    : suite failed as required
+    restored  : byte-identical to canonical
+--- M11b duplicate guard disabled (strict parser)
+    applied   : 01e59bd308acb96c (canonical 73bb839148a79f4b)
+    killed    : suite failed as required
+    restored  : byte-identical to canonical
+--- M12 capability gap answered as terminal 400
+    applied   : 6c06b9d42e1743ec (canonical 56d89486fc72965a)
+    killed    : suite failed as required
+    restored  : byte-identical to canonical
+--- M13 creation allowed above acceptance
+    applied   : 8e2c37a82d5922ca (canonical 56d89486fc72965a)
+    killed    : suite failed as required
+    restored  : byte-identical to canonical
+
+######## M14-M16 : quarantine downgrade boundary (suite: mobile) ########
+--- M14 quarantine smuggled back into the envelope
+    applied   : c95d2b0feaed2e84 (canonical aa276a39c8d29bd5)
+    killed    : suite failed as required
+    restored  : byte-identical to canonical
+--- M15 envelope always v2
+    applied   : 3e521ec3842edb7f (canonical aa276a39c8d29bd5)
+    killed    : suite failed as required
+    restored  : byte-identical to canonical
+--- M16 bad entry strands the whole queue
+    applied   : cf4701e8b106b66f (canonical aa276a39c8d29bd5)
+    killed    : suite failed as required
+    restored  : byte-identical to canonical
+
+######## M17-M21 : independent-review findings (suite: mobile) ########
+--- M17 rejected events are no longer retired
+    applied   : 29f0a409e7c0edf5 (canonical 2796772ca284ceba)
+    killed    : suite failed as required
+    restored  : byte-identical to canonical
+--- M18 server may retire events it was not sent
+    applied   : 88ef51f695fa9556 (canonical 2796772ca284ceba)
+    killed    : suite failed as required
+    restored  : byte-identical to canonical
+--- M19 kill switch is never published
+    applied   : d6deb849a3d4b889 (canonical 2796772ca284ceba)
+    killed    : suite failed as required
+    restored  : byte-identical to canonical
+--- M20 UI gate ignores the runtime switch
+    applied   : b49986cd0b292d5a (canonical a3306a88dcc3d47a)
+    killed    : suite failed as required
+    restored  : byte-identical to canonical
+--- M21 production drops the durable quarantine store
+    applied   : 147e0c3c7890b7cc (canonical c8c4566585ffa161)
+    killed    : suite failed as required
+    restored  : byte-identical to canonical
+--- M22 server silence un-disables creation
+    applied   : d50bd89f7a7b85d0 (canonical 5e73e1a13ccbced7)
+    killed    : suite failed as required
+    restored  : byte-identical to canonical
+================= AUTHORITATIVE CP17 MUTATION RESULT =================
+  candidate SHA   : 10bf37e31b6dcdca244d935cd8c2fb16f74745c6
+  declared set    : 23
+  mutants run     : 23
+  killed          : 23
+    of which hang : 0 (timeout-kill; baseline passes in 6s)
+  survived        : 0
+  aborted         : 0
+  io failure      : 0
+
+  final worktree porcelain lines: 0
+  final fingerprints:
+    OK    1126f649480c29bb  packages/learning-engine/src/native-binary-rollout.ts
+    OK    73bb839148a79f4b  apps/api/src/reviews/mobile-review-batch.request.ts
+    OK    56d89486fc72965a  apps/website/lib/mobile-review-http.ts
+    OK    aa276a39c8d29bd5  apps/mobile/lib/features/review/review_queue.dart
+    OK    2796772ca284ceba  apps/mobile/lib/features/sync/review_sync_coordinator.dart
+    OK    a3306a88dcc3d47a  apps/mobile/lib/features/review/review_screen.dart
+    OK    2e0ab1f8859696d5  apps/mobile/lib/main.dart
+    OK    c8c4566585ffa161  apps/mobile/lib/features/review/secure_review_queue_store.dart
+    OK    5e73e1a13ccbced7  apps/mobile/lib/features/review/binary_review_ui_config.dart
