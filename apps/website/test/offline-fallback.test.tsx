@@ -31,10 +31,14 @@ describe('static offline fallback', () => {
 describe('service worker cache version', () => {
   it('ships one bumped cache version literal and the unchanged prefix and fallback url', () => {
     expect([...serviceWorker.matchAll(/CACHE_PREFIX\}v(\d+)/g)].map((match) => match[1])).toEqual([
-      '9',
+      '10',
     ]);
     expect(serviceWorker).toContain("const CACHE_PREFIX = 'learnbox-public-shell-'");
     expect(serviceWorker).toContain("const OFFLINE_URL = '/offline.html'");
+  });
+
+  it('precaches the celebration image so a first offline completion is not broken (D-FV-1)', () => {
+    expect(serviceWorker).toContain("'/images/bobo/celebrate-v2.png'");
   });
 
   it('keeps the caching strategy and credential boundaries unchanged', () => {
@@ -53,6 +57,7 @@ describe('service worker cache version', () => {
       [
         'const OFFLINE_ASSETS = [',
         '  OFFLINE_URL,',
+        "  '/images/bobo/celebrate-v2.png',",
         "  '/images/bobo/recovery-v2.png',",
         "  '/images/launch/germany-welcome-v1.jpg',",
         "  '/icons/learnbox-v1-192.png',",
@@ -62,5 +67,12 @@ describe('service worker cache version', () => {
         '];',
       ].join('\n'),
     );
+  });
+
+  it('still refuses to cache the image optimizer and authorized requests', () => {
+    // next/image requests can proxy protected media, so they must never be precached.
+    expect(serviceWorker).not.toContain("'/_next/image'");
+    expect(serviceWorker).not.toContain("startsWith('/_next/image");
+    expect(serviceWorker).toContain("!event.request.headers.has('Authorization')");
   });
 });

@@ -120,11 +120,56 @@ describe('Bobo', () => {
     );
     expect(image?.getAttribute('alt')).toContain('بوبو');
   });
+
+  // D-FV-1: finishing a first session while offline must not leave a broken-image icon.
+  it('falls back to the precached raw path when the optimizer request fails', async () => {
+    rendered = await renderBobo({ expression: 'celebrate' });
+
+    const optimized = rendered.container.querySelector('img');
+    expect(optimized?.getAttribute('src')).toContain('/_next/image');
+
+    await rendered.failImage();
+
+    const raw = rendered.container.querySelector('img');
+    // The raw public path is in OFFLINE_ASSETS, so the service worker can serve it offline.
+    // jsdom resolves src against the document origin; assert on the pathname the worker matches.
+    const rawSrc = new URL(raw?.getAttribute('src') ?? '', 'http://localhost:3000');
+    expect(rawSrc.pathname).toBe('/images/bobo/celebrate-v2.png');
+    expect(rawSrc.search).toBe('');
+    expect(raw?.getAttribute('alt')).toContain('بوبو');
+  });
+
+  it('shows a decorative placeholder instead of a broken image when both sources fail', async () => {
+    rendered = await renderBobo({ expression: 'celebrate' });
+
+    await rendered.failImage();
+    await rendered.failImage();
+
+    expect(rendered.container.querySelector('img')).toBeNull();
+    const fallback = rendered.container.querySelector('.bobo-fallback');
+    expect(fallback).not.toBeNull();
+    // Decorative only: it carries no alt text to announce and is hidden from AT.
+    expect(fallback?.getAttribute('aria-hidden')).toBe('true');
+  });
+
+  it('keeps the speech bubble readable even when the image cannot load', async () => {
+    rendered = await renderBobo({ expression: 'celebrate', speech: 'آفرین!' });
+
+    await rendered.failImage();
+    await rendered.failImage();
+    await act(async () => {
+      vi.advanceTimersByTime(1000);
+    });
+
+    expect(rendered.container.querySelector('.bobo-fallback')).not.toBeNull();
+    expect(rendered.text()).toContain('آفرین!');
+  });
 });
 
 type Rendered = {
   clickButton(label: string): Promise<void>;
   container: HTMLElement;
+  failImage(): Promise<void>;
   text(): string;
   unmount(): Promise<void>;
 };
@@ -156,6 +201,7 @@ async function renderOnboarding(props: {
   return {
     clickButton: async (label) => clickButtonStartingWith(container, label),
     container,
+    failImage: async () => failFirstImage(container),
     text: () => container.textContent ?? '',
     unmount: async () => {
       await act(async () => root.unmount());
@@ -184,6 +230,7 @@ async function renderNav(props: {
   return {
     clickButton: async (label) => clickButtonStartingWith(container, label),
     container,
+    failImage: async () => failFirstImage(container),
     text: () => container.textContent ?? '',
     unmount: async () => {
       await act(async () => root.unmount());
@@ -196,6 +243,7 @@ async function renderBobo(props: {
   className?: string;
   expression: 'welcome' | 'encourage' | 'celebrate' | 'recovery' | 'focus';
   priority?: boolean;
+  speech?: string;
 }): Promise<Rendered> {
   const container = document.createElement('div');
   document.body.append(container);
@@ -215,12 +263,23 @@ async function renderBobo(props: {
       throw new Error('clickButton is only available for interactive renders.');
     },
     container,
+    failImage: async () => failFirstImage(container),
     text: () => container.textContent ?? '',
     unmount: async () => {
       await act(async () => root.unmount());
       container.remove();
     },
   };
+}
+
+// Simulates a failed image request (offline, 404, blocked optimizer) by firing the
+// element's own error event, which is what the browser does in those cases.
+async function failFirstImage(container: HTMLElement): Promise<void> {
+  const image = container.querySelector('img');
+  if (!image) throw new Error('failImage called but no <img> is rendered.');
+  await act(async () => {
+    image.dispatchEvent(new Event('error', { bubbles: false }));
+  });
 }
 
 async function clickButtonStartingWith(container: HTMLElement, label: string): Promise<void> {

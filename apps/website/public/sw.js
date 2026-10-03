@@ -1,10 +1,15 @@
 /* global caches, self */
 
 const CACHE_PREFIX = 'learnbox-public-shell-';
-const CACHE_NAME = `${CACHE_PREFIX}v9`;
+const CACHE_NAME = `${CACHE_PREFIX}v10`;
 const OFFLINE_URL = '/offline.html';
+// Bobo expressions reachable while offline are precached as their RAW public paths.
+// Bobo renders through next/image, so the first request is '/_next/image?url=...' which
+// this worker intentionally does not cache (it can proxy protected media). The component
+// falls back to the raw path below on error, which is why precaching these two is enough.
 const OFFLINE_ASSETS = [
   OFFLINE_URL,
+  '/images/bobo/celebrate-v2.png',
   '/images/bobo/recovery-v2.png',
   '/images/launch/germany-welcome-v1.jpg',
   '/icons/learnbox-v1-192.png',
