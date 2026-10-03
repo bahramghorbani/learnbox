@@ -1,6 +1,8 @@
 # CP17 — Native Binary Rollout Readiness
 
-**Status:** readiness work complete; rollout NOT authorized.
+**Status:** **MERGED / CLOSED — NOT ROLLED OUT** (owner approved repository merge only, 2026-10-03).
+**Merge:** PR **#353** squash-merged head-pinned from reviewed head `22c1351bcc7fcd15248284539bb598670121177a`; merge commit **`e79b1f4fe083920c2578b50cbed4a6954e71bf12` = current `main`**. Merged `main` tree `f481db38fe5642966f4b36d75d1ec8fc663654a1` is **byte-identical to the reviewed head tree**, so the evidence below transfers without re-running the campaign.
+**Code candidate:** `10bf37e31b6dcdca244d935cd8c2fb16f74745c6` (`apps/` and `packages/` byte-identical to the merged head).
 **Baseline:** `5a12fcf56a27a638f4e816af2e66758cad02c925` (CP16 closed)
 **Scheduler V2:** OFF throughout. **Native release:** not performed. **Production:** unchanged.
 
