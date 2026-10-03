@@ -122,7 +122,21 @@ class BinaryReviewSwitch extends ValueNotifier<BinaryReviewRuntimeConfig> {
   BinaryReviewSwitch([super.value = BinaryReviewRuntimeConfig.unknown]);
 
   /// Adopt what the server just advertised.
+  ///
+  /// A disable is STICKY against silence. `unknown` (`creationEnabled: null`)
+  /// means "the server has not spoken", and silence must never undo an explicit
+  /// operator disable: an absent or garbage `binaryReview` block would otherwise
+  /// re-enable creation that was deliberately turned off, which is precisely the
+  /// failure the kill switch exists to prevent. Only an explicit `true` from the
+  /// server may lift a disable.
   void adopt(BinaryReviewRuntimeConfig next) {
-    if (next != value) value = next;
+    final wasDisabled = value.creationEnabled == false;
+    final effective = (wasDisabled && next.creationEnabled == null)
+        ? BinaryReviewRuntimeConfig(
+            creationEnabled: false,
+            acceptanceEnabled: next.acceptanceEnabled,
+          )
+        : next;
+    if (effective != value) value = effective;
   }
 }

@@ -265,6 +265,52 @@ void main() {
     });
   });
 
+  group('R2 - an operator disable survives server silence', () {
+    test('an absent binaryReview block cannot lift a creation disable', () {
+      // Narrow re-review finding: adopt() replaced a known `false` with
+      // `unknown`, so one response lacking the block re-enabled creation the
+      // operator had deliberately switched off. Silence is not consent.
+      final sw = BinaryReviewSwitch();
+      sw.adopt(const BinaryReviewRuntimeConfig(
+        creationEnabled: false,
+        acceptanceEnabled: true,
+      ));
+      expect(sw.value.creationEnabled, isFalse);
+
+      sw.adopt(BinaryReviewRuntimeConfig.unknown);
+
+      expect(sw.value.creationEnabled, isFalse,
+          reason: 'an absent capability block must not undo a disable');
+      expect(_gate(local: true, sw: sw).showsBinaryReview, isFalse);
+    });
+
+    test('only an explicit server true lifts a disable', () {
+      final sw = BinaryReviewSwitch();
+      sw.adopt(const BinaryReviewRuntimeConfig(
+        creationEnabled: false,
+        acceptanceEnabled: true,
+      ));
+      sw.adopt(const BinaryReviewRuntimeConfig(
+        creationEnabled: true,
+        acceptanceEnabled: true,
+      ));
+      expect(sw.value.creationEnabled, isTrue);
+    });
+
+    test('acceptance still tracks the server while creation stays disabled',
+        () {
+      // Drain must keep working: acceptance is independent of the latch.
+      final sw = BinaryReviewSwitch();
+      sw.adopt(const BinaryReviewRuntimeConfig(
+        creationEnabled: false,
+        acceptanceEnabled: true,
+      ));
+      sw.adopt(BinaryReviewRuntimeConfig.unknown);
+      expect(sw.value.acceptanceEnabled, isTrue);
+      expect(sw.value.creationEnabled, isFalse);
+    });
+  });
+
   group('M21 - production composition keeps durable quarantine', () {
     test('the production queue is built with a durable quarantine store', () {
       // Operational invariant: quarantine evidence must outlive the queue
