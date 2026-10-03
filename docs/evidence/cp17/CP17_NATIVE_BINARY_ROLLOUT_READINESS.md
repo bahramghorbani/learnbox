@@ -6,6 +6,23 @@
 
 This checkpoint makes Native Binary Review *safe to roll out later*. It activates nothing.
 
+### Six activation states that are not interchangeable
+
+Conflating any two of these is how this feature becomes unsafe, so they are named separately
+and tracked separately everywhere in CP17.
+
+| State | Mechanism | Value now |
+|---|---|---|
+| Server binary **acceptance** | `LEARNBOX_BINARY_REVIEW` | Production `true` |
+| Server-advertised binary **creation** | `LEARNBOX_BINARY_REVIEW_CREATION` | Production **absent** |
+| Native **UI capability** | compile-time define | default **off** |
+| **First genuinely created** binary Native event | a learner acting on a capable build | has not happened |
+| **Drain-only** | creation off, acceptance on | n/a |
+| **Scheduler V2** | `LEARNBOX_SCHEDULER_V2` | absent / OFF, untouched by CP17 |
+
+Acceptance is not creation; creation is not UI capability; a capable UI is not a created event;
+a drain-only fleet is not a dormant one; and none of them is Scheduler V2.
+
 ---
 
 ## The four inherited findings, re-verified against main
@@ -177,12 +194,26 @@ event loss · protected-content invariants untouched · Scheduler V2 OFF.
 
 ## Test evidence
 
+Counts below are from the final post-review candidate, re-run serially; earlier
+counts are superseded and are not final evidence.
+
 | Suite | Result |
 |---|---|
-| `packages/learning-engine` | 184 passed (20 new, rollout state machine) |
-| `apps/api` | 178 passed |
-| `apps/website` | 809 passed, 14 skipped (10 new across 2 files) |
-| `apps/mobile` | 343 passed (15 new across 2 files) |
+| `packages/learning-engine` | **188** passed (24 new, rollout state machine) |
+| `apps/api` | **178** passed |
+| `apps/website` | **809** passed, 160 skipped |
+| `apps/mobile` | **355** passed (21 new) |
+| `flutter analyze` | no issues |
+| `dart format` | clean |
+| TS builds (`learning-engine`, `api`) | clean |
+
+**Mutation (authoritative, supersedes all earlier runs):** 22 mutants, **22
+killed, 0 survived, 0 aborted**. Each mutant was run under a strict invariant —
+canonical blob from `HEAD` → apply exactly one mutant → prove applied by hash
+change → run the designated suite → prove killed → restore → prove byte-identical
+to canonical. The earlier run was discarded: it restored via `git checkout --`,
+which silently cannot restore an untracked file, so mutants accumulated and its
+results were not attributable to single mutations.
 
 Adversarial cases covered: malformed event between valid events · terminal 422 inside a
 multi-event batch · retryable 5xx · duplicate `clientEventId` · mixed legacy/binary queues ·
@@ -194,12 +225,52 @@ Three pre-existing tests were deliberately updated because CP17 *intentionally* 
 contract they pinned (whole-batch 400 → per-item salvage; `rejected` → `validation`; added
 `binaryReview` key). Every fail-closed property in them was preserved.
 
+
+---
+
+## Independent adversarial review
+
+Reviewer: **Codex `gpt-6-sol`** (provider `openai-codex`), read-only, fresh
+context. Attribution verified mechanically from the usage record
+(`provider=openai-codex`, `model=gpt-6-sol`) — a response silently substituted
+to Claude would not have counted. Five issues were raised; the parent reproduced
+each one against the code before accepting it.
+
+| ID | Finding | Parent verification | Disposition |
+|---|---|---|---|
+| H1 | F4 not closed in production composition | reproduced | already documented as a release decision, not a repo defect |
+| H2 | Kill switch stopped at `ReviewUploadResponse`; the UI gate never consulted it, so F2 did not actually work end-to-end | reproduced | **FIXED** + regression |
+| H3 | The client skipped every non-acknowledged outcome, so a salvaged event stayed queued and kept occupying a batch slot — head-of-line blocking survived the F1 fix | reproduced | **FIXED** + regression |
+| H4 | Production supplied no quarantine store, so F3 evidence was memory-only and lost on restart | reproduced | **FIXED** + regression |
+| H5 | Claimed non-200 → retryable turns 422 into an infinite retry | **could not reproduce** | **REJECTED** — CP10/D16 already classifies `schedulerRejected` as terminal, and only that exact contract |
+| M1 | The kill-switch exception sat in the retreat branch, but `creating → draining` is a *forward* step: the exception was dead code, and the blocker check then vetoed the one transition that must never be vetoed | reproduced | **FIXED** + regression |
+| M4 | Stage derivation could report a pre-boundary stage after the boundary had been crossed | reproduced | **FIXED** + regression |
+
+H3 and M1 each defeated a headline CP17 safety claim while the whole suite was
+green: salvage that still blocked the queue, and a kill switch that failed
+precisely when the system was unhealthy. Both are now pinned by behavioural
+tests and by mutants M17–M21.
+
+### Why H5 was rejected
+
+The transport maps non-200 to `serverUnavailable` *except* an explicit
+`schedulerRejected` body, which it classifies terminal. That narrow, contract-
+exact mapping is deliberate (CP7 → CP10/D16): a 422 without the known code is
+treated as retryable because an unrecognised 422 is more likely a deploy skew
+than a permanent verdict. The reviewer's premise — that *any* 422 is retried
+forever — does not hold in the current code.
+
 ---
 
 ## Remaining blockers for an actual rollout
 
 1. **Production composition still wires `DisabledReviewSyncTransport`** — a release decision.
 2. **Owner gate** required before crossing into `creating`.
-3. `LEARNBOX_BINARY_REVIEW_CREATION` not yet set in Production (absent ⇒ creation would follow
-   acceptance; set it to `false` *before* distributing any binary-capable build).
+3. **Pre-release safety interlock — `LEARNBOX_BINARY_REVIEW_CREATION=false` must be set
+   explicitly in Production before any binary-capable Native build is distributed.**
+   CP17 does **not** set it. "Absent follows acceptance" is a safe *library* default but must
+   not be relied on at the release boundary: absent is indistinguishable from "nobody
+   configured this", and acceptance is already `true`, so a single composition mistake would
+   arm creation. The explicit `false` is the interlock, and it must be verified in the running
+   container — not merely in `.env` — before distribution.
 4. No store submission, no Native release, no flag change performed by this checkpoint.
