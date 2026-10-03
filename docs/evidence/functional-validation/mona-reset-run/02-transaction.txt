@@ -1,0 +1,27 @@
+Timing is off.
+BEGIN
+LOCK TABLE
+DO
+psql:/q.sql:95: NOTICE:  ALL 9 PRECONDITIONS PASSED - proceeding with Mona-only delete
+DELETE 39
+DELETE 15
+DELETE 1
+DELETE 1
+DELETE 0
+DELETE 0
+DO
+psql:/q.sql:190: NOTICE:  ALL 10 POST-ASSERTION GROUPS PASSED - committing
+COMMIT
+--- post-commit state ---
+ mona_ev=0
+
+ mona_account=1
+
+ total_ev=58
+
+ total_sch=16
+
+ total_plans=0
+
+ users=2
+

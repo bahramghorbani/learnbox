@@ -1,0 +1,50 @@
+=== MONA FRESH-STATE (all six must be 0, account must exist) ===
+mona_ev=0
+mona_sch=0
+mona_plans=0
+mona_cur=0
+mona_rej=0
+mona_mob=0
+mona_account_exists=1
+mona_phone_intact=YES
+mona_tz=Asia/Tehran
+=== BAHRAM ISOLATION PROOF (counts + fingerprints + xmin) ===
+bah_ev=58
+bah_sch=16
+bah_cur=1
+bah_account_exists=1
+bah_ev_md5=f50d09c9b0e5ac609adae8901197f1da
+bah_sch_md5=6c7fe96a66c9b8794efea569e66cc846
+bah_cur_md5=0912c7f1aa9d5d5425eb01004c802461
+bah_combined=f6f477b2f42a957a15092871655eb277
+bah_ev_xmin=b9b103fa7525cc76a332ceac1bc3ec25
+bah_sch_xmin=a733156634d5c6c24fdefa05874d2e8d
+bah_cur_xmin=1afb2c4a451903e95567f5030ffa18a6
+=== GLOBAL TOTALS ===
+users=2
+total_ev=58
+total_sch=16
+total_plans=0
+total_cur=1
+total_rej=0
+total_mob=0
+=== PRESERVED: catalog / revoked / auth ===
+cards=35
+card_versions=35
+pack_cards=35
+cards_md5=8cd0abc62c29f6d3c83574d8e7bd8e2d
+revoked=7
+revoked_md5=6c89b1a2ed6caab532d69030aab8a0be
+otp_ch=37
+otp_req=37
+invites=3
+invite_consents=1
+content_review_checks=210
+content_review_decisions=35
+=== SCHEMA / MIGRATION UNCHANGED ===
+schema_md5=0348784c84461e1bb7068411a8d33bcf
+mig_count=23
+mig_head=0023_learning_persistence
+=== NO ORPHAN / OVER-BROAD DELETE CHECK ===
+rows_not_belonging_to_bahram=0
+sch_not_belonging_to_bahram=0
