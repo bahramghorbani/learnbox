@@ -69,6 +69,17 @@ export {
   type LearningStreak,
 } from './learning-streak-storage.js';
 export {
+  assessRollout,
+  canAdvance,
+  STAGE_EVIDENCE,
+  type ClientBuildState,
+  type FleetState,
+  type RolloutAssessment,
+  type RolloutStage,
+  type ServerBinaryState,
+  type StageTransition,
+} from './native-binary-rollout.js';
+export {
   hasPersonalVocabularyDuplicate,
   loadPersonalVocabulary,
   savePersonalVocabulary,
