@@ -254,17 +254,34 @@ describe('mobile review HTTP boundary', () => {
 
   it('fails closed with generic no-store errors for malformed item data and service faults', async () => {
     const deps = dependencies();
+    // CP17 F1: an invalid item that carries a usable clientEventId is now reported per-item
+    // (200 + status 'rejected') instead of poisoning the whole batch, so valid events queued
+    // behind it still sync. The fail-closed properties are unchanged: the item never reaches
+    // the scheduler, no internal detail escapes, and the response stays no-store.
     for (const body of [
       { items: [{ ...validItem, grade: 'again' }] },
       { items: [{ ...validItem, occurredAt: 'not-a-date' }] },
-      { items: [{ ...validItem, clientEventId: '' }] },
       { items: [{ ...validItem, extra: true }] },
     ]) {
       const response = await handleMobileReviewPost(request(body), deps);
-      expect(response.status).toBe(400);
+      expect(response.status).toBe(200);
       expect(response.headers.get('cache-control')).toBe('no-store');
-      expect(await response.json()).toEqual({ error: 'validation' });
+      expect(await response.json()).toEqual({
+        outcomes: [{ status: 'rejected', clientEventId: 'evt-1', reason: 'validation' }],
+      });
+      expect(deps.submit).not.toHaveBeenCalled();
     }
+    // An item with no usable clientEventId cannot be reported back coherently, so it still
+    // fails the whole batch rather than being discarded without a trace.
+    const anonymous = await handleMobileReviewPost(
+      request({ items: [{ ...validItem, clientEventId: '' }] }),
+      deps,
+    );
+    expect(anonymous.status).toBe(400);
+    expect(anonymous.headers.get('cache-control')).toBe('no-store');
+    expect(await anonymous.json()).toEqual({ error: 'validation' });
+    expect(deps.submit).not.toHaveBeenCalled();
+
     deps.submit.mockRejectedValueOnce(new Error('database details must not escape'));
     const response = await handleMobileReviewPost(request({ items: [validItem] }), deps);
     expect(response.status).toBe(503);

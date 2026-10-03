@@ -5,8 +5,9 @@ import {
   schedulerRejectedBody,
 } from '@learnbox/learning-engine';
 import {
+  MobileReviewBatchCapabilityError,
   MobileReviewBatchRequestError,
-  parseMobileReviewBatchRequest,
+  parseMobileReviewBatchRequestSalvaging,
 } from '../../api/dist/reviews/mobile-review-batch.request.js';
 import {
   MobileReviewBatchError,
@@ -14,7 +15,12 @@ import {
 } from '../../api/dist/reviews/mobile-review-batch.service.js';
 
 type JsonObject = Record<string, unknown>;
-type BoundaryOptions = { development?: boolean };
+/**
+ * CP17 F5: `binaryResponses` must be threaded from `LEARNBOX_BINARY_REVIEW` exactly as the
+ * learner-web boundary already does. Omitting it silently disabled binary acceptance on the
+ * Native endpoint even with the Production flag ON.
+ */
+type BoundaryOptions = { development?: boolean; binaryResponses?: boolean };
 
 export type AccessVerification =
   { status: 'valid'; claims: { sub: string } } | { status: 'invalid' };
@@ -70,17 +76,41 @@ export async function handleMobileReviewPost(
 
   const body = await readJsonBody(request);
   if (body === null) return error('validation', 400);
-  let parsed: ReturnType<typeof parseMobileReviewBatchRequest>;
+  let parsed: ReturnType<typeof parseMobileReviewBatchRequestSalvaging>;
   try {
-    parsed = parseMobileReviewBatchRequest(body, verification.claims.sub);
+    // CP17 F5: honour the server-side binary acceptance flag, defaulting to the environment
+    // exactly like the learner-web boundary. CP17 F1: salvage valid items instead of letting
+    // one terminally-invalid event reject the whole batch.
+    parsed = parseMobileReviewBatchRequestSalvaging(body, verification.claims.sub, {
+      binaryResponses: options.binaryResponses ?? process.env.LEARNBOX_BINARY_REVIEW === 'true',
+    });
   } catch (parseError) {
+    // CP17 F5: a capability gap is transient and server-side. Answer 503 (retryable) so a flag
+    // regression never converts real learner reviews into terminal rejections.
+    if (parseError instanceof MobileReviewBatchCapabilityError) {
+      return error('serverUnavailable', 503);
+    }
     if (parseError instanceof MobileReviewBatchRequestError) return error('validation', 400);
     throw parseError;
   }
 
+  // A terminally-invalid item is reported per-item so the client can retire exactly that
+  // event. It is never silently dropped and never submitted to the scheduler.
+  const rejectedOutcomes = parsed.rejected.map((item) => ({
+    status: 'rejected' as const,
+    clientEventId: item.clientEventId,
+    reason: 'validation' as const,
+  }));
+
+  if (parsed.items.length === 0) {
+    // Nothing valid to submit: answer with the per-item verdicts rather than calling the
+    // scheduler with an empty batch.
+    return json({ outcomes: rejectedOutcomes }, 200);
+  }
+
   try {
     const outcomes = await dependencies.submit({ userId: parsed.userId, items: parsed.items });
-    return json({ outcomes }, 200);
+    return json({ outcomes: [...outcomes, ...rejectedOutcomes] }, 200);
   } catch (cause) {
     // LB-B35 CP7: deterministic scheduler refusal -> 422, not a retryable 503.
     if (cause instanceof MobileReviewBatchError && cause.code === SCHEDULER_REJECTED_CODE) {
