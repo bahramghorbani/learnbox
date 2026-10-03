@@ -39,8 +39,10 @@ typedef ReviewEventIdFactory = String Function();
 class ReviewQueue {
   ReviewQueue({
     required ReviewQueueStore store,
+    ReviewQueueStore? quarantineStore,
     ReviewEventIdFactory? idFactory,
   })  : _store = store,
+        _quarantineStore = quarantineStore,
         _idFactory = idFactory ?? _secureEventId;
 
   /// Highest envelope version this build writes.
@@ -55,6 +57,30 @@ class ReviewQueue {
   static const _maxQuarantineEntries = 50;
 
   final ReviewQueueStore _store;
+
+  /// CP17 F3 — quarantine evidence lives in its OWN store, never in the queue
+  /// envelope.
+  ///
+  /// A pre-CP16 build's `_load()` requires an envelope of exactly two keys and
+  /// calls `_discardCorruptQueue()` otherwise, so smuggling a `quarantine` key
+  /// into the envelope makes a downgraded build delete the learner's surviving
+  /// valid reviews. Keeping the evidence beside the queue preserves forensics
+  /// **and** keeps the envelope downgrade-readable whenever its contents are
+  /// representable in v1.
+  ///
+  /// When no quarantine store is supplied the evidence is kept in memory for
+  /// the lifetime of the queue only; it is never written into the envelope.
+  final ReviewQueueStore? _quarantineStore;
+
+  /// Whether quarantine evidence will outlive this queue instance.
+  ///
+  /// Exposed so the *production composition* is assertable: mutant M21 removed
+  /// the durable store from the factory and every suite stayed green, because
+  /// nothing could observe how production wired itself. Memory-only quarantine
+  /// is acceptable in tests and fatal in production, so the difference must be
+  /// visible to a test.
+  bool get hasDurableQuarantine => _quarantineStore != null;
+
   final ReviewEventIdFactory _idFactory;
   Future<void> _mutationTail = Future<void>.value();
   List<Object?> _quarantine = const [];
@@ -136,6 +162,35 @@ class ReviewQueue {
         return List<Object?>.unmodifiable(_quarantine);
       });
 
+  /// Retire events the server rejected terminally, preserving them as evidence.
+  ///
+  /// CP17 review finding H3. A terminally-rejected event must leave the pending
+  /// queue — otherwise it is re-sent in every batch forever and head-of-line
+  /// blocking survives the F1 salvage fix — but it must not simply vanish: the
+  /// learner really answered, so the serialized event is moved into the
+  /// quarantine evidence store. Uses the same mutation lock as [acknowledge] so
+  /// a concurrent enqueue cannot be lost.
+  Future<void> quarantineByClientEventId(Iterable<String> ids) async {
+    final rejected = ids.toSet();
+    if (rejected.isEmpty) return;
+    await _serializeMutation(() async {
+      final events = await _load();
+      final kept = <PendingReviewEvent>[];
+      final removed = <Object?>[];
+      for (final event in events) {
+        if (rejected.contains(event.clientEventId)) {
+          removed.add(event.toJson());
+        } else {
+          kept.add(event);
+        }
+      }
+      if (removed.isEmpty) return;
+      _quarantine = _capQuarantine([..._quarantine, ...removed]);
+      await _persistQuarantine();
+      await _write(kept);
+    });
+  }
+
   Future<void> acknowledge(Iterable<String> ids) async {
     final acknowledged = ids.toSet();
     await _serializeMutation(() async {
@@ -166,7 +221,8 @@ class ReviewQueue {
   Future<List<PendingReviewEvent>> _load() async {
     final serialized = await _store.read();
     if (serialized == null) {
-      _quarantine = const [];
+      // Evidence from an earlier session must survive an empty queue.
+      await _restoreQuarantine();
       return const [];
     }
 
@@ -176,14 +232,17 @@ class ReviewQueue {
     } catch (_) {
       // Not JSON at all: nothing can be salvaged, but the bytes are preserved
       // rather than overwritten with an empty queue.
+      await _restoreQuarantine();
       return _quarantineWhole(serialized);
     }
 
     if (decoded is! Map<String, dynamic>) {
+      await _restoreQuarantine();
       return _quarantineWhole(serialized);
     }
     final rawEvents = decoded['events'];
     if (rawEvents is! List<dynamic>) {
+      await _restoreQuarantine();
       return _quarantineWhole(serialized);
     }
 
@@ -200,12 +259,22 @@ class ReviewQueue {
       events.add(event);
     }
 
-    final carried = _carriedQuarantine(decoded['quarantine']);
-    _quarantine = _capQuarantine([...carried, ...rejected]);
+    // Start from evidence held in the side store, then migrate any evidence a
+    // CP16-era build wrote into the envelope itself (F3 forward migration), then
+    // add what this load rejected.
+    await _restoreQuarantine();
+    _quarantine = _capQuarantine([
+      ..._quarantine,
+      ..._carriedQuarantine(decoded['quarantine']),
+      ...rejected,
+    ]);
+    await _persistQuarantine();
 
     // Rewrite only when the stored form no longer matches what we restored, so
     // a healthy queue is never needlessly rewritten.
-    if (rejected.isNotEmpty || _needsRewrite(decoded, events)) {
+    if (rejected.isNotEmpty ||
+        decoded.containsKey('quarantine') ||
+        _needsRewrite(decoded, events)) {
       await _write(events);
     }
     return events;
@@ -235,25 +304,48 @@ class ReviewQueue {
 
   /// Lowest version that faithfully represents [events].
   ///
-  /// Bumped only once an event actually carries binary evidence (or quarantine
-  /// exists), so a queue a pre-CP16 build could still read stays at v1.
+  /// CP17 F3: bumped **only** when an event actually carries binary evidence.
+  /// Quarantine no longer participates: it is stored outside the envelope, so a
+  /// queue holding only legacy events stays v1-readable by a pre-CP16 build even
+  /// while forensic evidence is retained.
   int _envelopeVersionFor(List<PendingReviewEvent> events) =>
-      _quarantine.isEmpty &&
-              !events.any((event) => event.hasExplicitBinaryResponse)
-          ? _legacySchemaVersion
-          : _schemaVersion;
+      events.any((event) => event.hasExplicitBinaryResponse)
+          ? _schemaVersion
+          : _legacySchemaVersion;
 
   Future<List<PendingReviewEvent>> _quarantineWhole(String serialized) async {
     _quarantine = _capQuarantine([..._quarantine, serialized]);
+    await _persistQuarantine();
     await _write(const []);
     return const [];
+  }
+
+  /// Persist quarantine evidence beside the queue, never inside its envelope.
+  Future<void> _persistQuarantine() async {
+    final store = _quarantineStore;
+    if (store == null) return;
+    await store.write(jsonEncode({'quarantine': _quarantine}));
+  }
+
+  Future<void> _restoreQuarantine() async {
+    final store = _quarantineStore;
+    if (store == null) return;
+    final serialized = await store.read();
+    if (serialized == null) return;
+    try {
+      final decoded = jsonDecode(serialized);
+      if (decoded is Map<String, dynamic>) {
+        _quarantine = _capQuarantine(_carriedQuarantine(decoded['quarantine']));
+      }
+    } catch (_) {
+      // Unreadable evidence must never break queue loading.
+    }
   }
 
   Future<void> _write(List<PendingReviewEvent> events) => _store.write(
         jsonEncode({
           'schemaVersion': _envelopeVersionFor(events),
           'events': events.map((event) => event.toJson()).toList(),
-          if (_quarantine.isNotEmpty) 'quarantine': _quarantine,
         }),
       );
 }

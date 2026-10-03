@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import {
-  MobileReviewBatchRequestError,
+  MobileReviewBatchCapabilityError,
   parseMobileReviewBatchRequest,
 } from '../../api/dist/reviews/mobile-review-batch.request.js';
 import {
@@ -230,10 +230,18 @@ describe('CP9 N1 — mobile HTTP boundary (pre-existing gap, locked by test)', (
     occurredAt: new Date().toISOString(),
   };
 
-  it('rejects a binary item when binaryResponses is not enabled (mobile boundary call shape)', () => {
+  it('refuses a binary item as a retryable capability gap when binaryResponses is not enabled', () => {
+    // CP17 F5: this used to be MobileReviewBatchRequestError ('validation' -> terminal 400).
+    // A well-formed binary item meeting a flag-off server is a server CONFIGURATION gap, not
+    // learner-event corruption: the identical item becomes valid when the flag is restored.
+    // Classifying it terminal would let a flag regression destroy real reviews, so it is now a
+    // distinct retryable error that the boundary answers with 503.
     expect(() => parseMobileReviewBatchRequest({ items: [binaryItem] }, 'user-1')).toThrow(
-      MobileReviewBatchRequestError,
+      MobileReviewBatchCapabilityError,
     );
+    // The invariant this test exists for is unchanged: nothing binary is accepted or persisted
+    // while the flag is off.
+    expect(() => parseMobileReviewBatchRequest({ items: [binaryItem] }, 'user-1')).toThrow();
   });
 
   it('accepts the same item at the web boundary, which does pass binaryResponses', () => {

@@ -1,3 +1,4 @@
+import 'package:learnbox/features/review/binary_review_ui_config.dart';
 import 'package:learnbox/features/review/pending_review_event.dart';
 
 /// Provider-neutral upload port for pending review events.
@@ -17,14 +18,34 @@ class ReviewUploadResponse {
   ReviewUploadResponse({
     required List<String> acknowledgedClientEventIds,
     this.reconciliationCursor,
-  }) : acknowledgedClientEventIds =
-            List<String>.unmodifiable(acknowledgedClientEventIds);
+    this.binaryReview = BinaryReviewRuntimeConfig.unknown,
+    List<String> rejectedClientEventIds = const <String>[],
+  })  : acknowledgedClientEventIds =
+            List<String>.unmodifiable(acknowledgedClientEventIds),
+        rejectedClientEventIds =
+            List<String>.unmodifiable(rejectedClientEventIds);
 
   final List<String> acknowledgedClientEventIds;
+
+  /// Events the server rejected **terminally** (CP17 F1 per-item salvage).
+  ///
+  /// Review finding H3: salvage only ends head-of-line blocking if the client
+  /// also retires the salvaged event. These ids were judged permanently
+  /// unprocessable — resending them cannot succeed — so the queue must drop
+  /// them rather than keep offering them in every future batch. Retryable
+  /// conditions are never reported here; they surface as transport exceptions.
+  final List<String> rejectedClientEventIds;
 
   /// Authoritative per-learner projection version after the batch (ADR 0014),
   /// as a non-negative decimal string; null when no outcome was acknowledged.
   final String? reconciliationCursor;
+
+  /// CP17 F2 — the server's current binary-review runtime switch.
+  ///
+  /// Defaults to [BinaryReviewRuntimeConfig.unknown] so a transport that does
+  /// not report it (or a server that has not been upgraded) leaves the
+  /// compile-time gate in charge and keeps draining any queued binary events.
+  final BinaryReviewRuntimeConfig binaryReview;
 }
 
 /// Provider-neutral, read-only port for the cursor-gap reconciliation read.

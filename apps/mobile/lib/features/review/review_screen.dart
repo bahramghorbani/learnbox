@@ -19,6 +19,7 @@ class ReviewScreen extends StatefulWidget {
     required this.reviewQueue,
     required this.pronunciationPlayer,
     this.binaryReviewUi,
+    this.binaryReviewSwitch,
     super.key,
   });
 
@@ -30,7 +31,21 @@ class ReviewScreen extends StatefulWidget {
   /// null so [BinaryReviewUiConfig] (default off) decides.
   final bool? binaryReviewUi;
 
-  bool get showsBinaryReview => binaryReviewUi ?? BinaryReviewUiConfig.enabled;
+  /// Live switch state published by the sync coordinator (CP17 F2 / review H2).
+  ///
+  /// When present, a server that has disabled creation withdraws the binary
+  /// interaction at runtime — no store rebuild. When absent (tests, or before the
+  /// first sync) the compile-time gate alone decides, so this can only ever remove
+  /// the interaction, never add it to a build that did not ship it.
+  final BinaryReviewSwitch? binaryReviewSwitch;
+
+  /// The runtime switch is dominant: it gates the build-time value *and* any
+  /// explicit [binaryReviewUi] override. Found by mutant M20 — with the override
+  /// short-circuiting first, an explicit `true` silently outranked an operator
+  /// who had just disabled creation, which is exactly backwards for a kill switch.
+  bool get showsBinaryReview =>
+      (binaryReviewUi ?? BinaryReviewUiConfig.enabled) &&
+      (binaryReviewSwitch?.value.creationEnabled ?? true);
 
   @override
   State<ReviewScreen> createState() => _ReviewScreenState();
@@ -332,16 +347,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                   ),
                   const SizedBox(height: 12),
                 ],
-                if (widget.showsBinaryReview)
-                  _BinaryResponseButtons(
-                    enabled: !_isSaving,
-                    onRespond: _respond,
-                  )
-                else
-                  _GradeButtons(
-                    enabled: !_isSaving,
-                    onGrade: _grade,
-                  ),
+                _gradeControls(),
               ],
             ],
           ),
@@ -349,6 +355,28 @@ class _ReviewScreenState extends State<ReviewScreen> {
       ),
     );
   }
+
+  /// Rebuilds the grade controls whenever the server's switch changes, so an
+  /// operator disabling creation withdraws the binary interaction mid-session
+  /// instead of at the next cold start (CP17 F2 / review H2).
+  Widget _gradeControls() {
+    final sw = widget.binaryReviewSwitch;
+    if (sw == null) return _gradeControlsFor(widget.showsBinaryReview);
+    return ValueListenableBuilder<BinaryReviewRuntimeConfig>(
+      valueListenable: sw,
+      builder: (_, __, ___) => _gradeControlsFor(widget.showsBinaryReview),
+    );
+  }
+
+  Widget _gradeControlsFor(bool binary) => binary
+      ? _BinaryResponseButtons(
+          enabled: !_isSaving,
+          onRespond: _respond,
+        )
+      : _GradeButtons(
+          enabled: !_isSaving,
+          onGrade: _grade,
+        );
 }
 
 class _AudioButton extends StatelessWidget {

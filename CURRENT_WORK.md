@@ -42,6 +42,49 @@ adversarial findings), plus this closure commit. Branch `feat/lb-b35-cp15-contra
 
 **Evidence:** `docs/planning/LB_B35_CP15_CONTRACT_PARITY_READINESS.md`.
 
+## LB-B35 CP17 — Native Binary Rollout Readiness — AT OWNER GATE 2026-10-03
+
+**Readiness only. Rollout NOT authorized.** Candidate
+`10bf37e31b6dcdca244d935cd8c2fb16f74745c6`, base `5a12fcf5`, PR open and
+**unmerged**. Full evidence: `docs/evidence/cp17/CP17_NATIVE_BINARY_ROLLOUT_READINESS.md`.
+
+**Corrected facts that durable state must carry (each cost a wrong first diagnosis):**
+
+- **F1 root cause is server-side, not the client.** The poisoning was `items.map()`
+  in the API batch parser rejecting the whole envelope for one bad item — not
+  anything in the Dart `toWireJson()`. Per-item salvage emits `status: 'validation'`
+  per item; envelope-level corruption remains whole-batch.
+- **F2 required true end-to-end UI consumption, not merely response fields.**
+  Parsing `binaryReview` into `ReviewUploadResponse` looked complete and did
+  nothing: the UI gate never read it. A kill switch is only real where the
+  interaction is rendered.
+- **Creation disable dominates a local UI enable.** `(local ?? compiled) && creationEnabled`.
+  The earlier `local ?? (...)` let an explicit local enable short-circuit the operator.
+- **Silence is not consent.** An absent or garbage `binaryReview` block must not
+  lift a known `creationEnabled: false`; only an explicit server `true` does.
+- **Acceptance stays ON during drain.** Creation OFF + acceptance ON is the drain
+  state; creation may never exceed acceptance.
+- **F3 required persistent production composition, not memory-only tests.**
+  Quarantine evidence is memory-only unless production supplies a durable store,
+  and `main()` must call the one covered factory — an inline parallel path is
+  invisible to tests.
+- **F5: `/api/reviews/mobile` was not passing the binary parser option.** The
+  boundary was flag-blind; a binary item against a flag-OFF server now returns a
+  retryable **503**, never a destructive terminal rejection.
+- **First genuinely created binary event is the downgrade point of no return.**
+  Quarantine evidence alone no longer crosses that boundary.
+- **`LEARNBOX_BINARY_REVIEW_CREATION=false` must be set explicitly in Production
+  before any binary-capable Native build is distributed.** "Absent follows
+  acceptance" is a safe library default but not an interlock: absent is
+  indistinguishable from unconfigured, and acceptance is already `true`.
+
+**Still open / not authorized:** Native UI DEFAULT OFF; Scheduler V2 OFF;
+production composition still wires `DisabledReviewSyncTransport`; owner gate
+required before `creating`; pre-first-sync switch is `unknown` (defers to the
+compile-time gate — harmless while default OFF, documented not fixed).
+
+---
+
 ## LB-B35 CP16 — Native Binary Review Migration — IMPLEMENTATION MERGED 2026-10-03
 
 **Owner approved and merged CP16 implementation on 2026-10-03.** PR #350, reviewed head

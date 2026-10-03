@@ -3,5 +3,5 @@
   "B_empty_or_fully_synced_queue": "{\"schemaVersion\":1,\"events\":[]}",
   "C_pending_legacy_only_queue": "{\"schemaVersion\":1,\"events\":[{\"clientEventId\":\"evt-1\",\"cardId\":\"c1\",\"grade\":\"forgot\",\"occurredAt\":\"2026-08-13T09:00:00.000Z\"},{\"clientEventId\":\"evt-2\",\"cardId\":\"c2\",\"grade\":\"mastered\",\"occurredAt\":\"2026-08-13T09:00:00.000Z\"}]}",
   "D_binary_queue_state_exists": "{\"schemaVersion\":2,\"events\":[{\"clientEventId\":\"evt-1\",\"cardId\":\"c1\",\"grade\":\"hard\",\"occurredAt\":\"2026-08-13T09:00:00.000Z\"},{\"clientEventId\":\"evt-2\",\"cardId\":\"c2\",\"grade\":\"remembered\",\"occurredAt\":\"2026-08-13T09:00:00.000Z\",\"response\":\"known\"}]}",
-  "E_legacy_pending_with_quarantine": "{\"schemaVersion\":2,\"events\":[{\"clientEventId\":\"evt-1\",\"cardId\":\"c9\",\"grade\":\"hard\",\"occurredAt\":\"2026-08-13T09:00:00.000Z\"}],\"quarantine\":[{\"clientEventId\":\"bad\",\"cardId\":\"c1\",\"grade\":\"nope\",\"occurredAt\":\"2026-08-13T09:00:00.000Z\"}]}"
+  "E_legacy_pending_with_quarantine": "{\"schemaVersion\":1,\"events\":[{\"clientEventId\":\"evt-1\",\"cardId\":\"c9\",\"grade\":\"hard\",\"occurredAt\":\"2026-08-13T09:00:00.000Z\"}]}"
 }

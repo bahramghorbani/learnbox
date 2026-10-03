@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../ui/learner_bottom_navigation.dart';
 import '../../ui/learnbox_theme.dart';
+import 'binary_review_ui_config.dart';
 import 'pronunciation_player.dart';
 import 'review_queue.dart';
 import 'review_screen.dart';
@@ -13,6 +14,7 @@ class TodayScreen extends StatefulWidget {
     required this.startPackRepository,
     required this.reviewQueue,
     required this.pronunciationPlayer,
+    this.binaryReviewSwitch,
     this.onDestinationSelected,
     super.key,
   });
@@ -20,6 +22,9 @@ class TodayScreen extends StatefulWidget {
   final StartPackRepository startPackRepository;
   final ReviewQueue reviewQueue;
   final PronunciationPlayer pronunciationPlayer;
+
+  /// Runtime binary-review switch published by sync (CP17 F2 / review H2).
+  final BinaryReviewSwitch? binaryReviewSwitch;
 
   /// Optional injected navigation callback. When null, Today renders without
   /// the bottom navigation so the owning shell provides the only one.
@@ -91,6 +96,7 @@ class _TodayScreenState extends State<TodayScreen> {
                   onStart: () => Navigator.of(context).push(
                     MaterialPageRoute<void>(
                       builder: (_) => ReviewScreen(
+                        binaryReviewSwitch: widget.binaryReviewSwitch,
                         cards: cards,
                         reviewQueue: widget.reviewQueue,
                         pronunciationPlayer: widget.pronunciationPlayer,
