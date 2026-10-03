@@ -9,26 +9,36 @@ EV=$MOBILE/lib/features/review/pending_review_event.dart
 QU=$MOBILE/lib/features/review/review_queue.dart
 BR=$MOBILE/lib/features/review/binary_response.dart
 PROBE=scripts/cp16-mixed-client-compat-probe.mjs
+# The mobile suite REGENERATES this committed fixture from live queue code, so a
+# mutated run rewrites it with corrupt bytes and the mutation leaks into the tree
+# as a tracked modification. It must be snapshot/restored like any mutated file
+# even though no mutant edits it directly.
+FIXTURE=$MOBILE/test/fixtures/cp16_downgrade_queue_states.json
 
 killed=0
 survived=0
+
+# Files a mutant may edit directly (used for the applied-mutant check).
+MUTATED_FILES=("$EV" "$QU" "$BR" "$PROBE")
+# Every file a run can modify, including regenerated artifacts (snapshot/restore).
+TOUCHED_FILES=("$EV" "$QU" "$BR" "$PROBE" "$FIXTURE")
 
 # Snapshot by COPY, not `git checkout --`: some CP16 files are still untracked,
 # and git checkout silently leaves an untracked file mutated. That exact flaw
 # once left an inverted shadow-grade mapping behind in the working tree.
 SNAP=$(mktemp -d)
-for f in "$EV" "$QU" "$BR" "$PROBE"; do
+for f in "${TOUCHED_FILES[@]}"; do
   mkdir -p "$SNAP/$(dirname "$f")"
   cp "$f" "$SNAP/$f"
 done
 
 restore() {
-  for f in "$EV" "$QU" "$BR" "$PROBE"; do
+  for f in "${TOUCHED_FILES[@]}"; do
     cp "$SNAP/$f" "$f"
   done
 }
 verify_restored() {
-  for f in "$EV" "$QU" "$BR" "$PROBE"; do
+  for f in "${TOUCHED_FILES[@]}"; do
     if ! cmp -s "$SNAP/$f" "$f"; then
       echo "FATAL: $f not restored"
       return 1
@@ -45,7 +55,7 @@ run_mutant() {
   # An unapplied mutant is a HARNESS bug, not a passing guarantee. Without this
   # check a typo'd pattern reports "SURVIVED" and looks like a product gap.
   local applied=0
-  for f in "$EV" "$QU" "$BR" "$PROBE"; do
+  for f in "${MUTATED_FILES[@]}"; do
     cmp -s "$SNAP/$f" "$f" || applied=1
   done
   if [ "$applied" -eq 0 ]; then
