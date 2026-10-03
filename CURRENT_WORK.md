@@ -24,7 +24,9 @@ Nothing further is approved for implementation: P1 compatibility and Admin redes
   fail CI, including the case where a rename is propagated to the fixture.
 - **Native binary semantic direction: OWNER DECISION RESOLVED — adopt known/unknown** (Decision A,
   2026-10-03), with mandatory backward compatibility.
-- **Native implementation/parity: NOT YET IMPLEMENTED** — deferred to CP16.
+- **Native implementation/parity:** implementation **MERGED in CP16** (2026-10-03, `dba892ad`), but
+  **native semantic parity remains OPEN** — the native binary UI ships **default OFF** and Production
+  native sync is still dormant, so there is no field evidence. See the CP16 section below.
 - **Scheduler V2: OFF / NOT AUTHORIZED.** `LEARNBOX_SCHEDULER_V2` remains ABSENT.
 - **Production: UNCHANGED** (`sha256:cb3090da…`, `APP_SOURCE_SHA=d4ea6558…`, RestartCount 0, healthy).
   Production was not deployed or modified to close CP15.
@@ -40,21 +42,90 @@ adversarial findings), plus this closure commit. Branch `feat/lb-b35-cp15-contra
 
 **Evidence:** `docs/planning/LB_B35_CP15_CONTRACT_PARITY_READINESS.md`.
 
-## LB-B35 CP16 — Native Binary Review Migration — PROPOSED (design only, awaiting owner review)
+## LB-B35 CP16 — Native Binary Review Migration — IMPLEMENTATION MERGED 2026-10-03
 
-Narrowly scoped successor implementing Decision A. **Design is written and must be reviewed before any
-implementation:** `docs/planning/LB_B35_CP16_NATIVE_BINARY_REVIEW_MIGRATION.md`.
+**Owner approved and merged CP16 implementation on 2026-10-03.** PR #350, reviewed head
+`2145ed33a28f72f3bdaed044c7dd712bf9bfdb82`, squash-merged with head pinning to
+`dba892ad3e621b7300cec14ae4ff92d85828e929`, which is current `main`. The resulting `main` tree
+`51da3060f70716fd5dcbc33b5bbec31ee2b744bb` is **byte-identical** to the reviewed candidate tree
+(verified by tree-hash comparison, not by diff alone). 17 files, mobile + scripts + docs only; no
+server, scheduler, migration, infra, CI or compose changes entered `main`.
 
-Key finding from driving the **real compiled parser**: the wire protocol already supports mixed
-clients. `response` (CP5 `LEARNBOX_BINARY_REVIEW`) is already an optional per-event discriminator, and
-`review_events.response` (migration 0023) already stores `NULL` for legacy rows — so **no new version
-discriminator is required**. A batch containing one legacy four-grade event and one binary event is
-accepted, and the two remain distinguishable after parsing.
+CP16 was reviewed while stacked on CP15, then rebased onto post-CP15 `main`
+(`git rebase --onto`, no conflicts). Equivalence was proven rather than assumed: at the rebased head
+all 17 file blobs were byte-identical to the previously reviewed head
+`aedf18ab25f1154721ae8740db12972e06642490`; the final candidate differs in exactly **one** blob,
+`scripts/cp16-mutation-pass.sh`, by a deliberate harness fix (below). Historical anchors retained:
+tag `cp16-reviewed-stacked-aedf18a` and branch `backup/cp16-reviewed-aedf18a`.
 
-The blocker is client-side, and **B-3 is a data-loss bug that exists today**: `review_queue.dart`
-discards the _entire_ offline queue when any single event fails to parse or when `schemaVersion`
-changes, so introducing the `response` field would itself destroy queued reviews on upgrade. CP16 must
-fix B-3 **before** changing the queue format. Scheduler V2 is **not** activated by CP16.
+**What merging does and does not do.** It lands the implementation only. The learner-facing native
+binary interaction is **default OFF** at build time (`BinaryReviewUiConfig.enabled` is true only for an
+exact `'true'` define, so a typo fails safe to four grades). Merging deploys nothing, activates no
+flag, and changes no Production configuration.
+
+**Guarantees established (mutation- and probe-proven on the exact merged head):** B-2 **CLOSED** (wire
+emits `contentId`, and `response` XOR `grade`, never both); B-3 **CLOSED** (salvage-and-quarantine
+replaces whole-queue discard, so one malformed event no longer destroys unrelated queued reviews);
+legacy queued reviews survive upgrade with ordering, `clientEventId` and `occurredAt` intact; binary
+and legacy events remain distinguishable via the existing per-event `response` discriminator — **no new
+version discriminator was required**; old four-grade native clients remain compatible.
+
+**Evidence on the merged head:** mobile 328/328 · `flutter analyze` clean · `dart format` 0 changed ·
+TS 1,427 passed · `pnpm typecheck` clean · `pnpm format:check` clean · real compiled-parser
+compatibility probe 16/16 · downgrade characterization 5/5 stable · hardened mutation pass 7 killed /
+0 survived with the working tree byte-identical before and after · required GitHub CI 4/4 SUCCESS on
+the exact head (quality, secrets, mobile, production-stack) · independent adversarial review of the
+exact head returned **zero new defects**. Full evidence:
+`docs/planning/LB_B35_CP16_IMPLEMENTATION_EVIDENCE.md`.
+
+**Mutation-harness integrity fix (the one commit beyond the rebase).** The mobile suite _regenerates_
+`apps/mobile/test/fixtures/cp16_downgrade_queue_states.json` from live queue code, so running it under
+a mutant rewrote that committed fixture with corrupt bytes. Because the harness snapshotted only the
+four directly-mutated files, the corruption survived the pass and leaked into the working tree as a
+tracked modification while the run still reported a clean `killed=7 survived=0`. Snapshot/restore now
+covers every file a run can touch (`TOUCHED_FILES`), while the applied-mutant guard still considers
+only directly-mutated files (`MUTATED_FILES`) so a regenerated artifact can never be mistaken for an
+applied mutant. Detection method worth reusing: fingerprint the relevant files before and after a pass
+and compare — a changed fingerprint alongside `survived=0` means the harness is misreporting its own
+cleanliness.
+
+### Carried forward — still OPEN after this merge
+
+- **Native semantic parity: OPEN.** Contract-level and probe-level proof is **not** field proof.
+  Production native still uses `DisabledReviewSyncTransport`, so no real native client has exercised
+  this path end to end. Parity stays OPEN until real rollout evidence exists.
+- **Native Binary rollout: NOT AUTHORIZED.** Merging the implementation is not rollout approval.
+- **Scheduler V2: NOT AUTHORIZED and remains OFF.** `LEARNBOX_SCHEDULER_V2` is absent in Production.
+  CP16 is uncoupled from it: the only mentions inside merged CP16 files are a comment and documentation
+  asserting that independence — there is no executable coupling.
+- **Downgrade D/E limitation: OPEN rollout constraint.** Downgrade is one-way once binary queue state
+  exists. Categories A/B/C are queue-safe; **D** (legacy-only queue written with a v2 envelope) and
+  **E** (binary queue state) are **purged by an old parser**. A rollback after binary reviews have been
+  queued loses those queued events.
+- **Rollout ordering constraint.** The server flag must be enabled **before** shipping a
+  binary-capable client. Production already has the pre-existing CP9 server-side
+  `LEARNBOX_BINARY_REVIEW=true`; that flag was not modified by CP16.
+
+### Known LOW findings — recorded, deliberately NOT fixed
+
+Both were re-audited on the merged head by an independent adversarial review and remain accurately
+characterised. Neither is a correctness or data-safety defect, and fixing either during the rebase
+would have broken byte-equivalence with the reviewed implementation.
+
+1. **Quarantine forensic granularity.** In `review_queue.dart`, when the stored envelope cannot be
+   decoded as `Map<String, dynamic>` or `rawEvents` is not a `List`, `_quarantineWhole` appends the raw
+   serialized string as one opaque blob. Quarantine sub-entries nested in a previously valid envelope
+   are preserved inside that blob and recoverable by inspection, but are not promoted to individual
+   top-level entries. Evidence is **not** destroyed; only forensic granularity is reduced.
+2. **`binaryReviewUi` gate is convention-only.** `ReviewScreen` declares
+   `final bool? binaryReviewUi;` with a prose doc comment ("Tests only; production passes null") but no
+   `@visibleForTesting`, so the default-OFF gate has no compile-time enforcement. No production call
+   site sets it.
+
+**Design document:** `docs/planning/LB_B35_CP16_NATIVE_BINARY_REVIEW_MIGRATION.md`.
+
+**Next checkpoint is NOT started and NOT authorized.** A Native Binary Rollout Readiness checkpoint
+would need separate owner authorization; CP16 does not begin it.
 
 ## LB-B35 CP9 Production cutover — CLOSED 2026-10-02 (server-side complete; D-3 since PASSED in CP14)
 
