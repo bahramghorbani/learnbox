@@ -282,10 +282,12 @@ void main() {
   });
 
   // ---------------------------------------------------------------------------
-  // Native binary review must stay disabled: CP10 changes error handling only.
+  // CP16: the wire shape is now correct. This test previously PINNED the B-2
+  // defect (native sent `cardId`, which the server rejects with `validation`);
+  // it is kept and flipped into a fixed-assertion so the defect cannot return.
   // ---------------------------------------------------------------------------
 
-  test('native payload stays legacy four-grade with no binary response',
+  test('a legacy four-grade event goes on the wire as contentId + grade',
       () async {
     final transport = _transportReturning(const MobileReviewHttpResponse(
       statusCode: 200,
@@ -297,8 +299,11 @@ void main() {
     final items = sent['items'] as List<Object?>;
     final item = items.single as Map<String, Object?>;
 
-    expect(
-        item.keys.toSet(), {'clientEventId', 'cardId', 'grade', 'occurredAt'});
+    // B-2 fixed: the server's field is contentId; cardId was rejected.
+    expect(item.keys.toSet(),
+        {'clientEventId', 'contentId', 'grade', 'occurredAt'});
+    expect(item.containsKey('cardId'), isFalse);
+    // A legacy event carries NO binary response: absence is the discriminator.
     expect(item.containsKey('response'), isFalse);
     expect(item['grade'], 'remembered');
     expect(ReviewGrade.values.map((grade) => grade.name),
