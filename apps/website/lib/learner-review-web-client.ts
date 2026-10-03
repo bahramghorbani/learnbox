@@ -1,4 +1,8 @@
-import type { BinaryResponse, ReviewGrade } from '@learnbox/learning-engine';
+import {
+  SCHEDULER_REJECTED_STATUS,
+  type BinaryResponse,
+  type ReviewGrade,
+} from '@learnbox/learning-engine';
 import type { MobileReviewBatchItemOutcome } from '../../api/dist/reviews/mobile-review-batch.service.js';
 
 /**
@@ -57,7 +61,9 @@ export async function submitWebReviewBatch(
     return { status: 'unavailable' };
   }
   if (response.status === 401) return { status: 'unauthorized' };
-  if (response.status === 422) return { status: 'rejected' };
+  // LB-B35 CP15: this client classifies the deterministic refusal by STATUS only (it never reads
+  // the body), so the status must come from the canonical contract rather than a local literal.
+  if (response.status === SCHEDULER_REJECTED_STATUS) return { status: 'rejected' };
   if (response.status !== 200) return { status: 'unavailable' };
   try {
     const body = (await response.json()) as unknown;

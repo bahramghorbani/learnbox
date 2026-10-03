@@ -1,5 +1,10 @@
 import type { ReviewGrade } from '@learnbox/learning-engine';
 import {
+  SCHEDULER_REJECTED_CODE,
+  SCHEDULER_REJECTED_STATUS,
+  schedulerRejectedBody,
+} from '@learnbox/learning-engine';
+import {
   MobileReviewBatchRequestError,
   parseMobileReviewBatchRequest,
 } from '../../api/dist/reviews/mobile-review-batch.request.js';
@@ -78,8 +83,8 @@ export async function handleMobileReviewPost(
     return json({ outcomes }, 200);
   } catch (cause) {
     // LB-B35 CP7: deterministic scheduler refusal -> 422, not a retryable 503.
-    if (cause instanceof MobileReviewBatchError && cause.code === 'schedulerRejected') {
-      return error('schedulerRejected', 422);
+    if (cause instanceof MobileReviewBatchError && cause.code === SCHEDULER_REJECTED_CODE) {
+      return schedulerRejected();
     }
     return error('serverUnavailable', 503);
   }
@@ -171,10 +176,19 @@ function isSecure(request: Request, development: boolean): boolean {
   );
 }
 function error(
-  code: 'validation' | 'invalidToken' | 'schedulerRejected' | 'serverUnavailable',
+  code: 'validation' | 'invalidToken' | typeof SCHEDULER_REJECTED_CODE | 'serverUnavailable',
   status: number,
 ): Response {
   return json({ error: code }, status);
+}
+
+/**
+ * LB-B35 CP15 (Workstream A): the deterministic scheduler refusal is built from the canonical
+ * contract in `@learnbox/learning-engine`, never from a local literal. See
+ * `review-sync-wire-contract.ts` for why this indirection is load-bearing.
+ */
+function schedulerRejected(): Response {
+  return json(schedulerRejectedBody(), SCHEDULER_REJECTED_STATUS);
 }
 function json(body: JsonObject, status: number): Response {
   return Response.json(body, { status, headers: JSON_HEADERS });
