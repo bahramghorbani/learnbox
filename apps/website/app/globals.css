@@ -2371,6 +2371,15 @@ p {
   filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.18));
 }
 
+/* Decorative stand-in shown only when both the optimized and raw Bobo image
+   requests fail, so the learner never sees a broken-image icon. */
+.bobo-fallback {
+  max-width: 90px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 38%, var(--surface) 0%, var(--border) 100%);
+  filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.18));
+}
+
 .speech-bubble {
   background: var(--surface);
   border-radius: 18px;

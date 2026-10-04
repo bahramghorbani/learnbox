@@ -46,6 +46,14 @@ export function Bobo({
   const asset = boboAssets[expression];
   const [displayedText, setDisplayedText] = useState('');
   const [showBubble, setShowBubble] = useState(false);
+  // 'optimized' -> next/image (normal online path).
+  // 'raw' -> the plain public path, which the service worker precaches for offline use.
+  // 'failed' -> decorative placeholder, so a failed request never shows a broken-image icon.
+  const [stage, setStage] = useState<'optimized' | 'raw' | 'failed'>('optimized');
+
+  useEffect(() => {
+    setStage('optimized');
+  }, [asset.src]);
 
   useEffect(() => {
     if (!speech) {
@@ -64,16 +72,30 @@ export function Bobo({
     return () => clearInterval(interval);
   }, [speech]);
 
+  const width = size;
+  const height = Math.round(size * 1.2);
+  const animationStyle = { animation: animationStyles[animation] };
+
   return (
     <div className={`bobo-container ${className}`}>
-      <Image
-        src={asset.src}
-        alt={asset.alt}
-        width={size}
-        height={Math.round(size * 1.2)}
-        priority={priority}
-        style={{ animation: animationStyles[animation] }}
-      />
+      {stage === 'failed' ? (
+        <div
+          aria-hidden="true"
+          className="bobo-fallback"
+          style={{ ...animationStyle, height, width }}
+        />
+      ) : (
+        <Image
+          src={asset.src}
+          alt={asset.alt}
+          width={width}
+          height={height}
+          priority={priority}
+          unoptimized={stage === 'raw'}
+          onError={() => setStage((current) => (current === 'optimized' ? 'raw' : 'failed'))}
+          style={animationStyle}
+        />
+      )}
       {showBubble && displayedText ? (
         <div className="speech-bubble" dir="rtl">
           {displayedText}
