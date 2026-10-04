@@ -156,7 +156,13 @@ would still have bumped it. Cross-user isolation holds under real learner traffi
 
 ## 5. Defects found
 
-### D-FV-1 — Completion mascot breaks when first reached offline (UI, non-blocking)
+### D-FV-1 — Completion mascot breaks when first reached offline (UI, non-blocking) — **CLOSED**
+
+**Status:** FIXED and merged to `main` as `88c36bd890e61990d3bf6729ccb6665ad8f78b9d`
+(PR #358, reviewed head `b780bd38eea3e015729df16b183815f6a360e394`, required CI 4/4 green on
+both the PR head and `main`; merged tree byte-identical to the reviewed head).
+Fix evidence: `D_FV_1_OFFLINE_COMPLETION_IMAGE.md`. **Not deployed** — Production still serves
+the pre-fix worker (`v9`), so the defect remains live until a separately authorized deploy.
 
 **Symptom:** the celebration illustration on the session-complete screen rendered as a broken
 image icon after the offline card was answered.
@@ -179,21 +185,40 @@ first session offline, at precisely the reward moment.
 
 **Contributing factors (recorded, not fixed):**
 
-1. `Bobo` has no `onError` fallback, unlike `StartMediaVisual` which does.
+1. `Bobo` has no `onError` fallback, unlike `StartMediaVisual` which does. — **fixed in #358**
 2. The SW's prefix test checks `/images/`, but `next/image` requests arrive as
-   `/_next/image?url=...`, so **no** `next/image` asset is ever precached.
+   `/_next/image?url=...`, so **no** `next/image` asset is ever precached. — **unchanged and
+   deliberate**: that path can proxy protected media, so it must stay uncached. The component
+   fallback to the raw precached path is the fix instead.
 
-### D-FV-2 — «دقت» 67% reads as session progress (UX clarity, not a calculation bug)
+**Residual (F-1):** `welcome`, `encourage` and `focus` are still not precached (~1.5 MB).
+They now degrade to a decorative placeholder rather than a broken icon, so the learner-visible
+defect is closed; precaching all five would roughly double the ~1.6 MB install payload, which
+is a product decision rather than a bug.
+
+### D-FV-2 — «دقت» 67% reads as session progress — **CLOSED, no code change (accepted UX debt)**
 
 The 67% is `realAccuracy` under the label «دقت» (accuracy): 2 known of 3 answers = 66.7% → 67%.
 **The number is correct.** Session progress is a separate ring showing «۳ از ۳» with no percent.
-The defect is adjacency: a bare `۶۷٪` beside a completed 3/3 ring invites misreading it as
-progress. Owner misread it during this test, which is the evidence.
+
+**Decision: not worth fixing now.** Reviewed `TodayScreen.tsx`: the value already sits in a
+`stat-card` with «دقت» rendered directly beneath it, inside a `quick-stats` group labelled
+«آمار سریع», and the progress ring carries no percentage at all. The label is present, correct
+and adjacent — so there is no defect in the markup to repair. The single observed misreading
+happened while reading a text summary, not while using the screen, and one data point is not
+evidence that the UI misleads learners. Any "fix" here (renaming a correct label, adding
+explanatory copy, restyling the stat) would be speculative churn on a screen that is already
+accurate, and would need its own visual/a11y verification to land safely.
+
+**Revisit if** a real learner misreads it, or when the Today screen is next reworked for other
+reasons — at which point the cheap move is a clearer unit on the value («۶۷٪ دقت») rather than
+new UI. Tracked here; no backlog item opened, because the current behaviour is correct.
 
 ## 6. Scope discipline
 
 No code was changed to make any test pass. No deploy, no flag change, no Native release,
-no Scheduler V2 activation. Both defects are recorded as findings only.
+no Scheduler V2 activation. Both defects were recorded as findings during the test run itself;
+D-FV-1 was fixed afterwards under its own reviewed PR (#358) with the same discipline.
 
 ## 7. Recovery assets — still preserved
 
