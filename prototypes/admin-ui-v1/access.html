@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>نشست‌ها و دسترسی — LearnBox Admin</title>
+<link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body>
+<div class="shell" id="app">
+  <main class="main" id="page"><div id="body"></div></main>
+</div>
+
+<script src="assets/js/icons.js"></script>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/shell.js"></script>
+<script>
+mount('access', { title: 'نشست‌ها و دسترسی', sub: 'نشست‌های فعال مدیران، کلیدهای عبور و نقش‌ها' });
+
+var roles = [
+  { name: 'مدیر ارشد', desc: 'دسترسی کامل به همهٔ بخش‌ها', people: 1, locked: true,
+    perms: ['محتوا', 'کاربران', 'فروشگاه', 'دسترسی', 'عملیات', 'تنظیمات'] },
+  { name: 'بررسی‌کنندهٔ محتوا', desc: 'تأیید یا بازگرداندن بسته‌ها', people: 2, locked: false,
+    perms: ['محتوا', 'صف بررسی'] },
+  { name: 'پشتیبانی', desc: 'مشاهدهٔ کاربران و پاسخ‌گویی', people: 2, locked: false,
+    perms: ['کاربران', 'مشاهدهٔ سفارش'] }
+];
+
+function adminStateBadge(s) {
+  return s === 'active'
+    ? '<span class="badge b-green">فعال</span>'
+    : '<span class="badge b-grey">غیرفعال</span>';
+}
+
+function auditIcon(kind) {
+  if (kind === 'warn')  return '<span class="tl-ic t-amber">' + ICONS.alert + '</span>';
+  if (kind === 'muted') return '<span class="tl-ic t-grey">' + ICONS.clock + '</span>';
+  return '<span class="tl-ic t-green">' + ICONS.check + '</span>';
+}
+
+document.getElementById('body').innerHTML =
+  '<div class="page-head">' +
+    '<div><h2>نشست‌ها و دسترسی</h2><p>کنترل اینکه چه کسی، با چه کلیدی و تا کی به Admin دسترسی دارد.</p></div>' +
+    '<div class="head-actions">' +
+      '<button class="btn danger" data-toast="ابطال همهٔ نشست‌ها در نمونهٔ طراحی غیرفعال است.">' +
+        ICONS.power + ' ابطال همهٔ نشست‌ها</button>' +
+    '</div>' +
+  '</div>' +
+
+  '<div class="grid-4 mb">' +
+    [['نشست‌های فعال', faNum(DATA.sessionsAdmin.length), 'shield', 't-purple'],
+     ['حساب‌های مدیر', faNum(DATA.admins.length), 'users', 't-blue'],
+     ['نقش‌ها', faNum(roles.length), 'key', 't-green'],
+     ['رویدادهای امنیتی', faNum(DATA.audit.length), 'alert', 't-amber']].map(function (k) {
+      return '<div class="kpi"><div class="kpi-top"><span class="kpi-label">' + k[0] + '</span>' +
+        '<span class="kpi-ic ' + k[3] + '">' + ICONS[k[2]] + '</span></div>' +
+        '<div class="kpi-value">' + k[1] + '</div></div>';
+    }).join('') +
+  '</div>' +
+
+  '<div class="card mb">' +
+    '<div class="card-head"><span class="card-title">نشست‌های فعال</span>' +
+      '<span class="muted-note">نشست پس از بی‌فعالیتی طولانی منقضی می‌شود</span></div>' +
+    '<table class="tbl"><thead><tr>' +
+      '<th>مدیر</th><th>دستگاه</th><th>نشانی شبکه</th><th>آخرین فعالیت</th><th></th>' +
+    '</tr></thead><tbody>' +
+      DATA.sessionsAdmin.map(function (s) {
+        return '<tr>' +
+          '<td><div class="cell-main"><span class="avatar">' + s.who.slice(0, 1) + '</span>' +
+            '<div><div class="t-name">' + s.who + '</div>' +
+            '<div class="t-sub keep-latin">' + s.role + '</div></div></div></td>' +
+          '<td>' + s.dev + (s.cur ? ' <span class="badge b-green">این دستگاه</span>' : '') + '</td>' +
+          '<td class="ltr">' + s.ip + '</td>' +
+          '<td>' + s.last + '</td>' +
+          '<td style="text-align:left">' +
+            (s.cur ? '<span class="muted-note">—</span>'
+                   : '<button class="btn sm danger" data-toast="ابطال نشست در نمونهٔ طراحی غیرفعال است.">ابطال</button>') +
+          '</td>' +
+        '</tr>';
+      }).join('') +
+    '</tbody></table>' +
+  '</div>' +
+
+  '<div class="split-wide mb">' +
+    '<div class="card">' +
+      '<div class="card-head"><span class="card-title">حساب‌های مدیر</span>' +
+        '<button class="btn sm" data-toast="دعوت مدیر در نمونهٔ طراحی غیرفعال است.">' +
+          ICONS.plus + ' دعوت مدیر</button></div>' +
+      '<div class="card-body"><div class="list">' +
+        DATA.admins.map(function (a) {
+          return '<div class="list-row">' +
+            '<span class="avatar">' + a.who.slice(0, 1) + '</span>' +
+            '<div class="list-grow"><div class="list-title">' + a.who + '</div>' +
+              '<div class="list-sub keep-latin">' + a.mail + '</div></div>' +
+            '<div style="text-align:left;min-width:92px">' +
+              '<div class="list-sub keep-latin">' + a.role + '</div>' +
+              '<div class="list-sub">' + faNum(a.keys) + ' کلید عبور</div></div>' +
+            adminStateBadge(a.state) +
+          '</div>';
+        }).join('') +
+      '</div>' +
+      '<div class="notice info" style="margin-top:12px">' + ICONS.info +
+        '<span>ورود به Admin فقط با کلید عبور (Passkey) انجام می‌شود؛ رمز عبور ساده پذیرفته نیست.</span></div>' +
+      '</div>' +
+    '</div>' +
+
+    '<div class="card">' +
+      '<div class="card-head"><span class="card-title">رویدادهای امنیتی</span></div>' +
+      '<div class="card-body"><div class="timeline">' +
+        DATA.audit.map(function (a) {
+          return '<div class="tl-row">' + auditIcon(a.kind) +
+            '<div class="tl-body"><div class="list-title">' + a.t + '</div>' +
+              '<div class="list-sub">' + a.s + '</div></div>' +
+            '<span class="tl-time">' + a.time + '</span></div>';
+        }).join('') +
+      '</div></div>' +
+    '</div>' +
+  '</div>' +
+
+  '<div class="card">' +
+    '<div class="card-head"><span class="card-title">نقش‌ها و اختیارات</span>' +
+      '<button class="btn sm" data-toast="افزودن نقش در نمونهٔ طراحی غیرفعال است.">' +
+        ICONS.plus + ' نقش جدید</button></div>' +
+    '<table class="tbl"><thead><tr><th>نقش</th><th>تعداد</th><th>اختیارات</th><th></th></tr></thead><tbody>' +
+      roles.map(function (r) {
+        return '<tr>' +
+          '<td><div class="t-name">' + r.name + '</div><div class="t-sub">' + r.desc + '</div></td>' +
+          '<td>' + faNum(r.people) + '</td>' +
+          '<td><div class="perm-chips">' + r.perms.map(function (p) {
+            return '<span class="chip-sm">' + p + '</span>';
+          }).join('') + '</div></td>' +
+          '<td style="text-align:left">' +
+            (r.locked ? '<span class="badge b-purple">قفل سیستمی</span>'
+                      : '<button class="btn sm" data-toast="ویرایش نقش در نمونهٔ طراحی غیرفعال است.">ویرایش</button>') +
+          '</td>' +
+        '</tr>';
+      }).join('') +
+    '</tbody></table>' +
+  '</div>';
+
+faPass();
+</script>
+</body>
+</html>

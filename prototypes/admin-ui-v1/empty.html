@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>حالت خالی — LearnBox Admin</title>
+<link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body>
+<div class="shell" id="app">
+  <main class="main" id="page"><div id="body"></div></main>
+</div>
+
+<script src="assets/js/icons.js"></script>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/shell.js"></script>
+<script>
+mount('empty', { title: 'حالت خالی', sub: 'وقتی هنوز داده‌ای وجود ندارد' });
+
+function bigEmpty(icon, title, text, cta) {
+  return '<div class="empty-xl">' +
+    '<div class="e-ic-xl">' + ICONS[icon] + '</div>' +
+    '<div class="e-title">' + title + '</div>' +
+    '<div class="e-text">' + text + '</div>' +
+    (cta ? '<div class="e-cta">' + cta + '</div>' : '') +
+  '</div>';
+}
+
+document.getElementById('body').innerHTML =
+  '<div class="page-head">' +
+    '<div><h2>حالت خالی</h2><p>الگوی نمایش بخش‌هایی که هنوز محتوایی ندارند.</p></div>' +
+  '</div>' +
+
+  '<div class="card mb">' +
+    bigEmpty('box', 'هنوز بسته‌ای ساخته نشده است',
+      'اولین بستهٔ واژگان را بسازید تا کاربران بتوانند یادگیری را شروع کنند. می‌توانید دستی بسازید یا از یک فایل CSV شروع کنید.',
+      '<button class="btn primary" data-toast="ساخت بسته در نمونهٔ طراحی غیرفعال است.">' + ICONS.plus + ' ساخت اولین بسته</button>' +
+      '<button class="btn" data-toast="درون‌ریزی در نمونهٔ طراحی غیرفعال است.">' + ICONS.upload + ' درون‌ریزی از فایل</button>') +
+  '</div>' +
+
+  '<div class="grid-3 mb">' +
+    '<div class="card"><div class="card-head"><span class="card-title">صف بررسی</span></div>' +
+      '<div class="card-body">' + bigEmpty('checkCircle', 'صف بررسی خالی است',
+        'همهٔ بسته‌ها بررسی و تکلیفشان روشن شده است.', '') + '</div></div>' +
+    '<div class="card"><div class="card-head"><span class="card-title">اسلایدر</span></div>' +
+      '<div class="card-body">' + bigEmpty('image', 'اسلایدی تعریف نشده',
+        'اولین بنر اپلیکیشن را اضافه کنید.',
+        '<button class="btn sm primary" data-toast="افزودن اسلاید در نمونهٔ طراحی غیرفعال است.">افزودن اسلاید</button>') + '</div></div>' +
+    '<div class="card"><div class="card-head"><span class="card-title">اعلان‌ها</span></div>' +
+      '<div class="card-body">' + bigEmpty('bell', 'اعلان تازه‌ای نیست',
+        'وقتی رویداد مهمی رخ دهد اینجا نمایش داده می‌شود.', '') + '</div></div>' +
+  '</div>' +
+
+  '<div class="card mb">' +
+    '<div class="card-head"><span class="card-title">نتیجهٔ جستجو</span>' +
+      '<span class="field" style="min-width:230px">' + ICONS.search + ' «Versicherungsvertrag»</span></div>' +
+    '<div class="card-body">' +
+      bigEmpty('search', 'چیزی پیدا نشد',
+        'واژه‌ای با این املا در بسته‌ها نیست. املای دیگری را امتحان کنید یا فیلترها را بردارید.',
+        '<button class="btn" data-toast="حذف فیلتر در نمونهٔ طراحی غیرفعال است.">برداشتن فیلترها</button>') +
+    '</div>' +
+  '</div>' +
+
+  '<div class="card">' +
+    '<div class="card-head"><span class="card-title">داده‌ای که هنوز وصل نشده</span></div>' +
+    '<div class="card-body">' +
+      '<div class="grid-3">' +
+        [['کاربران آنلاین', 'اتصال داده فعال نشده'],
+         ['درآمد لحظه‌ای', 'درگاه پرداخت متصل نیست'],
+         ['گزارش تبلیغات', 'سرویس تحلیل متصل نیست']].map(function (k) {
+          return '<div class="kpi"><div class="kpi-top"><span class="kpi-label">' + k[0] + '</span>' +
+            '<span class="kpi-ic t-grey">' + ICONS.wifi + '</span></div>' +
+            '<div class="kpi-value muted">—</div>' +
+            '<div class="kpi-foot"><span class="unavailable">' + k[1] + '</span></div></div>';
+        }).join('') +
+      '</div>' +
+      '<div class="notice info" style="margin-top:14px">' + ICONS.info +
+        '<span>به‌جای نمایش عدد ساختگی، کارت صریحاً می‌گوید داده در دسترس نیست.</span></div>' +
+    '</div>' +
+  '</div>';
+
+faPass();
+</script>
+</body>
+</html>

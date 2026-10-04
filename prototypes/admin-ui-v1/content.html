@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>محتوا و بسته‌ها — LearnBox Admin</title>
+<link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body>
+<div class="shell" id="app">
+  <main class="main" id="page"><div id="body"></div></main>
+</div>
+
+<script src="assets/js/icons.js"></script>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/shell.js"></script>
+<script>
+mount('content', { title: 'محتوا و بسته‌ها', sub: 'ساخت، ویرایش، بررسی و انتشار بسته‌های واژگان' });
+
+var STATE_TABS = [
+  { k: 'all',       t: 'همه' },
+  { k: 'draft',     t: 'پیش‌نویس' },
+  { k: 'review',    t: 'در انتظار بررسی' },
+  { k: 'published', t: 'منتشر شده' },
+  { k: 'archived',  t: 'بایگانی' }
+];
+
+var view = 'grid', filter = 'all';
+
+function counts(k) {
+  return k === 'all' ? DATA.packs.length : DATA.packs.filter(function (p) { return p.state === k; }).length;
+}
+
+function packCard(p) {
+  return '<article class="pack-card">' +
+    '<div class="pack-cover" style="background:linear-gradient(135deg,' + p.cover + ',' + p.cover + 'cc)">' +
+      p.lvl + packBadge(p.state) + '</div>' +
+    '<div class="pack-body">' +
+      '<div class="pack-name">' + p.name + '</div>' +
+      '<div class="pack-meta"><span>' + faNum(p.cards) + ' کارت</span><span>' + p.cat + '</span>' +
+        (p.featured ? '<span style="color:#6b42df;font-weight:700">ویژه</span>' : '') + '</div>' +
+      (p.state === 'review' || p.state === 'draft'
+        ? '<div><div class="list-sub">تکمیل محتوا ' + fa(p.progress) + '٪</div>' +
+          '<div class="progress"><i style="width:' + p.progress + '%"></i></div></div>' : '') +
+      '<div class="pack-foot">' +
+        '<span class="muted-note">' + (p.paid ? toman(p.price) : 'رایگان') + '</span>' +
+        '<button class="btn sm" onclick="packDetail(\'' + p.id + '\')">' + ICONS.eye + ' جزئیات</button>' +
+      '</div>' +
+    '</div>' +
+  '</article>';
+}
+
+function packRow(p) {
+  return '<tr>' +
+    '<td><div class="cell-main"><span class="cover" style="background:' + p.cover + '"></span>' +
+      '<div><div class="t-name">' + p.name + '</div><div class="t-sub">' + p.cat + '</div></div></div></td>' +
+    '<td><span class="lvl">' + p.lvl + '</span></td>' +
+    '<td>' + faNum(p.cards) + '</td>' +
+    '<td>' + packBadge(p.state) + '</td>' +
+    '<td>' + (p.paid ? toman(p.price) : 'رایگان') + '</td>' +
+    '<td>' + faNum(p.sold) + '</td>' +
+    '<td style="text-align:left"><button class="btn sm" onclick="packDetail(\'' + p.id + '\')">جزئیات</button></td>' +
+  '</tr>';
+}
+
+function listPacks() {
+  var rows = DATA.packs.filter(function (p) { return filter === 'all' || p.state === filter; });
+  var holder = document.getElementById('packs');
+  holder.innerHTML = view === 'grid'
+    ? '<div class="pack-grid">' + rows.map(packCard).join('') + '</div>'
+    : '<div class="card"><table class="tbl"><thead><tr>' +
+        '<th>بسته</th><th>سطح</th><th>کارت</th><th>وضعیت</th><th>قیمت</th><th>فروش</th><th></th>' +
+      '</tr></thead><tbody>' + rows.map(packRow).join('') + '</tbody></table>' +
+      '<div class="tbl-foot"><span>' + faNum(rows.length) + ' بسته</span>' +
+        '<div class="pager"><button class="on">۱</button><button>۲</button><button>بعدی</button></div></div></div>';
+  faPass(holder);
+}
+
+function setFilter(k, el) {
+  filter = k;
+  [].forEach.call(document.querySelectorAll('.tab'), function (t) { t.classList.remove('on'); });
+  el.classList.add('on');
+  listPacks();
+}
+
+function setView(v) {
+  view = v;
+  document.getElementById('vg').classList.toggle('on', v === 'grid');
+  document.getElementById('vl').classList.toggle('on', v === 'list');
+  listPacks();
+}
+
+function packDetail(id) {
+  var p = DATA.packs.filter(function (x) { return x.id === id; })[0];
+  openDrawer(p.name,
+    '<div class="notice lav">' + ICONS.info + '<span>این نمای جزئیات بخشی از نمونهٔ طراحی است و به دادهٔ واقعی متصل نیست.</span></div>' +
+    '<div style="height:14px"></div>' +
+    '<dl class="dl">' +
+      '<div><dt>سطح</dt><dd>' + p.lvl + '</dd></div>' +
+      '<div><dt>تعداد کارت</dt><dd>' + faNum(p.cards) + '</dd></div>' +
+      '<div><dt>دسته</dt><dd>' + p.cat + '</dd></div>' +
+      '<div><dt>وضعیت</dt><dd>' + packBadge(p.state) + '</dd></div>' +
+      '<div><dt>قیمت</dt><dd>' + (p.paid ? toman(p.price) : 'رایگان') + '</dd></div>' +
+      '<div><dt>فروش</dt><dd>' + faNum(p.sold) + '</dd></div>' +
+      '<div><dt>تکمیل محتوا</dt><dd>' + fa(p.progress) + '٪</dd></div>' +
+    '</dl>' +
+    '<div style="height:16px"></div>' +
+    '<div class="card-title" style="margin-bottom:9px">نمونهٔ کارت‌ها</div>' +
+    '<div class="list">' + DATA.cards.slice(0, 5).map(function (c) {
+      return '<div class="list-row">' +
+        '<div class="list-grow"><div class="list-title keep-latin">' + c.de + '</div>' +
+          '<div class="list-sub">' + c.fa + ' · <span class="keep-latin">' + c.ipa + '</span></div></div>' +
+        '<span class="badge ' + (c.state === 'approved' ? 'b-green' : c.state === 'review' ? 'b-amber' : 'b-grey') + '">' +
+          (c.state === 'approved' ? 'تأیید شده' : c.state === 'review' ? 'در بررسی' : 'پیش‌نویس') + '</span>' +
+      '</div>';
+    }).join('') + '</div>' +
+    '<div style="height:16px"></div>' +
+    '<div style="display:flex;gap:9px">' +
+      '<button class="btn primary" data-toast="انتشار در نمونهٔ طراحی غیرفعال است.">' + ICONS.check + ' انتشار</button>' +
+      '<button class="btn" data-toast="ویرایش در نمونهٔ طراحی غیرفعال است.">' + ICONS.edit + ' ویرایش</button>' +
+      '<button class="btn danger" data-toast="بایگانی در نمونهٔ طراحی غیرفعال است.">' + ICONS.archive + ' بایگانی</button>' +
+    '</div>');
+}
+
+function newPack() {
+  openModal('افزودن بستهٔ جدید',
+    '<div class="form-row"><label>نام بسته</label>' +
+      '<input class="input" placeholder="مثلاً: واژگان سفر و گردشگری"></div>' +
+    '<div class="grid-2">' +
+      '<div class="form-row"><label>سطح</label><select class="select"><option>A1</option><option>A1-A2</option>' +
+        '<option>A2</option><option>A2-B1</option><option>B1</option><option>B1-B2</option><option>B2</option></select></div>' +
+      '<div class="form-row"><label>دسته</label><select class="select"><option>عمومی</option><option>تحصیلی</option>' +
+        '<option>شغلی</option><option>مکالمه</option><option>گرامر</option><option>آزمون</option></select></div>' +
+    '</div>' +
+    '<div class="form-row"><label>توضیح کوتاه</label><textarea class="textarea" placeholder="این بسته برای چه کسی مناسب است؟"></textarea></div>' +
+    '<div class="form-row"><label>روش ساخت</label>' +
+      '<div class="chips"><span class="chip on">دستی</span><span class="chip">با هوش مصنوعی</span>' +
+      '<span class="chip">درون‌ریزی CSV / XLSX</span></div></div>' +
+    '<div class="notice">' + ICONS.alert + '<span>بسته پس از ساخت در وضعیت «پیش‌نویس» قرار می‌گیرد و تا تأیید بررسی محتوا منتشر نمی‌شود.</span></div>',
+    '<button class="btn primary" data-toast="ساخت بسته در نمونهٔ طراحی غیرفعال است." onclick="closeOverlay()">ساخت بسته</button>' +
+    '<button class="btn ghost" onclick="closeOverlay()">انصراف</button>');
+}
+
+document.getElementById('body').innerHTML =
+  '<div class="page-head">' +
+    '<div><h2>محتوا و بسته‌ها</h2><p>کل محتوای آموزشی LearnBox از اینجا مدیریت می‌شود.</p></div>' +
+    '<div class="head-actions">' +
+      '<button class="btn" data-toast="درون‌ریزی در نمونهٔ طراحی غیرفعال است.">' + ICONS.upload + ' درون‌ریزی</button>' +
+      '<button class="btn" data-toast="ساخت با هوش مصنوعی در نمونهٔ طراحی غیرفعال است.">' + ICONS.sparkle + ' ساخت با AI</button>' +
+      '<button class="btn primary" onclick="newPack()">' + ICONS.plus + ' بستهٔ جدید</button>' +
+    '</div>' +
+  '</div>' +
+
+  '<div class="grid-4 mb">' +
+    [['کل بسته‌ها', DATA.packs.length, 'box', 't-purple'],
+     ['منتشر شده', counts('published'), 'checkCircle', 't-green'],
+     ['در انتظار بررسی', counts('review'), 'clock', 't-amber'],
+     ['پیش‌نویس', counts('draft'), 'edit', 't-grey']].map(function (k) {
+      return '<div class="kpi"><div class="kpi-top"><span class="kpi-label">' + k[0] + '</span>' +
+        '<span class="kpi-ic ' + k[3] + '">' + ICONS[k[2]] + '</span></div>' +
+        '<div class="kpi-value">' + faNum(k[1]) + '</div></div>';
+    }).join('') +
+  '</div>' +
+
+  '<div class="card mb">' +
+    '<div class="tabs">' + STATE_TABS.map(function (t, i) {
+      return '<button class="tab' + (i === 0 ? ' on' : '') + '" onclick="setFilter(\'' + t.k + '\',this)">' +
+        t.t + ' (' + faNum(counts(t.k)) + ')</button>';
+    }).join('') + '</div>' +
+    '<div class="toolbar">' +
+      '<span class="field grow">' + ICONS.search + ' جستجوی نام بسته یا واژه…</span>' +
+      '<span class="field">' + ICONS.filter + ' همهٔ سطح‌ها ' + '</span>' +
+      '<span class="field">' + ICONS.filter + ' همهٔ دسته‌ها' + '</span>' +
+      '<div style="flex:1"></div>' +
+      '<button id="vg" class="chip on" onclick="setView(\'grid\')">کارت</button>' +
+      '<button id="vl" class="chip" onclick="setView(\'list\')">جدول</button>' +
+    '</div>' +
+  '</div>' +
+
+  '<div id="packs"></div>';
+
+listPacks();
+faPass();
+</script>
+</body>
+</html>

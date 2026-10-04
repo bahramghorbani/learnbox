@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>یادگیری — LearnBox Admin</title>
+<link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body>
+<div class="shell" id="app">
+  <main class="main" id="page"><div id="body"></div></main>
+</div>
+
+<script src="assets/js/icons.js"></script>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/shell.js"></script>
+<script>
+mount('learning', { title: 'یادگیری', sub: 'وضعیت مرور، زمان‌بندی و کیفیت یادگیری' });
+
+var retention = [92, 88, 85, 81, 79, 76, 74, 72, 71, 69, 68, 67, 66, 65];
+var dailyReviews = [
+  [320, 540], [410, 620], [380, 590], [470, 700], [520, 760], [460, 690], [540, 820],
+  [600, 880], [570, 840], [640, 920], [610, 900], [690, 980], [660, 950], [720, 1040]
+];
+
+var leech = [
+  { de: 'die Versicherung', fa: 'بیمه', fails: 14, pack: 'واژگان پزشکی مقدماتی' },
+  { de: 'der Zusammenhang', fa: 'ارتباط / پیوند', fails: 12, pack: '۵۰۰ واژه ضروری' },
+  { de: 'die Voraussetzung', fa: 'پیش‌نیاز', fails: 11, pack: '۵۰۰ واژه ضروری' },
+  { de: 'berücksichtigen', fa: 'در نظر گرفتن', fails: 9, pack: 'آزمون Goethe B1' },
+  { de: 'die Verfügung', fa: 'اختیار / دسترسی', fails: 8, pack: 'اصطلاحات مصاحبه کاری' }
+];
+
+document.getElementById('body').innerHTML =
+  '<div class="page-head">' +
+    '<div><h2>یادگیری</h2><p>این صفحه همان قواعد یادگیری سامانه را منعکس می‌کند، نه منطق جداگانهٔ Admin.</p></div>' +
+    '<div class="head-actions"><span class="select-mini">۳۰ روز اخیر ' + ICONS.chevronDown + '</span></div>' +
+  '</div>' +
+
+  '<div class="grid-4 mb">' +
+    [['کل مرورها', faNum(125432), 'refresh', 't-purple'],
+     ['مرور امروز', faNum(4310), 'clock', 't-blue'],
+     ['میانگین دقت', '۷۸٪', 'checkCircle', 't-green'],
+     ['کارت‌های دشوار', faNum(126), 'alert', 't-amber']].map(function (k) {
+      return '<div class="kpi"><div class="kpi-top"><span class="kpi-label">' + k[0] + '</span>' +
+        '<span class="kpi-ic ' + k[3] + '">' + ICONS[k[2]] + '</span></div>' +
+        '<div class="kpi-value">' + k[1] + '</div></div>';
+    }).join('') +
+  '</div>' +
+
+  '<div class="charts-row">' +
+    '<div class="card">' +
+      '<div class="card-head"><span class="card-title">مرورهای روزانه</span>' +
+        '<div class="chart-legend">' +
+          '<span><i class="legend-dot" style="background:#6b42df"></i>درست</span>' +
+          '<span><i class="legend-dot" style="background:#c9b6ff"></i>کل</span>' +
+        '</div></div>' +
+      '<div class="chart-wrap">' + barChart(dailyReviews) +
+        axisRow(['۱ مرداد', '۸ مرداد', '۱۵ مرداد', '۲۲ مرداد', '۲۹ مرداد']) + '</div>' +
+    '</div>' +
+
+    '<div class="card">' +
+      '<div class="card-head"><span class="card-title">منحنی نگه‌داشت</span>' +
+        '<span class="select-mini">همه بسته‌ها ' + ICONS.chevronDown + '</span></div>' +
+      '<div class="chart-wrap">' + areaChart(retention) +
+        axisRow(['روز ۱', 'روز ۷', 'روز ۱۴', 'روز ۲۱', 'روز ۳۰']) + '</div>' +
+    '</div>' +
+
+    '<div class="card">' +
+      '<div class="card-head"><span class="card-title">وضعیت مرورها</span></div>' +
+      '<div class="donut-row">' +
+        donut([{ v: 60, c: '#22c07d' }, { v: 25, c: '#6b42df' }, { v: 10, c: '#f0a33c' }, { v: 5, c: '#e7e3ff' }],
+              faNum(125432), 'مرور') +
+        '<div class="donut-legend">' +
+          '<div><i class="legend-dot" style="background:#22c07d"></i><span class="pc">۶۰٪</span><span class="nm">Known</span></div>' +
+          '<div><i class="legend-dot" style="background:#6b42df"></i><span class="pc">۲۵٪</span><span class="nm">Learning</span></div>' +
+          '<div><i class="legend-dot" style="background:#f0a33c"></i><span class="pc">۱۰٪</span><span class="nm">Unknown</span></div>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+  '</div>' +
+
+  '<div class="split-wide" style="margin-top:16px">' +
+    '<div class="card">' +
+      '<div class="card-head"><span class="card-title">کارت‌های دشوار (Leech)</span>' +
+        '<span class="muted-note">بیشترین پاسخ نادرست</span></div>' +
+      '<table class="tbl"><thead><tr><th>واژه</th><th>معنی</th><th>بسته</th><th>خطا</th><th></th></tr></thead><tbody>' +
+        leech.map(function (l) {
+          return '<tr><td class="t-name keep-latin">' + l.de + '</td>' +
+            '<td>' + l.fa + '</td><td class="t-sub">' + l.pack + '</td>' +
+            '<td><span class="badge b-rose">' + faNum(l.fails) + '</span></td>' +
+            '<td style="text-align:left"><button class="btn sm" data-toast="بازبینی کارت در نمونهٔ طراحی غیرفعال است.">بازبینی</button></td></tr>';
+        }).join('') +
+      '</tbody></table>' +
+    '</div>' +
+
+    '<div class="stack">' +
+      '<div class="card">' +
+        '<div class="card-head"><span class="card-title">زمان‌بندی مرور</span></div>' +
+        '<div class="card-body">' +
+          '<div class="stat-line"><span>الگوریتم فعال</span><b>نسخهٔ ۱ (پایدار)</b></div>' +
+          '<div class="stat-line"><span>زمان‌بند نسخهٔ ۲</span><span class="badge b-grey">غیرفعال</span></div>' +
+          '<div class="stat-line"><span>کارت‌های سررسید امروز</span><b>' + faNum(2180) + '</b></div>' +
+          '<div class="stat-line"><span>میانگین فاصلهٔ مرور</span><b>۴.۲ روز</b></div>' +
+          '<div style="height:10px"></div>' +
+          '<div class="notice info">' + ICONS.info +
+            '<span>تغییر الگوریتم زمان‌بندی یک تصمیم محصولی است و از این صفحه انجام نمی‌شود.</span></div>' +
+        '</div>' +
+      '</div>' +
+
+      '<div class="card">' +
+        '<div class="card-head"><span class="card-title">توزیع سطح کاربران</span></div>' +
+        '<div class="card-body">' +
+          [['A1', 42], ['A2', 28], ['B1', 19], ['B2', 11]].map(function (r) {
+            return '<div style="margin-bottom:11px"><div class="row-between" style="margin-bottom:5px">' +
+              '<span class="lvl">' + r[0] + '</span><span class="muted-note">' + fa(r[1]) + '٪</span></div>' +
+              '<div class="progress"><i style="width:' + r[1] + '%"></i></div></div>';
+          }).join('') +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+  '</div>';
+
+faPass();
+</script>
+</body>
+</html>

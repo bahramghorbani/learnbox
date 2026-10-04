@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>تنظیمات — LearnBox Admin</title>
+<link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body>
+<div class="shell" id="app">
+  <main class="main" id="page"><div id="body"></div></main>
+</div>
+
+<script src="assets/js/icons.js"></script>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/shell.js"></script>
+<script>
+mount('settings', { title: 'تنظیمات', sub: 'پیکربندی عمومی، زبان، اعلان‌ها و قابلیت‌ها' });
+
+function sw(on) { return '<button class="switch' + (on ? ' on' : '') + '" data-toast="تغییر تنظیمات در نمونهٔ طراحی غیرفعال است."><i></i></button>'; }
+
+function settingRow(title, desc, control) {
+  return '<div class="setting-row"><div class="setting-txt">' +
+    '<div class="list-title">' + title + '</div><div class="list-sub">' + desc + '</div></div>' +
+    control + '</div>';
+}
+
+var tabs = [
+  { k: 'general',  t: 'عمومی' },
+  { k: 'content',  t: 'محتوا' },
+  { k: 'notif',    t: 'اعلان‌ها' },
+  { k: 'flags',    t: 'قابلیت‌ها' },
+  { k: 'profile',  t: 'پروفایل مدیر' }
+];
+
+var panes = {
+  general:
+    settingRow('نام نمایشی سامانه', 'در هدر Admin و گزارش‌ها دیده می‌شود.',
+      '<input class="input w-260" value="LearnBox Admin">') +
+    settingRow('زبان پیشکار', 'زبان رابط مدیریت.',
+      '<select class="select w-260"><option>فارسی</option><option>English</option></select>') +
+    settingRow('تقویم', 'مبنای نمایش تاریخ‌ها.',
+      '<select class="select w-260"><option>شمسی (جلالی)</option><option>میلادی</option></select>') +
+    settingRow('منطقهٔ زمانی', 'ساعت مرجع رویدادها.',
+      '<select class="select w-260"><option>Asia/Tehran</option><option>UTC</option></select>') +
+    settingRow('قالب اعداد', 'نمایش ارقام در جدول‌ها و نمودارها.',
+      '<select class="select w-260"><option>فارسی (۱۲۳)</option><option>لاتین (123)</option></select>'),
+
+  content:
+    settingRow('بررسی اجباری پیش از انتشار', 'هیچ بسته‌ای بدون تأیید بررسی محتوا منتشر نمی‌شود.', sw(true)) +
+    settingRow('تأیید دو مرحله‌ای محتوا', 'هر کارت باید توسط دو بررسی‌کننده تأیید شود.', sw(false)) +
+    settingRow('ساخت خودکار فایل صوتی', 'برای واژه‌های تازه صوت تولید می‌شود.', sw(true)) +
+    settingRow('حداکثر اندازهٔ تصویر کارت', 'تصاویر بزرگ‌تر رد می‌شوند.',
+      '<select class="select w-260"><option>۲ مگابایت</option><option>۴ مگابایت</option><option>۸ مگابایت</option></select>') +
+    settingRow('درون‌ریزی CSV / XLSX', 'اجازهٔ بارگذاری گروهی واژگان.', sw(true)),
+
+  notif:
+    settingRow('اعلان بسته در انتظار بررسی', 'وقتی بسته‌ای وارد صف بررسی می‌شود.', sw(true)) +
+    settingRow('اعلان ورود ناموفق', 'تلاش ناموفق ورود به Admin.', sw(true)) +
+    settingRow('گزارش روزانه', 'خلاصهٔ فعالیت سامانه هر صبح.', sw(false)) +
+    settingRow('اعلان فروش', 'به ازای هر سفارش موفق.', sw(false)) +
+    settingRow('نشانی دریافت اعلان', 'اعلان‌ها به این نشانی ارسال می‌شوند.',
+      '<input class="input w-260 ltr" value="admin@learnboxapp.com">'),
+
+  flags:
+    '<div class="notice mb">' + ICONS.alert +
+      '<span>تغییر این کلیدها تصمیم محصولی است و از نمونهٔ طراحی انجام نمی‌شود.</span></div>' +
+    settingRow('زمان‌بند نسخهٔ ۲', 'الگوریتم جدید فاصله‌گذاری مرور.',
+      '<span class="badge b-grey">غیرفعال</span>') +
+    settingRow('رابط دودویی مرور', 'حالت پاسخ «می‌دانم / نمی‌دانم».',
+      '<span class="badge b-grey">غیرفعال</span>') +
+    settingRow('صف بررسی محتوا', 'بخش بررسی محتوا در Admin.',
+      '<span class="badge b-green">فعال</span>') +
+    settingRow('فروشگاه درون‌برنامه‌ای', 'خرید بسته از داخل اپ.',
+      '<span class="badge b-amber">در انتظار درگاه</span>'),
+
+  profile:
+    '<div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">' +
+      '<div class="avatar" style="width:56px;height:56px;font-size:17px">ب</div>' +
+      '<div><div style="font-weight:700;font-size:14px">بهرام قربانی</div>' +
+        '<div class="list-sub">مدیر ارشد · دسترسی کامل</div></div>' +
+      '<button class="btn sm" style="margin-right:auto" data-toast="تغییر تصویر در نمونهٔ طراحی غیرفعال است.">' +
+        ICONS.image + ' تغییر تصویر</button>' +
+    '</div>' +
+    settingRow('نام نمایشی', 'در رویدادها و گزارش‌ها ثبت می‌شود.',
+      '<input class="input w-260" value="بهرام قربانی">') +
+    settingRow('نشانی ایمیل', 'برای اعلان‌های مدیریتی.',
+      '<input class="input w-260 ltr" value="bahram@learnboxapp.com">') +
+    settingRow('کلید عبور', 'ورود فقط با Passkey انجام می‌شود.',
+      '<button class="btn sm" data-toast="مدیریت کلید در صفحهٔ «نشست‌ها و دسترسی» انجام می‌شود.">مدیریت کلیدها</button>') +
+    settingRow('خروج از همهٔ دستگاه‌ها', 'همهٔ نشست‌های فعال باطل می‌شوند.',
+      '<button class="btn sm danger" data-toast="ابطال نشست در نمونهٔ طراحی غیرفعال است.">خروج کامل</button>')
+};
+
+function setTab(k, el) {
+  [].forEach.call(document.querySelectorAll('.tab'), function (t) { t.classList.remove('on'); });
+  el.classList.add('on');
+  var p = document.getElementById('pane');
+  p.innerHTML = panes[k];
+  faPass(p);
+}
+
+document.getElementById('body').innerHTML =
+  '<div class="page-head">' +
+    '<div><h2>تنظیمات</h2><p>پیکربندی Admin. تغییرات محیطی است، نه تغییر پیاده‌سازی.</p></div>' +
+    '<div class="head-actions">' +
+      '<button class="btn primary" data-toast="ذخیرهٔ تنظیمات در نمونهٔ طراحی غیرفعال است.">' +
+        ICONS.check + ' ذخیرهٔ تغییرات</button>' +
+    '</div>' +
+  '</div>' +
+
+  '<div class="card">' +
+    '<div class="tabs">' + tabs.map(function (t, i) {
+      return '<button class="tab' + (i === 0 ? ' on' : '') + '" onclick="setTab(\'' + t.k + '\',this)">' + t.t + '</button>';
+    }).join('') + '</div>' +
+    '<div class="card-body" id="pane">' + panes.general + '</div>' +
+  '</div>';
+
+faPass();
+</script>
+</body>
+</html>

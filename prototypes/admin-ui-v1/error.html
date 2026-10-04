@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>حالت خطا — LearnBox Admin</title>
+<link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body>
+<div class="shell" id="app">
+  <main class="main" id="page"><div id="body"></div></main>
+</div>
+
+<script src="assets/js/icons.js"></script>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/shell.js"></script>
+<script>
+mount('error', { title: 'حالت خطا', sub: 'الگوی نمایش خطاها و دسترسی نداشتن' });
+
+function errBlock(tone, icon, title, text, actions) {
+  return '<div class="err-block ' + tone + '">' +
+    '<div class="err-ic">' + ICONS[icon] + '</div>' +
+    '<div class="err-body"><div class="e-title">' + title + '</div>' +
+      '<div class="e-text">' + text + '</div>' +
+      (actions ? '<div class="e-cta">' + actions + '</div>' : '') + '</div>' +
+  '</div>';
+}
+
+document.getElementById('body').innerHTML =
+  '<div class="page-head">' +
+    '<div><h2>حالت خطا</h2><p>هر خطا باید بگوید چه شد و قدم بعدی چیست.</p></div>' +
+  '</div>' +
+
+  '<div class="card mb"><div class="card-body">' +
+    errBlock('rose', 'alert', 'ارتباط با سرور برقرار نشد',
+      'داده‌های این بخش دریافت نشد. اتصال شبکه را بررسی کنید و دوباره تلاش کنید. اگر تکرار شد، وضعیت سرویس‌ها را در صفحهٔ «عملیات» ببینید.',
+      '<button class="btn primary" data-toast="تلاش مجدد در نمونهٔ طراحی غیرفعال است.">' + ICONS.refresh + ' تلاش مجدد</button>' +
+      '<a class="btn" href="ops.html">بررسی وضعیت سرویس‌ها</a>') +
+  '</div></div>' +
+
+  '<div class="card mb"><div class="card-body">' +
+    errBlock('amber', 'shield', 'دسترسی شما به این بخش کافی نیست',
+      'این صفحه فقط برای نقش «مدیر ارشد» باز است. اگر فکر می‌کنید باید دسترسی داشته باشید، از مدیر ارشد بخواهید نقش شما را تغییر دهد.',
+      '<a class="btn" href="access.html">مشاهدهٔ نقش‌ها</a>') +
+  '</div></div>' +
+
+  '<div class="card mb"><div class="card-body">' +
+    errBlock('grey', 'search', 'صفحه‌ای با این نشانی وجود ندارد',
+      'نشانی ممکن است تغییر کرده باشد یا بخش موردنظر حذف شده باشد.',
+      '<a class="btn primary" href="index.html">بازگشت به اتاق کنترل</a>') +
+  '</div></div>' +
+
+  '<div class="split-wide">' +
+    '<div class="card">' +
+      '<div class="card-head"><span class="card-title">خطای درون‌خطی فرم</span></div>' +
+      '<div class="card-body">' +
+        '<div class="form-row"><label>نام بسته</label>' +
+          '<input class="input invalid" value="">' +
+          '<span class="err-text">' + ICONS.alert + ' نام بسته نمی‌تواند خالی باشد.</span></div>' +
+        '<div class="form-row"><label>قیمت (تومان)</label>' +
+          '<input class="input invalid ltr" value="-5000">' +
+          '<span class="err-text">' + ICONS.alert + ' قیمت باید عددی مثبت باشد.</span></div>' +
+        '<div class="form-row"><label>سطح</label>' +
+          '<select class="select"><option>A1</option></select>' +
+          '<span class="hint">این مقدار معتبر است.</span></div>' +
+      '</div>' +
+    '</div>' +
+
+    '<div class="card">' +
+      '<div class="card-head"><span class="card-title">خطای جزئی در کارت</span></div>' +
+      '<div class="card-body">' +
+        '<div class="grid-2">' +
+          '<div class="kpi"><div class="kpi-top"><span class="kpi-label">کاربران فعال</span>' +
+            '<span class="kpi-ic t-green">' + ICONS.users + '</span></div>' +
+            '<div class="kpi-value">' + faNum(8241) + '</div>' +
+            '<div class="kpi-foot"><span class="delta up">+۱۸٪</span></div></div>' +
+          '<div class="kpi err"><div class="kpi-top"><span class="kpi-label">مرورهای امروز</span>' +
+            '<span class="kpi-ic t-rose">' + ICONS.alert + '</span></div>' +
+            '<div class="kpi-value muted">—</div>' +
+            '<div class="kpi-foot"><span class="err-text">دریافت نشد</span>' +
+              '<button class="btn sm" data-toast="تلاش مجدد در نمونهٔ طراحی غیرفعال است.">تلاش مجدد</button></div></div>' +
+        '</div>' +
+        '<div class="notice info" style="margin-top:14px">' + ICONS.info +
+          '<span>خطای یک کارت نباید کل صفحه را از کار بیندازد؛ بقیهٔ داده‌ها سر جایشان می‌مانند.</span></div>' +
+      '</div>' +
+    '</div>' +
+  '</div>';
+
+faPass();
+</script>
+</body>
+</html>

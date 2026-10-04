@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>اتاق کنترل — LearnBox Admin</title>
+<link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body>
+<div class="shell" id="app">
+  <main class="main" id="page">
+    <div id="body"></div>
+  </main>
+</div>
+
+<script src="assets/js/icons.js"></script>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/shell.js"></script>
+<script>
+mount('index');
+
+var KPIS = [
+  { label: 'کل کاربران',            value: faNum(12438), delta: '+12%', foot: 'نسبت به ماه گذشته', ic: 'users',  tint: 't-purple' },
+  { label: 'کاربران فعال (۳۰ روز)', value: faNum(8241),  delta: '+18%', foot: 'نسبت به ماه گذشته', ic: 'check',  tint: 't-green' },
+  { label: 'بسته‌های منتشرشده',     value: faNum(24),    delta: '+۴',   foot: 'بستهٔ جدید این ماه', ic: 'box',    tint: 't-purple' },
+  { label: 'کاربران آنلاین',        value: null,          delta: null,  foot: 'اتصال داده فعال نشده', ic: 'wifi', tint: 't-blue' },
+  { label: 'بسته‌های فروخته‌شده',   value: faNum(1836),  delta: '+22%', foot: 'نسبت به ماه گذشته', ic: 'cart',   tint: 't-amber' },
+  { label: 'درآمد این ماه',         value: faNum(348500000), delta: '+28%', foot: 'تومان', ic: 'money', tint: 't-rose', small: true }
+];
+
+function kpiCard(k) {
+  var val = k.value === null
+    ? '<div class="kpi-value muted">—</div>'
+    : '<div class="kpi-value' + (k.small ? ' sm' : '') + '">' + k.value + '</div>';
+  var foot = k.delta
+    ? '<div class="kpi-foot"><span class="delta up">' + k.delta + '</span><span>' + k.foot + '</span></div>'
+    : '<div class="kpi-foot"><span class="unavailable">' + k.foot + '</span></div>';
+  return '<div class="kpi">' +
+    '<div class="kpi-top"><span class="kpi-label">' + k.label + '</span>' +
+      '<span class="kpi-ic ' + k.tint + '">' + ICONS[k.ic] + '</span></div>' +
+    val + foot + '</div>';
+}
+
+var QA = [
+  { t: 'افزودن بستهٔ جدید', s: 'دستی یا با هوش مصنوعی', ic: 'plus',    cls: 'primary', go: 'content.html' },
+  { t: 'تغییر اسپلش',       s: 'مناسبت‌های ویژه',       ic: 'phone',   cls: 'amber',   go: 'presentation.html' },
+  { t: 'مدیریت اسلایدر',    s: 'بنرهای داخل اپلیکیشن',  ic: 'image',   cls: 'lav',     go: 'presentation.html#slider' },
+  { t: 'ساخت بسته با هوش مصنوعی', s: 'با چند جمله یک بستهٔ کامل بساز', ic: 'sparkle', cls: 'green', go: 'content.html' },
+  { t: 'درون‌ریزی از فایل', s: 'CSV, XLSX',             ic: 'upload',  cls: 'blue',    go: 'content.html' }
+];
+
+function qaBtn(q) {
+  return '<a class="qa ' + q.cls + '" href="' + q.go + '">' +
+    '<div><div class="qa-t">' + q.t + '</div><div class="qa-s">' + q.s + '</div></div>' +
+    '<span class="qa-ic">' + ICONS[q.ic] + '</span></a>';
+}
+
+var reviewPacks = DATA.packs.filter(function (p) {
+  return p.state === 'review' || p.state === 'draft' || p.state === 'published';
+}).slice(0, 4);
+
+document.getElementById('body').innerHTML =
+  '<section class="kpi-row">' + KPIS.map(kpiCard).join('') + '</section>' +
+
+  '<section class="charts-row">' +
+    '<div class="card">' +
+      '<div class="card-head"><span class="card-title">رشد کاربران</span>' +
+        '<span class="select-mini">۳۰ روز اخیر ' + ICONS.chevronDown + '</span></div>' +
+      '<div class="chart-wrap">' + areaChart(DATA.growth) +
+        axisRow(['۱ مرداد', '۸ مرداد', '۱۵ مرداد', '۲۲ مرداد', '۲۹ مرداد']) + '</div>' +
+    '</div>' +
+
+    '<div class="card">' +
+      '<div class="card-head"><span class="card-title">فروش بسته‌ها</span>' +
+        '<span class="select-mini">۳۰ روز اخیر ' + ICONS.chevronDown + '</span></div>' +
+      '<div style="padding:0 16px"><div class="chart-legend">' +
+        '<span><i class="legend-dot" style="background:#6b42df"></i>درآمد (تومان)</span>' +
+        '<span><i class="legend-dot" style="background:#c9b6ff"></i>تعداد فروش</span>' +
+      '</div></div>' +
+      '<div class="chart-wrap">' + barChart(DATA.sales) +
+        axisRow(['۱ مرداد', '۸ مرداد', '۱۵ مرداد', '۲۲ مرداد', '۲۹ مرداد']) + '</div>' +
+    '</div>' +
+
+    '<div class="card">' +
+      '<div class="card-head"><span class="card-title">وضعیت مرورها</span>' +
+        '<span class="select-mini">همه بسته‌ها ' + ICONS.chevronDown + '</span></div>' +
+      '<div class="donut-row">' +
+        donut([
+          { v: 60, c: '#22c07d' },
+          { v: 25, c: '#6b42df' },
+          { v: 10, c: '#f0a33c' },
+          { v: 5,  c: '#e7e3ff' }
+        ], faNum(125432), 'مرور') +
+        '<div class="donut-legend">' +
+          '<div><i class="legend-dot" style="background:#22c07d"></i><span class="pc">۶۰٪</span><span class="nm">Known</span></div>' +
+          '<div><i class="legend-dot" style="background:#6b42df"></i><span class="pc">۲۵٪</span><span class="nm">Learning</span></div>' +
+          '<div><i class="legend-dot" style="background:#f0a33c"></i><span class="pc">۱۰٪</span><span class="nm">Unknown</span></div>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+  '</section>' +
+
+  '<section class="card qa-card">' +
+    '<div class="card-head"><span class="card-title">اقدامات سریع</span></div>' +
+    '<div class="qa-grid">' + QA.map(qaBtn).join('') + '</div>' +
+  '</section>' +
+
+  '<section class="panels-row">' +
+    '<div class="card">' +
+      '<div class="card-head"><span class="card-title">کاربران اخیر</span>' +
+        '<a class="link-more" href="users.html">مشاهده همه</a></div>' +
+      '<div class="card-body"><div class="list">' +
+        DATA.users.slice(0, 5).map(function (u) {
+          return '<div class="list-row">' +
+            '<div class="avatar">' + u.name.slice(0, 1) + '</div>' +
+            '<div class="list-grow"><div class="list-title">' + u.latin + '</div>' +
+              '<div class="list-sub">ID: ' + faNum(u.id) + '</div></div>' +
+            userBadge(u.status) +
+            '<span class="list-time">' + u.seen + '</span>' +
+            '<button class="kebab" data-toast="منوی کاربر در نمونهٔ طراحی فعال نیست.">' + ICONS.kebab + '</button>' +
+          '</div>';
+        }).join('') +
+      '</div></div>' +
+    '</div>' +
+
+    '<div class="card">' +
+      '<div class="card-head"><span class="card-title">بسته‌های جدید و در حال بررسی</span>' +
+        '<a class="link-more" href="content.html">مشاهده همه</a></div>' +
+      '<div class="card-body"><div class="list">' +
+        reviewPacks.map(function (p) {
+          var prog = p.state === 'review'
+            ? '<div style="min-width:52px;text-align:left"><div class="list-sub">' + fa(p.progress) + '٪</div>' +
+              '<div class="progress" style="width:52px"><i style="width:' + p.progress + '%"></i></div></div>'
+            : packBadge(p.state);
+          return '<div class="list-row">' +
+            '<div class="cover" style="background:' + p.cover + '"></div>' +
+            '<div class="list-grow">' +
+              '<div class="list-title">' + p.name + '</div>' +
+              '<div class="list-sub"><span class="lvl">' + p.lvl + '</span> &nbsp; ' + faNum(p.cards) + ' کارت</div>' +
+            '</div>' + prog +
+          '</div>';
+        }).join('') +
+      '</div></div>' +
+    '</div>' +
+
+    '<div class="card">' +
+      '<div class="card-head"><span class="card-title">فعالیت‌های اخیر</span>' +
+        '<a class="link-more" href="operations.html">مشاهده همه</a></div>' +
+      '<div class="card-body"><div class="list">' +
+        DATA.activity.map(function (a) {
+          return '<div class="list-row">' +
+            '<span class="act-ic ' + a.tint + '">' + ICONS[a.ic] + '</span>' +
+            '<div class="list-grow"><div class="list-title">' + a.t + '</div>' +
+              '<div class="list-sub">' + a.s + '</div></div>' +
+            '<span class="list-time">' + a.time + '</span>' +
+          '</div>';
+        }).join('') +
+      '</div></div>' +
+    '</div>' +
+  '</section>';
+
+faPass();
+</script>
+</body>
+</html>

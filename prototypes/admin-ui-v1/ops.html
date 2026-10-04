@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>عملیات — LearnBox Admin</title>
+<link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body>
+<div class="shell" id="app">
+  <main class="main" id="page"><div id="body"></div></main>
+</div>
+
+<script src="assets/js/icons.js"></script>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/shell.js"></script>
+<script>
+mount('ops', { title: 'عملیات', sub: 'سلامت سامانه، نسخهٔ منتشرشده و کارهای پس‌زمینه' });
+
+var health = [
+  { name: 'وب‌سرویس اپلیکیشن', state: 'up',   meta: 'پاسخ ۱۲۰ms' },
+  { name: 'پایگاه داده',        state: 'up',   meta: 'شاخهٔ staging' },
+  { name: 'ذخیره‌سازی رسانه',   state: 'up',   meta: 'خصوصی' },
+  { name: 'تولید صدا',          state: 'warn', meta: 'صف طولانی' },
+  { name: 'درگاه پرداخت',       state: 'down', meta: '' },
+  { name: 'سرویس پیامک',        state: 'up',   meta: 'تحویل کند' }
+];
+
+function jobBadge(s) {
+  var m = { done: ['b-green', 'انجام شد'], running: ['b-amber', 'در حال اجرا'], failed: ['b-rose', 'ناموفق'] }[s];
+  return '<span class="badge ' + m[0] + '">' + m[1] + '</span>';
+}
+
+function healthRow(h) {
+  var cls = h.state === 'up' ? '' : h.state === 'warn' ? 'warn' : 'off';
+  var txt = h.state === 'up'   ? '<span class="ok-text">برقرار</span>'
+          : h.state === 'warn' ? '<span class="warn-text">کند</span>'
+          :                      '<span class="unavailable">متصل نشده</span>';
+  return '<div class="health-row">' +
+    '<span class="health-name"><i class="pulse ' + cls + '"></i>' + h.name + '</span>' +
+    '<span class="health-meta">' + (h.meta || '') + '</span>' + txt + '</div>';
+}
+
+document.getElementById('body').innerHTML =
+  '<div class="page-head">' +
+    '<div><h2>عملیات</h2><p>وضعیت زیرساخت و نسخهٔ در حال اجرا.</p></div>' +
+    '<div class="head-actions">' +
+      '<button class="btn" data-toast="تازه‌سازی در نمونهٔ طراحی غیرفعال است.">' +
+        ICONS.refresh + ' تازه‌سازی</button>' +
+    '</div>' +
+  '</div>' +
+
+  '<div class="split-wide mb">' +
+    '<div class="card">' +
+      '<div class="card-head"><span class="card-title">سلامت سرویس‌ها</span>' +
+        '<span class="muted-note">آخرین بررسی: لحظاتی پیش</span></div>' +
+      '<div class="card-body">' + health.map(healthRow).join('') + '</div>' +
+    '</div>' +
+
+    '<div class="card">' +
+      '<div class="card-head"><span class="card-title">نسخهٔ در حال اجرا</span>' +
+        '<span class="badge b-purple">staging</span></div>' +
+      '<div class="card-body">' +
+        '<dl class="dl">' +
+          '<div><dt>نسخهٔ Admin</dt><dd class="keep-latin">v0.1.0</dd></div>' +
+          '<div><dt>محیط</dt><dd>staging (ایزوله)</dd></div>' +
+          '<div><dt>پایگاه داده</dt><dd>شاخهٔ staging — جدا از Production</dd></div>' +
+          '<div><dt>آخرین استقرار</dt><dd>امروز</dd></div>' +
+        '</dl>' +
+        '<div style="height:12px"></div>' +
+        '<div class="notice info">' + ICONS.shield +
+          '<span>Production از این صفحه قابل تغییر نیست. استقرار و فعال‌سازی نسخه مسیر تأیید جداگانه دارد.</span></div>' +
+      '</div>' +
+    '</div>' +
+  '</div>' +
+
+  '<div class="split-wide">' +
+    '<div class="card">' +
+      '<div class="card-head"><span class="card-title">کارهای پس‌زمینه</span>' +
+        '<span class="muted-note">' + faNum(DATA.jobs.length) + ' کار</span></div>' +
+      '<div class="card-body">' +
+        DATA.jobs.map(function (j) {
+          var pct = Math.round((j.done / j.total) * 100);
+          return '<div class="job-row">' +
+            '<div class="row-between" style="margin-bottom:6px">' +
+              '<span class="list-title">' + j.name + '</span>' + jobBadge(j.state) + '</div>' +
+            '<div class="progress' + (j.state === 'failed' ? ' err' : '') + '">' +
+              '<i style="width:' + pct + '%"></i></div>' +
+            '<div class="row-between" style="margin-top:5px">' +
+              '<span class="muted-note">' + faNum(j.done) + ' از ' + faNum(j.total) + '</span>' +
+              '<span class="muted-note">' + fa(pct) + '٪</span></div>' +
+          '</div>';
+        }).join('') +
+      '</div>' +
+    '</div>' +
+
+    '<div class="stack">' +
+      '<div class="card">' +
+        '<div class="card-head"><span class="card-title">فضای ذخیره‌سازی</span></div>' +
+        '<div class="card-body">' +
+          [['تصاویر محتوا', 62, '۴.۸ گیگابایت'],
+           ['فایل‌های صوتی', 48, '۳.۱ گیگابایت'],
+           ['پشتیبان‌ها', 71, '۹.۴ گیگابایت']].map(function (r) {
+            return '<div style="margin-bottom:12px">' +
+              '<div class="row-between" style="margin-bottom:5px">' +
+                '<span class="list-title">' + r[0] + '</span>' +
+                '<span class="muted-note">' + r[2] + '</span></div>' +
+              '<div class="progress"><i style="width:' + r[1] + '%"></i></div></div>';
+          }).join('') +
+        '</div>' +
+      '</div>' +
+
+      '<div class="card">' +
+        '<div class="card-head"><span class="card-title">اقدامات نگه‌داری</span></div>' +
+        '<div class="card-body" style="display:flex;flex-direction:column;gap:9px">' +
+          '<button class="btn" data-toast="پشتیبان‌گیری در نمونهٔ طراحی غیرفعال است.">' +
+            ICONS.download + ' پشتیبان‌گیری دستی</button>' +
+          '<button class="btn" data-toast="پاک‌سازی حافظهٔ نهان در نمونهٔ طراحی غیرفعال است.">' +
+            ICONS.refresh + ' پاک‌سازی حافظهٔ نهان</button>' +
+          '<button class="btn" data-toast="دریافت لاگ در نمونهٔ طراحی غیرفعال است.">' +
+            ICONS.file + ' دریافت لاگ سامانه</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+  '</div>';
+
+faPass();
+</script>
+</body>
+</html>

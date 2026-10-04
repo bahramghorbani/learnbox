@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>کاربران — LearnBox Admin</title>
+<link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body>
+<div class="shell" id="app">
+  <main class="main" id="page"><div id="body"></div></main>
+</div>
+
+<script src="assets/js/icons.js"></script>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/shell.js"></script>
+<script>
+mount('users', { title: 'کاربران', sub: 'فهرست کاربران، وضعیت و دسترسی آن‌ها' });
+
+function userDetail(id) {
+  var u = DATA.users.filter(function (x) { return x.id === id; })[0];
+  openDrawer(u.name,
+    '<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">' +
+      '<div class="avatar" style="width:48px;height:48px;font-size:15px">' + u.name.slice(0, 1) + '</div>' +
+      '<div><div style="font-weight:700;font-size:14px">' + u.name + '</div>' +
+        '<div class="list-sub keep-latin">' + u.mail + '</div></div>' +
+      '<div style="margin-right:auto">' + userBadge(u.status) + '</div>' +
+    '</div>' +
+    '<div class="notice lav">' + ICONS.info + '<span>دادهٔ این نما نمایشی است. در نسخهٔ واقعی از همان موجودیت‌های canonical کاربر خوانده می‌شود.</span></div>' +
+    '<div style="height:14px"></div>' +
+    '<dl class="dl">' +
+      '<div><dt>شناسه</dt><dd>' + faNum(u.id) + '</dd></div>' +
+      '<div><dt>تاریخ عضویت</dt><dd>' + u.joined + '</dd></div>' +
+      '<div><dt>آخرین فعالیت</dt><dd>' + u.seen + '</dd></div>' +
+      '<div><dt>بسته‌های خریداری‌شده</dt><dd>' + faNum(u.packs) + '</dd></div>' +
+      '<div><dt>کل مرورها</dt><dd>' + faNum(u.reviews) + '</dd></div>' +
+      '<div><dt>واژگان Known</dt><dd>' + faNum(u.known) + '</dd></div>' +
+    '</dl>' +
+    '<div style="height:16px"></div>' +
+    '<div class="card-title" style="margin-bottom:9px">اقدامات</div>' +
+    '<div style="display:flex;gap:9px;flex-wrap:wrap">' +
+      '<button class="btn" data-toast="ارسال پیام در نمونهٔ طراحی غیرفعال است.">پیام به کاربر</button>' +
+      '<button class="btn" data-toast="باطل‌کردن نشست در نمونهٔ طراحی غیرفعال است.">باطل‌کردن نشست‌ها</button>' +
+      '<button class="btn danger" data-toast="مسدودسازی در نمونهٔ طراحی غیرفعال است.">مسدودسازی</button>' +
+    '</div>');
+}
+
+var stats = [
+  ['کل کاربران', 12438, 'users', 't-purple'],
+  ['فعال (۳۰ روز)', 8241, 'checkCircle', 't-green'],
+  ['کاربران پولی', 1836, 'cart', 't-amber'],
+  ['مسدود', 14, 'alert', 't-rose']
+];
+
+document.getElementById('body').innerHTML =
+  '<div class="page-head">' +
+    '<div><h2>کاربران</h2><p>همان کاربران canonical سامانهٔ LearnBox.</p></div>' +
+    '<div class="head-actions">' +
+      '<button class="btn" data-toast="برون‌بری در نمونهٔ طراحی غیرفعال است.">' + ICONS.download + ' برون‌بری</button>' +
+    '</div>' +
+  '</div>' +
+
+  '<div class="grid-4 mb">' + stats.map(function (s) {
+    return '<div class="kpi"><div class="kpi-top"><span class="kpi-label">' + s[0] + '</span>' +
+      '<span class="kpi-ic ' + s[3] + '">' + ICONS[s[2]] + '</span></div>' +
+      '<div class="kpi-value">' + faNum(s[1]) + '</div></div>';
+  }).join('') + '</div>' +
+
+  '<div class="card">' +
+    '<div class="toolbar">' +
+      '<span class="field grow">' + ICONS.search + ' جستجو بر اساس نام، ایمیل یا شناسه…</span>' +
+      '<div class="chips">' +
+        '<span class="chip on">همه</span><span class="chip">فعال</span>' +
+        '<span class="chip">غیرفعال</span><span class="chip">مسدود</span>' +
+      '</div>' +
+    '</div>' +
+    '<table class="tbl"><thead><tr>' +
+      '<th>کاربر</th><th>شناسه</th><th>وضعیت</th><th>بسته‌ها</th><th>مرورها</th>' +
+      '<th>آخرین فعالیت</th><th>عضویت</th><th></th>' +
+    '</tr></thead><tbody>' +
+      DATA.users.map(function (u) {
+        return '<tr>' +
+          '<td><div class="cell-main"><span class="avatar">' + u.name.slice(0, 1) + '</span>' +
+            '<div><div class="t-name">' + u.name + '</div>' +
+            '<div class="t-sub keep-latin">' + u.mail + '</div></div></div></td>' +
+          '<td class="ltr">' + faNum(u.id) + '</td>' +
+          '<td>' + userBadge(u.status) + '</td>' +
+          '<td>' + faNum(u.packs) + '</td>' +
+          '<td>' + faNum(u.reviews) + '</td>' +
+          '<td>' + u.seen + '</td>' +
+          '<td>' + u.joined + '</td>' +
+          '<td style="text-align:left"><button class="btn sm" onclick="userDetail(' + u.id + ')">جزئیات</button></td>' +
+        '</tr>';
+      }).join('') +
+    '</tbody></table>' +
+    '<div class="tbl-foot"><span>نمایش ' + faNum(DATA.users.length) + ' کاربر از ' + faNum(12438) + '</span>' +
+      '<div class="pager"><button>قبلی</button><button class="on">۱</button><button>۲</button>' +
+      '<button>۳</button><button>بعدی</button></div></div>' +
+  '</div>';
+
+faPass();
+</script>
+</body>
+</html>

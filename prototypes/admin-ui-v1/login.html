@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ورود مدیر — LearnBox Admin</title>
+<link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body class="auth-body">
+
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-brand">
+      <span class="brand-mark" id="mk"></span>
+      <span class="brand-name">LearnBox</span>
+    </div>
+
+    <h1>ورود مدیر</h1>
+    <p class="auth-sub">برای ورود به اتاق کنترل، کلید عبور این دستگاه را تأیید کنید.</p>
+
+    <button class="btn primary auth-btn" id="signin">
+      <span id="sic"></span> ورود با کلید عبور
+    </button>
+
+    <div class="auth-state" id="state" hidden>
+      <span class="spinner"></span>
+      <span>در انتظار تأیید روی دستگاه…</span>
+    </div>
+
+    <div class="auth-divider"><span>یا</span></div>
+
+    <button class="btn ghost auth-btn" data-toast="ورود با دستگاه دیگر در نمونهٔ طراحی غیرفعال است.">
+      <span id="qic"></span> ورود با دستگاه دیگر
+    </button>
+
+    <div class="auth-note" id="note"></div>
+  </div>
+
+  <div class="auth-side">
+    <img src="assets/img/bobo-welcome.png" alt="" class="auth-bobo">
+    <div class="auth-quote">
+      <b>با هم آلمانی را آسان‌تر می‌کنیم.</b>
+      <span>اتاق کنترل LearnBox</span>
+    </div>
+  </div>
+</div>
+
+<div class="auth-foot">
+  <span class="keep-latin">LearnBox Admin v0.1.0</span>
+  <span class="dot-sep">·</span>
+  <span>محیط staging</span>
+</div>
+
+<script src="assets/js/icons.js"></script>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/shell.js"></script>
+<script>
+document.getElementById('mk').innerHTML = ICONS.diamond;
+document.getElementById('sic').innerHTML = ICONS.key;
+document.getElementById('qic').innerHTML = ICONS.phone;
+document.getElementById('note').innerHTML = ICONS.shield +
+  '<span>ورود فقط با کلید عبور سخت‌افزاری این دستگاه ممکن است. رمز عبور ساده پذیرفته نمی‌شود.</span>';
+
+document.getElementById('signin').addEventListener('click', function () {
+  var s = document.getElementById('state');
+  s.hidden = false;
+  setTimeout(function () {
+    s.innerHTML = '<span class="ok-text">' + ICONS.check + ' نمونهٔ طراحی — ورود واقعی انجام نمی‌شود.</span>';
+  }, 1600);
+});
+
+faPass();
+</script>
+</body>
+</html>

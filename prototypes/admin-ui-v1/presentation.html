@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>نمایش اپ — LearnBox Admin</title>
+<link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body>
+<div class="shell" id="app">
+  <main class="main" id="page"><div id="body"></div></main>
+</div>
+
+<script src="assets/js/icons.js"></script>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/shell.js"></script>
+<script>
+mount('presentation', { title: 'نمایش اپ', sub: 'اسپلش، اسلایدر و مناسبت‌های نمایشی اپلیکیشن' });
+
+function slideEditor(i) {
+  var s = DATA.slides[i];
+  openModal('ویرایش اسلاید — ' + s.title,
+    '<div class="form-row"><label>عنوان</label><input class="input" value="' + s.title + '"></div>' +
+    '<div class="form-row"><label>متن</label><textarea class="textarea">' + s.text + '</textarea></div>' +
+    '<div class="grid-2">' +
+      '<div class="form-row"><label>متن دکمه</label><input class="input" value="' + s.cta + '"></div>' +
+      '<div class="form-row"><label>مقصد</label><select class="select">' +
+        '<option>بستهٔ مشخص</option><option>فروشگاه</option><option>لینک بیرونی</option></select></div>' +
+    '</div>' +
+    '<div class="grid-2">' +
+      '<div class="form-row"><label>از تاریخ</label><input class="input" value="' + s.from + '"></div>' +
+      '<div class="form-row"><label>تا تاریخ</label><input class="input" value="' + s.to + '"></div>' +
+    '</div>' +
+    '<div class="form-row"><label>تصویر</label>' +
+      '<div class="field">' + ICONS.upload + ' انتخاب تصویر · PNG یا JPEG · حداکثر ۸ مگابایت</div></div>',
+    '<button class="btn primary" data-toast="ذخیرهٔ اسلاید در نمونهٔ طراحی غیرفعال است." onclick="closeOverlay()">ذخیره</button>' +
+    '<button class="btn ghost" onclick="closeOverlay()">انصراف</button>');
+}
+
+function splashEditor() {
+  openModal('جایگزینی اسپلش',
+    '<div class="form-row"><label>مناسبت</label><input class="input" value="پاییز ۱۴۰۴"></div>' +
+    '<div class="grid-2">' +
+      '<div class="form-row"><label>از تاریخ</label><input class="input" value="۱۴۰۴/۰۷/۰۱"></div>' +
+      '<div class="form-row"><label>تا تاریخ</label><input class="input" value="۱۴۰۴/۰۹/۳۰"></div>' +
+    '</div>' +
+    '<div class="form-row"><label>تصویر جدید</label>' +
+      '<div class="field">' + ICONS.upload + ' انتخاب تصویر از دستگاه</div>' +
+      '<span class="hint">PNG، JPEG یا WebP · حداکثر ۸ مگابایت · حداقل ۸۶۴ × ۱۶۰۰ پیکسل</span></div>' +
+    '<div class="notice">' + ICONS.alert +
+      '<span>اسپلش فقط پس از تأیید مدیر و در بازهٔ تاریخ تعیین‌شده نمایش داده می‌شود.</span></div>',
+    '<button class="btn primary" data-toast="تغییر اسپلش در نمونهٔ طراحی غیرفعال است." onclick="closeOverlay()">اعمال</button>' +
+    '<button class="btn ghost" onclick="closeOverlay()">انصراف</button>');
+}
+
+document.getElementById('body').innerHTML =
+  '<div class="page-head">' +
+    '<div><h2>نمایش اپ</h2><p>آنچه کاربر هنگام باز کردن اپ می‌بیند.</p></div>' +
+    '<div class="head-actions">' +
+      '<button class="btn" onclick="splashEditor()">' + ICONS.phone + ' تغییر اسپلش</button>' +
+      '<button class="btn primary" data-toast="افزودن اسلاید در نمونهٔ طراحی غیرفعال است.">' +
+        ICONS.plus + ' اسلاید جدید</button>' +
+    '</div>' +
+  '</div>' +
+
+  '<div class="split-detail mb">' +
+    '<div class="card">' +
+      '<div class="card-head"><span class="card-title">نمای آغاز برنامه</span></div>' +
+      '<div class="card-body" style="display:grid;place-items:center;padding-bottom:18px">' +
+        '<div class="phone"><span class="notch"></span>' +
+          '<div class="phone-splash">' +
+            '<div class="ps-mark">' + ICONS.diamond + '</div>' +
+            '<b>LearnBox</b><span>آلمانی را آسان‌تر بیاموز</span>' +
+          '</div>' +
+        '</div>' +
+        '<div style="height:12px"></div>' +
+        '<span class="badge b-purple">اسپلش فعلی</span>' +
+      '</div>' +
+    '</div>' +
+
+    '<div class="stack">' +
+      '<div class="card">' +
+        '<div class="card-head"><span class="card-title">جایگزینی اسپلش</span>' +
+          '<span class="badge b-purple">فقط مدیر</span></div>' +
+        '<div class="card-body">' +
+          '<p class="muted-note" style="margin:0 0 12px">آخرین تصویر تأییدشده تا جایگزینی بعدی نمایش داده می‌شود.</p>' +
+          '<div class="dl">' +
+            '<div><dt>مناسبت فعلی</dt><dd>—</dd></div>' +
+            '<div><dt>آخرین تغییر</dt><dd>۴۵ دقیقه پیش</dd></div>' +
+            '<div><dt>بازهٔ نمایش</dt><dd>نامحدود</dd></div>' +
+          '</div>' +
+          '<div style="height:12px"></div>' +
+          '<button class="btn primary" onclick="splashEditor()">' + ICONS.image + ' انتخاب تصویر جدید</button>' +
+        '</div>' +
+      '</div>' +
+
+      '<div class="card">' +
+        '<div class="card-head"><span class="card-title">مناسبت‌های زمان‌بندی‌شده</span></div>' +
+        '<div class="card-body">' +
+          '<div class="empty"><div class="e-ic">' + ICONS.calendar + '</div>' +
+            'هنوز مناسبتی زمان‌بندی نشده است.</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+  '</div>' +
+
+  '<div class="card" id="slider">' +
+    '<div class="card-head"><span class="card-title">اسلایدر داخل اپلیکیشن</span>' +
+      '<span class="muted-note">' + faNum(DATA.slides.length) + ' اسلاید · ' +
+      faNum(DATA.slides.filter(function (s) { return s.on; }).length) + ' فعال</span></div>' +
+    '<div class="card-body"><div class="grid-3">' +
+      DATA.slides.map(function (s, i) {
+        return '<div class="slide-card">' +
+          '<div class="slide-vis" style="background:' + s.bg + '">' + s.title + '</div>' +
+          '<div class="slide-body">' +
+            '<div class="list-title">' + s.text + '</div>' +
+            '<div class="list-sub">مقصد: ' + s.destName + '</div>' +
+            '<div class="list-sub">' + s.from + ' تا ' + s.to + '</div>' +
+            '<div class="row-between" style="margin-top:6px">' +
+              '<button class="switch' + (s.on ? ' on' : '') + '" data-toast="تغییر وضعیت در نمونهٔ طراحی غیرفعال است."><i></i></button>' +
+              '<div class="order-btns">' +
+                '<button data-toast="جابه‌جایی در نمونهٔ طراحی غیرفعال است.">' + ICONS.arrowUp + '</button>' +
+                '<button data-toast="جابه‌جایی در نمونهٔ طراحی غیرفعال است.">' + ICONS.arrowDown + '</button>' +
+                '<button onclick="slideEditor(' + i + ')">' + ICONS.edit + '</button>' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      }).join('') +
+    '</div></div>' +
+  '</div>';
+
+faPass();
+</script>
+</body>
+</html>

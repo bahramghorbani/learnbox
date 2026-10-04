@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>فروشگاه — LearnBox Admin</title>
+<link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body>
+<div class="shell" id="app">
+  <main class="main" id="page"><div id="body"></div></main>
+</div>
+
+<script src="assets/js/icons.js"></script>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/shell.js"></script>
+<script>
+mount('store', { title: 'فروشگاه', sub: 'قیمت‌گذاری، بسته‌های ویژه و وضعیت فروش' });
+
+var paid = DATA.packs.filter(function (p) { return p.paid; });
+
+var orders = [
+  { id: 'ORD-10492', who: 'سارا رحیمی', pack: 'مکالمه روزمره', amount: 189000, state: 'paid',    time: '۱ ساعت پیش' },
+  { id: 'ORD-10491', who: 'علی محمدی',  pack: 'افعال پرکاربرد آلمانی', amount: 159000, state: 'paid', time: '۳ ساعت پیش' },
+  { id: 'ORD-10490', who: 'مینا کریمی', pack: 'آزمون Goethe B1', amount: 229000, state: 'pending', time: '۴ ساعت پیش' },
+  { id: 'ORD-10489', who: 'ندا فرشاد',  pack: 'اصطلاحات مصاحبه کاری', amount: 149000, state: 'paid', time: 'دیروز' },
+  { id: 'ORD-10488', who: 'رضا احمدی',  pack: 'مکالمه روزمره', amount: 189000, state: 'failed',  time: 'دیروز' }
+];
+
+function orderBadge(s) {
+  var m = { paid: ['b-green', 'پرداخت شده'], pending: ['b-amber', 'در انتظار'], failed: ['b-rose', 'ناموفق'] }[s];
+  return '<span class="badge ' + m[0] + '">' + m[1] + '</span>';
+}
+
+function priceEditor(name, price) {
+  openModal('قیمت‌گذاری — ' + name,
+    '<div class="form-row"><label>قیمت (تومان)</label><input class="input ltr" value="' + price + '"></div>' +
+    '<div class="form-row"><label>تخفیف</label>' +
+      '<div class="chips"><span class="chip on">بدون تخفیف</span><span class="chip">۱۰٪</span>' +
+      '<span class="chip">۲۰٪</span><span class="chip">۳۰٪</span></div></div>' +
+    '<div class="form-row"><label>نمایش در فروشگاه</label>' +
+      '<div style="display:flex;align-items:center;gap:9px">' +
+        '<button class="switch on"><i></i></button><span class="hint">بسته در فروشگاه اپ دیده می‌شود.</span></div></div>' +
+    '<div class="notice">' + ICONS.alert + '<span>درگاه پرداخت هنوز متصل نیست؛ این صفحه فقط نمای طراحی قیمت‌گذاری است.</span></div>',
+    '<button class="btn primary" data-toast="ذخیرهٔ قیمت در نمونهٔ طراحی غیرفعال است." onclick="closeOverlay()">ذخیره</button>' +
+    '<button class="btn ghost" onclick="closeOverlay()">انصراف</button>');
+}
+
+document.getElementById('body').innerHTML =
+  '<div class="page-head">' +
+    '<div><h2>فروشگاه</h2><p>قیمت، تخفیف و فروش بسته‌های پولی.</p></div>' +
+    '<div class="head-actions"><button class="btn" data-toast="گزارش فروش در نمونهٔ طراحی غیرفعال است.">' +
+      ICONS.download + ' گزارش فروش</button></div>' +
+  '</div>' +
+
+  '<div class="notice mb">' + ICONS.alert +
+    '<span><b>درگاه پرداخت هنوز فعال نشده است.</b> ارقام این صفحه نمایشی‌اند و تا اتصال درگاه، فروش واقعی ثبت نمی‌شود.</span></div>' +
+
+  '<div class="grid-4 mb">' +
+    [['درآمد این ماه', faNum(348500000) + '<span class="kpi-unit"> تومان</span>', 'money', 't-rose'],
+     ['سفارش‌های موفق', faNum(1836), 'cart', 't-amber'],
+     ['بسته‌های پولی', faNum(paid.length), 'store', 't-purple'],
+     ['میانگین سبد', faNum(189000) + '<span class="kpi-unit"> تومان</span>', 'chart', 't-green']].map(function (k) {
+      return '<div class="kpi"><div class="kpi-top"><span class="kpi-label">' + k[0] + '</span>' +
+        '<span class="kpi-ic ' + k[3] + '">' + ICONS[k[2]] + '</span></div>' +
+        '<div class="kpi-value sm">' + k[1] + '</div></div>';
+    }).join('') +
+  '</div>' +
+
+  '<div class="split-wide">' +
+    '<div class="card">' +
+      '<div class="card-head"><span class="card-title">بسته‌های فروشگاه</span>' +
+        '<span class="muted-note">' + faNum(paid.length) + ' بستهٔ پولی</span></div>' +
+      '<table class="tbl"><thead><tr>' +
+        '<th>بسته</th><th>سطح</th><th>قیمت</th><th>فروش</th><th>وضعیت</th><th></th></tr></thead><tbody>' +
+        paid.map(function (p) {
+          return '<tr>' +
+            '<td><div class="cell-main"><span class="cover" style="background:' + p.cover + '"></span>' +
+              '<div><div class="t-name">' + p.name + '</div><div class="t-sub">' + p.cat + '</div></div></div></td>' +
+            '<td><span class="lvl">' + p.lvl + '</span></td>' +
+            '<td>' + toman(p.price) + '</td>' +
+            '<td>' + faNum(p.sold) + '</td>' +
+            '<td>' + packBadge(p.state) + '</td>' +
+            '<td style="text-align:left"><button class="btn sm" onclick="priceEditor(\'' + p.name + '\',' + p.price + ')">' +
+              ICONS.edit + ' قیمت</button></td>' +
+          '</tr>';
+        }).join('') +
+      '</tbody></table>' +
+    '</div>' +
+
+    '<div class="stack">' +
+      '<div class="card">' +
+        '<div class="card-head"><span class="card-title">سفارش‌های اخیر</span></div>' +
+        '<div class="card-body"><div class="list">' +
+          orders.map(function (o) {
+            return '<div class="list-row">' +
+              '<div class="list-grow"><div class="list-title">' + o.pack + '</div>' +
+                '<div class="list-sub">' + o.who + ' · <span class="keep-latin">' + o.id + '</span></div></div>' +
+              '<div style="text-align:left"><div class="list-title">' + faNum(o.amount) + '</div>' +
+                '<div class="list-sub">' + o.time + '</div></div>' +
+              orderBadge(o.state) +
+            '</div>';
+          }).join('') +
+        '</div></div>' +
+      '</div>' +
+
+      '<div class="card">' +
+        '<div class="card-head"><span class="card-title">درگاه پرداخت</span></div>' +
+        '<div class="card-body">' +
+          '<div class="health-row"><span class="health-name"><i class="pulse off"></i>درگاه بانکی</span>' +
+            '<span class="unavailable">متصل نشده</span></div>' +
+          '<div class="health-row"><span class="health-name"><i class="pulse off"></i>صدور فاکتور</span>' +
+            '<span class="unavailable">غیرفعال</span></div>' +
+          '<div class="health-row"><span class="health-name"><i class="pulse off"></i>بازگشت وجه</span>' +
+            '<span class="unavailable">غیرفعال</span></div>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+  '</div>';
+
+faPass();
+</script>
+</body>
+</html>
