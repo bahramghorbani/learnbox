@@ -24,7 +24,7 @@ They are design references and review artifacts, not proof that the correspondin
 - Warm off-white canvas, white surfaces, deep navy ink, blue primary action, apricot secondary accent and restrained lavender support color.
 - IRANSansX family for Persian and product UI, with accessible contrast and clear numeric hierarchy.
 - Rounded but controlled surfaces, low decoration, generous touch targets and calm learning-focused hierarchy.
-- Bobo is a supporting character, not a substitute for information hierarchy; canonical assets must not be altered without owner approval.
+- Bobo is a supporting character, not a substitute for information hierarchy. Bobo's face, core proportions and character identity are invariant and need owner approval to change; derived variants (clothing, pose, expression, scene, season) are permitted — see [`PDR-009`](../product-decisions/PDR-009-ADMIN-UI-DESIGN-FREEZE-AND-BOBO-VARIANTS.md).
 - Motion is short and purposeful; reduced-motion behavior is required.
 
 The mobile theme currently encodes the core tokens in `apps/mobile/lib/ui/learnbox_theme.dart`, and the Web learner implementation has a corresponding reviewed visual QA record in `docs/design/UI_QA.md`.
@@ -44,6 +44,26 @@ The mobile theme currently encodes the core tokens in `apps/mobile/lib/ui/learnb
 | Purchases / My Packs       | Direction only                               | Entitlement foundation only                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | Not implemented   | Entitlement, restore, revoke, support states                           |
 | Admin Content Factory      | Reviewed concept + accepted staging interior | Foundation and review seams exist. LB-DS-049 merged in PR #252 at `a2a75e9` with server-truthful loading/empty/error/retry/submitting/success/conflict states. LB-DS-056 passed independent exact-head code/accessibility/product review and 7/7 CI and merged in PR #266 at `e4e80dcc`; that image is now retained for rollback. LB-DS-058 passed independent exact-head review and 7/7 CI, merged in PR #268 at `351f8e3`, and its exact immutable image is healthy on isolated Admin staging. The authenticated Persian-first RTL queue/content/decision composition uses server-derived figures only, preserves the six-gate/publication-disabled behaviour, serves the required CSS, and was visually accepted by the owner after authenticated hard refresh. The owner also accepted all five deployed line icons and the collapse chevron. Axe/full assistive-technology coverage remains unclaimed. | Partial           | Complete workflow board, job states, batch review and release controls |
 | Responsive / accessibility | Principles established                       | Important tests exist. PR #282 adds focused automated coverage for accessible names, decorative imagery, polite/assertive status semantics, keyboard-operable recovery, truthful reconnect state and composed live-region ownership across Web failure surfaces; browser axe and the full assistive-technology/device matrix remain unclaimed.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | Partial           | Cross-surface audit, screen reader/keyboard and device matrix          |
+
+## Admin UI — APPROVED / DESIGN FROZEN
+
+**Status:** APPROVED / DESIGN FROZEN (product owner, 2026-10-04)
+**Artifact:** `prototypes/admin-ui-v1` — 12 Persian-first RTL screens
+**Decision record:** [`PDR-009`](../product-decisions/PDR-009-ADMIN-UI-DESIGN-FREEZE-AND-BOBO-VARIANTS.md)
+
+The prototype is the approved LearnBox Admin UI/UX direction. Admin implementation derives from it
+rather than independently redesigning the Admin. Its visual system (tokens, surfaces, card and
+table structure, sidebar composition, state patterns) and its internal screens are the reference.
+
+Screens: control room, content/packs, users, store, learning, app presentation, sessions/access,
+operations, settings, sign-in, empty-state pattern, error-state pattern.
+
+The first sidebar item is «خانه / نمای کلی». This naming is approved and is not renamed.
+
+Design changes are allowed only for a real usability problem, an implementation constraint, or an
+explicit product-owner decision. Speculative redesign and further visual exploration are out of
+scope. The freeze records the direction only — it does not authorize starting the Admin
+implementation.
 
 ## Design milestone added to delivery
 
