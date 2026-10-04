@@ -7,12 +7,12 @@ start. Historical tasks remain for traceability and must not be duplicated.
 
 ### Current release execution
 
-- **S0 — 30-day finish-line reset:** accepted in PR #278 at `34d0d6dbd85bb42c07a8aaee1576505b0eb8db72`. Official Web/PWA-first v1.0 is targeted for 2026-10-12; Android, commerce and premium packs are v1.1+.
+- **S0 — 30-day finish-line reset:** accepted in PR #278 at `34d0d6dbd85bb42c07a8aaee1576505b0eb8db72`. Official Web/PWA-first v1.0 has no fixed calendar date (date removed 2026-10-04; owner decides it later); Android, commerce and premium packs are v1.1+.
 - **S1 — Private media + 35-item release batch:** in progress. PR #286 merged the reviewed JPEG source-truth correction, after which the owner-authorized guarded upload placed exactly 105 assets in the isolated target and verified each by cache-disabled download, byte count and SHA-256. PR #288 merged the decision-free review packet; PR #289 merged the owner's 210/210 `passed` checks and 35 `approve` decisions as repository intent only. PR #292 added protected staging delivery/attestation without changing the canonical source attestation state `private_storage_verified_not_attached`. LB-DS-080 now records `private_media_attached` as owner-authorized repository evidence only, with publication, delivery, database and provider gates closed; it also discloses that 60/105 attested assets across 20/35 content IDs have byte-identical copies in the public repository, while 45/105 across 15/35 do not. Admin outcomes remain 0 recorded / 210 pending; 0/35 items are release-approved. Nothing is operationally attached, seeded, activated or published; those gates remain separately owner-authorized.
 - **S2 — Server-authoritative Web loop:** partial/dormant. PR #293 replaced eager all-catalog schedule bootstrap with one approved submitted-card schedule, and PR #294 added bounded learner-scoped approved Start-card intake to the authenticated learner-state read. Runtime flags remain default-off; staging/Production activation is separately gated.
 - **S3 — Web release essentials:** partial foundations; account/privacy/support/operations work may overlap S2 with disjoint paths.
-- **S4 — Closed alpha:** planned for 2026-10-04 through 2026-10-08 after S1–S3 integration evidence.
-- **S5 — Public Web/PWA v1.0:** planned for 2026-10-09 through 2026-10-12; production/public activation remains owner-gated.
+- **S4 — Closed alpha:** planned after S1–S3 integration evidence.
+- **S5 — Public Web/PWA v1.0:** planned after S4; production/public activation remains owner-gated, with the launch date decided by the owner at that point.
 - **v1.1+:** native Android/Cafe Bazaar, every payment path, premium packs/shared paid entitlements, native iOS and the general AI factory. These are not v1.0 tasks.
 
 The M0–M8 records below retain implementation provenance only; they do not override the active season exit gates.
@@ -164,13 +164,17 @@ The M0–M8 records below retain implementation provenance only; they do not ove
 
 ## LB-DS-066
 
+> **Historical record.** Dates below describe the plan as accepted at the time. The fixed
+> 2026-10-12 launch date was removed from the active plan on 2026-10-04; the launch date is now an
+> explicit owner decision taken later. Retained for provenance only — it does not govern delivery.
+
 - Status: accepted
 - Executor: supervisor plus independent release-architecture reviewer
 - Base: exact `32aad4c4cffdbdd6211263d9fe5f7ed2d9f191ee` (`origin/main`, PR #277 merge)
 - Branch: `docs/web-first-30-day-release`
 - Risk: product-scope-and-aggressive-release-forecast
 - Specification: `ROADMAP.md`; `docs/product/PRD.md`; `docs/PRODUCT_STATUS.md`; `BACKLOG.md`; `CURRENT_WORK.md`; `.ai/WORKSTREAMS.md`
-- Outcome: replace the multi-surface commercial v1.0 finish line with the owner-selected official Web/PWA-first release by 2026-10-12, define daily owner gates and measurable S0–S5 exits, and move Android, payments and premium packs to v1.1+.
+- Outcome: replace the multi-surface commercial v1.0 finish line with the owner-selected official Web/PWA-first release (originally dated 2026-10-12; that fixed date was removed on 2026-10-04 and the launch date is now an explicit owner decision taken later), define owner gates and measurable S0–S5 exits, and move Android, payments and premium packs to v1.1+.
 - Allowed paths: `ROADMAP.md`; `BACKLOG.md`; `CURRENT_WORK.md`; `PROJECT_STATE.md`; `PRODUCT.md`; `.ai/WORKSTREAMS.md`; `.ai/WORK_QUEUE.md`; `.ai/worker-reports/LB-DS-066.md`; `docs/PRODUCT_STATUS.md`; `docs/product/PRD.md`; `docs/product/MASTER_SPEC.md`; `docs/product/FEATURE_CATALOG.md`; `docs/product/MONETIZATION.md`; `docs/storyboard/STATUS.md`; `docs/storyboard/MASTER_PROJECT_STORYBOARD.md`; `docs/operations/AGENT_ACTIVE_BRIEF.md`
 - Documentation updates: make every current release view agree on the Web/PWA-only v1.0 deadline and v1.1 deferrals; preserve long-horizon product vision as non-authoritative context.
 - Owner gates: isolated storage target by 2026-09-14; distinct upload/attachment authorization by 2026-09-16; 35-item human approval by 2026-09-22; staging/seed activation by 2026-09-26; public rollout approval by 2026-10-11.

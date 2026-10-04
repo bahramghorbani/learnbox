@@ -245,7 +245,7 @@ queries columns (`rating`, `created_at`) that do not exist.
 
 ## Historical v1.0 record
 
-The v1.0 30-day critical path (S0–S5, target 2026-10-12) is retained in `ROADMAP.md` as history.
+The v1.0 critical path (S0–S5) is retained in `ROADMAP.md` as history. The fixed launch date was removed on 2026-10-04; the launch date is an explicit owner decision taken later.
 All of its release-blocking outcomes were met and the release activated on 2026-09-28, ahead of
 the planned date. That sequence no longer controls delivery.
 

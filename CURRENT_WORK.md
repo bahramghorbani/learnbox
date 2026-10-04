@@ -4,6 +4,23 @@
 
 ## Active work
 
+**Phase: Admin control plane (opened 2026-10-04).** The Learner/FV phase is closed; see the
+closure record below. No fixed launch date exists — it was removed from the active plan on
+2026-10-04 and is an explicit owner decision taken later. Active work is scoped to what
+materially contributes to launch readiness.
+
+Admin today: real Passkey/WebAuthn auth, a persisted content-review store, splash management and
+a rendered RTL workspace shell — but a single page, placeholder navigation, and a legacy route
+group (`banners`, `packs` write paths, `gateways`, `transactions`, `users`) that is
+**fail-closed to 404 in any production build** and still carries raw SQL plus at least one real
+schema mismatch (`users/[userId]` selects `rating`/`created_at`; the real columns are
+`grade`/`occurred_at`). Admin is **not reachable in Production**: Caddy answers
+`admin.learnboxapp.com` with a fixed 404 and the container publishes no ports.
+
+Mona's test account continues to receive real learner activity (3 events at 08:37Z on
+2026-10-04, after FV closure). This is expected ongoing use, not a deployment side effect;
+Bahram's control fingerprints remain byte-identical.
+
 **Functional Validation — COMPLETE AND RELEASED (closed 2026-10-04).** The final post-FV gate
 passed: Bahram's control account is **byte-identical** to the pinned pre-FV baseline on all 10
 fingerprints including all three `xmin` digests (58 events / 16 schedules / 1 cursor, combined
