@@ -90,3 +90,5 @@ unchanged and is not subject to path filtering — see
 `docs/planning/` release runbooks and the owner gates recorded there.
 
 If in doubt, run the full suite. Minutes are cheaper than a bad deploy.
+
+<!-- protection probe: verifies feature-branch -> PR -> CI -> merge still works -->
