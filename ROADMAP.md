@@ -2,7 +2,8 @@
 
 **Baseline:** 2026-09-12 at `32aad4c4cffdbdd6211263d9fe5f7ed2d9f191ee`
 
-**Planning target:** public Web/PWA v1.0 by **2026-10-12**
+**Planning target:** public Web/PWA v1.0. **No fixed calendar date.** The launch date is an
+explicit owner decision taken later; sequencing is by readiness, not by date.
 
 **Scope decision:** the owner chose a Web/PWA-first official release. Native Android and every payment path move to v1.1. This supersedes the broader forecast in PR #276.
 
@@ -22,7 +23,7 @@ A passing build, dormant flag, local fixture, Preview route or test alone does n
 
 ## 2. Scope excluded from v1.0
 
-The following are v1.1 or later and cannot delay the 2026-10-12 release:
+The following are v1.1 or later and cannot delay the v1.0 release:
 
 - native Android online release and Cafe Bazaar publication;
 - Cafe Bazaar billing, premium packs and shared paid entitlements;
@@ -76,7 +77,7 @@ Only disjoint preparation may overlap. Upload, attachment, approval, seed, activ
 
 **Exit gate**
 
-- Canonical documents agree on Web/PWA v1.0 and 2026-10-12.
+- Canonical documents agree on Web/PWA v1.0 with no fixed calendar date.
 - No active record makes Android, payment, premium content or iOS a v1.0 requirement.
 - Required owner gates and dates are visible.
 
@@ -181,23 +182,23 @@ Only disjoint preparation may overlap. Upload, attachment, approval, seed, activ
 - One serial security/identity/data chain and at most two disjoint implementation lanes.
 - Status updates belong in functional PRs; routine post-merge documentation PRs are prohibited.
 - Target ≥85% functional PRs and ≤10% docs-only maintenance during the window.
-- Daily status contains only: completed evidence, current critical path, blocker, owner action and deadline effect.
-- After Oct 3, accept only security/legal blockers or severity-0/1 and release-blocking severity-2 fixes.
-- Never bypass content review, credential, provider, migration, production or release gates to preserve the date.
+- Daily status contains only: completed evidence, current critical path, blocker, owner action and readiness effect.
+- Accept only security/legal blockers or severity-0/1 and release-blocking severity-2 fixes into v1.0.
+- Never bypass content review, credential, provider, migration, production or release gates.
 
-## 5. Deadline assumptions and failure policy
+## 5. Readiness assumptions and failure policy
 
-The 2026-10-12 target assumes:
+v1.0 readiness assumes:
 
 - storage/cost decision completed Sep 12;
 - separate bounded upload authorization and exact-105 integrity-verified execution completed Sep 14; operational attachment remains a separate open gate (LB-DS-080 records the repository attachment state only);
 - batched 35/35 human review decision returned Sep 14 and recorded as repository evidence; the repository attachment record followed Sep 20; two distinct owner authorizations and execution paths remain for Sep 22 work: Admin-outcome persistence and operational private-media attachment;
 - seed/controlled activation approval by Sep 26;
-- owner pilot and invitations available Oct 4–8;
-- public-release approval by Oct 11;
+- owner pilot and invitations completed;
+- explicit owner public-release approval;
 - no critical redesign or new v1 feature.
 
-A missed owner/external gate moves the target one-for-one unless the owner explicitly cuts scope again. Engineering work is parallelized where safe, but external authorization latency is not hidden. The date is a controlled target, not permission to fabricate evidence or ship an unsafe release.
+A missed owner/external gate defers readiness until it is met; there is no calendar date to protect. Engineering work is parallelized where safe, but external authorization latency is not hidden. Readiness is never permission to fabricate evidence or ship an unsafe release, and the launch date remains an explicit owner decision taken separately.
 
 ## 6. Scope-change rule
 
