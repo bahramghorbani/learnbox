@@ -87,8 +87,15 @@ read-only views built on shared services. Every number traceable to a query.
 **Phase C — guarded mutations.** Only the mutations launch actually needs, each behind auth +
 CSRF + reauth recency + an `audit_logs` entry, each with a test.
 
-**Phase D — UI/UX redesign.** Real multi-route navigation replacing the `#review` placeholders,
-consistent RTL layout, loading/empty/error states.
+**Phase D — UI/UX implementation.** Real multi-route navigation replacing the `#review`
+placeholders, consistent RTL layout, loading/empty/error states.
+
+The visual direction for Phase D is **settled, not open**: `prototypes/admin-ui-v1` is APPROVED /
+DESIGN FROZEN ([`PDR-009`](../product-decisions/PDR-009-ADMIN-UI-DESIGN-FREEZE-AND-BOBO-VARIANTS.md)).
+Derive the implementation from that prototype — its tokens, surfaces, card/table structure,
+sidebar composition and state patterns — rather than redesigning. Deviate only for a real
+usability problem, an implementation constraint, or an explicit product-owner decision. The first
+sidebar item is «خانه / نمای کلی» and is not renamed.
 
 Phase ordering is deliberate: correctness of the data path first, presentation last.
 
@@ -99,6 +106,7 @@ Phase ordering is deliberate: correctness of the data path first, presentation l
 - Legacy routes stay fail-closed until rebuilt on shared services.
 - Production untouched this phase.
 - No duplicated business logic: Admin calls the same services the learner app uses.
+- No speculative Admin redesign: the frozen prototype is the reference.
 
 ## 5. Known debt carried, not activated
 

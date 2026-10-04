@@ -26,7 +26,17 @@ The canonical Bobo appearance was owner-approved as version `1.0.0`: a white, so
 
 Do not generate, substitute, or ship a rabbit-like variant: long separated ears, a visible neck, or a separate head/body silhouette are not Bobo.
 
-Changing Bobo's canonical appearance, core expressions, voice, or physical character cues requires explicit owner approval. This preserves a coherent public identity and prevents an AI-generated or temporary visual from silently becoming the product mascot.
+### What is invariant, and what may vary
+
+The invariant is Bobo's **character identity**, not one immutable asset file (owner decision, [`PDR-009`](../product-decisions/PDR-009-ADMIN-UI-DESIGN-FREEZE-AND-BOBO-VARIANTS.md)).
+
+Must stay constant: face, recognizable facial characteristics, core proportions and overall character identity. Bobo must not be redesigned into a different character.
+
+May vary when a product or design need calls for it: clothing (including seasonal and event-specific), poses, gestures, expressions and behavioural states, contextual scenes, activity states, motion and animation, and UI-specific mascot compositions. Representative contexts include Nowruz, Yalda, Christmas, autumn/winter/summer, learning, celebrating, waiting, success, empty state, error state, AI/content generation and Store/promotional surfaces.
+
+Reuse an existing canonical asset whenever it already satisfies the need; create a new variant only when none does. Any new Bobo asset intended to ship must preserve the identity invariant and be stored and versioned as an official LearnBox asset.
+
+Changing Bobo's face, core proportions, character identity, voice or physical character cues still requires explicit owner approval. This preserves a coherent public identity and prevents an AI-generated or temporary visual from silently becoming the product mascot.
 
 ## Vocabulary-image direction
 

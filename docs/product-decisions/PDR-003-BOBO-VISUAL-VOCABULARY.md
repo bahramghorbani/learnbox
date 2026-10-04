@@ -36,4 +36,7 @@ feedback. Do not infer a hard Bobo quota from analytics.
 ## Reversibility
 
 Prompt and art-direction rules are versioned per asset; canonical Bobo changes still require
-explicit owner approval.
+explicit owner approval. The scope of "canonical Bobo only" above is clarified by
+[`PDR-009`](./PDR-009-ADMIN-UI-DESIGN-FREEZE-AND-BOBO-VARIANTS.md): derived variants (clothing,
+pose, expression, scene, season) are permitted; Bobo's face, proportions and character identity
+are not.
