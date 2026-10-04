@@ -76,6 +76,8 @@ const READ_ONLY: Record<string, 'hard-disabled' | 'session-layer'> = {
   'app/api/auth/reauth/options/route.ts': 'session-layer',
   'app/api/auth/session/route.ts': 'session-layer',
   'app/api/content/review/route.ts': 'session-layer',
+  'app/api/content/packs/route.ts': 'session-layer',
+  'app/api/content/packs/[packId]/route.ts': 'session-layer',
   'app/api/splash/current/route.ts': 'session-layer',
   'app/api/splash/preview/route.ts': 'session-layer',
 };

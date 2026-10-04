@@ -5,7 +5,7 @@ type AdminIconName = 'review' | 'splash' | 'content' | 'reports' | 'settings' | 
 const navItems = [
   { label: 'صف بررسی', icon: 'review', href: '#review' },
   { label: 'اسپلش', icon: 'splash', href: '#splash-management' },
-  { label: 'محتوا', icon: 'content', href: '#review' },
+  { label: 'محتوا', icon: 'content', href: '#content' },
   { label: 'گزارش‌ها', icon: 'reports', href: '#review' },
   { label: 'تنظیمات', icon: 'settings', href: '#review' },
 ] as const satisfies readonly {
