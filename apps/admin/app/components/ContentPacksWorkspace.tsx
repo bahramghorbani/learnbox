@@ -14,13 +14,6 @@ import { AdminSidebar } from './AdminSidebar';
  * shows, the UI says so explicitly instead of inventing a value.
  */
 
-type PackMediaSummary = {
-  cardsWithImage: number;
-  cardsWithWordAudio: number;
-  cardsWithSentenceAudio: number;
-  mediaRecorded: boolean;
-};
-
 type ServerPack = {
   id: string;
   displayName: string;
