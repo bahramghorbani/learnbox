@@ -25,10 +25,14 @@ Two UI defects were found; **both are now closed**:
   value and its label are correct and adjacent, so there is nothing to repair. Accepted as
   minor UX debt, to revisit only on real learner evidence or the next Today-screen rework.
 
-**NOT DEPLOYED.** Production still serves the pre-fix service worker (`v9`), digest
-`sha256:cb3090da…`, `APP_SOURCE_SHA=d4ea6558…`, restarts 0, `LEARNBOX_SCHEDULER_V2` ABSENT,
-`LEARNBOX_BINARY_REVIEW=true`, health 200. The D-FV-1 fix reaches learners only via a
-separately authorized deploy.
+**DEPLOYED to Production** 2026-10-04. Production runs digest `sha256:953b7b62…`,
+`APP_SOURCE_SHA=6d6aa72489dd895299f8a1f4bedb2c205e32e31b`, healthy, restarts 0,
+`LEARNBOX_SCHEDULER_V2` ABSENT, `LEARNBOX_BINARY_REVIEW=true` unchanged, health 200.
+Production serves SW `v10` with `celebrate-v2.png` precached, so the D-FV-1 fix now reaches
+learners. Owner explicitly authorized CP15/CP16/CP17 server runtime to ship in this release
+(Production had been 12 commits behind). Rollback remains one line: digest `sha256:cb3090da…`
+is still on the host with `compose.yaml.pre-dfv1`. Evidence:
+`docs/evidence/functional-validation/D_FV_1_PRODUCTION_DEPLOYMENT_EVIDENCE.md`.
 
 **No product feature work is active** (LB-B35 CP0–CP5 merged and closed; CP6 decision merged; CP7 implementation merged and closed; CP8 staging-activation evidence PASS and CLOSED, web only, below). CP9 (server-side Production cutover) is **CLOSED** as of 2026-10-02; its deferred **D-3** gate has since **PASSED in CP14** (see the CP14 section below); CP10 (D16 native 422 handling) is **CLOSED**; CP11 (documentation/evidence continuity) is **CLOSED**; CP12 (Binary Review UI activation readiness) is **CLOSED** — implementation merged (`51c6b552`) and **now ACTIVE in Production** via CP14; CP13 (replacement artifact build + verification) is **CLOSED**; CP14 (controlled Production deployment + D-3 real-browser observation) is **CLOSED and PASSED** as of 2026-10-02. **The learner Binary Review UI is ACTIVE IN PRODUCTION.** v1.2.0 and the v1.2.1 security patch (`LB-B29`) are released and
 closed (below), and the Admin P0 credential cutover (`LB-B30`–`B33`) is complete (next section).

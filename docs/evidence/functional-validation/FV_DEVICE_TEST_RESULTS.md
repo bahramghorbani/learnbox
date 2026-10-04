@@ -158,11 +158,16 @@ would still have bumped it. Cross-user isolation holds under real learner traffi
 
 ### D-FV-1 — Completion mascot breaks when first reached offline (UI, non-blocking) — **CLOSED**
 
-**Status:** FIXED and merged to `main` as `88c36bd890e61990d3bf6729ccb6665ad8f78b9d`
+**Status:** **DEPLOYED to Production** 2026-10-04 — artifact `sha256:953b7b62…`,
+`APP_SOURCE_SHA=6d6aa72489dd895299f8a1f4bedb2c205e32e31b`. Production serves SW `v10` with
+`celebrate-v2.png` precached; offline path proven against the deployed digest with the origin
+killed (raw image `DECODED_1024x1536`, no broken icon). Evidence:
+`D_FV_1_PRODUCTION_DEPLOYMENT_EVIDENCE.md`.
+
+Fixed and merged to `main` as `88c36bd890e61990d3bf6729ccb6665ad8f78b9d`
 (PR #358, reviewed head `b780bd38eea3e015729df16b183815f6a360e394`, required CI 4/4 green on
 both the PR head and `main`; merged tree byte-identical to the reviewed head).
-Fix evidence: `D_FV_1_OFFLINE_COMPLETION_IMAGE.md`. **Not deployed** — Production still serves
-the pre-fix worker (`v9`), so the defect remains live until a separately authorized deploy.
+Fix evidence: `D_FV_1_OFFLINE_COMPLETION_IMAGE.md`.
 
 **Symptom:** the celebration illustration on the session-complete screen rendered as a broken
 image icon after the offline card was answered.
