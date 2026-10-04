@@ -40,10 +40,31 @@ describe('admin auth server', () => {
       webauthn: {
         generateAuthenticationOptions: async () => ({ challenge: 'challenge' }),
         verifyAuthenticationResponse: async () => ({ verified: false }),
+        generateRegistrationOptions: async () => ({ challenge: 'challenge' }),
+        verifyRegistrationResponse: async () => ({ verified: false }),
       },
     });
 
     expect(runtime.enabled).toBe(true);
     expect(connectionString).toContain('sslmode=verify-full');
+  });
+
+  // Regression: the server previously wired only the two authentication helpers, so passkey
+  // ENROLMENT (bootstrap) threw at runtime and /api/auth/bootstrap/options answered 503 — no owner
+  // could ever be created. Enabled passkeys must require the registration helpers too.
+  it('refuses to build when the registration helpers are missing', () => {
+    expect(() =>
+      createAdminAuthServer({
+        environment,
+        createPool: () => ({
+          connect: async () => ({ query: async () => ({ rows: [] }), release: () => undefined }),
+          query: async () => ({ rows: [] }),
+        }),
+        webauthn: {
+          generateAuthenticationOptions: async () => ({ challenge: 'challenge' }),
+          verifyAuthenticationResponse: async () => ({ verified: false }),
+        },
+      }),
+    ).toThrow(/SimpleWebAuthn/);
   });
 });
