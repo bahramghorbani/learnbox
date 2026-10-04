@@ -4,6 +4,16 @@
 
 ## Active work
 
+**Functional Validation — COMPLETE AND RELEASED (closed 2026-10-04).** The final post-FV gate
+passed: Bahram's control account is **byte-identical** to the pinned pre-FV baseline on all 10
+fingerprints including all three `xmin` digests (58 events / 16 schedules / 1 cursor, combined
+`f6f477b2f42a957a15092871655eb277`), proving no row was ever rewritten. Mona sits at her expected
+final state (3 events / 3 schedules / 1 plan / 0 rejections), totals reconcile exactly to the two
+known accounts (58+3=61, 16+3=19) with zero foreign rows, and the learner fingerprint is identical
+before and after the Production deployment. Schema head unchanged at `0023_learning_persistence`
+(23 migrations). Closure evidence: `docs/evidence/functional-validation/FV_FINAL_CLOSURE.md`.
+Verification was read-only (`BEGIN TRANSACTION READ ONLY … ROLLBACK`); no Production data modified.
+
 **Functional Validation — COMPLETE and PASSED (2026-10-03/04).** The Mona-only learner-state
 reset was owner-approved and executed as `neondb_owner` in a single fail-closed transaction
 (56 rows, Mona only), then the full real-device journey was validated against Production on
