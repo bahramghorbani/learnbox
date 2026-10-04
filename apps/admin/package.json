@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "build": "pnpm --filter @learnbox/content-models build && next build",
+    "dev": "next dev --port 3310",
     "test": "vitest run",
     "typecheck": "pnpm --filter @learnbox/content-models build && tsc --noEmit"
   },

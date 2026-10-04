@@ -45,17 +45,17 @@ export async function GET(request: Request, { params }: { params: Promise<{ user
       SELECT
         (SELECT count(*) FROM card_schedules WHERE user_id = $1) as cards_started,
         (SELECT count(*) FROM review_events WHERE user_id = $1) as total_reviews,
-        (SELECT max(created_at) FROM review_events WHERE user_id = $1) as last_review_at
+        (SELECT max(occurred_at) FROM review_events WHERE user_id = $1) as last_review_at
     `,
       [userId],
     );
 
     const recentReviews = await pool.query(
       `
-      SELECT card_id, rating, created_at
+      SELECT card_id, grade, occurred_at
       FROM review_events
       WHERE user_id = $1
-      ORDER BY created_at DESC
+      ORDER BY occurred_at DESC
       LIMIT 20
     `,
       [userId],
