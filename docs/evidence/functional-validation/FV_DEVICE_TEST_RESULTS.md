@@ -241,3 +241,10 @@ branches), persistence, offline queueing, reconnect flush, exactly-once semantic
 restart/re-login durability and the relearning loop all behave correctly against real
 Production with a real device. Cross-user isolation is proven by unchanged control
 fingerprints. Two UI defects are recorded; neither affects data integrity.
+
+## 9. Final closure
+
+Functional Validation was closed as **COMPLETE AND RELEASED** on 2026-10-04 after the final
+post-FV gate: Bahram byte-identical on all 10 pinned fingerprints (xmin included), Mona at her
+expected final state, no learner-data mutation from the Production deployment, and the D-FV-1 fix
+live in Production. See `FV_FINAL_CLOSURE.md`.
