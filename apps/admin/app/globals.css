@@ -167,6 +167,11 @@ button {
   background: #f4f0ff;
   font-weight: 700;
 }
+/* Frozen-design nav entries whose destination is not implemented yet: present, clearly inert. */
+.admin-nav-item.is-pending {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
 .collapse-control {
   margin-top: auto;
   border: 0;

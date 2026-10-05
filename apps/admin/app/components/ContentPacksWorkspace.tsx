@@ -202,7 +202,7 @@ export function ContentPacksWorkspace() {
 
   return (
     <main className="admin-shell cp-workspace" id="content">
-      <AdminSidebar />
+      <AdminSidebar current="content" />
       <section className="admin-workspace">
         <div className="page-head">
           <div>

@@ -591,8 +591,8 @@ export function ContentReviewWorkspace() {
   const serverAuthenticated = access === 'server-authenticated';
 
   return (
-    <main className="admin-shell" id="review">
-      <AdminSidebar />
+    <main className="admin-shell" id="home">
+      <AdminSidebar current="home" />
       <section className="admin-workspace">
         <header className="admin-topbar">
           <h1>بازبینی محتوا</h1>
