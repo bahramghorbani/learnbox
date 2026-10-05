@@ -8,6 +8,11 @@ type ListDependencies = {
   sessionStore?: Parameters<typeof loadAdminSession>[2];
   store?: Pick<PostgresContentPacksStore, 'listPacks'>;
   now?: () => Date;
+  /**
+   * Whether Pack/Card management writes are live (Phase 1 / M1.2). Reported to the client so the
+   * workspace can keep create/edit controls hidden when they would have no real behaviour.
+   */
+  manageEnabled?: boolean;
 };
 
 type CardsDependencies = {
@@ -65,7 +70,7 @@ export function createContentPacksListRoute(dependencies: ListDependencies) {
     try {
       const result = await dependencies.store.listPacks(session.userId);
       if (result.status === 'forbidden') return notFound();
-      return json({ packs: result.packs });
+      return json({ packs: result.packs, manageEnabled: dependencies.manageEnabled === true });
     } catch {
       return unavailable();
     }

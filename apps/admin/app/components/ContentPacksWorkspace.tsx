@@ -2,6 +2,17 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
+import {
+  CardFormModal,
+  PackFormModal,
+  emptyCardForm,
+  emptyPackForm,
+  type CardFormValues,
+  type FieldIssue,
+  type PackFormValues,
+  type SubmitOutcome,
+} from './ContentPackForms';
+
 import { AdminSidebar } from './AdminSidebar';
 
 /**
@@ -50,6 +61,14 @@ type ServerCard = {
   essentialInflection: string | null;
   pronunciationIpa: string | null;
   examples: Array<{ german: string; persian: string }>;
+  simpleGermanDefinition: string;
+  grammarNote: string;
+  topicTags: string[];
+  difficulty: number;
+  cefr: string;
+  visualConcept: string;
+  imagePrompt: string;
+  sourceReference: string;
   versionStatus: string;
   sortOrder: number;
   media: ServerCardMedia;
@@ -125,6 +144,149 @@ const STATE_TABS = [
   { key: 'draft', label: 'پیش‌نویس' },
 ] as const;
 
+function readBrowserCookie(name: string): string | undefined {
+  return document.cookie
+    ?.split(';')
+    .map((item) => item.trim())
+    .find((item) => item.startsWith(`${name}=`))
+    ?.slice(name.length + 1);
+}
+
+function createClientKey(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (part) => {
+    const random = Math.floor(Math.random() * 16);
+    const value = part === 'x' ? random : (random & 0x3) | 0x8;
+    return value.toString(16);
+  });
+}
+
+function splitList(value: string): string[] {
+  return value
+    .split(/[،,]/)
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0);
+}
+
+/**
+ * Single mutation path for all four writes: session cookie + CSRF header + per-attempt
+ * idempotency key, exactly like the content-review workspace. Server status codes map to the
+ * outcomes the forms render, so no mutation can report success it did not get.
+ */
+async function sendMutation(
+  path: string,
+  method: 'POST' | 'PATCH',
+  body: unknown,
+): Promise<SubmitOutcome> {
+  const csrfToken = readBrowserCookie('__Host-learnbox_admin_csrf');
+  if (!csrfToken) {
+    return { ok: false, message: 'نشان امنیتی CSRF در دسترس نیست؛ صفحه را تازه کنید.' };
+  }
+  try {
+    const response = await fetch(path, {
+      method,
+      credentials: 'same-origin',
+      headers: {
+        'content-type': 'application/json',
+        'x-learnbox-csrf-token': csrfToken,
+        'idempotency-key': createClientKey(),
+      },
+      body: JSON.stringify(body),
+    });
+    if (response.ok) return { ok: true };
+    if (response.status === 401) {
+      return { ok: false, message: 'نشست معتبر نیست؛ دوباره وارد شوید.' };
+    }
+    if (response.status === 403) {
+      return { ok: false, message: 'نقش شما اجازهٔ ویرایش محتوا را ندارد.' };
+    }
+    if (response.status === 428) {
+      return { ok: false, message: 'احراز هویت مجدد لازم است؛ دوباره وارد شوید.' };
+    }
+    if (response.status === 422) {
+      const payload = (await response.json().catch(() => undefined)) as
+        { issues?: FieldIssue[] } | undefined;
+      return {
+        ok: false,
+        issues: payload?.issues ?? [],
+        message: 'محتوا با قواعد کانونی سازگار نیست؛ موارد مشخص‌شده را اصلاح کنید.',
+      };
+    }
+    if (response.status === 409) {
+      const payload = (await response.json().catch(() => undefined)) as
+        { reason?: string } | undefined;
+      return {
+        ok: false,
+        message:
+          payload?.reason === 'content_id_exists'
+            ? 'کارتی با همین شناسهٔ کانونی از قبل وجود دارد.'
+            : payload?.reason === 'pack_exists'
+              ? 'بسته‌ای با همین شناسه از قبل وجود دارد.'
+              : 'این تغییر با وضعیت فعلی دادهٔ کانونی سازگار نیست.',
+      };
+    }
+    return { ok: false, message: 'ذخیرهٔ تغییرات ناموفق بود.' };
+  } catch {
+    return { ok: false, message: 'ارتباط با سرور برقرار نشد؛ تغییری ذخیره نشد.' };
+  }
+}
+
+function packFormFrom(pack: ServerPack): PackFormValues {
+  return {
+    packId: pack.id,
+    displayName: pack.displayName,
+    description: pack.description ?? '',
+    targetCefr: pack.targetCefr || 'A1',
+    category: pack.category ?? '',
+    targetItemCount: pack.targetItemCount ? String(pack.targetItemCount) : '',
+    isFree: pack.isFree,
+  };
+}
+
+function cardFormFrom(card: ServerCard): CardFormValues {
+  return {
+    lemma: card.lemma,
+    article: card.article ?? '',
+    partOfSpeech: card.partOfSpeech,
+    essentialInflection: card.essentialInflection ?? '',
+    pronunciationIpa: card.pronunciationIpa ?? '',
+    persianMeanings: card.persianMeanings.join('، '),
+    exampleGerman: card.examples[0]?.german ?? '',
+    examplePersian: card.examples[0]?.persian ?? '',
+    simpleGermanDefinition: card.simpleGermanDefinition,
+    grammarNote: card.grammarNote,
+    topicTags: card.topicTags.join('، '),
+    difficulty: String(card.difficulty || 1),
+    cefr: card.cefr || 'A1',
+    visualConcept: card.visualConcept,
+    imagePrompt: card.imagePrompt,
+    sourceReference: card.sourceReference,
+  };
+}
+
+/** Form values → the canonical request body the write routes expect. */
+function cardRequestBody(values: CardFormValues) {
+  return {
+    lemma: values.lemma.trim(),
+    article: values.article || undefined,
+    partOfSpeech: values.partOfSpeech,
+    essentialInflection: values.essentialInflection.trim() || undefined,
+    pronunciationIpa: values.pronunciationIpa.trim() || undefined,
+    persianMeanings: splitList(values.persianMeanings),
+    examples: [{ german: values.exampleGerman.trim(), persian: values.examplePersian.trim() }],
+    simpleGermanDefinition: values.simpleGermanDefinition.trim(),
+    grammarNote: values.grammarNote.trim(),
+    topicTags: splitList(values.topicTags),
+    difficulty: Number(values.difficulty),
+    cefr: values.cefr,
+    visualConcept: values.visualConcept.trim(),
+    imagePrompt: values.imagePrompt.trim(),
+    sourceReference: values.sourceReference.trim(),
+  };
+}
+
 export function ContentPacksWorkspace() {
   const [phase, setPhase] = useState<Phase>('loading');
   const [packs, setPacks] = useState<ServerPack[]>([]);
@@ -133,6 +295,16 @@ export function ContentPacksWorkspace() {
   const [openPackId, setOpenPackId] = useState<string>();
   const [cards, setCards] = useState<ServerCard[]>([]);
   const [cardsPhase, setCardsPhase] = useState<'idle' | 'loading' | 'error' | 'ready'>('idle');
+  // Management surface (Phase 1 / M1.2). `manageEnabled` comes from the server, so create/edit
+  // controls never render when the write routes would 404.
+  const [manageEnabled, setManageEnabled] = useState(false);
+  const [packForm, setPackForm] = useState<{ mode: 'create' | 'edit'; values: PackFormValues }>();
+  const [cardForm, setCardForm] = useState<{
+    mode: 'create' | 'edit';
+    cardId?: string;
+    values: CardFormValues;
+  }>();
+  const [savedNotice, setSavedNotice] = useState<string>();
 
   const loadPacks = useCallback(async () => {
     setPhase('loading');
@@ -150,9 +322,13 @@ export function ContentPacksWorkspace() {
         return;
       }
       if (!response.ok) throw new Error('packs unavailable');
-      const payload = (await response.json()) as { packs?: ServerPack[] };
+      const payload = (await response.json()) as {
+        packs?: ServerPack[];
+        manageEnabled?: boolean;
+      };
       const list = Array.isArray(payload.packs) ? payload.packs : [];
       setPacks(list);
+      setManageEnabled(payload.manageEnabled === true);
       setPhase(list.length === 0 ? 'empty' : 'ready');
     } catch {
       setPhase('error');
@@ -185,6 +361,64 @@ export function ContentPacksWorkspace() {
     void loadCards(packId);
   }
 
+  /** After any successful write, re-read from the server — the list must reflect persisted rows,
+   *  never optimistic local state. */
+  async function refreshAfterWrite(notice: string, packId?: string) {
+    setSavedNotice(notice);
+    await loadPacks();
+    const target = packId ?? openPackId;
+    if (target) await loadCards(target);
+  }
+
+  async function submitPackForm(values: PackFormValues): Promise<SubmitOutcome> {
+    const creating = packForm?.mode === 'create';
+    const body = {
+      displayName: values.displayName.trim(),
+      description: values.description.trim() || undefined,
+      targetCefr: values.targetCefr,
+      category: values.category.trim() || undefined,
+      targetItemCount: values.targetItemCount ? Number(values.targetItemCount) : undefined,
+      isFree: values.isFree,
+    };
+    const outcome = creating
+      ? await sendMutation('/api/content/packs', 'POST', {
+          ...body,
+          packId: values.packId.trim(),
+        })
+      : await sendMutation(
+          `/api/content/packs/${encodeURIComponent(values.packId)}`,
+          'PATCH',
+          body,
+        );
+    if (outcome.ok) {
+      await refreshAfterWrite(creating ? 'بستهٔ تازه ساخته شد.' : 'بسته به‌روزرسانی شد.');
+    }
+    return outcome;
+  }
+
+  async function submitCardForm(values: CardFormValues): Promise<SubmitOutcome> {
+    if (!cardForm) return { ok: false, message: 'فرمی باز نیست.' };
+    const body = cardRequestBody(values);
+    const outcome =
+      cardForm.mode === 'create'
+        ? await sendMutation(
+            `/api/content/packs/${encodeURIComponent(openPackId ?? '')}/cards`,
+            'POST',
+            body,
+          )
+        : await sendMutation(
+            `/api/content/cards/${encodeURIComponent(cardForm.cardId ?? '')}`,
+            'PATCH',
+            body,
+          );
+    if (outcome.ok) {
+      await refreshAfterWrite(
+        cardForm.mode === 'create' ? 'کارت تازه ساخته شد.' : 'کارت به‌روزرسانی شد.',
+      );
+    }
+    return outcome;
+  }
+
   const visible = packs.filter((pack) => (filter === 'all' ? true : pack.status === filter));
   const tabCount = (key: string) =>
     key === 'all' ? packs.length : packs.filter((pack) => pack.status === key).length;
@@ -211,7 +445,25 @@ export function ContentPacksWorkspace() {
               بسته‌ها و کارت‌های واقعی LearnBox، خوانده‌شده از پایگاه دادهٔ کانونی.
             </p>
           </div>
+          {manageEnabled && phase !== 'disabled' && phase !== 'unauthorized' ? (
+            <button
+              className="btn primary"
+              type="button"
+              onClick={() => setPackForm({ mode: 'create', values: emptyPackForm })}
+            >
+              افزودن بستهٔ جدید
+            </button>
+          ) : null}
         </div>
+
+        {savedNotice ? (
+          <div className="notice" role="status" aria-live="polite" data-cp-state="saved">
+            <span>{savedNotice}</span>
+            <button className="btn" type="button" onClick={() => setSavedNotice(undefined)}>
+              بستن
+            </button>
+          </div>
+        ) : null}
 
         {phase === 'disabled' ? (
           <div className="notice" role="status" data-cp-state="disabled">
@@ -352,6 +604,17 @@ export function ContentPacksWorkspace() {
                         <button className="btn" onClick={() => openPack(pack.id)} type="button">
                           مشاهدهٔ کارت‌ها
                         </button>
+                        {manageEnabled ? (
+                          <button
+                            className="btn"
+                            type="button"
+                            onClick={() =>
+                              setPackForm({ mode: 'edit', values: packFormFrom(pack) })
+                            }
+                          >
+                            ویرایش
+                          </button>
+                        ) : null}
                       </div>
                     </div>
                   </article>
@@ -384,6 +647,17 @@ export function ContentPacksWorkspace() {
                           <button className="btn" onClick={() => openPack(pack.id)} type="button">
                             کارت‌ها
                           </button>
+                          {manageEnabled ? (
+                            <button
+                              className="btn"
+                              type="button"
+                              onClick={() =>
+                                setPackForm({ mode: 'edit', values: packFormFrom(pack) })
+                              }
+                            >
+                              ویرایش
+                            </button>
+                          ) : null}
                         </td>
                       </tr>
                     ))}
@@ -404,6 +678,15 @@ export function ContentPacksWorkspace() {
                   <button className="btn" onClick={() => setOpenPackId(undefined)} type="button">
                     بستن
                   </button>
+                  {manageEnabled ? (
+                    <button
+                      className="btn primary"
+                      type="button"
+                      onClick={() => setCardForm({ mode: 'create', values: emptyCardForm })}
+                    >
+                      افزودن کارت
+                    </button>
+                  ) : null}
                 </div>
                 <div className="card-body">
                   {cardsPhase === 'loading' ? (
@@ -449,6 +732,7 @@ export function ContentPacksWorkspace() {
                             <th>صدای واژه</th>
                             <th>صدای جمله</th>
                             <th>وضعیت</th>
+                            {manageEnabled ? <th /> : null}
                           </tr>
                         </thead>
                         <tbody>
@@ -482,6 +766,23 @@ export function ContentPacksWorkspace() {
                               <td>
                                 <CardBadge status={card.versionStatus} />
                               </td>
+                              {manageEnabled ? (
+                                <td>
+                                  <button
+                                    className="btn"
+                                    type="button"
+                                    onClick={() =>
+                                      setCardForm({
+                                        mode: 'edit',
+                                        cardId: card.cardId,
+                                        values: cardFormFrom(card),
+                                      })
+                                    }
+                                  >
+                                    ویرایش
+                                  </button>
+                                </td>
+                              ) : null}
                             </tr>
                           ))}
                         </tbody>
@@ -494,6 +795,25 @@ export function ContentPacksWorkspace() {
           </>
         ) : null}
       </section>
+
+      {packForm ? (
+        <PackFormModal
+          mode={packForm.mode}
+          initial={packForm.values}
+          onClose={() => setPackForm(undefined)}
+          onSubmit={submitPackForm}
+        />
+      ) : null}
+
+      {cardForm ? (
+        <CardFormModal
+          mode={cardForm.mode}
+          initial={cardForm.values}
+          packLabel={openPackRecord?.displayName ?? openPackId ?? ''}
+          onClose={() => setCardForm(undefined)}
+          onSubmit={submitCardForm}
+        />
+      ) : null}
     </main>
   );
 }

@@ -42,6 +42,22 @@ const INVENTORY: Record<string, Entry> = {
     category: 'delegated',
     guardIn: 'lib/server/admin-auth-routes.ts',
   },
+  'app/api/content/packs/route.ts': {
+    category: 'delegated',
+    guardIn: 'lib/server/admin-content-packs-write-routes.ts',
+  },
+  'app/api/content/packs/[packId]/route.ts': {
+    category: 'delegated',
+    guardIn: 'lib/server/admin-content-packs-write-routes.ts',
+  },
+  'app/api/content/packs/[packId]/cards/route.ts': {
+    category: 'delegated',
+    guardIn: 'lib/server/admin-content-packs-write-routes.ts',
+  },
+  'app/api/content/cards/[cardId]/route.ts': {
+    category: 'delegated',
+    guardIn: 'lib/server/admin-content-packs-write-routes.ts',
+  },
   'app/api/content/review/check/route.ts': {
     category: 'delegated',
     guardIn: 'lib/server/admin-content-review-routes.ts',
@@ -76,8 +92,6 @@ const READ_ONLY: Record<string, 'hard-disabled' | 'session-layer'> = {
   'app/api/auth/reauth/options/route.ts': 'session-layer',
   'app/api/auth/session/route.ts': 'session-layer',
   'app/api/content/review/route.ts': 'session-layer',
-  'app/api/content/packs/route.ts': 'session-layer',
-  'app/api/content/packs/[packId]/route.ts': 'session-layer',
   'app/api/splash/current/route.ts': 'session-layer',
   'app/api/splash/preview/route.ts': 'session-layer',
 };
