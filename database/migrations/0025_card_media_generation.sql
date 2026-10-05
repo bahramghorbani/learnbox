@@ -13,9 +13,12 @@
 --                             idempotency anchor: accepting the same candidate twice updates one
 --                             row to the same value and can never create a second association.
 --
--- Bytes never enter PostgreSQL. As with the owner-splash media, `object_key` is an opaque private
--- object-storage path and this table holds only integrity and attribution data. A credential is
--- never stored in either table.
+-- Bytes live in `card_media_objects`, keyed by an opaque `object_key`. Database-backed storage
+-- follows the same approach the owner-splash media uses where no blob token exists: it needs no
+-- additional credential and works on the Production VPS as well as on staging, so M1.5 requires no
+-- new durable-storage decision. The key stays opaque so bytes can move to private object storage
+-- later without touching the candidate schema. A credential is never stored in any of these
+-- tables.
 --
 -- Attribution is enforced by CHECK rather than left to application convention:
 --   * an audio candidate must record the exact spoken target, the voice, and the resolved voice
@@ -27,6 +30,17 @@
 --
 -- Forward-only and additive: two new tables plus indexes, no existing table altered. Idempotent,
 -- so a second application is a no-op and every pre-1.5 code path runs unchanged on this schema.
+
+-- Stored bytes for protected card media. Read only through an authenticated Admin route; there is
+-- no public path to this table's contents.
+CREATE TABLE IF NOT EXISTS card_media_objects (
+  object_key TEXT PRIMARY KEY,
+  media_type TEXT NOT NULL CHECK (media_type IN ('image/png', 'image/jpeg', 'audio/mpeg')),
+  byte_size INTEGER NOT NULL CHECK (byte_size > 0 AND byte_size <= 8388608),
+  checksum TEXT NOT NULL CHECK (checksum ~ '^[a-f0-9]{64}$'),
+  bytes BYTEA NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
 
 CREATE TABLE IF NOT EXISTS card_media_candidates (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

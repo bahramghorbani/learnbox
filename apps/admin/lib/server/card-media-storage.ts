@@ -1,45 +1,45 @@
 /**
  * Phase 1 / Milestone 1.5 — private storage for generated card media.
  *
- * Generated card images and audio are PROTECTED LEARNING CONTENT. They are written to the same
- * private object store the owner-splash media already uses — `access: 'private'`, never a public
- * static path — and are only ever read back through an authenticated Admin route. Bytes never enter
- * PostgreSQL; the database holds the opaque object key, the checksum and the attribution.
+ * Generated card images and audio are PROTECTED LEARNING CONTENT. They are never written to a
+ * public static path and are only ever read back through an authenticated Admin route.
  *
- * Every dependency is injected, exactly as `private-splash-storage` does, so tests exercise the
- * real code path against an in-memory store and a future non-Vercel delivery adapter is a
- * substitution rather than a rewrite.
+ * Bytes are stored in the database, following the same approach the owner-splash media already
+ * uses for environments without a blob token (`database-splash-storage`). That choice is deliberate
+ * and avoids a new durable-storage decision: it needs no additional credential and works on the
+ * Production VPS as well as on staging. Card media is small — a 1024x1024 image and a few seconds
+ * of mp3 — so this is not the large-object case object storage exists for.
+ *
+ * `object_key` is kept as the opaque identity for an asset, and every access goes through the
+ * `CardMediaStorage` interface, so moving bytes to private object storage later is a substitution
+ * of this one module rather than a schema or call-site change.
  */
 
-import { del as vercelDel, get as vercelGet, put as vercelPut } from '@vercel/blob';
 import { createHash, randomUUID } from 'node:crypto';
 
 export type CardMediaKind = 'image' | 'word_audio' | 'sentence_audio';
 
-type PutOptions = {
-  access: 'private';
-  addRandomSuffix: false;
-  contentType: string;
-  token: string;
+type QueryResult = { rows: Record<string, unknown>[] };
+type DatabasePool = {
+  query(sql: string, parameters?: readonly unknown[]): Promise<QueryResult>;
 };
-type DeleteOptions = { token: string };
-type GetOptions = { access: 'private'; token: string };
-
-export interface CardMediaBlobDependencies {
-  token: string;
-  put?: (
-    key: string,
-    bytes: Buffer,
-    options: PutOptions,
-  ) => Promise<{ pathname?: string } | unknown>;
-  get?: (key: string, options: GetOptions) => Promise<{ body?: unknown } | unknown>;
-  del?: (key: string, options: DeleteOptions) => Promise<unknown>;
-}
 
 export interface StoredCardMedia {
   objectKey: string;
   checksum: string;
   byteSize: number;
+}
+
+/** The storage contract the generation service depends on. */
+export interface CardMediaStorage {
+  store(
+    contentId: string,
+    kind: CardMediaKind,
+    mediaType: string,
+    bytes: Buffer,
+  ): Promise<StoredCardMedia>;
+  read(objectKey: string): Promise<Buffer>;
+  remove(objectKey: string): Promise<void>;
 }
 
 const EXTENSION_BY_MEDIA_TYPE: Record<string, string> = {
@@ -68,60 +68,37 @@ export function buildCardMediaObjectKey(
   return `admin/card-media/${safeContentId}/${kind}/${randomUUID()}.${extension}`;
 }
 
-export function createCardMediaStorage(dependencies: CardMediaBlobDependencies) {
-  const put =
-    dependencies.put ?? (vercelPut as unknown as NonNullable<CardMediaBlobDependencies['put']>);
-  const get =
-    dependencies.get ?? (vercelGet as unknown as NonNullable<CardMediaBlobDependencies['get']>);
-  const del =
-    dependencies.del ?? (vercelDel as unknown as NonNullable<CardMediaBlobDependencies['del']>);
-
+/** Database-backed card media storage. */
+export function createDatabaseCardMediaStorage(pool: DatabasePool): CardMediaStorage {
   return {
-    /** Writes candidate bytes and returns the integrity data persisted alongside the row. */
-    async store(
-      contentId: string,
-      kind: CardMediaKind,
-      mediaType: string,
-      bytes: Buffer,
-    ): Promise<StoredCardMedia> {
+    async store(contentId, kind, mediaType, bytes) {
       if (!bytes.length) throw new Error('رسانهٔ خالی ذخیره نمی‌شود.');
       const objectKey = buildCardMediaObjectKey(contentId, kind, mediaType);
-      await put(objectKey, bytes, {
-        access: 'private',
-        addRandomSuffix: false,
-        contentType: mediaType,
-        token: dependencies.token,
-      });
-      return {
-        objectKey,
-        checksum: createHash('sha256').update(bytes).digest('hex'),
-        byteSize: bytes.length,
-      };
+      const checksum = createHash('sha256').update(bytes).digest('hex');
+      await pool.query(
+        `INSERT INTO card_media_objects (object_key, media_type, byte_size, checksum, bytes)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [objectKey, mediaType, bytes.length, checksum, bytes],
+      );
+      return { objectKey, checksum, byteSize: bytes.length };
     },
 
-    /** Reads bytes back for authenticated Admin preview/playback only. */
-    async read(objectKey: string): Promise<Buffer> {
-      const result = (await get(objectKey, {
-        access: 'private',
-        token: dependencies.token,
-      })) as { body?: unknown; arrayBuffer?: () => Promise<ArrayBuffer> };
-
-      if (typeof result?.arrayBuffer === 'function') {
-        return Buffer.from(await result.arrayBuffer());
-      }
-      if (result?.body instanceof Uint8Array) return Buffer.from(result.body);
-      if (Buffer.isBuffer(result)) return result;
-      throw new Error('خواندن رسانهٔ ذخیره‌شده ناموفق بود.');
+    async read(objectKey) {
+      const result = await pool.query(
+        'SELECT bytes FROM card_media_objects WHERE object_key = $1',
+        [objectKey],
+      );
+      const row = result.rows[0];
+      if (!row) throw new Error('رسانهٔ ذخیره‌شده یافت نشد.');
+      return Buffer.from(row.bytes as Buffer);
     },
 
     /**
-     * Deletes an object. Used only for a candidate whose row could not be written — never for media
-     * that is accepted or superseded, so acceptance history stays auditable.
+     * Deletes stored bytes. Used only for a candidate whose row could not be written — never for
+     * media that is accepted or superseded, so acceptance history stays auditable.
      */
-    async remove(objectKey: string): Promise<void> {
-      await del(objectKey, { token: dependencies.token });
+    async remove(objectKey) {
+      await pool.query('DELETE FROM card_media_objects WHERE object_key = $1', [objectKey]);
     },
   };
 }
-
-export type CardMediaStorage = ReturnType<typeof createCardMediaStorage>;

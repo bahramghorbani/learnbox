@@ -28,7 +28,19 @@ import {
   createAiPlanRoute,
   createAiRunBatchRoute,
 } from './admin-ai-generation-routes';
+import {
+  createMediaAcceptRoute,
+  createMediaAssetRoute,
+  createMediaGenerateRoute,
+  createMediaModelsRoute,
+  createMediaStateRoute,
+  createVoicePreviewRoute,
+} from './admin-card-media-routes';
 import { readAiGenerationConfig } from './ai-generation-provider';
+import { readAiMediaConfig } from './ai-media-config';
+import { CardMediaGenerationService } from './card-media-generation-service';
+import { createDatabaseCardMediaStorage } from './card-media-storage';
+import { readCanonicalImageStandard } from './canonical-image-standard';
 import { AiPackGenerationService } from './ai-pack-generation-service';
 import { ContentImportService } from './content-import-service';
 import { readAdminDatabaseConfig, type AdminDatabaseConfig } from './admin-database';
@@ -109,6 +121,31 @@ export function createAdminContentPacksServer(dependencies: {
       provider: aiConfig.enabled ? aiConfig.provider : undefined,
       now: dependencies.now,
     };
+    // AI media generation (M1.5) rides the same manage gate AND its own default-off flag. The
+    // canonical image standard and the canonical article/voice rules are loaded here once, so every
+    // route shares exactly one definition of each.
+    const mediaConfig = readAiMediaConfig(dependencies.environment);
+    const mediaProvider = 'provider' in mediaConfig ? mediaConfig.provider : undefined;
+    const mediaShared = {
+      enabled: manageConfig.enabled && mediaConfig.enabled,
+      config: manageConfig,
+      sessionStore,
+      service:
+        mediaProvider && 'voices' in mediaConfig
+          ? new CardMediaGenerationService(
+              pool,
+              mediaProvider,
+              createDatabaseCardMediaStorage(pool),
+              mediaConfig.voices,
+              mediaConfig.limits,
+              readCanonicalImageStandard(),
+            )
+          : undefined,
+      provider: mediaProvider,
+      voices: 'voices' in mediaConfig ? mediaConfig.voices : undefined,
+      audioTimeoutMs: 'limits' in mediaConfig ? mediaConfig.limits.audioTimeoutMs : undefined,
+      now: dependencies.now,
+    };
     return {
       enabled: true as const,
       manageEnabled: manageConfig.enabled,
@@ -135,6 +172,13 @@ export function createAdminContentPacksServer(dependencies: {
       aiRunBatch: createAiRunBatchRoute(aiShared),
       aiJobStatus: createAiJobStatusRoute(aiShared),
       aiAccept: createAiAcceptRoute(aiShared),
+      mediaEnabled: mediaShared.enabled && mediaProvider !== undefined,
+      mediaModels: createMediaModelsRoute(mediaShared),
+      mediaState: createMediaStateRoute(mediaShared),
+      mediaGenerate: createMediaGenerateRoute(mediaShared),
+      mediaAccept: createMediaAcceptRoute(mediaShared),
+      mediaAsset: createMediaAssetRoute(mediaShared),
+      mediaVoicePreview: createVoicePreviewRoute(mediaShared),
     };
   } catch {
     return { enabled: false as const };
