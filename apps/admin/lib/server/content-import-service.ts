@@ -6,7 +6,7 @@ import {
   type CardContentInput,
   type PostgresContentPacksWriteStore,
 } from './postgres-content-packs-write-store';
-import { mapRow, type RowIssue } from './content-import-contract';
+import { mapRow, type ImportColumnKey, type RowIssue } from './content-import-contract';
 import { parseImportFile, ImportParseError, type ParsedSheet } from './content-import-parse';
 import { validateLearningVocabularyItem } from '@learnbox/content-models';
 
@@ -25,6 +25,7 @@ import { validateLearningVocabularyItem } from '@learnbox/content-models';
  */
 
 export type RowClassification = 'new' | 'duplicate_in_file' | 'existing' | 'invalid';
+export type ImportFileKind = 'csv' | 'xlsx';
 
 export interface AnalyzedRow {
   rowNumber: number;
@@ -46,7 +47,7 @@ export interface AnalyzedRow {
 export interface ImportAnalysis {
   packId: string;
   filename: string;
-  fileKind: 'csv' | 'xlsx';
+  fileKind: ImportFileKind;
   totalRows: number;
   counts: Record<RowClassification, number>;
   rows: AnalyzedRow[];
@@ -94,7 +95,7 @@ type QueryResult = { rows: Record<string, unknown>[] };
 type Queryable = { query(sql: string, parameters?: readonly unknown[]): Promise<QueryResult> };
 type DatabasePool = Queryable;
 
-function fileKindOf(filename: string, bytes: Buffer): 'csv' | 'xlsx' {
+function fileKindOf(filename: string, bytes: Buffer): ImportFileKind {
   return bytes.length > 4 && bytes.readUInt32LE(0) === 0x04034b50 ? 'xlsx' : 'csv';
 }
 
@@ -137,12 +138,6 @@ export class ContentImportService {
     filename: string;
     bytes: Buffer;
   }): Promise<AnalyzeResult> {
-    const packRow = await this.pool.query('SELECT id, target_cefr FROM packs WHERE id = $1', [
-      input.packId,
-    ]);
-    if (packRow.rows.length === 0) return { status: 'not_found' };
-    const packCefr = String(packRow.rows[0]!.target_cefr ?? 'A1');
-
     let sheet: ParsedSheet;
     try {
       sheet = parseImportFile(input.filename, input.bytes);
@@ -152,22 +147,65 @@ export class ContentImportService {
       return { status: 'unreadable', message: 'فایل قابل خواندن نیست.' };
     }
 
+    return this.analyzeRecords({
+      packId: input.packId,
+      records: sheet.records,
+      unknownHeaders: sheet.unknownHeaders,
+      missingRequiredColumns: sheet.missingRequiredColumns,
+      // +2: the header occupies row 1, so the first data record is row 2 in the source file.
+      firstRowNumber: 2,
+      filename: input.filename,
+      fileKind: fileKindOf(input.filename, input.bytes),
+    });
+  }
+
+  /**
+   * Classifies already-parsed records against canonical data.
+   *
+   * This is the shared analysis core: the file import reaches it through `analyze`, and AI pack
+   * generation (M1.4) reaches it with model-produced records. Both therefore get the SAME canonical
+   * validation, in-batch duplicate detection, existing-card conflict policy and fingerprint — a
+   * generated card can never take a softer path to canonical content than an uploaded one.
+   */
+  async analyzeRecords(input: {
+    packId: string;
+    records: ReadonlyArray<Partial<Record<ImportColumnKey, string>>>;
+    unknownHeaders?: string[];
+    missingRequiredColumns?: string[];
+    /** Row number assigned to the first record. Files start at 2 (header is row 1). */
+    firstRowNumber?: number;
+    /** Target CEFR to use when the pack does not exist yet. Required in that case. */
+    fallbackCefr?: string;
+    filename?: string;
+    fileKind?: ImportFileKind;
+  }): Promise<AnalyzeResult> {
+    const packRow = await this.pool.query('SELECT id, target_cefr FROM packs WHERE id = $1', [
+      input.packId,
+    ]);
+    const packCefr =
+      packRow.rows.length > 0 ? String(packRow.rows[0]!.target_cefr ?? 'A1') : undefined;
+    // A pack that does not exist yet is only acceptable when the caller supplies the target CEFR
+    // itself (AI generation creates the pack at acceptance time, after the plan is approved).
+    if (packCefr === undefined && input.fallbackCefr === undefined) return { status: 'not_found' };
+    const effectiveCefr = packCefr ?? input.fallbackCefr!;
+
+    const missingRequiredColumns = input.missingRequiredColumns ?? [];
     const rows: AnalyzedRow[] = [];
     const claimedInFile = new Map<string, number>();
     const candidateIds: string[] = [];
+    const firstRowNumber = input.firstRowNumber ?? 1;
 
-    sheet.records.forEach((record, index) => {
-      // +2: the header occupies row 1, so the first data record is row 2 in the source file.
-      const rowNumber = index + 2;
+    input.records.forEach((record, index) => {
+      const rowNumber = index + firstRowNumber;
       const mapped = mapRow(record, rowNumber);
       const lemma = (record.lemma ?? '').trim();
 
-      if (sheet.missingRequiredColumns.length > 0 || !mapped.content) {
+      if (missingRequiredColumns.length > 0 || !mapped.content) {
         rows.push({ rowNumber, lemma, classification: 'invalid', issues: mapped.issues });
         return;
       }
 
-      const cefr = mapped.content.cefr ?? packCefr;
+      const cefr = mapped.content.cefr ?? effectiveCefr;
       const contentId = deriveContentId(input.packId, cefr, mapped.content.lemma);
 
       // Canonical content rules — the same validator the write path runs, never a parallel copy.
@@ -254,7 +292,7 @@ export class ContentImportService {
       }
     }
 
-    if (sheet.missingRequiredColumns.length > 0) {
+    if (missingRequiredColumns.length > 0) {
       for (const row of rows) {
         row.classification = 'invalid';
         if (row.issues.length === 0) {
@@ -299,13 +337,13 @@ export class ContentImportService {
       status: 'ok',
       analysis: {
         packId: input.packId,
-        filename: input.filename,
-        fileKind: fileKindOf(input.filename, input.bytes),
+        filename: input.filename ?? '',
+        fileKind: input.fileKind ?? 'csv',
         totalRows: rows.length,
         counts,
         rows,
-        unknownHeaders: sheet.unknownHeaders,
-        missingRequiredColumns: sheet.missingRequiredColumns,
+        unknownHeaders: input.unknownHeaders ?? [],
+        missingRequiredColumns,
         importableFingerprint: fingerprint,
         importableCount: importable.length,
       },
@@ -338,13 +376,40 @@ export class ContentImportService {
      * skipped, which is the default.
      */
     selectedConflictRows?: readonly number[];
+    /**
+     * Row numbers the Admin EXPLICITLY accepted among `new` rows. `undefined` keeps the file-import
+     * behaviour of creating every new row; AI generation passes an explicit list, because a
+     * generated card is only canonical once the Admin picks it.
+     */
+    selectedNewRows?: readonly number[];
   }): Promise<ApplyResult> {
     const analyzed = await this.analyze(input);
     if (analyzed.status === 'not_found') return { status: 'not_found' };
     if (analyzed.status === 'unreadable') {
       return { status: 'stale', message: analyzed.message };
     }
-    if (analyzed.analysis.importableFingerprint !== input.expectedFingerprint) {
+    return this.applyAnalysis(analyzed.analysis, input);
+  }
+
+  /**
+   * Applies an analysis the SERVER just produced.
+   *
+   * Shared by the file import and by AI acceptance (M1.4). The analysis argument must always come
+   * from this service, never from the client: the caller re-derives it immediately before applying,
+   * and the fingerprint check below refuses anything that drifted from what the Admin reviewed.
+   */
+  async applyAnalysis(
+    analysis: ImportAnalysis,
+    input: {
+      packId: string;
+      actorUserId: string;
+      importKey: string;
+      expectedFingerprint: string;
+      selectedConflictRows?: readonly number[];
+      selectedNewRows?: readonly number[];
+    },
+  ): Promise<ApplyResult> {
+    if (analysis.importableFingerprint !== input.expectedFingerprint) {
       return {
         status: 'stale',
         message: 'فایل یا محتوای بسته از زمان پیش‌نمایش تغییر کرده است. دوباره پیش‌نمایش بگیرید.',
@@ -357,7 +422,7 @@ export class ContentImportService {
     const selected = new Set(input.selectedConflictRows ?? []);
     if (selected.size > 0) {
       const selectable = new Set(
-        analyzed.analysis.rows
+        analysis.rows
           .filter((row) => row.classification === 'existing' && row.existingCardId && row.content)
           .map((row) => row.rowNumber),
       );
@@ -370,13 +435,31 @@ export class ContentImportService {
       }
     }
 
+    // Same rule for an explicit new-row selection: only rows the server just classified `new`
+    // with applicable content may be accepted.
+    const acceptedNewRows = input.selectedNewRows ? new Set(input.selectedNewRows) : undefined;
+    if (acceptedNewRows && acceptedNewRows.size > 0) {
+      const creatable = new Set(
+        analysis.rows
+          .filter((row) => row.classification === 'new' && row.content)
+          .map((row) => row.rowNumber),
+      );
+      const unacceptable = [...acceptedNewRows].filter((rowNumber) => !creatable.has(rowNumber));
+      if (unacceptable.length > 0) {
+        return {
+          status: 'stale',
+          message: `این سطرها قابل پذیرش نیستند: ${unacceptable.join('، ')}. دوباره پیش‌نمایش بگیرید.`,
+        };
+      }
+    }
+
     const outcomes: ImportApplyOutcome[] = [];
     let created = 0;
     let versioned = 0;
     let skipped = 0;
     let replayed = 0;
 
-    for (const row of analyzed.analysis.rows) {
+    for (const row of analysis.rows) {
       // Explicitly selected conflict → NEW DRAFT VERSION on the existing card, through M1.2's
       // canonical edit path. That path leaves a published version untouched and inserts the next
       // version as a draft, so learner-visible content cannot change here.
@@ -430,6 +513,17 @@ export class ContentImportService {
           contentId: row.contentId ?? '',
           status: 'skipped',
           reason: row.classification,
+        });
+        continue;
+      }
+      // An explicit new-row selection means "only these"; an unselected valid row is left alone.
+      if (acceptedNewRows && !acceptedNewRows.has(row.rowNumber)) {
+        skipped += 1;
+        outcomes.push({
+          rowNumber: row.rowNumber,
+          contentId: row.contentId,
+          status: 'skipped',
+          reason: 'not_selected',
         });
         continue;
       }

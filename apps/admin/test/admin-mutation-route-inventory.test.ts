@@ -66,6 +66,30 @@ const INVENTORY: Record<string, Entry> = {
     category: 'delegated',
     guardIn: 'lib/server/admin-content-import-routes.ts',
   },
+  // M1.4 — AI pack generation. Every route delegates the full guard chain (Origin, session, CSRF,
+  // recent re-auth) to the shared route module, so an unauthenticated caller can never reach the
+  // AI provider. `accept` is the only one that writes canonical data. The GET-only model
+  // catalogue is classified under READ_ONLY below.
+  'app/api/content/ai/plan/route.ts': {
+    category: 'delegated',
+    guardIn: 'lib/server/admin-ai-generation-routes.ts',
+  },
+  'app/api/content/ai/plan/approve/route.ts': {
+    category: 'delegated',
+    guardIn: 'lib/server/admin-ai-generation-routes.ts',
+  },
+  'app/api/content/ai/generate/route.ts': {
+    category: 'delegated',
+    guardIn: 'lib/server/admin-ai-generation-routes.ts',
+  },
+  'app/api/content/ai/job/route.ts': {
+    category: 'delegated',
+    guardIn: 'lib/server/admin-ai-generation-routes.ts',
+  },
+  'app/api/content/ai/accept/route.ts': {
+    category: 'delegated',
+    guardIn: 'lib/server/admin-ai-generation-routes.ts',
+  },
   'app/api/content/review/check/route.ts': {
     category: 'delegated',
     guardIn: 'lib/server/admin-content-review-routes.ts',
@@ -102,6 +126,9 @@ const READ_ONLY: Record<string, 'hard-disabled' | 'session-layer'> = {
   'app/api/content/import/template/route.ts': 'session-layer',
   'app/api/content/import/contract/route.ts': 'session-layer',
   'app/api/content/review/route.ts': 'session-layer',
+  // M1.4 model catalogue: GET-only, so CSRF is not applicable; it still requires a valid Admin
+  // session, and it returns model ids and the configured default only — never the credential.
+  'app/api/content/ai/models/route.ts': 'session-layer',
   'app/api/splash/current/route.ts': 'session-layer',
   'app/api/splash/preview/route.ts': 'session-layer',
 };
