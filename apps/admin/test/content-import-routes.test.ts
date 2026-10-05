@@ -63,7 +63,13 @@ const analysis = {
 function service(overrides: Partial<Record<'analyze' | 'apply', unknown>> = {}) {
   return {
     analyze: vi.fn(async () => ({ status: 'ok', analysis })),
-    apply: vi.fn(async () => ({ status: 'applied', created: 1, skipped: 0, outcomes: [] })),
+    apply: vi.fn(async () => ({
+      status: 'applied',
+      created: 1,
+      versioned: 0,
+      skipped: 0,
+      outcomes: [],
+    })),
     ...overrides,
   } as never;
 }
@@ -208,9 +214,60 @@ describe('M1.3 import confirm route', () => {
     expect(await response.json()).toEqual({
       status: 'applied',
       created: 1,
+      versioned: 0,
       skipped: 0,
       outcomes: [],
     });
+  });
+
+  it('defaults to NO conflict override when the field is absent', async () => {
+    const importService = service();
+    const route = createContentImportConfirmRoute(deps({ service: importService }));
+    await route(upload({ fields }));
+    const call = (importService as unknown as { apply: ReturnType<typeof vi.fn> }).apply.mock
+      .calls[0]![0];
+    expect(call.selectedConflictRows).toEqual([]);
+  });
+
+  it('forwards explicitly selected conflict rows, de-duplicated', async () => {
+    const importService = service();
+    const route = createContentImportConfirmRoute(deps({ service: importService }));
+    const response = await route(
+      upload({ fields: { ...fields, selectedConflictRows: '[3,5,3]' } }),
+    );
+    expect(response.status).toBe(200);
+    const call = (importService as unknown as { apply: ReturnType<typeof vi.fn> }).apply.mock
+      .calls[0]![0];
+    expect(call.selectedConflictRows).toEqual([3, 5]);
+  });
+
+  it.each([
+    ['not json', 'nope'],
+    ['not an array', '{"rowNumber":3}'],
+    ['a non-integer row', '[3.5]'],
+    ['a zero row', '[0]'],
+    ['a negative row', '[-2]'],
+    ['a non-numeric row', '["3"]'],
+    ['a nested array', '[[3]]'],
+  ])('refuses a conflict selection that is %s', async (_label, raw) => {
+    const importService = service();
+    const route = createContentImportConfirmRoute(deps({ service: importService }));
+    const response = await route(upload({ fields: { ...fields, selectedConflictRows: raw } }));
+    expect(response.status).toBe(400);
+    expect(
+      (importService as unknown as { apply: ReturnType<typeof vi.fn> }).apply,
+    ).not.toHaveBeenCalled();
+  });
+
+  it('refuses a conflict selection larger than the import row cap', async () => {
+    const importService = service();
+    const route = createContentImportConfirmRoute(deps({ service: importService }));
+    const raw = JSON.stringify(Array.from({ length: 20001 }, (_value, index) => index + 1));
+    const response = await route(upload({ fields: { ...fields, selectedConflictRows: raw } }));
+    expect(response.status).toBe(400);
+    expect(
+      (importService as unknown as { apply: ReturnType<typeof vi.fn> }).apply,
+    ).not.toHaveBeenCalled();
   });
 
   it('refuses a confirm with no fingerprint — the owner must have previewed', async () => {

@@ -26,6 +26,8 @@ export interface ImportAnalysisRow {
   classification: ImportRowClassification;
   issues: Array<{ field: string; message: string }>;
   duplicateOfRow?: number;
+  /** Present on `existing` rows: the card that would receive a new draft version if selected. */
+  existingCardId?: string;
 }
 
 export interface ImportAnalysis {
@@ -44,23 +46,27 @@ export interface ImportAnalysis {
 export interface ImportOutcome {
   rowNumber: number;
   contentId: string;
-  status: 'created' | 'skipped';
+  status: 'created' | 'versioned' | 'skipped';
   reason?: string;
 }
 
 export interface ImportResultSummary {
   status: 'applied' | 'idempotent';
   created: number;
+  versioned: number;
   skipped: number;
   outcomes: ImportOutcome[];
 }
 
 const CLASSIFICATION_LABEL: Record<ImportRowClassification, string> = {
   new: 'جدید',
-  duplicate_in_file: 'تکراری در فایل',
-  existing: 'از قبل موجود',
+  duplicate_in_file: 'تکراری داخل فایل',
+  existing: 'موجود / در تعارض — رد شده به‌صورت پیش‌فرض',
   invalid: 'نامعتبر',
 };
+
+/** A conflicting row the Admin explicitly selected reads differently from a skipped one. */
+const SELECTED_CONFLICT_LABEL = 'موجود / در تعارض — انتخاب‌شده برای نسخه Draft جدید';
 
 const CLASSIFICATION_TONE: Record<ImportRowClassification, string> = {
   new: 'is-ok',
@@ -85,6 +91,7 @@ export function ContentImportModal({
   onConfirm: (
     file: File,
     fingerprint: string,
+    selectedConflictRows: number[],
   ) => Promise<{ ok: true; summary: ImportResultSummary } | { ok: false; message: string }>;
 }) {
   const [file, setFile] = useState<File | null>(null);
@@ -92,11 +99,39 @@ export function ContentImportModal({
   const [summary, setSummary] = useState<ImportResultSummary | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
+  // Conflicting rows the Admin explicitly ticked. Empty by default: conflicts are skipped
+  // unless the owner opts each one in.
+  const [selectedConflicts, setSelectedConflicts] = useState<ReadonlySet<number>>(new Set());
 
   const notImported = useMemo(
     () => (analysis ? analysis.rows.filter((row) => row.classification !== 'new') : []),
     [analysis],
   );
+
+  /** Conflicts that CAN be overridden — the server must have supplied a target card. */
+  const selectableConflicts = useMemo(
+    () =>
+      analysis
+        ? analysis.rows.filter((row) => row.classification === 'existing' && row.existingCardId)
+        : [],
+    [analysis],
+  );
+
+  const selectedCount = selectableConflicts.filter((row) =>
+    selectedConflicts.has(row.rowNumber),
+  ).length;
+  const skippedCount = notImported.length - selectedCount;
+  const invalidCount = analysis?.counts.invalid ?? 0;
+  const totalToWrite = (analysis?.importableCount ?? 0) + selectedCount;
+
+  function toggleConflict(rowNumber: number) {
+    setSelectedConflicts((previous) => {
+      const next = new Set(previous);
+      if (next.has(rowNumber)) next.delete(rowNumber);
+      else next.add(rowNumber);
+      return next;
+    });
+  }
 
   async function handlePreview() {
     if (!file) return;
@@ -105,6 +140,9 @@ export function ContentImportModal({
     setSummary(null);
     const result = await onPreview(file);
     setBusy(false);
+    // A fresh preview always clears the previous selection: selections only ever apply to the
+    // analysis currently on screen.
+    setSelectedConflicts(new Set());
     if (result.ok) setAnalysis(result.analysis);
     else {
       setAnalysis(null);
@@ -113,10 +151,10 @@ export function ContentImportModal({
   }
 
   async function handleConfirm() {
-    if (!file || !analysis || analysis.importableCount === 0) return;
+    if (!file || !analysis || totalToWrite === 0) return;
     setBusy(true);
     setError(undefined);
-    const result = await onConfirm(file, analysis.importableFingerprint);
+    const result = await onConfirm(file, analysis.importableFingerprint, [...selectedConflicts]);
     setBusy(false);
     if (result.ok) setSummary(result.summary);
     else setError(result.message);
@@ -132,13 +170,20 @@ export function ContentImportModal({
         type="button"
         className="btn primary"
         onClick={analysis ? handleConfirm : handlePreview}
-        disabled={busy || !file || (analysis !== null && analysis.importableCount === 0)}
+        disabled={busy || !file || (analysis !== null && totalToWrite === 0)}
       >
         {busy
           ? 'در حال پردازش…'
           : analysis
             ? // The action states exactly what will be written — never a vague "Import".
-              `درون‌ریزی ${analysis.importableCount} کارت جدید`
+              [
+                analysis.importableCount > 0
+                  ? `درون‌ریزی ${analysis.importableCount} کارت جدید`
+                  : null,
+                selectedCount > 0 ? `${selectedCount} نسخه Draft جدید` : null,
+              ]
+                .filter(Boolean)
+                .join(' + ') || 'درون‌ریزی'
             : 'بررسی فایل'}
       </button>
       <button type="button" className="btn" onClick={onClose} disabled={busy}>
@@ -186,7 +231,17 @@ export function ContentImportModal({
             </p>
           </div>
 
-          {analysis ? <ImportPreview analysis={analysis} notImported={notImported} /> : null}
+          {analysis ? (
+            <ImportPreview
+              analysis={analysis}
+              notImported={notImported}
+              selectedConflicts={selectedConflicts}
+              onToggleConflict={toggleConflict}
+              selectedCount={selectedCount}
+              skippedCount={skippedCount}
+              invalidCount={invalidCount}
+            />
+          ) : null}
         </>
       )}
     </CpModal>
@@ -196,9 +251,19 @@ export function ContentImportModal({
 function ImportPreview({
   analysis,
   notImported,
+  selectedConflicts,
+  onToggleConflict,
+  selectedCount,
+  skippedCount,
+  invalidCount,
 }: {
   analysis: ImportAnalysis;
   notImported: ImportAnalysisRow[];
+  selectedConflicts: ReadonlySet<number>;
+  onToggleConflict: (rowNumber: number) => void;
+  selectedCount: number;
+  skippedCount: number;
+  invalidCount: number;
 }) {
   return (
     <div className="cp-import-preview">
@@ -232,41 +297,82 @@ function ImportPreview({
         </p>
       ) : null}
 
-      <p className="cp-import-statement">
-        {analysis.importableCount > 0
-          ? `${analysis.importableCount} کارت جدید به‌صورت «پیش‌نویس» ساخته می‌شود. ${notImported.length} سطر نوشته نمی‌شود.`
-          : 'هیچ سطر قابل درون‌ریزی وجود ندارد. فایل را اصلاح کنید و دوباره بررسی بگیرید.'}
-      </p>
+      {/* The pre-confirmation summary: exactly what the confirm will and will not do. */}
+      <ul className="cp-import-statement">
+        <li>
+          کارت‌های جدیدی که ساخته می‌شوند: <strong>{analysis.importableCount}</strong>
+        </li>
+        <li>
+          کارت‌های موجودی که نسخهٔ Draft جدید می‌گیرند: <strong>{selectedCount}</strong>
+        </li>
+        <li>
+          سطرهای رد شده: <strong>{skippedCount}</strong>
+        </li>
+        <li>
+          سطرهای نامعتبر: <strong>{invalidCount}</strong>
+        </li>
+      </ul>
+      {analysis.importableCount === 0 && selectedCount === 0 ? (
+        <p className="cp-note">
+          هیچ سطری نوشته نمی‌شود. فایل را اصلاح کنید، یا سطرهای در تعارض را برای ساخت نسخهٔ Draft
+          جدید انتخاب کنید.
+        </p>
+      ) : null}
 
       {notImported.length > 0 ? (
         <div className="cp-import-issues">
-          <h4>سطرهایی که نوشته نمی‌شوند</h4>
+          <h4>سطرهایی که به‌صورت پیش‌فرض نوشته نمی‌شوند</h4>
           <table className="table">
             <thead>
               <tr>
-                <th>سطر</th>
-                <th>واژه</th>
-                <th>وضعیت</th>
-                <th>دلیل</th>
+                <th scope="col">نسخهٔ Draft جدید</th>
+                <th scope="col">سطر</th>
+                <th scope="col">واژه</th>
+                <th scope="col">وضعیت</th>
+                <th scope="col">دلیل</th>
               </tr>
             </thead>
             <tbody>
-              {notImported.map((row) => (
-                <tr key={row.rowNumber}>
-                  <td>{row.rowNumber}</td>
-                  <td>{row.lemma || '—'}</td>
-                  <td>
-                    <span className={`cp-import-badge ${CLASSIFICATION_TONE[row.classification]}`}>
-                      {CLASSIFICATION_LABEL[row.classification]}
-                    </span>
-                  </td>
-                  <td>
-                    {row.issues.length > 0
-                      ? row.issues.map((issue) => issue.message).join(' ')
-                      : '—'}
-                  </td>
-                </tr>
-              ))}
+              {notImported.map((row) => {
+                // Only a real conflict with a known target card can be overridden. Duplicates and
+                // invalid rows are never selectable.
+                const selectable = row.classification === 'existing' && Boolean(row.existingCardId);
+                const checked = selectable && selectedConflicts.has(row.rowNumber);
+                return (
+                  <tr key={row.rowNumber}>
+                    <td>
+                      {selectable ? (
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => onToggleConflict(row.rowNumber)}
+                          aria-label={`ساخت نسخهٔ Draft جدید برای «${row.lemma || row.rowNumber}» در سطر ${row.rowNumber}`}
+                        />
+                      ) : (
+                        <span aria-hidden="true">—</span>
+                      )}
+                    </td>
+                    <td>{row.rowNumber}</td>
+                    <td>{row.lemma || '—'}</td>
+                    <td>
+                      <span
+                        className={`cp-import-badge ${checked ? 'is-ok' : CLASSIFICATION_TONE[row.classification]}`}
+                      >
+                        {checked
+                          ? SELECTED_CONFLICT_LABEL
+                          : CLASSIFICATION_LABEL[row.classification]}
+                      </span>
+                    </td>
+                    <td>
+                      {checked
+                        ? 'نسخهٔ منتشرشده بدون تغییر می‌ماند و یک نسخهٔ Draft جدید ساخته می‌شود.'
+                        : row.issues.length > 0
+                          ? row.issues.map((issue) => issue.message).join(' ')
+                          : '—'}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -281,10 +387,18 @@ function ImportResult({ summary }: { summary: ImportResultSummary }) {
       <p className="cp-form-status is-success" role="status">
         {summary.status === 'idempotent'
           ? 'این درون‌ریزی قبلاً انجام شده بود؛ چیزی دوباره ساخته نشد.'
-          : `${summary.created} کارت جدید به‌صورت «پیش‌نویس» ساخته شد.`}
+          : [
+              `${summary.created} کارت جدید به‌صورت «پیش‌نویس» ساخته شد`,
+              summary.versioned > 0
+                ? `${summary.versioned} کارت موجود نسخهٔ Draft جدید گرفت`
+                : null,
+            ]
+              .filter(Boolean)
+              .join(' و ') + '.'}
       </p>
       <p className="cp-note">
-        کارت‌های ساخته‌شده پیش‌نویس هستند و تا تأیید بررسی محتوا برای زبان‌آموز نمایش داده نمی‌شوند.{' '}
+        محتوای ساخته‌شده پیش‌نویس است و تا تأیید بررسی محتوا برای زبان‌آموز نمایش داده نمی‌شود.
+        {summary.versioned > 0 ? ' نسخه‌های منتشرشدهٔ قبلی بدون تغییر باقی مانده‌اند.' : ''}{' '}
         {summary.skipped} سطر نوشته نشد.
       </p>
     </div>

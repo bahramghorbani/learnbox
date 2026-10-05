@@ -35,6 +35,12 @@ export interface AnalyzedRow {
   content?: CardContentInput;
   /** For duplicate_in_file: the earlier row in the same upload that already claimed this id. */
   duplicateOfRow?: number;
+  /**
+   * For `existing`: the canonical card this row conflicts with. Present so the Admin can
+   * explicitly select the row and have it become a NEW DRAFT VERSION on that card. Absent
+   * means the row can never be applied as an override.
+   */
+  existingCardId?: string;
 }
 
 export interface ImportAnalysis {
@@ -59,7 +65,8 @@ export type AnalyzeResult =
 export interface ImportApplyOutcome {
   rowNumber: number;
   contentId: string;
-  status: 'created' | 'skipped';
+  /** `versioned` = a new draft version was added to an existing card by explicit selection. */
+  status: 'created' | 'versioned' | 'skipped';
   reason?: string;
   cardId?: string;
 }
@@ -68,8 +75,20 @@ export type ApplyResult =
   | { status: 'forbidden' }
   | { status: 'not_found' }
   | { status: 'stale'; message: string }
-  | { status: 'idempotent'; created: number; skipped: number; outcomes: ImportApplyOutcome[] }
-  | { status: 'applied'; created: number; skipped: number; outcomes: ImportApplyOutcome[] };
+  | {
+      status: 'idempotent';
+      created: number;
+      versioned: number;
+      skipped: number;
+      outcomes: ImportApplyOutcome[];
+    }
+  | {
+      status: 'applied';
+      created: number;
+      versioned: number;
+      skipped: number;
+      outcomes: ImportApplyOutcome[];
+    };
 
 type QueryResult = { rows: Record<string, unknown>[] };
 type Queryable = { query(sql: string, parameters?: readonly unknown[]): Promise<QueryResult> };
@@ -87,9 +106,13 @@ function fileKindOf(filename: string, bytes: Buffer): 'csv' | 'xlsx' {
  * instead of a second card. Retry safety therefore reuses the established mechanism rather than
  * adding an import-specific one.
  */
-export function rowIdempotencyKey(importKey: string, contentId: string): string {
+export function rowIdempotencyKey(
+  importKey: string,
+  contentId: string,
+  operation: 'create' | 'version' = 'create',
+): string {
   const digest = createHash('sha1')
-    .update(`learnbox-import:${importKey}:${contentId}`)
+    .update(`learnbox-import:${operation}:${importKey}:${contentId}`)
     .digest()
     .subarray(0, 16);
   digest[6] = (digest[6]! & 0x0f) | 0x50;
@@ -101,7 +124,7 @@ export function rowIdempotencyKey(importKey: string, contentId: string): string 
 export class ContentImportService {
   constructor(
     private readonly pool: DatabasePool,
-    private readonly writeStore: Pick<PostgresContentPacksWriteStore, 'createCard'>,
+    private readonly writeStore: Pick<PostgresContentPacksWriteStore, 'createCard' | 'editCard'>,
   ) {}
 
   /**
@@ -201,21 +224,33 @@ export class ContentImportService {
     // Conflict detection against canonical data, by the same unique key the DB enforces.
     if (candidateIds.length > 0) {
       const existing = await this.pool.query(
-        'SELECT content_id FROM cards WHERE content_id = ANY($1::text[])',
+        'SELECT id, content_id FROM cards WHERE content_id = ANY($1::text[])',
         [candidateIds],
       );
-      const existingIds = new Set(existing.rows.map((row) => String(row.content_id)));
+      // A conflict is only selectable when the row carries a usable card id; anything else stays
+      // a plain skip rather than becoming an override target with a bogus id.
+      const existingCardIds = new Map(
+        existing.rows
+          .filter((row) => typeof row.id === 'string' && row.id !== '')
+          .map((row) => [String(row.content_id), String(row.id)]),
+      );
+      const conflictingIds = new Set(existing.rows.map((row) => String(row.content_id)));
       for (const row of rows) {
-        if (row.classification === 'new' && row.contentId && existingIds.has(row.contentId)) {
-          row.classification = 'existing';
-          row.issues = [
-            {
-              field: 'lemma',
-              message: 'کارتی با همین شناسه از قبل در این بسته وجود دارد و بازنویسی نمی‌شود.',
-            },
-          ];
-          delete row.content;
-        }
+        if (row.classification !== 'new' || !row.contentId) continue;
+        if (!conflictingIds.has(row.contentId)) continue;
+        const cardId = existingCardIds.get(row.contentId);
+        row.classification = 'existing';
+        // Content is deliberately KEPT: the Admin may explicitly select this row, which adds a
+        // new DRAFT VERSION to the existing card. Nothing happens to it unless selected.
+        row.existingCardId = cardId;
+        row.issues = [
+          {
+            field: 'lemma',
+            message: cardId
+              ? 'کارتی با همین شناسه از قبل در این بسته وجود دارد. به‌صورت پیش‌فرض رد می‌شود؛ برای ساخت نسخهٔ پیش‌نویس جدید آن را انتخاب کنید.'
+              : 'کارتی با همین شناسه از قبل در این بسته وجود دارد و بازنویسی نمی‌شود.',
+          },
+        ];
       }
     }
 
@@ -238,10 +273,24 @@ export class ContentImportService {
     for (const row of rows) counts[row.classification] += 1;
 
     const importable = rows.filter((row) => row.classification === 'new' && row.content);
+    // The fingerprint binds a confirm to this preview. It spans every row that could be written —
+    // new rows AND selectable conflicts — so no selection can apply content the Admin never saw.
+    const writable = rows.filter(
+      (row) =>
+        row.content &&
+        (row.classification === 'new' || (row.classification === 'existing' && row.existingCardId)),
+    );
     const fingerprint = createHash('sha256')
       .update(
         JSON.stringify(
-          importable.map((row) => [row.contentId, row.content?.lemma, row.content?.difficulty]),
+          writable.map((row) => [
+            row.classification,
+            row.contentId,
+            row.existingCardId ?? null,
+            // The FULL content, not a projection: a confirm must be refused whenever any field
+            // the Admin reviewed changed, since an override writes this content onto a real card.
+            row.content,
+          ]),
         ),
       )
       .digest('hex');
@@ -267,9 +316,11 @@ export class ContentImportService {
    * Applies a CONFIRMED import.
    *
    * Re-analyses the uploaded bytes server-side and refuses when the fingerprint no longer matches
-   * what the Admin previewed, so a confirm can never write rows the owner did not see. Only rows
-   * classified `new` are written; invalid, duplicate and conflicting rows are reported, never
-   * written, and never overwrite an existing card.
+   * what the Admin previewed, so a confirm can never write rows the owner did not see.
+   *
+   * Rows classified `new` are created. Conflicting rows are skipped BY DEFAULT and are applied
+   * only when the Admin explicitly selects them, in which case they add a new DRAFT VERSION to
+   * the existing card. Nothing is ever overwritten in place and nothing is published.
    *
    * Each row is applied through M1.2's `createCard`, which keeps authorization, canonical
    * validation, draft status, audit logging and per-row transactional integrity in ONE place.
@@ -281,6 +332,12 @@ export class ContentImportService {
     actorUserId: string;
     importKey: string;
     expectedFingerprint: string;
+    /**
+     * Row numbers the Admin EXPLICITLY selected for conflict override. Each becomes a new draft
+     * version on the existing card via M1.2's `editCard`. Omitted/empty = every conflict is
+     * skipped, which is the default.
+     */
+    selectedConflictRows?: readonly number[];
   }): Promise<ApplyResult> {
     const analyzed = await this.analyze(input);
     if (analyzed.status === 'not_found') return { status: 'not_found' };
@@ -294,12 +351,78 @@ export class ContentImportService {
       };
     }
 
+    // Validate the selection against the FRESH analysis: a row may only be overridden if the
+    // server itself just classified it as a conflict with applicable content. Anything else is
+    // refused outright rather than silently ignored.
+    const selected = new Set(input.selectedConflictRows ?? []);
+    if (selected.size > 0) {
+      const selectable = new Set(
+        analyzed.analysis.rows
+          .filter((row) => row.classification === 'existing' && row.existingCardId && row.content)
+          .map((row) => row.rowNumber),
+      );
+      const unselectable = [...selected].filter((rowNumber) => !selectable.has(rowNumber));
+      if (unselectable.length > 0) {
+        return {
+          status: 'stale',
+          message: `این سطرها قابل انتخاب نیستند: ${unselectable.join('، ')}. دوباره پیش‌نمایش بگیرید.`,
+        };
+      }
+    }
+
     const outcomes: ImportApplyOutcome[] = [];
     let created = 0;
+    let versioned = 0;
     let skipped = 0;
     let replayed = 0;
 
     for (const row of analyzed.analysis.rows) {
+      // Explicitly selected conflict → NEW DRAFT VERSION on the existing card, through M1.2's
+      // canonical edit path. That path leaves a published version untouched and inserts the next
+      // version as a draft, so learner-visible content cannot change here.
+      if (
+        row.classification === 'existing' &&
+        selected.has(row.rowNumber) &&
+        row.existingCardId &&
+        row.content &&
+        row.contentId
+      ) {
+        const edit = await this.writeStore.editCard({
+          cardId: row.existingCardId,
+          content: row.content,
+          idempotencyKey: rowIdempotencyKey(input.importKey, row.contentId, 'version'),
+          actorUserId: input.actorUserId,
+        });
+        if (edit.status === 'forbidden') return { status: 'forbidden' };
+        if (edit.status === 'applied') {
+          versioned += 1;
+          outcomes.push({
+            rowNumber: row.rowNumber,
+            contentId: row.contentId,
+            status: 'versioned',
+            cardId: row.existingCardId,
+          });
+        } else if (edit.status === 'idempotent') {
+          replayed += 1;
+          outcomes.push({
+            rowNumber: row.rowNumber,
+            contentId: row.contentId,
+            status: 'skipped',
+            reason: 'already_applied',
+            cardId: row.existingCardId,
+          });
+        } else {
+          skipped += 1;
+          outcomes.push({
+            rowNumber: row.rowNumber,
+            contentId: row.contentId,
+            status: 'skipped',
+            reason: edit.status === 'conflict' ? edit.reason : edit.status,
+          });
+        }
+        continue;
+      }
+
       if (row.classification !== 'new' || !row.content || !row.contentId) {
         skipped += 1;
         outcomes.push({
@@ -345,10 +468,10 @@ export class ContentImportService {
       }
     }
 
-    // Every importable row replayed → this exact confirmed import already ran.
-    if (created === 0 && replayed > 0) {
-      return { status: 'idempotent', created, skipped: skipped + replayed, outcomes };
+    // Every applicable row replayed → this exact confirmed import already ran.
+    if (created === 0 && versioned === 0 && replayed > 0) {
+      return { status: 'idempotent', created, versioned, skipped: skipped + replayed, outcomes };
     }
-    return { status: 'applied', created, skipped: skipped + replayed, outcomes };
+    return { status: 'applied', created, versioned, skipped: skipped + replayed, outcomes };
   }
 }

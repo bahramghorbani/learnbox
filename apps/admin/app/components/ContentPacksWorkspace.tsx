@@ -906,12 +906,17 @@ export function ContentPacksWorkspace() {
             const payload = result.payload as { analysis: ImportAnalysis };
             return { ok: true as const, analysis: payload.analysis };
           }}
-          onConfirm={async (file, fingerprint) => {
+          onConfirm={async (file, fingerprint, selectedConflictRows) => {
             const result = await sendImport(
               '/api/content/import/confirm',
               file,
               importSession.packId,
-              { fingerprint, importKey: importSession.importKey },
+              {
+                fingerprint,
+                importKey: importSession.importKey,
+                // Only explicitly ticked conflict rows are sent; the server re-validates each one.
+                selectedConflictRows: JSON.stringify(selectedConflictRows),
+              },
             );
             if (!result.ok) return result;
             return { ok: true as const, summary: result.payload as ImportResultSummary };
