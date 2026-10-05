@@ -1,17 +1,39 @@
 import React from 'react';
 
-type AdminIconName = 'review' | 'splash' | 'content' | 'reports' | 'settings' | 'collapse';
+type AdminIconName =
+  | 'home'
+  | 'book'
+  | 'store'
+  | 'users'
+  | 'chart'
+  | 'image'
+  | 'shield'
+  | 'ops'
+  | 'settings'
+  | 'collapse';
 
+/**
+ * Navigation is the APPROVED, DESIGN FROZEN Admin prototype's nav, verbatim:
+ * `prototypes/admin-ui-v1/assets/js/shell.js` (PDR-009), same labels, same order, same icons.
+ *
+ * `route` is set only for destinations that are really implemented. Every other entry renders as
+ * a visibly disabled item rather than a link to nowhere, so the frozen design is preserved without
+ * advertising screens that do not exist yet.
+ */
 const navItems = [
-  { label: 'صف بررسی', icon: 'review', href: '#review' },
-  { label: 'اسپلش', icon: 'splash', href: '#splash-management' },
-  { label: 'محتوا', icon: 'content', href: '#review' },
-  { label: 'گزارش‌ها', icon: 'reports', href: '#review' },
-  { label: 'تنظیمات', icon: 'settings', href: '#review' },
+  { label: 'خانه / نمای کلی', icon: 'home', route: 'home' },
+  { label: 'محتوا و بسته‌ها', icon: 'book', route: 'content' },
+  { label: 'فروشگاه', icon: 'store' },
+  { label: 'کاربران', icon: 'users' },
+  { label: 'یادگیری', icon: 'chart' },
+  { label: 'نمایش اپ', icon: 'image' },
+  { label: 'نشست‌ها و دسترسی', icon: 'shield' },
+  { label: 'عملیات', icon: 'ops' },
+  { label: 'تنظیمات', icon: 'settings' },
 ] as const satisfies readonly {
   label: string;
   icon: AdminIconName;
-  href: string;
+  route?: string;
 }[];
 
 function AdminIcon({ name }: { name: AdminIconName }) {
@@ -25,37 +47,68 @@ function AdminIcon({ name }: { name: AdminIconName }) {
   };
 
   switch (name) {
-    case 'review':
+    case 'home':
       return (
         <svg {...common}>
-          <path d="M13.5 6.5 17.5 10.5" />
-          <path d="m5 19 3.25-.65 9.6-9.6a2.1 2.1 0 0 0-3-3l-9.6 9.6L5 19Z" />
-          <path d="M13 5H7a3 3 0 0 0-3 3v9a3 3 0 0 0 3 3h9a3 3 0 0 0 3-3v-6" />
+          <path d="M3 10.2 12 3l9 7.2" />
+          <path d="M5 9.5V21h14V9.5" />
         </svg>
       );
-    case 'splash':
+    case 'book':
       return (
         <svg {...common}>
-          <rect height="16" rx="2.5" width="18" x="3" y="4" />
-          <circle cx="8.5" cy="9" r="1.25" />
-          <path d="m5.5 17 4.25-4.25 3 3 2.25-2.25L18.5 17" />
+          <path d="M4 4.5A1.5 1.5 0 0 1 5.5 3H11v18H5.5A1.5 1.5 0 0 1 4 19.5z" />
+          <path d="M20 4.5A1.5 1.5 0 0 0 18.5 3H13v18h5.5a1.5 1.5 0 0 0 1.5-1.5z" />
         </svg>
       );
-    case 'content':
+    case 'store':
       return (
         <svg {...common}>
-          <path d="M5 8h14l-1 11H6L5 8Z" />
-          <path d="m7 8 1.5-4h7L17 8" />
-          <path d="M9.5 12h5" />
+          <path d="M3 7h18l-1 4.2a3 3 0 0 1-2.9 2.3H6.9A3 3 0 0 1 4 11.2z" />
+          <path d="M5 13.5V21h14v-7.5" />
+          <path d="M8 7V5a4 4 0 0 1 8 0v2" />
         </svg>
       );
-    case 'reports':
+    case 'users':
       return (
         <svg {...common}>
-          <path d="M4 20V10h4v10" />
-          <path d="M10 20V4h4v16" />
-          <path d="M16 20v-7h4v7" />
-          <path d="M3 20h18" />
+          <circle cx="9" cy="8" r="3.2" />
+          <path d="M3.5 20c0-3.1 2.5-5.2 5.5-5.2s5.5 2.1 5.5 5.2" />
+          <path d="M16.5 6.4a3 3 0 0 1 0 5.9" />
+          <path d="M18 14.9c2 .6 3.4 2.3 3.4 4.6" />
+        </svg>
+      );
+    case 'chart':
+      return (
+        <svg {...common}>
+          <path d="M4 20V10" />
+          <path d="M10 20V4" />
+          <path d="M16 20v-7" />
+          <path d="M22 20H2" />
+        </svg>
+      );
+    case 'image':
+      return (
+        <svg {...common}>
+          <rect height="16" rx="2.6" width="18" x="3" y="4" />
+          <circle cx="8.6" cy="9.6" r="1.6" />
+          <path d="m4 17 4.6-4.2L13 17" />
+          <path d="m13 15 2.6-2.4L20 17" />
+        </svg>
+      );
+    case 'shield':
+      return (
+        <svg {...common}>
+          <path d="M12 3l7.5 3v5.6c0 4.5-3 8.3-7.5 9.4-4.5-1.1-7.5-4.9-7.5-9.4V6z" />
+          <path d="m9 12 2.2 2.2L15.5 10" />
+        </svg>
+      );
+    case 'ops':
+      return (
+        <svg {...common}>
+          <rect height="6" rx="2" width="18" x="3" y="4" />
+          <rect height="6" rx="2" width="18" x="3" y="14" />
+          <path d="M7 7h.01M7 17h.01" />
         </svg>
       );
     case 'settings':
@@ -75,27 +128,49 @@ function AdminIcon({ name }: { name: AdminIconName }) {
   }
 }
 
-export function AdminSidebar() {
+export function AdminSidebar({ current = 'home' }: { current?: string } = {}) {
   return (
     <aside className="admin-sidebar" aria-label="ناوبری مدیریت">
-      <a className="admin-logo" href="#review">
+      <a className="admin-logo" href="#home">
         <span aria-hidden="true">◇</span>
         LearnBox
       </a>
       <nav>
-        {navItems.map(({ label, icon, href }, index) => (
-          <a
-            aria-current={index === 0 ? 'page' : undefined}
-            className={index === 0 ? 'admin-nav-item is-current' : 'admin-nav-item'}
-            href={href}
-            key={label}
-          >
-            <span aria-hidden="true" className="admin-nav-icon" data-admin-nav-icon={icon}>
-              <AdminIcon name={icon} />
+        {navItems.map((item) => {
+          const icon = (
+            <span aria-hidden="true" className="admin-nav-icon" data-admin-nav-icon={item.icon}>
+              <AdminIcon name={item.icon} />
             </span>
-            {label}
-          </a>
-        ))}
+          );
+
+          if (!('route' in item) || !item.route) {
+            return (
+              <span
+                aria-disabled="true"
+                className="admin-nav-item is-pending"
+                data-admin-nav-pending="true"
+                key={item.label}
+                title="این بخش هنوز پیاده‌سازی نشده است"
+              >
+                {icon}
+                {item.label}
+              </span>
+            );
+          }
+
+          const isCurrent = item.route === current;
+          return (
+            <a
+              aria-current={isCurrent ? 'page' : undefined}
+              className={isCurrent ? 'admin-nav-item is-current' : 'admin-nav-item'}
+              href={`#${item.route}`}
+              key={item.label}
+            >
+              {icon}
+              {item.label}
+            </a>
+          );
+        })}
       </nav>
       <button className="collapse-control" type="button">
         <span aria-hidden="true" data-admin-collapse-icon>

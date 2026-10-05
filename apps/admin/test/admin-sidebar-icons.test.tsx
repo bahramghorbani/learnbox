@@ -29,7 +29,7 @@ describe('AdminSidebar iconography', () => {
     await act(async () => root?.render(createElement(AdminSidebar)));
 
     const items = [...container.querySelectorAll('.admin-nav-item')];
-    expect(items).toHaveLength(5);
+    expect(items).toHaveLength(9);
 
     for (const item of items) {
       const icon = item.querySelector('[data-admin-nav-icon]');
@@ -53,7 +53,8 @@ describe('AdminSidebar iconography', () => {
 
     const active = container.querySelector('.admin-nav-item.is-current');
     expect(active?.getAttribute('aria-current')).toBe('page');
-    expect(active?.textContent).toContain('صف بررسی');
+    // The first item of the APPROVED, DESIGN FROZEN nav (prototypes/admin-ui-v1, PDR-009).
+    expect(active?.textContent).toContain('خانه / نمای کلی');
 
     const collapse = container.querySelector('.collapse-control');
     expect(collapse?.querySelector('[data-admin-collapse-icon] svg')).not.toBeNull();

@@ -68,6 +68,17 @@ describe('ContentReviewWorkspace (unauthenticated shell, LB-B30)', () => {
       // No learner card content, queue rows, gate, media or release panel may render.
       expect(rendered.container.querySelectorAll('[data-review-item]')).toHaveLength(0);
       expect(rendered.container.querySelectorAll('.review-gate-list')).toHaveLength(0);
+      // The invariant under test is that protected LEARNER content never reaches an
+      // unauthenticated viewer. Assert it against the content region only: the surrounding
+      // Admin chrome (sidebar navigation, topbar) is static, approved, non-learner UI copy
+      // that ships in the bundle regardless of session state. Matching leak terms against
+      // the whole container conflated the two, so a legitimate navigation label could fail
+      // this test — or, worse, be renamed to satisfy it — without the security boundary
+      // having moved at all. `خانه` therefore stays in the protected list below: inside the
+      // content region it is still the Persian meaning of `das Haus` and a real leak signal.
+      const contentRegion = rendered.container.querySelector('.admin-workspace');
+      expect(contentRegion).not.toBeNull();
+      const contentText = contentRegion?.textContent ?? '';
       for (const leaked of [
         'das Haus',
         'die Häuser',
@@ -76,7 +87,7 @@ describe('ContentReviewWorkspace (unauthenticated shell, LB-B30)', () => {
         'Das Haus ist klein.',
         'Goethe A1',
       ]) {
-        expect(rendered.text).not.toContain(leaked);
+        expect(contentText).not.toContain(leaked);
       }
     } finally {
       await rendered.unmount();
@@ -88,6 +99,25 @@ describe('ContentReviewWorkspace (unauthenticated shell, LB-B30)', () => {
     try {
       expect(rendered.text).not.toContain('تأیید در پیش‌نمایش');
       expect(rendered.text).not.toContain('بازگرداندن برای اصلاح');
+    } finally {
+      await rendered.unmount();
+    }
+  });
+
+  it('separates approved navigation chrome from the protected content region', async () => {
+    // Regression guard for the boundary itself. «خانه / نمای کلی» is approved, frozen navigation
+    // copy and MUST render even with no session; the identical substring inside the content region
+    // would mean leaked learner vocabulary. Asserting both halves keeps the next person from
+    // "fixing" a future failure by renaming the nav item instead of closing a real leak.
+    const rendered = await renderWorkspace();
+    try {
+      const sidebar = rendered.container.querySelector('.admin-sidebar');
+      expect(sidebar?.textContent).toContain('خانه / نمای کلی');
+
+      const contentRegion = rendered.container.querySelector('.admin-workspace');
+      expect(contentRegion).not.toBeNull();
+      expect(contentRegion?.querySelector('.admin-sidebar')).toBeNull();
+      expect(contentRegion?.textContent ?? '').not.toContain('خانه');
     } finally {
       await rendered.unmount();
     }
