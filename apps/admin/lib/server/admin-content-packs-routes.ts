@@ -13,6 +13,8 @@ type ListDependencies = {
    * workspace can keep create/edit controls hidden when they would have no real behaviour.
    */
   manageEnabled?: boolean;
+  /** M1.4: whether AI pack generation is available (manage gate AND a configured provider). */
+  aiEnabled?: boolean;
 };
 
 type CardsDependencies = {
@@ -70,7 +72,11 @@ export function createContentPacksListRoute(dependencies: ListDependencies) {
     try {
       const result = await dependencies.store.listPacks(session.userId);
       if (result.status === 'forbidden') return notFound();
-      return json({ packs: result.packs, manageEnabled: dependencies.manageEnabled === true });
+      return json({
+        packs: result.packs,
+        manageEnabled: dependencies.manageEnabled === true,
+        aiEnabled: dependencies.aiEnabled === true,
+      });
     } catch {
       return unavailable();
     }

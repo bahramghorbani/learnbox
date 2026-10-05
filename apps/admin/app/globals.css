@@ -2083,6 +2083,32 @@ button {
 .cp-workspace .cp-import-statement strong {
   font-variant-numeric: tabular-nums;
 }
+/* M1.4 — AI generation: head actions, plan summary and real generation progress. */
+.cp-head-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.cp-workspace .cp-plan-grid {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 14px;
+  margin: 0 0 12px;
+  font-size: 12px;
+  line-height: 1.8;
+}
+.cp-workspace .cp-plan-grid dt {
+  color: var(--muted);
+}
+.cp-workspace .cp-plan-grid dd {
+  margin: 0;
+}
+.cp-workspace .cp-progress {
+  inline-size: 100%;
+  block-size: 8px;
+  margin: 0 0 10px;
+}
 .cp-workspace .cp-import-issues h4 {
   margin: 0 0 8px;
   font-size: 12px;

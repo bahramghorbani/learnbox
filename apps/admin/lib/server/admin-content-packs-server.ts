@@ -20,6 +20,16 @@ import {
   createContentImportPreviewRoute,
   createContentImportTemplateRoute,
 } from './admin-content-import-routes';
+import {
+  createAiAcceptRoute,
+  createAiApprovePlanRoute,
+  createAiJobStatusRoute,
+  createAiModelsRoute,
+  createAiPlanRoute,
+  createAiRunBatchRoute,
+} from './admin-ai-generation-routes';
+import { readAiGenerationConfig } from './ai-generation-provider';
+import { AiPackGenerationService } from './ai-pack-generation-service';
 import { ContentImportService } from './content-import-service';
 import { readAdminDatabaseConfig, type AdminDatabaseConfig } from './admin-database';
 import { getSharedAdminDatabasePool } from './admin-database-pool';
@@ -67,17 +77,48 @@ export function createAdminContentPacksServer(dependencies: {
     };
     // Bulk import rides the same manage gate and the same canonical write store, so it can never
     // become a second content path with its own rules.
+    const importService = new ContentImportService(pool, writeStore);
     const importShared = {
       enabled: manageConfig.enabled,
       config: manageConfig,
       sessionStore,
-      service: new ContentImportService(pool, writeStore),
+      service: importService,
+      now: dependencies.now,
+    };
+    // AI generation (M1.4) rides the same manage gate AND its own default-off flag, and reaches
+    // canonical content only through the import service above. With no provider credential the
+    // routes stay authenticated but answer an honest 503 instead of inventing cards.
+    const aiConfig = readAiGenerationConfig(dependencies.environment);
+    const aiShared = {
+      enabled: manageConfig.enabled && aiConfig.enabled,
+      config: manageConfig,
+      sessionStore,
+      // The service is built whenever the FEATURE is on, with or without a credential: inspecting
+      // and accepting an already-generated job must not depend on the provider. The two routes
+      // that do call the provider answer an honest 503 when it is absent.
+      service: aiConfig.enabled
+        ? new AiPackGenerationService(
+            pool,
+            aiConfig.provider,
+            aiConfig.limits,
+            importService,
+            writeStore,
+          )
+        : undefined,
+      // Only the model-catalog route needs the provider itself; it is the sole holder of the key.
+      provider: aiConfig.enabled ? aiConfig.provider : undefined,
       now: dependencies.now,
     };
     return {
       enabled: true as const,
       manageEnabled: manageConfig.enabled,
-      list: createContentPacksListRoute({ ...shared, manageEnabled: manageConfig.enabled }),
+      list: createContentPacksListRoute({
+        ...shared,
+        manageEnabled: manageConfig.enabled,
+        // Reported to the workspace only when a real provider is available, so the Admin is never
+        // offered a generation button that cannot generate.
+        aiEnabled: aiShared.enabled && aiConfig.enabled && aiConfig.provider !== undefined,
+      }),
       cards: createContentPackCardsRoute(shared),
       createPack: createContentPackCreateRoute(writeShared),
       editPack: createContentPackEditRoute(writeShared),
@@ -87,6 +128,13 @@ export function createAdminContentPacksServer(dependencies: {
       importConfirm: createContentImportConfirmRoute(importShared),
       importTemplate: createContentImportTemplateRoute(importShared),
       importContract: createContentImportContractRoute(importShared),
+      aiEnabled: aiShared.enabled,
+      aiModels: createAiModelsRoute(aiShared),
+      aiPlan: createAiPlanRoute(aiShared),
+      aiApprovePlan: createAiApprovePlanRoute(aiShared),
+      aiRunBatch: createAiRunBatchRoute(aiShared),
+      aiJobStatus: createAiJobStatusRoute(aiShared),
+      aiAccept: createAiAcceptRoute(aiShared),
     };
   } catch {
     return { enabled: false as const };

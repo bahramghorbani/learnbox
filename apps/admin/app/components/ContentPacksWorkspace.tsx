@@ -8,6 +8,11 @@ import {
   type ImportResultSummary,
 } from './ContentImportModal';
 import {
+  AiPackGenerationModal,
+  type AcceptSummary,
+  type GenerationJobView,
+} from './AiPackGenerationModal';
+import {
   CardFormModal,
   PackFormModal,
   emptyCardForm,
@@ -173,6 +178,47 @@ function splitList(value: string): string[] {
     .split(/[،,]/)
     .map((item) => item.trim())
     .filter((item) => item.length > 0);
+}
+
+/**
+ * JSON POST for the AI generation routes (Phase 1 / M1.4).
+ *
+ * Same credential and CSRF contract as `sendMutation`; it exists separately only because these
+ * routes return a payload the caller needs (job state, analysis), which `sendMutation` discards.
+ */
+async function postAiJson<T>(
+  path: string,
+  body: unknown,
+): Promise<{ ok: true; payload: T } | { ok: false; message: string }> {
+  const csrfToken = readBrowserCookie('__Host-learnbox_admin_csrf');
+  if (!csrfToken) {
+    return { ok: false, message: 'نشان امنیتی CSRF در دسترس نیست؛ صفحه را تازه کنید.' };
+  }
+  try {
+    const response = await fetch(path, {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'content-type': 'application/json', 'x-learnbox-csrf-token': csrfToken },
+      body: JSON.stringify(body),
+    });
+    if (response.ok) return { ok: true, payload: (await response.json()) as T };
+    if (response.status === 401) {
+      return { ok: false, message: 'نشست معتبر نیست؛ دوباره وارد شوید.' };
+    }
+    if (response.status === 403) {
+      return { ok: false, message: 'نقش شما اجازهٔ ساخت محتوا را ندارد.' };
+    }
+    if (response.status === 428) {
+      return { ok: false, message: 'احراز هویت مجدد لازم است؛ دوباره وارد شوید.' };
+    }
+    const payload = (await response.json().catch(() => undefined)) as
+      { message?: string; code?: string } | undefined;
+    // The server's own reason is preferred, so an unconfigured provider says exactly that.
+    if (payload?.message) return { ok: false, message: payload.message };
+    return { ok: false, message: 'درخواست تولید با خطا روبه‌رو شد.' };
+  } catch {
+    return { ok: false, message: 'ارتباط با سرور برقرار نشد.' };
+  }
 }
 
 /**
@@ -364,6 +410,9 @@ export function ContentPacksWorkspace() {
   // minted ONCE per opened import, so re-clicking confirm (or retrying after a network error)
   // replays the same keys and cannot create a second copy of the same rows.
   const [importSession, setImportSession] = useState<{ packId: string; importKey: string }>();
+  // AI generation (M1.4) has its own default-off gate on top of `manageEnabled`.
+  const [aiEnabled, setAiEnabled] = useState(false);
+  const [aiSession, setAiSession] = useState<{ acceptKey: string }>();
 
   const loadPacks = useCallback(async () => {
     setPhase('loading');
@@ -384,10 +433,12 @@ export function ContentPacksWorkspace() {
       const payload = (await response.json()) as {
         packs?: ServerPack[];
         manageEnabled?: boolean;
+        aiEnabled?: boolean;
       };
       const list = Array.isArray(payload.packs) ? payload.packs : [];
       setPacks(list);
       setManageEnabled(payload.manageEnabled === true);
+      setAiEnabled(payload.aiEnabled === true);
       setPhase(list.length === 0 ? 'empty' : 'ready');
     } catch {
       setPhase('error');
@@ -505,13 +556,24 @@ export function ContentPacksWorkspace() {
             </p>
           </div>
           {manageEnabled && phase !== 'disabled' && phase !== 'unauthorized' ? (
-            <button
-              className="btn primary"
-              type="button"
-              onClick={() => setPackForm({ mode: 'create', values: emptyPackForm })}
-            >
-              افزودن بستهٔ جدید
-            </button>
+            <div className="cp-head-actions">
+              {aiEnabled ? (
+                <button
+                  className="btn"
+                  type="button"
+                  onClick={() => setAiSession({ acceptKey: createClientKey() })}
+                >
+                  ساخت بسته با هوش مصنوعی
+                </button>
+              ) : null}
+              <button
+                className="btn primary"
+                type="button"
+                onClick={() => setPackForm({ mode: 'create', values: emptyPackForm })}
+              >
+                افزودن بستهٔ جدید
+              </button>
+            </div>
           ) : null}
         </div>
 
@@ -920,6 +982,90 @@ export function ContentPacksWorkspace() {
             );
             if (!result.ok) return result;
             return { ok: true as const, summary: result.payload as ImportResultSummary };
+          }}
+        />
+      ) : null}
+
+      {aiSession ? (
+        <AiPackGenerationModal
+          onClose={() => {
+            setAiSession(undefined);
+            // Acceptance may have created a new draft pack, so refresh the canonical read model.
+            void loadPacks();
+          }}
+          onPlan={async (prompt, model) => {
+            const result = await postAiJson<{ job: GenerationJobView }>('/api/content/ai/plan', {
+              prompt,
+              model,
+            });
+            return result.ok ? { ok: true as const, job: result.payload.job } : result;
+          }}
+          onLoadModels={async () => {
+            // Read-only catalog: a failure is not surfaced as an error, it just hides the
+            // selector and leaves generation on the server's configured default.
+            try {
+              const response = await fetch('/api/content/ai/models', {
+                credentials: 'same-origin',
+                headers: { accept: 'application/json' },
+              });
+              if (!response.ok) return undefined;
+              const payload: unknown = await response.json();
+              const models = (payload as { models?: unknown })?.models;
+              const defaultModel = (payload as { defaultModel?: unknown })?.defaultModel;
+              if (!Array.isArray(models) || typeof defaultModel !== 'string') return undefined;
+              return { models: models.map(String), defaultModel };
+            } catch {
+              return undefined;
+            }
+          }}
+          onApprovePlan={async (jobId, planFingerprint) => {
+            const result = await postAiJson<{ job: GenerationJobView }>(
+              '/api/content/ai/plan/approve',
+              { jobId, planFingerprint },
+            );
+            return result.ok ? { ok: true as const, job: result.payload.job } : result;
+          }}
+          onRunBatch={async (jobId) => {
+            const result = await postAiJson<{ job: GenerationJobView }>(
+              '/api/content/ai/generate',
+              { jobId },
+            );
+            return result.ok ? { ok: true as const, job: result.payload.job } : result;
+          }}
+          onRefresh={async (jobId) => {
+            const result = await postAiJson<{ job: GenerationJobView; analysis: ImportAnalysis }>(
+              '/api/content/ai/job',
+              { jobId },
+            );
+            return result.ok
+              ? {
+                  ok: true as const,
+                  job: result.payload.job,
+                  analysis: result.payload.analysis,
+                }
+              : result;
+          }}
+          onAccept={async (jobId, fingerprint, selectedRows) => {
+            const result = await postAiJson<AcceptSummary & { created: number }>(
+              '/api/content/ai/accept',
+              {
+                jobId,
+                fingerprint,
+                // Minted once per opened session, so a retried acceptance replays the same key
+                // and cannot create a second copy of the accepted cards.
+                acceptKey: aiSession.acceptKey,
+                selectedRows,
+              },
+            );
+            if (!result.ok) return result;
+            return {
+              ok: true as const,
+              summary: {
+                created: result.payload.created,
+                skipped: result.payload.skipped,
+                packId: result.payload.packId,
+              },
+            };
           }}
         />
       ) : null}
