@@ -347,7 +347,13 @@ describe('flag-off service equivalence to v1.2.1 over 10,000 inputs', () => {
       checked++;
     }
     expect(checked).toBe(10_000);
-  });
+    // This case is deterministic and exhaustive: it replays all 10,000 generated inputs through the
+    // real service and compares every write against scheduleReview(). It runs in well under a second
+    // locally but has been measured at 5.2-7.1s on hosted GitHub runners, which exceeds vitest's 5s
+    // default and fails the `quality` gate for timing reasons alone. The timeout below is raised for
+    // THIS case only; the input count and assertions are deliberately unchanged, because reducing
+    // either would shrink the equivalence coverage this test exists to provide.
+  }, 30_000);
 });
 
 describe('CP7 failure semantics at the SERVICE boundary (not just the preflight function)', () => {
