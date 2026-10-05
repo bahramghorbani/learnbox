@@ -3,6 +3,11 @@
 import React, { useCallback, useEffect, useState } from 'react';
 
 import {
+  ContentImportModal,
+  type ImportAnalysis,
+  type ImportResultSummary,
+} from './ContentImportModal';
+import {
   CardFormModal,
   PackFormModal,
   emptyCardForm,
@@ -233,6 +238,56 @@ async function sendMutation(
   }
 }
 
+/**
+ * Single upload path for both import steps (M1.3). Same session cookie + CSRF header as
+ * `sendMutation`; the body is multipart because it carries a file. Preview and confirm differ
+ * only by endpoint and by the fields that bind a confirm to the previewed analysis.
+ */
+async function sendImport(
+  path: string,
+  file: File,
+  packId: string,
+  extra: Record<string, string> = {},
+): Promise<{ ok: true; payload: unknown } | { ok: false; message: string }> {
+  const csrfToken = readBrowserCookie('__Host-learnbox_admin_csrf');
+  if (!csrfToken) {
+    return { ok: false, message: 'نشان امنیتی CSRF در دسترس نیست؛ صفحه را تازه کنید.' };
+  }
+  const form = new FormData();
+  form.set('packId', packId);
+  form.set('file', file, file.name);
+  for (const [key, value] of Object.entries(extra)) form.set(key, value);
+  try {
+    const response = await fetch(path, {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'x-learnbox-csrf-token': csrfToken },
+      body: form,
+    });
+    if (response.ok) return { ok: true, payload: await response.json() };
+    if (response.status === 401) {
+      return { ok: false, message: 'نشست معتبر نیست؛ دوباره وارد شوید.' };
+    }
+    if (response.status === 403) {
+      return { ok: false, message: 'نقش شما اجازهٔ ویرایش محتوا را ندارد.' };
+    }
+    if (response.status === 428) {
+      return { ok: false, message: 'احراز هویت مجدد لازم است؛ دوباره وارد شوید.' };
+    }
+    if (response.status === 413) {
+      return { ok: false, message: 'حجم فایل بیش از حد مجاز است.' };
+    }
+    if (response.status === 422 || response.status === 409) {
+      const payload = (await response.json().catch(() => undefined)) as
+        { message?: string } | undefined;
+      return { ok: false, message: payload?.message ?? 'فایل قابل پردازش نیست.' };
+    }
+    return { ok: false, message: 'پردازش فایل ناموفق بود.' };
+  } catch {
+    return { ok: false, message: 'ارتباط با سرور برقرار نشد؛ چیزی ذخیره نشد.' };
+  }
+}
+
 function packFormFrom(pack: ServerPack): PackFormValues {
   return {
     packId: pack.id,
@@ -305,6 +360,10 @@ export function ContentPacksWorkspace() {
     values: CardFormValues;
   }>();
   const [savedNotice, setSavedNotice] = useState<string>();
+  // Bulk import (Phase 1 / M1.3) rides the same manage gate as create/edit. The import key is
+  // minted ONCE per opened import, so re-clicking confirm (or retrying after a network error)
+  // replays the same keys and cannot create a second copy of the same rows.
+  const [importSession, setImportSession] = useState<{ packId: string; importKey: string }>();
 
   const loadPacks = useCallback(async () => {
     setPhase('loading');
@@ -687,6 +746,17 @@ export function ContentPacksWorkspace() {
                       افزودن کارت
                     </button>
                   ) : null}
+                  {manageEnabled && openPackId ? (
+                    <button
+                      className="btn"
+                      type="button"
+                      onClick={() =>
+                        setImportSession({ packId: openPackId, importKey: createClientKey() })
+                      }
+                    >
+                      درون‌ریزی CSV / XLSX
+                    </button>
+                  ) : null}
                 </div>
                 <div className="card-body">
                   {cardsPhase === 'loading' ? (
@@ -812,6 +882,40 @@ export function ContentPacksWorkspace() {
           packLabel={openPackRecord?.displayName ?? openPackId ?? ''}
           onClose={() => setCardForm(undefined)}
           onSubmit={submitCardForm}
+        />
+      ) : null}
+
+      {importSession ? (
+        <ContentImportModal
+          packLabel={openPackRecord?.displayName ?? importSession.packId}
+          templateHref="/api/content/import/template?example=1"
+          onClose={() => {
+            const { packId } = importSession;
+            setImportSession(undefined);
+            // A completed import created draft cards, so refresh the canonical read model.
+            void loadCards(packId);
+            void loadPacks();
+          }}
+          onPreview={async (file) => {
+            const result = await sendImport(
+              '/api/content/import/preview',
+              file,
+              importSession.packId,
+            );
+            if (!result.ok) return result;
+            const payload = result.payload as { analysis: ImportAnalysis };
+            return { ok: true as const, analysis: payload.analysis };
+          }}
+          onConfirm={async (file, fingerprint) => {
+            const result = await sendImport(
+              '/api/content/import/confirm',
+              file,
+              importSession.packId,
+              { fingerprint, importKey: importSession.importKey },
+            );
+            if (!result.ok) return result;
+            return { ok: true as const, summary: result.payload as ImportResultSummary };
+          }}
         />
       ) : null}
     </main>

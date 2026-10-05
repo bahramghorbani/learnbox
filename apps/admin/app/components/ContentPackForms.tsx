@@ -20,7 +20,7 @@ function issueFor(issues: FieldIssue[], field: string): string | undefined {
   return issues.find((issue) => issue.field === field)?.message;
 }
 
-function CpModal({
+export function CpModal({
   title,
   onClose,
   children,

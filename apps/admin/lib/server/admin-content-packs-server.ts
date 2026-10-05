@@ -14,6 +14,13 @@ import {
   createContentPackCreateRoute,
   createContentPackEditRoute,
 } from './admin-content-packs-write-routes';
+import {
+  createContentImportConfirmRoute,
+  createContentImportContractRoute,
+  createContentImportPreviewRoute,
+  createContentImportTemplateRoute,
+} from './admin-content-import-routes';
+import { ContentImportService } from './content-import-service';
 import { readAdminDatabaseConfig, type AdminDatabaseConfig } from './admin-database';
 import { getSharedAdminDatabasePool } from './admin-database-pool';
 import { PostgresOwnerAuthStore } from './postgres-owner-auth-store';
@@ -50,11 +57,21 @@ export function createAdminContentPacksServer(dependencies: {
     // Writes carry their own default-off gate; when it is off the mutation routes 404 while the
     // read workspace keeps working.
     const manageConfig = readAdminContentPacksManageConfig(dependencies.environment);
+    const writeStore = new PostgresContentPacksWriteStore(pool);
     const writeShared = {
       enabled: manageConfig.enabled,
       config: manageConfig,
       sessionStore,
-      store: new PostgresContentPacksWriteStore(pool),
+      store: writeStore,
+      now: dependencies.now,
+    };
+    // Bulk import rides the same manage gate and the same canonical write store, so it can never
+    // become a second content path with its own rules.
+    const importShared = {
+      enabled: manageConfig.enabled,
+      config: manageConfig,
+      sessionStore,
+      service: new ContentImportService(pool, writeStore),
       now: dependencies.now,
     };
     return {
@@ -66,6 +83,10 @@ export function createAdminContentPacksServer(dependencies: {
       editPack: createContentPackEditRoute(writeShared),
       createCard: createContentCardCreateRoute(writeShared),
       editCard: createContentCardEditRoute(writeShared),
+      importPreview: createContentImportPreviewRoute(importShared),
+      importConfirm: createContentImportConfirmRoute(importShared),
+      importTemplate: createContentImportTemplateRoute(importShared),
+      importContract: createContentImportContractRoute(importShared),
     };
   } catch {
     return { enabled: false as const };
