@@ -20,7 +20,7 @@ const config = {
 const now = new Date('2026-10-05T10:30:00.000Z');
 const sessionToken = 't'.repeat(43);
 const csrfToken = 'c'.repeat(43);
-const actorUserId = '71b5b438-99c7-4a2e-a09a-859f7c9f95cb';
+const actorUserId = '22222222-2222-4222-8222-222222222222';
 const packId = 'b1f0c0de-1111-4222-8333-444455556666';
 
 function sessionStore(overrides: { userId?: string | null } = {}) {
@@ -59,7 +59,7 @@ const pack: ContentPackEntry = {
 };
 
 const card: ContentPackCardEntry = {
-  cardId: '0a1b2c3d-4e5f-4a6b-8c9d-0e1f2a3b4c5d',
+  cardId: '33333333-3333-4333-8333-333333333333',
   contentId: 'start-a1-haus',
   cardVersionId: 'b89dabb1-406a-5b88-b535-4e90ba6af24c',
   lemma: 'Haus',
@@ -69,6 +69,14 @@ const card: ContentPackCardEntry = {
   essentialInflection: 'die Häuser',
   pronunciationIpa: 'haʊs',
   examples: [{ german: 'Das Haus ist groß.', persian: 'خانه بزرگ است.' }],
+  simpleGermanDefinition: 'Ein Gebäude zum Wohnen.',
+  grammarNote: 'Neutrum, Plural mit Umlaut.',
+  topicTags: ['wohnen'],
+  difficulty: 2,
+  cefr: 'A1',
+  visualConcept: 'Ein kleines Haus mit rotem Dach.',
+  imagePrompt: 'simple illustration of a house',
+  sourceReference: 'start-35',
   versionStatus: 'published',
   sortOrder: 1,
   media: { imageCount: 0, wordAudioCount: 0, sentenceAudioCount: 0, unrecorded: true },

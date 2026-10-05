@@ -28,6 +28,19 @@ export interface ContentPackCardEntry {
   essentialInflection: string | null;
   pronunciationIpa: string | null;
   examples: Array<{ german: string; persian: string }>;
+  /**
+   * Remaining editable canonical fields (Phase 1 / M1.2). The management form must prefill the
+   * WHOLE editable surface: a form that only knew the display subset above would save blanks over
+   * stored `content_json` values on every edit.
+   */
+  simpleGermanDefinition: string;
+  grammarNote: string;
+  topicTags: string[];
+  difficulty: number;
+  cefr: string;
+  visualConcept: string;
+  imagePrompt: string;
+  sourceReference: string;
   media: ContentPackCardMediaState;
 }
 
@@ -219,11 +232,13 @@ export class PostgresContentPacksStore {
                 c.lemma,
                 cv.id AS card_version_id,
                 cv.status,
+                cv.source_reference,
                 cv.content_json
            FROM pack_cards pc
            JOIN cards c ON c.id = pc.card_id
            JOIN LATERAL (
-                  SELECT inner_cv.id, inner_cv.status, inner_cv.content_json
+                  SELECT inner_cv.id, inner_cv.status, inner_cv.source_reference,
+                         inner_cv.content_json
                     FROM card_versions inner_cv
                    WHERE inner_cv.card_id = pc.card_id
                    ORDER BY inner_cv.version DESC
@@ -269,6 +284,16 @@ export class PostgresContentPacksStore {
               ? String(pronunciation.ipa)
               : null,
           examples,
+          simpleGermanDefinition: String(content.simpleGermanDefinition ?? ''),
+          grammarNote: String(content.grammarNote ?? ''),
+          topicTags: Array.isArray(content.topicTags)
+            ? (content.topicTags as unknown[]).map(String)
+            : [],
+          difficulty: toCount(content.difficulty) || 1,
+          cefr: String(content.cefr ?? ''),
+          visualConcept: String(content.visualConcept ?? ''),
+          imagePrompt: String(content.imagePrompt ?? ''),
+          sourceReference: String(row.source_reference ?? ''),
           media: deriveCardMediaState(content.media),
         } satisfies ContentPackCardEntry;
       });

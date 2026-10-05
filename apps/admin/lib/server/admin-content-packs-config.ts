@@ -15,3 +15,17 @@ export function readAdminContentPacksConfig(environment: Environment): AdminAuth
   if (!auth.enabled) return { enabled: false };
   return auth;
 }
+
+/**
+ * Separate default-off gate for Pack/Card WRITES (Phase 1, Milestone 1.2).
+ *
+ * The read flag above deliberately grants no mutation capability, so management needs its own
+ * switch and additionally requires the read workspace to be on — a write surface with no readable
+ * workspace is never a valid configuration. Enabling this flag authorizes draft authoring only:
+ * publication stays behind the canonical review/release gates, and it grants no migration,
+ * staging or Production activation authority.
+ */
+export function readAdminContentPacksManageConfig(environment: Environment): AdminAuthConfig {
+  if (environment.LEARNBOX_ADMIN_CONTENT_PACKS_MANAGE_ENABLED !== 'true') return { enabled: false };
+  return readAdminContentPacksConfig(environment);
+}
