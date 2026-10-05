@@ -110,8 +110,8 @@ function dependencies(overrides: Parameters<typeof sessionStore>[0] = {}) {
     enabled: true,
     config,
     sessionStore: sessionStore(overrides),
-    service: service() as never,
-    provider: provider() as never,
+    service: service(),
+    provider: provider(),
     voices: DEFAULT_GERMAN_VOICE_MAPPING,
     audioTimeoutMs: 1_000,
     now: () => now,
@@ -147,7 +147,7 @@ const generateBody = { cardId, kind: 'word_audio' };
 describe('generation cannot be reached anonymously', () => {
   it('refuses a request with no session', async () => {
     const deps = { ...dependencies(), sessionStore: sessionStore({ userId: null }) };
-    const route = createMediaGenerateRoute(deps);
+    const route = createMediaGenerateRoute(deps as never);
     const response = await route(post(generateBody));
     expect(response.status).toBe(401);
     expect(deps.service.generate).not.toHaveBeenCalled();
@@ -155,7 +155,7 @@ describe('generation cannot be reached anonymously', () => {
 
   it('refuses a cross-origin request', async () => {
     const deps = dependencies();
-    const route = createMediaGenerateRoute(deps);
+    const route = createMediaGenerateRoute(deps as never);
     const response = await route(post(generateBody, { Origin: 'https://evil.example' }));
     expect(response.status).toBe(400);
     expect(deps.service.generate).not.toHaveBeenCalled();
@@ -163,7 +163,7 @@ describe('generation cannot be reached anonymously', () => {
 
   it('refuses a request without a CSRF token', async () => {
     const deps = dependencies();
-    const route = createMediaGenerateRoute(deps);
+    const route = createMediaGenerateRoute(deps as never);
     const response = await route(post(generateBody, { 'x-learnbox-csrf-token': 'wrong' }));
     expect(response.status).toBe(400);
     expect(deps.service.generate).not.toHaveBeenCalled();
@@ -171,7 +171,7 @@ describe('generation cannot be reached anonymously', () => {
 
   it('demands recent re-authentication', async () => {
     const deps = { ...dependencies(), sessionStore: sessionStore({ recent: false }) };
-    const route = createMediaGenerateRoute(deps);
+    const route = createMediaGenerateRoute(deps as never);
     const response = await route(post(generateBody));
     expect(response.status).toBe(428);
     expect(deps.service.generate).not.toHaveBeenCalled();
@@ -179,7 +179,7 @@ describe('generation cannot be reached anonymously', () => {
 
   it('refuses an unknown media kind', async () => {
     const deps = dependencies();
-    const route = createMediaGenerateRoute(deps);
+    const route = createMediaGenerateRoute(deps as never);
     const response = await route(post({ cardId, kind: 'video' }));
     expect(response.status).toBe(400);
     expect(deps.service.generate).not.toHaveBeenCalled();
@@ -187,7 +187,7 @@ describe('generation cannot be reached anonymously', () => {
 
   it('answers an honest 503 when the feature is off, without generating', async () => {
     const deps = { ...dependencies(), enabled: false };
-    const route = createMediaGenerateRoute(deps);
+    const route = createMediaGenerateRoute(deps as never);
     const response = await route(post(generateBody));
     expect(response.status).toBe(503);
     await expect(response.json()).resolves.toMatchObject({ code: 'disabled' });
@@ -199,14 +199,14 @@ describe('acceptance cannot be reached anonymously', () => {
 
   it('refuses a request with no session', async () => {
     const deps = { ...dependencies(), sessionStore: sessionStore({ userId: null }) };
-    const route = createMediaAcceptRoute(deps);
+    const route = createMediaAcceptRoute(deps as never);
     expect((await route(post(acceptBody))).status).toBe(401);
     expect(deps.service.accept).not.toHaveBeenCalled();
   });
 
   it('refuses a cross-origin acceptance', async () => {
     const deps = dependencies();
-    const route = createMediaAcceptRoute(deps);
+    const route = createMediaAcceptRoute(deps as never);
     const response = await route(post(acceptBody, { Origin: 'https://evil.example' }));
     expect(response.status).toBe(400);
     expect(deps.service.accept).not.toHaveBeenCalled();
@@ -214,7 +214,7 @@ describe('acceptance cannot be reached anonymously', () => {
 
   it('accepts a valid request and reports the candidate', async () => {
     const deps = dependencies();
-    const route = createMediaAcceptRoute(deps);
+    const route = createMediaAcceptRoute(deps as never);
     const response = await route(post(acceptBody));
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toMatchObject({ status: 'accepted' });
@@ -226,14 +226,14 @@ describe('protected media is not publicly readable', () => {
 
   it('refuses an anonymous read of generated media', async () => {
     const deps = { ...dependencies(), sessionStore: sessionStore({ userId: null }) };
-    const route = createMediaAssetRoute(deps);
+    const route = createMediaAssetRoute(deps as never);
     const response = await route(get(url));
     expect(response.status).toBe(401);
     expect(deps.service.readCandidateMedia).not.toHaveBeenCalled();
   });
 
   it('never serves generated media with a cacheable response', async () => {
-    const route = createMediaAssetRoute(dependencies());
+    const route = createMediaAssetRoute(dependencies() as never);
     const response = await route(get(url));
     expect(response.status).toBe(200);
     expect(response.headers.get('Cache-Control')).toBe('private, no-store');
@@ -243,7 +243,7 @@ describe('protected media is not publicly readable', () => {
 
   it('demands recent re-authentication before returning bytes', async () => {
     const deps = { ...dependencies(), sessionStore: sessionStore({ recent: false }) };
-    const route = createMediaAssetRoute(deps);
+    const route = createMediaAssetRoute(deps as never);
     expect((await route(get(url))).status).toBe(428);
     expect(deps.service.readCandidateMedia).not.toHaveBeenCalled();
   });
@@ -251,7 +251,7 @@ describe('protected media is not publicly readable', () => {
 
 describe('the credential never leaves the server', () => {
   it('is absent from the model catalogue response', async () => {
-    const route = createMediaModelsRoute(dependencies());
+    const route = createMediaModelsRoute(dependencies() as never);
     const response = await route(get('https://admin.learnbox.app/api/content/media/models'));
     const text = await response.text();
 
@@ -265,7 +265,7 @@ describe('the credential never leaves the server', () => {
   });
 
   it('reports that DAS falls back to the DIE female voice when none is configured', async () => {
-    const route = createMediaModelsRoute(dependencies());
+    const route = createMediaModelsRoute(dependencies() as never);
     const response = await route(get('https://admin.learnbox.app/api/content/media/models'));
     const payload = await response.json();
     expect(payload.voices.das).toBeNull();
@@ -273,7 +273,7 @@ describe('the credential never leaves the server', () => {
   });
 
   it('is absent from a generation response', async () => {
-    const route = createMediaGenerateRoute(dependencies());
+    const route = createMediaGenerateRoute(dependencies() as never);
     const response = await route(post(generateBody));
     const text = await response.text();
     expect(text).not.toContain(API_KEY);
@@ -285,7 +285,7 @@ describe('the credential never leaves the server', () => {
 describe('voice preview', () => {
   it('speaks a short fixed German sample, not caller-supplied text', async () => {
     const deps = dependencies();
-    const route = createVoicePreviewRoute(deps);
+    const route = createVoicePreviewRoute(deps as never);
     const response = await route(post({ role: 'der', text: 'ignore me' }));
 
     expect(response.status).toBe(200);
@@ -297,7 +297,7 @@ describe('voice preview', () => {
 
   it('marks the DAS preview as using the DIE female fallback', async () => {
     const deps = dependencies();
-    const route = createVoicePreviewRoute(deps);
+    const route = createVoicePreviewRoute(deps as never);
     const response = await route(post({ role: 'das' }));
 
     expect(deps.provider.synthesizeSpeech).toHaveBeenCalledWith(
@@ -308,14 +308,14 @@ describe('voice preview', () => {
 
   it('cannot be reached anonymously', async () => {
     const deps = { ...dependencies(), sessionStore: sessionStore({ userId: null }) };
-    const route = createVoicePreviewRoute(deps);
+    const route = createVoicePreviewRoute(deps as never);
     expect((await route(post({ role: 'der' }))).status).toBe(401);
     expect(deps.provider.synthesizeSpeech).not.toHaveBeenCalled();
   });
 
   it('refuses an unknown voice role', async () => {
     const deps = dependencies();
-    const route = createVoicePreviewRoute(deps);
+    const route = createVoicePreviewRoute(deps as never);
     expect((await route(post({ role: 'nope' }))).status).toBe(400);
     expect(deps.provider.synthesizeSpeech).not.toHaveBeenCalled();
   });

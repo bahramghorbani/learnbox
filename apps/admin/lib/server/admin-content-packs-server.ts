@@ -155,6 +155,9 @@ export function createAdminContentPacksServer(dependencies: {
         // Reported to the workspace only when a real provider is available, so the Admin is never
         // offered a generation button that cannot generate.
         aiEnabled: aiShared.enabled && aiConfig.enabled && aiConfig.provider !== undefined,
+        // Offered to the workspace only with a real provider, so the Admin never sees a media
+        // button that cannot generate.
+        mediaEnabled: mediaShared.enabled && mediaProvider !== undefined,
       }),
       cards: createContentPackCardsRoute(shared),
       createPack: createContentPackCreateRoute(writeShared),
