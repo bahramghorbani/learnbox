@@ -5,6 +5,7 @@ import {
 } from './admin-auth-policy';
 import { loadAdminSession, verifyAdminCsrf } from './admin-route-security';
 import { buildCsvTemplate, IMPORT_COLUMNS } from './content-import-contract';
+import { MAX_IMPORT_ROWS } from './content-import-parse';
 import type { ContentImportService } from './content-import-service';
 
 /**
@@ -167,6 +168,28 @@ export function createContentImportConfirmRoute(dependencies: RouteDependencies)
     // The import key is the retry anchor: the same key re-applied is a no-op, never a second card.
     if (typeof importKey !== 'string' || !uuidPattern.test(importKey)) return genericInvalid();
 
+    // Explicit conflict override. Absent/empty = conflicts are skipped, which is the default.
+    // The row numbers are only a selection; the service re-validates each one against its own
+    // fresh analysis before anything is written.
+    const rawSelection = upload.form.get('selectedConflictRows');
+    let selectedConflictRows: number[] = [];
+    if (typeof rawSelection === 'string' && rawSelection.trim() !== '') {
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(rawSelection);
+      } catch {
+        return genericInvalid();
+      }
+      if (
+        !Array.isArray(parsed) ||
+        parsed.length > MAX_IMPORT_ROWS ||
+        !parsed.every((value) => Number.isSafeInteger(value) && (value as number) > 0)
+      ) {
+        return genericInvalid();
+      }
+      selectedConflictRows = [...new Set(parsed as number[])];
+    }
+
     try {
       const result = await dependencies.service.apply({
         packId: upload.packId,
@@ -175,6 +198,7 @@ export function createContentImportConfirmRoute(dependencies: RouteDependencies)
         actorUserId: authorized.actorUserId,
         importKey,
         expectedFingerprint: fingerprint,
+        selectedConflictRows,
       });
       switch (result.status) {
         case 'forbidden':
@@ -187,6 +211,7 @@ export function createContentImportConfirmRoute(dependencies: RouteDependencies)
           return json({
             status: result.status,
             created: result.created,
+            versioned: result.versioned,
             skipped: result.skipped,
             outcomes: result.outcomes,
           });

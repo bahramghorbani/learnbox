@@ -2078,6 +2078,10 @@ button {
   margin: 0 0 12px;
   font-size: 12px;
   line-height: 1.8;
+  padding-inline-start: 18px;
+}
+.cp-workspace .cp-import-statement strong {
+  font-variant-numeric: tabular-nums;
 }
 .cp-workspace .cp-import-issues h4 {
   margin: 0 0 8px;
