@@ -23,7 +23,7 @@ type AdminIconName =
 const navItems = [
   { label: 'خانه / نمای کلی', icon: 'home', route: 'home' },
   { label: 'محتوا و بسته‌ها', icon: 'book', route: 'content' },
-  { label: 'فروشگاه', icon: 'store' },
+  { label: 'فروشگاه', icon: 'store', route: 'store' },
   { label: 'کاربران', icon: 'users' },
   { label: 'یادگیری', icon: 'chart' },
   { label: 'نمایش اپ', icon: 'image' },

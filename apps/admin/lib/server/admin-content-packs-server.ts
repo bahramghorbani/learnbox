@@ -3,6 +3,7 @@ import { Pool } from 'pg';
 import {
   readAdminContentPacksConfig,
   readAdminContentPacksManageConfig,
+  readAdminStoreConfig,
 } from './admin-content-packs-config';
 import {
   createContentPackCardsRoute,
@@ -49,6 +50,11 @@ import { PostgresOwnerAuthStore } from './postgres-owner-auth-store';
 import { PostgresContentPacksStore } from './postgres-content-packs-store';
 import { PostgresContentPacksWriteStore } from './postgres-content-packs-write-store';
 import { PostgresContentLifecycleStore } from './postgres-content-lifecycle-store';
+import { PostgresStoreListingsStore } from './postgres-store-listings-store';
+import {
+  createStoreListingUpsertRoute,
+  createStoreListingsRoute,
+} from './admin-store-listing-routes';
 import {
   createPackArchiveRoute,
   createPackLifecycleRoute,
@@ -163,6 +169,18 @@ export function createAdminContentPacksServer(dependencies: {
       store: lifecycleStore,
       now: dependencies.now,
     };
+    // Store (M2.1) carries its OWN default-off gate rather than riding the content manage flag,
+    // because commercial availability is a different authority from content authoring. It writes
+    // only `store_listings` and reads canonical packs, so the Store can never become a second
+    // source of truth for pack or card content.
+    const storeConfig = readAdminStoreConfig(dependencies.environment);
+    const storeShared = {
+      enabled: storeConfig.enabled,
+      config: storeConfig,
+      sessionStore,
+      store: new PostgresStoreListingsStore(pool),
+      now: dependencies.now,
+    };
     return {
       enabled: true as const,
       manageEnabled: manageConfig.enabled,
@@ -204,6 +222,9 @@ export function createAdminContentPacksServer(dependencies: {
       submitPackForReview: createPackSubmitForReviewRoute(lifecycleShared),
       publishPack: createPackPublishRoute(lifecycleShared),
       archivePack: createPackArchiveRoute(lifecycleShared),
+      storeEnabled: storeConfig.enabled,
+      storeListings: createStoreListingsRoute(storeShared),
+      upsertStoreListing: createStoreListingUpsertRoute(storeShared),
     };
   } catch {
     return { enabled: false as const };

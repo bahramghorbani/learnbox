@@ -129,6 +129,13 @@ const INVENTORY: Record<string, Entry> = {
     category: 'delegated',
     guardIn: 'lib/server/admin-splash-routes.ts',
   },
+  // M2.1 — canonical Store listings. PUT delegates the full guard chain (Origin, session, CSRF,
+  // recent re-auth, idempotency key) to the shared module, behind its own default-off
+  // LEARNBOX_ADMIN_STORE_ENABLED gate. It writes `store_listings` only, never pack or card content.
+  'app/api/store/listings/route.ts': {
+    category: 'delegated',
+    guardIn: 'lib/server/admin-store-listing-routes.ts',
+  },
   'app/api/banners/route.ts': { category: 'hard-disabled' },
   'app/api/gateways/route.ts': { category: 'hard-disabled' },
   'app/api/packs/route.ts': { category: 'hard-disabled' },
