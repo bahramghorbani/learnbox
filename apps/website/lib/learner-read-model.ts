@@ -18,6 +18,8 @@ import {
 } from '@learnbox/learning-engine';
 import type { Pool } from 'pg';
 
+import { curriculumCteSql, packAccessSql } from './pack-access';
+
 /**
  * Learner read model (LB-B35 CP3).
  *
@@ -30,17 +32,13 @@ import type { Pool } from 'pg';
  * Read-only: no statement here writes, and `review_events` is never modified.
  *
  * Curriculum scope (one definition for every screen): a card counts if it has a PUBLISHED version
- * and belongs to a PUBLISHED pack. A schedule row for a card outside that set (retired, or in a
- * draft pack) is not learner progress and is shown nowhere.
+ * and belongs to a pack THIS LEARNER MAY ACCESS, per the canonical rule in `./pack-access`. A
+ * schedule row for a card outside that set (retired, in a draft pack, or in a paid pack the learner
+ * is not entitled to) is not learner progress and is shown nowhere. The curriculum is therefore
+ * per-learner, which is why every query here binds the learner id.
  */
 
-const CURRICULUM_CTE = `
-curriculum AS (
-  SELECT DISTINCT pc.card_id
-  FROM pack_cards pc
-  JOIN packs p ON p.id = pc.pack_id AND p.status = 'published'
-  JOIN card_versions cv ON cv.card_id = pc.card_id AND cv.status = 'published'
-)`;
+const CURRICULUM_CTE = curriculumCteSql('$1');
 
 export interface CurriculumProgress {
   /** Distinct cards in the curriculum (the denominator of every "x of y"). */
@@ -84,6 +82,7 @@ export async function readCurriculumProgress(
     // No scheduled card: the aggregate query returned no row, so ask for the curriculum size alone.
     const only = await pool.query(
       `WITH ${CURRICULUM_CTE} SELECT count(*) AS total FROM curriculum`,
+      [userId],
     );
     total = Number(only.rows[0]?.total ?? 0);
   }
@@ -123,7 +122,7 @@ export async function readPackProgress(
      JOIN pack_cards pc ON pc.pack_id = p.id
      JOIN card_versions cv ON cv.card_id = pc.card_id AND cv.status = 'published'
      LEFT JOIN card_schedules cs ON cs.card_id = pc.card_id AND cs.user_id = $1
-     WHERE p.status = 'published'
+     WHERE ${packAccessSql('p', '$1')}
      GROUP BY p.id, p.display_name, p.is_free, p.price_tomans, p.created_at
      ORDER BY p.created_at, p.id`,
     [userId],

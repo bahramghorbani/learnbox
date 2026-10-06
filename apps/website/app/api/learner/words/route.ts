@@ -1,6 +1,7 @@
 import { boxFromStabilityDays, isLearnedBox, isMasteredBox } from '@learnbox/learning-engine';
 import { Pool } from 'pg';
 import { unknownGradesSql } from '../../../../lib/learner-read-model';
+import { packAccessSql } from '../../../../lib/pack-access';
 import { authenticateLearner } from '../../../../lib/learner-auth';
 import { requireVerifiedDatabaseTls } from '../../../../../api/dist/database/migration-runner.js';
 
@@ -40,14 +41,15 @@ export async function GET(request: Request): Promise<Response> {
 
   const pool = getPool();
   try {
-    // Get all packs that have published cards
+    // Packs with published cards that THIS learner may access (canonical rule).
     const packsResult = await pool.query(
       `SELECT DISTINCT p.id as pack_id, p.display_name as pack_title
        FROM packs p
        JOIN pack_cards pc ON pc.pack_id = p.id
        JOIN card_versions cv ON cv.card_id = pc.card_id AND cv.status = 'published'
-       WHERE p.status = 'published'
+       WHERE ${packAccessSql('p', '$1')}
        ORDER BY p.display_name`,
+      [session.subject],
     );
 
     const packIds = packsResult.rows.map((r: { pack_id: string }) => r.pack_id);
@@ -90,7 +92,7 @@ export async function GET(request: Request): Promise<Response> {
        JOIN pack_cards pc ON pc.card_id = cv.card_id
        JOIN packs p ON p.id = pc.pack_id
        LEFT JOIN card_schedules cs ON cs.card_id = cv.card_id AND cs.user_id = $1
-       WHERE cv.status = 'published' ${packClause}
+       WHERE cv.status = 'published' AND ${packAccessSql('p', '$1')} ${packClause}
        ORDER BY COALESCE(cs.stability_days, 0) ASC`,
       params,
     );

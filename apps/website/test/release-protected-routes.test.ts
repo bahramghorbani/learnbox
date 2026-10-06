@@ -22,13 +22,33 @@ describe('release private-content boundary', () => {
     expect((await banners(request())).status).toBe(401);
   });
 
-  it('cannot expose a card via historical debug/store routes or mint an invite anonymously', async () => {
+  it('cannot expose a card via historical debug routes or mint an invite anonymously', async () => {
     expect((await debugWords()).status).toBe(404);
     expect((await legacyInvite()).status).toBe(404);
-    expect((await storePacks()).status).toBe(404);
-    expect((await storeMyPacks()).status).toBe(404);
     expect((await storeActivate()).status).toBe(404);
     expect((await resetProgress()).status).toBe(404);
+  });
+
+  // M2.2 made the two Store read endpoints real. They are authenticated, not absent: anonymous
+  // callers must still get a non-success response and zero payload.
+  it('denies the real Store read endpoints without a learner cookie', async () => {
+    for (const route of [storePacks, storeMyPacks]) {
+      const response = await route(request());
+      expect(response.status).toBe(401);
+      expect(response.headers.get('cache-control')).toContain('no-store');
+      expect(await response.json()).toEqual({ error: 'unauthorized' });
+    }
+  });
+
+  it('reports a missing database as unavailable rather than public on the Store endpoints', async () => {
+    vi.stubEnv('LEARNBOX_SESSION_SECRET', 'release-boundary-secret-at-least-32-bytes');
+    vi.stubEnv('DATABASE_URL', '');
+    const valid = new Request('https://app.learnboxapp.com/', {
+      headers: { cookie: `learnbox_alpha_session=${createLearnerSession('learner-id')}` },
+    });
+    for (const route of [storePacks, storeMyPacks]) {
+      expect((await route(valid)).status).toBe(503);
+    }
   });
 
   it.each(['image', 'word-audio', 'sentence-audio'])('%s media denies no session', async (kind) => {

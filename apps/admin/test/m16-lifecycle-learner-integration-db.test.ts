@@ -198,10 +198,15 @@ afterAll(async () => {
 suite('M1.6 — the learner contract this milestone must not break', () => {
   it('still requires BOTH a published pack and a published version in the learner read model', () => {
     const source = readFileSync(join(repoRoot, 'apps/website/lib/learner-read-model.ts'), 'utf8');
-    expect(source).toContain("JOIN packs p ON p.id = pc.pack_id AND p.status = 'published'");
-    expect(source).toContain(
-      "JOIN card_versions cv ON cv.card_id = pc.card_id AND cv.status = 'published'",
-    );
+    // M2.2 moved the pack half of this rule into the canonical resolver and made it stricter
+    // (published AND (free OR entitled)), so assert the delegation plus the rule itself rather
+    // than a SQL literal that any legitimate refactor would break.
+    expect(source).toContain("from './pack-access'");
+    expect(source).toMatch(/curriculumCteSql\('\$1'\)/);
+    const rule = readFileSync(join(repoRoot, 'apps/website/lib/pack-access.ts'), 'utf8');
+    expect(rule).toContain("status = 'published'");
+    expect(rule).toContain("cv.status = 'published'");
+    expect(rule).toContain('user_packs');
   });
 
   it('shows no learner content before anything is published', async () => {

@@ -2,6 +2,11 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { get as readPrivateBlob } from '@vercel/blob';
 
+const packAccess = vi.hoisted(() => ({ allow: vi.fn(async () => true) }));
+vi.mock('../lib/published-start-card', () => ({
+  canLearnerAccessStartContentId: packAccess.allow,
+}));
+
 import { GET as privateMedia } from '../app/api/private-media/[contentId]/[kind]/route';
 import { buildStartMediaSources, resolveStartMediaMode } from '../app/start-media';
 import { createLearnerSession } from '../lib/server-session';
@@ -126,6 +131,7 @@ describe('Start media sources', () => {
 });
 
 const sessionCookie = () => {
+  packAccess.allow.mockResolvedValue(true);
   vi.stubEnv('LEARNBOX_PRIVATE_MEDIA_ATTACHMENT_ENABLED', 'true');
   vi.stubEnv('APP_ENV', 'staging');
   vi.stubEnv('LEARNBOX_SESSION_SECRET', 'start-media-test-session-secret-32-bytes');
@@ -202,6 +208,19 @@ describe('Private media delivery contract (LB-DS-074)', () => {
 
     expect(response.status).toBe(404);
     expect(readPrivateBlob).not.toHaveBeenCalled();
+  });
+
+  it('denies attested bytes to a learner without canonical pack access (M2.2)', async () => {
+    // An attestation entry is an inventory record, not an authorization: the route must consult the
+    // canonical pack-access rule and hand back nothing when it says no.
+    const cookie = sessionCookie();
+    packAccess.allow.mockResolvedValue(false);
+    const response = await fetchPrivateMedia('start-a1-fenster', 'image', { cookie });
+
+    expect(response.status).toBe(404);
+    expect(response.headers.get('cache-control')).toBe('no-store');
+    expect(readPrivateBlob).not.toHaveBeenCalled();
+    expect(packAccess.allow).toHaveBeenCalledWith('start-a1-fenster', 'start-learner-1');
   });
 
   it('keeps private, same-origin, no-sniff delivery headers', async () => {

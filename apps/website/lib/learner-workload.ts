@@ -3,6 +3,8 @@ import { PostgresLearnerStateRepository } from '../../api/dist/learner-state/pos
 
 import type { Pool } from 'pg';
 
+import { packAccessSql } from './pack-access';
+
 /**
  * LB-B35 CP5-A — the ONE definition of "work for today" shown to the learner.
  *
@@ -27,13 +29,22 @@ export interface TodayWorkload {
 export const todayWorkloadEnabled = (environment: Record<string, string | undefined>): boolean =>
   environment.LEARNBOX_TODAY_WORKLOAD === 'true';
 
-/** Published cards the learner has not met yet (the v1.2.1 `newCount`, now named for what it is). */
+/**
+ * Published cards the learner has not met yet (the v1.2.1 `newCount`, now named for what it is).
+ *
+ * Counts only cards in packs this learner may access: previously this query joined `pack_cards`
+ * without ever filtering the pack, so a draft pack's cards were offered as upcoming work.
+ */
 export async function countUnseenCatalogCards(pool: Pool, userId: string): Promise<number> {
   const result = await pool.query<{ new_count: string }>(
-    `SELECT COUNT(*) as new_count
+    `SELECT COUNT(DISTINCT cv.card_id) as new_count
        FROM card_versions cv
-       JOIN pack_cards pc ON pc.card_id = cv.card_id
       WHERE cv.status = 'published'
+        AND EXISTS (
+          SELECT 1 FROM pack_cards pc
+          JOIN packs p ON p.id = pc.pack_id
+          WHERE pc.card_id = cv.card_id AND ${packAccessSql('p', '$1')}
+        )
         AND NOT EXISTS (
           SELECT 1 FROM card_schedules cs
            WHERE cs.card_id = cv.card_id AND cs.user_id = $1

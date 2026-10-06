@@ -1,5 +1,6 @@
 import { Pool } from 'pg';
 import { authenticateLearner } from '../../../../lib/learner-auth';
+import { packAccessSql } from '../../../../lib/pack-access';
 import { requireVerifiedDatabaseTls } from '../../../../../api/dist/database/migration-runner.js';
 
 export const runtime = 'nodejs';
@@ -32,8 +33,8 @@ type Content = {
 
 /** Authenticated, published DB faces only; draft JSON is never bundled into client JS. */
 export async function GET(request: Request): Promise<Response> {
-  if (!(await authenticateLearner(request)))
-    return Response.json({ error: 'unauthorized' }, { status: 401, headers });
+  const session = await authenticateLearner(request);
+  if (!session) return Response.json({ error: 'unauthorized' }, { status: 401, headers });
   if (process.env.WEB_LEARNER_STATE_ENABLED !== 'true' || !process.env.DATABASE_URL)
     return Response.json({ error: 'unavailable' }, { status: 503, headers });
   const pool = new Pool({
@@ -46,13 +47,15 @@ export async function GET(request: Request): Promise<Response> {
       `SELECT cv.content_json->>'id' AS content_id, cv.content_json
          FROM cards c
          JOIN pack_cards pc ON pc.card_id = c.id
-         JOIN packs p ON p.id = pc.pack_id AND p.status = 'published'
+         JOIN packs p ON p.id = pc.pack_id
          JOIN LATERAL (
            SELECT content_json FROM card_versions
            WHERE card_id = c.id AND status = 'published'
            ORDER BY version DESC LIMIT 1
          ) cv ON true
+        WHERE ${packAccessSql('p', '$1')}
         ORDER BY content_id`,
+      [session.subject],
     );
     const items = result.rows.flatMap(({ content_id, content_json: c }) => {
       if (

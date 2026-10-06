@@ -3,7 +3,7 @@ import { accessSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { NextResponse } from 'next/server';
 import { authenticateLearner } from '../../../../../lib/learner-auth';
-import { isPublishedStartContentId } from '../../../../../lib/published-start-card';
+import { canLearnerAccessStartContentId } from '../../../../../lib/published-start-card';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -71,7 +71,8 @@ export async function GET(
   }
 
   try {
-    if (!(await isPublishedStartContentId(contentId)))
+    // Same canonical boundary as the card itself: published pack AND (free OR entitled).
+    if (!(await canLearnerAccessStartContentId(contentId, session.subject)))
       return NextResponse.json(
         { error: 'not found' },
         { status: 404, headers: { 'Cache-Control': 'no-store' } },

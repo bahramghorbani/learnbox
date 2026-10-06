@@ -2,7 +2,9 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createLearnerSession } from '../lib/server-session';
 
 const mocked = vi.hoisted(() => ({ published: vi.fn(), read: vi.fn() }));
-vi.mock('../lib/published-start-card', () => ({ isPublishedStartContentId: mocked.published }));
+vi.mock('../lib/published-start-card', () => ({
+  canLearnerAccessStartContentId: mocked.published,
+}));
 vi.mock('node:fs/promises', () => ({ readFile: mocked.read }));
 import { GET } from '../app/api/content-media/[contentId]/[kind]/route';
 
