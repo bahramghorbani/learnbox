@@ -48,6 +48,7 @@ import { PronunciationButton } from './components/PronunciationButton';
 import { Bobo } from './components/Bobo';
 import { OnboardingGoal } from './components/OnboardingGoal';
 import { ProgressScreen } from './components/ProgressScreen';
+import { StoreScreen } from './components/StoreScreen';
 import { SupportivePlusOffer } from './components/SupportivePlusOffer';
 import { personalWordLimit } from './product-experience';
 import { resolveSupportivePlusOffer } from './paywall';
@@ -1090,6 +1091,10 @@ export function LearnerHome({
         pendingReviewCount={pendingReviewCount}
       />
     );
+  }
+
+  if (screen === 'store') {
+    return <StoreScreen onNavigate={(destination) => setScreen(destination)} />;
   }
 
   if (screen === 'words') {

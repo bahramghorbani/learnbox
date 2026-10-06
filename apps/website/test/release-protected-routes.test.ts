@@ -25,8 +25,36 @@ describe('release private-content boundary', () => {
   it('cannot expose a card via historical debug routes or mint an invite anonymously', async () => {
     expect((await debugWords()).status).toBe(404);
     expect((await legacyInvite()).status).toBe(404);
-    expect((await storeActivate()).status).toBe(404);
     expect((await resetProgress()).status).toBe(404);
+  });
+
+  // M2.3 made activate real. It is authenticated and same-origin, not absent: a cross-site post is
+  // rejected before authentication, and a same-origin anonymous post still gets nothing.
+  it('denies free pack activation to anonymous and cross-origin callers', async () => {
+    const crossSite = await storeActivate(
+      new Request('https://app.learnboxapp.com/api/store/activate', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', origin: 'https://evil.example' },
+        body: JSON.stringify({ packId: 'learnbox_start_a1_essentials' }),
+      }),
+    );
+    expect(crossSite.status).toBe(403);
+    expect(await crossSite.json()).toEqual({ error: 'request_rejected' });
+
+    vi.stubEnv('LEARNBOX_PUBLIC_APP_ORIGIN', 'https://app.learnboxapp.com');
+    const anonymous = await storeActivate(
+      new Request('https://app.learnboxapp.com/api/store/activate', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          origin: 'https://app.learnboxapp.com',
+        },
+        body: JSON.stringify({ packId: 'learnbox_start_a1_essentials' }),
+      }),
+    );
+    expect(anonymous.status).toBe(401);
+    expect(anonymous.headers.get('cache-control')).toContain('no-store');
+    expect(await anonymous.json()).toEqual({ error: 'unauthorized' });
   });
 
   // M2.2 made the two Store read endpoints real. They are authenticated, not absent: anonymous

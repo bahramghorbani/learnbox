@@ -21,7 +21,8 @@ const navIcons: Record<LearnerDestination, string> = {
 const destinations: Array<{ id: LearnerDestination; label: string }> = [
   { id: 'today', label: 'امروز' },
   { id: 'words', label: 'واژه‌ها' },
-  // 'store' is v1.1+ (premium packs) — excluded from v1.0 release
+  // M2.3 owner decision: Store is a PRIMARY learner destination, not a secondary-menu entry.
+  { id: 'store', label: 'فروشگاه' },
   { id: 'progress', label: 'پیشرفت' },
   { id: 'profile', label: 'پروفایل' },
 ];

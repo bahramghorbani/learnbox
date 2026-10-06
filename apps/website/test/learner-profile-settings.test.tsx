@@ -273,7 +273,7 @@ describe('SettingsScreen (Profile child)', () => {
 });
 
 describe('LearnerNav', () => {
-  it('renders Profile as the fourth persistent destination with aria-current', async () => {
+  it('renders Profile as the last persistent destination with aria-current', async () => {
     vi.stubGlobal('React', { createElement, Fragment });
     const container = document.createElement('div');
     document.body.append(container);
@@ -295,6 +295,7 @@ describe('LearnerNav', () => {
     expect(buttons.map((button) => button.textContent?.trim())).toEqual([
       'امروز',
       'واژه‌ها',
+      'فروشگاه',
       'پیشرفت',
       'پروفایل',
     ]);
