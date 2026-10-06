@@ -4,6 +4,10 @@ import {
   createAdminPaymentConfigRoute,
   createAdminTransactionsRoute,
 } from '../lib/server/admin-payments-routes';
+import type {
+  ListTransactionsResult,
+  PaymentConfigurationResult,
+} from '../lib/server/postgres-admin-payments-store';
 import { hashAdminSecret } from '../lib/server/admin-session.js';
 
 /**
@@ -80,20 +84,16 @@ const configurationStatus = {
 
 function transactionsStore(forbidden = false) {
   return {
-    listTransactions: vi.fn(async () =>
-      forbidden
-        ? ({ status: 'forbidden' } as const)
-        : ({ status: 'ok', rows: [transactionRow] } as const),
+    listTransactions: vi.fn(async (): Promise<ListTransactionsResult> =>
+      forbidden ? { status: 'forbidden' } : { status: 'ok', rows: [transactionRow] },
     ),
   };
 }
 
 function configStore(forbidden = false) {
   return {
-    readConfigurationStatus: vi.fn(async () =>
-      forbidden
-        ? ({ status: 'forbidden' } as const)
-        : ({ status: 'ok', configuration: configurationStatus } as const),
+    readConfigurationStatus: vi.fn(async (): Promise<PaymentConfigurationResult> =>
+      forbidden ? { status: 'forbidden' } : { status: 'ok', configuration: configurationStatus },
     ),
   };
 }
