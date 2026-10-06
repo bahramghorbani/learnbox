@@ -17,6 +17,35 @@ schema mismatch (`users/[userId]` selects `rating`/`created_at`; the real column
 `grade`/`occurred_at`). Admin is **not reachable in Production**: Caddy answers
 `admin.learnboxapp.com` with a fixed 404 and the container publishes no ports.
 
+**Phase 2 — Store & Entitlements — M2.1 merged (implemented in repository, not activated).** The
+canonical commercial layer now exists: migration `0026_store_listings.sql` creates one additive
+table keyed 1:1 on canonical `packs` (`pack_id` is both primary and foreign key, so a pack cannot
+carry two listings and a listing cannot exist without a pack). The listing owns commercial state
+only — `store_status`, `featured`, `display_order`, `cover_object_key`, `commercial_summary`,
+`listed_at` — while `price_tomans`, `category` and `is_free` remain canonical on `packs` and are
+read through the join, so no second source of truth for commercial facts exists. Admin `#store`
+(«فروشگاه») is reachable through the real `AdminWorkspaceRouter`, replacing the frozen design's
+route-less sidebar slot, and manages listing/unlisting, featured state, display order, cover and
+commercial summary against real canonical packs. The store module writes exactly two tables,
+`store_listings` and `audit_logs`, and never pack, card, media or ownership tables; content is
+read-only on the Store surface and content fields in a Store request are ignored rather than
+forwarded. Mutations require the `content_publisher` role — the same authority as publishing
+content — plus Origin/Content-Type, session, per-session CSRF, fresh re-authentication, a uuid
+idempotency key, and the store status the operator observed (stale writes return 409). `listed_at`
+is server-owned. It rides a new default-off `LEARNBOX_ADMIN_STORE_ENABLED` gate, set nowhere in the
+repository and absent in Production. Migration `0026` is **not applied in Production**. M2.1 grants
+no learner-facing capability: there is no learner Store, the learner «فروشگاه» destination remains
+excluded, pack access is still not entitlement-aware, and no acquisition, entitlement or payment
+path exists. Sales reporting is deliberately absent — no transaction data exists. M2.2 (entitlement
+enforcement), M2.3 (free acquisition and learner Store) and M2.4 (Zarinpal) are not started.
+
+While validating M2.1, the M1.6 lifecycle mutation guard was found to read wall-clock time while
+its own read path honoured the injected clock, even though its dependency contract already declared
+`now?: () => Date`. That made session-expiry behaviour non-deterministic and had already broken 20
+pre-existing lifecycle route tests on `main` once real time passed the fixture's fixed expiry. The
+guard now honours the injected clock. Production behaviour is unchanged (no clock is injected in
+production), and the full Admin suite returned to green.
+
 **Phase 1 — Content & Packs — CLOSED 2026-10-06 (implemented in repository, not activated).** The
 authoring, import, AI-generation and media layers were deliberately draft-only and nothing in the
 repository could move canonical content to `published`; the sole publish path was the

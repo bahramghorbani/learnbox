@@ -29,3 +29,16 @@ export function readAdminContentPacksManageConfig(environment: Environment): Adm
   if (environment.LEARNBOX_ADMIN_CONTENT_PACKS_MANAGE_ENABLED !== 'true') return { enabled: false };
   return readAdminContentPacksConfig(environment);
 }
+
+/**
+ * Separate default-off gate for the commercial Store surface (Phase 2, Milestone 2.1).
+ *
+ * Additionally requires the Content & Packs read workspace, because a Store listing references a
+ * canonical pack and an operator must be able to see the pack they are listing. Enabling this flag
+ * authorizes commercial listing state only: it grants no learner-facing Store, no entitlement, no
+ * acquisition, no payment capability, and no migration, staging or Production activation authority.
+ */
+export function readAdminStoreConfig(environment: Environment): AdminAuthConfig {
+  if (environment.LEARNBOX_ADMIN_STORE_ENABLED !== 'true') return { enabled: false };
+  return readAdminContentPacksConfig(environment);
+}

@@ -82,7 +82,12 @@ function parseMutationBody(body: Record<string, unknown>): ParsedMutation | unde
  */
 async function authorizeMutation(
   request: Request,
-  dependencies: { enabled: boolean; config: AdminAuthConfig; sessionStore?: unknown },
+  dependencies: {
+    enabled: boolean;
+    config: AdminAuthConfig;
+    sessionStore?: unknown;
+    now?: () => Date;
+  },
 ): Promise<
   | { ok: true; actorUserId: string; idempotencyKey: string; mutation: ParsedMutation }
   | { ok: false; response: Response }
@@ -96,7 +101,9 @@ async function authorizeMutation(
   } catch {
     return { ok: false, response: genericInvalid() };
   }
-  const currentTime = new Date();
+  // Honour the injected clock, exactly as the GET route does. Reading wall-clock here made session
+  // expiry non-deterministic and diverged the mutation path from the read path for no reason.
+  const currentTime = (dependencies.now ?? (() => new Date()))();
   const session = await loadAdminSession(
     request,
     config,

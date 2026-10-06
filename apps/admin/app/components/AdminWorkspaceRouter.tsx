@@ -4,18 +4,25 @@ import React, { useEffect, useState } from 'react';
 
 import { ContentPacksWorkspace } from './ContentPacksWorkspace';
 import { ContentReviewWorkspace } from './ContentReviewWorkspace';
+import { StoreListingsWorkspace } from './StoreListingsWorkspace';
 
 /**
- * Minimal hash router for the approved Admin navigation model. Milestone 1.1 makes exactly two
- * destinations real — «خانه / نمای کلی» (the existing, real Content Review workspace) and
- * «محتوا و بسته‌ها» — so navigation works in both directions without forking either screen.
+ * Minimal hash router for the approved Admin navigation model. Milestone 1.1 made two destinations
+ * real — «خانه / نمای کلی» (the existing, real Content Review workspace) and «محتوا و بسته‌ها».
+ * Milestone 2.1 adds «فروشگاه», the commercial listing surface, so navigation works in every
+ * direction without forking any screen.
  */
-function readRoute(hash: string): 'content' | 'home' {
-  return hash.replace(/^#/, '') === 'content' ? 'content' : 'home';
+type AdminRoute = 'content' | 'store' | 'home';
+
+function readRoute(hash: string): AdminRoute {
+  const value = hash.replace(/^#/, '');
+  if (value === 'content') return 'content';
+  if (value === 'store') return 'store';
+  return 'home';
 }
 
 export function AdminWorkspaceRouter() {
-  const [route, setRoute] = useState<'content' | 'home'>('home');
+  const [route, setRoute] = useState<AdminRoute>('home');
 
   useEffect(() => {
     const sync = () => setRoute(readRoute(window.location.hash));
@@ -24,5 +31,7 @@ export function AdminWorkspaceRouter() {
     return () => window.removeEventListener('hashchange', sync);
   }, []);
 
-  return route === 'content' ? <ContentPacksWorkspace /> : <ContentReviewWorkspace />;
+  if (route === 'content') return <ContentPacksWorkspace />;
+  if (route === 'store') return <StoreListingsWorkspace />;
+  return <ContentReviewWorkspace />;
 }
