@@ -90,6 +90,21 @@ const INVENTORY: Record<string, Entry> = {
     category: 'delegated',
     guardIn: 'lib/server/admin-ai-generation-routes.ts',
   },
+  // M1.5 — AI media generation. Same delegated guard chain. `generate` and `voice-preview` call
+  // the provider; `accept` is the only one that changes which asset a card points at. The GET-only
+  // catalogue, per-card state and protected asset reads are classified under READ_ONLY below.
+  'app/api/content/media/generate/route.ts': {
+    category: 'delegated',
+    guardIn: 'lib/server/admin-card-media-routes.ts',
+  },
+  'app/api/content/media/accept/route.ts': {
+    category: 'delegated',
+    guardIn: 'lib/server/admin-card-media-routes.ts',
+  },
+  'app/api/content/media/voice-preview/route.ts': {
+    category: 'delegated',
+    guardIn: 'lib/server/admin-card-media-routes.ts',
+  },
   'app/api/content/review/check/route.ts': {
     category: 'delegated',
     guardIn: 'lib/server/admin-content-review-routes.ts',
@@ -129,6 +144,12 @@ const READ_ONLY: Record<string, 'hard-disabled' | 'session-layer'> = {
   // M1.4 model catalogue: GET-only, so CSRF is not applicable; it still requires a valid Admin
   // session, and it returns model ids and the configured default only — never the credential.
   'app/api/content/ai/models/route.ts': 'session-layer',
+  // M1.5 media reads: GET-only, so CSRF is not applicable; each still requires a valid Admin
+  // session and recent re-auth. `asset` returns protected media bytes with `private, no-store`,
+  // never on a public path.
+  'app/api/content/media/models/route.ts': 'session-layer',
+  'app/api/content/media/state/route.ts': 'session-layer',
+  'app/api/content/media/asset/route.ts': 'session-layer',
   'app/api/splash/current/route.ts': 'session-layer',
   'app/api/splash/preview/route.ts': 'session-layer',
 };

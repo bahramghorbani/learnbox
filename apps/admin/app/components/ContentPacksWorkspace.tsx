@@ -13,6 +13,12 @@ import {
   type GenerationJobView,
 } from './AiPackGenerationModal';
 import {
+  CardMediaPanel,
+  type CardMediaKind,
+  type MediaCandidateView,
+  type MediaKindState,
+} from './CardMediaPanel';
+import {
   CardFormModal,
   PackFormModal,
   emptyCardForm,
@@ -412,6 +418,11 @@ export function ContentPacksWorkspace() {
   const [importSession, setImportSession] = useState<{ packId: string; importKey: string }>();
   // AI generation (M1.4) has its own default-off gate on top of `manageEnabled`.
   const [aiEnabled, setAiEnabled] = useState(false);
+  const [mediaEnabled, setMediaEnabled] = useState(false);
+  /** The card whose media panel is open, if any. */
+  const [mediaCard, setMediaCard] = useState<{ cardId: string; label: string } | undefined>(
+    undefined,
+  );
   const [aiSession, setAiSession] = useState<{ acceptKey: string }>();
 
   const loadPacks = useCallback(async () => {
@@ -434,11 +445,13 @@ export function ContentPacksWorkspace() {
         packs?: ServerPack[];
         manageEnabled?: boolean;
         aiEnabled?: boolean;
+        mediaEnabled?: boolean;
       };
       const list = Array.isArray(payload.packs) ? payload.packs : [];
       setPacks(list);
       setManageEnabled(payload.manageEnabled === true);
       setAiEnabled(payload.aiEnabled === true);
+      setMediaEnabled(payload.mediaEnabled === true);
       setPhase(list.length === 0 ? 'empty' : 'ready');
     } catch {
       setPhase('error');
@@ -913,6 +926,20 @@ export function ContentPacksWorkspace() {
                                   >
                                     ویرایش
                                   </button>
+                                  {mediaEnabled ? (
+                                    <button
+                                      className="btn"
+                                      type="button"
+                                      onClick={() =>
+                                        setMediaCard({
+                                          cardId: card.cardId,
+                                          label: `${card.article ? `${card.article} ` : ''}${card.lemma}`,
+                                        })
+                                      }
+                                    >
+                                      رسانه
+                                    </button>
+                                  ) : null}
                                 </td>
                               ) : null}
                             </tr>
@@ -927,6 +954,53 @@ export function ContentPacksWorkspace() {
           </>
         ) : null}
       </section>
+
+      {mediaCard ? (
+        <CardMediaPanel
+          cardId={mediaCard.cardId}
+          cardLabel={mediaCard.label}
+          onClose={() => {
+            setMediaCard(undefined);
+            // Accepted media changes the canonical read model, so refresh the card table.
+            void loadPacks();
+          }}
+          onLoadState={async () => {
+            try {
+              const response = await fetch(
+                `/api/content/media/state?cardId=${encodeURIComponent(mediaCard.cardId)}`,
+                { credentials: 'same-origin', headers: { accept: 'application/json' } },
+              );
+              if (!response.ok) return undefined;
+              const payload = (await response.json()) as { media?: MediaKindState[] };
+              return payload.media;
+            } catch {
+              return undefined;
+            }
+          }}
+          onGenerate={async (kind: CardMediaKind) => {
+            const result = await postAiJson<{ candidate: MediaCandidateView }>(
+              '/api/content/media/generate',
+              { cardId: mediaCard.cardId, kind },
+            );
+            return result.ok
+              ? { ok: true as const, candidate: result.payload.candidate }
+              : { ok: false as const, message: result.message };
+          }}
+          onAccept={async (kind: CardMediaKind, candidateId: string) => {
+            const result = await postAiJson<unknown>('/api/content/media/accept', {
+              cardId: mediaCard.cardId,
+              kind,
+              candidateId,
+            });
+            return result.ok
+              ? { ok: true as const }
+              : { ok: false as const, message: result.message };
+          }}
+          assetUrl={(candidateId) =>
+            `/api/content/media/asset?candidateId=${encodeURIComponent(candidateId)}`
+          }
+        />
+      ) : null}
 
       {packForm ? (
         <PackFormModal

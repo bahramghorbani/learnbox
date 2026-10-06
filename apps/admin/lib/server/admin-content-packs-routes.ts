@@ -15,6 +15,7 @@ type ListDependencies = {
   manageEnabled?: boolean;
   /** M1.4: whether AI pack generation is available (manage gate AND a configured provider). */
   aiEnabled?: boolean;
+  mediaEnabled?: boolean;
 };
 
 type CardsDependencies = {
@@ -76,6 +77,7 @@ export function createContentPacksListRoute(dependencies: ListDependencies) {
         packs: result.packs,
         manageEnabled: dependencies.manageEnabled === true,
         aiEnabled: dependencies.aiEnabled === true,
+        mediaEnabled: dependencies.mediaEnabled === true,
       });
     } catch {
       return unavailable();

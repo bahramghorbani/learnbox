@@ -269,5 +269,6 @@ export function transitionContentReview(
   };
 }
 
+export * from './card-media-generation.js';
 export * from './content-pack-release.js';
 export * from './launch-experience.js';
