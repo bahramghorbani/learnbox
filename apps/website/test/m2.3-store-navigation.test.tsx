@@ -155,12 +155,15 @@ describe('M2.3 Store screen states', () => {
     expect(container.querySelector('.store-tag-free')?.textContent).toBe('رایگان');
     expect(container.querySelector('.store-tag-paid')?.textContent).toBe('پولی');
     expect(container.querySelector('.store-tag-owned')?.textContent).toBe('دریافت‌شده');
-    // The paid price is real data, shown in Persian numerals; buying is M2.4, so the action is off.
+    // The paid price is real data, shown in Persian numerals. M2.4 made the action live, so the
+    // CTA is now an enabled purchase button rather than the M2.3 placeholder.
     expect(container.textContent).toContain('۱۵۰٬۰۰۰ تومان');
     const paidAction = Array.from(container.querySelectorAll('button')).find((b) =>
-      (b.textContent ?? '').includes('خرید به‌زودی'),
+      (b.textContent ?? '').includes('خرید بسته'),
     );
-    expect((paidAction as HTMLButtonElement | undefined)?.disabled).toBe(true);
+    expect(paidAction).toBeDefined();
+    expect((paidAction as HTMLButtonElement).disabled).toBe(false);
+    expect(container.textContent).not.toContain('خرید به‌زودی');
   });
 
   it('reports an empty shop rather than an error', async () => {

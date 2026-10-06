@@ -6,6 +6,9 @@ import { GET as legacyInvite } from '../app/api/owner-issue-invite/route';
 import { GET as storePacks } from '../app/api/store/packs/route';
 import { GET as storeMyPacks } from '../app/api/store/my-packs/route';
 import { POST as storeActivate } from '../app/api/store/activate/route';
+import { POST as purchaseInitiate } from '../app/api/store/purchase/initiate/route';
+import { GET as purchaseStatus } from '../app/api/store/purchase/status/route';
+import { GET as purchaseCallback } from '../app/api/store/purchase/callback/route';
 import { POST as resetProgress } from '../app/api/learner/reset-progress/route';
 import { GET as localMedia } from '../app/api/local-preview-media/[contentId]/[kind]/route';
 import { GET as contentMedia } from '../app/api/content-media/[contentId]/[kind]/route';
@@ -55,6 +58,52 @@ describe('release private-content boundary', () => {
     expect(anonymous.status).toBe(401);
     expect(anonymous.headers.get('cache-control')).toContain('no-store');
     expect(await anonymous.json()).toEqual({ error: 'unauthorized' });
+  });
+
+  // M2.4 added the paid flow. Starting a purchase is authenticated AND same-origin: a cross-site
+  // post is refused before authentication, and an anonymous same-origin post gets nothing.
+  it('denies paid purchase initiation to anonymous and cross-origin callers', async () => {
+    const crossSite = await purchaseInitiate(
+      new Request('https://app.learnboxapp.com/api/store/purchase/initiate', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', origin: 'https://evil.example' },
+        body: JSON.stringify({ packId: 'paid-pack' }),
+      }),
+    );
+    expect(crossSite.status).toBe(403);
+    expect(await crossSite.json()).toEqual({ error: 'request_rejected' });
+
+    vi.stubEnv('LEARNBOX_PUBLIC_APP_ORIGIN', 'https://app.learnboxapp.com');
+    const anonymous = await purchaseInitiate(
+      new Request('https://app.learnboxapp.com/api/store/purchase/initiate', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', origin: 'https://app.learnboxapp.com' },
+        body: JSON.stringify({ packId: 'paid-pack' }),
+      }),
+    );
+    expect(anonymous.status).toBe(401);
+    expect(await anonymous.json()).toEqual({ error: 'unauthorized' });
+  });
+
+  it('denies a payment receipt without a learner cookie', async () => {
+    const response = await purchaseStatus(
+      new Request('https://app.learnboxapp.com/api/store/purchase/status?id=x'),
+    );
+    expect(response.status).toBe(401);
+    // No receipt data may reach an anonymous caller, not even an empty shell.
+    expect(await response.json()).toEqual({ error: 'unauthorized' });
+  });
+
+  // The gateway callback is deliberately unauthenticated — the provider redirects the learner's
+  // browser to it. What matters is that it grants nothing and leaks nothing when payment is not
+  // configured: it must redirect, never return a payload.
+  it('never returns a payload from the unconfigured payment callback', async () => {
+    const response = await purchaseCallback(
+      new Request('https://app.learnboxapp.com/api/store/purchase/callback?Authority=A1&Status=OK'),
+    );
+    expect(response.status).toBe(303);
+    expect(await response.text()).toBe('');
+    expect(response.headers.get('location')).toContain('purchase=unavailable');
   });
 
   // M2.2 made the two Store read endpoints real. They are authenticated, not absent: anonymous

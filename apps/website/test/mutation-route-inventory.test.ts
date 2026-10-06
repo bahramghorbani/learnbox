@@ -11,6 +11,11 @@
  *  - bearer:        authenticated by an `Authorization: Bearer` token, never a cookie, so a
  *                   cross-site page cannot ride it. Must not read the session cookie at all.
  *  - hard-disabled: always 404 (or dev-only); must not read the request or the database.
+ *  - provider-callback: a state-changing GET. Only a payment gateway's return URL qualifies: the
+ *                   provider redirects the learner's BROWSER, so `guardMutation`'s same-origin
+ *                   check would reject the gateway itself. Safety comes from elsewhere — the
+ *                   outcome is re-verified with the provider and settlement is idempotent — so each
+ *                   one is enumerated here and justified rather than merely permitted.
  */
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
@@ -20,7 +25,7 @@ const ROOT = join(__dirname, '..');
 const APP = join(ROOT, 'app');
 const LIB = join(ROOT, 'lib');
 
-type Category = 'guarded' | 'pre-login' | 'bearer' | 'hard-disabled';
+type Category = 'guarded' | 'pre-login' | 'bearer' | 'hard-disabled' | 'provider-callback';
 interface Entry {
   category: Category;
   /** File that must contain the `guardMutation` call (guarded / pre-login). Defaults to the route. */
@@ -49,6 +54,13 @@ const INVENTORY: Record<string, Entry> = {
     category: 'guarded',
     authMarker: 'readLearnerSession(request)',
   },
+  // M2.4 paid acquisition: starting a purchase is a cookie-authenticated guarded mutation.
+  'app/api/store/purchase/initiate/route.ts': {
+    category: 'guarded',
+    // The call site, not the bare identifier: the import line would otherwise match first.
+    authMarker: 'authenticateLearner(request)',
+  },
+
   // M2.3 made free pack acquisition real; it is a cookie-authenticated guarded mutation.
   'app/api/store/activate/route.ts': {
     category: 'guarded',
@@ -70,6 +82,9 @@ const INVENTORY: Record<string, Entry> = {
   'app/api/auth/mobile/session/refresh/route.ts': { category: 'bearer' },
   'app/api/auth/mobile/session/revoke/route.ts': { category: 'bearer' },
   'app/api/reviews/mobile/route.ts': { category: 'bearer' },
+
+  // M2.4 Zarinpal return URL. A GET that settles a payment, by the gateway's contract.
+  'app/api/store/purchase/callback/route.ts': { category: 'provider-callback' },
 
   // Disabled for Web/PWA: answer 404 and touch nothing.
   'app/api/learner/reset-progress/route.ts': { category: 'hard-disabled' },
@@ -132,8 +147,31 @@ describe('mutation route inventory (LB-B29)', () => {
   });
 
   it('has no stale inventory entry for a route that no longer mutates', () => {
-    const stale = Object.keys(INVENTORY).filter((file) => !mutating.includes(file));
+    const stale = Object.keys(INVENTORY).filter(
+      (file) =>
+        !mutating.includes(file) &&
+        // A provider callback mutates behind a GET, so it is absent from `mutating` by design.
+        INVENTORY[file].category !== 'provider-callback',
+    );
     expect(stale).toEqual([]);
+  });
+
+  /**
+   * The scan above classifies by exported METHOD, so a route that writes behind a GET would slip
+   * past it entirely. This closes that gap: any GET-only route that touches writing SQL or the
+   * purchase settlement helper must be declared `provider-callback` and justified there.
+   */
+  it('classifies every route that changes state behind a safe method', () => {
+    const writes = /\b(INSERT\s+INTO|UPDATE\s+\w+\s+SET|DELETE\s+FROM)\b|verifyPurchase\(/i;
+    const undeclared = routeFiles
+      .filter((file) => !mutating.includes(file))
+      .filter((file) => writes.test(read(file)))
+      .filter((file) => INVENTORY[file]?.category !== 'provider-callback');
+    expect(
+      undeclared,
+      `Route(s) changing state behind a safe method without a classification: ${undeclared.join(', ')}.\n` +
+        "Declare each as 'provider-callback' in INVENTORY and justify why guardMutation cannot apply.",
+    ).toEqual([]);
   });
 
   it('does not use Next.js server actions, which would bypass this inventory', () => {
@@ -186,6 +224,36 @@ describe('mutation route inventory (LB-B29)', () => {
             expect(guardAt).toBeLessThan(authAt);
           });
         }
+      }
+
+      if (entry.category === 'provider-callback') {
+        /**
+         * A state-changing GET is only acceptable because its safety comes from elsewhere. These
+         * assert that the "elsewhere" is actually present, so the category cannot become a place to
+         * park an unprotected write.
+         */
+        it('exports only safe methods, so it is a callback and not a hidden mutation endpoint', () => {
+          const exported = exportedMethods(read(file));
+          expect(exported.every((method) => SAFE_METHODS.has(method))).toBe(true);
+        });
+
+        it('re-verifies the outcome with the provider instead of trusting the query string', () => {
+          const source = read(file);
+          expect(source).toMatch(/verifyPurchase\(/);
+          // The provider adapter must come from configuration, never from request input.
+          expect(source).toMatch(/zarinpalProviderFromEnvironment\(/);
+        });
+
+        it('never grants an entitlement directly from the callback file', () => {
+          // Settlement belongs to the purchase module's single atomic statement; a direct write
+          // here would bypass its `status = 'pending'` idempotency lock.
+          expect(read(file)).not.toMatch(/INSERT\s+INTO\s+user_packs/i);
+        });
+
+        it('does not read the caller session, so a replayer cannot claim the purchase', () => {
+          const source = read(file);
+          expect(source).not.toMatch(/authenticateLearner\(|readLearnerSession\(/);
+        });
       }
 
       if (entry.category === 'bearer') {

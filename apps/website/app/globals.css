@@ -4210,3 +4210,123 @@ p {
   font-weight: 500 !important;
   color: var(--muted) !important;
 }
+
+/* ===== Payment result (M2.4) =====
+   Reuses the Store/screen token palette so the gateway return lands somewhere that still looks
+   like LearnBox. Centred single-card layout because this screen has exactly one job. */
+.payment-result {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px calc(var(--nav-h, 64px) + 24px);
+  overflow-y: auto;
+}
+
+.payment-result-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  max-width: 420px;
+  padding: 28px 20px;
+  border-radius: 20px;
+  background: var(--surface, #fff);
+  box-shadow: 0 10px 30px rgb(0 0 0 / 8%);
+  text-align: center;
+}
+
+.payment-result-card h1 {
+  margin: 0;
+  font-size: 1.15rem;
+  line-height: 1.6;
+}
+
+.payment-result-title.success {
+  color: var(--success, #15803d);
+}
+
+.payment-result-title.failed {
+  color: var(--danger, #b91c1c);
+}
+
+.payment-result-title.cancelled,
+.payment-result-title.pending {
+  color: var(--text-muted, #6b7280);
+}
+
+.payment-result-note {
+  margin: 0;
+  color: var(--text-muted, #6b7280);
+  font-size: 0.92rem;
+  line-height: 1.85;
+}
+
+.payment-receipt {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  margin: 4px 0 0;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--surface-muted, #f6f7f9);
+  font-size: 0.88rem;
+}
+
+.payment-receipt > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+}
+
+.payment-receipt > div + div {
+  border-top: 1px solid var(--border-subtle, #e5e7eb);
+}
+
+.payment-receipt dt {
+  color: var(--text-muted, #6b7280);
+  flex-shrink: 0;
+}
+
+.payment-receipt dd {
+  margin: 0;
+  font-weight: 600;
+  text-align: left;
+  word-break: break-all;
+}
+
+/* Transaction and tracking identifiers are read aloud to support, so they stay LTR and monospaced
+   even inside the RTL layout — a Persian-shaped uuid is unreadable over the phone. */
+.payment-mono {
+  direction: ltr;
+  unicode-bidi: embed;
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  font-size: 0.82rem;
+}
+
+.payment-action {
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid var(--border-subtle, #e5e7eb);
+  border-radius: 14px;
+  background: transparent;
+  color: var(--text, #111827);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.payment-action.primary {
+  border-color: transparent;
+  background: var(--brand, #2563eb);
+  color: #fff;
+}
+
+.payment-action:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
