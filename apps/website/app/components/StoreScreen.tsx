@@ -134,6 +134,49 @@ export function StoreScreen({ onNavigate }: { onNavigate: (dest: LearnerDestinat
     }
   };
 
+  const purchase = async (packId: string): Promise<void> => {
+    setActivation({ packId, error: null, success: null });
+    try {
+      const response = await fetch('/api/store/purchase/initiate', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ packId }),
+      });
+      if (!response.ok) {
+        setActivation({
+          packId: null,
+          success: null,
+          error:
+            response.status === 401
+              ? 'برای خرید بسته باید وارد حساب خود شوید.'
+              : response.status === 502 || response.status === 503
+                ? 'درگاه پرداخت در دسترس نیست. کمی بعد دوباره تلاش کنید.'
+                : 'شروع خرید انجام نشد. دوباره تلاش کنید.',
+        });
+        return;
+      }
+      const body = (await response.json()) as { redirectUrl?: string };
+      // The gateway URL is built server-side from the Authority the provider issued; the client
+      // only follows it. Nothing here decides the amount or what is being bought.
+      if (!body.redirectUrl) {
+        setActivation({
+          packId: null,
+          success: null,
+          error: 'شروع خرید انجام نشد. دوباره تلاش کنید.',
+        });
+        return;
+      }
+      window.location.assign(body.redirectUrl);
+    } catch {
+      setActivation({
+        packId: null,
+        success: null,
+        error: 'ارتباط با درگاه پرداخت برقرار نشد. دوباره تلاش کنید.',
+      });
+    }
+  };
+
   return (
     <main className="store-v2" data-testid="learnbox-store">
       {/* Shared screen chrome, same as Progress — the Store is a native section, not a web shop. */}
@@ -268,9 +311,13 @@ export function StoreScreen({ onNavigate }: { onNavigate: (dest: LearnerDestinat
                               {busy ? 'در حال دریافت…' : 'دریافت رایگان'}
                             </button>
                           ) : (
-                            // Paid packs are shown when real data exists, but buying is M2.4.
-                            <button type="button" className="store-action" disabled>
-                              خرید به‌زودی
+                            <button
+                              type="button"
+                              className="store-action"
+                              onClick={() => void purchase(pack.id)}
+                              disabled={busy}
+                            >
+                              {busy ? 'در حال انتقال به درگاه…' : 'خرید بسته'}
                             </button>
                           )}
                         </li>

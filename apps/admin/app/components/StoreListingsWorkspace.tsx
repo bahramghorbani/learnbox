@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { AdminSidebar } from './AdminSidebar';
+import { PaymentOperationsPanel } from './PaymentOperationsPanel';
 
 /**
  * Phase 2 / Milestone 2.1 — Store workspace («فروشگاه»).
@@ -391,6 +392,10 @@ export function StoreListingsWorkspace() {
             </tbody>
           </table>
         ) : null}
+
+        {/* M2.4 — payment operations live inside the Store workspace rather than as a new
+            navigation destination, so the approved Admin nav model is unchanged. */}
+        <PaymentOperationsPanel />
       </section>
     </main>
   );

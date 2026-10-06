@@ -49,6 +49,7 @@ import { Bobo } from './components/Bobo';
 import { OnboardingGoal } from './components/OnboardingGoal';
 import { ProgressScreen } from './components/ProgressScreen';
 import { StoreScreen } from './components/StoreScreen';
+import { PaymentResultScreen } from './components/PaymentResultScreen';
 import { SupportivePlusOffer } from './components/SupportivePlusOffer';
 import { personalWordLimit } from './product-experience';
 import { resolveSupportivePlusOffer } from './paywall';
@@ -199,6 +200,10 @@ export function LearnerHome({
   const [screen, setScreen] = useState<
     'today' | 'card' | 'complete' | 'progress' | 'words' | 'store' | 'profile' | 'settings'
   >('today');
+  // The payment callback redirects to `/?purchase=<internal transaction id>`. Read once on mount:
+  // the token only identifies the transaction, and the result screen fetches the real outcome as
+  // the authenticated learner rather than trusting anything in this URL.
+  const [purchaseToken, setPurchaseToken] = useState<string | null>(null);
   const [flipped, setFlipped] = useState(false);
   const [grade, setGrade] = useState<Grade | null>(null);
   const [binaryAnswer, setBinaryAnswer] = useState<BinaryResponse | null>(null);
@@ -286,6 +291,18 @@ export function LearnerHome({
       unsentCount = 0;
     }
     setSessionEnded({ unsentCount });
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const token = new URLSearchParams(window.location.search).get('purchase');
+    if (!token) return;
+    setPurchaseToken(token);
+    // Strip the parameter so a refresh or a shared link does not re-open the result screen, and so
+    // the transaction id stops travelling in the address bar once it has been read.
+    const cleaned = new URL(window.location.href);
+    cleaned.searchParams.delete('purchase');
+    window.history.replaceState(null, '', `${cleaned.pathname}${cleaned.search}${cleaned.hash}`);
   }, []);
 
   useEffect(() => {
@@ -1089,6 +1106,24 @@ export function LearnerHome({
         reviewedToday={reviewedToday}
         streakDays={streakDays}
         pendingReviewCount={pendingReviewCount}
+      />
+    );
+  }
+
+  // Takes precedence over the normal screen switch: a learner returning from the gateway must see
+  // the outcome of their payment before anything else, whichever screen they left from.
+  if (purchaseToken) {
+    return (
+      <PaymentResultScreen
+        purchaseToken={purchaseToken}
+        onDone={() => {
+          setPurchaseToken(null);
+          setScreen('today');
+        }}
+        onRetry={() => {
+          setPurchaseToken(null);
+          setScreen('store');
+        }}
       />
     );
   }

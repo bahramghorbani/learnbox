@@ -17,8 +17,89 @@ schema mismatch (`users/[userId]` selects `rating`/`created_at`; the real column
 `grade`/`occurred_at`). Admin is **not reachable in Production**: Caddy answers
 `admin.learnboxapp.com` with a fixed 404 and the container publishes no ports.
 
-**Phase 2 — Store & Entitlements — M2.1 merged (implemented in repository, not activated).** The
-canonical commercial layer now exists: migration `0026_store_listings.sql` creates one additive
+**Phase 2 — Store & Entitlements — M2.1–M2.4 merged (implemented in repository, not activated).**
+M2.4 completes the canonical commercial path: a learner can now be charged for a paid pack through
+Zarinpal and receive an entitlement only after the payment is verified server-side.
+
+M2.4 extends the existing `purchase_events` table from `0004_billing_foundation` rather than adding
+a payment table of its own (migration `0027_zarinpal_paid_acquisition.sql`, additive: new enum
+values, four nullable columns, one relaxed `NOT NULL`, one CHECK, one index; nothing dropped or
+rewritten). Reused unchanged: `id` as the internal LearnBox transaction identifier,
+`provider`/`environment`, `provider_purchase_id` holding Zarinpal's Authority, and the existing
+`UNIQUE (provider, provider_purchase_id)` which is the duplicate-payment guarantee. Added because
+0004 could not express them: `pack_id` (0004 points a purchase at a `billing_products` row, while a
+LearnBox entitlement references `packs.id` — without this, granting would require inventing a
+billing product per pack, a second catalogue beside `packs`), `amount_tomans` (the immutable amount
+snapshot; verification must send the amount the learner was actually charged, so an operator
+re-pricing a pack mid-payment cannot invalidate a correct payment), `provider_reference` (Zarinpal's
+RefID, issued only on success, distinct from the Authority which proves nothing), and `updated_at`
+(a failure or cancellation has no date otherwise). No currency column: Zarinpal settles in Rial
+only and prices are Tomans, so the unit stays in the column name as it already is on
+`packs.price_tomans`. `product_id` loses its `NOT NULL` and the new CHECK makes the pack-purchase
+and store-purchase shapes mutually exclusive and each internally complete.
+
+Three learner routes. `POST /api/store/purchase/initiate` is authenticated and same-origin
+(`guardMutation` before the session read); the body carries a pack id and nothing else, and the
+server decides publication, listing, free/paid state and amount from the canonical tables — a
+client-supplied price, flag or ownership claim is never read. It records a `pending` transaction and
+returns the gateway URL; it grants nothing. `GET /api/store/purchase/callback` is the Zarinpal
+return URL and is deliberately unauthenticated: the provider redirects the learner's browser, so a
+same-origin check would reject the gateway itself. Its query parameters are a hint, never proof —
+`Status=OK` triggers a verification call to Zarinpal with the stored amount, and only Zarinpal's
+answer settles the transaction. It ignores the caller's session entirely and grants to
+`purchase_events.user_id`, so a second learner replaying the URL acquires nothing. It redirects with
+only the internal transaction id and never renders an outcome. `GET /api/store/purchase/status`
+returns the learner's own receipt, with ownership enforced as a `WHERE` clause.
+
+Settlement is one statement whose `UPDATE … WHERE status = 'pending'` is the idempotency lock, with
+the entitlement inserted from that update's own result under `ON CONFLICT DO NOTHING`. A replayed or
+concurrent callback therefore produces no second transaction and no second entitlement, and a late
+non-OK callback cannot revoke a verified sale. A provider or network failure leaves the row
+`pending` and reports an unresolved outcome — never a failure — because the learner may have paid.
+Zarinpal's code 101 (already verified) is treated as success, not rejection. All gateway protocol
+lives in one adapter behind an injectable `ZarinpalProvider`; the canonical pack-access rule from
+M2.2 remains the single authority on access and imports nothing provider-specific.
+
+The learner payment result is an in-app surface with five visually distinct states — success
+(pack, amount, Zarinpal RefID, internal transaction id, date, «شروع یادگیری»), failed, cancelled,
+verifying/pending, and unresolved. It never derives the outcome from its own input: it fetches the
+receipt as the authenticated learner, so editing the URL cannot manufacture a success screen.
+
+Admin gains two read-only surfaces inside the Store workspace: the real `purchase_events`
+transaction list (internal id, learner, pack, amount, provider, canonical status, Zarinpal
+reference, timestamps) and a Zarinpal configuration status panel. There is **no Admin write path
+for the merchant credential**, and this is a decision rather than an omission: the repository keeps
+third-party credentials in server environment variables (SMS.ir, database, object storage), so
+accepting the merchant id through an Admin form would mean either a live payment secret in a
+plaintext application table or a new encrypted-secrets subsystem with its own key management and
+rotation story — both larger and weaker than the pattern already in use. Admin therefore never
+reads `ZARINPAL_MERCHANT_ID` at all (it runs as its own deployment, so reading it would report on
+the wrong environment, and provisioning a payment credential to a service with no use for it would
+widen the secret's blast radius for a status label). Credential validity is reported from the only
+thing that genuinely proves it — whether a payment has ever been verified in that environment —
+giving «تنظیم نشده» / «تنظیم شده — در انتظار نخستین پرداخت موفق» / «آماده». No sales summary, no
+revenue aggregation, no finance dashboard. The dead `payment_logs`/`payment_gateways` FinancePanel
+stack is untouched and stays gated off.
+
+**M2.4 implementation complete is NOT live-Zarinpal verified.** The owner does not yet hold a real
+Merchant ID, so no real transaction has ever been performed and none was attempted: contacting the
+live gateway with a fake credential is forbidden and would prove nothing. Every business rule is
+proven against a real Postgres with a deterministic provider fixture implementing the same
+interface the production adapter does. What remains for later, once the owner receives the real
+Merchant ID: set `ZARINPAL_MERCHANT_ID`, `LEARNBOX_ZARINPAL_ENABLED=true`,
+`LEARNBOX_PUBLIC_APP_ORIGIN` and `ZARINPAL_SANDBOX=false` on the learner runtime (server-side
+only), register the callback URL `<origin>/api/store/purchase/callback` with Zarinpal, list a
+genuine paid pack at a real owner-decided price, then complete ONE real end-to-end transaction and
+confirm the verified transaction, the RefID and the granted entitlement. Until that transaction
+exists the gateway status is «در انتظار نخستین پرداخت موفق» by design. `ZARINPAL_SANDBOX` defaults
+to sandbox unless explicitly `false`, so a configuration mistake cannot silently take real money.
+
+M2.4 grants no new capability in Production: migrations `0024`, `0025`, `0026` and now `0027` are
+**not applied in Production**, nothing is deployed, no paid pack exists, no commercial price was
+invented, and the paid flow is inert without the merchant credential. Cafe Bazaar and the Android
+purchase flow remain out of scope and unimplemented, as Phase 2 requires.
+
+M2.1–M2.3 as previously recorded: migration `0026_store_listings.sql` creates one additive
 table keyed 1:1 on canonical `packs` (`pack_id` is both primary and foreign key, so a pack cannot
 carry two listings and a listing cannot exist without a pack). The listing owns commercial state
 only — `store_status`, `featured`, `display_order`, `cover_object_key`, `commercial_summary`,
@@ -33,11 +114,10 @@ forwarded. Mutations require the `content_publisher` role — the same authority
 content — plus Origin/Content-Type, session, per-session CSRF, fresh re-authentication, a uuid
 idempotency key, and the store status the operator observed (stale writes return 409). `listed_at`
 is server-owned. It rides a new default-off `LEARNBOX_ADMIN_STORE_ENABLED` gate, set nowhere in the
-repository and absent in Production. Migration `0026` is **not applied in Production**. M2.1 grants
-no learner-facing capability: there is no learner Store, the learner «فروشگاه» destination remains
-excluded, pack access is still not entitlement-aware, and no acquisition, entitlement or payment
-path exists. Sales reporting is deliberately absent — no transaction data exists. M2.2 (entitlement
-enforcement), M2.3 (free acquisition and learner Store) and M2.4 (Zarinpal) are not started.
+repository and absent in Production. M2.2 made pack access entitlement-aware through a single
+canonical rule (`published AND (is_free OR entitled)`) in `apps/website/lib/pack-access.ts`, where
+`store_listings` never grants content access. M2.3 made «فروشگاه» a primary learner destination in
+the bottom navigation and made free acquisition real through one idempotent statement.
 
 While validating M2.1, the M1.6 lifecycle mutation guard was found to read wall-clock time while
 its own read path honoured the injected clock, even though its dependency contract already declared

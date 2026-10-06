@@ -51,6 +51,11 @@ import { PostgresContentPacksStore } from './postgres-content-packs-store';
 import { PostgresContentPacksWriteStore } from './postgres-content-packs-write-store';
 import { PostgresContentLifecycleStore } from './postgres-content-lifecycle-store';
 import { PostgresStoreListingsStore } from './postgres-store-listings-store';
+import { PostgresAdminPaymentsStore } from './postgres-admin-payments-store';
+import {
+  createAdminPaymentConfigRoute,
+  createAdminTransactionsRoute,
+} from './admin-payments-routes';
 import {
   createStoreListingUpsertRoute,
   createStoreListingsRoute,
@@ -181,6 +186,18 @@ export function createAdminContentPacksServer(dependencies: {
       store: new PostgresStoreListingsStore(pool),
       now: dependencies.now,
     };
+    // Payments (M2.4) are read-only operations: transaction inspection and gateway configuration
+    // status. They ride the Store gate because a shop without a way to see its payments is not
+    // operable, and they add no write path — the merchant credential is server-provisioned and
+    // this store never reads it.
+    const paymentsShared = {
+      enabled: storeConfig.enabled,
+      config: storeConfig,
+      sessionStore,
+      store: new PostgresAdminPaymentsStore(pool),
+      now: dependencies.now,
+      environment: dependencies.environment,
+    };
     return {
       enabled: true as const,
       manageEnabled: manageConfig.enabled,
@@ -225,6 +242,8 @@ export function createAdminContentPacksServer(dependencies: {
       storeEnabled: storeConfig.enabled,
       storeListings: createStoreListingsRoute(storeShared),
       upsertStoreListing: createStoreListingUpsertRoute(storeShared),
+      transactions: createAdminTransactionsRoute(paymentsShared),
+      paymentConfiguration: createAdminPaymentConfigRoute(paymentsShared),
     };
   } catch {
     return { enabled: false as const };

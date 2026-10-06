@@ -1,7 +1,18 @@
-export type BillingProvider = 'cafe_bazaar' | 'direct_web' | 'google_play' | 'app_store';
+export type BillingProvider =
+  | 'cafe_bazaar'
+  | 'direct_web'
+  | 'google_play'
+  | 'app_store'
+  /** Phase 2 / M2.4 — Web/PWA paid acquisition. Its own identity, not folded into `direct_web`. */
+  | 'zarinpal';
 export type BillingEnvironment = 'sandbox' | 'production';
 export type ProductKind = 'subscription' | 'one_time_pack';
-export type PurchaseStatus = 'verified' | 'revoked' | 'refunded' | 'rejected';
+/**
+ * `pending`, `failed` and `cancelled` were added in M2.4: a redirect-based gateway has states that
+ * a store receipt does not, and "we do not yet know" must stay distinguishable from "it failed".
+ */
+export type PurchaseStatus =
+  'pending' | 'verified' | 'failed' | 'cancelled' | 'revoked' | 'refunded' | 'rejected';
 export type LearnBoxTierId = 'learnbox_start' | 'learnbox_plus';
 export type LearnBoxSubscriptionPeriod = 'monthly' | 'three_month' | 'annual';
 
