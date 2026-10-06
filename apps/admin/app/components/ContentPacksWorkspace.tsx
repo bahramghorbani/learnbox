@@ -18,6 +18,7 @@ import {
   type MediaCandidateView,
   type MediaKindState,
 } from './CardMediaPanel';
+import { PackLifecyclePanel } from './PackLifecyclePanel';
 import {
   CardFormModal,
   PackFormModal,
@@ -110,6 +111,7 @@ const PACK_BADGE: Record<string, readonly [string, string]> = {
   needs_review: ['b-amber', 'در انتظار بررسی'],
   approved: ['b-amber', 'تأییدشده'],
   published: ['b-green', 'منتشر شده'],
+  archived: ['b-grey', 'بایگانی‌شده'],
 };
 
 const CARD_BADGE: Record<string, readonly [string, string]> = {
@@ -119,6 +121,7 @@ const CARD_BADGE: Record<string, readonly [string, string]> = {
   approved: ['b-green', 'تأییدشده'],
   published: ['b-green', 'منتشر شده'],
   rejected: ['b-rose', 'ردشده'],
+  deprecated: ['b-grey', 'بایگانی‌شده'],
 };
 
 function PackBadge({ status }: { status: string }) {
@@ -834,6 +837,18 @@ export function ContentPacksWorkspace() {
                   ) : null}
                 </div>
                 <div className="card-body">
+                  {manageEnabled ? (
+                    <PackLifecyclePanel
+                      packId={openPackId}
+                      manageEnabled={manageEnabled}
+                      onAction={(path, body) => sendMutation(path, 'POST', body)}
+                      onChanged={() => {
+                        // A lifecycle change rewrites canonical pack and card state.
+                        void loadPacks();
+                        void loadCards(openPackId);
+                      }}
+                    />
+                  ) : null}
                   {cardsPhase === 'loading' ? (
                     <p className="muted" role="status" aria-live="polite">
                       در حال دریافت کارت‌ها…

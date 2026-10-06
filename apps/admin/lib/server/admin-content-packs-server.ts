@@ -48,6 +48,13 @@ import { getSharedAdminDatabasePool } from './admin-database-pool';
 import { PostgresOwnerAuthStore } from './postgres-owner-auth-store';
 import { PostgresContentPacksStore } from './postgres-content-packs-store';
 import { PostgresContentPacksWriteStore } from './postgres-content-packs-write-store';
+import { PostgresContentLifecycleStore } from './postgres-content-lifecycle-store';
+import {
+  createPackArchiveRoute,
+  createPackLifecycleRoute,
+  createPackPublishRoute,
+  createPackSubmitForReviewRoute,
+} from './admin-content-lifecycle-routes';
 
 type Environment = Record<string, string | undefined>;
 type QueryResult = { rows: Record<string, unknown>[] };
@@ -146,6 +153,16 @@ export function createAdminContentPacksServer(dependencies: {
       audioTimeoutMs: 'limits' in mediaConfig ? mediaConfig.limits.audioTimeoutMs : undefined,
       now: dependencies.now,
     };
+    // Lifecycle (M1.6) rides the same manage gate and writes only canonical `packs` /
+    // `card_versions` rows, so Admin publish and learner visibility cannot diverge.
+    const lifecycleStore = new PostgresContentLifecycleStore(pool);
+    const lifecycleShared = {
+      enabled: manageConfig.enabled,
+      config: manageConfig,
+      sessionStore,
+      store: lifecycleStore,
+      now: dependencies.now,
+    };
     return {
       enabled: true as const,
       manageEnabled: manageConfig.enabled,
@@ -182,6 +199,11 @@ export function createAdminContentPacksServer(dependencies: {
       mediaAccept: createMediaAcceptRoute(mediaShared),
       mediaAsset: createMediaAssetRoute(mediaShared),
       mediaVoicePreview: createVoicePreviewRoute(mediaShared),
+      lifecycleEnabled: manageConfig.enabled,
+      packLifecycle: createPackLifecycleRoute(lifecycleShared),
+      submitPackForReview: createPackSubmitForReviewRoute(lifecycleShared),
+      publishPack: createPackPublishRoute(lifecycleShared),
+      archivePack: createPackArchiveRoute(lifecycleShared),
     };
   } catch {
     return { enabled: false as const };

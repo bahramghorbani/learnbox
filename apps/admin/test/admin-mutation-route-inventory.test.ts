@@ -101,6 +101,18 @@ const INVENTORY: Record<string, Entry> = {
     category: 'delegated',
     guardIn: 'lib/server/admin-card-media-routes.ts',
   },
+  'app/api/content/lifecycle/submit-review/route.ts': {
+    category: 'delegated',
+    guardIn: 'lib/server/admin-content-lifecycle-routes.ts',
+  },
+  'app/api/content/lifecycle/publish/route.ts': {
+    category: 'delegated',
+    guardIn: 'lib/server/admin-content-lifecycle-routes.ts',
+  },
+  'app/api/content/lifecycle/archive/route.ts': {
+    category: 'delegated',
+    guardIn: 'lib/server/admin-content-lifecycle-routes.ts',
+  },
   'app/api/content/media/voice-preview/route.ts': {
     category: 'delegated',
     guardIn: 'lib/server/admin-card-media-routes.ts',
@@ -150,6 +162,7 @@ const READ_ONLY: Record<string, 'hard-disabled' | 'session-layer'> = {
   'app/api/content/media/models/route.ts': 'session-layer',
   'app/api/content/media/state/route.ts': 'session-layer',
   'app/api/content/media/asset/route.ts': 'session-layer',
+  'app/api/content/lifecycle/route.ts': 'session-layer',
   'app/api/splash/current/route.ts': 'session-layer',
   'app/api/splash/preview/route.ts': 'session-layer',
 };

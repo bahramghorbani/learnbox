@@ -34,7 +34,15 @@ export interface WordCardDraft {
   persianMeanings: string[];
   examples: ExampleSentence[];
   media: VersionedMediaAsset[];
-  source: { provider: 'editorial' | 'user' | 'ai_suggestion'; reference?: string };
+  /**
+   * Origin of record. `provider` is immutable provenance and is never rewritten by review, so
+   * `reviewedBy` carries the identity of the human who approved the card for release.
+   */
+  source: {
+    provider: 'editorial' | 'user' | 'ai_suggestion';
+    reference?: string;
+    reviewedBy?: string;
+  };
 }
 
 /**
@@ -151,7 +159,11 @@ export function validateWordCard(card: WordCardDraft): ContentValidationIssue[] 
       message: 'محتوای منتشرشده فقط رسانهٔ تأییدشده می‌پذیرد.',
     });
   }
-  if (card.source.provider === 'ai_suggestion' && card.status === 'published') {
+  if (
+    card.source.provider === 'ai_suggestion' &&
+    card.status === 'published' &&
+    !card.source.reviewedBy?.trim()
+  ) {
     issues.push({ field: 'source', message: 'پیشنهاد AI بدون بازبینی انسانی منتشر نمی‌شود.' });
   }
   return issues;
@@ -270,5 +282,6 @@ export function transitionContentReview(
 }
 
 export * from './card-media-generation.js';
+export * from './content-lifecycle.js';
 export * from './content-pack-release.js';
 export * from './launch-experience.js';

@@ -17,6 +17,22 @@ schema mismatch (`users/[userId]` selects `rating`/`created_at`; the real column
 `grade`/`occurred_at`). Admin is **not reachable in Production**: Caddy answers
 `admin.learnboxapp.com` with a fixed 404 and the container publishes no ports.
 
+**Content & Packs lifecycle — IMPLEMENTED IN REPOSITORY, NOT ACTIVATED (2026-10-06).** The
+authoring, import, AI-generation and media layers were deliberately draft-only and nothing in the
+repository could move canonical content to `published`; the sole publish path was the
+hard-disabled legacy `PATCH /api/packs` prototype, which carried no role check, no readiness
+evaluation and no audit, and would have published draft and rejected cards alike. The canonical
+lifecycle now exists end to end: `draft/ai_generated → needs_review → approved → published`, plus
+non-destructive `archived`/`deprecated` deactivation. Publication requires the
+`content_publisher` role — distinct from the `content_reviewer` who approves — a fresh
+re-authentication, an idempotency key and the status the operator acted on; readiness is
+re-evaluated server-side on locked rows by the canonical domain layer, and every transition writes
+`audit_logs`. Only canonical `packs` and `card_versions` rows are written, so Admin publish and
+learner visibility cannot diverge, and no migration was required. It rides the existing default-off
+`LEARNBOX_ADMIN_CONTENT_PACKS_MANAGE_ENABLED` gate, which is set nowhere in the repository and is
+absent in Production. No real content was published: the 35 Start candidates still have no
+persisted Admin decision, so **0/35 remain release-approved** and nothing became learner-visible.
+
 Mona's test account continues to receive real learner activity (3 events at 08:37Z on
 2026-10-04, after FV closure). This is expected ongoing use, not a deployment side effect;
 Bahram's control fingerprints remain byte-identical.
