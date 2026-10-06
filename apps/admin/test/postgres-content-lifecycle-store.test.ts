@@ -136,7 +136,7 @@ describe('PostgresContentLifecycleStore pack lifecycle reads', () => {
 
 describe('PostgresContentLifecycleStore draft to review', () => {
   it('moves drafts into the review queue, advances the pack and audits every move', async () => {
-    const client = createClient((sql, params) => {
+    const client = createClient((sql) => {
       if (sql.includes('FROM admin_role_assignments')) return [{ role: 'content_reviewer' }];
       if (sql.includes('FROM packs')) return [{ id: packId, status: 'draft' }];
       if (sql.includes('FROM pack_cards')) return [{ id: versionOne }, { id: versionTwo }];
@@ -245,7 +245,10 @@ describe('PostgresContentLifecycleStore publish', () => {
     const cardUpdate = client.calls.find((call) => call.sql.startsWith('UPDATE card_versions'));
     expect(cardUpdate?.sql).toContain("status = 'published'");
     expect(cardUpdate?.sql).toContain('published_at = now()');
-    const persisted = cardUpdate?.params?.[1] as Record<string, any>;
+    const persisted = cardUpdate?.params?.[1] as {
+      status: string;
+      source: { provider: string; reviewedBy?: string };
+    };
     expect(persisted.status).toBe('published');
     // Provenance is preserved and the approving human is recorded alongside it.
     expect(persisted.source.provider).toBe('editorial');
