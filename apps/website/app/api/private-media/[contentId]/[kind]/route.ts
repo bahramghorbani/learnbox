@@ -2,6 +2,7 @@ import { get } from '@vercel/blob';
 
 import privateMediaAttestation from '../../../../../../../content/packs/learnbox-start/validation/start-a1-35-final-private-media-attestation.json';
 import { authenticateLearner } from '../../../../../lib/learner-auth';
+import { canLearnerAccessStartContentId } from '../../../../../lib/published-start-card';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -57,7 +58,8 @@ export async function GET(request: Request, context: RouteContext) {
     return new Response('Not found', { status: 404 });
   }
 
-  if (!(await authenticateLearner(request))) {
+  const session = await authenticateLearner(request);
+  if (!session) {
     return new Response('Unauthorized', {
       status: 401,
       headers: { 'Cache-Control': 'no-store' },
@@ -68,6 +70,12 @@ export async function GET(request: Request, context: RouteContext) {
   const assetKind = kindByRouteSegment[kind as keyof typeof kindByRouteSegment];
   if (!/^[a-z0-9-]+$/.test(contentId) || !assetKind) {
     return new Response('Not found', { status: 404 });
+  }
+
+  // An attestation entry is not an authorization: protected bytes follow the same canonical pack
+  // access rule as the card, so an authenticated but unentitled learner cannot fetch media directly.
+  if (!(await canLearnerAccessStartContentId(contentId, session.subject))) {
+    return new Response('Not found', { status: 404, headers: { 'Cache-Control': 'no-store' } });
   }
 
   const asset = privateMediaByKey.get(`${contentId}:${assetKind}`);

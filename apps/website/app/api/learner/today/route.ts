@@ -1,5 +1,6 @@
 import { Pool } from 'pg';
 import { authenticateLearner } from '../../../../lib/learner-auth';
+import { packAccessSql } from '../../../../lib/pack-access';
 import {
   dayOfWeekOfKey,
   readCurriculumProgress,
@@ -108,7 +109,13 @@ export async function GET(request: Request): Promise<Response> {
       `SELECT cv.card_id, cv.content_json, cs.due_at, cs.stability_days
        FROM card_schedules cs
        JOIN card_versions cv ON cv.card_id = cs.card_id AND cv.status = 'published'
-       WHERE cs.user_id = $1 AND cs.due_at <= NOW() + INTERVAL '1 day'
+       WHERE cs.user_id = $1
+         AND EXISTS (
+           SELECT 1 FROM pack_cards pc
+           JOIN packs p ON p.id = pc.pack_id
+           WHERE pc.card_id = cs.card_id AND ${packAccessSql('p', '$1')}
+         )
+         AND cs.due_at <= NOW() + INTERVAL '1 day'
        ORDER BY cs.due_at ASC
        LIMIT 3`,
       [userId],
