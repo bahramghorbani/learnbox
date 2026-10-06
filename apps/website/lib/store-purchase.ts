@@ -232,14 +232,17 @@ async function markTerminal(
   pool: Pick<Pool, 'query'>,
   purchaseId: string,
   status: 'failed' | 'cancelled',
-): Promise<void> {
+): Promise<boolean> {
   // Guarded by `status = 'pending'` too, so a late non-OK callback can never undo a verified sale.
-  await pool.query(
+  // Returns false when it changed nothing, so the caller re-reads instead of reporting a failure
+  // for a transaction that another callback has already settled as paid.
+  const result = await pool.query(
     `UPDATE purchase_events
         SET status = $2::purchase_status, updated_at = now()
       WHERE id = $1::uuid AND status = 'pending'`,
     [purchaseId, status],
   );
+  return (result.rowCount ?? 0) > 0;
 }
 
 /**
@@ -297,7 +300,11 @@ export async function verifyPurchase(
   // Zarinpal sends Status=NOK when the learner cancels or the payment never completed. There is no
   // payment to verify, so this is settled locally.
   if (input.callbackStatus !== 'OK') {
-    await markTerminal(pool, row.id, 'cancelled');
+    // If this changed nothing, a concurrent OK callback settled the same payment as paid; report
+    // what is recorded rather than the cancellation this callback assumed.
+    if (!(await markTerminal(pool, row.id, 'cancelled')) && attempt === 0) {
+      return verifyPurchase(dependencies, input, 1);
+    }
     return { status: 'cancelled', purchaseId: row.id };
   }
 
@@ -311,7 +318,9 @@ export async function verifyPurchase(
     return { status: 'verification_error', purchaseId: row.id };
   }
   if (verification.status === 'rejected') {
-    await markTerminal(pool, row.id, 'failed');
+    if (!(await markTerminal(pool, row.id, 'failed')) && attempt === 0) {
+      return verifyPurchase(dependencies, input, 1);
+    }
     return { status: 'failed', purchaseId: row.id, code: verification.code };
   }
 

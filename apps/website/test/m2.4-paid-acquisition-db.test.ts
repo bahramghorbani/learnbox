@@ -8,7 +8,12 @@ import { guardForcedTeardown } from './support/forced-teardown-guard';
 import { canLearnerAccessPack } from '../lib/pack-access';
 import { activateFreePack } from '../lib/store-activation';
 import { readLearnerPacks, readStoreCatalogue } from '../lib/store-catalogue';
-import { createPurchase, readPurchaseForLearner, verifyPurchase } from '../lib/store-purchase';
+import {
+  createPurchase,
+  readPurchaseForLearner,
+  verifyPurchase,
+  type VerifyPurchaseOutcome,
+} from '../lib/store-purchase';
 import type { ZarinpalProvider } from '../lib/zarinpal';
 
 /**
@@ -451,23 +456,120 @@ suite('M2.4 paid pack acquisition through Zarinpal (real Postgres)', () => {
       expect(provider.verifications).toHaveLength(1);
     });
 
-    it('keeps exactly one entitlement under concurrent callbacks', async () => {
+    it('keeps exactly one entitlement when a second callback arrives mid-verification', async () => {
+      // The replay test above proves the settled-row short circuit. This proves the other half:
+      // two callbacks for the same authority BOTH passing the pending check before either settles
+      // it — Zarinpal retrying its callback, or a learner double-submitting the return URL.
+      //
+      // The interleaving is forced rather than raced, so it is deterministic: the outer caller is
+      // suspended inside `verifyPayment` while a complete second verification runs to completion.
+      //
+      // Each verification issues a DIFFERENT reference id, because entitlement count alone cannot
+      // see a double settlement — UNIQUE(user_id, pack_id) absorbs the second insert even with no
+      // lock at all. The stored RefID can: it is the handle support quotes to the bank, so it must
+      // be written once by the caller that granted, and never rewritten by a straggler.
+      let issued = 0;
+      let reentered = false;
+      // Collected rather than assigned: the inner outcome is produced inside a closure.
+      const inner: VerifyPurchaseOutcome[] = [];
+      const provider: ZarinpalProvider = fixtureProvider({
+        verifyPayment: async () => {
+          if (!reentered) {
+            reentered = true;
+            // Runs the whole second callback — read, verify, settle, grant — before this one
+            // returns, so the outer caller resumes holding a stale "pending" read.
+            inner.push(
+              await verifyPurchase(
+                { pool, provider },
+                { authority: authorityOf('1'), callbackStatus: 'OK' },
+              ),
+            );
+          }
+          issued += 1;
+          return { status: 'verified', referenceId: `90000000${issued}`, alreadyVerified: false };
+        },
+      });
+      await createPurchase(dependencies(provider), { userId: alice, packId: packs.paidListed });
+
+      const outer = await verifyPurchase(
+        { pool, provider },
+        { authority: authorityOf('1'), callbackStatus: 'OK' },
+      );
+
+      // Both callbacks really did ask the gateway from a pending read.
+      expect(issued).toBe(2);
+      // The inner one settled first, so it is the one that granted.
+      expect(inner).toHaveLength(1);
+      expect(inner[0]).toMatchObject({ status: 'verified', entitlementCreated: true });
+      // The outer one finds its update refused, re-reads, and reports the recorded outcome.
+      expect(outer).toMatchObject({ status: 'verified', entitlementCreated: false });
+
+      expect(await countEntitlements(alice, packs.paidListed)).toBe(1);
+      expect(await countTransactions(packs.paidListed)).toBe(1);
+
+      const winner = inner[0] as { referenceId: string | null };
+      const settled = await pool.query<{ provider_reference: string; verified_count: string }>(
+        `SELECT provider_reference, count(*)::text AS verified_count
+           FROM purchase_events
+          WHERE pack_id = $1 AND status = 'verified'
+          GROUP BY provider_reference`,
+        [packs.paidListed],
+      );
+      expect(settled.rows).toHaveLength(1);
+      expect(settled.rows[0].verified_count).toBe('1');
+      // The straggler's reference must NOT have overwritten the stored one.
+      expect(settled.rows[0].provider_reference).toBe(winner.referenceId);
+      expect((outer as { referenceId: string | null }).referenceId).toBe(winner.referenceId);
+    });
+
+    it('refuses to cancel a sale another callback has already verified', async () => {
+      // The late-NOK test above is handled by the settled-row short circuit. This covers the
+      // version that gets past it: a NOK callback that read the row while it was still pending,
+      // then tried to settle it after an OK callback had already paid and granted.
+      //
+      // Injected at the pool, because the NOK branch settles immediately after its read and has no
+      // provider call to suspend inside.
       const provider = fixtureProvider();
       await createPurchase(dependencies(provider), { userId: alice, packId: packs.paidListed });
 
-      const results = await Promise.all(
-        Array.from({ length: 5 }, () =>
-          verifyPurchase({ pool, provider }, { authority: authorityOf('1'), callbackStatus: 'OK' }),
-        ),
+      const verified: VerifyPurchaseOutcome[] = [];
+      let hooked = false;
+      const poolWithRaceAfterRead: Pick<typeof pool, 'query'> = {
+        query: (async (...args: Parameters<typeof pool.query>) => {
+          const result = await pool.query(...args);
+          if (!hooked && typeof args[0] === 'string' && args[0].includes('FROM purchase_events')) {
+            hooked = true;
+            // The whole OK callback completes here: verified, granted, settled.
+            verified.push(
+              await verifyPurchase(
+                { pool, provider },
+                { authority: authorityOf('1'), callbackStatus: 'OK' },
+              ),
+            );
+          }
+          return result;
+        }) as typeof pool.query,
+      };
+
+      const late = await verifyPurchase(
+        { pool: poolWithRaceAfterRead, provider },
+        { authority: authorityOf('1'), callbackStatus: 'NOK' },
       );
 
-      expect(results.every((result) => result.status === 'verified')).toBe(true);
-      const granted = results.filter(
-        (result) => result.status === 'verified' && result.entitlementCreated,
+      expect(verified[0]).toMatchObject({ status: 'verified', entitlementCreated: true });
+      // The cancellation must not be reported either: it re-reads and tells the learner the truth.
+      expect(late.status).toBe('verified');
+
+      const settled = await pool.query<{ status: string; provider_reference: string | null }>(
+        `SELECT status, provider_reference FROM purchase_events WHERE pack_id = $1`,
+        [packs.paidListed],
       );
-      // The `status = 'pending'` predicate is the lock: exactly one caller may grant.
-      expect(granted).toHaveLength(1);
+      expect(settled.rows).toHaveLength(1);
+      expect(settled.rows[0].status).toBe('verified');
+      expect(settled.rows[0].provider_reference).not.toBeNull();
+      // The paid-for entitlement survives.
       expect(await countEntitlements(alice, packs.paidListed)).toBe(1);
+      expect(await canLearnerAccessPack(pool, packs.paidListed, alice)).toBe(true);
     });
 
     it('refuses a duplicate transaction for the same gateway authority', async () => {
