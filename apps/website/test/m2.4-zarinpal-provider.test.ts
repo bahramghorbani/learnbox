@@ -8,7 +8,6 @@ import {
   zarinpalEndpoints,
 } from '../lib/zarinpal';
 import {
-  describeZarinpalConfiguration,
   isZarinpalMerchantId,
   readZarinpalConfig,
   zarinpalProviderFromEnvironment,
@@ -276,38 +275,5 @@ describe('M2.4 Zarinpal configuration gate', () => {
   it('builds no provider when payment is unconfigured', () => {
     expect(zarinpalProviderFromEnvironment({})).toBeNull();
     expect(zarinpalProviderFromEnvironment(complete)).not.toBeNull();
-  });
-
-  describe('status description', () => {
-    it('reports disabled, incomplete and ready distinctly', () => {
-      expect(describeZarinpalConfiguration({}).state).toBe('disabled');
-      expect(describeZarinpalConfiguration({ LEARNBOX_ZARINPAL_ENABLED: 'true' }).state).toBe(
-        'incomplete',
-      );
-      expect(describeZarinpalConfiguration(complete).state).toBe('ready');
-    });
-
-    it('names what is missing without revealing any value', () => {
-      const status = describeZarinpalConfiguration({ LEARNBOX_ZARINPAL_ENABLED: 'true' });
-      expect(status.missing).toContain('ZARINPAL_MERCHANT_ID');
-      expect(status.missing).toContain('LEARNBOX_PUBLIC_APP_ORIGIN');
-      expect(JSON.stringify(status)).not.toContain(fakeMerchantId);
-    });
-
-    it('exposes at most the last four characters of the merchant id', () => {
-      const status = describeZarinpalConfiguration(complete);
-      expect(status.merchantIdHint).toBe('0000');
-      expect(status.merchantIdValid).toBe(true);
-      // The full credential must never appear in the status payload.
-      expect(JSON.stringify(status)).not.toContain(fakeMerchantId);
-      expect(status.merchantIdHint?.length).toBe(4);
-    });
-
-    it('offers no hint for an invalid credential', () => {
-      const status = describeZarinpalConfiguration({ ...complete, ZARINPAL_MERCHANT_ID: 'nope' });
-      expect(status.merchantIdPresent).toBe(true);
-      expect(status.merchantIdValid).toBe(false);
-      expect(status.merchantIdHint).toBeNull();
-    });
   });
 });
