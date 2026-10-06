@@ -29,8 +29,9 @@ unrelated future feature. Admin stays non-public.
 
 **Weak or missing:**
 
-- One real page (`app/page.tsx`, 11 lines) plus `/bootstrap`. The sidebar's `content`, `reports`
-  and `settings` entries all point at `#review` — placeholder navigation.
+- `app/page.tsx` plus `/bootstrap`. `#content` is now a real destination — `AdminWorkspaceRouter`
+  renders the Content & Packs workspace there (Phase 1, closed 2026-10-06). The sidebar's
+  `reports` and `settings` entries remain placeholder navigation.
 - Legacy route group — `banners`, `packs` write paths, `gateways`, `transactions`, `users` —
   holds raw SQL and duplicated rules, and is **fail-closed to 404 in any production build**
   via `legacyAdminRouteGate()`.
@@ -63,7 +64,7 @@ Derived from real tables, not invented. Every module names the tables it reads.
 | **Overview**                    | aggregates of the tables below                                                                                                     | 2      |
 | **Content review**              | `content_review_checks`, `content_review_decisions`, `cards`, `card_versions`                                                      | exists |
 | **Cards & packs**               | `cards`, `card_versions`, `packs`, `pack_cards`                                                                                    | 1      |
-| **Users**                       | `users`, `invite_codes`, `invite_consents`, `account_deletion_events`                                                              | 1      |
+| **Users & Support Control**     | `users`, `invite_codes`, `invite_consents`, `account_deletion_events`                                                              | 3      |
 | **Learner state** (read-mostly) | `card_schedules`, `review_events`, `learner_daily_plans`, `learner_reconciliation_cursors`, `review_event_rejections`              | 2      |
 | **Sessions & access**           | `admin_sessions`, `admin_owner`, `admin_passkey_credentials`, `admin_role_assignments`, `revoked_sessions`, `user_session_cutoffs` | 2      |
 | **Operations**                  | `audit_logs`, `otp_challenges`, `otp_request_events`, `schema_migrations`, `private_media_cleanup_jobs`                            | 2      |
