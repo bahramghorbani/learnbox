@@ -3935,3 +3935,278 @@ p {
   outline: 3px solid var(--primary);
   outline-offset: 2px;
 }
+
+/* ---------------------------------------------------------------------------
+   Learner Store (Phase 2 / M2.3)
+   Reuses the shared screen chrome (.screen-topbar / .screen-body-scroll) and the
+   existing token palette, so the Store reads as a native primary section rather
+   than a separate shop. RTL comes from <html dir="rtl">; nothing here flips it.
+   --------------------------------------------------------------------------- */
+.store-v2 {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+  background: var(--bg);
+  min-height: 0;
+}
+.store-v2 .screen-body-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+.store-v2 .screen-body-scroll::-webkit-scrollbar {
+  display: none;
+}
+.store-content {
+  padding: 16px 16px calc(var(--nav-h) + 16px);
+}
+
+/* Acquisition feedback: success and failure are announced, not only coloured. */
+.store-banner {
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.7;
+}
+.store-banner-success {
+  background: rgba(34, 197, 94, 0.12);
+  color: #15803d;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+.store-banner-error {
+  background: rgba(239, 68, 68, 0.1);
+  color: #b91c1c;
+  border: 1px solid rgba(239, 68, 68, 0.28);
+}
+
+/* Loading / unavailable */
+.store-state {
+  background: var(--surface);
+  border-radius: var(--card-radius);
+  box-shadow: var(--card-shadow);
+  padding: 32px 20px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 14px;
+}
+.store-spinner {
+  display: block;
+  width: 26px;
+  height: 26px;
+  margin: 0 auto 12px;
+  border: 3px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: storeSpin 700ms linear infinite;
+}
+@keyframes storeSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .store-spinner {
+    animation-duration: 2s;
+  }
+}
+.store-retry {
+  margin-top: 14px;
+  min-height: 44px;
+  padding: 0 22px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--primary-grad);
+  color: #fff;
+  font-family: var(--persian-font);
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.store-section {
+  margin-bottom: 22px;
+}
+.store-section h2 {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text);
+  margin: 0 0 10px;
+}
+
+/* «بسته‌های من» — the learner's real entitlements. */
+.store-owned-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.store-owned-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.store-owned-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+.store-owned-meta {
+  font-size: 12px;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+.store-continue {
+  margin-top: 10px;
+  width: 100%;
+  min-height: 44px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--lavender);
+  color: var(--primary);
+  font-family: var(--persian-font);
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+/* Catalogue */
+.store-pack-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.store-pack-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--card-radius);
+  box-shadow: var(--card-shadow);
+  padding: 16px;
+}
+.store-pack-card.featured {
+  border-color: var(--primary-light);
+}
+.store-pack-card.owned {
+  border-color: rgba(34, 197, 94, 0.4);
+}
+.store-pack-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.store-pack-head h3 {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text);
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* Free / paid / owned are distinguished by label, not colour alone. */
+.store-tag {
+  flex-shrink: 0;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.store-tag-free {
+  background: rgba(34, 197, 94, 0.14);
+  color: #15803d;
+}
+.store-tag-paid {
+  background: rgba(249, 115, 22, 0.14);
+  color: #c2410c;
+}
+.store-tag-owned {
+  background: var(--lavender);
+  color: var(--primary);
+}
+.store-pack-summary {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.8;
+  margin: 0 0 10px;
+}
+.store-pack-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+.store-price {
+  font-weight: 800;
+  color: var(--text);
+}
+.store-price.free {
+  color: #15803d;
+}
+.store-action {
+  width: 100%;
+  min-height: 44px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--primary-grad);
+  color: #fff;
+  font-family: var(--persian-font);
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.store-action:disabled {
+  background: var(--border);
+  color: var(--muted);
+  cursor: not-allowed;
+}
+.store-action-free {
+  background: linear-gradient(135deg, #34d399, #22c55e);
+}
+.store-action-owned {
+  background: var(--lavender);
+  color: var(--primary);
+}
+.store-action:focus-visible,
+.store-retry:focus-visible,
+.store-continue:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Empty shop — Bobo keeps the moment warm instead of leaving a bare message. */
+.store-empty {
+  background: var(--surface);
+  border-radius: var(--card-radius);
+  box-shadow: var(--card-shadow);
+  padding: 28px 20px;
+  text-align: center;
+}
+.store-empty p {
+  margin: 10px 0 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+.store-empty-hint {
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: var(--muted) !important;
+}

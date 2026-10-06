@@ -49,6 +49,11 @@ const INVENTORY: Record<string, Entry> = {
     category: 'guarded',
     authMarker: 'readLearnerSession(request)',
   },
+  // M2.3 made free pack acquisition real; it is a cookie-authenticated guarded mutation.
+  'app/api/store/activate/route.ts': {
+    category: 'guarded',
+    authMarker: 'authenticateLearner(request)',
+  },
 
   // pre-login and owner-only browser mutations
   'app/api/auth/otp/request/route.ts': { category: 'pre-login', guardIn: 'lib/otp-http.ts' },
@@ -68,7 +73,6 @@ const INVENTORY: Record<string, Entry> = {
 
   // Disabled for Web/PWA: answer 404 and touch nothing.
   'app/api/learner/reset-progress/route.ts': { category: 'hard-disabled' },
-  'app/api/store/activate/route.ts': { category: 'hard-disabled' },
   'app/api/development-session/route.ts': { category: 'hard-disabled' },
 };
 

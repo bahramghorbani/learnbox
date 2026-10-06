@@ -79,19 +79,44 @@ describe('M2.2 access rule is single-sourced', () => {
     expect(packAccessSql('p', '$1')).not.toMatch(/[0-9a-f]{8}-[0-9a-f]{4}/);
   });
 
-  it('creates no entitlement rows anywhere in M2.2 (that is M2.3)', () => {
+  it('creates entitlement rows only in the M2.3 activation module, never in a read path', () => {
     for (const relative of [...GUARDED_QUERY_MODULES, 'lib/pack-access.ts']) {
       const source = read(relative);
       expect(source).not.toMatch(/INSERT\s+INTO\s+user_packs/i);
       expect(source).not.toMatch(/UPDATE\s+user_packs/i);
       expect(source).not.toMatch(/DELETE\s+FROM\s+user_packs/i);
     }
+    // The single writer, and it only ever inserts.
+    const activation = read('lib/store-activation.ts');
+    expect(activation).toMatch(/INSERT\s+INTO\s+user_packs/i);
+    expect(activation).not.toMatch(/UPDATE\s+user_packs/i);
+    expect(activation).not.toMatch(/DELETE\s+FROM\s+user_packs/i);
   });
 
-  it('leaves POST /api/store/activate a 404 stub (M2.3)', async () => {
+  it('routes free activation through the canonical store-activation module', async () => {
     const source = read('app/api/store/activate/route.ts');
-    // The stub may export POST; what matters is that it grants nothing.
-    expect(source).not.toMatch(/user_packs|INSERT|pack-access/);
-    expect((await storeActivate()).status).toBe(404);
+    // The route delegates; it must not carry its own copy of the eligibility rule.
+    expect(source).toMatch(/from '\.\.\/\.\.\/\.\.\/\.\.\/lib\/store-activation'/);
+    expect(source).not.toMatch(/INSERT\s+INTO|is_free|store_status/i);
+    // And it is a guarded mutation, so a cross-origin post never reaches the database.
+    expect(source).toMatch(/guardMutation\(request, \{ method: 'POST' \}\)/);
+    expect(
+      (
+        await storeActivate(
+          new Request('https://app.learnboxapp.com/api/store/activate', { method: 'POST' }),
+        )
+      ).status,
+    ).toBe(403);
+  });
+
+  it('keeps free acquisition free of any payment or provider record', () => {
+    const activation = read('lib/store-activation.ts');
+    // Table and provider usage in code — the prose explaining why they are absent is fine.
+    expect(activation).not.toMatch(/INSERT\s+INTO\s+(purchase_events|payment_logs)/i);
+    expect(activation).not.toMatch(/purchase_event_id|zarinpal|bazaar|gateway/i);
+    expect(activation).toMatch(/'free'/);
+    expect(read('app/api/store/activate/route.ts')).not.toMatch(
+      /purchase_event_id|payment_log|zarinpal|bazaar|gateway/i,
+    );
   });
 });
