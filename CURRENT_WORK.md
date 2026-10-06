@@ -17,7 +17,7 @@ schema mismatch (`users/[userId]` selects `rating`/`created_at`; the real column
 `grade`/`occurred_at`). Admin is **not reachable in Production**: Caddy answers
 `admin.learnboxapp.com` with a fixed 404 and the container publishes no ports.
 
-**Content & Packs lifecycle — IMPLEMENTED IN REPOSITORY, NOT ACTIVATED (2026-10-06).** The
+**Phase 1 — Content & Packs — CLOSED 2026-10-06 (implemented in repository, not activated).** The
 authoring, import, AI-generation and media layers were deliberately draft-only and nothing in the
 repository could move canonical content to `published`; the sole publish path was the
 hard-disabled legacy `PATCH /api/packs` prototype, which carried no role check, no readiness
@@ -30,8 +30,13 @@ re-evaluated server-side on locked rows by the canonical domain layer, and every
 `audit_logs`. Only canonical `packs` and `card_versions` rows are written, so Admin publish and
 learner visibility cannot diverge, and no migration was required. It rides the existing default-off
 `LEARNBOX_ADMIN_CONTENT_PACKS_MANAGE_ENABLED` gate, which is set nowhere in the repository and is
-absent in Production. No real content was published: the 35 Start candidates still have no
-persisted Admin decision, so **0/35 remain release-approved** and nothing became learner-visible.
+absent in Production. This milestone published no content itself. Production had already reached
+the reviewed-and-published state before M1.6 by the earlier path: 35 persisted
+`content_review_decisions`, 210 `content_review_checks`, and the `learnbox_start_a1_essentials`
+pack published on 2026-09-25 with **35/35 card versions published**. Phase 1 therefore closes on
+merged capability plus that pre-existing Production content state; the lifecycle code itself is
+merged but **not deployed** (Production still runs `APP_SOURCE_SHA=6d6aa724`), and activation
+remains a separate, separately-authorized release action.
 
 Mona's test account continues to receive real learner activity (3 events at 08:37Z on
 2026-10-04, after FV closure). This is expected ongoing use, not a deployment side effect;
