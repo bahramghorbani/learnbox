@@ -31,15 +31,23 @@ const mutants = [
     id: 'MUT1',
     claim: 'the operational role is required to read the trail',
     file: store,
-    from: `      if (!(await this.hasRole(client, input.actorUserId))) return { status: 'forbidden' };`,
-    to: `      if (false && !(await this.hasRole(client, input.actorUserId))) return { status: 'forbidden' };`,
+    from: `      if (!(await this.hasRole(client, input.actorUserId))) return { status: 'forbidden' };
+
+      const limit = Math.min(`,
+    to: `      if (false && !(await this.hasRole(client, input.actorUserId))) return { status: 'forbidden' };
+
+      const limit = Math.min(`,
   },
   {
     id: 'MUT2',
     claim: 'an unauthorized operator is answered 404, not told the trail exists',
     file: routes,
-    from: `      if (result.status === 'forbidden') return notFound();`,
-    to: `      if (result.status === 'forbidden') return unauthorized();`,
+    from: `      if (result.status === 'forbidden') return notFound();
+      return json({
+        entries: result.rows,`,
+    to: `      if (result.status === 'forbidden') return unauthorized();
+      return json({
+        entries: result.rows,`,
   },
   {
     id: 'MUT3',
@@ -56,17 +64,15 @@ const mutants = [
     id: 'MUT4',
     claim: 'the whole surface is 404 while the support flag is off',
     file: routes,
-    from: `    if (
+    from: `export function createAdminAuditLogRoute(dependencies: UsersDependencies<'listAuditLog'>) {
+  return async function GET(request: Request) {
+    if (
       !dependencies.enabled ||
-      !dependencies.config.enabled ||
-      !dependencies.sessionStore ||
-      !dependencies.store
-    ) {
-      return notFound();
-    }`,
-    to: `    if (!dependencies.sessionStore || !dependencies.store) {
-      return notFound();
-    }`,
+      !dependencies.config.enabled ||`,
+    to: `export function createAdminAuditLogRoute(dependencies: UsersDependencies<'listAuditLog'>) {
+  return async function GET(request: Request) {
+    if (
+      !dependencies.config.enabled ||`,
   },
 
   // ---- Honesty: a filter that is quietly ignored shows a page a reviewer reads as the truth. ----
@@ -263,24 +269,43 @@ if (!suitesPass()) {
 console.log('baseline PASS\n');
 
 const survivors = [];
+const harnessErrors = [];
 for (const mutant of mutants) {
   const path = join(repoRoot, mutant.file);
   const original = readFileSync(path, 'utf8');
-  if (!original.includes(mutant.from)) {
-    console.log(`${mutant.id} NOT APPLIED (anchor missing) — ${mutant.claim}`);
-    survivors.push(`${mutant.id} (anchor missing)`);
+  // An anchor present more than once is a HARNESS failure, not a survivor. `replace` rewrites the
+  // first occurrence, and these files hold byte-identical guard lines on the M3.1 and M3.2 paths —
+  // so a duplicated anchor silently mutates a path these suites do not run and reports SURVIVED for
+  // a property that is in fact asserted. That reads exactly like a real coverage gap, which makes it
+  // the most expensive way for this script to be wrong.
+  const occurrences = original.split(mutant.from).length - 1;
+  if (occurrences !== 1) {
+    const detail = occurrences === 0 ? 'anchor missing' : `anchor matches ${occurrences} places`;
+    console.log(`${mutant.id} HARNESS ERROR (${detail}) — ${mutant.claim}`);
+    harnessErrors.push(`${mutant.id} (${detail})`);
     continue;
   }
   writeFileSync(path, original.replace(mutant.from, mutant.to));
   const stillGreen = suitesPass();
   writeFileSync(path, original);
+  if (readFileSync(path, 'utf8') !== original) {
+    console.log(`${mutant.id} FATAL — ${mutant.file} not restored`);
+    process.exit(2);
+  }
   console.log(`${mutant.id} ${stillGreen ? 'SURVIVED' : 'KILLED  '} — ${mutant.claim}`);
   if (stillGreen) survivors.push(`${mutant.id}: ${mutant.claim}`);
 }
 
-console.log(`\n${mutants.length - survivors.length}/${mutants.length} killed`);
+console.log(
+  `\n${mutants.length - survivors.length - harnessErrors.length}/${mutants.length} killed`,
+);
+if (harnessErrors.length > 0) {
+  console.log(
+    'HARNESS ERRORS (no verdict earned):\n' + harnessErrors.map((item) => `  - ${item}`).join('\n'),
+  );
+}
 if (survivors.length > 0) {
   console.log('SURVIVORS:\n' + survivors.map((item) => `  - ${item}`).join('\n'));
-  process.exit(1);
 }
+if (survivors.length > 0 || harnessErrors.length > 0) process.exit(1);
 console.log('ALL MUTANTS KILLED');
