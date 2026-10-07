@@ -171,6 +171,10 @@ const READ_ONLY: Record<string, 'hard-disabled' | 'session-layer'> = {
   // session plus an operational role, and sits behind LEARNBOX_ADMIN_SUPPORT_ENABLED. It returns
   // canonical user rows and activity counters only — no learning content, no card history.
   'app/api/support/users/route.ts': 'session-layer',
+  // M3.3 Audit Log viewer: GET-only, so CSRF is not applicable; it requires a valid Admin session
+  // plus an operational role and sits behind LEARNBOX_ADMIN_SUPPORT_ENABLED. It reads the canonical
+  // append-only trail and has no write companion — audit records are evidence, not editable rows.
+  'app/api/support/audit/route.ts': 'session-layer',
   'app/api/transactions/route.ts': 'hard-disabled',
   'app/api/packs/csv-template/route.ts': 'hard-disabled',
   'app/api/auth/add-passkey/options/route.ts': 'session-layer',

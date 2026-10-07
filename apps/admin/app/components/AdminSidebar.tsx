@@ -24,11 +24,11 @@ const navItems = [
   { label: 'خانه / نمای کلی', icon: 'home', route: 'home' },
   { label: 'محتوا و بسته‌ها', icon: 'book', route: 'content' },
   { label: 'فروشگاه', icon: 'store', route: 'store' },
-  { label: 'کاربران', icon: 'users' },
+  { label: 'کاربران', icon: 'users', route: 'users' },
   { label: 'یادگیری', icon: 'chart' },
   { label: 'نمایش اپ', icon: 'image' },
   { label: 'نشست‌ها و دسترسی', icon: 'shield' },
-  { label: 'عملیات', icon: 'ops' },
+  { label: 'عملیات', icon: 'ops', route: 'audit' },
   { label: 'تنظیمات', icon: 'settings' },
 ] as const satisfies readonly {
   label: string;

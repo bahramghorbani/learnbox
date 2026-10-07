@@ -4,6 +4,7 @@ import { readAdminSupportConfig } from './admin-content-packs-config';
 import { readAdminDatabaseConfig, type AdminDatabaseConfig } from './admin-database';
 import { getSharedAdminDatabasePool } from './admin-database-pool';
 import {
+  createAdminAuditLogRoute,
   createAdminUserPackEntitlementRoute,
   createAdminUserPacksRoute,
   createAdminUserStatusRoute,
@@ -43,6 +44,7 @@ export function createAdminSupportServer(dependencies: {
       setUserStatus: createAdminUserStatusRoute(shared),
       userPacks: createAdminUserPacksRoute(shared),
       setPackEntitlement: createAdminUserPackEntitlementRoute(shared),
+      auditLog: createAdminAuditLogRoute(shared),
     };
   } catch {
     return { enabled: false as const };

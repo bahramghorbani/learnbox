@@ -1,5 +1,7 @@
 import type { Pool, PoolClient } from 'pg';
 
+import { summariseAuditMetadata, type AuditDetail } from './audit-metadata';
+
 /**
  * Canonical Admin support store for account status (Phase 3 / M3.1).
  *
@@ -21,6 +23,10 @@ import type { Pool, PoolClient } from 'pg';
  * M3.2 adds manual pack entitlements to the same store, for the same reason: `user_packs` is the
  * canonical entitlement the learner runtime reads, so a support grant writes that row and nothing
  * else. Payment records are read for provenance and never written.
+ *
+ * M3.3 adds the READ side of that same trail. It lives here rather than in a store of its own so
+ * that `hasRole` stays the single implementation of "may this operator use the support surface" —
+ * a second copy of that predicate is a second place for it to drift wrong.
  */
 
 export type AccountStatus = 'active' | 'disabled';
@@ -151,6 +157,50 @@ export type SetPackEntitlementResult =
 
 export type ReadPackEntitlementsResult =
   { status: 'ok'; rows: PackEntitlementRow[] } | { status: 'not_found' } | { status: 'forbidden' };
+
+/**
+ * One administrative action, as the audit viewer presents it (M3.3).
+ *
+ * `metadata` is deliberately NOT included raw: the row carries the already-summarised, redacted,
+ * length-capped view produced by `summariseAuditMetadata`, so no untrusted producer field can reach
+ * the browser merely because a new writer added it.
+ */
+export type AuditLogRow = {
+  id: string;
+  createdAt: string;
+  /** null when the actor was anonymised by account deletion (0019) — the action still stands. */
+  actorUserId: string | null;
+  actorLabel: string | null;
+  action: string;
+  entityType: string;
+  entityId: string;
+  reason: string | null;
+  details: AuditDetail[];
+};
+
+export type AuditLogFilters = {
+  action?: string;
+  actorUserId?: string;
+  entityType?: string;
+  entityId?: string;
+  /** Inclusive lower bound, exclusive upper bound, both as ISO instants. */
+  from?: string;
+  to?: string;
+};
+
+export type ListAuditLogResult =
+  | {
+      status: 'ok';
+      rows: AuditLogRow[];
+      total: number;
+      limit: number;
+      offset: number;
+      /** Filter vocabularies, read from the trail itself rather than hard-coded. */
+      actions: string[];
+      entityTypes: string[];
+      actors: { id: string; label: string }[];
+    }
+  | { status: 'forbidden' };
 
 type Queryable = Pick<PoolClient, 'query'>;
 
@@ -560,6 +610,143 @@ export class PostgresAdminUsersStore {
     } catch (error) {
       await client.query('ROLLBACK').catch(() => undefined);
       throw error;
+    } finally {
+      client.release();
+    }
+  }
+
+  /** The viewer never offers an unbounded page: one screen of history, server-decided. */
+  private static readonly auditMaxLimit = 100;
+  private static readonly auditDefaultLimit = 25;
+  /** Deep paging into an operational trail is a filtering problem, not a scrolling problem. */
+  private static readonly auditMaxOffset = 10_000;
+
+  /**
+   * Read the canonical administrative audit trail (Phase 3 / M3.3).
+   *
+   * STRICTLY read-only, and visibly so: this method issues SELECT statements and nothing else, so
+   * the viewer has no code path that could edit or delete an audit record even if a caller asked.
+   * Immutability is not a UI convention here — there is no mutation to reach. Least privilege backs
+   * that up: `learnbox_admin` holds SELECT and INSERT on `audit_logs` and no UPDATE or DELETE
+   * (infrastructure/database/db-roles-p0.sql), so a rewrite would be refused by the database too.
+   *
+   * Every producer's records are readable through one query — content review, pack lifecycle,
+   * splash, Store listings, M3.1 suspensions and M3.2 entitlements — because they all write the one
+   * canonical table. The viewer adds no table, no projection and no event of its own.
+   */
+  async listAuditLog(input: {
+    actorUserId: string;
+    filters?: AuditLogFilters;
+    limit?: number;
+    offset?: number;
+  }): Promise<ListAuditLogResult> {
+    const client = await this.pool.connect();
+    try {
+      if (!(await this.hasRole(client, input.actorUserId))) return { status: 'forbidden' };
+
+      const limit = Math.min(
+        Math.max(Math.trunc(input.limit ?? PostgresAdminUsersStore.auditDefaultLimit), 1),
+        PostgresAdminUsersStore.auditMaxLimit,
+      );
+      const offset = Math.min(
+        Math.max(Math.trunc(input.offset ?? 0), 0),
+        PostgresAdminUsersStore.auditMaxOffset,
+      );
+      const filters = input.filters ?? {};
+
+      // `count(*) OVER ()` gives the unpaged total from the same filtered scan, so the page and its
+      // total can never disagree the way two separate queries can.
+      const page = await client.query<{
+        id: string;
+        createdAt: string;
+        actorUserId: string | null;
+        actorLabel: string | null;
+        action: string;
+        entityType: string;
+        entityId: string;
+        metadata: unknown;
+        total: string;
+      }>(
+        `SELECT a.id,
+                to_char(a.created_at, 'YYYY-MM-DD"T"HH24:MI:SSOF') AS "createdAt",
+                a.actor_user_id                                    AS "actorUserId",
+                nullif(trim(coalesce(u.first_name, '') || ' ' || coalesce(u.last_name, '')), '')
+                                                                   AS "actorLabel",
+                a.action,
+                a.entity_type                                      AS "entityType",
+                a.entity_id                                        AS "entityId",
+                a.metadata,
+                count(*) OVER ()                                   AS total
+           FROM audit_logs a
+           LEFT JOIN users u ON u.id = a.actor_user_id
+          WHERE ($1::text IS NULL OR a.action = $1)
+            AND ($2::uuid IS NULL OR a.actor_user_id = $2)
+            AND ($3::text IS NULL OR a.entity_type = $3)
+            AND ($4::uuid IS NULL OR a.entity_id = $4)
+            AND ($5::timestamptz IS NULL OR a.created_at >= $5)
+            AND ($6::timestamptz IS NULL OR a.created_at < $6)
+          ORDER BY a.created_at DESC, a.id DESC
+          LIMIT $7 OFFSET $8`,
+        [
+          filters.action ?? null,
+          filters.actorUserId ?? null,
+          filters.entityType ?? null,
+          filters.entityId ?? null,
+          filters.from ?? null,
+          filters.to ?? null,
+          limit,
+          offset,
+        ],
+      );
+
+      // Filter vocabularies come from the trail itself: a new producer's action appears in the
+      // dropdown without this file being edited, and a vocabulary this deployment never wrote is
+      // never offered. Bounded, so they stay dropdowns rather than exports.
+      const vocabulary = await client.query<{
+        actions: string[] | null;
+        entityTypes: string[] | null;
+      }>(
+        `SELECT (SELECT array_agg(action ORDER BY action)
+                   FROM (SELECT DISTINCT action FROM audit_logs LIMIT 200) a)      AS actions,
+                (SELECT array_agg(entity_type ORDER BY entity_type)
+                   FROM (SELECT DISTINCT entity_type FROM audit_logs LIMIT 200) e) AS "entityTypes"`,
+      );
+
+      const actors = await client.query<{ id: string; label: string }>(
+        `SELECT a.actor_user_id AS id,
+                coalesce(
+                  nullif(trim(coalesce(u.first_name, '') || ' ' || coalesce(u.last_name, '')), ''),
+                  left(a.actor_user_id::text, 8)
+                ) AS label
+           FROM (SELECT DISTINCT actor_user_id FROM audit_logs WHERE actor_user_id IS NOT NULL
+                  LIMIT 200) a
+           LEFT JOIN users u ON u.id = a.actor_user_id
+          ORDER BY label`,
+      );
+
+      return {
+        status: 'ok',
+        rows: page.rows.map((row) => {
+          const summary = summariseAuditMetadata(row.metadata);
+          return {
+            id: row.id,
+            createdAt: row.createdAt,
+            actorUserId: row.actorUserId,
+            actorLabel: row.actorLabel,
+            action: row.action,
+            entityType: row.entityType,
+            entityId: row.entityId,
+            reason: summary.reason,
+            details: summary.details,
+          };
+        }),
+        total: Number(page.rows[0]?.total ?? 0),
+        limit,
+        offset,
+        actions: vocabulary.rows[0]?.actions ?? [],
+        entityTypes: vocabulary.rows[0]?.entityTypes ?? [],
+        actors: actors.rows,
+      };
     } finally {
       client.release();
     }
