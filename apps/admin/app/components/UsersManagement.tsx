@@ -16,6 +16,25 @@ type User = {
   lastActivityAt: string | null;
 };
 
+/**
+ * One pack as the support screen must present it (M3.2). Every field is decided by the server:
+ * `grant` and `revoke` are the server's own verdicts, so a control is shown only where the backend
+ * will actually allow the action — and the server re-decides anyway when the request arrives.
+ */
+type PackEntitlement = {
+  packId: string;
+  title: string;
+  isFree: boolean;
+  published: boolean;
+  acquisition: 'free' | 'purchased' | 'support' | null;
+  acquiredAt: string | null;
+  purchase: { status: string; verifiedAt: string | null; amountTomans: number | null } | null;
+  hasAccess: boolean;
+  accessVia: 'free_pack' | 'entitlement' | null;
+  grant: 'allowed' | 'already_owned' | 'free_pack' | 'disabled_account';
+  revoke: 'allowed' | 'not_entitled' | 'purchased' | 'free_acquisition';
+};
+
 function formatDate(iso: string | null): string {
   if (!iso) return '—';
   const parsed = new Date(iso);
@@ -100,6 +119,102 @@ async function saveStatus(
   }
 }
 
+/**
+ * Why the learner can read this pack right now — the canonical reason, not a guess. A free pack is
+ * labelled as free for everyone even when an acquisition row exists, because that row is not what
+ * grants the access.
+ */
+function accessLabel(pack: PackEntitlement): { text: string; className: string } {
+  if (pack.accessVia === 'free_pack') {
+    return { text: 'رایگان برای همهٔ کاربران', className: 'pack-access pack-access-free' };
+  }
+  if (pack.acquisition === 'purchased') {
+    return { text: 'خریداری‌شده (پرداخت تأییدشده)', className: 'pack-access pack-access-paid' };
+  }
+  if (pack.acquisition === 'support') {
+    return { text: 'اعطای پشتیبانی', className: 'pack-access pack-access-support' };
+  }
+  if (pack.acquisition === 'free') {
+    return { text: 'فعال‌سازی رایگان توسط کاربر', className: 'pack-access pack-access-free' };
+  }
+  return { text: 'بدون دسترسی', className: 'pack-access pack-access-none' };
+}
+
+/** The server's reason for offering no action, said plainly instead of hiding a dead button. */
+function blockedReason(pack: PackEntitlement): string | null {
+  if (pack.grant === 'free_pack') return 'این بسته برای همهٔ کاربران رایگان است و اعطا لازم نیست.';
+  if (pack.grant === 'disabled_account') {
+    return 'حساب غیرفعال است؛ ابتدا آن را فعال کنید تا دسترسی معنا پیدا کند.';
+  }
+  if (pack.revoke === 'purchased') {
+    return 'این دسترسی از یک پرداخت تأییدشده آمده است؛ لغو دستی انجام نمی‌شود و نیازمند سیاست بازپرداخت است.';
+  }
+  if (pack.revoke === 'free_acquisition') {
+    return 'دسترسی از قانون رایگان بودن بسته می‌آید؛ حذف این ردیف دسترسی را لغو نمی‌کند.';
+  }
+  return null;
+}
+
+async function savePackEntitlement(
+  userId: string,
+  packId: string,
+  action: 'grant' | 'revoke',
+  reason: string,
+): Promise<
+  | { ok: true; pack: PackEntitlement; alreadyApplied: boolean }
+  | { ok: false; message: string; pack?: PackEntitlement }
+> {
+  const csrfToken = readBrowserCookie('__Host-learnbox_admin_csrf');
+  if (!csrfToken) {
+    return { ok: false, message: 'نشان امنیتی CSRF در دسترس نیست؛ صفحه را تازه کنید.' };
+  }
+  try {
+    const response = await fetch('/api/support/users/packs', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: {
+        'content-type': 'application/json',
+        'x-learnbox-csrf-token': csrfToken,
+        'idempotency-key': createClientKey(),
+      },
+      body: JSON.stringify({ userId, packId, action, reason: reason.trim() }),
+    });
+    if (response.ok) {
+      const payload = (await response.json()) as { status: string; pack: PackEntitlement };
+      return { ok: true, pack: payload.pack, alreadyApplied: payload.status === 'idempotent' };
+    }
+    // 409 = the server refused on provenance grounds. Its verdict is the message, and the
+    // refreshed row it returns replaces whatever this screen believed.
+    if (response.status === 409) {
+      const payload = (await response.json()) as { verdict: string; pack: PackEntitlement };
+      const messages: Record<string, string> = {
+        purchased: 'این دسترسی خریداری‌شده است و با لغو دستی حذف نمی‌شود.',
+        free_acquisition: 'این بسته رایگان است؛ لغو دستی دسترسی را عوض نمی‌کند.',
+        not_entitled: 'دسترسی اعطایی‌ای برای لغو وجود ندارد.',
+        already_owned: 'کاربر از قبل این دسترسی را دارد.',
+        disabled_account: 'حساب غیرفعال است؛ ابتدا آن را فعال کنید.',
+        free_pack: 'این بسته برای همه رایگان است و اعطا لازم نیست.',
+      };
+      return {
+        ok: false,
+        message: messages[payload.verdict] ?? 'این اقدام برای این بسته مجاز نیست.',
+        pack: payload.pack,
+      };
+    }
+    if (response.status === 401)
+      return { ok: false, message: 'نشست معتبر نیست؛ دوباره وارد شوید.' };
+    if (response.status === 428)
+      return { ok: false, message: 'احراز هویت مجدد لازم است؛ دوباره وارد شوید.' };
+    if (response.status === 400)
+      return { ok: false, message: 'دلیل واردشده پذیرفته نشد؛ آن را کامل‌تر بنویسید.' };
+    if (response.status === 404)
+      return { ok: false, message: 'نقش شما اجازهٔ تغییر دسترسی بسته را ندارد.' };
+    return { ok: false, message: 'تغییر دسترسی بسته با خطا روبه‌رو شد.' };
+  } catch {
+    return { ok: false, message: 'ارتباط با سرور برقرار نشد.' };
+  }
+}
+
 export function UsersManagement() {
   const [users, setUsers] = useState<User[]>([]);
   const [total, setTotal] = useState(0);
@@ -111,6 +226,17 @@ export function UsersManagement() {
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
+  const [packs, setPacks] = useState<PackEntitlement[]>([]);
+  const [packsLoading, setPacksLoading] = useState(false);
+  const [packsError, setPacksError] = useState<string | null>(null);
+  /** The action awaiting explicit confirmation, so nothing is granted or revoked on one click. */
+  const [pending, setPending] = useState<{ packId: string; action: 'grant' | 'revoke' } | null>(
+    null,
+  );
+  const [packReason, setPackReason] = useState('');
+  const [packNotice, setPackNotice] = useState<string | null>(null);
+  const [packError, setPackError] = useState<string | null>(null);
+  const [packSaving, setPackSaving] = useState(false);
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
@@ -137,11 +263,75 @@ export function UsersManagement() {
     void fetchUsers();
   }, [fetchUsers]);
 
+  const selectedId = selected?.id ?? null;
+
+  const fetchPacks = useCallback(async (userId: string) => {
+    setPacksLoading(true);
+    setPacksError(null);
+    try {
+      const response = await fetch(
+        `/api/support/users/packs?userId=${encodeURIComponent(userId)}`,
+        {
+          credentials: 'same-origin',
+          cache: 'no-store',
+        },
+      );
+      if (!response.ok) throw new Error('خطا در دریافت دسترسی بسته‌ها');
+      const data = (await response.json()) as { packs: PackEntitlement[] };
+      setPacks(data.packs);
+    } catch (caught) {
+      setPacks([]);
+      setPacksError((caught as Error).message);
+    } finally {
+      setPacksLoading(false);
+    }
+  }, []);
+
+  // The entitlement view is re-read whenever the selected learner changes, and again after a
+  // suspension changes status, because status decides whether a grant is legitimate at all.
+  useEffect(() => {
+    if (!selectedId) {
+      setPacks([]);
+      return;
+    }
+    void fetchPacks(selectedId);
+  }, [selectedId, selected?.status, fetchPacks]);
+
   function openUser(user: User) {
     setSelected(user);
     setReason('');
     setNotice(null);
     setFormError(null);
+    setPending(null);
+    setPackReason('');
+    setPackNotice(null);
+    setPackError(null);
+  }
+
+  async function applyPackEntitlement(packId: string, action: 'grant' | 'revoke') {
+    if (!selected) return;
+    setPackSaving(true);
+    setPackError(null);
+    setPackNotice(null);
+    const result = await savePackEntitlement(selected.id, packId, action, packReason);
+    setPackSaving(false);
+    if (result.pack) {
+      const updated = result.pack;
+      setPacks((rows) => rows.map((row) => (row.packId === updated.packId ? updated : row)));
+    }
+    if (!result.ok) {
+      setPackError(result.message);
+      return;
+    }
+    setPending(null);
+    setPackReason('');
+    setPackNotice(
+      result.alreadyApplied
+        ? 'این درخواست قبلاً ثبت شده بود؛ تغییر تازه‌ای اعمال نشد.'
+        : action === 'grant'
+          ? 'دسترسی اعطا شد و در اپلیکیشن کاربر فعال است.'
+          : 'دسترسی اعطایی لغو شد و کاربر دیگر به این بسته دسترسی ندارد.',
+    );
   }
 
   async function applyStatus(user: User, status: AccountStatus) {
@@ -358,6 +548,142 @@ export function UsersManagement() {
                 )}
               </div>
             </div>
+
+            <section className="user-packs" aria-labelledby="user-packs-title">
+              <h4 id="user-packs-title">دسترسی بسته‌ها</h4>
+              {packsLoading && <p className="users-loading">در حال بارگذاری دسترسی‌ها...</p>}
+              {packsError && (
+                <p className="users-error" role="alert">
+                  {packsError}
+                </p>
+              )}
+              {!packsLoading && !packsError && packs.length === 0 && (
+                <p className="user-packs-empty">بستهٔ فعالی برای نمایش وجود ندارد.</p>
+              )}
+              {packNotice && (
+                <p className="users-notice" role="status">
+                  {packNotice}
+                </p>
+              )}
+              {packError && (
+                <p className="users-error" role="alert">
+                  {packError}
+                </p>
+              )}
+              <ul className="user-packs-list">
+                {packs.map((pack) => {
+                  const label = accessLabel(pack);
+                  const blocked = blockedReason(pack);
+                  const isPending = pending?.packId === pack.packId;
+                  return (
+                    <li key={pack.packId} className="user-pack-row">
+                      <div className="user-pack-head">
+                        <span className="user-pack-title">{pack.title}</span>
+                        <span className={label.className}>{label.text}</span>
+                        {!pack.published && (
+                          <span className="pack-access pack-access-none">منتشر نشده</span>
+                        )}
+                      </div>
+                      {pack.purchase && (
+                        <p className="user-pack-meta">
+                          پرداخت تأییدشده
+                          {pack.purchase.amountTomans
+                            ? ` — ${pack.purchase.amountTomans.toLocaleString('fa-IR')} تومان`
+                            : ''}
+                          {pack.purchase.verifiedAt
+                            ? ` — ${formatDate(pack.purchase.verifiedAt)}`
+                            : ''}
+                        </p>
+                      )}
+                      {pack.acquisition === 'support' && (
+                        <p className="user-pack-meta">
+                          اعطای پشتیبانی — {formatDate(pack.acquiredAt)}
+                        </p>
+                      )}
+                      {blocked && <p className="user-pack-meta user-pack-blocked">{blocked}</p>}
+
+                      {/* A control appears only where the server has already said the action is
+                          legitimate; the request is validated again server-side regardless. */}
+                      {!isPending && pack.grant === 'allowed' && (
+                        <button
+                          type="button"
+                          className="users-reactivate-btn"
+                          onClick={() => {
+                            setPending({ packId: pack.packId, action: 'grant' });
+                            setPackReason('');
+                            setPackError(null);
+                            setPackNotice(null);
+                          }}
+                        >
+                          اعطای دسترسی
+                        </button>
+                      )}
+                      {!isPending && pack.revoke === 'allowed' && (
+                        <button
+                          type="button"
+                          className="users-suspend-btn"
+                          onClick={() => {
+                            setPending({ packId: pack.packId, action: 'revoke' });
+                            setPackReason('');
+                            setPackError(null);
+                            setPackNotice(null);
+                          }}
+                        >
+                          لغو دسترسی اعطایی
+                        </button>
+                      )}
+
+                      {isPending && (
+                        <div className="user-pack-confirm">
+                          <p className="user-status-explainer">
+                            {pending.action === 'grant'
+                              ? 'این بسته بدون هیچ پرداختی برای کاربر باز می‌شود و به‌عنوان «اعطای پشتیبانی» ثبت می‌گردد. سابقهٔ پرداخت ساخته یا تغییر داده نمی‌شود.'
+                              : 'هشدار: دسترسی کاربر به این بسته فوراً حذف می‌شود. این اقدام فقط دسترسی اعطایی پشتیبانی را برمی‌دارد و روی پرداخت‌ها اثری ندارد.'}
+                          </p>
+                          <label htmlFor={`pack-reason-${pack.packId}`}>دلیل (الزامی)</label>
+                          <textarea
+                            id={`pack-reason-${pack.packId}`}
+                            className="user-status-reason"
+                            value={packReason}
+                            maxLength={500}
+                            rows={2}
+                            onChange={(event) => setPackReason(event.target.value)}
+                            placeholder="مثلاً: تیکت ۴۵۶ — جبران پرداخت ناموفق"
+                          />
+                          <div className="user-detail-actions">
+                            <button
+                              type="button"
+                              className={
+                                pending.action === 'grant'
+                                  ? 'users-reactivate-btn'
+                                  : 'users-suspend-btn'
+                              }
+                              disabled={packSaving || packReason.trim().length < 3}
+                              onClick={() => void applyPackEntitlement(pack.packId, pending.action)}
+                            >
+                              {packSaving
+                                ? 'در حال ثبت...'
+                                : pending.action === 'grant'
+                                  ? 'تأیید و اعطای دسترسی'
+                                  : 'تأیید و لغو دسترسی'}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setPending(null);
+                                setPackReason('');
+                              }}
+                            >
+                              انصراف
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
           </div>
         </div>
       )}

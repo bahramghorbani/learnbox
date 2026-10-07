@@ -3,7 +3,12 @@ import { Pool } from 'pg';
 import { readAdminSupportConfig } from './admin-content-packs-config';
 import { readAdminDatabaseConfig, type AdminDatabaseConfig } from './admin-database';
 import { getSharedAdminDatabasePool } from './admin-database-pool';
-import { createAdminUserStatusRoute, createAdminUsersRoute } from './admin-users-routes';
+import {
+  createAdminUserPackEntitlementRoute,
+  createAdminUserPacksRoute,
+  createAdminUserStatusRoute,
+  createAdminUsersRoute,
+} from './admin-users-routes';
 import { PostgresAdminUsersStore } from './postgres-admin-users-store';
 import { PostgresOwnerAuthStore } from './postgres-owner-auth-store';
 
@@ -36,6 +41,8 @@ export function createAdminSupportServer(dependencies: {
       enabled: true as const,
       users: createAdminUsersRoute(shared),
       setUserStatus: createAdminUserStatusRoute(shared),
+      userPacks: createAdminUserPacksRoute(shared),
+      setPackEntitlement: createAdminUserPackEntitlementRoute(shared),
     };
   } catch {
     return { enabled: false as const };
