@@ -63,15 +63,17 @@ for (const required of [
 }
 
 // The route must not verify the token itself. It must go through the single
-// enforcement point, which is what applies revocation and the production
-// fail-closed policy. A route that called readLearnerSession directly would accept
-// a signed-out session, so that call is forbidden here and required there.
+// enforcement point, which is what applies revocation, account suspension and the
+// production fail-closed policy. A route that called readLearnerSession directly would
+// accept a signed-out session, so that call is forbidden here and required there.
 if (mediaRoute.includes('readLearnerSession(')) {
   throw new Error('Private media route must use authenticateLearner, not readLearnerSession.');
 }
 for (const required of [
   'readLearnerSession(request)',
-  'isSessionRevoked(',
+  // Renamed from isSessionRevoked in M3.1: the same single query now also refuses a
+  // suspended account, so the safeguard follows the broader contract.
+  'isSessionBlocked(',
   "process.env.NODE_ENV === 'production'",
 ]) {
   if (!learnerAuthSource.includes(required))

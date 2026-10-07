@@ -9,7 +9,7 @@ import { deleteAccount } from '../lib/account-deletion-store';
 import { applyProfileUpdate, readProfileDetails } from '../lib/learner-profile-fields';
 import { readLearnerSummary } from '../lib/learner-summary';
 import {
-  isSessionRevoked,
+  isSessionBlocked,
   pruneExpiredRevocations,
   revokeAllSessionsForUser,
   revokeSession,
@@ -140,13 +140,13 @@ suite('LB-B30 real store code under least-privilege roles', () => {
       expiresAt: Math.floor(Date.now() / 1000) + 600,
       sessionId: randomUUID(),
     };
-    expect(await isSessionRevoked(app, session)).toBe(false);
+    expect(await isSessionBlocked(app, session)).toBe(false);
     await revokeSession(app, session);
-    expect(await isSessionRevoked(app, session)).toBe(true);
+    expect(await isSessionBlocked(app, session)).toBe(true);
     const other = { ...session, sessionId: randomUUID() };
-    expect(await isSessionRevoked(app, other)).toBe(false);
+    expect(await isSessionBlocked(app, other)).toBe(false);
     await revokeAllSessionsForUser(app, learner);
-    expect(await isSessionRevoked(app, other)).toBe(true);
+    expect(await isSessionBlocked(app, other)).toBe(true);
     await expect(pruneExpiredRevocations(app)).resolves.toBeTypeOf('number');
   });
 

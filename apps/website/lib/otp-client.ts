@@ -82,6 +82,13 @@ export function otpErrorMessage(status: number, code?: string, retryAfterSeconds
   if (code === 'verification_failed') {
     return 'کد واردشده درست نیست یا اعتبار آن تمام شده است.';
   }
+  // The code was right; the account itself is suspended. Repeating "wrong code" here would send
+  // the learner round the loop forever instead of telling them to contact support (M3.1).
+  // Keyed on the code alone, never on the 403 status: other refusals also arrive as 403 and must
+  // keep their own message.
+  if (code === 'account_suspended') {
+    return 'حساب شما موقتاً غیرفعال شده است؛ برای بررسی با پشتیبانی تماس بگیرید.';
+  }
   if (
     status === 503 ||
     code === 'delivery_unavailable' ||

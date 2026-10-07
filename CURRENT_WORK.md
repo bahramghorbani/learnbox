@@ -17,6 +17,59 @@ schema mismatch (`users/[userId]` selects `rating`/`created_at`; the real column
 `grade`/`occurred_at`). Admin is **not reachable in Production**: Caddy answers
 `admin.learnboxapp.com` with a fixed 404 and the container publishes no ports.
 
+**Phase 3 — Users & Support Control — M3.1 merged (implemented in repository, not activated).**
+Admin can temporarily suspend a learner account and restore it. This is the first support _action_
+in Admin: before it, the only user surfaces were a read-only prototype list and detail pair that
+are hard-disabled to 404 in any production build, so an account could not be paused without direct
+database access.
+
+Account status is one additive column, `users.status` (migration `0028_user_account_status.sql`:
+`ADD COLUMN IF NOT EXISTS … DEFAULT 'active'` plus a guarded CHECK, so every existing row is
+already valid and no row is rewritten). A named state rather than a boolean, matching
+`packs.status`, `card_versions.status` and `purchase_events.status`. No history column: who changed
+it, when and why goes to the canonical `audit_logs` from `0003_content_review`, the same trail the
+content, splash and Store listing actions write — there is one Admin audit trail, not a parallel
+support log.
+
+Enforcement is server-side at two doors, one guard each. `authenticateLearner` is already the single
+place a learner request is authenticated, and the single revocation query it runs now also answers
+"is this account suspended?" — one predicate added to one existing `SELECT`, so all 22 authenticated
+learner routes are covered with no extra round trip and no per-page checks to forget (the function is
+renamed `isSessionBlocked`, because "revoked session" stopped being the whole truth). The second door
+is sign-in: the identity store that turns a verified phone into a session subject reads the status in
+the UPSERT it already performs and returns `suspended` instead of a subject, so a suspended learner
+is refused a session rather than handed one every later request would reject. The learner is told
+«حساب شما موقتاً غیرفعال شده است؛ برای بررسی با پشتیبانی تماس بگیرید.» — a correct OTP code is not
+reported as a wrong one.
+
+Suspending writes the canonical session cutoff from `0020_session_revocation` in the same
+transaction as the status change, so there is no instant where an account is suspended while its
+30-day sessions still work. Reactivation deliberately does **not** move that cutoff back: sessions
+killed during a suspension stay dead and the learner authenticates again. Nothing else is touched —
+identity, learning progress, review history, Pack entitlements and purchase records are all
+preserved, and this is asserted as a before/after snapshot rather than described.
+
+The Admin surface is the existing «مدیریت کاربران» view, rebuilt onto the canonical pattern instead
+of the hard-disabled legacy routes (which stay disabled, with their raw SQL and schema mismatch, for
+the LB-B30 compatibility phase to delete). New canonical routes live under `/api/support/users`
+behind a default-off `LEARNBOX_ADMIN_SUPPORT_ENABLED` gate and a `super_admin` role check, and the
+mutation carries the same chain as publishing content or changing a price: trusted Origin, Admin
+session, per-session CSRF token, recent re-authentication (`428` otherwise), an idempotency key, and
+a required human-readable reason. The prototype's «حذف پیشرفت یادگیری» button is gone — learning
+reset is explicitly out of pre-launch Phase 3 scope, and shipping a dead destructive control on a
+surface that now works would be worse than the 404 it used to hit.
+
+Evidence: a real-Postgres suite drives the real Admin store and the real learner auth predicate
+against the same database (default-active migration, immediate cutoff, data preservation, scoped to
+one account, idempotent retry, audit contents, reactivation without session resurrection, sign-in
+refusal and restoration, constraint rejection, deletion lifecycle still separate and working), plus
+route-boundary tests for every refusal. Ten mutations covering each guard were introduced and all
+ten were killed.
+
+M3.1 grants no capability in Production: migration `0028` is **not applied in Production**, the
+support flag is off, nothing is deployed, and the pending `0024`–`0027` migrations remain pending.
+M3.2 (manual Pack grant/revoke) and M3.3 (Admin audit log UI) are not started.
+
 **Phase 2 — Store & Entitlements — M2.1–M2.4 merged (implemented in repository, not activated).**
 M2.4 completes the canonical commercial path: a learner can now be charged for a paid pack through
 Zarinpal and receive an entitlement only after the payment is verified server-side.

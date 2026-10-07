@@ -136,6 +136,14 @@ const INVENTORY: Record<string, Entry> = {
     category: 'delegated',
     guardIn: 'lib/server/admin-store-listing-routes.ts',
   },
+  // M3.1 — account suspension. POST delegates the full guard chain (Origin, session, CSRF, recent
+  // re-auth, idempotency key, required reason) to the shared module, behind its own default-off
+  // LEARNBOX_ADMIN_SUPPORT_ENABLED gate. It writes `users.status`, the canonical session cutoff and
+  // one audit entry — it cannot delete an account or erase learner data.
+  'app/api/support/users/status/route.ts': {
+    category: 'delegated',
+    guardIn: 'lib/server/admin-users-routes.ts',
+  },
   'app/api/banners/route.ts': { category: 'hard-disabled' },
   'app/api/gateways/route.ts': { category: 'hard-disabled' },
   'app/api/packs/route.ts': { category: 'hard-disabled' },
@@ -150,6 +158,10 @@ const INVENTORY: Record<string, Entry> = {
  */
 const READ_ONLY: Record<string, 'hard-disabled' | 'session-layer'> = {
   'app/api/users/route.ts': 'hard-disabled',
+  // M3.1 support list: GET-only, so CSRF is not applicable; it still requires a valid Admin
+  // session plus an operational role, and sits behind LEARNBOX_ADMIN_SUPPORT_ENABLED. It returns
+  // canonical user rows and activity counters only — no learning content, no card history.
+  'app/api/support/users/route.ts': 'session-layer',
   'app/api/transactions/route.ts': 'hard-disabled',
   'app/api/packs/csv-template/route.ts': 'hard-disabled',
   'app/api/auth/add-passkey/options/route.ts': 'session-layer',

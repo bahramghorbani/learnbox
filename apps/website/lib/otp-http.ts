@@ -1,5 +1,6 @@
 import { guardMutation } from './mutation-guard';
 import { inactivityWindowSeconds } from './server-session';
+import type { WebLearnerIdentityOutcome } from './web-identity';
 
 type OtpPurpose = 'sign_in';
 
@@ -35,7 +36,7 @@ export type OtpHttpDependencies = {
   hashClientIp(clientIp: string): string;
   requestChallenge(input: RequestChallengeInput): Promise<RequestChallengeOutcome>;
   verifyChallenge(input: VerifyChallengeInput): Promise<VerifyChallengeOutcome>;
-  resolveSessionSubject(input: ResolveSessionSubjectInput): Promise<string | null>;
+  resolveSessionSubject(input: ResolveSessionSubjectInput): Promise<WebLearnerIdentityOutcome>;
   createSession(subject: string): string;
 };
 
@@ -101,13 +102,18 @@ export async function handleOtpVerification(
       return jsonResponse({ error: 'verification_failed' }, 400);
     }
 
-    const subject = await dependencies.resolveSessionSubject({
+    const identity = await dependencies.resolveSessionSubject({
       phoneE164,
       phoneHash: outcome.phoneHash,
     });
-    if (!subject) return jsonResponse({ error: 'verification_failed' }, 400);
+    // A suspended account is told so, with its own code and status: the OTP was correct, and
+    // pretending otherwise would send a learner round the sign-in loop forever. No session is
+    // issued, so this is the sign-in half of the same server-side suspension the authenticated
+    // request path enforces (M3.1).
+    if (identity.status === 'suspended') return jsonResponse({ error: 'account_suspended' }, 403);
+    if (identity.status !== 'ok') return jsonResponse({ error: 'verification_failed' }, 400);
 
-    const cookie = serializeSessionCookie(dependencies.createSession(subject), request);
+    const cookie = serializeSessionCookie(dependencies.createSession(identity.userId), request);
     return new Response(null, {
       status: 204,
       headers: { 'cache-control': 'no-store', 'set-cookie': cookie },

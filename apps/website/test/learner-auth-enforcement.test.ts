@@ -48,19 +48,19 @@ describe('authenticateLearner', () => {
     env.NODE_ENV = 'test';
   });
 
-  it('accepts a valid, non-revoked session', async () => {
-    queryMock.mockResolvedValue({ rows: [{ revoked: false }] });
+  it('accepts a valid session that is not blocked', async () => {
+    queryMock.mockResolvedValue({ rows: [{ blocked: false }] });
     const session = await authenticateLearner(requestFor(createLearnerSession('user-a')));
     expect(session?.subject).toBe('user-a');
   });
 
-  it('REJECTS a session whose id has been revoked by logout', async () => {
-    queryMock.mockResolvedValue({ rows: [{ revoked: true }] });
+  it('REJECTS a blocked session (revoked by logout, cut off, or suspended account)', async () => {
+    queryMock.mockResolvedValue({ rows: [{ blocked: true }] });
     expect(await authenticateLearner(requestFor(createLearnerSession('user-a')))).toBeNull();
   });
 
-  it('checks revocation against this session id and subject', async () => {
-    queryMock.mockResolvedValue({ rows: [{ revoked: false }] });
+  it('checks the block against this session id and subject', async () => {
+    queryMock.mockResolvedValue({ rows: [{ blocked: false }] });
     const token = createLearnerSession('user-a');
     const expected = readLearnerSession(requestFor(token))!;
 
