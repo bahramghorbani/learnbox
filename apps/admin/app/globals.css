@@ -2424,3 +2424,110 @@ button {
   color: #6b6b72;
   border-color: #e3e3e6;
 }
+
+/* M3.3 — Audit Log viewer («عملیات»). Same table idiom as the Users support screen so the two
+   Phase 3 surfaces read as one product rather than two. Read-only: no row control, no edit affordance. */
+.audit-filters {
+  margin: 20px auto 0;
+  max-width: 1170px;
+  padding: 18px 20px;
+  border: 1px solid var(--line-soft, #e7e3ff);
+  border-radius: 14px;
+  background: #fbfaff;
+}
+.audit-filters-title {
+  margin: 0 0 12px;
+  font-size: 15px;
+  color: var(--ink-muted, #64748b);
+}
+.audit-filter-grid {
+  display: grid;
+  gap: 12px 16px;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+}
+.audit-filter-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--ink-muted, #64748b);
+}
+.audit-filter-grid input,
+.audit-filter-grid select {
+  padding: 8px 10px;
+  border: 1px solid var(--line-soft, #e7e3ff);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--ink-strong, #1e293b);
+  font: inherit;
+  font-size: 14px;
+}
+.audit-filter-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+.audit-table {
+  width: calc(100% - 0px);
+  max-width: 1170px;
+  margin: 18px auto 0;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.audit-table th,
+.audit-table td {
+  padding: 10px 12px;
+  text-align: right;
+  vertical-align: top;
+  border-bottom: 1px solid var(--line-soft, #e7e3ff);
+}
+.audit-table th {
+  font-weight: 600;
+  color: var(--ink-muted, #64748b);
+  white-space: nowrap;
+}
+.audit-table tbody tr:last-child td {
+  border-bottom: none;
+}
+.audit-action,
+.audit-entity-id {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  direction: ltr;
+  unicode-bidi: embed;
+}
+.audit-entity-type {
+  font-size: 13px;
+  color: var(--ink-strong, #1e293b);
+}
+.audit-details {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 4px;
+}
+.audit-details li {
+  display: flex;
+  gap: 6px;
+  font-size: 12px;
+}
+.audit-detail-key {
+  color: var(--ink-muted, #64748b);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  direction: ltr;
+  unicode-bidi: embed;
+}
+.audit-pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  max-width: 1170px;
+  margin: 16px auto 40px;
+}
+.audit-pager-actions {
+  display: flex;
+  gap: 8px;
+}

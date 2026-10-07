@@ -40,7 +40,7 @@ function genericInvalid() {
 }
 
 function unavailable() {
-  return new Response('Account status unavailable', {
+  return new Response('Support data unavailable', {
     status: 503,
     headers: { 'Cache-Control': 'no-store' },
   });
@@ -308,6 +308,92 @@ export function createAdminUserPackEntitlementRoute(
         idempotencyKey: authorized.idempotencyKey,
       });
       return entitlementResponse(result);
+    } catch {
+      return unavailable();
+    }
+  };
+}
+
+/** `action` and `entity_type` are producer-written identifiers, not free text. */
+const auditTokenPattern = /^[a-z0-9][a-z0-9_.-]{0,63}$/i;
+
+/** Accepts only what `Date` can parse unambiguously; the value reaches SQL as a bound parameter. */
+function parseInstant(value: string | null): string | undefined | null {
+  if (value === null || value.trim() === '') return undefined;
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
+}
+
+function parseCount(value: string | null, fallback: number): number | null {
+  if (value === null || value.trim() === '') return fallback;
+  if (!/^\d{1,6}$/.test(value.trim())) return null;
+  return Number(value.trim());
+}
+
+/**
+ * The Audit Log viewer (Phase 3 / M3.3). GET only, by design: the canonical trail is append-only
+ * evidence, so this surface exports no POST, PUT, PATCH or DELETE and the store it calls issues
+ * nothing but SELECT. There is no "edit audit record" path to defend because none exists.
+ *
+ * Same authorization as every other support surface — a valid Admin session plus the operational
+ * role, behind the default-off `LEARNBOX_ADMIN_SUPPORT_ENABLED` gate. A role-less operator gets the
+ * same 404 as a disabled deployment: an unauthorized caller learns nothing, not even that a trail
+ * is there to read.
+ *
+ * A malformed filter is a 400 and never a silently ignored one — an audit search that quietly
+ * dropped a date bound would show a reviewer a page they would reasonably mistake for the truth.
+ */
+export function createAdminAuditLogRoute(dependencies: UsersDependencies<'listAuditLog'>) {
+  return async function GET(request: Request) {
+    if (
+      !dependencies.enabled ||
+      !dependencies.config.enabled ||
+      !dependencies.sessionStore ||
+      !dependencies.store
+    ) {
+      return notFound();
+    }
+    const session = await loadAdminSession(
+      request,
+      dependencies.config,
+      dependencies.sessionStore,
+      (dependencies.now ?? (() => new Date()))(),
+    );
+    if (!session) return unauthorized();
+
+    const params = new URL(request.url).searchParams;
+    const action = params.get('action')?.trim() || undefined;
+    const entityType = params.get('entityType')?.trim() || undefined;
+    const actorUserId = params.get('actorUserId')?.trim() || undefined;
+    const entityId = params.get('entityId')?.trim() || undefined;
+    if (action && !auditTokenPattern.test(action)) return genericInvalid();
+    if (entityType && !auditTokenPattern.test(entityType)) return genericInvalid();
+    if (actorUserId && !uuidPattern.test(actorUserId)) return genericInvalid();
+    if (entityId && !uuidPattern.test(entityId)) return genericInvalid();
+
+    const from = parseInstant(params.get('from'));
+    const to = parseInstant(params.get('to'));
+    const limit = parseCount(params.get('limit'), 25);
+    const offset = parseCount(params.get('offset'), 0);
+    if (from === null || to === null || limit === null || offset === null) return genericInvalid();
+
+    try {
+      const result = await dependencies.store.listAuditLog({
+        actorUserId: session.userId,
+        filters: { action, entityType, actorUserId, entityId, from, to },
+        limit,
+        offset,
+      });
+      if (result.status === 'forbidden') return notFound();
+      return json({
+        entries: result.rows,
+        total: result.total,
+        limit: result.limit,
+        offset: result.offset,
+        actions: result.actions,
+        entityTypes: result.entityTypes,
+        actors: result.actors,
+      });
     } catch {
       return unavailable();
     }

@@ -17,7 +17,7 @@ schema mismatch (`users/[userId]` selects `rating`/`created_at`; the real column
 `grade`/`occurred_at`). Admin is **not reachable in Production**: Caddy answers
 `admin.learnboxapp.com` with a fixed 404 and the container publishes no ports.
 
-**Phase 3 — Users & Support Control — M3.1 merged (implemented in repository, not activated).**
+**Phase 3 — Users & Support Control — M3.1, M3.2 and M3.3 merged. Phase 3 development COMPLETE (implemented in repository, not activated).**
 Admin can temporarily suspend a learner account and restore it. This is the first support _action_
 in Admin: before it, the only user surfaces were a read-only prototype list and detail pair that
 are hard-disabled to 404 in any production build, so an account could not be paused without direct
@@ -120,7 +120,57 @@ canonical rule on every pack it reports. Seventeen mutations of the safety prope
 introduced and all seventeen were killed (`scripts/m3.2-mutation-battery.mjs`).
 
 M3.2 grants no capability in Production either: `0029` is **not applied in Production**, the support
-flag is off, and nothing is deployed. M3.3 (Admin audit log UI) is not started.
+flag is off, and nothing is deployed.
+
+**Phase 3 — M3.3 merged. Phase 3 development is COMPLETE (implemented in repository, not
+activated).** Authorized Admin operators can now review what support actually did: Admin →
+«عملیات» reads the canonical `audit_logs` trail — timestamp, operator by name, action, target
+entity and identifier, the reason the operator recorded, and the safe details the acting code
+wrote. Filtering by action, operator, date range and target, and paging, happen entirely on the
+server, so what an operator sees is a complete answer to the filter they set rather than one page
+searched in their browser.
+
+M3.3 adds **no migration and no grant**: the trail is the `audit_logs` table from
+`0003_content_review`, and `learnbox_admin` already holds `SELECT` (and `INSERT`) on it with no
+`UPDATE` and no `DELETE` (`infrastructure/database/db-roles-p0.sql`). Read-only is therefore
+enforced three layers down and not as a UI convention: the route exports `GET` and no mutation
+verb, the store issues nothing but `SELECT`, and the database role could not rewrite a record even
+if asked. No second audit table, no projection, no audit event of its own — the viewer reads what
+the six existing producers already write.
+
+Stored metadata is treated as untrusted display data, because six independent producers write it
+and future ones will too. One module decides what a reviewer may see: only a plain JSON object is
+read, credential-shaped and internal correlation keys (`*_key`, token, secret, session, hash) are
+listed but shown as «پنهان‌شده» so redaction cannot be mistaken for absence, and every key, value
+and row count is bounded. Recorded values are never rewritten to be safe — React escapes them at
+render time, so markup in a record displays as the characters that were recorded.
+
+The same change wires «کاربران» to the M3.1/M3.2 support screen. That screen's only mount was the
+superseded `AdminWorkspace` shell, so account suspension and manual pack entitlements existed as
+working, tested APIs behind a destination the real router could not open — a nav entry that routes
+nowhere is indistinguishable from an unbuilt feature, and Phase 3 cannot be complete while that is
+true. `UsersManagement` itself is unchanged; it is framed in the approved shell.
+
+Evidence: a real-Postgres suite produces genuine M3.1 and M3.2 events by calling the real
+`setUserStatus` and `setPackEntitlement` — not hand-written rows, which would prove only that the
+viewer can read its own assumptions and would stay green on the day a producer renamed an action
+and left the trail unreadable. It then proves Phase 1 content-review and Phase 2 Store records stay
+readable alongside Phase 3 records, that filters combine conjunctively and honour a date window,
+that paging drops, repeats and reorders nothing, that page size is clamped, that an operator
+without the role is refused, that an action survives its actor being anonymised by account
+deletion, and that reading the trail writes nothing to it. Twenty-two mutations of the safety
+properties were introduced and all twenty-two were killed
+(`scripts/m3.3-mutation-battery.mjs`).
+
+Support documentation for Phase 3 closure is `docs/operations/ADMIN_SUPPORT_RUNBOOK.md`: disable
+versus permanent deletion, reactivation and session behaviour, manual pack grant/revoke, purchased
+entitlement protection, required reasons, audit log usage, and escalation for the actions Admin
+deliberately does not expose. The owner-approved audit retention policy — **minimum one year** — is
+documented there; no retention scheduler was built, because nothing in the application prunes audit
+records and retention beyond the minimum is an infrastructure concern.
+
+M3.3 grants no capability in Production: nothing is deployed, the support flag is off, and
+migrations `0024`–`0029` remain unapplied in Production. Phase 4 is not started.
 
 **Phase 2 — Store & Entitlements — M2.1–M2.4 merged (implemented in repository, not activated).**
 M2.4 completes the canonical commercial path: a learner can now be charged for a paid pack through
