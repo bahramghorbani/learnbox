@@ -110,6 +110,25 @@ describe('learner server OTP behavior', () => {
     },
   );
 
+  it('tells a suspended learner their account is suspended, not that the code was wrong', async () => {
+    const onAuthenticated = vi.fn();
+    const only = challenge('suspended-challenge-id-01');
+    const fetchMock = mockFetch(response(201, only), response(403, { error: 'account_suspended' }));
+
+    rendered = await renderServerGate(onAuthenticated);
+    await rendered.requestCode();
+    await rendered.enterCode('12345');
+
+    expect(onAuthenticated).not.toHaveBeenCalled();
+    expect(verificationChallengeIds(fetchMock)).toEqual([only.challengeId]);
+    expect(rendered.text()).toContain(
+      'حساب شما موقتاً غیرفعال شده است؛ برای بررسی با پشتیبانی تماس بگیرید.',
+    );
+    // Neither of the two misleading alternatives: not "wrong code", not "SMS unavailable".
+    expect(rendered.text()).not.toContain('کد واردشده درست نیست');
+    expect(rendered.text()).not.toContain('ارسال پیامک اکنون در دسترس نیست');
+  });
+
   it('keeps server OTP unauthenticated after a network error', async () => {
     const onAuthenticated = vi.fn();
     mockFetch(

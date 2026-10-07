@@ -42,3 +42,20 @@ export function readAdminStoreConfig(environment: Environment): AdminAuthConfig 
   if (environment.LEARNBOX_ADMIN_STORE_ENABLED !== 'true') return { enabled: false };
   return readAdminContentPacksConfig(environment);
 }
+
+/**
+ * Separate default-off gate for the user support surface (Phase 3, Milestone 3.1).
+ *
+ * Unlike the Store gate this does NOT require the Content & Packs workspace: account support is
+ * not a content capability and an operator suspending an abusive account has no reason to hold
+ * content permissions. It still requires the Passkey auth runtime, because every support action
+ * must resolve a canonical Admin actor to record in the audit trail.
+ *
+ * Enabling this flag authorizes reading the canonical user list and changing one account's
+ * status. It grants no entitlement, no learning-state, no deletion and no content capability, and
+ * no migration, staging or Production activation authority.
+ */
+export function readAdminSupportConfig(environment: Environment): AdminAuthConfig {
+  if (environment.LEARNBOX_ADMIN_SUPPORT_ENABLED !== 'true') return { enabled: false };
+  return readAdminAuthConfig(environment);
+}

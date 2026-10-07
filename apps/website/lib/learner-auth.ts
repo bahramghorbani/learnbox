@@ -9,7 +9,7 @@ import {
   renewLearnerSession,
   type LearnerSession,
 } from './server-session';
-import { isSessionRevoked } from './session-revocation';
+import { isSessionBlocked } from './session-revocation';
 
 /**
  * The single place a learner request is authenticated (LB-B26).
@@ -18,7 +18,9 @@ import { isSessionRevoked } from './session-revocation';
  * cannot know the session was revoked by logout, so a route that stops there keeps
  * honouring a signed-out token for up to 30 days. Every authenticated endpoint
  * therefore goes through `authenticateLearner`, which also checks server-side
- * revocation.
+ * whether this session may still act: revoked by logout, cut off for the whole
+ * account, or belonging to an account an operator has suspended (M3.1). A
+ * suspended learner is denied here, once, for every route.
  *
  * Failure policy: in production a revocation lookup that errors DENIES the
  * request. Serving a possibly-revoked session because the database blipped would
@@ -55,7 +57,7 @@ export async function authenticateLearner(request: Request): Promise<LearnerSess
   if (!pool) return production ? null : session;
 
   try {
-    return (await isSessionRevoked(pool, session)) ? null : session;
+    return (await isSessionBlocked(pool, session)) ? null : session;
   } catch {
     return production ? null : session;
   }

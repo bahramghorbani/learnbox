@@ -2131,3 +2131,206 @@ button {
   background: var(--rose-soft);
   color: var(--rose-ink);
 }
+/* Users & Support (Phase 3 / M3.1) — the Users view had class names but no stylesheet, so the
+   support surface rendered unstyled. Plain CSS on the global palette, no new tokens. */
+.users-management {
+  padding: 20px;
+  display: grid;
+  gap: 14px;
+}
+.users-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.users-header h2 {
+  margin: 0;
+  font-size: 16px;
+}
+.users-total {
+  color: var(--muted);
+  font-size: 12.5px;
+}
+.users-search-input {
+  inline-size: 100%;
+  max-inline-size: 360px;
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font: inherit;
+}
+.users-error {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #ffecef;
+  color: #e11d48;
+  font-size: 12.5px;
+}
+.users-notice {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #e7f7ef;
+  color: #0f7b4f;
+  font-size: 12.5px;
+}
+.users-loading,
+.users-empty {
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
+}
+.users-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+}
+.users-table {
+  inline-size: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+.users-table th,
+.users-table td {
+  padding: 10px 12px;
+  text-align: right;
+  border-block-end: 1px solid var(--line);
+  white-space: nowrap;
+}
+.users-table th {
+  background: #fbfaff;
+  font-weight: 700;
+  color: var(--muted);
+}
+.users-table tbody tr:last-child td {
+  border-block-end: 0;
+}
+.users-status {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.users-status-active {
+  background: #e7f7ef;
+  color: #0f7b4f;
+}
+.users-status-disabled {
+  background: #fff8e6;
+  color: #8a6100;
+}
+.users-detail-btn {
+  padding: 5px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  font-size: 11.5px;
+}
+.users-detail-btn:hover {
+  border-color: var(--purple);
+  color: var(--purple);
+}
+.user-detail-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(22, 24, 43, 0.45);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  z-index: 50;
+}
+.user-detail-modal {
+  inline-size: 100%;
+  max-inline-size: 560px;
+  max-block-size: 86vh;
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 12px 40px rgba(22, 24, 43, 0.22);
+  padding: 18px;
+  display: grid;
+  gap: 14px;
+}
+.user-detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.user-detail-header h3 {
+  margin: 0;
+  font-size: 15px;
+}
+.user-detail-header button {
+  border: 0;
+  background: transparent;
+  font-size: 15px;
+  color: var(--muted);
+  line-height: 1;
+}
+.user-detail-info {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 14px;
+  font-size: 12.5px;
+}
+.user-detail-info dt {
+  color: var(--muted);
+  margin-block-end: 2px;
+}
+.user-detail-info dd {
+  margin: 0;
+  font-weight: 600;
+}
+.user-status-form {
+  display: grid;
+  gap: 8px;
+  padding-block-start: 12px;
+  border-block-start: 1px solid var(--line);
+  font-size: 12.5px;
+}
+.user-status-explainer {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.7;
+}
+.user-status-reason {
+  inline-size: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font: inherit;
+  resize: vertical;
+}
+.user-detail-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.users-suspend-btn,
+.users-reactivate-btn {
+  padding: 9px 16px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 12.5px;
+  font-weight: 700;
+}
+.users-suspend-btn {
+  background: #fff8e6;
+  color: #8a6100;
+  border-color: #f1dfae;
+}
+.users-reactivate-btn {
+  background: #e7f7ef;
+  color: #0f7b4f;
+  border-color: #bfe6d2;
+}
+.users-suspend-btn:disabled,
+.users-reactivate-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}

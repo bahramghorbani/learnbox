@@ -14,7 +14,10 @@ function dependencies(overrides: Partial<OtpHttpDependencies> = {}): OtpHttpDepe
       resendAvailableAt: new Date('2026-08-06T10:01:00Z'),
     }),
     verifyChallenge: async () => ({ status: 'verified', phoneHash: 'opaque-phone-hash' }),
-    resolveSessionSubject: async () => '2efaf676-84e4-45b1-8a13-50735a8df2c8',
+    resolveSessionSubject: async () => ({
+      status: 'ok' as const,
+      userId: '2efaf676-84e4-45b1-8a13-50735a8df2c8',
+    }),
     createSession: () => 'signed-session-token',
     ...overrides,
   };
@@ -105,11 +108,32 @@ describe('handleOtpVerification', () => {
   it('returns no cookie when the verified phone cannot resolve a canonical user', async () => {
     const response = await handleOtpVerification(
       post('/api/auth/otp/verify', { challengeId, code: '۱۲۳۴۵', phone: '۰۹۱۲۱۲۳۴۵۶۷' }),
-      dependencies({ resolveSessionSubject: async () => null }),
+      dependencies({ resolveSessionSubject: async () => ({ status: 'rejected' }) }),
     );
 
     expect(response.status).toBe(400);
     expect(response.headers.has('set-cookie')).toBe(false);
+  });
+
+  it('refuses a suspended account with its own code and issues no session', async () => {
+    let minted = false;
+    const response = await handleOtpVerification(
+      post('/api/auth/otp/verify', { challengeId, code: '12345', phone: '09121234567' }),
+      dependencies({
+        resolveSessionSubject: async () => ({ status: 'suspended' }),
+        createSession: () => {
+          minted = true;
+          return 'signed-session-token';
+        },
+      }),
+    );
+
+    // A correct OTP for a suspended account is not a verification failure, and must not mint a
+    // session the rest of the app would then refuse (M3.1).
+    expect(response.status).toBe(403);
+    expect(await response.json()).toEqual({ error: 'account_suspended' });
+    expect(response.headers.has('set-cookie')).toBe(false);
+    expect(minted).toBe(false);
   });
 
   it('returns a generic response without a cookie for a rejected challenge', async () => {
