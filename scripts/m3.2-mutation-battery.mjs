@@ -122,7 +122,7 @@ const mutants = [
     id: 'MUT15',
     claim: 'a refused action is not reported as success',
     file: routes,
-    from: "      return json({ status: 'refused', verdict: result.verdict, pack: result.row }, { status: 409 });",
+    from: "      return json(\n        { status: 'refused', verdict: result.verdict, pack: result.row },\n        { status: 409 },\n      );",
     to: "      return json({ status: 'refused', verdict: result.verdict, pack: result.row });",
   },
   {

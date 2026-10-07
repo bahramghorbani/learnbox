@@ -68,7 +68,59 @@ ten were killed.
 
 M3.1 grants no capability in Production: migration `0028` is **not applied in Production**, the
 support flag is off, nothing is deployed, and the pending `0024`–`0027` migrations remain pending.
-M3.2 (manual Pack grant/revoke) and M3.3 (Admin audit log UI) are not started.
+
+**Phase 3 — M3.2 merged (implemented in repository, not activated).** Admin support staff can now
+see a learner's canonical pack access and grant or revoke it by hand. Before this, compensating a
+learner for a failed payment meant either direct database access or a fabricated purchase.
+
+The entitlement model is unchanged: a learner owns a pack because a row exists in `user_packs`, and
+`apps/website/lib/pack-access.ts` stays the one definition of access. There is no second entitlement
+table, no parallel Store model and no mock business logic. What the canonical model could not express
+was provenance: `acquisition_type` allowed only `'free'` (M2.3 self-service) and `'purchased'`
+(M2.4, pointing at a verified transaction). A support-issued entitlement is neither, and writing it
+as either one would be a lie with consequences — as `'purchased'` it would be a paid entitlement
+with no payment behind it, and support could no longer tell a real purchase from a manual favour, so
+revoke could not refuse to destroy one. Migration `0029_support_pack_entitlements.sql` therefore
+widens the CHECK to admit `'support'` and adds the matching invariant: only a `'purchased'`
+entitlement may carry a `purchase_event_id`, so a support grant linked to a transaction is
+unwritable rather than merely discouraged. One constraint widened, one added, no column, no table,
+no existing row rewritten.
+
+A grant writes exactly one `user_packs` row with `acquisition_type = 'support'` and no payment link.
+No `purchase_events` row is created, updated or deleted anywhere on this surface, and the Admin role
+holds `SELECT` only on that table — support must recognise a verified payment in order to refuse to
+revoke it, and must never be able to alter one. Granting to a suspended account is refused (the
+entitlement would exist but the learner could not sign in to use it), and granting a published free
+pack is refused as meaningless rather than recorded as if it changed something.
+
+Revoke removes only a support-issued entitlement, and the `DELETE` statement itself carries the
+`acquisition_type = 'support'` predicate — the guard is the write, not a check above it, so a request
+that races past the pre-read still cannot remove anything else. A verified purchase is refused
+explicitly: the learner paid, and withdrawing that access is a refund decision with a money movement
+behind it, which M3.2 deliberately does not implement. A free self-activation is refused too,
+because while the pack is published and free the canonical rule grants access with or without the
+row, so deleting it would revoke nothing — the screen says that instead of reporting a success that
+did not happen. Both directions require a 3–500 character reason, and both write the canonical
+`audit_logs` trail (`user_pack.grant` / `user_pack.revoke`) with the reason, the pack, the previous
+and resulting acquisition and access state, and the idempotency key.
+
+The Admin surface is the existing «مدیریت کاربران» detail panel with one new section, not a redesign.
+Each pack shows the canonical reason access exists — free for everyone, support-granted, purchased
+with its verified amount and date, or nothing — and a control appears only where the server has
+already ruled the action legitimate, with the refusal spelled out in words everywhere else. The
+server re-decides on every request regardless of what the screen showed.
+
+Evidence: a real-Postgres suite drives the real Admin store and then asks the real canonical access
+rule whether the learner may read the pack — mocking either side would let the two agree while
+production disagreed. It proves immediate access after a grant, access loss after a legitimate
+revoke, a byte-identical payment snapshot across every operation, replay safety in both directions,
+refusal on purchase and on free acquisition, blast radius limited to one learner, concurrent
+duplicate grants collapsing to one row and one audit entry, and the Admin view agreeing with the
+canonical rule on every pack it reports. Seventeen mutations of the safety properties were
+introduced and all seventeen were killed (`scripts/m3.2-mutation-battery.mjs`).
+
+M3.2 grants no capability in Production either: `0029` is **not applied in Production**, the support
+flag is off, and nothing is deployed. M3.3 (Admin audit log UI) is not started.
 
 **Phase 2 — Store & Entitlements — M2.1–M2.4 merged (implemented in repository, not activated).**
 M2.4 completes the canonical commercial path: a learner can now be charged for a paid pack through
