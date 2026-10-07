@@ -7,6 +7,7 @@ import { loadAdminSession, verifyAdminCsrf } from './admin-route-security';
 import {
   isAccountStatus,
   type PostgresAdminUsersStore,
+  type SetPackEntitlementResult,
   type SetUserStatusResult,
 } from './postgres-admin-users-store';
 
@@ -96,7 +97,7 @@ function parseStatusChange(body: Record<string, unknown>): ParsedStatusChange | 
  * and Phase 2 Store gates — suspending a learner's account is exactly as hard to trigger as
  * publishing content or changing what a pack costs.
  */
-async function authorizeMutation(
+async function authorizeMutation<TChange>(
   request: Request,
   dependencies: {
     enabled: boolean;
@@ -104,8 +105,9 @@ async function authorizeMutation(
     sessionStore?: unknown;
     now?: () => Date;
   },
+  parse: (body: Record<string, unknown>) => TChange | undefined,
 ): Promise<
-  | { ok: true; actorUserId: string; idempotencyKey: string; change: ParsedStatusChange }
+  | { ok: true; actorUserId: string; idempotencyKey: string; change: TChange }
   | { ok: false; response: Response }
 > {
   if (!dependencies.enabled || !dependencies.config.enabled || !dependencies.sessionStore) {
@@ -137,8 +139,8 @@ async function authorizeMutation(
   if (!idempotencyKey) return { ok: false, response: genericInvalid() };
 
   const body = await parseJsonBody(request);
-  const change = body ? parseStatusChange(body) : undefined;
-  if (!change) return { ok: false, response: genericInvalid() };
+  const change = body ? parse(body) : undefined;
+  if (change === undefined) return { ok: false, response: genericInvalid() };
 
   return { ok: true, actorUserId: session.userId, idempotencyKey, change };
 }
@@ -196,7 +198,7 @@ function statusResponse(result: SetUserStatusResult) {
 export function createAdminUserStatusRoute(dependencies: UsersDependencies<'setUserStatus'>) {
   return async function POST(request: Request) {
     if (!dependencies.store) return notFound();
-    const authorized = await authorizeMutation(request, dependencies);
+    const authorized = await authorizeMutation(request, dependencies, parseStatusChange);
     if (!authorized.ok) return authorized.response;
     try {
       const result = await dependencies.store.setUserStatus({
@@ -205,6 +207,107 @@ export function createAdminUserStatusRoute(dependencies: UsersDependencies<'setU
         idempotencyKey: authorized.idempotencyKey,
       });
       return statusResponse(result);
+    } catch {
+      return unavailable();
+    }
+  };
+}
+
+/** `packs.id` is a human-authored slug, not a UUID. Bounded and charset-checked, nothing more. */
+const packIdPattern = /^[a-z0-9][a-z0-9_-]{0,63}$/i;
+
+type ParsedEntitlementChange = {
+  userId: string;
+  packId: string;
+  action: 'grant' | 'revoke';
+  reason: string;
+};
+
+/** Same required reason as a suspension, in BOTH directions. */
+function parseEntitlementChange(
+  body: Record<string, unknown>,
+): ParsedEntitlementChange | undefined {
+  const { userId, packId, action, reason } = body;
+  if (typeof userId !== 'string' || !uuidPattern.test(userId)) return undefined;
+  if (typeof packId !== 'string' || !packIdPattern.test(packId)) return undefined;
+  if (action !== 'grant' && action !== 'revoke') return undefined;
+  if (typeof reason !== 'string') return undefined;
+  const trimmed = reason.trim();
+  if (trimmed.length < minReason || trimmed.length > maxReason) return undefined;
+  return { userId, packId, action, reason: trimmed };
+}
+
+/** The learner's canonical pack access, as support sees it. Read-only; no mutation path here. */
+export function createAdminUserPacksRoute(dependencies: UsersDependencies<'readPackEntitlements'>) {
+  return async function GET(request: Request) {
+    if (
+      !dependencies.enabled ||
+      !dependencies.config.enabled ||
+      !dependencies.sessionStore ||
+      !dependencies.store
+    ) {
+      return notFound();
+    }
+    const session = await loadAdminSession(
+      request,
+      dependencies.config,
+      dependencies.sessionStore,
+      (dependencies.now ?? (() => new Date()))(),
+    );
+    if (!session) return unauthorized();
+
+    const userId = new URL(request.url).searchParams.get('userId')?.trim() ?? '';
+    if (!uuidPattern.test(userId)) return genericInvalid();
+
+    try {
+      const result = await dependencies.store.readPackEntitlements({
+        actorUserId: session.userId,
+        userId,
+      });
+      if (result.status !== 'ok') return notFound();
+      return json({ packs: result.rows });
+    } catch {
+      return unavailable();
+    }
+  };
+}
+
+/**
+ * `refused` is a 409, not a 400: the request was well formed and the operator was authorized, but
+ * the action is not legitimate for this entitlement's provenance — a verified purchase, a pack that
+ * is free to everyone, or an entitlement that is not there. The verdict is returned so the screen
+ * can say which, and the refreshed row so it stops showing a control that was never valid.
+ */
+function entitlementResponse(result: SetPackEntitlementResult) {
+  switch (result.status) {
+    case 'applied':
+    case 'idempotent':
+      return json({ status: result.status, pack: result.row });
+    case 'refused':
+      return json(
+        { status: 'refused', verdict: result.verdict, pack: result.row },
+        { status: 409 },
+      );
+    case 'forbidden':
+    case 'not_found':
+      return notFound();
+  }
+}
+
+export function createAdminUserPackEntitlementRoute(
+  dependencies: UsersDependencies<'setPackEntitlement'>,
+) {
+  return async function POST(request: Request) {
+    if (!dependencies.store) return notFound();
+    const authorized = await authorizeMutation(request, dependencies, parseEntitlementChange);
+    if (!authorized.ok) return authorized.response;
+    try {
+      const result = await dependencies.store.setPackEntitlement({
+        ...authorized.change,
+        actorUserId: authorized.actorUserId,
+        idempotencyKey: authorized.idempotencyKey,
+      });
+      return entitlementResponse(result);
     } catch {
       return unavailable();
     }

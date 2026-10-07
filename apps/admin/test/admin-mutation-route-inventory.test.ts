@@ -144,6 +144,15 @@ const INVENTORY: Record<string, Entry> = {
     category: 'delegated',
     guardIn: 'lib/server/admin-users-routes.ts',
   },
+  // M3.2 — manual pack entitlements. POST (grant/revoke) delegates the same full guard chain to the
+  // same shared module, behind the same default-off LEARNBOX_ADMIN_SUPPORT_ENABLED gate. It writes
+  // one `user_packs` row and one audit entry; it can neither create nor alter a payment record, and
+  // its revoke refuses an entitlement that came from a verified purchase. The file's GET is the
+  // read-only support view of the same data.
+  'app/api/support/users/packs/route.ts': {
+    category: 'delegated',
+    guardIn: 'lib/server/admin-users-routes.ts',
+  },
   'app/api/banners/route.ts': { category: 'hard-disabled' },
   'app/api/gateways/route.ts': { category: 'hard-disabled' },
   'app/api/packs/route.ts': { category: 'hard-disabled' },
