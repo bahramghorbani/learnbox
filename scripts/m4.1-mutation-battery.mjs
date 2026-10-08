@@ -150,13 +150,30 @@ const mutants = [
     id: 'MUT11',
     claim: 'revert verifies the per-session CSRF token',
     file: routes,
+    // The replacement route carries a byte-identical CSRF block, so the anchor must reach into the
+    // 428 body that follows to stay unique — a duplicated anchor would mutate the wrong route and
+    // then report a survivor for a property that is in fact asserted.
     from: `    try {
       verifyAdminCsrf(request, session.csrfHash, config);
     } catch {
       return genericInvalid();
     }
-    if (!session.recent) {`,
-    to: `    if (!session.recent) {`,
+    if (!session.recent) {
+      return Response.json(
+        { code: 'reauthentication_required' },
+        { status: 428, headers: { 'Cache-Control': 'no-store' } },
+      );
+    }
+    try {
+      const result = await dependencies.revert({ now: currentTime });`,
+    to: `    if (!session.recent) {
+      return Response.json(
+        { code: 'reauthentication_required' },
+        { status: 428, headers: { 'Cache-Control': 'no-store' } },
+      );
+    }
+    try {
+      const result = await dependencies.revert({ now: currentTime });`,
   },
   {
     id: 'MUT12',
