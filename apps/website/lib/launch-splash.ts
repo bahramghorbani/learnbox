@@ -9,7 +9,13 @@ type Queryable = {
 
 export type LaunchSplashConfig = {
   databaseUrl: string;
-  blobToken: string;
+  /**
+   * Vercel Blob is the LEGACY storage path. The canonical splash bytes live in
+   * `splash_versions.image_data`, which the route below reads first, so a missing token must not
+   * disable delivery — it only removes the blob fallback. Requiring it here made an owner-promoted
+   * splash unreachable (404) on a deployment that stores its bytes in PostgreSQL.
+   */
+  blobToken?: string;
 };
 
 export function readLaunchSplashConfig(environment: Environment): LaunchSplashConfig | null {
@@ -17,11 +23,12 @@ export function readLaunchSplashConfig(environment: Environment): LaunchSplashCo
   const databaseUrl = environment.DATABASE_URL ?? '';
   const blobToken = environment.BLOB_READ_WRITE_TOKEN ?? '';
   if (!/^postgres(ql)?:\/\//.test(databaseUrl)) return null;
-  if (!blobToken) return null;
   try {
     const parsed = new URL(databaseUrl);
     parsed.searchParams.set('sslmode', 'verify-full');
-    return { databaseUrl: parsed.toString(), blobToken };
+    return blobToken
+      ? { databaseUrl: parsed.toString(), blobToken }
+      : { databaseUrl: parsed.toString() };
   } catch {
     return null;
   }
@@ -51,7 +58,10 @@ export function createLaunchSplashRoute(dependencies: {
         const mediaType = (dbResult.rows[0].media_type as string) || 'image/webp';
         return new Response(new Uint8Array(imageData), {
           headers: {
-            'Cache-Control': 'public, max-age=3600',
+            // The launch image is deliberately pre-authentication content, so it may be cached —
+            // but a revert to the bundled default must become visible quickly, which bounds the
+            // lifetime to a minute rather than an hour.
+            'Cache-Control': 'public, max-age=60',
             'Content-Type': mediaType,
             'Cross-Origin-Resource-Policy': 'same-origin',
             'X-Content-Type-Options': 'nosniff',
@@ -128,12 +138,16 @@ function splashPool(databaseUrl: string) {
 export function launchSplashRouteFromEnvironment(environment: Environment = process.env) {
   const config = readLaunchSplashConfig(environment);
   if (!config) return undefined;
+  const blobToken = config.blobToken;
   return createLaunchSplashRoute({
     enabled: true,
     pool: splashPool(config.databaseUrl),
-    readBlob: async (objectKey) => {
-      const result = await getBlob(objectKey, { access: 'private', token: config.blobToken });
-      return result?.stream ?? undefined;
-    },
+    // Only offered when a token exists; the DB-first read above is the canonical path.
+    readBlob: blobToken
+      ? async (objectKey) => {
+          const result = await getBlob(objectKey, { access: 'private', token: blobToken });
+          return result?.stream ?? undefined;
+        }
+      : undefined,
   });
 }

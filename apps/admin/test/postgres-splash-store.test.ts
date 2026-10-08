@@ -261,4 +261,92 @@ describe('PostgresSplashStore', () => {
       calls.some(({ sql }) => sql.includes("last_error_code = 'delete_failed_exhausted'")),
     ).toBe(true);
   });
+
+  // M4.1 — revert to the bundled default. The invariants worth locking are structural: the pointer
+  // is deleted under the same advisory lock promotion takes, the audit row is written in the SAME
+  // transaction as the deletion, and NOTHING deletes a version row or its bytes.
+  it('deletes only the pointer, under the promotion lock, with the audit row in one transaction', async () => {
+    const calls: QueryCall[] = [];
+    const client = {
+      async query(sql: string, parameters?: readonly unknown[]) {
+        calls.push({ sql, parameters });
+        if (sql.includes('FROM current_splash')) return { rows: [{ version_id: 'version-1' }] };
+        return { rows: [] };
+      },
+      release() {},
+    };
+    const store = new PostgresSplashStore({ connect: async () => client });
+
+    await expect(store.revertToBundledDefault({ now })).resolves.toEqual({
+      status: 'reverted',
+      versionId: 'version-1',
+    });
+
+    const shape = calls.map(({ sql }) => sql.trim().split(/\s+/).slice(0, 2).join(' '));
+    expect(shape).toEqual([
+      'BEGIN',
+      'SELECT pg_advisory_xact_lock($1)',
+      'SELECT version_id',
+      'DELETE FROM',
+      'INSERT INTO',
+      'COMMIT',
+    ]);
+    expect(calls[2].sql).toContain('FOR UPDATE');
+    expect(calls[3].sql).toContain('DELETE FROM current_splash WHERE singleton_id = 1');
+    expect(calls[4].sql).toContain("'splash.reverted'");
+    expect(calls[4].parameters?.[0]).toBe('version-1');
+    const everySql = calls.map(({ sql }) => sql).join('\n');
+    expect(everySql).not.toMatch(/DELETE\s+FROM\s+splash_versions/i);
+    expect(everySql).not.toMatch(/DELETE\s+FROM\s+splash_replacement_actions/i);
+    expect(everySql).not.toMatch(/UPDATE\s+splash_versions/i);
+  });
+
+  it('is a no-op that writes nothing when the bundled default is already active', async () => {
+    const calls: QueryCall[] = [];
+    const client = {
+      async query(sql: string, parameters?: readonly unknown[]) {
+        calls.push({ sql, parameters });
+        return { rows: [] };
+      },
+      release() {},
+    };
+    const store = new PostgresSplashStore({ connect: async () => client });
+
+    await expect(store.revertToBundledDefault({ now })).resolves.toEqual({
+      status: 'already_default',
+    });
+
+    expect(calls.map(({ sql }) => sql.trim().split(/\s+/)[0])).toEqual([
+      'BEGIN',
+      'SELECT',
+      'SELECT',
+      'COMMIT',
+    ]);
+    expect(calls.some(({ sql }) => /DELETE|INSERT/i.test(sql))).toBe(false);
+  });
+
+  it('rolls back and releases the connection when the revert fails', async () => {
+    const calls: QueryCall[] = [];
+    let released = false;
+    const client = {
+      async query(sql: string, parameters?: readonly unknown[]) {
+        calls.push({ sql, parameters });
+        if (sql.includes('DELETE FROM current_splash')) {
+          throw new Error('permission denied for table current_splash');
+        }
+        if (sql.includes('FROM current_splash')) return { rows: [{ version_id: 'version-1' }] };
+        return { rows: [] };
+      },
+      release() {
+        released = true;
+      },
+    };
+    const store = new PostgresSplashStore({ connect: async () => client });
+
+    await expect(store.revertToBundledDefault({ now })).rejects.toThrow('permission denied');
+
+    expect(calls.at(-1)?.sql).toBe('ROLLBACK');
+    expect(calls.some(({ sql }) => sql.includes('INSERT INTO audit_logs'))).toBe(false);
+    expect(released).toBe(true);
+  });
 });

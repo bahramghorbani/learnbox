@@ -6,6 +6,7 @@ import { AdminSidebar } from './AdminSidebar';
 import { AuditLogWorkspace } from './AuditLogWorkspace';
 import { ContentPacksWorkspace } from './ContentPacksWorkspace';
 import { ContentReviewWorkspace } from './ContentReviewWorkspace';
+import { PresentationWorkspace } from './PresentationWorkspace';
 import { StoreListingsWorkspace } from './StoreListingsWorkspace';
 import { UsersManagement } from './UsersManagement';
 
@@ -20,8 +21,12 @@ import { UsersManagement } from './UsersManagement';
  * suspension and manual pack entitlements existed as working APIs behind a screen this router
  * could not open. Phase 3 cannot be complete while that is true, so the route is wired here rather
  * than deferred.
+ *
+ * Milestone 4.1 adds «نمایش اپ»: the splash management panel was real and guarded but mounted on
+ * the home workspace, while the sidebar entry that names it pointed nowhere. The destination now
+ * opens the presentation workspace, which is where splash — and later the slider — belongs.
  */
-type AdminRoute = 'content' | 'store' | 'users' | 'audit' | 'home';
+type AdminRoute = 'content' | 'store' | 'users' | 'audit' | 'presentation' | 'home';
 
 function readRoute(hash: string): AdminRoute {
   const value = hash.replace(/^#/, '');
@@ -29,6 +34,7 @@ function readRoute(hash: string): AdminRoute {
   if (value === 'store') return 'store';
   if (value === 'users') return 'users';
   if (value === 'audit') return 'audit';
+  if (value === 'presentation') return 'presentation';
   return 'home';
 }
 
@@ -45,6 +51,7 @@ export function AdminWorkspaceRouter() {
   if (route === 'content') return <ContentPacksWorkspace />;
   if (route === 'store') return <StoreListingsWorkspace />;
   if (route === 'audit') return <AuditLogWorkspace />;
+  if (route === 'presentation') return <PresentationWorkspace />;
   // The support screen predates the approved shell and renders its own section, so it is framed
   // here instead of being rewritten — the M3.1/M3.2 screen stays byte-for-byte the reviewed one.
   if (route === 'users') {

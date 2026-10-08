@@ -129,6 +129,13 @@ const INVENTORY: Record<string, Entry> = {
     category: 'delegated',
     guardIn: 'lib/server/admin-splash-routes.ts',
   },
+  // M4.1 — revert the launch screen to the bundled default. Same guard chain as the replacement
+  // route (Origin + Content-Type, session, CSRF, recent re-auth); no idempotency key because the
+  // underlying delete of the single current_splash pointer is idempotent by construction.
+  'app/api/splash/revert/route.ts': {
+    category: 'delegated',
+    guardIn: 'lib/server/admin-splash-routes.ts',
+  },
   // M2.1 — canonical Store listings. PUT delegates the full guard chain (Origin, session, CSRF,
   // recent re-auth, idempotency key) to the shared module, behind its own default-off
   // LEARNBOX_ADMIN_STORE_ENABLED gate. It writes `store_listings` only, never pack or card content.

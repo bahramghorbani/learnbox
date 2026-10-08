@@ -7,6 +7,7 @@ import {
   createSplashCurrentRoute,
   createSplashPreviewRoute,
   createSplashReplaceRoute,
+  createSplashRevertRoute,
 } from './admin-splash-routes';
 import { normalizeSplashImage } from './splash-image';
 import { PostgresOwnerAuthStore } from './postgres-owner-auth-store';
@@ -71,6 +72,13 @@ export function createAdminSplashServer(dependencies: {
         ...shared,
         normalize: dependencies.normalize ?? normalizeSplashImage,
         replace: (input) => replaceSplash(input, { storage, store: splashStore }),
+      }),
+      revert: createSplashRevertRoute({
+        enabled: true,
+        config,
+        now: dependencies.now,
+        sessionStore,
+        revert: (input) => splashStore.revertToBundledDefault(input),
       }),
     };
   } catch {

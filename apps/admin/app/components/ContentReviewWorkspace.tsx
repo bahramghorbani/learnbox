@@ -6,7 +6,6 @@ import type { LearningVocabularyItem } from '@learnbox/content-models';
 
 import { AdminSidebar } from './AdminSidebar';
 import { useAdminWorkspaceAccess } from './AdminAuthGate';
-import { SplashReplacementPanel } from './SplashReplacementPanel';
 
 const partOfSpeechLabels: Record<LearningVocabularyItem['partOfSpeech'], string> = {
   noun: 'اسم',
@@ -618,8 +617,6 @@ export function ContentReviewWorkspace() {
             برای مشاهدهٔ محتوای بازبینی باید با ورود امن وارد شوید.
           </p>
         )}
-
-        <SplashReplacementPanel />
       </section>
     </main>
   );

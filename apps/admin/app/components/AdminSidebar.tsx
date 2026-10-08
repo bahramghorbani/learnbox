@@ -26,7 +26,7 @@ const navItems = [
   { label: 'فروشگاه', icon: 'store', route: 'store' },
   { label: 'کاربران', icon: 'users', route: 'users' },
   { label: 'یادگیری', icon: 'chart' },
-  { label: 'نمایش اپ', icon: 'image' },
+  { label: 'نمایش اپ', icon: 'image', route: 'presentation' },
   { label: 'نشست‌ها و دسترسی', icon: 'shield' },
   { label: 'عملیات', icon: 'ops', route: 'audit' },
   { label: 'تنظیمات', icon: 'settings' },

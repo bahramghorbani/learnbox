@@ -170,7 +170,56 @@ documented there; no retention scheduler was built, because nothing in the appli
 records and retention beyond the minimum is an infrastructure concern.
 
 M3.3 grants no capability in Production: nothing is deployed, the support flag is off, and
-migrations `0024`–`0029` remain unapplied in Production. Phase 4 is not started.
+migrations `0024`–`0029` remain unapplied in Production.
+
+**Phase 4 — App Presentation — M4.1 merged (implemented in repository, not activated).** Admin's
+splash capability is now reachable and its learner delivery actually works. «نمایش اپ» was a
+sidebar entry with no destination, the reviewed `SplashReplacementPanel` was mounted on the home
+workspace underneath the content-review queue, and the learner endpoint answered `404` even though
+Production holds a promoted splash: `readLaunchSplashConfig` refused to build the route without
+`BLOB_READ_WRITE_TOKEN`, a credential the route does not need and Production does not have. The
+owner had replaced the splash; no learner ever saw it.
+
+The fix is wiring plus one deleted condition. «نمایش اپ» resolves to a new `PresentationWorkspace`
+that mounts the existing panel — moved, not copied, so there is exactly one place where
+presentation is managed and no second mutation surface for the same singleton. Vercel Blob becomes
+what the route already treated it as: an optional legacy fallback behind the canonical
+`splash_versions.image_data` read. A missing token now removes the fallback instead of the feature.
+The cached launch image is bounded to a minute so a revert becomes visible promptly.
+
+M4.1 also adds the revert the owner required: deactivate the dynamic splash and return the app to
+its approved bundled image. Reverting deletes the single `current_splash` pointer row and nothing
+else — every `splash_versions` row, its bytes, its object key, the replacement history and the
+audit trail survive, so a reverted splash stays re-promotable and stays available as evidence. It
+runs under the same advisory lock as promotion, writes `splash.reverted` to the canonical
+`audit_logs` in the same transaction as the deactivation, and is idempotent by construction: a
+repeated revert finds no pointer, writes nothing and reports `already_default` rather than claiming
+a change it did not make. The route carries the replacement route's full guard chain — trusted
+Origin, Admin session, per-session CSRF, recent re-authentication (`428` otherwise) — and no
+idempotency key, because a key would add a failure mode to an operation that cannot double-apply.
+
+Migration `0030_splash_revert_to_default.sql` is privilege-only: a guarded
+`GRANT DELETE ON current_splash TO learnbox_admin`, mirroring
+`infrastructure/database/db-roles-p0.sql`. No schema change, no data change, and no `DELETE` of its
+own — the grant covers the pointer table only, never `splash_versions`.
+
+Evidence: a real-Postgres suite applies every migration, promotes a version whose bytes live in
+`image_data`, and drives the real learner route with no blob token configured — so "the Admin
+promoted it" and "a learner receives it" are proven to be the same fact. It also proves an
+uploaded-but-unpromoted version is never deliverable, that revert produces `404` with the version
+row and its bytes intact, that a repeated revert adds no second audit record, and that a reverted
+version can be promoted again. Seventeen mutations of the delivery, revert, guard and reachability
+properties were introduced and all seventeen were killed
+(`scripts/m4.1-mutation-battery.mjs`). `scripts/validate-owner-splash-boundary.mjs` now also fails
+if the blob token is reintroduced as a delivery requirement or if the store gains a statement that
+destroys a version or its history.
+
+M4.1 grants no capability in Production: nothing is deployed, `0030` joins `0024`–`0029` as
+unapplied, and `LEARNBOX_OWNER_SPLASH_REPLACEMENT_ENABLED` remains absent from the Production
+environment, so `/api/launch/splash` still answers `404` there. Production delivery of the promoted
+splash is a **release-gate item**, not an M4.1 claim. Admin splash _management_ additionally still
+requires `BLOB_READ_WRITE_TOKEN` for uploads (`admin-splash-server.ts`), which is deliberately
+unchanged in M4.1 and carried as release debt. M4.2 (Slider Manager) is not started.
 
 **Phase 2 — Store & Entitlements — M2.1–M2.4 merged (implemented in repository, not activated).**
 M2.4 completes the canonical commercial path: a learner can now be charged for a paid pack through

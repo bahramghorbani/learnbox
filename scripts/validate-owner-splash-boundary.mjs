@@ -15,6 +15,7 @@ const [
   learnerDelivery,
   learnerLaunch,
   migration,
+  splashStore,
 ] = await Promise.all([
   source('.env.example'),
   source('apps/admin/lib/server/admin-splash-routes.ts'),
@@ -26,6 +27,7 @@ const [
   source('apps/website/lib/launch-splash.ts'),
   source('apps/website/app/components/LaunchScreen.tsx'),
   source('database/migrations/0011_owner_splash_replacement.sql'),
+  source('apps/admin/lib/server/postgres-splash-store.ts'),
 ]);
 
 const errors = [];
@@ -92,6 +94,7 @@ for (const required of [
 for (const required of [
   "'/api/splash/current'",
   "'/api/splash/replace'",
+  "'/api/splash/revert'",
   'crypto.randomUUID()',
   "'/api/auth/reauth/options'",
   "'/api/auth/reauth/verify'",
@@ -116,6 +119,35 @@ for (const required of [
 if (/https?:\/\//.test(learnerDelivery)) {
   errors.push('Learner splash delivery must not contain a public Blob URL.');
 }
+// M4.1: the canonical bytes live in splash_versions.image_data, so a missing (legacy) blob token
+// must only remove the blob fallback. Requiring it in the config made a promoted splash 404.
+if (/if \(!blobToken\) return null/.test(learnerDelivery)) {
+  errors.push(
+    'Learner splash delivery must not require BLOB_READ_WRITE_TOKEN to deliver DB bytes.',
+  );
+}
+requireText(
+  learnerDelivery,
+  'image_data IS NOT NULL',
+  'Learner delivery must read canonical bytes',
+);
+// M4.1: revert must deactivate the pointer only — never destroy a version, its bytes or the trail.
+requireText(routes, 'createSplashRevertRoute', 'Revert route must exist in the guarded module');
+if (/DELETE\s+FROM\s+splash_versions/i.test(splashStore)) {
+  errors.push('Splash store must never delete a version row or its image bytes.');
+}
+// The only permitted deletion of a replacement action is an abandoned, never-completed reservation.
+for (const match of splashStore.matchAll(/DELETE FROM splash_replacement_actions[\s\S]{0,120}/g)) {
+  if (!match[0].includes("status = 'pending'")) {
+    errors.push('Replacement history may only be deleted while still pending.');
+  }
+}
+requireText(
+  splashStore,
+  'DELETE FROM current_splash WHERE singleton_id = 1',
+  'Revert must deactivate by deleting only the current pointer',
+);
+requireText(splashStore, "'splash.reverted'", 'Revert must be audited');
 for (const required of ["'/api/launch/splash'", 'activeLaunchExperience.imagePath']) {
   requireText(learnerLaunch, required, 'Learner launch fallback requirement missing');
 }

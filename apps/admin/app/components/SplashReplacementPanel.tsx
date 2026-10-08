@@ -16,10 +16,19 @@ type PanelState =
   | 'idle'
   | 'confirming'
   | 'uploading'
+  | 'confirming-revert'
+  | 'reverting'
   | 'reauth-required'
   | 'reauthenticating'
   | 'success'
+  | 'reverted'
   | 'error';
+
+/**
+ * Which operation is waiting on re-authentication. Replacement needs its idempotency key carried
+ * across the 428, revert needs nothing because it is idempotent by construction.
+ */
+type PendingAction = { kind: 'replace'; key: string } | { kind: 'revert' };
 
 const acceptedTypes = new Set(['image/png', 'image/jpeg', 'image/webp']);
 const maximumBytes = 8 * 1024 * 1024;
@@ -47,8 +56,9 @@ export function SplashReplacementPanel() {
   const [preview, setPreview] = useState<string>();
   const [fileError, setFileError] = useState<string>();
   const [state, setState] = useState<PanelState>('idle');
-  const [pendingKey, setPendingKey] = useState<string>();
+  const [pending, setPending] = useState<PendingAction>();
   const confirmButton = useRef<HTMLButtonElement>(null);
+  const revertButton = useRef<HTMLButtonElement>(null);
 
   const loadCurrent = useCallback(async (reportFailure = true) => {
     try {
@@ -82,6 +92,7 @@ export function SplashReplacementPanel() {
 
   useEffect(() => {
     if (state === 'confirming') confirmButton.current?.focus();
+    if (state === 'confirming-revert') revertButton.current?.focus();
   }, [state]);
 
   function chooseFile(nextFile?: File) {
@@ -121,13 +132,13 @@ export function SplashReplacementPanel() {
         body: form,
       });
       if (response.status === 428) {
-        setPendingKey(idempotencyKey);
+        setPending({ kind: 'replace', key: idempotencyKey });
         setState('reauth-required');
         return;
       }
       if (!response.ok) throw new Error('replacement unavailable');
       setState('success');
-      setPendingKey(undefined);
+      setPending(undefined);
       setFile(undefined);
       setPreview(undefined);
       await loadCurrent(false);
@@ -136,9 +147,45 @@ export function SplashReplacementPanel() {
     }
   }
 
+  /**
+   * Deactivate the dynamic splash. The server deletes only the current-splash pointer, so stored
+   * versions and their media survive and a repeated request is a no-op.
+   */
+  async function sendRevert() {
+    const csrfToken = readBrowserCookie('__Host-learnbox_admin_csrf');
+    if (!csrfToken) {
+      setState('error');
+      return;
+    }
+    setState('reverting');
+    try {
+      const response = await fetch('/api/splash/revert', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+          'content-type': 'application/json',
+          'x-learnbox-csrf-token': csrfToken,
+        },
+        body: '{}',
+      });
+      if (response.status === 428) {
+        setPending({ kind: 'revert' });
+        setState('reauth-required');
+        return;
+      }
+      if (!response.ok) throw new Error('revert unavailable');
+      setState('reverted');
+      setPending(undefined);
+      setCurrent(undefined);
+      await loadCurrent(false);
+    } catch {
+      setState('error');
+    }
+  }
+
   async function reauthenticate() {
     const csrfToken = readBrowserCookie('__Host-learnbox_admin_csrf');
-    if (!csrfToken || !pendingKey) {
+    if (!csrfToken || !pending) {
       setState('error');
       return;
     }
@@ -161,7 +208,8 @@ export function SplashReplacementPanel() {
         body: JSON.stringify({ response: assertion }),
       });
       if (verifyResponse.status !== 204) throw new Error('reauth failed');
-      await sendReplacement(pendingKey);
+      if (pending.kind === 'revert') await sendRevert();
+      else await sendReplacement(pending.key);
     } catch {
       setState('error');
     }
@@ -209,6 +257,42 @@ export function SplashReplacementPanel() {
                 </dd>
               </div>
             </dl>
+          ) : null}
+
+          {current && state !== 'confirming-revert' && state !== 'reverting' ? (
+            <button
+              type="button"
+              className="splash-secondary-action"
+              onClick={() => setState('confirming-revert')}
+            >
+              بازگردانی به تصویر پیش‌فرض
+            </button>
+          ) : null}
+
+          {state === 'confirming-revert' ? (
+            <div className="splash-confirmation" role="group" aria-label="تأیید بازگردانی اسپلش">
+              <p>
+                اسپلش پویا غیرفعال می‌شود و تصویر پیش‌فرض برنامه نمایش داده می‌شود. نسخه‌های ثبت‌شده
+                و سابقه تغییرات حذف نمی‌شوند.
+              </p>
+              <div>
+                <button
+                  type="button"
+                  className="splash-secondary-action"
+                  onClick={() => setState('idle')}
+                >
+                  انصراف
+                </button>
+                <button
+                  ref={revertButton}
+                  type="button"
+                  className="splash-primary-action"
+                  onClick={() => void sendRevert()}
+                >
+                  تأیید و بازگردانی
+                </button>
+              </div>
+            </div>
           ) : null}
         </div>
 
@@ -278,6 +362,11 @@ export function SplashReplacementPanel() {
               در حال انجام امن جایگزینی…
             </p>
           ) : null}
+          {state === 'reverting' ? (
+            <p className="splash-status" role="status" aria-live="polite">
+              در حال بازگردانی به تصویر پیش‌فرض…
+            </p>
+          ) : null}
           {state === 'reauth-required' ? (
             <div className="splash-reauth" role="status">
               <p>برای این تغییر حساس، هویت مدیر باید دوباره تأیید شود.</p>
@@ -295,9 +384,14 @@ export function SplashReplacementPanel() {
               اسپلش با موفقیت جایگزین شد.
             </p>
           ) : null}
+          {state === 'reverted' ? (
+            <p className="splash-success" role="status" tabIndex={-1}>
+              اسپلش پویا غیرفعال شد و تصویر پیش‌فرض برنامه فعال است.
+            </p>
+          ) : null}
           {state === 'error' ? (
             <p className="splash-error" role="alert">
-              جایگزینی انجام نشد. دوباره تلاش کنید.
+              عملیات انجام نشد. دوباره تلاش کنید.
             </p>
           ) : null}
         </div>
