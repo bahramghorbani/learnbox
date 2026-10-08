@@ -1,69 +1,25 @@
-import { createHash } from 'node:crypto';
+import {
+  normalizeImage,
+  type ImageNormalization,
+  type ImageRejectionCode,
+} from './image-normalization';
 
-import sharp from 'sharp';
+/**
+ * The launch splash is a full-screen portrait image, so it is checked against a tall shape: at
+ * least 864×1600 and an aspect ratio between 0.42 and 0.55. The intake pipeline itself is shared
+ * with every other owner-supplied Admin image (see image-normalization).
+ */
+const splashImageShape = {
+  maximumInputBytes: 8 * 1024 * 1024,
+  minimumWidth: 864,
+  minimumHeight: 1600,
+  minimumAspectRatio: 0.42,
+  maximumAspectRatio: 0.55,
+} as const;
 
-const maximumInputBytes = 8 * 1024 * 1024;
-const minimumWidth = 864;
-const minimumHeight = 1600;
-const minimumAspectRatio = 0.42;
-const maximumAspectRatio = 0.55;
+export type SplashImageRejectionCode = ImageRejectionCode;
+export type SplashImageNormalization = ImageNormalization;
 
-type SplashImageRejectionCode =
-  | 'invalid_image'
-  | 'file_too_large'
-  | 'animated_image'
-  | 'dimensions_too_small'
-  | 'aspect_ratio_invalid';
-
-export type SplashImageNormalization =
-  | {
-      kind: 'normalized';
-      bytes: Buffer;
-      checksum: string;
-      width: number;
-      height: number;
-      byteSize: number;
-      mediaType: 'image/webp';
-    }
-  | { kind: 'rejected'; code: SplashImageRejectionCode };
-
-function rejected(code: SplashImageRejectionCode): SplashImageNormalization {
-  return { kind: 'rejected', code };
-}
-
-export async function normalizeSplashImage(bytes: Buffer): Promise<SplashImageNormalization> {
-  if (bytes.byteLength > maximumInputBytes) return rejected('file_too_large');
-
-  try {
-    const source = sharp(bytes, { animated: false, failOn: 'error', limitInputPixels: 40_000_000 });
-    const metadata = await source.metadata();
-    if (!metadata.format || !['jpeg', 'png', 'webp'].includes(metadata.format)) {
-      return rejected('invalid_image');
-    }
-    if (metadata.pages && metadata.pages > 1) return rejected('animated_image');
-
-    const normalized = await source
-      .rotate()
-      .webp({ effort: 4, quality: 86 })
-      .toBuffer({ resolveWithObject: true });
-    const { width, height } = normalized.info;
-    if (!width || !height) return rejected('invalid_image');
-    if (width < minimumWidth || height < minimumHeight) return rejected('dimensions_too_small');
-    const ratio = width / height;
-    if (ratio < minimumAspectRatio || ratio > maximumAspectRatio) {
-      return rejected('aspect_ratio_invalid');
-    }
-
-    return {
-      kind: 'normalized',
-      bytes: normalized.data,
-      checksum: createHash('sha256').update(normalized.data).digest('hex'),
-      width,
-      height,
-      byteSize: normalized.data.byteLength,
-      mediaType: 'image/webp',
-    };
-  } catch {
-    return rejected('invalid_image');
-  }
+export function normalizeSplashImage(bytes: Buffer): Promise<SplashImageNormalization> {
+  return normalizeImage(bytes, splashImageShape);
 }

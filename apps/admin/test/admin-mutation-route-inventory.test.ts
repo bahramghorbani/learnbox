@@ -160,7 +160,20 @@ const INVENTORY: Record<string, Entry> = {
     category: 'delegated',
     guardIn: 'lib/server/admin-users-routes.ts',
   },
-  'app/api/banners/route.ts': { category: 'hard-disabled' },
+  // M4.2 — canonical Slider Manager. POST (create/edit/activate/deactivate) and POST reorder both
+  // delegate the full guard chain (Origin + Content-Type, session, CSRF, recent re-auth,
+  // idempotency key) to the shared module, behind its own default-off
+  // LEARNBOX_ADMIN_PRESENTATION_ENABLED gate. They write `banners` only — no pack, card or media
+  // table — and cannot delete a row: a slide is retired by deactivating it. The file's GET is the
+  // read-only slide list, which reports whether a slide has image bytes but never ships them.
+  'app/api/presentation/slides/route.ts': {
+    category: 'delegated',
+    guardIn: 'lib/server/admin-presentation-routes.ts',
+  },
+  'app/api/presentation/slides/reorder/route.ts': {
+    category: 'delegated',
+    guardIn: 'lib/server/admin-presentation-routes.ts',
+  },
   'app/api/gateways/route.ts': { category: 'hard-disabled' },
   'app/api/packs/route.ts': { category: 'hard-disabled' },
   'app/api/packs/generate/route.ts': { category: 'hard-disabled' },
@@ -182,6 +195,11 @@ const READ_ONLY: Record<string, 'hard-disabled' | 'session-layer'> = {
   // plus an operational role and sits behind LEARNBOX_ADMIN_SUPPORT_ENABLED. It reads the canonical
   // append-only trail and has no write companion — audit records are evidence, not editable rows.
   'app/api/support/audit/route.ts': 'session-layer',
+  // M4.2 slide image: GET-only, so CSRF is not applicable; it requires a valid Admin session plus
+  // super_admin and sits behind LEARNBOX_ADMIN_PRESENTATION_ENABLED. The caller names a SLIDE, not
+  // an object key or a path, so the route cannot be walked to any other stored object, and the
+  // bytes come back `private, no-store`.
+  'app/api/presentation/slides/image/route.ts': 'session-layer',
   'app/api/transactions/route.ts': 'hard-disabled',
   'app/api/packs/csv-template/route.ts': 'hard-disabled',
   'app/api/auth/add-passkey/options/route.ts': 'session-layer',
@@ -279,7 +297,6 @@ describe('Admin mutation route inventory (LB-B30)', () => {
     for (const file of [
       'app/api/gateways/route.ts',
       'app/api/transactions/route.ts',
-      'app/api/banners/route.ts',
       'app/api/packs/csv-template/route.ts',
     ]) {
       const source = read(file);
@@ -327,7 +344,6 @@ describe('Admin mutation route inventory (LB-B30)', () => {
         .filter(([, c]) => c === 'hard-disabled')
         .map(([f]) => f),
       'app/api/gateways/route.ts',
-      'app/api/banners/route.ts',
     ];
     for (const file of new Set(disabledFiles)) {
       const source = read(file);

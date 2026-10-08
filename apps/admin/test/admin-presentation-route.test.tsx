@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AdminWorkspaceRouter } from '../app/components/AdminWorkspaceRouter';
 
 /**
- * Phase 4 / Milestone 4.1 — «نمایش اپ» is genuinely reachable.
+ * Phase 4 / Milestones 4.1 and 4.2 — «نمایش اپ» is genuinely reachable, with both panels on it.
  *
  * This is the regression that M3.3 already had to repair once for «کاربران»: a real, guarded,
  * reviewed panel that no route could open. The splash panel was mounted on the home workspace while
@@ -23,7 +23,7 @@ import { AdminWorkspaceRouter } from '../app/components/AdminWorkspaceRouter';
   globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }
 ).IS_REACT_ACT_ENVIRONMENT = true;
 
-describe('Admin #presentation destination (M4.1)', () => {
+describe('Admin #presentation destination (M4.1, M4.2)', () => {
   let container: HTMLElement | undefined;
   let root: ReturnType<typeof createRoot> | undefined;
 
@@ -38,6 +38,24 @@ describe('Admin #presentation destination (M4.1)', () => {
       vi.fn(async (input: RequestInfo | URL) => {
         if (String(input).endsWith('/api/splash/current')) {
           return Response.json({ current: null });
+        }
+        if (String(input).startsWith('/api/presentation/slides')) {
+          return Response.json({
+            slides: [
+              {
+                id: 'banner_1a2b3c4d',
+                title: 'اسلاید نمونه',
+                description: null,
+                destination: { kind: 'screen', screen: 'today' },
+                isActive: true,
+                sortOrder: 0,
+                hasImage: true,
+                legacyImageUrl: null,
+                createdAt: '2026-10-08T14:00:00.000Z',
+              },
+            ],
+            maximumActiveSlides: 3,
+          });
         }
         return new Response(null, { status: 404 });
       }),
@@ -91,10 +109,19 @@ describe('Admin #presentation destination (M4.1)', () => {
     expect(container?.textContent).not.toContain('PNG، JPEG یا WebP');
   });
 
-  it('shows no slider surface yet, because M4.2 owns it', async () => {
+  it('mounts the M4.2 slider manager here, exactly once, beside the splash panel', async () => {
     await render('#presentation');
 
-    expect(container?.textContent).not.toContain('اسلایدر');
-    expect(container?.textContent).not.toContain('بنر');
+    expect(container?.querySelectorAll('#slider-management')).toHaveLength(1);
+    expect(container?.textContent).toContain('مدیریت اسلایدها');
+    expect(container?.textContent).toContain('اسلاید نمونه');
+    expect(fetch).toHaveBeenCalledWith('/api/presentation/slides', expect.anything());
+  });
+
+  it('keeps slider management off the home workspace too', async () => {
+    await render('');
+
+    expect(container?.querySelector('#slider-management')).toBeNull();
+    expect(container?.textContent).not.toContain('مدیریت اسلایدها');
   });
 });

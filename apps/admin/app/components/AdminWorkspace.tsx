@@ -5,10 +5,9 @@ import { ContentReviewWorkspace } from './ContentReviewWorkspace';
 import { UsersManagement } from './UsersManagement';
 import { PackBuilder } from './PackBuilder';
 import { FinancePanel } from './FinancePanel';
-import { BannersPanel } from './BannersPanel';
 import { AddPasskeyButton } from './AddPasskeyButton';
 
-type AdminView = 'review' | 'users' | 'packs' | 'finance' | 'banners' | 'settings';
+type AdminView = 'review' | 'users' | 'packs' | 'finance' | 'settings';
 
 export function AdminWorkspace() {
   const [view, setView] = useState<AdminView>('review');
@@ -19,7 +18,6 @@ export function AdminWorkspace() {
       if (hash === 'users') setView('users');
       else if (hash === 'packs') setView('packs');
       else if (hash === 'finance') setView('finance');
-      else if (hash === 'banners') setView('banners');
       else if (hash === 'settings') setView('settings');
       else setView('review');
     }
@@ -31,7 +29,6 @@ export function AdminWorkspace() {
   if (view === 'users') return <UsersManagement />;
   if (view === 'packs') return <PackBuilder />;
   if (view === 'finance') return <FinancePanel />;
-  if (view === 'banners') return <BannersPanel />;
   if (view === 'settings') return <SettingsPanel />;
   return <ContentReviewWorkspace />;
 }

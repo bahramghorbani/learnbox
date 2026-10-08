@@ -2531,3 +2531,107 @@ button {
   display: flex;
   gap: 8px;
 }
+
+/* M4.2 — Slider Manager. Reuses the approved splash panel shell; these rules only lay out the
+   slide list and the slide form, and introduce no new visual language. */
+.slide-active-count {
+  margin-inline-start: 8px;
+  padding: 3px 9px;
+  color: #51349f;
+  background: #f1ebff;
+  border-radius: 999px;
+  font-size: 12px;
+}
+.slide-list {
+  display: grid;
+  gap: 14px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.slide-row {
+  display: grid;
+  grid-template-columns: 136px minmax(0, 1fr);
+  gap: 14px;
+  padding: 12px;
+  border: 1px solid #e6e4ef;
+  border-radius: 14px;
+  background: #fdfdff;
+}
+.slide-thumb {
+  min-height: 76px;
+  aspect-ratio: 16 / 9;
+}
+.slide-body {
+  min-width: 0;
+}
+.slide-body p {
+  margin: 0 0 6px;
+  line-height: 1.7;
+}
+.slide-title {
+  font-weight: 700;
+}
+.slide-badge-on,
+.slide-badge-off {
+  margin-inline-start: 8px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.slide-badge-on {
+  color: #1f6b3f;
+  background: #e5f6ec;
+  border: 1px solid #c6e9d5;
+}
+.slide-badge-off {
+  color: #6b6b7b;
+  background: #f1f1f5;
+  border: 1px solid #e0e0e8;
+}
+.slide-destination {
+  overflow-wrap: anywhere;
+  color: var(--muted);
+  font-size: 13px;
+}
+.slide-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+.slide-field {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 14px;
+  font-size: 14px;
+}
+.slide-field input,
+.slide-field select,
+.slide-field textarea {
+  padding: 10px 12px;
+  color: inherit;
+  background: #fff;
+  border: 1px solid #d7d5e3;
+  border-radius: 11px;
+  font: inherit;
+}
+.slide-field input:focus-visible,
+.slide-field select:focus-visible,
+.slide-field textarea:focus-visible {
+  outline: 2px solid var(--purple);
+  outline-offset: 1px;
+}
+.slide-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0 14px;
+  font-size: 14px;
+}
+@media (max-width: 900px) {
+  .slide-row {
+    grid-template-columns: 1fr;
+  }
+}

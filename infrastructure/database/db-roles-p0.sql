@@ -2,9 +2,12 @@
 --
 -- Derived from the SQL the shipped code actually executes (learner: apps/website + apps/api;
 -- Admin: the live surface after LB-B30 = auth, content review, splash), not from a guess.
--- The legacy Admin routes (banners, packs, gateways, transactions, users) are hard-disabled, so
--- learnbox_admin gets NO write privilege on banners/packs/pack_cards/cards/payment_gateways.
+-- The legacy Admin routes (packs, gateways, transactions, users) are hard-disabled, so
+-- learnbox_admin gets NO write privilege on packs/pack_cards/cards/payment_gateways.
 -- Re-enabling one in P1 must add its exact grant in a reviewed change.
+-- M4.2 rebuilt banner management on the shared services (Presentation workspace, Slider Manager),
+-- which is why learnbox_admin now holds INSERT, UPDATE on banners — and only those two: the
+-- Slider Manager cannot delete a slide, so there is deliberately no DELETE privilege.
 --
 -- Run as the current owner role (neondb_owner). Idempotent and additive: no data change, no
 -- DROP/TRUNCATE of data. Roles are created WITHOUT a password; passwords are set by the secure
@@ -76,7 +79,7 @@ GRANT SELECT ON
 TO learnbox_admin;
 GRANT INSERT, UPDATE ON admin_owner, admin_passkey_credentials, admin_sessions,
   admin_webauthn_challenges, content_review_checks, splash_versions,
-  private_media_cleanup_jobs, splash_replacement_actions TO learnbox_admin;
+  private_media_cleanup_jobs, splash_replacement_actions, banners TO learnbox_admin;
 GRANT INSERT ON audit_logs, content_review_decisions TO learnbox_admin;
 GRANT INSERT, UPDATE ON current_splash TO learnbox_admin;  -- INSERT .. ON CONFLICT DO UPDATE (splash activation)
 GRANT UPDATE (status, published_at) ON card_versions TO learnbox_admin;
