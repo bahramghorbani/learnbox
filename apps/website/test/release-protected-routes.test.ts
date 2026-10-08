@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { GET as cards } from '../app/api/learner/cards/route';
 import { GET as banners } from '../app/api/banners/route';
+import { GET as bannerImage } from '../app/api/banners/[id]/image/route';
 import { GET as debugWords } from '../app/api/debug/words/route';
 import { GET as legacyInvite } from '../app/api/owner-issue-invite/route';
 import { GET as storePacks } from '../app/api/store/packs/route';
@@ -23,6 +24,14 @@ describe('release private-content boundary', () => {
   it('denies published card faces and banners before any DB access without a learner cookie', async () => {
     expect((await cards(request())).status).toBe(401);
     expect((await banners(request())).status).toBe(401);
+  });
+
+  it('denies Admin-uploaded slider image bytes to an anonymous caller (M4.3)', async () => {
+    const response = await bannerImage(request(), {
+      params: Promise.resolve({ id: 'banner_a1b2c3d4' }),
+    });
+    expect(response.status).toBe(401);
+    expect(response.headers.get('content-type')).not.toContain('image');
   });
 
   it('cannot expose a card via historical debug routes or mint an invite anonymously', async () => {

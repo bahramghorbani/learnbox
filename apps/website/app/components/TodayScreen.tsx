@@ -10,16 +10,7 @@ import { browserTimeZone } from '../../lib/learner-summary-client';
 import { Bobo } from './Bobo';
 import { AVATARS } from '../../lib/learner-profile-fields';
 
-interface Banner {
-  id: string;
-  title: string;
-  description: string | null;
-  image_url: string | null;
-  background_color: string | null;
-  link_url: string | null;
-  link_type: string | null;
-  link_target: string | null;
-}
+import { maximumDeliveredSlides, type DeliveredSlide } from '../../lib/learner-slider';
 
 interface TodayServerMetrics {
   reviewedToday: number;
@@ -68,8 +59,14 @@ export interface TodayScreenProps {
   studyItems?: StartSliceItem[];
   soundEnabled?: boolean;
   onToggleSound?: () => void;
-  /** Navigate to a screen (for banner links) */
+  /** Navigate to a learner screen (slider slide destinations and the bottom nav). */
   onNavigate?: (screen: string) => void;
+  /**
+   * Open the Store on a specific pack (M4.3 slide destination). Separate from `onNavigate` because
+   * it carries a pack id, and the learner app has no pack detail route: the Store itself is the
+   * destination, with that pack brought into view under its own publication and entitlement rules.
+   */
+  onNavigateToPack?: (packId: string) => void;
 }
 
 const WEEK_DAYS_FA = ['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج'];
@@ -129,9 +126,11 @@ export function TodayScreen({
   soundEnabled = true,
   onToggleSound,
   onNavigate,
+  onNavigateToPack,
 }: TodayScreenProps) {
   const [bannerIdx, setBannerIdx] = useState(0);
-  const [banners, setBanners] = useState<Banner[]>([]);
+  const [banners, setBanners] = useState<DeliveredSlide[]>([]);
+  const [brokenImages, setBrokenImages] = useState<Record<string, true>>({});
   const [lboxVisible, setLboxVisible] = useState(false);
   const lboxRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -204,27 +203,35 @@ export function TodayScreen({
 
   const realAccuracy = visibleMetrics?.accuracyPercent;
 
-  // Fetch banners from API
+  // The Admin-authored slider (M4.3). The server decides which slides exist, in which order and
+  // how many; the client renders what it is given and never filters or reorders it.
   useEffect(() => {
     let cancelled = false;
-    fetch('/api/banners', { cache: 'no-store' })
+    fetch('/api/banners', { cache: 'no-store', credentials: 'same-origin' })
       .then((r) => r.json())
-      .then((data: { banners?: Banner[] }) => {
-        if (!cancelled && data.banners && data.banners.length > 0) {
-          setBanners(data.banners);
+      .then((data: { slides?: DeliveredSlide[] }) => {
+        if (!cancelled && Array.isArray(data.slides) && data.slides.length > 0) {
+          // The server enforces the owner's maximum; the same constant caps what is rendered, so
+          // the limit cannot be exceeded on screen even if a future payload carries more. It is
+          // the one number, imported — not a second rule written here.
+          setBanners(data.slides.slice(0, maximumDeliveredSlides));
         }
       })
       .catch(() => {
-        /* ignore — banners are non-critical */
+        /* ignore — the slider is non-critical and Today must render without it */
       });
     return () => {
       cancelled = true;
     };
   }, []);
 
-  // Auto-rotate banners
+  // Auto-rotate, unless the learner asked for less motion. A carousel that moves on its own is
+  // exactly what `prefers-reduced-motion` is about, so the slides stay put and the dots still work.
   useEffect(() => {
     if (banners.length <= 1) return;
+    if (typeof window !== 'undefined' && typeof window.matchMedia === 'function') {
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    }
     timerRef.current = setInterval(() => {
       setBannerIdx((i) => (i + 1) % banners.length);
     }, 4000);
@@ -264,6 +271,50 @@ export function TodayScreen({
       (process.env.NODE_ENV === 'test' && syncState === 'local-only')) &&
     remainingCount === 0 &&
     (canonicalRemaining !== null || reviewCount === 0);
+
+  const slideCount = banners.length;
+
+  /**
+   * One place where a slide destination becomes navigation. The server already revalidated the
+   * destination, and the https check below is deliberate belt-and-braces before a value from the
+   * database reaches `window.open`.
+   */
+  const openSlide = (slide: DeliveredSlide) => {
+    const destination = slide.destination;
+    if (destination.kind === 'screen') {
+      onNavigate?.(destination.screen);
+      return;
+    }
+    if (destination.kind === 'pack') {
+      onNavigateToPack?.(destination.packId);
+      return;
+    }
+    if (destination.kind === 'url' && destination.url.startsWith('https://')) {
+      window.open(destination.url, '_blank', 'noopener,noreferrer');
+    }
+  };
+
+  // Touch/pointer swipe. A slide is a real button, so a drag across it would otherwise read as a
+  // tap and navigate: a movement past the threshold advances the carousel and swallows the click.
+  const swipeStartRef = useRef<number | null>(null);
+  const swipedRef = useRef(false);
+  const beginSwipe = (clientX: number) => {
+    swipeStartRef.current = clientX;
+    swipedRef.current = false;
+  };
+  const endSwipe = (clientX: number) => {
+    const start = swipeStartRef.current;
+    swipeStartRef.current = null;
+    if (start === null || slideCount <= 1) return;
+    const travelled = clientX - start;
+    if (Math.abs(travelled) < 40) return;
+    swipedRef.current = true;
+    // The track translates by +100% per index under RTL, so dragging toward the end of the
+    // reading direction (leftward) brings the next slide into view.
+    setBannerIdx((index) =>
+      travelled < 0 ? (index + 1) % slideCount : (index - 1 + slideCount) % slideCount,
+    );
+  };
 
   return (
     <div className="home-screen" data-testid="learnbox-today">
@@ -348,39 +399,87 @@ export function TodayScreen({
       )}
 
       <div className="home-screen-body">
-        {/* Banner Slider — from API */}
-        {banners.length > 0 && (
-          <div className="banner-wrap" aria-label="بنرهای پیشنهادی">
-            <div className="banner-track" style={{ transform: `translateX(${bannerIdx * 100}%)` }}>
-              {banners.map((b) => (
-                <div
-                  key={b.id}
-                  className="banner-slide"
-                  style={{ background: b.background_color ?? 'var(--primary)' }}
-                  onClick={() => {
-                    if (b.link_type === 'screen' && b.link_url && onNavigate) {
-                      onNavigate(b.link_url);
-                    }
-                  }}
-                  role={b.link_url ? 'button' : undefined}
-                  tabIndex={b.link_url ? 0 : undefined}
-                >
-                  <div className="banner-content">
-                    <div className="banner-title">{b.title}</div>
-                    {b.description && <div className="banner-sub">{b.description}</div>}
-                  </div>
-                </div>
-              ))}
-            </div>
-            {banners.length > 1 && (
-              <div className="banner-dots" aria-hidden="true">
-                {banners.map((_, i) => (
+        {/* Admin-authored slider (M4.3). Absent entirely when there is nothing to show. */}
+        {slideCount > 0 && (
+          <div
+            className="banner-wrap"
+            data-testid="learnbox-slider"
+            role="region"
+            aria-roledescription="اسلایدر"
+            aria-label="بنرهای پیشنهادی"
+          >
+            <div
+              className="banner-track"
+              style={{ transform: `translateX(${bannerIdx * 100}%)` }}
+              onPointerDown={(event) => beginSwipe(event.clientX)}
+              onPointerUp={(event) => endSwipe(event.clientX)}
+              onPointerCancel={() => {
+                swipeStartRef.current = null;
+              }}
+            >
+              {banners.map((slide, index) => {
+                const current = index === bannerIdx;
+                const showImage = slide.hasImage && !brokenImages[slide.id];
+                return (
                   <button
-                    key={i}
-                    className={`bndot${bannerIdx === i ? ' on' : ''}`}
+                    key={slide.id}
                     type="button"
-                    onClick={() => setBannerIdx(i)}
-                    aria-label={`بنر ${toPersianDigits(i + 1)}`}
+                    className={`banner-slide${showImage ? ' has-image' : ''}`}
+                    style={{ background: slide.backgroundColor ?? 'var(--primary)' }}
+                    // Off-screen slides are hidden from assistive technology AND removed from the
+                    // tab order, so a keyboard or screen-reader user is not walked through three
+                    // slides they cannot see.
+                    aria-hidden={current ? undefined : true}
+                    tabIndex={current ? 0 : -1}
+                    onClick={() => {
+                      if (swipedRef.current) {
+                        swipedRef.current = false;
+                        return;
+                      }
+                      openSlide(slide);
+                    }}
+                  >
+                    {showImage && (
+                      <>
+                        {/* The Admin-uploaded bytes, from the protected learner media route. A
+                            plain <img> on purpose: the Next.js optimizer would proxy private
+                            bytes through /_next/image, which is not a path protected media may
+                            take. Decorative, because the title below carries the meaning. */}
+                        <img
+                          className="banner-image"
+                          src={`/api/banners/${encodeURIComponent(slide.id)}/image`}
+                          alt=""
+                          aria-hidden="true"
+                          draggable={false}
+                          onError={() =>
+                            setBrokenImages((broken) => ({ ...broken, [slide.id]: true }))
+                          }
+                        />
+                        {/* Keeps the title readable over any photograph. */}
+                        <span className="banner-scrim" aria-hidden="true" />
+                      </>
+                    )}
+                    <span className="banner-content">
+                      <span className="banner-title">{slide.title}</span>
+                      {slide.description && <span className="banner-sub">{slide.description}</span>}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            {slideCount > 1 && (
+              // These buttons are focusable, so the container must NOT be aria-hidden: that
+              // combination hides a control from a screen reader while a keyboard still lands on
+              // it, which is the accessibility defect this milestone fixes.
+              <div className="banner-dots" role="group" aria-label="انتخاب بنر">
+                {banners.map((slide, index) => (
+                  <button
+                    key={slide.id}
+                    className={`bndot${bannerIdx === index ? ' on' : ''}`}
+                    type="button"
+                    onClick={() => setBannerIdx(index)}
+                    aria-label={`بنر ${toPersianDigits(index + 1)}`}
+                    aria-current={bannerIdx === index ? 'true' : undefined}
                   />
                 ))}
               </div>

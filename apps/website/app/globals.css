@@ -2733,6 +2733,48 @@ p {
   padding: 22px 24px;
   position: relative;
   overflow: hidden;
+  /* A slide is a real <button> so Enter/Space activate it and a screen reader announces a
+     control; these reset the browser's button chrome without changing the approved look. */
+  border: 0;
+  margin: 0;
+  width: 100%;
+  font: inherit;
+  color: inherit;
+  text-align: inherit;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.banner-slide:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: -4px;
+}
+/* M4.3: the Admin-uploaded image fills the slide; the colour underneath stays visible while the
+   image loads and remains the fallback if it never arrives. */
+.banner-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+  pointer-events: none;
+  user-select: none;
+}
+.banner-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.62) 0%, rgba(0, 0, 0, 0.12) 72%);
+}
+.banner-slide .banner-content {
+  display: flex;
+  flex-direction: column;
+}
+.banner-slide.has-image .banner-title,
+.banner-slide.has-image .banner-sub {
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.55);
 }
 .b1 {
   background: linear-gradient(135deg, #6d28d9 0%, #a855f7 100%);
@@ -2764,6 +2806,7 @@ p {
   backdrop-filter: blur(4px);
 }
 .banner-title {
+  display: block;
   font-size: 22px;
   font-weight: 800;
   color: #fff;
@@ -2771,6 +2814,7 @@ p {
   margin-bottom: 4px;
 }
 .banner-sub {
+  display: block;
   font-size: 13px;
   color: rgba(255, 255, 255, 0.82);
 }
@@ -2808,6 +2852,21 @@ p {
 .bndot.on {
   width: 20px;
   background: #fff;
+}
+.bndot:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+/* The slider never animates itself for a learner who asked for less motion: auto-rotation is
+   switched off in TodayScreen, and a dot press changes the slide without a sliding transition. */
+@media (prefers-reduced-motion: reduce) {
+  .banner-track {
+    transition: none;
+  }
+  .bndot {
+    transition: none;
+  }
 }
 
 /* Goal Card */
@@ -4098,6 +4157,11 @@ p {
 }
 .store-pack-card.featured {
   border-color: var(--primary-light);
+}
+/* M4.3: the pack a slider slide pointed at. A ring only — the card itself, its price, its button
+   and whether it appears at all are unchanged. */
+.store-pack-card.slide-focused {
+  box-shadow: 0 0 0 2px var(--primary);
 }
 .store-pack-card.owned {
   border-color: rgba(34, 197, 94, 0.4);

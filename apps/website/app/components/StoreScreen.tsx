@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { Bobo } from './Bobo';
 import { LearnerNav, type LearnerDestination } from './LearnerNav';
@@ -61,11 +61,27 @@ function formatPrice(pack: CataloguePack): string {
   return 'به‌زودی';
 }
 
-export function StoreScreen({ onNavigate }: { onNavigate: (dest: LearnerDestination) => void }) {
+export function StoreScreen({
+  onNavigate,
+  focusPackId = null,
+}: {
+  onNavigate: (dest: LearnerDestination) => void;
+  /**
+   * M4.3 slide destination: a pack the learner asked to see from a slider slide.
+   *
+   * The learner app has no pack detail route, so the smallest safe navigation is the Store itself
+   * with that pack brought into view. It changes nothing about WHAT the Store shows: the catalogue
+   * is still exactly `/api/store/packs` (published AND listed) and ownership is still
+   * `/api/store/my-packs`, so a slide can never surface a pack the learner may not see or buy. A
+   * pack that is not in the catalogue is simply not highlighted.
+   */
+  focusPackId?: string | null;
+}) {
   const [catalogue, setCatalogue] = useState<CataloguePack[]>([]);
   const [owned, setOwned] = useState<OwnedPack[]>([]);
   const [state, setState] = useState<LoadState>('loading');
   const [activation, setActivation] = useState<ActivationState>(ACTIVATION_IDLE);
+  const focusedCardRef = useRef<HTMLLIElement | null>(null);
 
   const load = useCallback(async (): Promise<void> => {
     setState('loading');
@@ -92,6 +108,19 @@ export function StoreScreen({ onNavigate }: { onNavigate: (dest: LearnerDestinat
   useEffect(() => {
     void load();
   }, [load]);
+
+  // Bring the requested pack into view once the real catalogue has arrived. Guarded because
+  // `scrollIntoView` does not exist in the test environment, and absent entirely when the pack is
+  // not on offer — no error, no placeholder, nothing that implies a hidden pack exists.
+  const focusedPackPresent =
+    focusPackId !== null && catalogue.some((pack) => pack.id === focusPackId);
+  useEffect(() => {
+    if (state !== 'ready' || !focusedPackPresent) return;
+    const card = focusedCardRef.current;
+    if (card && typeof card.scrollIntoView === 'function') {
+      card.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }
+  }, [state, focusedPackPresent, focusPackId]);
 
   const activate = async (packId: string): Promise<void> => {
     setActivation({ packId, error: null, success: null });
@@ -267,9 +296,11 @@ export function StoreScreen({ onNavigate }: { onNavigate: (dest: LearnerDestinat
                       return (
                         <li
                           key={pack.id}
+                          ref={focusPackId === pack.id ? focusedCardRef : undefined}
                           className={`store-pack-card${pack.owned ? ' owned' : ''}${
                             pack.featured ? ' featured' : ''
-                          }`}
+                          }${focusPackId === pack.id ? ' slide-focused' : ''}`}
+                          aria-current={focusPackId === pack.id ? 'true' : undefined}
                         >
                           <div className="store-pack-head">
                             <h3>{pack.name}</h3>
