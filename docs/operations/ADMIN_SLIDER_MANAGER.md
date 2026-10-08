@@ -52,9 +52,8 @@ one, so pre-existing rows that only have the legacy `image_url` can still be swi
 - **An external link**: plain public `https` only — no embedded credentials, no custom port, no IP
   literal, no private-network suffix.
 
-Store and Pack destinations can be authored now. The learner banner API is unchanged in M4.2 and
-still serves only the four original screens, so an existing learner build receives neither until
-**M4.3** adds learner-side rendering and navigation.
+Since **M4.3** all three kinds are delivered to the learner app and navigate for real; see
+[LEARNER_SLIDER_DELIVERY.md](LEARNER_SLIDER_DELIVERY.md).
 
 ## Audit
 
@@ -71,5 +70,6 @@ writes nothing a second time.
 - **Every action answers 404 while the panel is visible** — the operator lacks `super_admin`.
 - **"بیشتر از 3 اسلاید نمی‌تواند فعال باشد"** — three slides are already active; deactivate one.
 - **"برای فعال‌کردن اسلاید، تصویر لازم است"** — the slide has no stored image bytes.
-- **A slide looks right in Admin but the app does not show its image** — expected in M4.2; learner
-  rendering is M4.3.
+- **A slide looks right in Admin but the app does not show it** — check it is active, inside its
+  schedule, and among the three most recent by position; the learner receives at most three. See
+  [LEARNER_SLIDER_DELIVERY.md](LEARNER_SLIDER_DELIVERY.md).

@@ -7,6 +7,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { PostgresPresentationSlidesStore } from '../lib/server/postgres-presentation-slides-store.js';
 import { maximumActiveSlides } from '../lib/server/presentation-slide.js';
+import { learnerSlidesSql, toDeliveredSlides } from '../../website/lib/learner-slider';
 
 /**
  * Phase 4 / Milestone 4.2 — the Slider Manager against a REAL Postgres with every repo migration
@@ -17,7 +18,8 @@ import { maximumActiveSlides } from '../lib/server/presentation-slide.js';
  *   - an invalid destination is refused by the server
  *   - slide image bytes are stored canonically, served only to a super_admin, never listed
  *   - every write is audited, and a replayed request changes nothing
- *   - nothing is deleted, no pre-existing banner is disturbed, the learner contract is unchanged
+ *   - nothing is deleted, no pre-existing banner is disturbed, and what the Admin publishes is
+ *     exactly what the canonical learner rule (M4.3) delivers
  *   - the role needs only INSERT and UPDATE on `banners` — never DELETE
  *
  * The REAL store runs; nothing is stubbed. Requires TEST_DATABASE_URL (the suite creates and drops
@@ -34,19 +36,14 @@ const repoRoot = join(__dirname, '../../..');
 const migrationsDir = join(repoRoot, 'database/migrations');
 
 /**
- * Verbatim from apps/website/app/api/banners/route.ts. Copied rather than imported because the
- * route builds its own pool from DATABASE_URL; the drift guard below fails if the route's rule
- * ever stops matching this copy, so the copy cannot silently go stale.
+ * The learner's side of the contract, IMPORTED rather than copied.
+ *
+ * M4.2 kept a verbatim copy of the learner route's SQL here, because the rule lived inside the
+ * route. M4.3 moved it into `apps/website/lib/learner-slider.ts` — one definition, used by the
+ * route, by the image route and by this suite — so a copy is no longer the honest way to check it:
+ * the real rule is asked directly, and the guard below is that the route still has no rule of its
+ * own to drift from.
  */
-const LEARNER_BANNERS_SQL = `SELECT id, title, description, image_url, background_color, link_url, link_type, link_target
-       FROM banners
-       WHERE is_active = true
-         AND (starts_at IS NULL OR starts_at <= NOW())
-         AND (ends_at IS NULL OR ends_at >= NOW())
-         AND link_type = 'screen'
-         AND link_url IN ('today', 'words', 'progress', 'profile')
-       ORDER BY sort_order ASC, created_at DESC
-       LIMIT 5`;
 
 let pool: PgPool;
 let admin: PgPool;
@@ -778,18 +775,16 @@ suite('M4.2 — the learner contract and the pre-existing banners are untouched'
     });
   });
 
-  it('still serves the learner exactly what it served before: screen slides only, no bytes', async () => {
+  it('serves the learner from the one canonical rule, and still never serves bytes in a list', async () => {
     const source = readFileSync(join(repoRoot, 'apps/website/app/api/banners/route.ts'), 'utf8');
-    // Drift guard: M4.3 owns widening this. If the learner rule changes, the copy above is stale.
-    // Compared with comments and indentation collapsed, so reformatting the route is not a failure
-    // while any change to the columns, the filters, the order or the limit is.
-    const squash = (value: string) =>
-      value
-        .replace(/--[^\n]*/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim();
-    expect(squash(source)).toContain(squash(LEARNER_BANNERS_SQL));
-    expect(source).not.toContain('image_data');
+    // Drift guard, M4.3 shape: the route may not carry a rule of its own. A second SELECT written
+    // here is how the Admin and the learner would start disagreeing about what is published.
+    expect(source).not.toMatch(/\bSELECT\b/i);
+    expect(source).toContain("from '../../../lib/learner-slider'");
+    expect(source).toContain('learnerSlidesSql');
+    // A list response may say WHETHER a slide has an image, never carry the bytes.
+    expect(learnerSlidesSql).toContain('image_data IS NOT NULL AS has_image');
+    expect(learnerSlidesSql).not.toMatch(/SELECT[^;]*\bimage_data\b\s*,/i);
 
     await clearActive();
     const storeSlide = await createSlide({ title: 'مقصد فروشگاه' });
@@ -835,14 +830,14 @@ suite('M4.2 — the learner contract and the pre-existing banners are untouched'
       ).status,
     ).toBe('applied');
 
-    const learner = await pool.query(LEARNER_BANNERS_SQL);
-    const served = learner.rows.map((row) => String(row.id));
+    const learner = await pool.query(learnerSlidesSql);
+    const served = toDeliveredSlides(learner.rows).map((row) => row.id);
+    // M4.3 delivers all three: Today as before, and the Store and Pack destinations the Slider
+    // Manager has been able to author since M4.2.
     expect(served).toContain(todaySlide.id);
-    // Store and Pack destinations are authored now and delivered in M4.3, so an existing learner
-    // build receives neither — and no response column can carry image bytes.
-    expect(served).not.toContain(storeSlide.id);
-    expect(served).not.toContain(packSlide.id);
+    expect(served).toContain(storeSlide.id);
+    expect(served).toContain(packSlide.id);
     expect(Object.keys(learner.rows[0] ?? {})).not.toContain('image_data');
-    expect(learner.rows.length).toBeLessThanOrEqual(5);
+    expect(served.length).toBeLessThanOrEqual(maximumActiveSlides);
   });
 });

@@ -200,6 +200,12 @@ export function LearnerHome({
   const [screen, setScreen] = useState<
     'today' | 'card' | 'complete' | 'progress' | 'words' | 'store' | 'profile' | 'settings'
   >('today');
+  /**
+   * M4.3: a slider slide may point at a specific pack. There is no pack detail route, so the
+   * destination is the Store with that pack brought into view — the Store's own publication,
+   * listing and entitlement rules decide what is actually shown there.
+   */
+  const [slidePackId, setSlidePackId] = useState<string | null>(null);
   // The payment callback redirects to `/?purchase=<internal transaction id>`. Read once on mount:
   // the token only identifies the transaction, and the result screen fetches the real outcome as
   // the authenticated learner rather than trusting anything in this URL.
@@ -1129,7 +1135,15 @@ export function LearnerHome({
   }
 
   if (screen === 'store') {
-    return <StoreScreen onNavigate={(destination) => setScreen(destination)} />;
+    return (
+      <StoreScreen
+        focusPackId={slidePackId}
+        onNavigate={(destination) => {
+          setSlidePackId(null);
+          setScreen(destination);
+        }}
+      />
+    );
   }
 
   if (screen === 'words') {
@@ -1561,7 +1575,14 @@ export function LearnerHome({
         studyItems={studyItems}
         soundEnabled={soundEnabled}
         onToggleSound={() => handleToggleSound(!soundEnabled)}
-        onNavigate={(dest) => setScreen(dest as typeof screen)}
+        onNavigate={(dest) => {
+          setSlidePackId(null);
+          setScreen(dest as typeof screen);
+        }}
+        onNavigateToPack={(packId) => {
+          setSlidePackId(packId);
+          setScreen('store');
+        }}
       />
       <LearnerNav current="today" onNavigate={(destination) => setScreen(destination)} />
     </>
