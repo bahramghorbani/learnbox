@@ -155,6 +155,11 @@ describe('M4.3 — the real slide image on Today', () => {
     const images = rendered.images();
     expect(images).toHaveLength(1);
     expect(images[0].getAttribute('src')).toBe('/api/banners/banner_a1b2c3d4/image');
+    // Read from the canonical learner path, with no variant or legacy query of its own.
+    const requested = (
+      globalThis.fetch as unknown as { mock: { calls: unknown[][] } }
+    ).mock.calls.map((call) => String(call[0]));
+    expect(requested).toContain('/api/banners');
     // Decorative: the title beside it carries the meaning, so it is not announced twice.
     expect(images[0].getAttribute('alt')).toBe('');
     expect(rendered.text()).toContain('بسته‌های تازه');

@@ -145,7 +145,7 @@ const mutants = [
     claim: 'an external destination must be https',
     file: rule,
     from: `  if (url.protocol !== 'https:') return undefined;`,
-    to: `  if (url.protocol !== 'https:' && url.protocol !== 'about:') return undefined;`,
+    to: `  if (url.protocol !== 'https:' && url.protocol !== 'http:') return undefined;`,
   },
   {
     id: 'MUT15',
@@ -437,10 +437,10 @@ const mutants = [
   },
   {
     id: 'MUT50',
-    claim: 'a pack the Store does not offer is not treated as present',
+    claim: 'presence is decided against the catalogue, not against what the learner already owns',
     file: store,
     from: `    focusPackId !== null && catalogue.some((pack) => pack.id === focusPackId);`,
-    to: `    focusPackId !== null;`,
+    to: `    focusPackId !== null && owned.some((pack) => pack.id === focusPackId);`,
   },
 
   // ---- The wiring between a slide and the Store. ----
@@ -513,6 +513,18 @@ function suitesPass() {
   );
 }
 
+// `--only MUT4,MUT14` re-runs just those mutants. For closing specific survivors without paying
+// for the whole battery again; a merge claim still needs a full run.
+const onlyFlag = process.argv.indexOf('--only');
+const selected =
+  onlyFlag === -1
+    ? mutants
+    : mutants.filter((mutant) => process.argv[onlyFlag + 1].split(',').includes(mutant.id));
+if (onlyFlag !== -1 && selected.length === 0) {
+  console.log(`--only matched no mutant id`);
+  process.exit(2);
+}
+
 const dirty = execFileSync('git', ['status', '--porcelain'], { cwd: repoRoot, encoding: 'utf8' });
 
 // `--check-anchors` verifies every anchor still matches exactly one place and stops. Useful after a
@@ -545,7 +557,7 @@ console.log('baseline PASS\n');
 
 const survivors = [];
 const harnessErrors = [];
-for (const mutant of mutants) {
+for (const mutant of selected) {
   const path = join(repoRoot, mutant.file);
   const original = readFileSync(path, 'utf8');
   // An anchor present more than once is a HARNESS failure, not a survivor: `replace` rewrites the
@@ -571,7 +583,7 @@ for (const mutant of mutants) {
 }
 
 console.log(
-  `\n${mutants.length - survivors.length - harnessErrors.length}/${mutants.length} killed`,
+  `\n${selected.length - survivors.length - harnessErrors.length}/${selected.length} killed`,
 );
 if (harnessErrors.length > 0) {
   console.log(

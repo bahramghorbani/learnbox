@@ -266,6 +266,36 @@ suite('M4.3 — how many slides a learner receives', () => {
     expect(delivered).toHaveLength(3);
   });
 
+  it('does not let a crowd of unusable rows push every real slide out of the read', async () => {
+    await deactivateEverything();
+    const first = await authorSlide({
+      title: 'واقعی یک',
+      destination: { kind: 'screen', screen: 'today' },
+    });
+    const second = await authorSlide({
+      title: 'واقعی دو',
+      destination: { kind: 'screen', screen: 'words' },
+    });
+    const third = await authorSlide({
+      title: 'واقعی سه',
+      destination: { kind: 'screen', screen: 'store' },
+    });
+    // More destination-less active rows than the read window, all ordered ahead of the real
+    // slides, written directly because the Admin would refuse them. The database must drop them
+    // rather than hand them over to be filtered afterwards: a read that comes back full of junk
+    // delivers an empty slider while three published slides exist.
+    for (let index = 0; index < 12; index += 1) {
+      await pool.query(
+        `INSERT INTO banners (id, title, link_url, link_type, sort_order, is_active)
+         VALUES ($1, 'بدون مقصد', NULL, 'screen', -100, true)`,
+        [`m43_junk_${index}`],
+      );
+    }
+
+    expect((await deliveredSlides()).map((row) => row.id)).toEqual([first.id, second.id, third.id]);
+    await pool.query(`DELETE FROM banners WHERE id LIKE 'm43_junk_%'`);
+  });
+
   it('delivers nothing at all when no slide is active', async () => {
     await deactivateEverything();
     expect(await deliveredSlides()).toEqual([]);
