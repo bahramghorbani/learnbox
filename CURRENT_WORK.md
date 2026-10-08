@@ -281,6 +281,75 @@ three Production sample banners are untouched. M4.3 owns learner-side slide imag
 and Pack navigation, safe external navigation, the learner-side maximum of three and the carousel
 accessibility correction.
 
+**Phase 4 — App Presentation — M4.1, M4.2 and M4.3 merged. Phase 4 development COMPLETE (implemented in repository, not activated).**
+The slider the Admin can author now reaches the learner. Before M4.3 the Slider Manager could
+author slides no learner would ever see: `GET /api/banners` served four screen destinations only,
+carried no image, and the carousel's pagination buttons sat inside `aria-hidden="true"`.
+
+The delivery rule lives in ONE place. `apps/website/lib/learner-slider.ts` defines what a learner
+receives — active, inside its scheduling window, a destination this product will navigate to,
+deterministic order, at most three — and both learner routes plus the tests consume it. The route
+carries no SQL of its own, and the Admin suite's M4.2 drift guard now asserts exactly that instead
+of keeping a copy of the route's query, so the authoring half and the delivery half cannot drift
+apart silently. More candidates are read than are delivered, so one unusable legacy row cannot cost
+the learner a real slide.
+
+Slide images are the Admin's own bytes. `GET /api/banners/:id/image` serves `banners.image_data` to
+a signed-in learner as `image/webp`, `private, no-store`, `nosniff`, same-origin — no public static
+path, no second storage system, no `next/image` proxy for protected bytes. The image obeys the SAME
+delivery predicate as its slide, so retiring a slide in Admin also stops its image, and an id that
+is no longer delivered is a plain `404` rather than a private object that lingers. Anonymous gets
+`401` on both routes before any database access. Delivery needs no new privilege and no migration:
+both queries run under `SELECT` on `banners` alone.
+
+Destinations navigate for real. Internal screens including the Store; a specific pack opens the
+Store with that pack scrolled into view and marked current — the Store's own catalogue and
+entitlement reads are untouched, so a slide cannot surface a draft, unlisted or unentitled pack, and
+a pack that is not on offer is simply not highlighted; an external link is revalidated server-side
+at delivery (public `https` only, no credentials, no port, no IP literal, no private-network name,
+identical to the Admin's own validator) and opened with `noopener,noreferrer`.
+
+The carousel keeps its visual identity, auto-rotation, dots, order and responsiveness, and the
+accessibility defect is fixed: the pagination container is no longer `aria-hidden` while holding
+focusable buttons, each slide is a real button, off-screen slides leave both the tab order and the
+accessibility tree, auto-rotation stops for `prefers-reduced-motion`, and swipe was added in a form
+that cannot misfire as a tap. Everything degrades to less carousel, never a broken Today: no slides
+renders nothing, a failed image falls back to the approved colour, an unreadable slider answers an
+empty list, and an unavailable image answers `503`.
+
+Evidence: a real-Postgres delivery suite driven by the real Admin store, a route-contract suite, a
+carousel UI/accessibility suite and a Store pack-destination suite — website 1254 passed, Admin 734
+passed — plus 53 mutations of the rule, the routes, the carousel and the wiring, all 53 killed
+(`scripts/m4.3-mutation-battery.mjs`). Merged as PR #388, reviewed head
+`1859ea6f4935041a7aee7115facfe7af75ecbcdb`, squash merge
+`adf2cb5528e99974b3c15fabf5a659e346d95b2a` (now `main`); the merged tree
+`885f6cfb5043b1c2a0663c91cf5b1cfb7f939a55` is byte-identical to the reviewed head and required CI
+was 4/4 green before and after the merge.
+
+M4.3 grants no capability in Production: nothing is deployed, no migration was added and none was
+applied, `LEARNBOX_ADMIN_PRESENTATION_ENABLED` remains absent from the Production environment, and
+the three Production sample banners are untouched. Re-verified after the merge:
+`app.learnboxapp.com/api/banners` answers `401` to an anonymous caller on the pre-M4.1 build,
+`/api/banners/<id>/image`, `/api/launch/splash` and `/api/presentation/slides` all answer `404`,
+and `/api/health` reports `ok`.
+
+**Phase 4 release gate — debts carried forward (not closed by development completion).** Phase 4 is
+development complete, not released. Before any Production activation of Phase 2–4 work:
+
+- Migrations `0024`–`0031` are all unapplied in Production and are a deploy prerequisite.
+- `0026` and `0027` add **no** `learnbox_admin` grants, so Admin reads of `store_listings` and
+  `purchase_events` fail under the least-privilege roles. Fix before the Production deploy.
+- Admin splash **upload** still needs `BLOB_READ_WRITE_TOKEN`, which Production does not have; the
+  M4.1 DB-first splash _delivery_ and revert do not need it.
+- M2.4 Zarinpal **live** verification is still pending — no real Merchant ID has been exercised, so
+  the paid path is proven only against the provider contract, not against production money.
+- Every Admin capability flag (`LEARNBOX_ADMIN_PRESENTATION_ENABLED`,
+  `LEARNBOX_ADMIN_SUPPORT_ENABLED`, `LEARNBOX_ADMIN_CONTENT_PACKS_MANAGE_ENABLED`) is default-off and
+  absent in Production, and Admin itself is unreachable there (Caddy answers a fixed `404`, the
+  container publishes no ports).
+
+Phase 5 is not started and not authorized.
+
 **Phase 2 — Store & Entitlements — M2.1–M2.4 merged (implemented in repository, not activated).**
 M2.4 completes the canonical commercial path: a learner can now be charged for a paid pack through
 Zarinpal and receive an entitlement only after the payment is verified server-side.
