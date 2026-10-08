@@ -219,7 +219,67 @@ unapplied, and `LEARNBOX_OWNER_SPLASH_REPLACEMENT_ENABLED` remains absent from t
 environment, so `/api/launch/splash` still answers `404` there. Production delivery of the promoted
 splash is a **release-gate item**, not an M4.1 claim. Admin splash _management_ additionally still
 requires `BLOB_READ_WRITE_TOKEN` for uploads (`admin-splash-server.ts`), which is deliberately
-unchanged in M4.1 and carried as release debt. M4.2 (Slider Manager) is not started.
+unchanged in M4.1 and carried as release debt.
+
+**Phase 4 — App Presentation — M4.2 merged (implemented in repository, not activated).** Admin can
+now manage the learner home-screen slider: list, create, edit, activate, deactivate and reorder
+real slides. Before M4.2 the only banner write path in the repository was the legacy prototype
+route — raw SQL, no authentication, no guard, hard-disabled to `404` in any production build — so
+the three sample banners Production serves could only be changed with direct database access.
+
+The slider is the canonical `banners` table (`0022`), not a new model. That table already carried
+title, description, `link_type`, `link_url`, `sort_order` and `is_active`; the one thing genuinely
+missing was the image, because a slide image must be owner-supplied bytes rather than an external
+URL a third party controls. `0031_m4_2_presentation_slides.sql` adds `image_data BYTEA` — the same
+answer as `splash_versions.image_data`, so there is no new storage provider, no public object path
+and no parallel media system — plus a guarded `GRANT INSERT, UPDATE ON banners TO learnbox_admin`
+mirrored in `infrastructure/database/db-roles-p0.sql`. No `DELETE` privilege: a slide is retired by
+deactivating it, so no operator action destroys a row or an image. The legacy prototype
+`app/api/banners/route.ts` is deleted in the same change, because leaving an unguarded writer for
+the same table would mean two banner systems and a path around the active-slide limit.
+
+The owner's maximum of three active slides is a database invariant, not a UI rule. It is a
+statement about the whole table, so it cannot be enforced by locking the row being written: two
+transactions activating two different slides share no row and would both read "two active" and both
+commit. Activation therefore takes one transaction-scoped advisory lock before counting, which is
+proven against a real Postgres by firing five concurrent activations and observing exactly three
+applied and two refused. An active slide must also have canonical image bytes, while deactivating
+never requires an image — so a pre-existing row can always be switched off.
+
+Destinations are validated server-side against the canonical kinds: a learner screen from a
+five-value allowlist including the Store, a specific pack that must exist (checked in the same
+transaction), or a plain public `https` URL — no credentials, no custom port, no IP literal and no
+private-network suffix. Store and Pack destinations can be authored now and are delivered in M4.3;
+the learner banner route is deliberately untouched, keeps its narrower four-screen allowlist, and
+an existing learner build therefore receives neither. Creating, editing, activating and
+deactivating are one upsert, because they are one fact — the state of one slide — and splitting
+them would let the limit be checked on one path and skipped on another. Reorder rewrites the whole
+order in one transaction and rejects a partial list rather than renumbering a subset.
+
+Every mutation passes the splash replacement's own guard chain behind its own default-off
+`LEARNBOX_ADMIN_PRESENTATION_ENABLED` flag: trusted Origin and Content-Type, Admin session,
+`super_admin` resolved in-transaction from `admin_role_assignments`, per-session CSRF, recent
+re-authentication (`428` otherwise) and a canonical idempotency key matched against the canonical
+`audit_logs` — so a replay reports the first outcome and writes nothing, including a replayed
+create, which reports the slide it originally created instead of making a second one. Writes audit
+as `presentation_slide.created|updated|activated|deactivated|reordered` with actor, target and safe
+metadata, in the same transaction as the change. Slide bytes have exactly one authenticated read
+path, addressed by slide id rather than by object key or path, answered `private, no-store`, and
+never present in a list response.
+
+Evidence: a real-Postgres suite applies every migration and drives the real store — the concurrency
+proof above, destination refusals, replay safety, the audit trail, deactivation preserving the row
+and its bytes, a pre-existing sample banner left byte-identical including its external
+`image_url`, and the whole Slider Manager running under a role holding only `SELECT`, `INSERT` and
+`UPDATE` on `banners` while `DELETE` is denied. Thirty mutations of the limit, destination, audit,
+idempotency, guard, image-path and wiring properties were introduced and all thirty were killed
+(`scripts/m4.2-mutation-battery.mjs`).
+
+M4.2 grants no capability in Production: nothing is deployed, `0031` joins `0024`–`0030` as
+unapplied, `LEARNBOX_ADMIN_PRESENTATION_ENABLED` is absent from the Production environment, and the
+three Production sample banners are untouched. M4.3 owns learner-side slide image rendering, Store
+and Pack navigation, safe external navigation, the learner-side maximum of three and the carousel
+accessibility correction.
 
 **Phase 2 — Store & Entitlements — M2.1–M2.4 merged (implemented in repository, not activated).**
 M2.4 completes the canonical commercial path: a learner can now be charged for a paid pack through

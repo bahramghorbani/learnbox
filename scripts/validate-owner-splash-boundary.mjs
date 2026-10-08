@@ -11,6 +11,7 @@ const [
   storage,
   replacement,
   image,
+  imagePipeline,
   ui,
   learnerDelivery,
   learnerLaunch,
@@ -23,6 +24,7 @@ const [
   source('apps/admin/lib/server/private-splash-storage.ts'),
   source('apps/admin/lib/server/replace-splash.ts'),
   source('apps/admin/lib/server/splash-image.ts'),
+  source('apps/admin/lib/server/image-normalization.ts'),
   source('apps/admin/app/components/SplashReplacementPanel.tsx'),
   source('apps/website/lib/launch-splash.ts'),
   source('apps/website/app/components/LaunchScreen.tsx'),
@@ -81,6 +83,10 @@ for (const required of [
   requireText(replacement, required, 'Atomic replacement requirement missing');
 }
 
+// The intake pipeline is shared with the other owner-supplied Admin images (M4.2), so the
+// re-encode requirements are asserted where the pipeline lives, and the splash file is asserted to
+// still go through it with the tall shape a full-screen splash needs. Inlining a second pipeline,
+// or loosening the splash shape, fails here.
 for (const required of [
   "['jpeg', 'png', 'webp']",
   'maximumInputBytes',
@@ -88,7 +94,15 @@ for (const required of [
   'minimumHeight',
   '.webp(',
 ]) {
-  requireText(image, required, 'Image normalization requirement missing');
+  requireText(imagePipeline, required, 'Image normalization requirement missing');
+}
+for (const required of [
+  "from './image-normalization'",
+  'normalizeImage(bytes, splashImageShape)',
+  'minimumWidth: 864',
+  'minimumHeight: 1600',
+]) {
+  requireText(image, required, 'Splash image shape requirement missing');
 }
 
 for (const required of [
