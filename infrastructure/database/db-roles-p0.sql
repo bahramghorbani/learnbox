@@ -80,4 +80,7 @@ GRANT INSERT, UPDATE ON admin_owner, admin_passkey_credentials, admin_sessions,
 GRANT INSERT ON audit_logs, content_review_decisions TO learnbox_admin;
 GRANT INSERT, UPDATE ON current_splash TO learnbox_admin;  -- INSERT .. ON CONFLICT DO UPDATE (splash activation)
 GRANT UPDATE (status, published_at) ON card_versions TO learnbox_admin;
-GRANT DELETE ON splash_replacement_actions, admin_webauthn_challenges TO learnbox_admin;
+-- M4.1 revert-to-default deletes ONLY the single current_splash pointer row; splash_versions and
+-- its stored bytes are never deleted, so history and media evidence survive a revert.
+GRANT DELETE ON splash_replacement_actions, admin_webauthn_challenges, current_splash
+  TO learnbox_admin;

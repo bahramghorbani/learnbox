@@ -54,6 +54,16 @@ type PreviewDependencies = CurrentDependencies & {
   };
 };
 
+type RevertDependencies = {
+  enabled: boolean;
+  config: AdminAuthConfig;
+  sessionStore?: Parameters<typeof loadAdminSession>[2];
+  revert?: (input: {
+    now: Date;
+  }) => Promise<{ status: 'reverted'; versionId: string } | { status: 'already_default' }>;
+  now?: () => Date;
+};
+
 const maximumImageBytes = 8 * 1024 * 1024;
 const maximumMultipartBytes = maximumImageBytes + 256 * 1024;
 const idempotencyKeyPattern =
@@ -260,6 +270,62 @@ export function createSplashReplaceRoute(dependencies: ReplaceDependencies) {
       );
     } catch {
       return new Response('Splash replacement unavailable', {
+        status: 503,
+        headers: { 'Cache-Control': 'no-store' },
+      });
+    }
+  };
+}
+
+/**
+ * M4.1 — revert the learner launch screen to the approved bundled default.
+ *
+ * The guard chain is the replacement route's, unchanged: Origin + Content-Type, then session, then
+ * per-session CSRF, then recent re-authentication, because deactivating the launch screen is as
+ * sensitive as replacing it. There is deliberately no idempotency key: the underlying operation
+ * deletes the single `current_splash` pointer, so repeating it is a no-op by construction and a key
+ * would only add a failure mode. No request body is read.
+ */
+export function createSplashRevertRoute(dependencies: RevertDependencies) {
+  return async function POST(request: Request) {
+    if (
+      !dependencies.enabled ||
+      !dependencies.config.enabled ||
+      !dependencies.sessionStore ||
+      !dependencies.revert
+    ) {
+      return notFound();
+    }
+    const config: EnabledAdminAuthConfig = dependencies.config;
+    try {
+      assertTrustedAdminMutation(request, config, ['application/json']);
+    } catch {
+      return genericInvalid();
+    }
+    const currentTime = (dependencies.now ?? (() => new Date()))();
+    const session = await loadAdminSession(request, config, dependencies.sessionStore, currentTime);
+    if (!session) {
+      return new Response('Unauthorized', {
+        status: 401,
+        headers: { 'Cache-Control': 'no-store' },
+      });
+    }
+    try {
+      verifyAdminCsrf(request, session.csrfHash, config);
+    } catch {
+      return genericInvalid();
+    }
+    if (!session.recent) {
+      return Response.json(
+        { code: 'reauthentication_required' },
+        { status: 428, headers: { 'Cache-Control': 'no-store' } },
+      );
+    }
+    try {
+      const result = await dependencies.revert({ now: currentTime });
+      return Response.json({ status: result.status }, { headers: { 'Cache-Control': 'no-store' } });
+    } catch {
+      return new Response('Splash revert unavailable', {
         status: 503,
         headers: { 'Cache-Control': 'no-store' },
       });

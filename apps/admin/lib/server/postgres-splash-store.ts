@@ -57,6 +57,50 @@ export class PostgresSplashStore {
     }
   }
 
+  /**
+   * M4.1 — deactivate the dynamic splash and fall back to the bundled default.
+   *
+   * Deleting the single `current_splash` pointer row is the whole operation: the learner route
+   * joins `current_splash` to `splash_versions`, so with no pointer it finds nothing, answers 404
+   * and the app renders the approved bundled image. Nothing else is touched — every
+   * `splash_versions` row, its `image_data`, its `object_key` and the stored media stay exactly as
+   * they were, so a reverted splash can be re-promoted and remains available as evidence. The
+   * operation is naturally idempotent (a second call finds no pointer), takes the same advisory
+   * lock as promotion so the two can never interleave, and writes the audit row in the same
+   * transaction as the deletion so a recorded revert and an actual revert cannot diverge.
+   */
+  async revertToBundledDefault(input: {
+    now: Date;
+  }): Promise<{ status: 'reverted'; versionId: string } | { status: 'already_default' }> {
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      await client.query('SELECT pg_advisory_xact_lock($1)', [splashPromotionLockId]);
+      const current = await client.query(
+        `SELECT version_id FROM current_splash WHERE singleton_id = 1 FOR UPDATE`,
+      );
+      const versionId = current.rows[0]?.version_id;
+      if (!versionId) {
+        await client.query('COMMIT');
+        return { status: 'already_default' };
+      }
+      await client.query('DELETE FROM current_splash WHERE singleton_id = 1');
+      await client.query(
+        `INSERT INTO audit_logs (actor_user_id, action, entity_type, entity_id, metadata)
+         VALUES (NULL, 'splash.reverted', 'splash_version', $1,
+                 jsonb_build_object('reverted_to', 'bundled_default', 'reverted_at', $2::text))`,
+        [versionId, input.now.toISOString()],
+      );
+      await client.query('COMMIT');
+      return { status: 'reverted', versionId: String(versionId) };
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
   async claimCleanupJobs(input: {
     now: Date;
     limit: number;

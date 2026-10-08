@@ -207,7 +207,116 @@ describe('owner splash replacement UI', () => {
     await act(async () => Promise.resolve());
 
     expect(rendered.text()).toContain('اسپلش با موفقیت جایگزین شد');
-    expect(rendered.text()).not.toContain('جایگزینی انجام نشد');
+    expect(rendered.text()).not.toContain('عملیات انجام نشد');
+    await rendered.unmount();
+  });
+
+  // M4.1 — revert to the bundled default. The control only exists while a dynamic splash is
+  // actually promoted, it never fires without an explicit confirmation, and a 428 must retry the
+  // REVERT rather than silently falling back to the replacement path it shares the flow with.
+  it('offers no revert control while the app is already on the bundled default', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => Response.json({ current: null })),
+    );
+    const rendered = await render(createElement(SplashReplacementPanel));
+
+    expect(rendered.button('بازگردانی به تصویر پیش‌فرض')).toBeUndefined();
+    await rendered.unmount();
+  });
+
+  it('requires confirmation, then deactivates the dynamic splash with a protected request', async () => {
+    const requests: Array<{ url: string; init?: RequestInit }> = [];
+    let currentReads = 0;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+        const url = String(input);
+        requests.push({ url, init });
+        if (url.endsWith('/api/splash/current')) {
+          currentReads += 1;
+          if (currentReads === 1) {
+            return Response.json({
+              current: {
+                revision: 'version-1',
+                width: 864,
+                height: 1821,
+                byteSize: 120_000,
+                updatedAt: '2026-08-10T14:30:00.000Z',
+                previewPath: '/api/splash/preview',
+              },
+            });
+          }
+          return Response.json({ current: null });
+        }
+        return Response.json({ status: 'reverted' });
+      }),
+    );
+    const rendered = await render(createElement(SplashReplacementPanel));
+
+    expect(requests.some(({ url }) => url.endsWith('/api/splash/revert'))).toBe(false);
+    await act(async () => rendered.button('بازگردانی به تصویر پیش‌فرض')!.click());
+    expect(document.activeElement).toBe(rendered.button('تأیید و بازگردانی'));
+    expect(rendered.text()).toContain('نسخه‌های ثبت‌شده');
+    await act(async () => rendered.button('تأیید و بازگردانی')!.click());
+    await act(async () => Promise.resolve());
+
+    const mutation = requests.find(({ url }) => url.endsWith('/api/splash/revert'))!;
+    expect(mutation.init?.method).toBe('POST');
+    const headers = new Headers(mutation.init?.headers);
+    expect(headers.get('x-learnbox-csrf-token')).toBe('csrf-token');
+    expect(headers.get('content-type')).toBe('application/json');
+    expect(rendered.text()).toContain('اسپلش پویا غیرفعال شد');
+    expect(rendered.button('بازگردانی به تصویر پیش‌فرض')).toBeUndefined();
+    await rendered.unmount();
+  });
+
+  it('re-authenticates and retries the revert itself, never the replacement path', async () => {
+    let revertAttempts = 0;
+    let replaceAttempts = 0;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.endsWith('/api/splash/current')) {
+          return Response.json({
+            current: {
+              revision: 'version-1',
+              width: 864,
+              height: 1821,
+              byteSize: 120_000,
+              updatedAt: '2026-08-10T14:30:00.000Z',
+              previewPath: '/api/splash/preview',
+            },
+          });
+        }
+        if (url.endsWith('/api/splash/replace')) {
+          replaceAttempts += 1;
+          return Response.json({ status: 'replaced', revision: 'version-2' });
+        }
+        if (url.endsWith('/api/splash/revert')) {
+          revertAttempts += 1;
+          return revertAttempts === 1
+            ? Response.json({ code: 'reauthentication_required' }, { status: 428 })
+            : Response.json({ status: 'reverted' });
+        }
+        if (url.endsWith('/api/auth/reauth/options')) return Response.json({ challenge: 'c' });
+        if (url.endsWith('/api/auth/reauth/verify')) return new Response(null, { status: 204 });
+        return new Response(null, { status: 404 });
+      }),
+    );
+    const rendered = await render(createElement(SplashReplacementPanel));
+    await act(async () => rendered.button('بازگردانی به تصویر پیش‌فرض')!.click());
+    await act(async () => rendered.button('تأیید و بازگردانی')!.click());
+    await act(async () => Promise.resolve());
+
+    expect(rendered.text()).toContain('هویت مدیر باید دوباره تأیید شود');
+    await act(async () => rendered.button('تأیید دوباره با Passkey')!.click());
+    await act(async () => Promise.resolve());
+
+    expect(revertAttempts).toBe(2);
+    expect(replaceAttempts).toBe(0);
+    expect(rendered.text()).toContain('اسپلش پویا غیرفعال شد');
     await rendered.unmount();
   });
 });

@@ -4,6 +4,7 @@ import {
   createSplashCurrentRoute,
   createSplashPreviewRoute,
   createSplashReplaceRoute,
+  createSplashRevertRoute,
 } from '../lib/server/admin-splash-routes.js';
 import { hashAdminSecret } from '../lib/server/admin-session.js';
 
@@ -316,5 +317,169 @@ describe('owner splash routes', () => {
 
     expect(response.status).toBe(413);
     expect(normalized).toBe(false);
+  });
+
+  // M4.1 — revert-to-default. The revert deactivates the learner launch screen, so it carries the
+  // replacement route's full guard chain; these cases prove each link independently, because a
+  // revert reachable without a session, without CSRF or without recent re-authentication would let
+  // a cross-site page blank the launch screen of every learner.
+  describe('revert to the bundled default', () => {
+    const activeSession = {
+      findActiveSession: async () => ({
+        userId: '2efaf676-84e4-45b1-8a13-50735a8df2c8',
+        csrfHash: hashAdminSecret(csrfToken, config.tokenHashKey),
+        lastSeenAt: now,
+        absoluteExpiresAt: new Date(now.getTime() + 60_000),
+        revokedAt: null,
+        recentAuthenticatedAt: now,
+      }),
+      touchSession: async () => true,
+    };
+
+    function revertRequest(headers: Record<string, string>) {
+      return new Request('https://admin.learnbox.app/api/splash/revert', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', ...headers },
+        body: '{}',
+      });
+    }
+
+    const trustedHeaders = {
+      origin: config.origin,
+      cookie: `__Host-learnbox_admin_session=${sessionToken}`,
+      'x-learnbox-csrf-token': csrfToken,
+    };
+
+    it('reverts once the full guard chain passes and reports the outcome only', async () => {
+      const calls: unknown[] = [];
+      const handler = createSplashRevertRoute({
+        enabled: true,
+        config,
+        now: () => now,
+        sessionStore: activeSession,
+        revert: async (input) => {
+          calls.push(input);
+          return { status: 'reverted', versionId: 'version-1' };
+        },
+      });
+
+      const response = await handler(revertRequest(trustedHeaders));
+
+      expect(response.status).toBe(200);
+      expect(response.headers.get('cache-control')).toBe('no-store');
+      await expect(response.json()).resolves.toEqual({ status: 'reverted' });
+      expect(calls).toEqual([{ now }]);
+    });
+
+    it('reports a repeated revert as already default without inventing a change', async () => {
+      const handler = createSplashRevertRoute({
+        enabled: true,
+        config,
+        now: () => now,
+        sessionStore: activeSession,
+        revert: async () => ({ status: 'already_default' }),
+      });
+
+      const response = await handler(revertRequest(trustedHeaders));
+
+      expect(response.status).toBe(200);
+      await expect(response.json()).resolves.toEqual({ status: 'already_default' });
+    });
+
+    it('is hidden when the splash server flag is disabled', async () => {
+      let reverted = false;
+      const handler = createSplashRevertRoute({
+        enabled: false,
+        config,
+        sessionStore: activeSession,
+        revert: async () => {
+          reverted = true;
+          return { status: 'already_default' };
+        },
+      });
+
+      expect((await handler(revertRequest(trustedHeaders))).status).toBe(404);
+      expect(reverted).toBe(false);
+    });
+
+    it('refuses an untrusted origin, a missing session and a wrong CSRF token', async () => {
+      let reverted = 0;
+      const build = (sessionStore: Parameters<typeof createSplashRevertRoute>[0]['sessionStore']) =>
+        createSplashRevertRoute({
+          enabled: true,
+          config,
+          now: () => now,
+          sessionStore,
+          revert: async () => {
+            reverted += 1;
+            return { status: 'reverted', versionId: 'version-1' };
+          },
+        });
+
+      const crossSite = await build(activeSession)(
+        revertRequest({ ...trustedHeaders, origin: 'https://attacker.example' }),
+      );
+      expect(crossSite.status).toBe(400);
+
+      const anonymous = await build({
+        findActiveSession: async () => undefined,
+        touchSession: async () => false,
+      })(revertRequest(trustedHeaders));
+      expect(anonymous.status).toBe(401);
+
+      const forgedCsrf = await build(activeSession)(
+        revertRequest({ ...trustedHeaders, 'x-learnbox-csrf-token': 'x'.repeat(43) }),
+      );
+      expect(forgedCsrf.status).toBe(400);
+
+      expect(reverted).toBe(0);
+    });
+
+    it('requires authentication within the previous five minutes', async () => {
+      let reverted = false;
+      const handler = createSplashRevertRoute({
+        enabled: true,
+        config,
+        now: () => now,
+        sessionStore: {
+          findActiveSession: async () => ({
+            userId: '2efaf676-84e4-45b1-8a13-50735a8df2c8',
+            csrfHash: hashAdminSecret(csrfToken, config.tokenHashKey),
+            lastSeenAt: now,
+            absoluteExpiresAt: new Date(now.getTime() + 60_000),
+            revokedAt: null,
+            recentAuthenticatedAt: new Date(now.getTime() - 6 * 60_000),
+          }),
+          touchSession: async () => true,
+        },
+        revert: async () => {
+          reverted = true;
+          return { status: 'reverted', versionId: 'version-1' };
+        },
+      });
+
+      const response = await handler(revertRequest(trustedHeaders));
+
+      expect(response.status).toBe(428);
+      await expect(response.json()).resolves.toEqual({ code: 'reauthentication_required' });
+      expect(reverted).toBe(false);
+    });
+
+    it('answers 503 without leaking failure detail when the store is unavailable', async () => {
+      const handler = createSplashRevertRoute({
+        enabled: true,
+        config,
+        now: () => now,
+        sessionStore: activeSession,
+        revert: async () => {
+          throw new Error('permission denied for table current_splash');
+        },
+      });
+
+      const response = await handler(revertRequest(trustedHeaders));
+
+      expect(response.status).toBe(503);
+      expect(await response.text()).not.toContain('permission denied');
+    });
   });
 });
