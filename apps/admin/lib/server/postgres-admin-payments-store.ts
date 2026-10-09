@@ -82,7 +82,8 @@ export class PostgresAdminPaymentsStore {
     roles: readonly string[],
   ): Promise<boolean> {
     const result = await client.query(
-      `SELECT 1 FROM admin_user_roles WHERE user_id = $1::uuid AND role = ANY($2::text[]) LIMIT 1`,
+      `SELECT 1 FROM admin_role_assignments
+        WHERE user_id = $1::uuid AND role::text = ANY($2::text[]) LIMIT 1`,
       [actorUserId, roles],
     );
     return result.rows.length > 0;
