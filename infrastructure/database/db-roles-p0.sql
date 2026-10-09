@@ -2,9 +2,11 @@
 --
 -- Derived from the SQL the shipped code actually executes (learner: apps/website + apps/api;
 -- Admin: the live surface after LB-B30 = auth, content review, splash), not from a guess.
--- The legacy Admin routes (packs, gateways, transactions, users) are hard-disabled, so
--- learnbox_admin gets NO write privilege on packs/pack_cards/cards/payment_gateways.
--- Re-enabling one in P1 must add its exact grant in a reviewed change.
+-- The legacy Admin routes (gateways, transactions, users) are hard-disabled, so learnbox_admin gets
+-- NO write privilege on payment_gateways. Re-enabling one must add its exact grant in a reviewed
+-- change: migration 0033 did exactly that for the content workspace, which is why learnbox_admin now
+-- holds INSERT on packs/cards/card_versions/pack_cards plus column-level UPDATE for the status,
+-- headword and draft-content columns the shipped code writes — no DELETE, and no price column.
 -- M4.2 rebuilt banner management on the shared services (Presentation workspace, Slider Manager),
 -- which is why learnbox_admin now holds INSERT, UPDATE on banners — and only those two: the
 -- Slider Manager cannot delete a slide, so there is deliberately no DELETE privilege.
@@ -83,6 +85,11 @@ GRANT INSERT, UPDATE ON admin_owner, admin_passkey_credentials, admin_sessions,
 GRANT INSERT ON audit_logs, content_review_decisions TO learnbox_admin;
 GRANT INSERT, UPDATE ON current_splash TO learnbox_admin;  -- INSERT .. ON CONFLICT DO UPDATE (splash activation)
 GRANT UPDATE (status, published_at) ON card_versions TO learnbox_admin;
+-- Content workspace (migration 0033): create and edit content, retire it by status, never delete it.
+GRANT INSERT ON packs, cards, card_versions, pack_cards TO learnbox_admin;
+GRANT UPDATE (status, published_at) ON packs TO learnbox_admin;
+GRANT UPDATE (lemma, content_version) ON cards TO learnbox_admin;
+GRANT UPDATE (content_json, source_provider, source_reference) ON card_versions TO learnbox_admin;
 -- M4.1 revert-to-default deletes ONLY the single current_splash pointer row; splash_versions and
 -- its stored bytes are never deleted, so history and media evidence survive a revert.
 GRANT DELETE ON splash_replacement_actions, admin_webauthn_challenges, current_splash
