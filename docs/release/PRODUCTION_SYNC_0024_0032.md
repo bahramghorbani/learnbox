@@ -148,13 +148,73 @@ Suggested sequence when that approval is given (each step verifiable, none of it
 1. Take a backup and confirm `backup.status=ok`, then run the restore drill against that exact
    archive.
 2. Apply `0024` … `0032` with the tracked runner, as the role that owns the existing tables
-   (`neondb_owner`) so `0032`'s default privileges attach to the right role.
-3. Confirm the ledger head is `0032_role_grant_repair` and that `0032`'s self-verification raised
-   nothing.
+   (`neondb_owner`) so `0032`'s default privileges attach to the right role:
+   `DATABASE_URL=<ephemeral owner DSN> node apps/api/dist/database/run-migrations.js` from a checkout
+   at the reviewed `main`. That entrypoint reads `DATABASE_URL` and nothing else, forces
+   `sslmode=verify-full`, takes advisory lock `1825273952`, and wraps each migration with its ledger
+   row in one transaction. Expected output: `applied 9`.
+3. Confirm the ledger head is `0032_role_grant_repair`, `count(*) = 32`, and that `0032`'s
+   self-verification raised nothing.
 4. Re-run the read-only unreadable-objects query in `docs/operations/BACKUP_RESTORE.md`: it must
    return no rows.
 5. Reproduce `pg_dump` read-only as `learnbox_migrator` (byte count only, no archive written).
-6. Confirm the learner application is healthy on the **unchanged** image — this step deploys nothing.
+6. Confirm `pg_default_acl` now holds two `neondb_owner` rows granting `SELECT` to
+   `learnbox_migrator` (one for tables, one for sequences) — that is the proof the class fix landed
+   on the creating role rather than on whoever happened to run the migration.
+7. Confirm the learner application is healthy on the **unchanged** image — this step deploys nothing.
+
+### Pre-flight facts, verified read-only on 2026-10-09 against Production
+
+| Fact                                                     | Value                                                                           |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Ledger                                                   | 23 rows, head `0023_learning_persistence`, `0` rows at `0024`+                  |
+| Recorded checksums vs the repo files at `main` `0598613` | **23/23 match**, 0 mismatches — the runner will not abort on checksum           |
+| Unrecorded migration files                               | exactly 9: `0024` … `0032` — so the run applies 9 and nothing else              |
+| Object ownership in `public`                             | **all 40 tables and the 1 sequence owned by `neondb_owner`**                    |
+| `pg_default_acl`                                         | only Neon's own `cloud_admin` entries; no `neondb_owner` default privileges yet |
+| Objects unreadable by `learnbox_migrator`                | 0 (the 2026-10-09 sequence grant holds)                                         |
+| Server                                                   | PostgreSQL 17.11                                                                |
+
+The owner DSN for the apply is minted on demand from the Neon control plane
+(`neon connection-string main --role-name neondb_owner --database-name neondb`), held only in a shell
+variable for the lifetime of the command, passed to containers **by variable name** so it never
+appears in `argv` or a shell history, and never written to the repository or the production host. It
+is not a new credential and not rotated by this process: what is temporary is our possession of it.
+
+### Stop conditions — abort and report, do not improvise
+
+| Signal                                                                 | Meaning                                                                                  | Action                                                                                                              |
+| ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `backup.status` is not `ok`, or the restore drill fails, before step 2 | no verified restore point                                                                | **do not apply anything**                                                                                           |
+| `Applied migration checksum mismatch: <version>`                       | a recorded file's bytes changed since it was applied                                     | abort; nothing has been applied in this run; reconcile the file with the ledger first                               |
+| Any migration raises                                                   | that migration and its ledger row rolled back together; the head is the previous version | stop, capture the SQLSTATE and message, re-run only after the cause is understood — the set is retry-safe by design |
+| `applied` is not `9`                                                   | the ledger or the migration directory is not what this release reviewed                  | stop and diff before touching anything else                                                                         |
+| `0032` raises `missing privileges after repair: …`                     | a grant did not land                                                                     | stop; the transaction rolled back, so no partial privilege state exists                                             |
+| Step 4 returns any row                                                 | the backup role still cannot read something                                              | stop; the next nightly `pg_dump` would fail                                                                         |
+| Learner health is not 200 after step 7                                 | unexpected, since no code changed                                                        | stop and roll the image back; do not apply anything further                                                         |
+
+### Rollback limitations
+
+- **There are no down-migrations.** Nothing in `database/migrations/` reverses a step; rollback means
+  reverting the _image_, not the schema. That is sound here only because the delta is additive and
+  the deployed version is proven against the expanded schema.
+- **Ledger rows are not removed.** Re-applying a migration after deleting its row would re-run DDL
+  against objects that already exist; `IF NOT EXISTS` makes that survivable from `0024` onwards, but
+  it is not a supported recovery path.
+- **Two steps are one-way**: the three `purchase_status` enum values `0027` adds (PostgreSQL cannot
+  drop an enum value) and its `purchase_events.product_id DROP NOT NULL` (re-tightening requires no
+  NULL rows). Neither is read by the deployed image.
+- **Restoring the pre-migration backup is the only true schema rollback**, and it costs every write
+  made after the archive was taken — it is a last resort, not a step in this plan.
+
+### Known privilege debt, deliberately out of scope here
+
+`learnbox_migrator` currently holds `INSERT` on 38 of 40 Production tables and `CREATE` on schema
+`public`, so the credential the nightly backup uses on the host is far broader than a backup needs.
+It is pre-existing, `0032` does not widen it, and narrowing it is a separate change: migrations are
+applied as `neondb_owner` (all 40 tables prove it), so those write grants are vestigial. Revoking
+them, or splitting a read-only `learnbox_backup` role, belongs in its own PR with its own restore
+drill.
 
 Deploying the new application image, enabling any feature flag, and activating payment remain
 separate approvals and are **not** covered by the one above.

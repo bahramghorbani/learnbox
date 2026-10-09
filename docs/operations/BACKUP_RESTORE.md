@@ -131,6 +131,14 @@ deleted. The first _scheduled_ (unattended) run after the repair is the remainin
 
 ## Still open
 
+- **The host still runs the pre-fix script.** `sanitize_error` and the migrator-DSN preference live in
+  the repository as of `0598613`; the copy under `/home/ubuntu/learnbox/ops/` has not been updated,
+  which is why the 2026-10-09 02:30 failure still reads `pg_dump did not complete` with no reason.
+  Shipping the script to the host is a Production change and needs its own approval.
+- **The first unattended run after the 2026-10-09 repair has not happened yet.** The manual recovery
+  ran through systemd (`learnbox-backup.service`, 07:01:53Z, `status=ok`), and the timer demonstrably
+  fires (it started the service at 02:30:51Z the same morning), so unit, environment, DSN and
+  privileges are all proven — but the scheduled path itself is unobserved until 2026-10-10 02:32 UTC.
 - Off-host copies: archives live on the production host's disk only. Object-storage replication with
   versioning, and encryption at rest beyond the host's own, are not yet in place.
 - Retention is count-based pruning in the script; there is no separate long-term archive tier.
