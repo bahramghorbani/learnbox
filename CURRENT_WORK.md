@@ -4,6 +4,21 @@
 
 ## Active work
 
+**Admin stabilization — two confirmed defects fixed and merged, neither live yet (2026-10-09).**
+The Admin panel is deployed and reachable behind Passkey, the owner's real sign-in is recorded in
+`admin_passkey_credentials`, and Support, content read, content review, presentation and store
+administration are enabled. Two defects found by running real statements as the real
+`learnbox_admin` role are fixed on `main` and **not** in Production:
+`postgres-admin-payments-store.ts` read admin roles from a non-existent `admin_user_roles`
+(`42P01`), fixed in PR #394 (`f5c27a08`); and the content workspace had `SELECT`-only privileges, so
+every content mutation would have been a `500`, addressed by `0033_admin_content_management_grants`
+in PR #395 (`8631565a`) — Production is still at head `0032`. Both carry regression tests that fail
+without their fix. Content mutations, both AI capabilities, splash replacement and payments stay off;
+AI needs `LEARNBOX_AI_API_KEY` and splash needs `BLOB_READ_WRITE_TOKEN`, both owner-supplied.
+Capability states, flags, prerequisites and the exact owner authorizations still required:
+`docs/operations/ADMIN_PRODUCTION_STATUS.md`. The Admin UI/UX redesign is a separate planned
+workstream (`LB-B36` in `BACKLOG.md`) and was deliberately not started.
+
 **Production synchronization — database migrations `0024`-`0032` APPLIED to Production
 2026-10-09.** `main` could not be synchronized to Production because migrations `0024`-`0026`
 create six tables and grant no privileges to any role: applying them as they stood would have

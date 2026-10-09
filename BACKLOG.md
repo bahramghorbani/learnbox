@@ -189,7 +189,28 @@ progress, content or users.
 | LB-B32 Admin uses the owner database role             | SECURITY/HARDENING | **P0 — FIXED on Production.** Learner uses `learnbox_app`, Admin `learnbox_admin`; owner DSN retained only for operations and rollback. Roles proven on Neon.                                                                                                                                                                                                                                       |
 | LB-B33 Production Admin provenance unprovable         | TECH DEBT          | **CLOSED for the new image:** SHA → OCI label → image → runtime verified for `e601d8a`. Live Caddyfile now committed. Older Admin image `d4f39bfc` kept as evidence only.                                                                                                                                                                                                                           |
 | LB-B34 Admin/learner data and logic unification       | TECH DEBT          | **PLANNED** (P0 complete; not started). Shared repositories/services; database-backed review; remove the payments surface. Carried from LB-B35 CP0: Admin user-detail route selects `review_events.rating` and `created_at`, but the table has `grade` and `occurred_at` (queries fail against the real schema; route is behind the legacy gate and Admin is contained). Fix inside this item only. |
-| LB-B13 Admin operations (redesign and feature parity) | PRODUCT DEBT       | **PLANNED** (after LB-B30–B34). Scope waits for the compatibility phase.                                                                                                                                                                                                                                                                                                                            |
+| LB-B13 Admin operations (redesign and feature parity) | PRODUCT DEBT       | **PLANNED** (after LB-B30–B34). Scope waits for the compatibility phase. The interface half is now a separate, explicitly scoped workstream: **LB-B36 Admin UI/UX Redesign** below.                                                                                                                                                                                                                 |
+
+#### LB-B36 — LearnBox Admin UI/UX Redesign (planned workstream, not started)
+
+Recorded 2026-10-09 as a **separate** workstream, deliberately excluded from functional
+stabilization. Admin functional stabilization (defect fixes, database privileges, capability
+verification) is tracked in `docs/operations/ADMIN_PRODUCTION_STATUS.md` and changed no interface by
+design; a redesign must not be mixed into a defect fix or a privilege migration.
+
+Scope for the later phase:
+
+- Professional, modern administrative dashboard layout.
+- Improved navigation and information architecture.
+- Consistent Persian RTL interface throughout.
+- Better tables, filters, forms and management workflows.
+- Responsive desktop and mobile layouts.
+- Clear status indicators, confirmations and error messages.
+- One consistent visual design system.
+
+Entry conditions: the Admin capability matrix has no `BLOCKED` row that a redesign would hide, the
+Store transaction fix and migration `0033` are live in Production, and the owner authorizes a
+redesign phase. Not approved for implementation yet.
 
 ### Learning system unification (owner decision 2026-10-01)
 
