@@ -13,7 +13,15 @@
 #  - DATABASE_URL is read from the deployment env file and passed via the environment, never as a
 #    command argument (arguments are world-readable through /proc).
 #  - The script never writes to the database and never touches Production runtime state.
+#  - A failure reports WHY. The first version swallowed pg_dump's stderr and alerted with a fixed
+#    "pg_dump did not complete", which is why a single missing SELECT privilege on one sequence
+#    went undiagnosed for seven consecutive nights (2026-10-03 .. 2026-10-09). The reason is now
+#    carried into both the status file and the alert, after sanitising anything that could leak a
+#    credential — the error text comes from a process that was handed a DSN.
 set -euo pipefail
+
+# Diagnostic capture files may contain connection strings; never create them world-readable.
+umask 077
 
 APP_DIR="${LEARNBOX_APP_DIR:-/home/ubuntu/learnbox/app}"
 BACKUP_DIR="${LEARNBOX_BACKUP_DIR:-/home/ubuntu/learnbox/backups}"
@@ -36,17 +44,37 @@ fail() {
   exit 1
 }
 
-PGURL="$(grep -E '^DATABASE_URL=' "$APP_DIR/.env" 2>/dev/null | cut -d= -f2- || true)"
-[ -n "$PGURL" ] || fail "DATABASE_URL not readable from $APP_DIR/.env"
+# LB-B30: the learner runs as least-privilege learnbox_app, which cannot dump the whole database.
+# Prefer the dedicated migrator credential (full read for pg_dump) from the mode-600 secrets file;
+# fall back to the legacy DATABASE_URL so the job still works before the credential cutover.
+ROLES_ENV="${LEARNBOX_ROLES_ENV:-/home/ubuntu/learnbox/secrets/db-roles.env}"
+PGURL="$(grep -E '^LEARNBOX_MIGRATOR_DATABASE_URL=' "$ROLES_ENV" 2>/dev/null | cut -d= -f2- || true)"
+[ -n "$PGURL" ] || PGURL="$(grep -E '^DATABASE_URL=' "$APP_DIR/.env" 2>/dev/null | cut -d= -f2- || true)"
+[ -n "$PGURL" ] || fail "no database URL readable from $ROLES_ENV or $APP_DIR/.env"
+
+# Turn a raw pg_dump/psql diagnostic into something safe to put in an alert: one line, bounded
+# length, and with every shape that can carry a secret removed. Credentials reach this script only
+# inside a DSN, so the DSN forms are what must go; table, column and sequence names — the part that
+# actually identifies the fault — are preserved verbatim.
+sanitize_error() {
+  sed -E \
+    -e 's#(postgres(ql)?://)[^[:space:]"]*#\1[redacted]#g' \
+    -e 's#(password|PGPASSWORD)=[^[:space:]&"]*#\1=[redacted]#Ig' \
+    -e 's#npg_[A-Za-z0-9_]+#[redacted]#g' \
+    | tr -d '\r' \
+    | tr '\n' ' ' \
+    | sed -E 's/[[:cntrl:]]/ /g; s/  +/ /g; s/^ //; s/ $//' \
+    | cut -c1-400
+}
 
 PG_IMAGE="${LEARNBOX_PG_IMAGE:-postgres:17-alpine}"
 
 # pg_dump runs in a throwaway client container; only the compressed stream crosses to the host.
 if ! docker run --rm -i -e PGURL="$PGURL" "$PG_IMAGE" \
   sh -c 'pg_dump --no-owner --no-privileges --format=plain "$PGURL"' 2>/tmp/lb-backup-err.$$ | gzip -9 > "$target"; then
-  err="$(head -c 400 /tmp/lb-backup-err.$$ 2>/dev/null | tr -d '\n' || true)"
+  err="$(sanitize_error < /tmp/lb-backup-err.$$ 2>/dev/null || true)"
   rm -f /tmp/lb-backup-err.$$ "$target"
-  fail "pg_dump did not complete"
+  fail "pg_dump did not complete: ${err:-no diagnostic output captured}"
 fi
 rm -f /tmp/lb-backup-err.$$
 

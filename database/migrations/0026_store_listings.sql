@@ -26,8 +26,24 @@
 -- This migration grants no learner-facing capability. Entitlement enforcement (M2.2), free
 -- acquisition (M2.3) and payment (M2.4) are separate milestones; nothing here makes a pack
 -- purchasable or changes who can read content.
+--
+-- grants: none in this file. `store_listings` is read by the learner runtime and upserted by the
+-- Admin workspace; both sets of privileges are granted in 0032_role_grant_repair.sql together
+-- with the rest of the 0023-0031 repair, so one reviewable matrix covers every environment —
+-- including the ones that had already applied this migration when the gap was found. From 0032
+-- onward the backup role also holds default SELECT on new tables and sequences.
 
-CREATE TABLE store_listings (
+-- Retry safety (added before this migration was ever applied to production): the runner wraps each
+-- migration in one transaction, but a migration is only genuinely re-runnable if its DDL is
+-- conditional too — a dump/restore, a manual psql apply, or a ledger write that fails after the DDL
+-- committed can all leave the table present but the version unrecorded, and a bare `CREATE TABLE`
+-- then fails forever with "relation already exists". `IF NOT EXISTS` on both objects makes a second
+-- run a no-op instead of a dead end. Editing this file is safe precisely because production has
+-- never applied it (ledger head is 0023): the runner stores the SHA-256 of the exact bytes and
+-- aborts on a checksum mismatch, so a migration that IS recorded anywhere must never be edited —
+-- its repair belongs in a new migration (see 0032 for the grant repair).
+
+CREATE TABLE IF NOT EXISTS store_listings (
   pack_id TEXT PRIMARY KEY REFERENCES packs(id) ON DELETE CASCADE,
 
   -- Commercial availability, independent of `packs.status`. 'unlisted' is the default so a new
@@ -54,5 +70,5 @@ CREATE TABLE store_listings (
 
 -- Serves the Admin listing table today and the learner catalogue ordering in M2.2 — featured first,
 -- then operator display order, with the pack slug as a stable tiebreaker.
-CREATE INDEX store_listings_display_idx
+CREATE INDEX IF NOT EXISTS store_listings_display_idx
   ON store_listings (store_status, featured DESC, display_order, pack_id);

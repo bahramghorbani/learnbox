@@ -25,6 +25,59 @@ for (let index = 0; index < numberedMigrations.length; index += 1) {
 
 console.log(`Validated ${numberedMigrations.length} migration(s).`);
 
+// Release-gate rules introduced after the 2026-10 backup outage and the 0024-0032 readiness audit.
+//
+// They apply from 0024 onwards: 0001-0023 are recorded in the production ledger with a SHA-256 of
+// their exact bytes, so they are immutable history — editing one to satisfy a rule would make the
+// runner refuse to start. Anything not yet recorded can and must comply.
+const RETRY_SAFETY_BASELINE = 24;
+
+const conditionalCreate =
+  /^[ \t]*CREATE\s+(?:UNIQUE\s+)?(TABLE|INDEX|SEQUENCE|VIEW)\s+(?!IF\s+NOT\s+EXISTS)/gim;
+const transactionControl = /^[ \t]*(BEGIN|COMMIT|ROLLBACK|START\s+TRANSACTION)\s*;/gim;
+const createsTable = /CREATE\s+TABLE\s+IF\s+NOT\s+EXISTS/i;
+
+for (const entry of numberedMigrations.filter((m) => m.number >= RETRY_SAFETY_BASELINE)) {
+  const body = await readFile(new URL(entry.file, migrationsUrl), 'utf8');
+
+  // The migration runner wraps every migration and its ledger row in ONE transaction. A file that
+  // issues its own COMMIT ends that transaction early: the DDL is committed while the ledger row is
+  // not, so a later failure cannot be rolled back and the schema is left applied but unrecorded.
+  const ownTransaction = body.match(transactionControl);
+  if (ownTransaction) {
+    throw new Error(
+      `${entry.file} must not control its own transaction (found ${ownTransaction[0].trim()}); ` +
+        'the migration runner already wraps each migration and its ledger row in one transaction.',
+    );
+  }
+
+  // Retry safety: a migration may be re-run after an interrupted release or an out-of-band apply,
+  // so object creation must be conditional. A bare CREATE TABLE turns a retry into a dead end
+  // ("relation already exists") that only manual intervention can clear.
+  const unconditional = body.match(conditionalCreate);
+  if (unconditional) {
+    throw new Error(
+      `${entry.file} must use IF NOT EXISTS for object creation (found "${unconditional[0].trim()}").`,
+    );
+  }
+
+  // The omission that disabled production backups for seven nights: 0023 created a table and a
+  // sequence and granted the backup role nothing. A migration that adds a table must therefore
+  // state its privilege decision in writing — either explicit GRANTs in the file, or a
+  // `-- grants:` line recording where the privileges live and why that is sufficient.
+  if (createsTable.test(body) && !body.includes('GRANT ') && !/^-- grants:/m.test(body)) {
+    throw new Error(
+      `${entry.file} creates a table but records no privilege decision; add the GRANTs the new ` +
+        'table needs, or a "-- grants: ..." line stating where they live and why that suffices ' +
+        '(the backup role must be able to read every new table and sequence).',
+    );
+  }
+}
+
+console.log(
+  `Validated retry safety and privilege decisions for migrations ${String(RETRY_SAFETY_BASELINE).padStart(4, '0')}+.`,
+);
+
 // LB-DS-049 (PDR-008): deep, deterministic validation of the 35-candidate review migration.
 const candidateMigration = numberedMigrations.find(
   (entry) => entry.file === '0017_start_catalog_review_candidates.sql',

@@ -4,6 +4,40 @@ PostgreSQL migrations are append-only. Review events are idempotent through `cli
 
 `card_schedules` is the current, mutable scheduling projection for a user and a card. It can be rebuilt from the append-only review history when the scheduling policy changes or an incident requires reconciliation.
 
+## Authoring rules (enforced by `pnpm verify:migrations`)
+
+The runner in `apps/api/src/database/migration-runner.ts` applies each migration and its
+`schema_migrations` row in **one** transaction, and records the SHA-256 of the file's exact bytes.
+Three rules follow from that, and they are checked from `0024` onwards — `0001`-`0023` are recorded
+in the Production ledger and are immutable history.
+
+1. **Never control your own transaction.** No `BEGIN`, `COMMIT`, `ROLLBACK` or `START TRANSACTION`
+   in a migration file. A file that commits for itself ends the runner's transaction early: the DDL
+   lands, the ledger row does not, and a later failure can no longer be rolled back. The database is
+   then applied-but-unrecorded, and the next release run fails with "already exists".
+2. **Create objects conditionally.** `CREATE TABLE IF NOT EXISTS`, `CREATE INDEX IF NOT EXISTS`, and
+   a guarded `DO` block for anything that has no `IF NOT EXISTS` form (such as `CREATE TYPE`). A
+   migration may be re-run after an interrupted release or an out-of-band apply; a bare `CREATE`
+   turns that retry into a dead end.
+3. **Record a privilege decision when you add a table.** Either the `GRANT`s the new table needs, or
+   a `-- grants: …` line stating where they live and why that is sufficient. `0023` created a table
+   and a sequence, granted the backup role nothing, and Production had no backup for seven nights.
+
+### Privileges, after `0032_role_grant_repair.sql`
+
+`learnbox_app` and `learnbox_admin` get table-level, verb-level grants only — no `ALL`, no
+schema-wide write grant, no default privileges — so a new table is never silently reachable by the
+learner or Admin surface. `learnbox_migrator` (backup and ledger reader) holds `SELECT` on all
+tables and all sequences plus **default** `SELECT` on future objects, which is what keeps the
+nightly `pg_dump` working without anyone remembering to grant it. `pg_dump` needs `SELECT` on a
+sequence (it reads `last_value`); `USAGE` is not enough.
+
+Default privileges belong to the role that creates the objects — `neondb_owner` in Production — so
+migrations must be applied as that role, and `0032`'s `ALTER DEFAULT PRIVILEGES` has to be re-run if
+that ever changes. `apps/website/test/db-role-grant-matrix-db.test.ts` connects as the real
+restricted roles and runs a real `pg_dump`; every other database test connects as the owner, where a
+missing grant is invisible.
+
 ## Pack membership reconciliation (candidate; not applied to Production)
 
 `0018_pack_membership_schema.sql` records the existing production `packs`/`pack_cards` schema which was created outside the tracked `0001`–`0017` migration ledger. The 17 existing production checksums match this repository. `pack_cards` is the actual live association of the 35 published starter cards to the published free starter pack, not a speculative new model. See `docs/release/CURRENT_RELEASE_BASELINE.md` for read-only findings. The migration creates empty pack tables on a fresh database and validates compatible existing tables without seeding or changing any row. An isolated fresh PostgreSQL 16 instance applied all 18 migrations and re-ran with zero changes.
