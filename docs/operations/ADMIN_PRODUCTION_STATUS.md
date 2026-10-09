@@ -21,6 +21,12 @@ They prove the boundary, the code and the process — not the capability.
 
 ## 1. Baseline (recorded before any change in this task)
 
+> Superseded on 2026-10-09T20:44Z by the executed release: Production now runs Admin image
+> `sha256:a6a7e3a4a01374684468d911f191f9c17c50040f4f09ed84ce1273e4c81d8e4d`
+> (revision `8631565a`), schema head is `0033_admin_content_management_grants`, and
+> `LEARNBOX_ADMIN_CONTENT_PACKS_MANAGE_ENABLED=true`. The table below is kept as the pre-release
+> baseline; the execution record is `docs/release/ADMIN_RELEASE_0033_8631565.md`.
+
 | Item                | Value                                                                                                                                                                                                 |
 | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Admin image         | `sha256:1ad7033a8f3f7bc85f578a80fd8bb4bbb7048d5d1859471b6b0b7f639395d37d`                                                                                                                             |
@@ -115,8 +121,11 @@ required grant is missing **or** a forbidden one is present. Regression coverage
 `price_tomans`, `is_free`, `content_id`, `DELETE` on all four content tables and learner-progress
 writes. Removing the grants fails the suite with `permission denied for table packs`.
 
-**Production is still at head `0032`.** Verified after the merge: `packs INSERT = false`,
-`packs.status UPDATE = false`, `cards INSERT = false` for `learnbox_admin`.
+**Production is at head `0033`.** Applied 2026-10-09T20:37Z under owner authorization; verified after
+the apply: `packs INSERT = true`, `packs.status UPDATE = true`, `cards INSERT = true`,
+`packs.price_tomans UPDATE = false`, `DELETE = false` on all four content tables, and
+`learnbox_admin` still cannot write `review_events` or `card_schedules`. Data unchanged (12 counts
+and 8 `xmin` digests identical). Full record: `docs/release/ADMIN_RELEASE_0033_8631565.md`.
 
 ### 3.3 Pre-existing, found while verifying — not fixed here
 
@@ -136,42 +145,42 @@ writes. Removing the grants fails the suite with `permission denied for table pa
 
 ## 4. Production Admin feature flags (current)
 
-| Flag                                            | Value   | Effect                                                   |
-| ----------------------------------------------- | ------- | -------------------------------------------------------- |
-| `LEARNBOX_ADMIN_PASSKEY_ENABLED`                | `true`  | Passkey authentication required                          |
-| `NEXT_PUBLIC_LEARNBOX_ADMIN_PASSKEY_UI_ENABLED` | `true`  | Passkey login UI compiled into the image                 |
-| `LEARNBOX_ADMIN_BOOTSTRAP_ENABLED`              | `false` | Enrollment closed                                        |
-| `LEARNBOX_ADMIN_SUPPORT_ENABLED`                | `true`  | Users and Support                                        |
-| `LEARNBOX_ADMIN_CONTENT_PACKS_ENABLED`          | `true`  | Content and Packs — read                                 |
-| `LEARNBOX_ADMIN_CONTENT_REVIEW_ENABLED`         | `true`  | Content review workspace                                 |
-| `LEARNBOX_ADMIN_PRESENTATION_ENABLED`           | `true`  | Slider and splash authoring surface                      |
-| `LEARNBOX_ADMIN_STORE_ENABLED`                  | `true`  | Store administration (no payment path)                   |
-| `LEARNBOX_ADMIN_CONTENT_PACKS_MANAGE_ENABLED`   | absent  | Content mutations off — **requires `0033` first**        |
-| `LEARNBOX_ADMIN_CONTENT_AI_ENABLED`             | absent  | AI pack generation off                                   |
-| `LEARNBOX_ADMIN_MEDIA_AI_ENABLED`               | absent  | AI media generation off                                  |
-| `LEARNBOX_ADMIN_SPLASH_REPLACEMENT_ENABLED`     | absent  | Splash replacement off                                   |
-| `LEARNBOX_ZARINPAL_ENABLED`                     | absent  | No payment initiation, no merchant id in the environment |
+| Flag                                            | Value   | Effect                                                      |
+| ----------------------------------------------- | ------- | ----------------------------------------------------------- |
+| `LEARNBOX_ADMIN_PASSKEY_ENABLED`                | `true`  | Passkey authentication required                             |
+| `NEXT_PUBLIC_LEARNBOX_ADMIN_PASSKEY_UI_ENABLED` | `true`  | Passkey login UI compiled into the image                    |
+| `LEARNBOX_ADMIN_BOOTSTRAP_ENABLED`              | `false` | Enrollment closed                                           |
+| `LEARNBOX_ADMIN_SUPPORT_ENABLED`                | `true`  | Users and Support                                           |
+| `LEARNBOX_ADMIN_CONTENT_PACKS_ENABLED`          | `true`  | Content and Packs — read                                    |
+| `LEARNBOX_ADMIN_CONTENT_REVIEW_ENABLED`         | `true`  | Content review workspace                                    |
+| `LEARNBOX_ADMIN_PRESENTATION_ENABLED`           | `true`  | Slider and splash authoring surface                         |
+| `LEARNBOX_ADMIN_STORE_ENABLED`                  | `true`  | Store administration (no payment path)                      |
+| `LEARNBOX_ADMIN_CONTENT_PACKS_MANAGE_ENABLED`   | `true`  | Content mutations on since 2026-10-09T20:44Z (after `0033`) |
+| `LEARNBOX_ADMIN_CONTENT_AI_ENABLED`             | absent  | AI pack generation off                                      |
+| `LEARNBOX_ADMIN_MEDIA_AI_ENABLED`               | absent  | AI media generation off                                     |
+| `LEARNBOX_ADMIN_SPLASH_REPLACEMENT_ENABLED`     | absent  | Splash replacement off                                      |
+| `LEARNBOX_ZARINPAL_ENABLED`                     | absent  | No payment initiation, no merchant id in the environment    |
 
 `LEARNBOX_ADMIN_ORIGIN` and `LEARNBOX_ADMIN_RP_ID` are pinned to `admin.learnboxapp.com`.
 
 ## 5. Capability matrix
 
-| Capability                                 | State                 | Basis                                                                                                                                                                                                                                                          |
-| ------------------------------------------ | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Passkey authentication, session security   | **VERIFIED**          | Real owner sign-in recorded in `admin_passkey_credentials`/`admin_sessions`; sessions survive container recreation; anonymous `401`; bootstrap `404`                                                                                                           |
-| Users and Support                          | **DEPLOYED**          | Flag on, routes answer `401` anonymously; column grants verified (`users.status` writable, `users.phone_e164` `DENIED 42501`); owner reviewed the interface without a blocking finding. Not VERIFIED: no authenticated per-route response captured as evidence |
-| Content and Packs — read                   | **DEPLOYED**          | Flag on; Admin reads the same canonical rows the learner serves (`packs=1`, `cards=35`, `card_versions=35`, `pack_cards=35`) as `learnbox_admin` on the same Neon endpoint                                                                                     |
-| Content review workspace                   | **DEPLOYED**          | Flag on; `content_review_decisions` `INSERT` and `card_versions.status` `UPDATE` verified present                                                                                                                                                              |
-| Content lifecycle (publish/archive/import) | **BLOCKED**           | Needs migration `0033` applied to Production, then `LEARNBOX_ADMIN_CONTENT_PACKS_MANAGE_ENABLED=true`. Code and grants verified against a real database in CI                                                                                                  |
-| Presentation and slider                    | **DEPLOYED**          | Flag on; `banners` `INSERT`/`UPDATE` verified in a rolled-back transaction; real-database suite green (14 tests)                                                                                                                                               |
-| Splash management                          | **BLOCKED**           | Needs `BLOB_READ_WRITE_TOKEN`; see §6                                                                                                                                                                                                                          |
-| Store listings (administration)            | **DEPLOYED**          | Flag on; `store_listings` `INSERT`/`UPDATE` verified; catalogue currently empty                                                                                                                                                                                |
-| Store transactions / gateway status        | **MERGED**            | Fixed in #394; the running image predates it. `VERIFIED` only against a real database in CI, not in Production                                                                                                                                                 |
-| Payments / Zarinpal                        | **BLOCKED**           | No merchant id, flag absent, `purchase_events` is `SELECT`-only for Admin. Deliberately inactive                                                                                                                                                               |
-| AI content management                      | **BLOCKED**           | Needs `LEARNBOX_AI_API_KEY`; see §6                                                                                                                                                                                                                            |
-| AI media generation                        | **BLOCKED**           | Needs the same key; see §6                                                                                                                                                                                                                                     |
-| Audit logging                              | **IMPLEMENTED**       | Write path proven in the real-database suites (every slider mutation writes `audit_logs` in the same transaction). Production holds `1` row from 2026-09-25; no new Admin mutation has occurred, so there is nothing newer to show                             |
-| Legacy prototype routes                    | **DEPLOYED (closed)** | `legacyAdminRoutesEnabled()` is false in any production build; `/api/users`, `/api/packs`, `/api/gateways`, `/api/transactions` answer `404`                                                                                                                   |
+| Capability                                 | State                 | Basis                                                                                                                                                                                                                                                                                                                                                 |
+| ------------------------------------------ | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Passkey authentication, session security   | **VERIFIED**          | Real owner sign-in recorded in `admin_passkey_credentials`/`admin_sessions`; sessions survive container recreation; anonymous `401`; bootstrap `404`                                                                                                                                                                                                  |
+| Users and Support                          | **DEPLOYED**          | Flag on, routes answer `401` anonymously; column grants verified (`users.status` writable, `users.phone_e164` `DENIED 42501`); owner reviewed the interface without a blocking finding. Not VERIFIED: no authenticated per-route response captured as evidence                                                                                        |
+| Content and Packs — read                   | **DEPLOYED**          | Flag on; Admin reads the same canonical rows the learner serves (`packs=1`, `cards=35`, `card_versions=35`, `pack_cards=35`) as `learnbox_admin` on the same Neon endpoint                                                                                                                                                                            |
+| Content review workspace                   | **DEPLOYED**          | Flag on; `content_review_decisions` `INSERT` and `card_versions.status` `UPDATE` verified present                                                                                                                                                                                                                                                     |
+| Content lifecycle (publish/archive/import) | **DEPLOYED**          | `0033` applied 2026-10-09T20:37Z and the manage flag on at `20:44Z`; the eight granted verbs ALLOWED and the seven forbidden ones DENIED as `learnbox_admin` in a rolled-back zero-row transaction; write routes left `404` and now answer `401` with a trusted Origin, `400` cross-origin. Not VERIFIED: no authenticated lifecycle run captured yet |
+| Presentation and slider                    | **DEPLOYED**          | Flag on; `banners` `INSERT`/`UPDATE` verified in a rolled-back transaction; real-database suite green (14 tests)                                                                                                                                                                                                                                      |
+| Splash management                          | **BLOCKED**           | Needs `BLOB_READ_WRITE_TOKEN`; see §6                                                                                                                                                                                                                                                                                                                 |
+| Store listings (administration)            | **DEPLOYED**          | Flag on; `store_listings` `INSERT`/`UPDATE` verified; catalogue currently empty                                                                                                                                                                                                                                                                       |
+| Store transactions / gateway status        | **DEPLOYED**          | #394 live since 2026-10-09T20:42Z in image `sha256:a6a7e3a4…` (`admin_user_roles` absent from the artifact); the fixed query executes as the real `learnbox_admin` role in Production and returns rows instead of `42P01`. Not VERIFIED: no authenticated page load captured yet                                                                      |
+| Payments / Zarinpal                        | **BLOCKED**           | No merchant id, flag absent, `purchase_events` is `SELECT`-only for Admin. Deliberately inactive                                                                                                                                                                                                                                                      |
+| AI content management                      | **BLOCKED**           | Needs `LEARNBOX_AI_API_KEY`; see §6                                                                                                                                                                                                                                                                                                                   |
+| AI media generation                        | **BLOCKED**           | Needs the same key; see §6                                                                                                                                                                                                                                                                                                                            |
+| Audit logging                              | **IMPLEMENTED**       | Write path proven in the real-database suites (every slider mutation writes `audit_logs` in the same transaction). Production holds `1` row from 2026-09-25; no new Admin mutation has occurred, so there is nothing newer to show                                                                                                                    |
+| Legacy prototype routes                    | **DEPLOYED (closed)** | `legacyAdminRoutesEnabled()` is false in any production build; `/api/users`, `/api/packs`, `/api/gateways`, `/api/transactions` answer `404`                                                                                                                                                                                                          |
 
 Canonical-data equivalence is established: the Admin container's own connection reports
 `current_user = learnbox_admin` on the same Neon endpoint and database as the learner, and the rows
