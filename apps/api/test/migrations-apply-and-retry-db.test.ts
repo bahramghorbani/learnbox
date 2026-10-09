@@ -16,11 +16,11 @@ import {
  * M5 — the full migration set, applied by the REAL runner to a REAL isolated Postgres, plus the
  * partial-failure recovery behaviour the release depends on.
  *
- * Production stands at ledger head 0023 and must take 0024-0032 in one release. Two properties
- * have to hold before that is safe:
+ * Production stands at ledger head 0032; 0033 (the Admin content-management grants) is the next
+ * migration it must take. Two properties have to hold before that is safe:
  *
  *  1. The whole set applies to an empty database, is idempotent on a second run, and the ledger
- *     ends at 0032.
+ *     ends at the newest migration on disk.
  *  2. A migration that was interrupted — or applied out of band by an operator with psql — can be
  *     re-run. 0026 created `store_listings` with a bare `CREATE TABLE`, so a retry hit
  *     "relation already exists" (42P07) forever and the release could only be rescued by hand.
@@ -60,7 +60,7 @@ async function freshDatabase(): Promise<{ pool: Pool; client: MigrationClient; n
   return { pool, client, name };
 }
 
-suite('migrations 0001-0032 in an isolated database', () => {
+suite('migrations 0001-0033 in an isolated database', () => {
   beforeAll(() => {
     root = new Pool({ connectionString: url, max: 2 });
   });
@@ -82,7 +82,7 @@ suite('migrations 0001-0032 in an isolated database', () => {
         'SELECT version FROM schema_migrations ORDER BY version',
       );
       expect(ledger.rows).toHaveLength(allMigrations.length);
-      expect(ledger.rows.at(-1)?.version).toBe('0032_role_grant_repair');
+      expect(ledger.rows.at(-1)?.version).toBe('0033_admin_content_management_grants');
       expect(ledger.rows.map((r) => r.version)).toEqual(allMigrations.map((m) => m.version));
 
       const second = await runDatabaseMigrations(client, allMigrations);
@@ -144,7 +144,7 @@ suite('migrations 0001-0032 in an isolated database', () => {
       const ledger = await pool.query<{ version: string }>(
         'SELECT version FROM schema_migrations ORDER BY version',
       );
-      expect(ledger.rows.at(-1)?.version).toBe('0032_role_grant_repair');
+      expect(ledger.rows.at(-1)?.version).toBe('0033_admin_content_management_grants');
       const listings = await pool.query(
         `SELECT count(*)::int AS n FROM pg_class WHERE relname = 'store_listings'`,
       );
@@ -202,7 +202,7 @@ suite('migrations 0001-0032 in an isolated database', () => {
       const head = await pool.query<{ version: string }>(
         'SELECT version FROM schema_migrations ORDER BY version DESC LIMIT 1',
       );
-      expect(head.rows[0].version).toBe('0032_role_grant_repair');
+      expect(head.rows[0].version).toBe('0033_admin_content_management_grants');
     } finally {
       await pool.end();
     }
@@ -221,8 +221,8 @@ suite('migrations 0001-0032 in an isolated database', () => {
     expect(offenders).toEqual([]);
   });
 
-  it('ends with the grant repair recorded as the head of the ledger', async () => {
-    expect(files.at(-1)).toBe('0032_role_grant_repair.sql');
+  it('ends with the newest migration recorded as the head of the ledger', async () => {
+    expect(files.at(-1)).toBe('0033_admin_content_management_grants.sql');
     const numbers = files.map((f) => Number(f.slice(0, 4)));
     expect(numbers).toEqual(numbers.map((_, i) => i + 1));
     // The checksum the release will record, derived from the exact bytes on disk.
