@@ -26,6 +26,8 @@ SELECT r, unnest(string_to_array(l, ' ')), o FROM (VALUES
   ('learnbox_app', 'users review_events card_schedules learner_reconciliation_cursors mobile_learner_sessions user_packs payment_logs purchase_events revoked_sessions', 'DELETE'),
   ('learnbox_admin', 'users cards card_versions card_schedules review_events packs pack_cards banners current_splash splash_versions splash_replacement_actions private_media_cleanup_jobs content_review_checks content_review_decisions admin_owner admin_role_assignments admin_sessions admin_passkey_credentials admin_webauthn_challenges audit_logs billing_products payment_logs', 'SELECT'),
   ('learnbox_admin', 'admin_owner admin_passkey_credentials admin_sessions admin_webauthn_challenges content_review_checks current_splash splash_versions private_media_cleanup_jobs splash_replacement_actions audit_logs content_review_decisions', 'INSERT'),
+  -- Content workspace (migration 0033): create content, edit it, retire it by status, never delete it.
+  ('learnbox_admin', 'packs cards card_versions pack_cards', 'INSERT'),
   ('learnbox_admin', 'admin_owner admin_passkey_credentials admin_sessions admin_webauthn_challenges content_review_checks current_splash splash_versions private_media_cleanup_jobs splash_replacement_actions', 'UPDATE'),
   ('learnbox_admin', 'splash_replacement_actions admin_webauthn_challenges', 'DELETE')
 ) v(r, l, o);
@@ -35,7 +37,15 @@ CREATE TEMP TABLE expected_cols (role_name text, table_name text, col text, op t
 INSERT INTO expected_cols VALUES
   ('learnbox_app', 'audit_logs', 'actor_user_id', 'UPDATE'),
   ('learnbox_admin', 'card_versions', 'status', 'UPDATE'),
-  ('learnbox_admin', 'card_versions', 'published_at', 'UPDATE');
+  ('learnbox_admin', 'card_versions', 'published_at', 'UPDATE'),
+  -- Migration 0033. Note what is absent: packs.price_tomans, packs.is_free, cards.content_id.
+  ('learnbox_admin', 'card_versions', 'content_json', 'UPDATE'),
+  ('learnbox_admin', 'card_versions', 'source_provider', 'UPDATE'),
+  ('learnbox_admin', 'card_versions', 'source_reference', 'UPDATE'),
+  ('learnbox_admin', 'packs', 'status', 'UPDATE'),
+  ('learnbox_admin', 'packs', 'published_at', 'UPDATE'),
+  ('learnbox_admin', 'cards', 'lemma', 'UPDATE'),
+  ('learnbox_admin', 'cards', 'content_version', 'UPDATE');
 
 CREATE TEMP TABLE results (n serial, kind text, role_name text, subject text, expected text, actual text, ok boolean) ON COMMIT DROP;
 

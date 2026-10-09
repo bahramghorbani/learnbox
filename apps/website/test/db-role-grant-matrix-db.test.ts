@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { randomBytes } from 'node:crypto';
+import { randomBytes, randomUUID } from 'node:crypto';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -354,15 +354,94 @@ suite('restricted-role grant matrix (real Postgres, real roles)', () => {
       );
     });
 
+    /**
+     * Migration 0033 — the content workspace. Every statement below is the one the shipped Admin
+     * code runs (apps/admin/lib/server/postgres-content-packs-write-store.ts and
+     * postgres-content-lifecycle-store.ts), executed as the restricted role, so a missing grant
+     * fails here instead of as a 500 in Production.
+     */
+    it('creates, edits, publishes and archives content as the restricted Admin role', async () => {
+      const newPack = 'roles-admin-pack';
+      const newCard = randomUUID();
+      await adminRole.query(
+        `INSERT INTO packs (id, display_name, target_item_count, status)
+         VALUES ($1, 'بستهٔ ادمین', 1, 'draft')`,
+        [newPack],
+      );
+      await adminRole.query(`INSERT INTO cards (id, lemma, content_version, content_id)
+         VALUES ($1, 'Apfel', 1, 'roles-admin-card')`, [newCard]);
+      const version = await adminRole.query<{ id: string }>(
+        `INSERT INTO card_versions (card_id, version, status, content_json, source_provider, source_reference)
+         VALUES ($1, 1, 'draft', '{"lemma":"Apfel"}'::jsonb, 'editorial', 'roles-test')
+         RETURNING id`,
+        [newCard],
+      );
+      await adminRole.query(
+        `INSERT INTO pack_cards (pack_id, card_id, sort_order) VALUES ($1, $2, 1)`,
+        [newPack, newCard],
+      );
+
+      // In-place draft edit, then the canonical headword mirror on `cards`.
+      await adminRole.query(
+        `UPDATE card_versions
+            SET content_json = '{"lemma":"Apfelbaum"}'::jsonb,
+                source_provider = 'editorial',
+                source_reference = 'roles-test-2'
+          WHERE id = $1`,
+        [version.rows[0].id],
+      );
+      await adminRole.query(`UPDATE cards SET lemma = 'Apfelbaum', content_version = 2 WHERE id = $1`, [
+        newCard,
+      ]);
+
+      // Submit for review, publish, archive — the whole lifecycle, status only.
+      await adminRole.query(`UPDATE card_versions SET status = 'needs_review' WHERE card_id = $1`, [
+        newCard,
+      ]);
+      await adminRole.query(`UPDATE packs SET status = 'needs_review' WHERE id = $1`, [newPack]);
+      await adminRole.query(
+        `UPDATE card_versions SET status = 'published', published_at = now() WHERE card_id = $1`,
+        [newCard],
+      );
+      await adminRole.query(
+        `UPDATE packs SET status = 'published', published_at = COALESCE(published_at, now()) WHERE id = $1`,
+        [newPack],
+      );
+      await adminRole.query(`UPDATE packs SET status = 'archived' WHERE id = $1`, [newPack]);
+
+      const stored = await admin.query(
+        `SELECT p.status, c.lemma, v.status AS version_status
+           FROM packs p JOIN pack_cards pc ON pc.pack_id = p.id
+           JOIN cards c ON c.id = pc.card_id
+           JOIN card_versions v ON v.card_id = c.id
+          WHERE p.id = $1`,
+        [newPack],
+      );
+      expect(stored.rows[0]).toMatchObject({
+        status: 'archived',
+        lemma: 'Apfelbaum',
+        version_status: 'published',
+      });
+    });
+
     it('keeps the deliberate limits of the contained Admin surface', async () => {
       // db-roles-p0.sql: the Slider Manager cannot delete a slide, only deactivate it.
       await expectDenied(adminRole, `DELETE FROM banners WHERE id = 'banner_roles_test'`);
-      // The legacy content/packs/gateway routes are hard-disabled; their privileges stay revoked.
+      // 0033 grants content writes, NOT commercial configuration: pricing stays an owner decision.
       await expectDenied(adminRole, `UPDATE packs SET price_tomans = 1 WHERE id = $1`, [PACK]);
-      await expectDenied(adminRole, `UPDATE cards SET lemma = 'x' WHERE id = $1`, [ids.card]);
+      await expectDenied(adminRole, `UPDATE packs SET is_free = false WHERE id = $1`, [PACK]);
+      // The learner media/review key is immutable to the Admin role as well as to the trigger.
+      await expectDenied(adminRole, `UPDATE cards SET content_id = 'x' WHERE id = $1`, [ids.card]);
+      // Content is retired by status, never deleted.
+      await expectDenied(adminRole, `DELETE FROM packs WHERE id = $1`, [PACK]);
+      await expectDenied(adminRole, `DELETE FROM cards WHERE id = $1`, [ids.card]);
+      await expectDenied(adminRole, `DELETE FROM card_versions`);
+      await expectDenied(adminRole, `DELETE FROM pack_cards WHERE pack_id = $1`, [PACK]);
       await expectDenied(adminRole, `DELETE FROM users WHERE id = $1`, [ids.learner]);
       // The learner's own learning state is not an Admin-writable surface.
       await expectDenied(adminRole, `DELETE FROM review_events`);
+      await expectDenied(adminRole, `UPDATE review_events SET grade = 1`);
+      await expectDenied(adminRole, `UPDATE card_schedules SET due_at = now()`);
       await expectDenied(adminRole, `CREATE TABLE admin_cannot_create (id int)`);
     });
   });
