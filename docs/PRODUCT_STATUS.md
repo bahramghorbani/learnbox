@@ -132,13 +132,18 @@ capabilities beyond the shipped v1 scope unless this section says otherwise.
 
 **As of 2026-10-09.** Learner application: `APP_SOURCE_SHA=fa44d21a0e0604960becd66a8ab6e2d935911700`,
 image `sha256:65cd7969…`, healthy, `RestartCount=0`. Database schema head `0032_role_grant_repair`
-(32 ledger rows, 45 tables). Admin: not deployed, running `e601d8a1` and unreachable
-(`admin.learnboxapp.com` answers a fixed 404, container publishes no ports). Payments inactive,
-`store_listings = 0`, `BLOB_READ_WRITE_TOKEN` unset, one deliverable banner slide
-(`banner_sample3`). Deployment evidence: `docs/release/LEARNER_DEPLOY_FA44D21.md`. Not yet proven:
+(32 ledger rows, 45 tables). Admin: **deployed and reachable** at `admin.learnboxapp.com` from the
+same `fa44d21` source as image `sha256:1ad7033a…`, behind Passkey authentication with bootstrap
+enrollment closed; the owner's real Passkey sign-in is recorded in the database. Support, content
+read, content review, presentation and store administration flags are on; content mutations, both AI
+capabilities, splash replacement and payments are off. Payments inactive, `store_listings = 0`,
+`BLOB_READ_WRITE_TOKEN` unset, one deliverable banner slide (`banner_sample3`). Deployment evidence:
+`docs/release/LEARNER_DEPLOY_FA44D21.md`; Admin operational truth, capability states and the exact
+owner authorizations still required: `docs/operations/ADMIN_PRODUCTION_STATUS.md`. Not yet proven:
 device-level learner QA and the first unattended backup run after the backup fix
-(`2026-10-10T02:32Z`). Sections below this one describe earlier releases and are historical unless
-they say otherwise.
+(`2026-10-10T02:32Z`). Two merged changes are NOT in the running Admin image: the Store transaction
+role-table fix (#394) and migration `0033` (#395, Production still at head `0032`). Sections below
+this one describe earlier releases and are historical unless they say otherwise.
 
 ## v1.1.0 Option B capability state
 
