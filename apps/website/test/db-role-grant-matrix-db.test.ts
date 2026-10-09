@@ -368,8 +368,11 @@ suite('restricted-role grant matrix (real Postgres, real roles)', () => {
          VALUES ($1, 'بستهٔ ادمین', 1, 'draft')`,
         [newPack],
       );
-      await adminRole.query(`INSERT INTO cards (id, lemma, content_version, content_id)
-         VALUES ($1, 'Apfel', 1, 'roles-admin-card')`, [newCard]);
+      await adminRole.query(
+        `INSERT INTO cards (id, lemma, content_version, content_id)
+         VALUES ($1, 'Apfel', 1, 'roles-admin-card')`,
+        [newCard],
+      );
       const version = await adminRole.query<{ id: string }>(
         `INSERT INTO card_versions (card_id, version, status, content_json, source_provider, source_reference)
          VALUES ($1, 1, 'draft', '{"lemma":"Apfel"}'::jsonb, 'editorial', 'roles-test')
@@ -390,9 +393,10 @@ suite('restricted-role grant matrix (real Postgres, real roles)', () => {
           WHERE id = $1`,
         [version.rows[0].id],
       );
-      await adminRole.query(`UPDATE cards SET lemma = 'Apfelbaum', content_version = 2 WHERE id = $1`, [
-        newCard,
-      ]);
+      await adminRole.query(
+        `UPDATE cards SET lemma = 'Apfelbaum', content_version = 2 WHERE id = $1`,
+        [newCard],
+      );
 
       // Submit for review, publish, archive — the whole lifecycle, status only.
       await adminRole.query(`UPDATE card_versions SET status = 'needs_review' WHERE card_id = $1`, [
