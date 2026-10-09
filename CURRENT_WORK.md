@@ -21,10 +21,20 @@ Production schema head is now `0032_role_grant_repair` (32 ledger entries, 45 ta
 `neondb_owner` after a verified backup and isolated restore drill: `applied 9`, all 9 new ledger
 checksums matching the repository, 0 objects unreadable by the backup role, `pg_dump` through the
 restricted role succeeding, and every learner `xmin` digest unchanged. Full evidence:
-`docs/release/PRODUCTION_SYNC_0024_0032_EXECUTION.md`. **The application was not deployed** — it
-still runs SHA `6d6aa724` on an unchanged image with `RestartCount=0`, intentionally one schema
-version behind, which its own suites are proven against. Deploying it, enabling any flag and
-activating payment remain separate owner approvals.
+`docs/release/PRODUCTION_SYNC_0024_0032_EXECUTION.md`.
+
+**The learner application was then deployed from `fa44d21` on 2026-10-09T14:33Z** (separate owner
+authorization, learner only). Production runs digest
+`sha256:65cd79695c1c0352c49e5c2b69d7c31be058ac034f26a4355390c45bf0e7c495` with
+`APP_SOURCE_SHA=fa44d21a0e0604960becd66a8ab6e2d935911700`, healthy, `RestartCount=0`, on schema
+head `0032` — application and schema are now in sync. The learner fingerprint (counts, `md5`,
+`xmin`) is identical before and after the switch, and the two sample banner rows that M4.3's wider
+delivery predicate would newly have surfaced (`banner_sample1`, `banner_sample2`) were deactivated
+with owner authorization, leaving `banner_sample3` as the only delivered slide, exactly as before.
+Full evidence: `docs/release/LEARNER_DEPLOY_FA44D21.md`. Still open from that deployment:
+device-level learner QA (OTP login, a review round trip, progress) was not exercised, and the first
+unattended backup after the backup fix (`2026-10-10T02:32Z`) has not been observed. Admin
+deployment, enabling any flag and activating payment remain separate owner approvals.
 
 **Phase: Admin control plane (opened 2026-10-04).** The Learner/FV phase is closed; see the
 closure record below. No fixed launch date exists — it was removed from the active plan on
@@ -500,7 +510,10 @@ the reviewed-and-published state before M1.6 by the earlier path: 35 persisted
 pack published on 2026-09-25 with **35/35 card versions published**. Phase 1 therefore closes on
 merged capability plus that pre-existing Production content state; the lifecycle code itself is
 merged but **not deployed** (Production still runs `APP_SOURCE_SHA=6d6aa724`), and activation
-remains a separate, separately-authorized release action.
+remains a separate, separately-authorized release action. _(Superseded 2026-10-09: the learner
+application now runs `fa44d21`, so this code is deployed; it stays inert because
+`LEARNBOX_ADMIN_CONTENT_PACKS_MANAGE_ENABLED` is still set nowhere — see
+`docs/release/LEARNER_DEPLOY_FA44D21.md`.)_
 
 Mona's test account continues to receive real learner activity (3 events at 08:37Z on
 2026-10-04, after FV closure). This is expected ongoing use, not a deployment side effect;

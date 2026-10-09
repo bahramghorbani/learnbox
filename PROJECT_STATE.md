@@ -20,21 +20,30 @@
 | Release record                 | annotated tag `v1.0.0` + GitHub Release, targeting `2acdcef4`             |
 | Repository visibility          | private (security decision, 2026-09-28)                                   |
 
-### Production as deployed today (reconciled at CP11, 2026-10-02)
+### Production as deployed today (reconciled 2026-10-09)
 
-Production has since advanced through the v1.2.1 security patch and the **LB-B35 CP9 server-side
-cutover**. These are the current live facts; the table above is the v1.0.0 activation record and must
-not be read as current.
+These are the current live facts. The table above is the v1.0.0 activation record and must not be
+read as current; the earlier CP11 (2026-10-02) reconciliation of this table is superseded by the
+rows below.
 
-| Fact                                    | Value                                                                                      |
-| --------------------------------------- | ------------------------------------------------------------------------------------------ |
-| Production application source           | `8b7b32905ccbae09977cd0c102df62cf79e58bd5`                                                 |
-| Production image digest                 | `sha256:6318eb286ec3187bd3857389bab5e2b9de6b105ba76307f936d1257b958dfa0c`                  |
-| Migration ledger applied                | `0001`–`0023` (includes `0023_learning_persistence`)                                       |
-| Server flags ON                         | `TZ_PERSIST`, `SERVER_SESSION_PLAN`, `TODAY_WORKLOAD`, `QUEUE_QUARANTINE`, `BINARY_REVIEW` |
-| `LEARNBOX_SCHEDULER_V2`                 | **ABSENT / not authorized**                                                                |
-| `NEXT_PUBLIC_LEARNBOX_BINARY_REVIEW_UI` | `false` (baked into the artifact; learner UI is legacy four-grade)                         |
-| Latest release tag                      | `v1.0.0` still targets `2acdcef4` and is **not** moved                                     |
+| Fact                                    | Value                                                                                                                  |
+| --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Production application source           | `fa44d21a0e0604960becd66a8ab6e2d935911700` (learner; deployed 2026-10-09T14:33Z)                                       |
+| Production image digest                 | `sha256:65cd79695c1c0352c49e5c2b69d7c31be058ac034f26a4355390c45bf0e7c495`                                              |
+| Rollback artifact retained              | `sha256:953b7b6240c266ec22d1ed6bc4dad5998ae679cd907276d39c232676f7709d24` (`6d6aa724`) plus `compose.yaml.pre-fa44d21` |
+| Migration ledger applied                | `0001`–`0032` (head `0032_role_grant_repair`, 45 tables, applied 2026-10-09)                                           |
+| Server flags ON                         | `TZ_PERSIST`, `SERVER_SESSION_PLAN`, `TODAY_WORKLOAD`, `QUEUE_QUARANTINE`, `BINARY_REVIEW`, `DYNAMIC_SPLASH_ENABLED`   |
+| `LEARNBOX_SCHEDULER_V2`                 | **ABSENT / not authorized**                                                                                            |
+| `LEARNBOX_ZARINPAL_ENABLED`             | **ABSENT** — payment inactive; `store_listings = 0`, `purchase_events = 0`                                             |
+| `BLOB_READ_WRITE_TOKEN`                 | **ABSENT** — splash bytes are served from `splash_versions.image_data`                                                 |
+| `NEXT_PUBLIC_LEARNBOX_BINARY_REVIEW_UI` | `true` (baked into the artifact since CP14; learner UI is binary)                                                      |
+| Admin application                       | `e601d8a118ec915d1a3c18cca7fb018025ad9a1c`, **not deployed from `main`**, unreachable (fixed 404, no published ports)  |
+| Deliverable learner banner slides       | `1` (`banner_sample3`); `banner_sample1`/`2` deactivated 2026-10-09 with owner authorization                           |
+| Latest release tag                      | `v1.0.0` still targets `2acdcef4` and is **not** moved                                                                 |
+
+Deployment evidence: `docs/release/LEARNER_DEPLOY_FA44D21.md`. Open items from that deployment:
+device-level learner QA (OTP login, review round trip, progress) was not exercised, and the first
+unattended backup run after the backup fix (`2026-10-10T02:32Z`) has not been observed.
 
 Repository `main` may advance beyond the Production application SHA through documentation-only
 commits. That is intentional and is **not** application drift: compare the Production application
