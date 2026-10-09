@@ -42,6 +42,8 @@ test('keeps the diagnostic that identifies the fault', () => {
   const out = sanitizeError(real);
   assert.match(out, /permission denied for sequence review_event_rejections_id_seq/);
   assert.match(out, /SELECT last_value, is_called/);
+  // One line on every platform: GNU `cut` terminates its output with a newline where BSD `cut`
+  // does not, so the function ends with `tr -d '\n'` and this asserts that contract.
   assert.equal(out.includes('\n'), false, 'the alert reason must be a single line');
 });
 

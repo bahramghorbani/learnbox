@@ -64,7 +64,8 @@ sanitize_error() {
     | tr -d '\r' \
     | tr '\n' ' ' \
     | sed -E 's/[[:cntrl:]]/ /g; s/  +/ /g; s/^ //; s/ $//' \
-    | cut -c1-400
+    | cut -c1-400 \
+    | tr -d '\n'
 }
 
 PG_IMAGE="${LEARNBOX_PG_IMAGE:-postgres:17-alpine}"
