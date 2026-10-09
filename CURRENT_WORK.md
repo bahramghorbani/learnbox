@@ -4,6 +4,20 @@
 
 ## Active work
 
+**Production synchronization — database privilege and retry-safety repair (merged; nothing applied
+to Production).** `main` could not be synchronized to Production because migrations `0024`-`0026`
+create six tables and grant no privileges to any role: applying them as they stood would have
+aborted the nightly `pg_dump` the same night (the 2026-10 outage, repeated) and left Admin reads
+failing under the least-privilege roles, while `0026` could not be retried after an interrupted
+apply and `0029` took transaction control away from the runner. `0032_role_grant_repair.sql` now
+carries the whole privilege matrix — verb-level grants for the learner and Admin roles, `SELECT` on
+all tables **and sequences** for the backup role, and `ALTER DEFAULT PRIVILEGES` so a future table
+cannot repeat the failure — and `pnpm verify:migrations` enforces the three authoring rules from
+`0024` onwards. Evidence, the release-readiness checklist and the exact Production approval still
+required are in `docs/release/PRODUCTION_SYNC_0024_0032.md`; the operational half is in
+`docs/operations/BACKUP_RESTORE.md`. Production remains at ledger head `0023` and application SHA
+`6d6aa724`.
+
 **Phase: Admin control plane (opened 2026-10-04).** The Learner/FV phase is closed; see the
 closure record below. No fixed launch date exists — it was removed from the active plan on
 2026-10-04 and is an explicit owner decision taken later. Active work is scoped to what

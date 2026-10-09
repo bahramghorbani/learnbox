@@ -329,12 +329,15 @@ describe('Store is never a second source of truth for content (M2.1)', () => {
     }
   });
 
-  it('keeps the migration additive: no drop, no destructive alter, no backfill', () => {
+  it('keeps the migration additive and retry-safe: no drop, no destructive alter, no backfill', () => {
     const migration = readFileSync(
       join(root, '../../database/migrations/0026_store_listings.sql'),
       'utf8',
     );
-    expect(migration).toContain('CREATE TABLE store_listings');
+    // Retry safety: an interrupted or out-of-band apply must not turn every retry into
+    // "relation already exists" (see database/README.md and 0032_role_grant_repair.sql).
+    expect(migration).toContain('CREATE TABLE IF NOT EXISTS store_listings');
+    expect(migration).toContain('CREATE INDEX IF NOT EXISTS store_listings_display_idx');
     expect(migration).toMatch(/pack_id TEXT PRIMARY KEY REFERENCES packs\(id\)/);
     expect(migration).not.toMatch(/\bDROP\b/i);
     expect(migration).not.toMatch(/\bALTER TABLE\b/i);

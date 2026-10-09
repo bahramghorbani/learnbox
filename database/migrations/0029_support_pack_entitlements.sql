@@ -31,8 +31,15 @@
 --
 -- Forward-only and idempotent. Existing 'free' and 'purchased' rows satisfy both constraints, so
 -- revalidation cannot fail and no data is rewritten.
-
-BEGIN;
+--
+-- No transaction control in this file (the explicit BEGIN/COMMIT it was written with has been
+-- removed before it was ever applied to production): the runner in
+-- apps/api/src/database/migration-runner.ts already wraps each migration and its ledger row in ONE
+-- transaction. A file that commits for itself ends that transaction early — the DDL lands, the
+-- ledger row does not, and a later failure can no longer be rolled back, which leaves the schema
+-- applied but unrecorded and the next release run hitting "already exists". Proven in
+-- apps/api/test/migrations-apply-and-retry-db.test.ts and now rejected by
+-- scripts/validate-migrations.mjs.
 
 -- The inline CHECK from 0022 is auto-named there, but `user_packs` predates that migration in
 -- Production, where the constraint may carry a different name. Dropping by discovered name rather
@@ -85,4 +92,3 @@ BEGIN
     END IF;
 END $$;
 
-COMMIT;

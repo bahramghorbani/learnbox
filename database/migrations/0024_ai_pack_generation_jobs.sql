@@ -24,6 +24,13 @@
 --
 -- Forward-only and additive: a new table plus one index. Idempotent, so a second application is a
 -- no-op. No existing table is altered, so every pre-1.4 code path runs unchanged on this schema.
+--
+-- grants: none in this file. `ai_generation_jobs` is written only by the Admin workspace, and the
+-- privileges for it are granted in 0032_role_grant_repair.sql together with the rest of the
+-- 0023-0031 repair, so one reviewable matrix covers every environment — including the ones that
+-- had already applied this migration when the gap was found. From 0032 onward the backup role
+-- also holds default SELECT on new tables and sequences, so a future table cannot repeat the
+-- omission that disabled nightly backups for seven nights in 2026-10.
 
 CREATE TABLE IF NOT EXISTS ai_generation_jobs (
     id                  uuid PRIMARY KEY,

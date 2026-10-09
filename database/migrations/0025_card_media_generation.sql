@@ -30,6 +30,12 @@
 --
 -- Forward-only and additive: two new tables plus indexes, no existing table altered. Idempotent,
 -- so a second application is a no-op and every pre-1.5 code path runs unchanged on this schema.
+--
+-- grants: none in this file. The three `card_media_*` tables are written only by the Admin
+-- workspace, and their privileges are granted in 0032_role_grant_repair.sql together with the
+-- rest of the 0023-0031 repair, so one reviewable matrix covers every environment — including the
+-- ones that had already applied this migration when the gap was found. From 0032 onward the
+-- backup role also holds default SELECT on new tables and sequences.
 
 -- Stored bytes for protected card media. Read only through an authenticated Admin route; there is
 -- no public path to this table's contents.
