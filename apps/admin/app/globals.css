@@ -1724,6 +1724,36 @@ button {
   gap: 10px;
   flex-wrap: wrap;
 }
+/* Stage 3 — reference identity cell and level chip (`content.html` pack table). */
+.cp-workspace .cell-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.cp-workspace .cover {
+  width: 42px;
+  height: 42px;
+  border-radius: 11px;
+  flex: none;
+  background: var(--lavender-soft);
+}
+.cp-workspace .t-name {
+  font-weight: 700;
+  font-size: 12px;
+}
+.cp-workspace .t-sub {
+  font-size: 10.5px;
+  color: var(--muted);
+}
+.cp-workspace .lvl {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 7px;
+  background: var(--lavender-soft);
+  color: var(--purple-ink);
+  display: inline-block;
+}
 .cp-workspace .pack-foot {
   display: flex;
   align-items: center;
@@ -1805,16 +1835,8 @@ button {
   padding: 2px 7px;
   color: var(--ink-strong);
 }
-.cp-workspace .chip-sm {
-  font-size: 11px;
-  padding: 3px 8px;
-  border-radius: 999px;
-  background: var(--lav-soft);
-  color: var(--purple-deep);
-  border: 1px solid var(--lav-line);
-}
 .cp-workspace .progress.err > i {
-  background: linear-gradient(90deg, #f6778f, var(--rose));
+  background: linear-gradient(90deg, #f6778f, var(--rose-ink));
 }
 .cp-workspace .kpi.err {
   border-color: #f3c9d4;
@@ -1864,6 +1886,12 @@ button {
 @media (max-width: 1080px) {
   .cp-workspace .grid-4 {
     grid-template-columns: 1fr 1fr;
+  }
+  /* Deviation from the reference, deliberate: the prototype lets a six-column pack table push the
+     whole page sideways on a phone, which drags the header and nav off-screen with it. Scrolling
+     the table inside its own card keeps every column reachable and the page itself still. */
+  .cp-workspace .card:has(.tbl) {
+    overflow-x: auto;
   }
 }
 @media (max-width: 760px) {
@@ -2116,13 +2144,7 @@ button {
 .cp-workspace .cp-import-statement strong {
   font-variant-numeric: tabular-nums;
 }
-/* M1.4 — AI generation: head actions, plan summary and real generation progress. */
-.cp-head-actions {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  flex-wrap: wrap;
-}
+/* M1.4 — AI generation: plan summary and real generation progress. */
 .cp-workspace .cp-plan-grid {
   display: grid;
   grid-template-columns: max-content 1fr;
