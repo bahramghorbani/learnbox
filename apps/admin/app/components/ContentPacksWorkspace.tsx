@@ -7,6 +7,7 @@ import {
   type ImportAnalysis,
   type ImportResultSummary,
 } from './ContentImportModal';
+import { fetchWithStepUp, stepUpMessage } from './step-up-reauth';
 import {
   AiPackGenerationModal,
   type AcceptSummary,
@@ -204,7 +205,7 @@ async function postAiJson<T>(
     return { ok: false, message: 'نشان امنیتی CSRF در دسترس نیست؛ صفحه را تازه کنید.' };
   }
   try {
-    const response = await fetch(path, {
+    const { response, stepUp } = await fetchWithStepUp(path, {
       method: 'POST',
       credentials: 'same-origin',
       headers: { 'content-type': 'application/json', 'x-learnbox-csrf-token': csrfToken },
@@ -218,7 +219,7 @@ async function postAiJson<T>(
       return { ok: false, message: 'نقش شما اجازهٔ ساخت محتوا را ندارد.' };
     }
     if (response.status === 428) {
-      return { ok: false, message: 'احراز هویت مجدد لازم است؛ دوباره وارد شوید.' };
+      return { ok: false, message: stepUpMessage(stepUp) };
     }
     const payload = (await response.json().catch(() => undefined)) as
       { message?: string; code?: string } | undefined;
@@ -245,7 +246,7 @@ async function sendMutation(
     return { ok: false, message: 'نشان امنیتی CSRF در دسترس نیست؛ صفحه را تازه کنید.' };
   }
   try {
-    const response = await fetch(path, {
+    const { response, stepUp } = await fetchWithStepUp(path, {
       method,
       credentials: 'same-origin',
       headers: {
@@ -263,7 +264,7 @@ async function sendMutation(
       return { ok: false, message: 'نقش شما اجازهٔ ویرایش محتوا را ندارد.' };
     }
     if (response.status === 428) {
-      return { ok: false, message: 'احراز هویت مجدد لازم است؛ دوباره وارد شوید.' };
+      return { ok: false, message: stepUpMessage(stepUp) };
     }
     if (response.status === 422) {
       const payload = (await response.json().catch(() => undefined)) as
@@ -313,7 +314,7 @@ async function sendImport(
   form.set('file', file, file.name);
   for (const [key, value] of Object.entries(extra)) form.set(key, value);
   try {
-    const response = await fetch(path, {
+    const { response, stepUp } = await fetchWithStepUp(path, {
       method: 'POST',
       credentials: 'same-origin',
       headers: { 'x-learnbox-csrf-token': csrfToken },
@@ -327,7 +328,7 @@ async function sendImport(
       return { ok: false, message: 'نقش شما اجازهٔ ویرایش محتوا را ندارد.' };
     }
     if (response.status === 428) {
-      return { ok: false, message: 'احراز هویت مجدد لازم است؛ دوباره وارد شوید.' };
+      return { ok: false, message: stepUpMessage(stepUp) };
     }
     if (response.status === 413) {
       return { ok: false, message: 'حجم فایل بیش از حد مجاز است.' };

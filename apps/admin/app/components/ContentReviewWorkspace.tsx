@@ -6,6 +6,7 @@ import type { LearningVocabularyItem } from '@learnbox/content-models';
 
 import { AdminSidebar } from './AdminSidebar';
 import { useAdminWorkspaceAccess } from './AdminAuthGate';
+import { fetchWithStepUp, stepUpMessage } from './step-up-reauth';
 
 const partOfSpeechLabels: Record<LearningVocabularyItem['partOfSpeech'], string> = {
   noun: 'اسم',
@@ -187,7 +188,7 @@ export function ServerBackedContentReview() {
     setBusyDimension(dimension);
     setNotice({ kind: 'none' });
     try {
-      const response = await fetch('/api/content/review/check', {
+      const { response, stepUp } = await fetchWithStepUp('/api/content/review/check', {
         method: 'POST',
         credentials: 'same-origin',
         headers: {
@@ -202,7 +203,7 @@ export function ServerBackedContentReview() {
         }),
       });
       if (response.status === 428) {
-        setNotice({ kind: 'reauth', text: 'احراز هویت مجدد لازم است؛ دوباره وارد شوید.' });
+        setNotice({ kind: 'reauth', text: stepUpMessage(stepUp) });
         return;
       }
       if (response.status === 409) {
@@ -272,7 +273,7 @@ export function ServerBackedContentReview() {
     setBusy('decision');
     setNotice({ kind: 'none' });
     try {
-      const response = await fetch('/api/content/review/decision', {
+      const { response, stepUp } = await fetchWithStepUp('/api/content/review/decision', {
         method: 'POST',
         credentials: 'same-origin',
         headers: {
@@ -286,7 +287,7 @@ export function ServerBackedContentReview() {
         }),
       });
       if (response.status === 428) {
-        setNotice({ kind: 'reauth', text: 'احراز هویت مجدد لازم است؛ دوباره وارد شوید.' });
+        setNotice({ kind: 'reauth', text: stepUpMessage(stepUp) });
         return;
       }
       if (response.status === 409) {

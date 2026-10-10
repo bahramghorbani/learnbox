@@ -12,6 +12,13 @@ import { ServerBackedContentReview } from '../app/components/ContentReviewWorksp
   globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }
 ).IS_REACT_ACT_ENVIRONMENT = true;
 
+/** Swapped per test to play the operator's answer to the passkey prompt. */
+let stepUpAssertion: () => Promise<{ id: string }> = async () => ({ id: 'credential' });
+
+vi.mock('@simplewebauthn/browser', () => ({
+  startAuthentication: async () => stepUpAssertion(),
+}));
+
 type Rendered = {
   container: HTMLElement;
   text: string;
@@ -691,6 +698,85 @@ describe('ServerBackedContentReview (authenticated review composition)', () => {
       expect(disabled.container.querySelector('[data-review-panel]')).toBeNull();
     } finally {
       await disabled.unmount();
+    }
+  });
+
+  it('re-authenticates a refused check in place and replays the same idempotency key', async () => {
+    let checkAttempts = 0;
+    stepUpAssertion = async () => ({ id: 'credential' });
+    const { calls } = stubReviewFetch({
+      '/api/content/review': () => jsonResponse({ items: [itemHaus] }),
+      '/api/content/review/check': () => {
+        checkAttempts += 1;
+        return checkAttempts === 1
+          ? jsonResponse({ code: 'reauthentication_required' }, 428)
+          : jsonResponse({ status: 'applied' });
+      },
+      '/api/auth/reauth/options': () => jsonResponse({ challenge: 'challenge' }),
+      '/api/auth/reauth/verify': () => new Response(null, { status: 204 }),
+    });
+    const rendered = await renderServer();
+    try {
+      const dimensionRow = rendered.container.querySelector('[data-dimension="audio"]');
+      // The reviewer's selected card must still be the one being reviewed after the step-up.
+      const selectedBefore = rendered.container.querySelector("[aria-pressed='true']")?.textContent;
+      await rendered.clickButton('تأیید', dimensionRow as HTMLElement);
+      await flush();
+
+      expect(checkAttempts).toBe(2);
+      const keys = calls
+        .filter((call) => call.url === '/api/content/review/check')
+        .map((call) => new Headers(call.init?.headers).get('idempotency-key'));
+      expect(keys).toHaveLength(2);
+      expect(new Set(keys).size).toBe(1);
+      expect(calls.filter((call) => call.url === '/api/auth/reauth/verify')).toHaveLength(1);
+      expect(rendered.text).toContain('ثبت بررسی در سرور انجام شد.');
+      expect(rendered.container.querySelector("[aria-pressed='true']")?.textContent).toBe(
+        selectedBefore,
+      );
+    } finally {
+      await rendered.unmount();
+    }
+  });
+
+  it('keeps the review context and records nothing when the step-up is cancelled', async () => {
+    let checkAttempts = 0;
+    stepUpAssertion = async () => {
+      const error = new Error('cancelled by the reviewer');
+      error.name = 'NotAllowedError';
+      throw error;
+    };
+    const { calls } = stubReviewFetch({
+      '/api/content/review': () => jsonResponse({ items: [itemHaus, itemTisch] }),
+      '/api/content/review/check': () => {
+        checkAttempts += 1;
+        return jsonResponse({ code: 'reauthentication_required' }, 428);
+      },
+      '/api/auth/reauth/options': () => jsonResponse({ challenge: 'challenge' }),
+      '/api/auth/reauth/verify': () => new Response(null, { status: 204 }),
+    });
+    const rendered = await renderServer();
+    try {
+      const selectedBefore = rendered.container.querySelector("[aria-pressed='true']")?.textContent;
+      const dimensionRow = rendered.container.querySelector('[data-dimension="visual"]');
+      await rendered.clickButton('تأیید', dimensionRow as HTMLElement);
+      await flush();
+
+      expect(checkAttempts).toBe(1);
+      expect(calls.filter((call) => call.url === '/api/auth/reauth/options')).toHaveLength(1);
+      expect(calls.filter((call) => call.url === '/api/auth/reauth/verify')).toHaveLength(0);
+      expect(rendered.text).toContain('لغو شد');
+      expect(rendered.text).toContain('حفظ شده است');
+      expect(rendered.text).not.toContain('ثبت بررسی در سرور انجام شد');
+      // Queue, selection and the six-dimension gate are all still on screen and usable.
+      expect(rendered.container.querySelector("[aria-pressed='true']")?.textContent).toBe(
+        selectedBefore,
+      );
+      expect(rendered.container.querySelectorAll('.review-gate-list li')).toHaveLength(6);
+      expect(rendered.container.querySelector('[data-review-panel]')).not.toBeNull();
+    } finally {
+      await rendered.unmount();
+      stepUpAssertion = async () => ({ id: 'credential' });
     }
   });
 
