@@ -172,7 +172,12 @@ export function AdminSidebar({ current = 'home' }: { current?: string } = {}) {
           );
         })}
       </nav>
-      <button className="collapse-control" type="button">
+      {/*
+       * The approved reference has no collapse control; this one predates it and has never had a
+       * handler. It is kept so no existing control disappears, but marked disabled so it stops
+       * advertising behaviour that does not exist.
+       */}
+      <button aria-disabled="true" className="collapse-control" disabled type="button">
         <span aria-hidden="true" data-admin-collapse-icon>
           <AdminIcon name="collapse" />
         </span>
