@@ -20,6 +20,7 @@ import {
   type MediaKindState,
 } from './CardMediaPanel';
 import { PackLifecyclePanel } from './PackLifecyclePanel';
+import { EmptyState, ErrorState, LoadingState } from './AdminStates';
 import {
   CardFormModal,
   PackFormModal,
@@ -128,6 +129,38 @@ const CARD_BADGE: Record<string, readonly [string, string]> = {
 function PackBadge({ status }: { status: string }) {
   const [tone, label] = PACK_BADGE[status] ?? ['b-grey', status];
   return <span className={`badge ${tone}`}>{label}</span>;
+}
+
+/**
+ * Content-completion bar from the reference pack card (`content.html`).
+ *
+ * Both numbers are canonical: `cardCount` is the pack's real card count and `targetItemCount` is
+ * the target the operator set on the pack. A pack with no target has nothing to be a ratio of, so
+ * the bar is not rendered at all rather than shown at a made-up zero or a hundred percent.
+ * Only unfinished packs show it — on a published pack the number is not a to-do any more.
+ */
+function PackProgress({ pack }: { pack: ServerPack }) {
+  if (pack.status !== 'draft' && pack.status !== 'needs_review') return null;
+  if (!pack.targetItemCount || pack.targetItemCount <= 0) return null;
+  const percent = Math.min(100, Math.round((pack.cardCount / pack.targetItemCount) * 100));
+  return (
+    <div>
+      <div className="t-sub">
+        تکمیل محتوا: {faNum(pack.cardCount)} از {faNum(pack.targetItemCount)} کارت ({faNum(percent)}
+        ٪)
+      </div>
+      <div
+        className="progress"
+        role="progressbar"
+        aria-label={`تکمیل محتوای بستهٔ ${pack.displayName}`}
+        aria-valuenow={percent}
+        aria-valuemin={0}
+        aria-valuemax={100}
+      >
+        <i style={{ width: `${percent}%` }} />
+      </div>
+    </div>
+  );
 }
 
 function CardBadge({ status }: { status: string | null }) {
@@ -573,7 +606,7 @@ export function ContentPacksWorkspace() {
             </p>
           </div>
           {manageEnabled && phase !== 'disabled' && phase !== 'unauthorized' ? (
-            <div className="cp-head-actions">
+            <div className="head-actions">
               {aiEnabled ? (
                 <button
                   className="btn"
@@ -611,31 +644,45 @@ export function ContentPacksWorkspace() {
           </div>
         ) : null}
 
-        {phase === 'loading' ? (
-          <div className="notice" role="status" aria-live="polite" data-cp-state="loading">
-            <span>در حال دریافت بسته‌ها از سرور…</span>
-          </div>
-        ) : null}
+        {phase === 'loading' ? <LoadingState label="در حال دریافت بسته‌ها از سرور…" /> : null}
 
         {phase === 'unauthorized' ? (
-          <div className="notice" role="status" data-cp-state="unauthorized">
-            <span>نشست امن معتبر نیست؛ برای مشاهدهٔ محتوا دوباره وارد شوید.</span>
-          </div>
+          <ErrorState
+            tone="amber"
+            title="نشست امن معتبر نیست"
+            description="برای مشاهدهٔ بسته‌ها و کارت‌ها باید دوباره با گذرکلید وارد شوید."
+          />
         ) : null}
 
         {phase === 'error' ? (
-          <div className="notice rose" role="status" data-cp-state="error">
-            <span>دریافت بسته‌ها از سرور ناموفق بود.</span>
-            <button className="btn" type="button" onClick={() => void loadPacks()}>
-              تلاش دوباره
-            </button>
-          </div>
+          <ErrorState
+            title="دریافت بسته‌ها ناموفق بود"
+            description="ارتباط با پایگاه دادهٔ کانونی برقرار نشد؛ هیچ دادهٔ محلی یا جایگزینی نمایش داده نمی‌شود."
+            action={
+              <button className="btn" type="button" onClick={() => void loadPacks()}>
+                تلاش دوباره
+              </button>
+            }
+          />
         ) : null}
 
         {phase === 'empty' ? (
-          <div className="notice" role="status" data-cp-state="empty">
-            <span>هنوز هیچ بستهٔ محتوایی در پایگاه دادهٔ کانونی ثبت نشده است.</span>
-          </div>
+          <EmptyState
+            variant="page"
+            title="هنوز بسته‌ای ثبت نشده است"
+            description="هیچ بستهٔ محتوایی در پایگاه دادهٔ کانونی وجود ندارد. نخستین بسته را بسازید تا کارت‌ها به آن افزوده شوند."
+            action={
+              manageEnabled ? (
+                <button
+                  className="btn primary"
+                  type="button"
+                  onClick={() => setPackForm({ mode: 'create', values: emptyPackForm })}
+                >
+                  افزودن بستهٔ جدید
+                </button>
+              ) : undefined
+            }
+          />
         ) : null}
 
         {phase === 'ready' ? (
@@ -729,30 +776,46 @@ export function ContentPacksWorkspace() {
               <div className="pack-grid" data-cp-view="grid">
                 {visible.map((pack) => (
                   <article className="pack-card" key={pack.id}>
+                    {/* The reference's cover carries the pack's own CEFR level and status badge.
+                        It is a flat token gradient: no per-pack artwork exists in canonical data,
+                        so nothing here is invented or sampled from the prototype's demo rows. */}
+                    <div className="pack-cover">
+                      <span className="ltr" aria-hidden="true">
+                        {pack.targetCefr}
+                      </span>
+                      <PackBadge status={pack.status} />
+                    </div>
                     <div className="pack-body">
                       <div className="pack-name">{pack.displayName}</div>
                       <div className="pack-meta">
+                        <span>سطح {pack.targetCefr}</span>
                         <span>{faNum(pack.cardCount)} کارت</span>
-                        <span className="ltr">{pack.targetCefr}</span>
                         {pack.category ? <span>{pack.category}</span> : null}
                       </div>
-                      {pack.description ? <p className="muted">{pack.description}</p> : null}
+                      {pack.description ? <p className="muted-note">{pack.description}</p> : null}
+                      <PackProgress pack={pack} />
                       <div className="pack-foot">
-                        <PackBadge status={pack.status} />
-                        <button className="btn" onClick={() => openPack(pack.id)} type="button">
-                          مشاهدهٔ کارت‌ها
-                        </button>
-                        {manageEnabled ? (
+                        <span className="muted-note">{pack.isFree ? 'رایگان' : 'غیررایگان'}</span>
+                        <div className="head-actions">
                           <button
-                            className="btn"
+                            className="btn sm"
+                            onClick={() => openPack(pack.id)}
                             type="button"
-                            onClick={() =>
-                              setPackForm({ mode: 'edit', values: packFormFrom(pack) })
-                            }
                           >
-                            ویرایش
+                            مشاهدهٔ کارت‌ها
                           </button>
-                        ) : null}
+                          {manageEnabled ? (
+                            <button
+                              className="btn sm"
+                              type="button"
+                              onClick={() =>
+                                setPackForm({ mode: 'edit', values: packFormFrom(pack) })
+                              }
+                            >
+                              ویرایش
+                            </button>
+                          ) : null}
+                        </div>
                       </div>
                     </div>
                   </article>
@@ -774,28 +837,45 @@ export function ContentPacksWorkspace() {
                   <tbody>
                     {visible.map((pack) => (
                       <tr key={pack.id}>
-                        <td>{pack.displayName}</td>
-                        <td className="ltr">{pack.targetCefr}</td>
+                        <td>
+                          <div className="cell-main">
+                            <span className="cover" aria-hidden="true" />
+                            <div>
+                              <div className="t-name">{pack.displayName}</div>
+                              {/* Canonical id, not a prototype subtitle: operators match rows by it. */}
+                              <div className="t-sub ltr">{pack.id}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <span className="lvl ltr">{pack.targetCefr}</span>
+                        </td>
                         <td>{faNum(pack.cardCount)}</td>
                         <td>{faNum(pack.publishedCardCount)}</td>
                         <td>
                           <PackBadge status={pack.status} />
                         </td>
                         <td>
-                          <button className="btn" onClick={() => openPack(pack.id)} type="button">
-                            کارت‌ها
-                          </button>
-                          {manageEnabled ? (
+                          <div className="head-actions">
                             <button
-                              className="btn"
+                              className="btn sm"
+                              onClick={() => openPack(pack.id)}
                               type="button"
-                              onClick={() =>
-                                setPackForm({ mode: 'edit', values: packFormFrom(pack) })
-                              }
                             >
-                              ویرایش
+                              کارت‌ها
                             </button>
-                          ) : null}
+                            {manageEnabled ? (
+                              <button
+                                className="btn sm"
+                                type="button"
+                                onClick={() =>
+                                  setPackForm({ mode: 'edit', values: packFormFrom(pack) })
+                                }
+                              >
+                                ویرایش
+                              </button>
+                            ) : null}
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -851,26 +931,32 @@ export function ContentPacksWorkspace() {
                     />
                   ) : null}
                   {cardsPhase === 'loading' ? (
-                    <p className="muted" role="status" aria-live="polite">
-                      در حال دریافت کارت‌ها…
-                    </p>
+                    <LoadingState label="در حال دریافت کارت‌ها…" />
                   ) : null}
                   {cardsPhase === 'error' ? (
-                    <div className="notice rose" role="status">
-                      <span>دریافت کارت‌های این بسته ناموفق بود.</span>
-                      <button
-                        className="btn"
-                        onClick={() => void loadCards(openPackId)}
-                        type="button"
-                      >
-                        تلاش دوباره
-                      </button>
-                    </div>
+                    <ErrorState
+                      title="دریافت کارت‌های این بسته ناموفق بود"
+                      description="کارت‌ها از پایگاه دادهٔ کانونی خوانده نشدند؛ فهرست زیر خالی می‌ماند تا خواندن موفق شود."
+                      action={
+                        <button
+                          className="btn"
+                          onClick={() => void loadCards(openPackId)}
+                          type="button"
+                        >
+                          تلاش دوباره
+                        </button>
+                      }
+                    />
                   ) : null}
                   {cardsPhase === 'ready' && cards.length === 0 ? (
-                    <p className="muted" role="status">
-                      این بسته هیچ کارتی ندارد.
-                    </p>
+                    <EmptyState
+                      title="این بسته هنوز کارتی ندارد"
+                      description={
+                        manageEnabled
+                          ? 'با «افزودن کارت» یا درون‌ریزی CSV / XLSX نخستین کارت‌ها را بسازید.'
+                          : undefined
+                      }
+                    />
                   ) : null}
                   {cardsPhase === 'ready' && cards.length > 0 ? (
                     <>
