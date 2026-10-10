@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
 import type { AdminAuthMode } from '../admin-auth-mode';
+import { LoadingState } from './AdminStates';
 import { PasskeySignIn } from './PasskeySignIn';
 
 export type AdminWorkspaceAccess = 'local-prototype' | 'server-authenticated';
@@ -59,8 +60,8 @@ export function AdminAuthGate({ mode, children }: AdminAuthGateProps) {
   }
   if (state === 'checking') {
     return (
-      <main className="admin-auth-loading" aria-live="polite">
-        در حال بررسی ورود امن…
+      <main className="admin-auth-loading">
+        <LoadingState label="در حال بررسی ورود امن…" />
       </main>
     );
   }
