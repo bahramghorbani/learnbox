@@ -2,6 +2,8 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
+import { EmptyState, LoadingState } from './AdminStates';
+
 type AccountStatus = 'active' | 'disabled';
 
 type User = {
@@ -382,7 +384,7 @@ export function UsersManagement() {
       )}
 
       {loading ? (
-        <p className="users-loading">در حال بارگذاری...</p>
+        <LoadingState label="در حال بارگذاری..." />
       ) : (
         <div className="users-table-wrap">
           <table className="users-table">
@@ -433,8 +435,8 @@ export function UsersManagement() {
               ))}
               {users.length === 0 && (
                 <tr>
-                  <td colSpan={9} className="users-empty">
-                    کاربری یافت نشد.
+                  <td colSpan={9}>
+                    <EmptyState title="کاربری یافت نشد." icon="search" />
                   </td>
                 </tr>
               )}
@@ -551,14 +553,14 @@ export function UsersManagement() {
 
             <section className="user-packs" aria-labelledby="user-packs-title">
               <h4 id="user-packs-title">دسترسی بسته‌ها</h4>
-              {packsLoading && <p className="users-loading">در حال بارگذاری دسترسی‌ها...</p>}
+              {packsLoading && <LoadingState label="در حال بارگذاری دسترسی‌ها..." />}
               {packsError && (
                 <p className="users-error" role="alert">
                   {packsError}
                 </p>
               )}
               {!packsLoading && !packsError && packs.length === 0 && (
-                <p className="user-packs-empty">بستهٔ فعالی برای نمایش وجود ندارد.</p>
+                <EmptyState title="بستهٔ فعالی برای نمایش وجود ندارد." />
               )}
               {packNotice && (
                 <p className="users-notice" role="status">
