@@ -7,18 +7,18 @@ entitlements or environment variables were changed. No deploy, no migration.
 
 ## Result: PASS (all 8 steps)
 
-| Step | Result | Evidence |
-|---|---|---|
-| Draft pack creation | PASS | `zz-test-lifecycle-20261010`, audit `content_pack.create` 04:49:15 |
-| Card creation | PASS | `POST /api/content/packs/{id}/cards` → 200, card `de66b880…`, version `7a1ea31d…`, audit 05:40:33 |
-| Card edit | PASS | `PATCH /api/content/cards/{id}` → 200, `persianMeanings` updated in place (version stays 1 while draft), audit 05:41:57 |
-| Submit for review | PASS | `submittedCardCount=1`, `packStatus=needs_review`, audit 05:41:58 |
-| Six-dimension review | PASS | 6× `POST /api/content/review/check` → 200 (`german_linguistic`, `persian_translation`, `provenance`, `visual`, `audio`, `app_flow`), audit 05:41:58–05:42:00 |
-| Editorial decision | PASS | `POST /api/content/review/decision` → `nextStatus=approved`, audit `content_review.approve` 05:42:00 |
-| Publication | PASS | `publishedCardCount=1`; pack `status=published`, version `status=published`, audit 05:42:01 |
-| Learner catalogue visibility | PASS | learner-visible free published set = 36 cards; `Testwort` present for both users |
-| Archival | PASS | `deactivatedCardCount=1`; pack `archived`, version `deprecated`, audit 05:43:32 |
-| Learner visibility after archival | PASS | learner set back to 35 cards; `Testwort` absent; visible packs = `learnbox_start_a1_essentials` only |
+| Step                              | Result | Evidence                                                                                                                                                     |
+| --------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Draft pack creation               | PASS   | `zz-test-lifecycle-20261010`, audit `content_pack.create` 04:49:15                                                                                           |
+| Card creation                     | PASS   | `POST /api/content/packs/{id}/cards` → 200, card `de66b880…`, version `7a1ea31d…`, audit 05:40:33                                                            |
+| Card edit                         | PASS   | `PATCH /api/content/cards/{id}` → 200, `persianMeanings` updated in place (version stays 1 while draft), audit 05:41:57                                      |
+| Submit for review                 | PASS   | `submittedCardCount=1`, `packStatus=needs_review`, audit 05:41:58                                                                                            |
+| Six-dimension review              | PASS   | 6× `POST /api/content/review/check` → 200 (`german_linguistic`, `persian_translation`, `provenance`, `visual`, `audio`, `app_flow`), audit 05:41:58–05:42:00 |
+| Editorial decision                | PASS   | `POST /api/content/review/decision` → `nextStatus=approved`, audit `content_review.approve` 05:42:00                                                         |
+| Publication                       | PASS   | `publishedCardCount=1`; pack `status=published`, version `status=published`, audit 05:42:01                                                                  |
+| Learner catalogue visibility      | PASS   | learner-visible free published set = 36 cards; `Testwort` present for both users                                                                             |
+| Archival                          | PASS   | `deactivatedCardCount=1`; pack `archived`, version `deprecated`, audit 05:43:32                                                                              |
+| Learner visibility after archival | PASS   | learner set back to 35 cards; `Testwort` absent; visible packs = `learnbox_start_a1_essentials` only                                                         |
 
 ## Data integrity (post-test)
 
