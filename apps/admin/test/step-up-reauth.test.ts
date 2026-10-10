@@ -2,7 +2,11 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { fetchWithStepUp, requestStepUpReauth, stepUpMessage } from '../app/components/step-up-reauth';
+import {
+  fetchWithStepUp,
+  requestStepUpReauth,
+  stepUpMessage,
+} from '../app/components/step-up-reauth';
 
 /**
  * Inline step-up re-authentication (the 428 fix for the content workspaces).

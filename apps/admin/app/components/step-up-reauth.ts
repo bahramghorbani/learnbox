@@ -17,7 +17,8 @@ import { startAuthentication } from '@simplewebauthn/browser';
  *   - nothing navigates or reloads, so unsaved form state, selection and workflow context survive.
  */
 
-export type StepUpOutcome = 'not-required' | 'confirmed' | 'cancelled' | 'failed' | 'session-expired';
+export type StepUpOutcome =
+  'not-required' | 'confirmed' | 'cancelled' | 'failed' | 'session-expired';
 
 const csrfCookieName = '__Host-learnbox_admin_csrf';
 
