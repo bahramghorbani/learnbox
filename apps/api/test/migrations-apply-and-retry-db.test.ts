@@ -16,7 +16,7 @@ import {
  * M5 — the full migration set, applied by the REAL runner to a REAL isolated Postgres, plus the
  * partial-failure recovery behaviour the release depends on.
  *
- * Production stands at ledger head 0032; 0033 (the Admin content-management grants) is the next
+ * Production stands at ledger head 0033; 0034 (the Admin pack metadata grants) is the next
  * migration it must take. Two properties have to hold before that is safe:
  *
  *  1. The whole set applies to an empty database, is idempotent on a second run, and the ledger
@@ -60,7 +60,7 @@ async function freshDatabase(): Promise<{ pool: Pool; client: MigrationClient; n
   return { pool, client, name };
 }
 
-suite('migrations 0001-0033 in an isolated database', () => {
+suite('migrations 0001-0034 in an isolated database', () => {
   beforeAll(() => {
     root = new Pool({ connectionString: url, max: 2 });
   });
@@ -82,7 +82,7 @@ suite('migrations 0001-0033 in an isolated database', () => {
         'SELECT version FROM schema_migrations ORDER BY version',
       );
       expect(ledger.rows).toHaveLength(allMigrations.length);
-      expect(ledger.rows.at(-1)?.version).toBe('0033_admin_content_management_grants');
+      expect(ledger.rows.at(-1)?.version).toBe('0034_admin_pack_metadata_grants');
       expect(ledger.rows.map((r) => r.version)).toEqual(allMigrations.map((m) => m.version));
 
       const second = await runDatabaseMigrations(client, allMigrations);
@@ -144,7 +144,7 @@ suite('migrations 0001-0033 in an isolated database', () => {
       const ledger = await pool.query<{ version: string }>(
         'SELECT version FROM schema_migrations ORDER BY version',
       );
-      expect(ledger.rows.at(-1)?.version).toBe('0033_admin_content_management_grants');
+      expect(ledger.rows.at(-1)?.version).toBe('0034_admin_pack_metadata_grants');
       const listings = await pool.query(
         `SELECT count(*)::int AS n FROM pg_class WHERE relname = 'store_listings'`,
       );
@@ -202,7 +202,7 @@ suite('migrations 0001-0033 in an isolated database', () => {
       const head = await pool.query<{ version: string }>(
         'SELECT version FROM schema_migrations ORDER BY version DESC LIMIT 1',
       );
-      expect(head.rows[0].version).toBe('0033_admin_content_management_grants');
+      expect(head.rows[0].version).toBe('0034_admin_pack_metadata_grants');
     } finally {
       await pool.end();
     }
@@ -222,7 +222,7 @@ suite('migrations 0001-0033 in an isolated database', () => {
   });
 
   it('ends with the newest migration recorded as the head of the ledger', async () => {
-    expect(files.at(-1)).toBe('0033_admin_content_management_grants.sql');
+    expect(files.at(-1)).toBe('0034_admin_pack_metadata_grants.sql');
     const numbers = files.map((f) => Number(f.slice(0, 4)));
     expect(numbers).toEqual(numbers.map((_, i) => i + 1));
     // The checksum the release will record, derived from the exact bytes on disk.

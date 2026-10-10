@@ -133,6 +133,25 @@ function parseCardContent(body: Record<string, unknown>): CardContentInput | und
   };
 }
 
+/**
+ * One structured line per failed content write. The route still answers with the generic
+ * `unavailable()` body — this is the only place the real cause (e.g. a Postgres `42501`
+ * permission denial) becomes visible to an operator. Request bodies, cookies, CSRF and
+ * idempotency keys are never logged: only the operation name, the Postgres error code and the
+ * driver's message.
+ */
+function logWriteFailure(operation: string, error: unknown) {
+  const code = (error as { code?: unknown } | null | undefined)?.code;
+  console.error(
+    JSON.stringify({
+      event: 'admin.content_write_failed',
+      operation,
+      pgCode: typeof code === 'string' ? code : undefined,
+      message: error instanceof Error ? error.message : 'unknown error',
+    }),
+  );
+}
+
 function packWriteResponse(result: PackWriteResult) {
   switch (result.status) {
     case 'forbidden':
@@ -238,7 +257,8 @@ export function createContentPackCreateRoute(dependencies: RouteDependencies<'cr
         actorUserId: authorized.actorUserId,
       });
       return packWriteResponse(result);
-    } catch {
+    } catch (error) {
+      logWriteFailure('content_pack.create', error);
       return unavailable();
     }
   };
@@ -276,7 +296,8 @@ export function createContentPackEditRoute(dependencies: RouteDependencies<'edit
         actorUserId: authorized.actorUserId,
       });
       return packWriteResponse(result);
-    } catch {
+    } catch (error) {
+      logWriteFailure('content_pack.edit', error);
       return unavailable();
     }
   };
@@ -311,7 +332,8 @@ export function createContentCardCreateRoute(dependencies: RouteDependencies<'cr
         actorUserId: authorized.actorUserId,
       });
       return cardWriteResponse(result);
-    } catch {
+    } catch (error) {
+      logWriteFailure('content_card.create', error);
       return unavailable();
     }
   };
@@ -345,7 +367,8 @@ export function createContentCardEditRoute(dependencies: RouteDependencies<'edit
         actorUserId: authorized.actorUserId,
       });
       return cardWriteResponse(result);
-    } catch {
+    } catch (error) {
+      logWriteFailure('content_card.edit', error);
       return unavailable();
     }
   };
