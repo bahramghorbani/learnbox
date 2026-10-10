@@ -480,10 +480,30 @@ export class PostgresContentPacksWriteStore {
         await client.query('ROLLBACK');
         return { status: 'idempotent', packId: replayed };
       }
-      const current = await client.query('SELECT id FROM packs WHERE id = $1 FOR UPDATE', [packId]);
+      const current = await client.query('SELECT id, is_free FROM packs WHERE id = $1 FOR UPDATE', [
+        packId,
+      ]);
       if (current.rows.length === 0) {
         await client.query('ROLLBACK');
         return { status: 'not_found' };
+      }
+      const currentIsFree = (current.rows[0] as { is_free?: boolean }).is_free;
+
+      // Free/paid is an owner decision, not editorial metadata: `is_free` is deliberately absent
+      // from both the SET list below and the `learnbox_admin` grants (migrations 0033/0034). The
+      // edit form posts the pack's current value on every save, so only a real attempt to flip it
+      // lands here, and it gets a field-level answer instead of a permission-denied 503.
+      if (input.isFree !== undefined && input.isFree !== currentIsFree) {
+        await client.query('ROLLBACK');
+        return {
+          status: 'invalid',
+          issues: [
+            {
+              field: 'isFree',
+              message: 'تغییر رایگان/پولی بودن بسته از پنل مجاز نیست؛ این تصمیم مالکانه است.',
+            },
+          ],
+        };
       }
 
       await client.query(
@@ -492,8 +512,7 @@ export class PostgresContentPacksWriteStore {
                 description       = CASE WHEN $3::boolean THEN $4 ELSE description END,
                 target_cefr       = COALESCE($5, target_cefr),
                 category          = CASE WHEN $6::boolean THEN $7 ELSE category END,
-                target_item_count = COALESCE($8, target_item_count),
-                is_free           = COALESCE($9, is_free)
+                target_item_count = COALESCE($8, target_item_count)
           WHERE id = $1`,
         [
           packId,
@@ -504,7 +523,6 @@ export class PostgresContentPacksWriteStore {
           input.category !== undefined,
           optionalText(input.category, 'Category', 120),
           targetItemCount ?? null,
-          input.isFree === undefined ? null : input.isFree === true,
         ],
       );
       await this.audit(client, actorUserId, 'content_pack.edit', 'pack', packId, {
