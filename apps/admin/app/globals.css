@@ -11,12 +11,46 @@
   font-display: swap;
 }
 :root {
+  /* Design tokens of the APPROVED, DESIGN FROZEN prototype (PDR-009):
+   * `prototypes/admin-ui-v1/assets/css/app.css` on `proto/admin-ui-concept` @ 8b3e050d.
+   *
+   * They live here, not on a wrapper class, because Admin surfaces outside the shell
+   * (the sign-in check, the Passkey screen) use the same shared patterns. Scoped to
+   * `.cp-workspace` they resolved to nothing there — e.g. the shared `.spinner` border
+   * silently disappeared on the sign-in check screen.
+   *
+   * `--canvas` is deliberately NOT promoted: `.admin-shell` keeps the true-white canvas that
+   * the review-contrast guard pins, and `.cp-workspace` keeps the reference canvas. */
   --purple: #6b42df;
+  --purple-deep: #5733c4;
+  --purple-ink: #4527a0;
   --ink: #16182b;
+  --ink-strong: #1e293b;
+  --ink-muted: #64748b;
   --muted: #6e7182;
   --line: #e4e3e9;
+  --line-soft: #e7e3ff;
+  --surface: #ffffff;
+  --surface-2: #fbfaff;
+  --lavender-soft: #f3ecff;
+  --apricot-soft: #fff1e3;
+  --blue-soft: #e8f1ff;
+  --blue-ink: #2563eb;
   --green: #15a765;
+  --green-soft: #e7f7ef;
   --orange: #e89911;
+  --rose-soft: #ffecef;
+  --rose-ink: #e11d48;
+  --amber-ink: #b45309;
+  --radius-sm: 10px;
+  --radius: 14px;
+  --radius-lg: 18px;
+  --radius-pill: 999px;
+  --shadow-sm: 0 1px 2px rgba(22, 24, 43, 0.04);
+  --shadow: 0 2px 10px rgba(22, 24, 43, 0.05);
+  --shadow-lg: 0 12px 40px rgba(22, 24, 43, 0.14);
+  --gap: 16px;
+  --sidebar-w: 186px;
 }
 * {
   box-sizing: border-box;
@@ -109,63 +143,88 @@ button {
   background: var(--canvas);
 }
 .admin-sidebar {
-  width: 248px;
+  width: var(--sidebar-w);
+  background: var(--surface);
   border-left: 1px solid var(--line);
   display: flex;
   flex-direction: column;
-  padding: 38px 24px 26px;
+  padding: 18px 12px 14px;
   flex-shrink: 0;
+  /* The reference keeps navigation in place while the workspace scrolls. */
+  align-self: flex-start;
+  position: sticky;
+  top: 0;
+  height: 100vh;
 }
 .admin-logo {
   color: var(--purple);
-  font-size: 25px;
+  font-size: 17px;
   font-weight: 700;
+  letter-spacing: -0.2px;
   text-decoration: none;
   direction: ltr;
   display: flex;
-  gap: 10px;
+  gap: 9px;
   align-items: center;
-  margin: 4px 14px 72px;
+  margin: 2px 8px 20px;
 }
 .admin-logo span {
-  border: 2px solid currentColor;
+  border: 1.6px solid currentColor;
   display: grid;
   place-items: center;
   width: 30px;
   height: 30px;
-  border-radius: 8px;
+  border-radius: 9px;
+  flex: none;
 }
 .admin-sidebar nav {
   display: grid;
-  gap: 10px;
+  gap: 2px;
 }
 .admin-nav-item {
   display: flex;
   align-items: center;
-  gap: 14px;
-  color: #4e5060;
+  gap: 10px;
+  color: var(--ink);
   text-decoration: none;
-  padding: 14px 17px;
-  font-size: 16px;
-  border-radius: 12px;
+  padding: 9px 10px;
+  font-size: 12.5px;
+  border-radius: var(--radius-sm);
+  transition:
+    background 0.13s ease,
+    color 0.13s ease;
+}
+.admin-nav-item:not(.is-pending):hover {
+  background: var(--surface-2);
+}
+/* The reference has no focus style; keyboard navigation needs one, so it is added here. */
+.admin-nav-item:focus-visible,
+.admin-logo:focus-visible,
+.collapse-control:focus-visible {
+  outline: 2px solid var(--purple);
+  outline-offset: 2px;
 }
 .admin-nav-icon {
   display: grid;
-  flex: 0 0 24px;
+  flex: 0 0 17px;
   place-items: center;
-  width: 24px;
-  height: 24px;
+  width: 17px;
+  height: 17px;
+  color: var(--muted);
 }
 .admin-nav-icon svg,
 .collapse-control svg {
   display: block;
-  width: 24px;
-  height: 24px;
+  width: 17px;
+  height: 17px;
 }
 .admin-nav-item.is-current {
-  color: var(--purple);
-  background: #f4f0ff;
+  color: var(--purple-ink);
+  background: var(--lavender-soft);
   font-weight: 700;
+}
+.admin-nav-item.is-current .admin-nav-icon {
+  color: var(--purple);
 }
 /* Frozen-design nav entries whose destination is not implemented yet: present, clearly inert. */
 .admin-nav-item.is-pending {
@@ -176,33 +235,43 @@ button {
   margin-top: auto;
   border: 0;
   background: transparent;
-  color: #515362;
+  color: var(--muted);
   display: flex;
-  gap: 12px;
+  gap: 10px;
   align-items: center;
-  padding: 14px 17px;
+  padding: 9px 10px;
+  font-size: 12.5px;
+  font-family: inherit;
+}
+.collapse-control[disabled] {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 .collapse-control span {
   display: grid;
   place-items: center;
-  width: 24px;
-  height: 24px;
+  width: 17px;
+  height: 17px;
 }
 .admin-workspace {
   flex: 1;
   min-width: 0;
 }
+.cp-workspace .admin-workspace {
+  padding: 16px 18px 26px;
+}
 .admin-topbar {
-  min-height: 102px;
-  padding: 24px 42px;
-  border-bottom: 1px solid var(--line);
+  padding: 16px 18px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 14px;
 }
 .admin-topbar h1 {
   margin: 0;
-  font-size: 34px;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
   line-height: 1.2;
 }
 .admin-preview-notice {
@@ -219,8 +288,13 @@ button {
 .editor-identity {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 9px;
   color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 5px 10px;
+  box-shadow: var(--shadow-sm);
 }
 .editor-identity strong,
 .editor-identity small {
@@ -228,20 +302,24 @@ button {
 }
 .editor-identity strong {
   color: var(--ink);
-  font-size: 15px;
-  margin-bottom: 3px;
+  font-size: 12px;
+  line-height: 1.35;
 }
 .editor-identity small {
-  font-size: 13px;
+  font-size: 10.5px;
+  line-height: 1.35;
 }
 .editor-avatar {
-  width: 48px;
-  height: 48px;
+  width: 32px;
+  height: 32px;
   display: grid;
   place-items: center;
-  border-radius: 14px;
-  background: #f1ecff;
+  border-radius: 50%;
+  background: var(--lavender-soft);
   color: var(--purple);
+  font-size: 11px;
+  font-weight: 700;
+  flex: none;
 }
 .review-layout {
   max-width: 1170px;
@@ -891,26 +969,6 @@ button {
 }
 
 @media (max-width: 1420px) {
-  .admin-sidebar {
-    width: 86px;
-    padding: 28px 12px;
-  }
-  .admin-logo {
-    margin: 4px auto 52px;
-    font-size: 0;
-  }
-  .admin-logo span {
-    font-size: 22px;
-  }
-  .admin-nav-item {
-    justify-content: center;
-    font-size: 0;
-    padding: 14px;
-  }
-  .collapse-control {
-    font-size: 0;
-    justify-content: center;
-  }
   .review-layout {
     padding: 0 20px;
     grid-template-columns: 1fr;
@@ -930,7 +988,7 @@ button {
     grid-column: 1/-1;
   }
   .admin-topbar {
-    padding: 22px 28px;
+    padding: 16px 18px;
   }
 }
 @media (max-width: 600px) {
@@ -961,44 +1019,6 @@ button {
   }
   .review-gate-list {
     grid-template-columns: 1fr;
-  }
-  .admin-shell {
-    display: block;
-  }
-  .admin-sidebar {
-    width: 100%;
-    border-left: 0;
-    border-bottom: 1px solid var(--line);
-    padding: 13px 16px;
-    flex-direction: row;
-    align-items: center;
-    gap: 12px;
-    overflow-x: auto;
-  }
-  .admin-logo {
-    font-size: 19px;
-    margin: 0 0 0 10px;
-    white-space: nowrap;
-  }
-  .admin-logo span {
-    width: 24px;
-    height: 24px;
-  }
-  .admin-sidebar nav {
-    display: flex;
-    gap: 4px;
-  }
-  .admin-nav-item {
-    font-size: 13px;
-    padding: 9px 10px;
-    white-space: nowrap;
-  }
-  .admin-nav-icon,
-  .collapse-control {
-    display: none;
-  }
-  .admin-topbar h1 {
-    font-size: 27px;
   }
   .editor-identity {
     display: none;
@@ -1375,30 +1395,9 @@ button {
    frozen visual system cannot leak into the existing review/splash screens.
    Visual source of truth: prototypes/admin-ui-v1/content.html + assets/css/app.css. */
 .cp-workspace {
-  --purple-deep: #5733c4;
-  --purple-ink: #4527a0;
-  --ink-strong: #1e293b;
-  --ink-muted: #64748b;
-  --line-soft: #e7e3ff;
-  --lavender-soft: #f3ecff;
-  --apricot-soft: #fff1e3;
+  /* Everything else now comes from :root. Only the canvas differs, and it must stay declared
+   * after `.admin-shell` so the reference canvas wins on prototype-styled screens. */
   --canvas: #f5f4fa;
-  --surface: #ffffff;
-  --surface-2: #fbfaff;
-  --blue-soft: #e8f1ff;
-  --blue-ink: #2563eb;
-  --green-soft: #e7f7ef;
-  --rose-soft: #ffecef;
-  --rose-ink: #e11d48;
-  --amber-ink: #b45309;
-  --radius-sm: 10px;
-  --radius: 14px;
-  --radius-lg: 18px;
-  --radius-pill: 999px;
-  --shadow-sm: 0 1px 2px rgba(22, 24, 43, 0.04);
-  --shadow: 0 2px 10px rgba(22, 24, 43, 0.05);
-  --shadow-lg: 0 12px 40px rgba(22, 24, 43, 0.14);
-  --gap: 16px;
   color: var(--ink);
 }
 .cp-workspace .card {
@@ -1828,6 +1827,40 @@ button {
     grid-template-columns: repeat(3, 1fr);
   }
 }
+/* Reference behaviour at <= 1080px: the sidebar becomes a horizontal, scrollable nav bar and
+ * every label stays readable instead of collapsing to an icon. */
+@media (max-width: 1080px) {
+  .admin-shell {
+    display: block;
+  }
+  .admin-sidebar {
+    width: 100%;
+    height: auto;
+    position: static;
+    border-left: 0;
+    border-bottom: 1px solid var(--line);
+    padding: 10px 12px;
+    flex-direction: row;
+    align-items: center;
+    overflow-x: auto;
+  }
+  .admin-logo {
+    margin: 0 8px 0 14px;
+    white-space: nowrap;
+  }
+  .admin-sidebar nav {
+    display: flex;
+    gap: 4px;
+  }
+  .admin-nav-item {
+    padding: 8px 11px;
+    white-space: nowrap;
+  }
+  .collapse-control {
+    display: none;
+  }
+}
+
 @media (max-width: 1080px) {
   .cp-workspace .grid-4 {
     grid-template-columns: 1fr 1fr;
@@ -2134,7 +2167,6 @@ button {
 /* Users & Support (Phase 3 / M3.1) — the Users view had class names but no stylesheet, so the
    support surface rendered unstyled. Plain CSS on the global palette, no new tokens. */
 .users-management {
-  padding: 20px;
   display: grid;
   gap: 14px;
 }
