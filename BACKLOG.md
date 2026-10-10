@@ -212,6 +212,33 @@ Entry conditions: the Admin capability matrix has no `BLOCKED` row that a redesi
 Store transaction fix and migration `0033` are live in Production, and the owner authorizes a
 redesign phase. Not approved for implementation yet.
 
+Staged execution plan recorded 2026-10-10:
+[`docs/planning/ADMIN_UI_IMPLEMENTATION_PLAN.md`](docs/planning/ADMIN_UI_IMPLEMENTATION_PLAN.md) —
+12 stages against the frozen prototype (`proto/admin-ui-concept`, `8b3e050d`,
+`prototypes/admin-ui-v1`, approved by PDR-009). The plan is a plan only; no stage is started.
+
+#### Commercial policy gaps recorded from the owner decision of 2026-10-10
+
+Policy source of truth:
+[`docs/planning/LEARNBOX_BUSINESS_RULES_PERMANENCE.md`](docs/planning/LEARNBOX_BUSINESS_RULES_PERMANENCE.md).
+Rule 1 (a paid pack never becomes free) is **enforced in Production** for Admin paths by migration
+`0034_admin_pack_metadata_grants` plus the `editPack` 422. The remaining three rules are **policy
+only — no schema, API, UI or entitlement behaviour exists for them.** None of them may be reported
+as a shipped capability.
+
+| ID     | Title                                        | Class            | Current state                                                                                                                                                                                                                                                                                                                                                                     |
+| ------ | -------------------------------------------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| LB-B37 | Free → Paid conversion with claim provenance | PRODUCT / POLICY | **PLANNED** (Rule 2). `user_packs` has no ownership-origin column and access is `published AND (is_free OR user_packs)` in `apps/website/lib/pack-access.ts`, so converting a free pack to paid today would strip access from earlier free claimers. Needs an explicit, recordable claim event distinguishable from a purchase, plus learner library UX. No migration authorized. |
+| LB-B38 | Base-price immutability after the first sale | PRODUCT / POLICY | **PLANNED** (Rule 3). `price_tomans` has no Admin UI and no grant, so the rule cannot be violated from the panel today; but there is no price-change history and no lock after the first completed purchase. `purchase_events` exists with zero rows in Production and is the intended source for "first successful purchase". No migration authorized.                           |
+| LB-B39 | Discount codes (percentage and fixed amount) | PRODUCT / POLICY | **PLANNED** (Rule 4). No discount table, API or UI exists. Discounts must apply only to paid packs and must never mutate the pack's recorded base price. Redemption limits, validity windows and per-user caps are a separate design phase. No migration authorized.                                                                                                              |
+
+#### Open Admin defects carried into the UI implementation plan (not fixed)
+
+| ID     | Title                                                    | Class | Current state                                                                                                                                                                                                                                                                                            |
+| ------ | -------------------------------------------------------- | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| LB-B40 | HTTP 428 step-up dead end in two Admin workspaces        | BUG   | **OPEN (P3).** Only `ContentPacksWorkspace` and `ContentReviewWorkspace` consume the shared `step-up-reauth.ts` helper. `UsersManagement` and `StoreListingsWorkspace` reference 428 but offer no inline re-auth path, so a stale session dead-ends. Scheduled into stages 5 and 6 of the Admin UI plan. |
+| LB-B41 | `/api/auth/reauth/options` returns 404 on a dead session | BUG   | **OPEN (P4).** An expired session cannot be distinguished from a server fault, so the UI cannot offer recovery. The fix must keep the five-minute recent-authentication policy and must not create a Passkey bypass. Scheduled into stage 8 of the Admin UI plan.                                        |
+
 ### Learning system unification (owner decision 2026-10-01)
 
 Fix and unify the learning system before any new feature, Admin redesign or Store work. One umbrella
