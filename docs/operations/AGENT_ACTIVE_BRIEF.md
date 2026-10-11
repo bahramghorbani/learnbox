@@ -12,6 +12,10 @@ Use this brief after `AGENTS.md` and `AI_BOOTSTRAP.md`. The canonical product st
 - Future payments remain platform-specific (Web bank, Cafe Bazaar, Apple IAP) with shared server entitlement, but none is a Web v1.0 requirement.
 - AI can generate pack drafts and media candidates; human review is required before publication.
 
+## Current Admin release handoff
+
+Admin release preparation is complete on `main` at `4d077214d05e7dc363fbfc968c0d74c6d7b3ee15`; Production deployment remains owner-gated. Read [`ADMIN_RELEASE_HANDOFF.md`](./ADMIN_RELEASE_HANDOFF.md) before any Admin release, recovery, or Production task. It is an index to the canonical readiness and recovery records, not a deployment authorization.
+
 ## Read order
 
 1. `AGENTS.md`
