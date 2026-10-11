@@ -59,3 +59,22 @@ export function readAdminSupportConfig(environment: Environment): AdminAuthConfi
   if (environment.LEARNBOX_ADMIN_SUPPORT_ENABLED !== 'true') return { enabled: false };
   return readAdminAuthConfig(environment);
 }
+
+/**
+ * Separate default-off gate for the read-only Dashboard overview (Stage 2 of
+ * docs/planning/ADMIN_UI_IMPLEMENTATION_PLAN.md).
+ *
+ * Like the support gate this does NOT require the Content & Packs workspace: the overview is an
+ * aggregate of counts that already exist, and tying it to the content flag would make an operator
+ * need authoring access to see how many learners signed up. It still requires the Passkey auth
+ * runtime, because the role check that decides whether the caller may see aggregates is resolved
+ * from the canonical session actor in PostgreSQL, never from the request.
+ *
+ * Enabling this flag authorizes aggregate SELECTs and three bounded newest-first lists. It grants
+ * no mutation, no personal learner field, no payment capability, and no migration, staging or
+ * Production activation authority.
+ */
+export function readAdminDashboardConfig(environment: Environment): AdminAuthConfig {
+  if (environment.LEARNBOX_ADMIN_DASHBOARD_ENABLED !== 'true') return { enabled: false };
+  return readAdminAuthConfig(environment);
+}

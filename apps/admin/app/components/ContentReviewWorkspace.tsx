@@ -657,7 +657,7 @@ export function ContentReviewWorkspace() {
   const serverAuthenticated = access === 'server-authenticated';
 
   return (
-    <main className="admin-shell cp-workspace" id="home">
+    <main className="admin-shell cp-workspace" id="review">
       <AdminSidebar current="home" />
       <section className="admin-workspace">
         <div className="page-head">
