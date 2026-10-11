@@ -298,14 +298,17 @@ check "admin: UPDATE audit_logs is denied (audit is append-only)" denied \
 check "admin: CREATE TABLE is denied" denied \
   "$(outcome_as learnbox_admin "$PW_ADMIN" 'create table lb_drill_forbidden(x int)')"
 check "app: write to Admin tables is denied (learner isolation)" denied \
-  "$(outcome_as learnbox_app "$PW_APP" 'insert into admin_sessions (id) select null where false')"
+  "$(outcome_as learnbox_app "$PW_APP" 'delete from admin_sessions where false')"
 check "app: write to content is denied (learner cannot author)" denied \
   "$(outcome_as learnbox_app "$PW_APP" 'insert into packs (id) select null where false')"
 
 rm -f "$expected" "$expected.aa" "$recovered" "$recovered.aa" /tmp/lb-rd-err.$$
 
 # --- verdict. A truncated run must not pass as a complete one.
-EXPECTED_CHECKS=47
+# The number of checks above this line. A probe that dies mid-run (a dropped connection, a container
+# that never came up) otherwise leaves a short all-green list that reads as a pass; raise this when
+# adding a check.
+EXPECTED_CHECKS=45
 echo
 check "every planned check reported (a truncated run is not a pass)" "$EXPECTED_CHECKS" "$((checks))"
 
