@@ -22,13 +22,33 @@ export type StepUpOutcome =
 
 const csrfCookieName = '__Host-learnbox_admin_csrf';
 
-function readCsrfToken(): string | undefined {
-  const prefix = `${csrfCookieName}=`;
-  return document.cookie
-    ?.split(';')
-    .map((item) => item.trim())
-    .find((item) => item.startsWith(prefix))
-    ?.slice(prefix.length);
+/**
+ * The CSRF token every guarded mutation must send. Exported because the retry contract below is
+ * only safe if the caller builds its `init` the same way this module does — three private copies of
+ * the same cookie read is three places for that header to drift.
+ */
+export function readCsrfToken(): string | undefined {
+  if (typeof document === 'undefined') return undefined;
+  for (const part of document.cookie.split(';')) {
+    const [key, ...rest] = part.trim().split('=');
+    if (key === csrfCookieName) return decodeURIComponent(rest.join('='));
+  }
+  return undefined;
+}
+
+/**
+ * The idempotency key that makes the single retry safe: the server either applies the mutation
+ * once or reports it as already applied. Lives here, next to the retry it protects.
+ */
+export function createIdempotencyKey(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (part) => {
+    const random = Math.floor(Math.random() * 16);
+    const value = part === 'x' ? random : (random & 0x3) | 0x8;
+    return value.toString(16);
+  });
 }
 
 /** A user who dismisses the system passkey sheet is not an error; only the browser says which. */
@@ -112,4 +132,21 @@ export async function fetchWithStepUp(
   if (stepUp !== 'confirmed') return { response, stepUp };
   // Exactly one retry. A second 428 is reported to the operator instead of prompting again.
   return { response: await fetch(input, init), stepUp };
+}
+
+/**
+ * What to tell the operator when a guarded mutation did not go through for an authentication
+ * reason. `undefined` means "this was not a step-up problem" and the caller maps the status itself.
+ *
+ * A second 428 AFTER a confirmed passkey is reported rather than re-prompted: `fetchWithStepUp`
+ * retries exactly once, which is what keeps a stale clock or a revoked credential from turning
+ * into an endless prompt loop. Shared by every screen with a guarded mutation, because this is the
+ * one message that must not drift between them.
+ */
+export function stepUpRefusal(stepUp: StepUpOutcome, httpStatus: number): string | undefined {
+  if (stepUp !== 'not-required' && stepUp !== 'confirmed') return stepUpMessage(stepUp);
+  if (httpStatus === 428) {
+    return 'تأیید هویت ثبت شد، اما سرور همچنان احراز هویت تازه می‌خواهد؛ داده‌های واردشده حفظ شده است — یک‌بار دیگر تلاش کنید.';
+  }
+  return undefined;
 }
