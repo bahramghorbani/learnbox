@@ -76,7 +76,7 @@ function draftFrom(row: ServerListing): Draft {
 function priceLabel(row: ServerListing): string {
   if (row.isFree) return 'رایگان';
   if (row.priceTomans === null) return 'قیمت ثبت نشده';
-  return `${row.priceTomans.toLocaleString('fa-IR')} تومان`;
+  return `${faNum(row.priceTomans)} تومان`;
 }
 
 const packStatusLabels: Record<string, string> = {

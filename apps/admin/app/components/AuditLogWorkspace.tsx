@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { AdminSidebar } from './AdminSidebar';
+import { faDateTime } from './fa-dates';
 
 /**
  * Phase 3 / Milestone 3.3 — the administrative Audit Log («عملیات»).
@@ -67,14 +68,10 @@ type Phase = 'loading' | 'ready' | 'unavailable' | 'unauthorized' | 'invalid' | 
 
 const PAGE_SIZE = 25;
 
-const timestampFormat = new Intl.DateTimeFormat('fa-IR', {
-  dateStyle: 'medium',
-  timeStyle: 'short',
-});
+const timestampFormat = faDateTime;
 
 function formatTimestamp(value: string): string {
-  const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? value : timestampFormat.format(parsed);
+  return timestampFormat(value);
 }
 
 /** A picked end date means "through that day", so the exclusive upper bound is the next midnight. */

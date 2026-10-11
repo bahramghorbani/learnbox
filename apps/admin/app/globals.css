@@ -3231,3 +3231,56 @@ button {
     grid-template-columns: 1fr;
   }
 }
+
+/*
+ * Stage 11 — touch-target floor.
+ *
+ * The approved desktop design sizes its controls at 32–38px, which is correct for a pointer and
+ * below the 44px a finger needs. Raising them everywhere would redesign the approved desktop
+ * layout, so the floor applies only where the input is actually touch: a coarse pointer, or a
+ * viewport narrow enough that the sidebar has already collapsed into its scrolling bar.
+ *
+ * Only the box grows. Type scale, colour, radius, spacing rhythm and every other token stay as
+ * PDR-009 froze them.
+ */
+@media (pointer: coarse), (max-width: 760px) {
+  .admin-shell .admin-nav-item,
+  .admin-shell .collapse-control,
+  .admin-shell .admin-logo,
+  .admin-shell .btn,
+  .admin-shell .chip,
+  .admin-shell .field,
+  .admin-shell .qa,
+  .admin-shell .cp-x-btn,
+  .admin-shell select,
+  .admin-shell input:not([type='checkbox']):not([type='radio']):not([type='file']),
+  .admin-shell button:not(.admin-nav-item):not(.chip) {
+    min-height: 44px;
+  }
+  .admin-shell .chip,
+  .admin-shell .btn,
+  .admin-shell .cp-x-btn {
+    min-width: 44px;
+  }
+  /* A checkbox must keep its own 13px box; the label around it carries the touch area instead. */
+  .admin-shell .slide-checkbox,
+  .admin-shell label:has(> input[type='checkbox']),
+  .admin-shell label:has(> input[type='radio']) {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+  }
+  /*
+   * `.chip` is the only control here with no base `display`, so a min-height alone would do
+   * nothing to it. Everything else is already flex with `align-items: center`.
+   *
+   * No `justify-content` anywhere in this block: `.cp-workspace .qa` uses `space-between` to push
+   * its text and icon capsule to opposing ends, and a later rule of equal specificity would
+   * silently re-centre them — redesigning the approved card to reach a height floor it already
+   * meets through `align-items`.
+   */
+  .admin-shell .chip {
+    display: inline-flex;
+    align-items: center;
+  }
+}

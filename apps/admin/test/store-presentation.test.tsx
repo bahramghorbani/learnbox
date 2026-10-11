@@ -216,7 +216,8 @@ describe('StoreListingsWorkspace presentation', () => {
     await render();
 
     const row = query(`[data-store-pack="${paidPack.packId}"]`);
-    expect(row?.textContent).toContain('۱۸۰٬۰۰۰ تومان');
+    // Stage 11: one separator across Admin — the frozen prototype's `fa(toLocaleString('en-US'))`.
+    expect(row?.textContent).toContain('۱۸۰,۰۰۰ تومان');
     expect(row?.querySelector('.badge.b-green')?.textContent).toBe('فهرست‌شده');
     expect(row?.querySelector('.badge.b-amber')?.textContent).toBe('ویژه');
     expect(row?.querySelector('.lvl')?.textContent).toBe('منتشرشده');

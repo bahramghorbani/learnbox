@@ -4,6 +4,8 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import { AdminSidebar } from './AdminSidebar';
 import { EmptyState, ErrorState, LoadingState } from './AdminStates';
+import { faDateTime } from './fa-dates';
+import { faNum } from './fa-digits';
 
 type GatewayConfiguration = {
   state: 'disabled' | 'unproven' | 'ready';
@@ -35,12 +37,7 @@ const paymentTone: Record<GatewayConfiguration['state'], string> = {
 };
 
 function formatDate(value: string | null) {
-  if (!value) return '—';
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return '—';
-  return new Intl.DateTimeFormat('fa-IR', { dateStyle: 'short', timeStyle: 'short' }).format(
-    parsed,
-  );
+  return faDateTime(value);
 }
 
 /**
@@ -182,13 +179,13 @@ export function OperationsWorkspace() {
                   </div>
                   <div className="health-row">
                     <span className="health-name">پرداخت‌های تأییدشده</span>
-                    <span>{payment.configuration.verifiedCount.toLocaleString('fa-IR')}</span>
+                    <span>{faNum(payment.configuration.verifiedCount)}</span>
                   </div>
                   <div className="health-row">
                     <span className="health-name">در انتظار / ناموفق</span>
                     <span>
-                      {payment.configuration.pendingCount.toLocaleString('fa-IR')} /{' '}
-                      {payment.configuration.failedCount.toLocaleString('fa-IR')}
+                      {faNum(payment.configuration.pendingCount)} /{' '}
+                      {faNum(payment.configuration.failedCount)}
                     </span>
                   </div>
                   <div className="health-row">

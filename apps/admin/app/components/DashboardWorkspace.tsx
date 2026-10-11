@@ -6,6 +6,7 @@ import { AdminSidebar } from './AdminSidebar';
 import { useAdminWorkspaceAccess } from './AdminAuthGate';
 import { EmptyState, ErrorState, LoadingState } from './AdminStates';
 import { fa, faNum } from './fa-digits';
+import { type BadgeTreatment, PACK_BADGE, badgeFor } from './status-badges';
 import { faDay, faDateTime, faRelative } from './fa-dates';
 
 /**
@@ -73,20 +74,11 @@ const unavailableLabels: Record<'no_data_source' | 'payments_disabled', string> 
 };
 
 /**
- * Canonical `packs.status` in the approved badge treatment, kept identical to `PACK_BADGE` in
- * ContentPacksWorkspace so the same pack cannot read as two different things on two screens.
- * Deliberately a copy and not an import: pulling it from a 48 KB client component would drag that
- * whole workspace into the home bundle. Recorded as LB-B53 — the shared extraction is a refactor
- * of an already-merged stage, not Stage 2 scope.
+ * Canonical `packs.status` in the approved badge treatment. Shared with ContentPacksWorkspace via
+ * `status-badges.ts` (LB-B53 resolved): the map alone is a few hundred bytes, so the home bundle
+ * no longer has to choose between a duplicate and dragging a 48 KB client workspace in with it.
  */
-const packStatusBadges: Record<string, [string, string]> = {
-  draft: ['b-grey', 'پیش‌نویس'],
-  ai_generated: ['b-grey', 'ساخته‌شده با هوش مصنوعی'],
-  needs_review: ['b-amber', 'در انتظار بررسی'],
-  approved: ['b-amber', 'تأییدشده'],
-  published: ['b-green', 'منتشر شده'],
-  archived: ['b-grey', 'بایگانی‌شده'],
-};
+const packStatusBadges = PACK_BADGE;
 
 /** Canonical `users.status` (migration 0028), worded as the support screen words it. */
 const learnerStatusBadges: Record<string, [string, string]> = {
@@ -458,9 +450,9 @@ function KpiCard({
   );
 }
 
-function Badge({ map, value }: { map: Record<string, [string, string]>; value: string }) {
-  const entry = map[value];
-  return <span className={`badge ${entry?.[0] ?? 'b-grey'}`}>{entry?.[1] ?? value}</span>;
+function Badge({ map, value }: { map: Record<string, BadgeTreatment>; value: string }) {
+  const [tone, label] = badgeFor(map, value);
+  return <span className={`badge ${tone}`}>{label}</span>;
 }
 
 type QuickAction = {
