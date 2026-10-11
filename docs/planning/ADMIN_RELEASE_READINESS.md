@@ -122,9 +122,9 @@
 
 | مورد                               | Production امروز                                                          | candidate انتشار                                                          |
 | ---------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| image id                           | `sha256:20263ce025b239213a4f181f1816d0b967a53866984b21da55c2052dd0dd27cd` | `sha256:b074793dc61b35374654f6f9f68fbeb9c1f797052b571accb35f032c7b3cc973` |
-| tag                                | `learnbox-admin:b34647e-pack-metadata`                                    | `learnbox-admin:b94175c-candidate`                                        |
-| commit منبع (از خود image)         | `b34647e166cd7a0f8bb80d44c075a23faef0e8ce`                                | `b94175c554f10b8838c1eae65b855a59e25ee553`                                |
+| image id                           | `sha256:20263ce025b239213a4f181f1816d0b967a53866984b21da55c2052dd0dd27cd` | `sha256:bfb9db8c2e13e87d082530aa2f104473e9ad4123255e290168ed137bc179d7f0` |
+| tag                                | `learnbox-admin:b34647e-pack-metadata`                                    | `learnbox-admin:9829c88-release`                                          |
+| commit منبع (از خود image)         | `b34647e166cd7a0f8bb80d44c075a23faef0e8ce`                                | `9829c8819c347609578225cc2d1ccc8f453646da`                                |
 | مراحل UI موجود                     | ۰ تا ۶                                                                    | ۰ تا ۱۱ (هر ۱۲)                                                           |
 | معماری                             | `linux/amd64`                                                             | `linux/amd64`                                                             |
 | `LEARNBOX_ADMIN_DASHBOARD_ENABLED` | غایب                                                                      | لازم برای داشبورد، در استقرار **غایب می‌ماند**                            |
@@ -134,13 +134,16 @@
 در label استاندارد `org.opencontainers.image.revision` و در یک متغیر محیطی حمل می‌کنند؛ پس
 «کدام commit در حال اجراست» با `docker inspect` یا `printenv` پاسخ دارد و حدس لازم نیست.
 نسخهٔ نخست ممیزی گفت Admin هیچ provenance ندارد — آن هم غلط بود: متغیر وجود داشت ولی نامش
-`ADMIN_SOURCE_SHA` بود و جست‌وجو با نام learner (`APP_SOURCE_SHA`) انجام شده بود. همین PR نام
-Admin را به `APP_SOURCE_SHA` تغییر می‌دهد تا یک readback برای هر دو سرویس کار کند.
+`ADMIN_SOURCE_SHA` بود و جست‌وجو با نام learner (`APP_SOURCE_SHA`) انجام شده بود. PR #415 نام
+Admin را به `APP_SOURCE_SHA` تغییر داد تا یک readback برای هر دو سرویس کار کند.
 
-> **توجه:** digest بالا از commit `b94175c5` (قبل از اصلاحات مستندات همین PR) ساخته شده و
-> اثبات می‌کند مکانیزم build کار می‌کند. image قابل‌استقرار باید از **commit ادغام** این PR
-> ساخته شود، چون خود این تغییرات بخشی از انتشارند. دستور، همان است:
-> `infrastructure/production/admin/build-admin-image.sh <merge-sha>`.
+image انتشار از **commit ادغام PR #415** ساخته شده، یعنی خود تغییرات آماده‌سازی هم درونش
+هستند، و با ۱۰ بررسی تأیید شد (label، متغیر runtime، معماری amd64، کاربر غیرroot، entrypoint
+Admin، صفر متغیر secret-شکل، و تطابق sha256 یک فایل bundle با blob همان commit). دستور
+بازتولیدش: `infrastructure/production/admin/build-admin-image.sh 9829c8819c347609578225cc2d1ccc8f453646da release`.
+
+image فقط روی هاست ساخته شده: **به هیچ registry ای push نشده، `production` tag نخورده، و
+هیچ سرویسی restart نشده.**
 
 Production از زمان شروع این مجموعه مراحل **دست‌نخورده** است: بدون استقرار، بدون نوشتن در
 دیتابیس، بدون migration، بدون تغییر env یا secret، بدون تغییر learner. آخرین بازبینی
@@ -244,8 +247,8 @@ Production از زمان شروع این مجموعه مراحل **دست‌نخ
 
 آنچه مانده:
 
-- **P0 — image کهنه.** بسته شد به‌عنوان آمادگی: candidate ساخته و تأیید شد
-  (`sha256:b074793d…`، ۱۰ بررسی). باز می‌ماند به‌عنوان _استقرار_، چون استقرار مجاز نیست.
+- **P0 — image کهنه.** بسته شد به‌عنوان آمادگی: image انتشار از commit ادغام ساخته و تأیید شد
+  (`sha256:bfb9db8c…`، ۱۰ بررسی). باز می‌ماند به‌عنوان _استقرار_، چون استقرار مجاز نیست.
 - **P1 — تأیید اپراتور واقعی.** فقط پس از استقرار قابل بستن است (بخش ۹).
 - **P1 — نصب اسکریپت بازیابی روی هاست و نسخهٔ خارج از هاست آرشیوها.** رویه و اثباتش آماده است؛
   نصب روی هاست یک تغییر Production است و مجوز جدا می‌خواهد.
