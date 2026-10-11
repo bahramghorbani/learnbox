@@ -29,10 +29,17 @@ WORKDIR /app
 COPY --from=builder --chown=nextjs:nodejs /workspace/apps/admin/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /workspace/apps/admin/.next/static ./apps/admin/.next/static
 COPY --from=builder --chown=nextjs:nodejs /workspace/apps/admin/public ./apps/admin/public
-ARG ADMIN_SOURCE_SHA=unknown
-LABEL org.opencontainers.image.revision="${ADMIN_SOURCE_SHA}"
+# Provenance. The image is built with --build-arg APP_SOURCE_SHA=<full sha> and records it both as
+# the standard OCI label (readable from the image without starting it) and as a runtime env var
+# (readable from the running container), so the commit a deployment serves can be established from
+# either side. The variable deliberately carries the same name as the learner's
+# (infrastructure/production/app/Dockerfile), so one readback works across both services and
+# tools/cp8/cp9-replacement-artifact-proof.sh verifies an Admin candidate unchanged. A build that
+# forgets the argument is visible as the literal "unknown" rather than as a missing variable.
+ARG APP_SOURCE_SHA=unknown
+LABEL org.opencontainers.image.revision="${APP_SOURCE_SHA}"
 LABEL org.opencontainers.image.title="learnbox-admin"
-ENV ADMIN_SOURCE_SHA=${ADMIN_SOURCE_SHA}
+ENV APP_SOURCE_SHA=${APP_SOURCE_SHA}
 USER nextjs
 EXPOSE 3000
 CMD ["node", "apps/admin/server.js"]
