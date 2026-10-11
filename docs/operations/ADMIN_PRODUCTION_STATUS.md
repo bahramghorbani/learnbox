@@ -159,6 +159,7 @@ and 8 `xmin` digests identical). Full record: `docs/release/ADMIN_RELEASE_0033_8
 | `LEARNBOX_ADMIN_CONTENT_AI_ENABLED`             | absent  | AI pack generation off                                      |
 | `LEARNBOX_ADMIN_MEDIA_AI_ENABLED`               | absent  | AI media generation off                                     |
 | `LEARNBOX_ADMIN_SPLASH_REPLACEMENT_ENABLED`     | absent  | Splash replacement off                                      |
+| `LEARNBOX_ADMIN_DASHBOARD_ENABLED`              | absent  | Dashboard overview off — `/api/dashboard/overview` 404s     |
 | `LEARNBOX_ZARINPAL_ENABLED`                     | absent  | No payment initiation, no merchant id in the environment    |
 
 `LEARNBOX_ADMIN_ORIGIN` and `LEARNBOX_ADMIN_RP_ID` are pinned to `admin.learnboxapp.com`.

@@ -6,6 +6,7 @@ import { AdminSidebar } from './AdminSidebar';
 import { AuditLogWorkspace } from './AuditLogWorkspace';
 import { ContentPacksWorkspace } from './ContentPacksWorkspace';
 import { ContentReviewWorkspace } from './ContentReviewWorkspace';
+import { DashboardWorkspace } from './DashboardWorkspace';
 import { PresentationWorkspace } from './PresentationWorkspace';
 import { StoreListingsWorkspace } from './StoreListingsWorkspace';
 import { UsersManagement } from './UsersManagement';
@@ -25,8 +26,13 @@ import { UsersManagement } from './UsersManagement';
  * Milestone 4.1 adds «نمایش اپ»: the splash management panel was real and guarded but mounted on
  * the home workspace, while the sidebar entry that names it pointed nowhere. The destination now
  * opens the presentation workspace, which is where splash — and later the slider — belongs.
+ *
+ * Stage 2 gives «خانه» its real screen: the Dashboard. Content review used to occupy home purely
+ * because nothing else did, and the frozen nine-item nav has no review entry, so review moves to
+ * its own `#review` destination — reachable from the dashboard panel that previews its queue.
+ * Replacing home without that link would have left a working, audited workspace unreachable.
  */
-type AdminRoute = 'content' | 'store' | 'users' | 'audit' | 'presentation' | 'home';
+type AdminRoute = 'content' | 'store' | 'users' | 'audit' | 'presentation' | 'review' | 'home';
 
 function readRoute(hash: string): AdminRoute {
   const value = hash.replace(/^#/, '');
@@ -35,6 +41,7 @@ function readRoute(hash: string): AdminRoute {
   if (value === 'users') return 'users';
   if (value === 'audit') return 'audit';
   if (value === 'presentation') return 'presentation';
+  if (value === 'review') return 'review';
   return 'home';
 }
 
@@ -52,6 +59,7 @@ export function AdminWorkspaceRouter() {
   if (route === 'store') return <StoreListingsWorkspace />;
   if (route === 'audit') return <AuditLogWorkspace />;
   if (route === 'presentation') return <PresentationWorkspace />;
+  if (route === 'review') return <ContentReviewWorkspace />;
   // The support screen renders its own section inside the shell frame. Stage 5 moved its markup
   // onto the approved vocabulary; the framing here is unchanged.
   if (route === 'users') {
@@ -64,5 +72,5 @@ export function AdminWorkspaceRouter() {
       </main>
     );
   }
-  return <ContentReviewWorkspace />;
+  return <DashboardWorkspace />;
 }

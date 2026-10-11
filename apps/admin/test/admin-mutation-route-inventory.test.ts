@@ -210,6 +210,12 @@ const READ_ONLY: Record<string, 'hard-disabled' | 'session-layer'> = {
   'app/api/content/import/template/route.ts': 'session-layer',
   'app/api/content/import/contract/route.ts': 'session-layer',
   'app/api/content/review/route.ts': 'session-layer',
+  // Stage 2 dashboard overview: GET-only, so CSRF is not applicable; it requires a valid Admin
+  // session plus an operational role and sits behind the default-off
+  // LEARNBOX_ADMIN_DASHBOARD_ENABLED. Everything it returns is an aggregate count, a 30-day bucket
+  // series or a LIMIT-ed newest-first list, with no personal learner field and no credential, and
+  // it has no write companion — an overview is a projection of state other surfaces own.
+  'app/api/dashboard/overview/route.ts': 'session-layer',
   // M1.4 model catalogue: GET-only, so CSRF is not applicable; it still requires a valid Admin
   // session, and it returns model ids and the configured default only — never the credential.
   'app/api/content/ai/models/route.ts': 'session-layer',
