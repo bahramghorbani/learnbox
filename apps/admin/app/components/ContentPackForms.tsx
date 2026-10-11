@@ -1,6 +1,13 @@
 'use client';
 
-import React, { useEffect, useRef, useState, type ReactNode } from 'react';
+import React, { useState } from 'react';
+
+import { CpModal } from './AdminModal';
+
+// The overlay primitive moved to its own module so the support screen can open one without
+// pulling the pack forms with it. Re-exported here because callers already import it from this
+// module and that import path is not worth churning.
+export { CpModal };
 
 /**
  * Phase 1 / Milestone 1.2 — management form surfaces.
@@ -18,59 +25,6 @@ export type SubmitOutcome = { ok: true } | { ok: false; message?: string; issues
 
 function issueFor(issues: FieldIssue[], field: string): string | undefined {
   return issues.find((issue) => issue.field === field)?.message;
-}
-
-export function CpModal({
-  title,
-  onClose,
-  children,
-  footer,
-  wide,
-}: {
-  title: string;
-  onClose: () => void;
-  children: ReactNode;
-  footer: ReactNode;
-  wide?: boolean;
-}) {
-  const headingId = `cp-modal-${title.replace(/\s+/g, '-')}`;
-  const dialogRef = useRef<HTMLDivElement | null>(null);
-
-  // Escape closes, and focus moves into the dialog — the prototype's overlay behaviour.
-  useEffect(() => {
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') onClose();
-    }
-    document.addEventListener('keydown', onKeyDown);
-    dialogRef.current?.querySelector<HTMLElement>('input, select, textarea')?.focus();
-    return () => document.removeEventListener('keydown', onKeyDown);
-  }, [onClose]);
-
-  return (
-    <div
-      className="cp-scrim"
-      onClick={(event) => {
-        if (event.target === event.currentTarget) onClose();
-      }}
-    >
-      <div
-        className={wide ? 'cp-modal is-wide' : 'cp-modal'}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={headingId}
-        ref={dialogRef}
-      >
-        <div className="cp-modal-head">
-          <h3 id={headingId}>{title}</h3>
-          <button type="button" className="cp-x-btn" onClick={onClose} aria-label="بستن">
-            ✕
-          </button>
-        </div>
-        <div className="cp-modal-body">{children}</div>
-        <div className="cp-modal-foot">{footer}</div>
-      </div>
-    </div>
-  );
 }
 
 function StatusBanner({ message, tone }: { message?: string; tone: 'error' | 'success' }) {
