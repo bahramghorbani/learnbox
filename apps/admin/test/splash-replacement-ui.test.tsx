@@ -75,7 +75,7 @@ describe('owner splash replacement UI', () => {
   it('shows exact upload guidance and no excluded management controls', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn(async () => new Response('Not found', { status: 404 })),
+      vi.fn(async () => Response.json({ current: null })),
     );
     const rendered = await render(createElement(SplashReplacementPanel));
 
@@ -88,10 +88,23 @@ describe('owner splash replacement UI', () => {
     await rendered.unmount();
   });
 
-  it('rejects an unsupported local file before enabling confirmation', async () => {
+  it('does not expose a mutation control when splash management is unavailable', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn(async () => new Response('Not found', { status: 404 })),
+    );
+    const rendered = await render(createElement(SplashReplacementPanel));
+
+    expect(rendered.text()).toContain('مدیریت اسپلش در این محیط فعال نیست');
+    expect(rendered.container.querySelector('input[type="file"]')).toBeNull();
+    expect(rendered.button('تأیید و جایگزینی')).toBeUndefined();
+    await rendered.unmount();
+  });
+
+  it('rejects an unsupported local file before enabling confirmation', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => Response.json({ current: null })),
     );
     const rendered = await render(createElement(SplashReplacementPanel));
     await selectFile(rendered, new File(['not-an-image'], 'splash.gif', { type: 'image/gif' }));

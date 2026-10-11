@@ -216,7 +216,11 @@ export function SplashReplacementPanel() {
   }
 
   return (
-    <section className="splash-panel" id="splash-management" aria-labelledby="splash-title">
+    <section
+      className="splash-panel presentation-splash-panel"
+      id="splash-management"
+      aria-labelledby="splash-title"
+    >
       <div className="splash-panel-heading">
         <div>
           <span className="splash-kicker">نمای آغاز برنامه</span>
@@ -226,176 +230,182 @@ export function SplashReplacementPanel() {
         <span className="splash-private-badge">فقط مدیر</span>
       </div>
 
-      <div className="splash-panel-grid">
-        <div className="splash-current-card">
-          <h3>تصویر فعلی</h3>
-          <div className="splash-frame">
+      {!available ? (
+        <p className="splash-status" role="status">
+          مدیریت اسپلش در این محیط فعال نیست.
+        </p>
+      ) : (
+        <div className="splash-panel-grid">
+          <div className="splash-current-card">
+            <h3>تصویر فعلی</h3>
+            <div className="splash-frame">
+              {current ? (
+                <img src={current.previewPath} alt="پیش‌نمایش اسپلش فعلی LearnBox" />
+              ) : (
+                <span>{available ? 'هنوز تصویری ثبت نشده است.' : 'در این محیط فعال نیست.'}</span>
+              )}
+            </div>
             {current ? (
-              <img src={current.previewPath} alt="پیش‌نمایش اسپلش فعلی LearnBox" />
-            ) : (
-              <span>{available ? 'هنوز تصویری ثبت نشده است.' : 'در این محیط فعال نیست.'}</span>
-            )}
-          </div>
-          {current ? (
-            <dl className="splash-meta">
-              <div>
-                <dt>نسخه</dt>
-                <dd dir="ltr">{current.revision.slice(0, 8)}</dd>
-              </div>
-              <div>
-                <dt>ابعاد</dt>
-                <dd dir="ltr">
-                  {current.width} × {current.height}
-                </dd>
-              </div>
-              <div>
-                <dt>آخرین تغییر</dt>
-                <dd>
-                  {new Intl.DateTimeFormat('fa-IR', { dateStyle: 'medium' }).format(
-                    new Date(current.updatedAt),
-                  )}
-                </dd>
-              </div>
-            </dl>
-          ) : null}
+              <dl className="splash-meta">
+                <div>
+                  <dt>نسخه</dt>
+                  <dd dir="ltr">{current.revision.slice(0, 8)}</dd>
+                </div>
+                <div>
+                  <dt>ابعاد</dt>
+                  <dd dir="ltr">
+                    {current.width} × {current.height}
+                  </dd>
+                </div>
+                <div>
+                  <dt>آخرین تغییر</dt>
+                  <dd>
+                    {new Intl.DateTimeFormat('fa-IR', { dateStyle: 'medium' }).format(
+                      new Date(current.updatedAt),
+                    )}
+                  </dd>
+                </div>
+              </dl>
+            ) : null}
 
-          {current && state !== 'confirming-revert' && state !== 'reverting' ? (
-            <button
-              type="button"
-              className="splash-secondary-action"
-              onClick={() => setState('confirming-revert')}
-            >
-              بازگردانی به تصویر پیش‌فرض
-            </button>
-          ) : null}
-
-          {state === 'confirming-revert' ? (
-            <div className="splash-confirmation" role="group" aria-label="تأیید بازگردانی اسپلش">
-              <p>
-                اسپلش پویا غیرفعال می‌شود و تصویر پیش‌فرض برنامه نمایش داده می‌شود. نسخه‌های ثبت‌شده
-                و سابقه تغییرات حذف نمی‌شوند.
-              </p>
-              <div>
-                <button
-                  type="button"
-                  className="splash-secondary-action"
-                  onClick={() => setState('idle')}
-                >
-                  انصراف
-                </button>
-                <button
-                  ref={revertButton}
-                  type="button"
-                  className="splash-primary-action"
-                  onClick={() => void sendRevert()}
-                >
-                  تأیید و بازگردانی
-                </button>
-              </div>
-            </div>
-          ) : null}
-        </div>
-
-        <div className="splash-upload-card">
-          <h3>تصویر جدید</h3>
-          <p className="splash-guidance">
-            PNG، JPEG یا WebP · حداکثر ۸ مگابایت · حداقل ۸۶۴ × ۱۶۰۰ پیکسل
-          </p>
-          <label className="splash-file-control">
-            <span>{file ? file.name : 'انتخاب تصویر از دستگاه'}</span>
-            <input
-              type="file"
-              accept="image/png,image/jpeg,image/webp"
-              onChange={(event) => chooseFile(event.target.files?.[0])}
-            />
-          </label>
-          {fileError ? (
-            <p className="splash-error" role="alert">
-              {fileError}
-            </p>
-          ) : null}
-          {preview ? (
-            <div className="splash-local-preview">
-              <img src={preview} alt="پیش‌نمایش محلی اسپلش انتخاب‌شده" />
-              <span>پیش‌نمایش محلی؛ ابعاد و محتوای واقعی روی سرور بررسی می‌شود.</span>
-            </div>
-          ) : null}
-
-          {file &&
-          state !== 'confirming' &&
-          state !== 'uploading' &&
-          state !== 'reauthenticating' ? (
-            <button
-              className="splash-primary-action"
-              type="button"
-              onClick={() => setState('confirming')}
-            >
-              آماده‌سازی جایگزینی
-            </button>
-          ) : null}
-
-          {state === 'confirming' ? (
-            <div className="splash-confirmation" role="group" aria-label="تأیید جایگزینی اسپلش">
-              <p>پس از موفقیت، تصویر فعلی با همین تصویر جایگزین می‌شود.</p>
-              <div>
-                <button
-                  type="button"
-                  className="splash-secondary-action"
-                  onClick={() => setState('idle')}
-                >
-                  انصراف
-                </button>
-                <button
-                  ref={confirmButton}
-                  type="button"
-                  className="splash-primary-action"
-                  onClick={() => void sendReplacement(crypto.randomUUID())}
-                >
-                  تأیید و جایگزینی
-                </button>
-              </div>
-            </div>
-          ) : null}
-
-          {state === 'uploading' || state === 'reauthenticating' ? (
-            <p className="splash-status" role="status" aria-live="polite">
-              در حال انجام امن جایگزینی…
-            </p>
-          ) : null}
-          {state === 'reverting' ? (
-            <p className="splash-status" role="status" aria-live="polite">
-              در حال بازگردانی به تصویر پیش‌فرض…
-            </p>
-          ) : null}
-          {state === 'reauth-required' ? (
-            <div className="splash-reauth" role="status">
-              <p>برای این تغییر حساس، هویت مدیر باید دوباره تأیید شود.</p>
+            {current && state !== 'confirming-revert' && state !== 'reverting' ? (
               <button
                 type="button"
-                className="splash-primary-action"
-                onClick={() => void reauthenticate()}
+                className="splash-secondary-action"
+                onClick={() => setState('confirming-revert')}
               >
-                تأیید دوباره با Passkey
+                بازگردانی به تصویر پیش‌فرض
               </button>
-            </div>
-          ) : null}
-          {state === 'success' ? (
-            <p className="splash-success" role="status" tabIndex={-1}>
-              اسپلش با موفقیت جایگزین شد.
+            ) : null}
+
+            {state === 'confirming-revert' ? (
+              <div className="splash-confirmation" role="group" aria-label="تأیید بازگردانی اسپلش">
+                <p>
+                  اسپلش پویا غیرفعال می‌شود و تصویر پیش‌فرض برنامه نمایش داده می‌شود. نسخه‌های
+                  ثبت‌شده و سابقه تغییرات حذف نمی‌شوند.
+                </p>
+                <div>
+                  <button
+                    type="button"
+                    className="splash-secondary-action"
+                    onClick={() => setState('idle')}
+                  >
+                    انصراف
+                  </button>
+                  <button
+                    ref={revertButton}
+                    type="button"
+                    className="splash-primary-action"
+                    onClick={() => void sendRevert()}
+                  >
+                    تأیید و بازگردانی
+                  </button>
+                </div>
+              </div>
+            ) : null}
+          </div>
+
+          <div className="splash-upload-card">
+            <h3>تصویر جدید</h3>
+            <p className="splash-guidance">
+              PNG، JPEG یا WebP · حداکثر ۸ مگابایت · حداقل ۸۶۴ × ۱۶۰۰ پیکسل
             </p>
-          ) : null}
-          {state === 'reverted' ? (
-            <p className="splash-success" role="status" tabIndex={-1}>
-              اسپلش پویا غیرفعال شد و تصویر پیش‌فرض برنامه فعال است.
-            </p>
-          ) : null}
-          {state === 'error' ? (
-            <p className="splash-error" role="alert">
-              عملیات انجام نشد. دوباره تلاش کنید.
-            </p>
-          ) : null}
+            <label className="splash-file-control">
+              <span>{file ? file.name : 'انتخاب تصویر از دستگاه'}</span>
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                onChange={(event) => chooseFile(event.target.files?.[0])}
+              />
+            </label>
+            {fileError ? (
+              <p className="splash-error" role="alert">
+                {fileError}
+              </p>
+            ) : null}
+            {preview ? (
+              <div className="splash-local-preview">
+                <img src={preview} alt="پیش‌نمایش محلی اسپلش انتخاب‌شده" />
+                <span>پیش‌نمایش محلی؛ ابعاد و محتوای واقعی روی سرور بررسی می‌شود.</span>
+              </div>
+            ) : null}
+
+            {file &&
+            state !== 'confirming' &&
+            state !== 'uploading' &&
+            state !== 'reauthenticating' ? (
+              <button
+                className="splash-primary-action"
+                type="button"
+                onClick={() => setState('confirming')}
+              >
+                آماده‌سازی جایگزینی
+              </button>
+            ) : null}
+
+            {state === 'confirming' ? (
+              <div className="splash-confirmation" role="group" aria-label="تأیید جایگزینی اسپلش">
+                <p>پس از موفقیت، تصویر فعلی با همین تصویر جایگزین می‌شود.</p>
+                <div>
+                  <button
+                    type="button"
+                    className="splash-secondary-action"
+                    onClick={() => setState('idle')}
+                  >
+                    انصراف
+                  </button>
+                  <button
+                    ref={confirmButton}
+                    type="button"
+                    className="splash-primary-action"
+                    onClick={() => void sendReplacement(crypto.randomUUID())}
+                  >
+                    تأیید و جایگزینی
+                  </button>
+                </div>
+              </div>
+            ) : null}
+
+            {state === 'uploading' || state === 'reauthenticating' ? (
+              <p className="splash-status" role="status" aria-live="polite">
+                در حال انجام امن جایگزینی…
+              </p>
+            ) : null}
+            {state === 'reverting' ? (
+              <p className="splash-status" role="status" aria-live="polite">
+                در حال بازگردانی به تصویر پیش‌فرض…
+              </p>
+            ) : null}
+            {state === 'reauth-required' ? (
+              <div className="splash-reauth" role="status">
+                <p>برای این تغییر حساس، هویت مدیر باید دوباره تأیید شود.</p>
+                <button
+                  type="button"
+                  className="splash-primary-action"
+                  onClick={() => void reauthenticate()}
+                >
+                  تأیید دوباره با Passkey
+                </button>
+              </div>
+            ) : null}
+            {state === 'success' ? (
+              <p className="splash-success" role="status" tabIndex={-1}>
+                اسپلش با موفقیت جایگزین شد.
+              </p>
+            ) : null}
+            {state === 'reverted' ? (
+              <p className="splash-success" role="status" tabIndex={-1}>
+                اسپلش پویا غیرفعال شد و تصویر پیش‌فرض برنامه فعال است.
+              </p>
+            ) : null}
+            {state === 'error' ? (
+              <p className="splash-error" role="alert">
+                عملیات انجام نشد. دوباره تلاش کنید.
+              </p>
+            ) : null}
+          </div>
         </div>
-      </div>
+      )}
     </section>
   );
 }

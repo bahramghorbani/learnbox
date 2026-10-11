@@ -367,7 +367,11 @@ export function SliderManagerPanel() {
   const busy = state === 'saving' || state === 'reauthenticating';
 
   return (
-    <section className="splash-panel" id="slider-management" aria-labelledby="slider-title">
+    <section
+      className="splash-panel presentation-slider-panel"
+      id="slider-management"
+      aria-labelledby="slider-title"
+    >
       <div className="splash-panel-heading">
         <div>
           <span className="splash-kicker">اسلایدر صفحهٔ امروز</span>

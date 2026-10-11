@@ -21,19 +21,16 @@ import { SplashReplacementPanel } from './SplashReplacementPanel';
  */
 export function PresentationWorkspace() {
   return (
-    <main className="admin-shell cp-workspace" id="presentation">
+    <main className="admin-shell cp-workspace presentation-workspace" id="presentation">
       <AdminSidebar current="presentation" />
-      <section className="admin-workspace">
+      <section className="admin-workspace" aria-labelledby="presentation-title">
         <div className="page-head">
           <h2 id="presentation-title">نمایش اپ</h2>
-          <p className="muted">
-            کنترل تجربهٔ نمایش برنامه برای زبان‌آموز. تغییرات این بخش بدون انتشار نسخهٔ جدید اعمال
-            می‌شود.
-          </p>
+          <p className="muted">آنچه زبان‌آموز هنگام باز کردن برنامه می‌بیند.</p>
         </div>
 
-        <SliderManagerPanel />
         <SplashReplacementPanel />
+        <SliderManagerPanel />
       </section>
     </main>
   );
