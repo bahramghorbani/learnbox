@@ -93,12 +93,28 @@ describe('dashboard store privileges', () => {
       'packs',
       'pack_cards',
       'card_versions',
-      'card_schedules',
       'purchase_events',
       'audit_logs',
     ]) {
       expect(read.has(table)).toBe(true);
     }
+  });
+
+  /**
+   * LB-B35 CP2: no layer outside the learning engine may name or redefine a scheduler state or the
+   * learning-day. The repo-wide guard lives in `apps/website/test/cp2-no-redefinition-guard.test.ts`;
+   * this keeps the dashboard store honest where the temptation is strongest, because an overview is
+   * exactly where someone would reach for a progress distribution.
+   */
+  it('holds no learning rule: no scheduler state and no hand-written day bucket', () => {
+    const source = readFileSync(storePath, 'utf8');
+    const sql = storeSql().join('\n');
+    expect(sql).not.toMatch(/\bcard_schedules\b/);
+    expect(sql).not.toMatch(/date_trunc/);
+    expect(source).not.toMatch(/@learnbox\/learning-engine/);
+    expect(source.replace(/\/\/.*|\/\*[\s\S]*?\*\//g, '')).not.toMatch(
+      /streak|mastered|leitner|stability_days/i,
+    );
   });
 
   it('issues no write statement', () => {

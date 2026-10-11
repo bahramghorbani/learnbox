@@ -46,7 +46,7 @@ type Overview = {
     draft: number;
   };
   reviewQueueCards: number;
-  schedules: { total: number; byState: { state: string; count: number }[] };
+  contentPipeline: { total: number; byStatus: { status: string; count: number }[] };
   sales: {
     gatewayEnvironment: 'sandbox' | 'production' | null;
     verifiedTotal: Metric;
@@ -95,28 +95,31 @@ const learnerStatusBadges: Record<string, [string, string]> = {
 };
 
 /**
- * Canonical `learning_state` (migration 0001). The reference donut legend reads
- * Known/Learning/Unknown, which is not what the scheduler stores — these are the real states, so
- * the slice labels match the data instead of the mock-up.
+ * Canonical `content_status` (migration 0003) — the content pipeline Admin itself operates.
+ *
+ * The reference donut legend reads Known/Learning/Unknown, i.e. a learner-progress distribution.
+ * Admin deliberately does not show that: the owner rule is that no layer outside the learning
+ * engine may name or redefine a scheduler state, and a dashboard is not an exception. The donut
+ * answers the question this screen can answer honestly — where the content backlog actually sits.
  */
-const scheduleStateLabels: Record<string, string> = {
-  new: 'تازه',
-  learning: 'در حال یادگیری',
-  review: 'در مرور',
-  relearning: 'یادگیری مجدد',
-  mastered: 'مسلط',
-  suspended: 'معلق',
-  archived: 'بایگانی',
+const pipelineStatusLabels: Record<string, string> = {
+  draft: 'پیش‌نویس',
+  ai_generated: 'ساختهٔ هوش مصنوعی',
+  auto_validated: 'اعتبارسنجی خودکار',
+  needs_review: 'در انتظار بازبینی',
+  approved: 'تأییدشده',
+  published: 'منتشرشده',
+  deprecated: 'بازنشسته',
 };
 
-const scheduleStateColors: Record<string, string> = {
-  mastered: '#22c07d',
-  review: '#6b42df',
-  learning: '#c9b6ff',
-  relearning: '#f0a33c',
-  new: '#e7e3ff',
-  suspended: '#d8d6e4',
-  archived: '#c3c2cf',
+const pipelineStatusColors: Record<string, string> = {
+  published: '#22c07d',
+  approved: '#6b42df',
+  auto_validated: '#c9b6ff',
+  needs_review: '#f0a33c',
+  ai_generated: '#e7e3ff',
+  draft: '#d8d6e4',
+  deprecated: '#c3c2cf',
 };
 
 type IconName =
@@ -594,14 +597,14 @@ export function DashboardOverview() {
       : undefined;
   const growthTotal = overview.learnerGrowth.reduce((sum, point) => sum + point.count, 0);
   const salesTotal = (overview.salesSeries ?? []).reduce((sum, point) => sum + point.count, 0);
-  const scheduleTotal = overview.schedules.total;
-  const donutSlices = overview.schedules.byState
+  const pipelineTotal = overview.contentPipeline.total;
+  const donutSlices = overview.contentPipeline.byStatus
     .filter((entry) => entry.count > 0)
     .map((entry) => ({
-      key: entry.state,
-      share: scheduleTotal > 0 ? (entry.count / scheduleTotal) * 100 : 0,
-      color: scheduleStateColors[entry.state] ?? '#d8d6e4',
-      label: scheduleStateLabels[entry.state] ?? entry.state,
+      key: entry.status,
+      share: pipelineTotal > 0 ? (entry.count / pipelineTotal) * 100 : 0,
+      color: pipelineStatusColors[entry.status] ?? '#d8d6e4',
+      label: pipelineStatusLabels[entry.status] ?? entry.status,
       count: entry.count,
     }));
 
@@ -728,23 +731,23 @@ export function DashboardOverview() {
           )}
         </div>
 
-        <div className="card" data-chart="schedule-states">
+        <div className="card" data-chart="content-pipeline">
           <div className="card-head">
-            <span className="card-title">وضعیت زمان‌بندی کارت‌ها</span>
+            <span className="card-title">وضعیت خط تولید محتوا</span>
             <span className="select-mini">همهٔ بسته‌ها</span>
           </div>
-          {scheduleTotal === 0 ? (
+          {pipelineTotal === 0 ? (
             <EmptyState
-              title="هنوز هیچ کارتی زمان‌بندی نشده است."
-              description="این نمودار از زمان‌بندی واقعی کارت‌های کاربران خوانده می‌شود."
+              title="هنوز هیچ نسخهٔ کارتی ساخته نشده است."
+              description="این نمودار از وضعیت واقعی نسخه‌های کارت در خط تولید محتوا خوانده می‌شود."
             />
           ) : (
             <div className="donut-row">
               <Donut
                 slices={donutSlices}
-                centerTop={faNum(scheduleTotal)}
-                centerSub="کارت"
-                label="توزیع وضعیت زمان‌بندی کارت‌ها"
+                centerTop={faNum(pipelineTotal)}
+                centerSub="نسخه"
+                label="توزیع وضعیت نسخه‌های کارت در خط تولید محتوا"
               />
               <div className="donut-legend">
                 {donutSlices.map((slice) => (

@@ -41,6 +41,41 @@ const canonicalUuidPattern =
  */
 const reportingTimeZone = 'Asia/Tehran';
 
+/**
+ * Start of the calendar day containing `instant`, in `timeZone`.
+ *
+ * This is a chart axis, not the learning-day: Admin holds no learning rule and must not hand-write
+ * one (LB-B35 CP2), so nothing here is derived from review behaviour — it only answers "which
+ * calendar day did this timestamp land on for the operator". Iran has had no DST since 2022, so
+ * every bucket is a flat 24 hours.
+ */
+function zonedDayStart(instant: Date, timeZone: string): Date {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    hour12: false,
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  }).formatToParts(instant);
+  const part = (type: string) => Number(parts.find((entry) => entry.type === type)?.value ?? 0);
+  const intoDay =
+    (part('hour') % 24) * 3_600_000 +
+    part('minute') * 60_000 +
+    part('second') * 1_000 +
+    instant.getMilliseconds();
+  return new Date(instant.getTime() - intoDay);
+}
+
+/** `YYYY-MM-DD` for an instant, in `timeZone`. */
+function zonedDayLabel(instant: Date, timeZone: string): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(instant);
+}
+
 /** A metric the dashboard may show, or an explicit reason it cannot be shown. */
 export type DashboardMetric =
   | { state: 'available'; value: number }
@@ -70,9 +105,13 @@ export type DashboardOverview = {
   };
   /** Card versions waiting for a human decision — the real content-review queue depth. */
   reviewQueueCards: number;
-  schedules: {
+  /**
+   * Card versions by `content_status` — the content pipeline Admin itself operates. Deliberately
+   * not a scheduler-state distribution: that is a learning rule, and it does not live here.
+   */
+  contentPipeline: {
     total: number;
-    byState: { state: string; count: number }[];
+    byStatus: { status: string; count: number }[];
   };
   sales: {
     /** Null while the paid flow is off: there is no gateway environment to report. */
@@ -167,7 +206,20 @@ export class PostgresAdminDashboardStore {
     }
     const now = input.now ?? new Date();
     const windowDays = Math.min(Math.max(input.windowDays ?? 30, 1), 90);
-    const windowStart = new Date(now.getTime() - windowDays * 24 * 60 * 60 * 1000);
+    // `windowDays` buckets need `windowDays + 1` edges: the first is midnight on the oldest day in
+    // the window, the last is midnight after today, so `width_bucket` returns 1..windowDays for
+    // everything inside it. The filter uses the first edge, so the SQL window and the chart axis
+    // cannot disagree.
+    const today = zonedDayStart(now, reportingTimeZone);
+    const dayEdges = Array.from(
+      { length: windowDays + 1 },
+      (_unused, index) =>
+        new Date(today.getTime() + (index - (windowDays - 1)) * 24 * 60 * 60 * 1000),
+    );
+    const dayLabels = dayEdges
+      .slice(0, windowDays)
+      .map((edge) => zonedDayLabel(edge, reportingTimeZone));
+    const windowStart = dayEdges[0];
 
     // Same derivation as the Store's gateway status card: Admin never reads the merchant
     // credential, only whether the learner runtime's paid flow is switched on and which gateway
@@ -185,21 +237,26 @@ export class PostgresAdminDashboardStore {
 
       const counters = (await client.query(countersSql, [windowStart])).rows[0] ?? {};
 
-      const schedules = await client.query(
-        `SELECT state::text AS state, count(*) AS total
-           FROM card_schedules
+      // Deliberately NOT a card_schedules.state distribution. Admin holds no learning rule and
+      // may not name a scheduler state (LB-B35 CP2); the content pipeline is Admin's own domain,
+      // and `content_status` is the enum the review workspace already acts on.
+      const pipeline = await client.query(
+        `SELECT status::text AS status, count(*) AS total
+           FROM card_versions
           GROUP BY 1
           ORDER BY 1`,
       );
 
+      // The chart axis is a calendar histogram of sign-ups, not the learning-day: Admin must not
+      // hand-write a day rule (LB-B35 CP2), so the bucket edges are computed once above, in the
+      // reporting zone, and PostgreSQL only has to say which bucket a timestamp falls in.
       const growth = await client.query(
-        `SELECT to_char(date_trunc('day', created_at AT TIME ZONE $2), 'YYYY-MM-DD') AS day,
-                count(*) AS total
+        `SELECT width_bucket(created_at, $2::timestamptz[]) AS bucket, count(*) AS total
            FROM users
           WHERE created_at >= $1
           GROUP BY 1
           ORDER BY 1`,
-        [windowStart, reportingTimeZone],
+        [windowStart, dayEdges],
       );
 
       let verifiedTotal: DashboardMetric = { state: 'unavailable', reason: 'payments_disabled' };
@@ -222,7 +279,7 @@ export class PostgresAdminDashboardStore {
         revenueInWindow = { state: 'available', value: count(totals.revenue_in_window) };
 
         const series = await client.query(
-          `SELECT to_char(date_trunc('day', verified_at AT TIME ZONE $3), 'YYYY-MM-DD') AS day,
+          `SELECT width_bucket(verified_at, $3::timestamptz[]) AS bucket,
                   count(*) AS total,
                   coalesce(sum(amount_tomans), 0) AS revenue
              FROM purchase_events
@@ -232,12 +289,18 @@ export class PostgresAdminDashboardStore {
               AND verified_at >= $2
             GROUP BY 1
             ORDER BY 1`,
-          [gatewayEnvironment, windowStart, reportingTimeZone],
+          [gatewayEnvironment, windowStart, dayEdges],
         );
-        salesSeries = series.rows.map((row) => ({
-          day: String(row.day),
-          count: count(row.total),
-          revenueTomans: count(row.revenue),
+        const salesByDay = new Map(
+          series.rows.map((row) => [
+            Number(row.bucket),
+            { count: count(row.total), revenueTomans: count(row.revenue) },
+          ]),
+        );
+        salesSeries = dayLabels.map((day, index) => ({
+          day,
+          count: salesByDay.get(index + 1)?.count ?? 0,
+          revenueTomans: salesByDay.get(index + 1)?.revenueTomans ?? 0,
         }));
       }
 
@@ -269,8 +332,9 @@ export class PostgresAdminDashboardStore {
           LIMIT 5`,
       );
 
-      const scheduleRows = schedules.rows.map((row) => ({
-        state: String(row.state),
+      const growthByDay = new Map(growth.rows.map((row) => [Number(row.bucket), count(row.total)]));
+      const pipelineRows = pipeline.rows.map((row) => ({
+        status: String(row.status),
         count: count(row.total),
       }));
 
@@ -297,14 +361,14 @@ export class PostgresAdminDashboardStore {
             draft: count(counters.pack_draft),
           },
           reviewQueueCards: count(counters.review_queue_cards),
-          schedules: {
-            total: scheduleRows.reduce((sum, row) => sum + row.count, 0),
-            byState: scheduleRows,
+          contentPipeline: {
+            total: pipelineRows.reduce((sum, row) => sum + row.count, 0),
+            byStatus: pipelineRows,
           },
           sales: { gatewayEnvironment, verifiedTotal, revenueTomansInWindow: revenueInWindow },
-          learnerGrowth: growth.rows.map((row) => ({
-            day: String(row.day),
-            count: count(row.total),
+          learnerGrowth: dayLabels.map((day, index) => ({
+            day,
+            count: growthByDay.get(index + 1) ?? 0,
           })),
           salesSeries,
           recentLearners: recentLearners.rows.map((row) => ({

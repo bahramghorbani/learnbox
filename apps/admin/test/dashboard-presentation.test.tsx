@@ -51,11 +51,11 @@ function overviewPayload(overrides: Record<string, unknown> = {}) {
         draft: 2,
       },
       reviewQueueCards: 9,
-      schedules: {
+      contentPipeline: {
         total: 200,
-        byState: [
-          { state: 'mastered', count: 120 },
-          { state: 'learning', count: 80 },
+        byStatus: [
+          { status: 'published', count: 120 },
+          { status: 'needs_review', count: 80 },
         ],
       },
       sales: {
@@ -268,23 +268,28 @@ describe('dashboard figures', () => {
     await view.unmount();
   });
 
-  it('labels donut slices with the canonical scheduler states and real shares', async () => {
+  it('labels donut slices with canonical content statuses and real shares', async () => {
     const view = await renderOverview(() => jsonResponse(overviewPayload()));
-    const legend = view.container.querySelector('[data-chart="schedule-states"] .donut-legend');
-    expect(legend?.textContent).toContain('مسلط');
-    expect(legend?.textContent).toContain('در حال یادگیری');
+    const legend = view.container.querySelector('[data-chart="content-pipeline"] .donut-legend');
+    expect(legend?.textContent).toContain('منتشرشده');
+    expect(legend?.textContent).toContain('در انتظار بازبینی');
     expect(legend?.textContent).toContain('۶۰٪');
     expect(legend?.textContent).toContain('۴۰٪');
-    // The reference legend reads Known/Learning/Unknown, which the scheduler does not store.
+    // The reference legend reads Known/Learning/Unknown — a learner-progress distribution. Admin
+    // holds no learning rule (LB-B35 CP2), so the donut shows the content pipeline instead and
+    // must never grow a scheduler-state vocabulary.
     expect(legend?.textContent).not.toContain('Known');
+    for (const schedulerState of ['مسلط', 'در حال یادگیری', 'یادگیری مجدد']) {
+      expect(legend?.textContent).not.toContain(schedulerState);
+    }
     await view.unmount();
   });
 
-  it('renders no scheduler donut when nothing is scheduled yet', async () => {
+  it('renders no pipeline donut when no card version exists yet', async () => {
     const view = await renderOverview(() =>
-      jsonResponse(overviewPayload({ schedules: { total: 0, byState: [] } })),
+      jsonResponse(overviewPayload({ contentPipeline: { total: 0, byStatus: [] } })),
     );
-    const card = view.container.querySelector('[data-chart="schedule-states"]');
+    const card = view.container.querySelector('[data-chart="content-pipeline"]');
     expect(card?.querySelector('svg[role="img"]')).toBeNull();
     expect(card?.querySelector('.empty')).not.toBeNull();
     await view.unmount();

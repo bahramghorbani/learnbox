@@ -77,19 +77,19 @@ function pool(options: { hasRole?: boolean; purchases?: boolean } = {}) {
     if (sql.includes('admin_role_assignments'))
       return { rows: options.hasRole === false ? [] : [{ '?column?': 1 }] };
     if (sql.includes('WITH learner AS')) return { rows: [counterRow] };
-    if (sql.includes('FROM card_schedules'))
+    if (sql.includes('FROM card_versions'))
       return {
         rows: [
-          { state: 'mastered', total: '120' },
-          { state: 'learning', total: '80' },
+          { status: 'published', total: '120' },
+          { status: 'needs_review', total: '80' },
         ],
       };
-    if (sql.includes("date_trunc('day', created_at") && sql.includes('FROM users'))
-      return { rows: [{ day: '2026-10-11', total: '3' }] };
+    if (sql.includes('width_bucket') && sql.includes('FROM users'))
+      return { rows: [{ bucket: '30', total: '3' }] };
     if (sql.includes('verified_total'))
       return { rows: [{ verified_total: '18', revenue_in_window: '5400000' }] };
-    if (sql.includes("date_trunc('day', verified_at"))
-      return { rows: [{ day: '2026-10-11', total: '2', revenue: '300000' }] };
+    if (sql.includes('width_bucket') && sql.includes('FROM purchase_events'))
+      return { rows: [{ bucket: '30', total: '2', revenue: '300000' }] };
     if (sql.includes('FROM users\n          ORDER BY created_at DESC'))
       return {
         rows: [
@@ -240,7 +240,15 @@ describe('admin dashboard overview route', () => {
     expect(overview.sales.gatewayEnvironment).toBe('production');
     expect(overview.sales.verifiedTotal).toEqual({ state: 'available', value: 18 });
     expect(overview.sales.revenueTomansInWindow).toEqual({ state: 'available', value: 5400000 });
-    expect(overview.salesSeries).toEqual([{ day: '2026-10-11', count: 2, revenueTomans: 300000 }]);
+    // The series is dense: one point per bucket in the window, so a gap reads as a real zero
+    // rather than a missing day the chart would silently shorten.
+    expect(overview.salesSeries).toHaveLength(30);
+    expect(overview.salesSeries.at(-1)).toEqual({
+      day: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/) as unknown as string,
+      count: 2,
+      revenueTomans: 300000,
+    });
+    expect(overview.salesSeries.slice(0, 29).every((point) => point.count === 0)).toBe(true);
     expect(fakePool.statements.some((sql) => sql.includes("provider = 'zarinpal'"))).toBe(true);
   });
 
