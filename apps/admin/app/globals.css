@@ -2727,3 +2727,316 @@ button {
     align-items: flex-start;
   }
 }
+
+/* Stage 7 — Splash & Slider Management. These are the approved PDR-009 presentation patterns,
+   namespaced so legacy splash-* behaviour and other Admin workspaces remain untouched. */
+.presentation-workspace .grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--gap);
+}
+.presentation-workspace .grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--gap);
+}
+.presentation-workspace .split-detail {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  gap: var(--gap);
+  align-items: start;
+}
+.presentation-workspace .row-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.presentation-workspace .form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 13px;
+}
+.presentation-workspace .form-row label {
+  color: var(--muted);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+.presentation-workspace .b-purple {
+  background: var(--lavender-soft);
+  color: var(--purple-ink);
+}
+.presentation-workspace .phone {
+  width: 190px;
+  height: 380px;
+  position: relative;
+  flex: none;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  color: #fff;
+  border: 7px solid #1f2030;
+  border-radius: 26px;
+  background: linear-gradient(170deg, var(--purple) 0%, #4c2bb0 100%);
+  box-shadow: var(--shadow-lg);
+}
+.presentation-workspace .phone .notch {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 72px;
+  height: 17px;
+  transform: translateX(-50%);
+  border-radius: 0 0 11px 11px;
+  background: #1f2030;
+}
+.presentation-workspace .phone-splash {
+  text-align: center;
+}
+.presentation-workspace .phone-splash .ps-mark {
+  display: grid;
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 12px;
+  place-items: center;
+  border: 2.4px solid #fff;
+  border-radius: 17px;
+}
+.presentation-workspace .phone-splash .ps-mark svg {
+  width: 26px;
+  height: 26px;
+}
+.presentation-workspace .phone-splash b {
+  display: block;
+  font-size: 16px;
+}
+.presentation-workspace .phone-splash span {
+  font-size: 10.5px;
+  opacity: 0.85;
+}
+.presentation-workspace .slide-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.presentation-workspace .slide-vis {
+  position: relative;
+  display: grid;
+  height: 92px;
+  place-items: center;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+}
+.presentation-workspace .switch {
+  position: relative;
+  flex: none;
+  width: 38px;
+  height: 22px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: #ddd9ea;
+}
+.presentation-workspace .switch i {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.16s ease;
+}
+.presentation-workspace .switch.on {
+  background: var(--purple);
+}
+.presentation-workspace .switch.on i {
+  right: 19px;
+}
+.presentation-workspace .order-btns {
+  display: flex;
+  gap: 4px;
+}
+.presentation-workspace .order-btns button {
+  display: grid;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--muted);
+}
+.presentation-workspace .order-btns svg {
+  width: 12px;
+  height: 12px;
+}
+@media (max-width: 1080px) {
+  .presentation-workspace .split-detail,
+  .presentation-workspace .grid-3 {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (max-width: 760px) {
+  .presentation-workspace .grid-2,
+  .presentation-workspace .grid-3,
+  .presentation-workspace .split-detail {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Stage 7 adaptation for the real, server-backed panels. The frozen prototype's seasonal fields
+   and synthetic previews are intentionally not reproduced: neither has a canonical API contract.
+   These rules present only rows and image bytes returned by the existing guarded endpoints. */
+.presentation-workspace .splash-panel {
+  max-width: none;
+  margin: 0 0 24px;
+  padding: 0;
+}
+.presentation-workspace .splash-panel-heading {
+  margin: 0 0 14px;
+  padding: 0 2px;
+}
+.presentation-workspace .splash-panel-heading h2 {
+  margin-top: 3px;
+  font-size: 20px;
+}
+.presentation-workspace .splash-panel-heading p {
+  max-width: 640px;
+}
+.presentation-workspace .splash-panel-grid {
+  gap: var(--gap);
+}
+.presentation-workspace .splash-current-card,
+.presentation-workspace .splash-upload-card {
+  padding: 0;
+  overflow: hidden;
+  border-radius: var(--radius);
+  box-shadow: none;
+}
+.presentation-workspace .splash-current-card > h3,
+.presentation-workspace .splash-upload-card > h3 {
+  margin: 0;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
+}
+.presentation-workspace .presentation-splash-panel .splash-current-card {
+  display: grid;
+  grid-template-rows: auto minmax(260px, 1fr) auto;
+}
+.presentation-workspace .presentation-splash-panel .splash-frame {
+  min-height: 320px;
+  border: 0;
+  border-radius: 0;
+  background: var(--canvas);
+}
+.presentation-workspace .presentation-splash-panel .splash-frame img {
+  max-height: 440px;
+}
+.presentation-workspace .presentation-splash-panel .splash-meta,
+.presentation-workspace .presentation-splash-panel .splash-secondary-action,
+.presentation-workspace .presentation-splash-panel .splash-confirmation {
+  margin-inline: 16px;
+}
+.presentation-workspace .presentation-splash-panel .splash-meta {
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+.presentation-workspace .presentation-splash-panel .splash-secondary-action,
+.presentation-workspace .presentation-splash-panel .splash-confirmation {
+  margin-top: 14px;
+  margin-bottom: 16px;
+}
+.presentation-workspace .presentation-splash-panel .splash-upload-card > :not(h3) {
+  margin-inline: 16px;
+}
+.presentation-workspace .presentation-splash-panel .splash-upload-card > .splash-guidance {
+  margin-top: 16px;
+}
+.presentation-workspace .presentation-slider-panel .splash-panel-grid {
+  display: block;
+}
+.presentation-workspace .presentation-slider-panel .splash-current-card,
+.presentation-workspace .presentation-slider-panel .splash-upload-card {
+  margin-bottom: var(--gap);
+}
+.presentation-workspace .presentation-slider-panel .splash-current-card > h3,
+.presentation-workspace .presentation-slider-panel .splash-upload-card > h3 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.presentation-workspace .presentation-slider-panel .slide-list {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--gap);
+  margin: 0;
+  padding: 16px;
+}
+.presentation-workspace .presentation-slider-panel .slide-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+  border-color: var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.presentation-workspace .presentation-slider-panel .slide-thumb {
+  width: 100%;
+  min-height: 92px;
+  aspect-ratio: auto;
+  border: 0;
+  border-radius: 0;
+  background: var(--canvas);
+}
+.presentation-workspace .presentation-slider-panel .slide-thumb img {
+  object-fit: cover;
+}
+.presentation-workspace .presentation-slider-panel .slide-body {
+  padding: 12px;
+}
+.presentation-workspace .presentation-slider-panel .slide-actions {
+  justify-content: space-between;
+  margin-top: 12px;
+}
+.presentation-workspace .presentation-slider-panel .slide-actions button:first-child {
+  margin-inline-end: auto;
+}
+.presentation-workspace .presentation-slider-panel .splash-upload-card {
+  padding-bottom: 16px;
+}
+.presentation-workspace .presentation-slider-panel .splash-upload-card > :not(h3) {
+  margin-inline: 16px;
+}
+.presentation-workspace .presentation-slider-panel .slide-field {
+  margin-top: 16px;
+}
+.presentation-workspace .presentation-slider-panel .splash-file-control,
+.presentation-workspace .presentation-slider-panel .slide-checkbox,
+.presentation-workspace .presentation-slider-panel .slide-actions {
+  margin-top: 16px;
+}
+@media (max-width: 1260px) {
+  .presentation-workspace .presentation-slider-panel .slide-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 760px) {
+  .presentation-workspace .splash-panel-heading {
+    align-items: flex-start;
+  }
+  .presentation-workspace .splash-panel-grid,
+  .presentation-workspace .presentation-slider-panel .slide-list {
+    grid-template-columns: 1fr;
+  }
+  .presentation-workspace .presentation-splash-panel .splash-frame {
+    min-height: 260px;
+  }
+}
