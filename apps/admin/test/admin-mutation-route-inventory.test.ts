@@ -372,6 +372,19 @@ describe('Admin mutation route inventory (LB-B30)', () => {
     }
   });
 
+  it('requires fresh Passkey authentication before starting or completing credential enrollment', () => {
+    const options = read('app/api/auth/add-passkey/options/route.ts');
+    const verify = read('app/api/auth/add-passkey/verify/route.ts');
+    const recentGuard = 'if (!session.recent) return reauthenticationRequired();';
+
+    expect(options).toContain(recentGuard);
+    expect(verify).toContain(recentGuard);
+    expect(verify.indexOf('verifyAdminCsrf(')).toBeLessThan(verify.indexOf(recentGuard));
+    expect(verify.indexOf(recentGuard)).toBeLessThan(
+      verify.indexOf("readCookie(request, '__Host-learnbox_admin_addkey')"),
+    );
+  });
+
   it('routes that are not hard-disabled never carry raw legacy SQL against learner tables', () => {
     // Known, session-gated exception (deferred to the compatibility phase, LB-B31): the passkey
     // registration options route reads admin_owner/admin_passkey_credentials inline and issues a

@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
 import type { AdminAuthMode } from '../admin-auth-mode';
-import { LoadingState } from './AdminStates';
+import { ErrorState, LoadingState } from './AdminStates';
 import { PasskeySignIn } from './PasskeySignIn';
 
 export type AdminWorkspaceAccess = 'local-prototype' | 'server-authenticated';
@@ -34,26 +34,35 @@ type AdminAuthGateProps = {
 };
 
 export function AdminAuthGate({ mode, children }: AdminAuthGateProps) {
-  const [state, setState] = useState<'checking' | 'signed-out' | 'signed-in'>(
+  const [state, setState] = useState<'checking' | 'signed-out' | 'signed-in' | 'unavailable'>(
     mode === 'local-prototype' ? 'signed-in' : 'checking',
   );
+  const [retry, setRetry] = useState(0);
 
   useEffect(() => {
     if (mode === 'local-prototype') return;
     let active = true;
     void fetch('/api/auth/session', { credentials: 'same-origin', cache: 'no-store' })
-      .then((response) => (response.ok ? response.json() : undefined))
-      .then((session) => {
+      .then(async (response) => {
         if (!active) return;
-        setState(session?.authenticated ? 'signed-in' : 'signed-out');
+        if (response.status === 401) {
+          setState('signed-out');
+          return;
+        }
+        if (!response.ok) {
+          setState('unavailable');
+          return;
+        }
+        const session = (await response.json()) as { authenticated?: unknown };
+        setState(session.authenticated === true ? 'signed-in' : 'signed-out');
       })
       .catch(() => {
-        if (active) setState('signed-out');
+        if (active) setState('unavailable');
       });
     return () => {
       active = false;
     };
-  }, [mode]);
+  }, [mode, retry]);
 
   if (mode === 'local-prototype') {
     return <WorkspaceAccess access="local-prototype">{children}</WorkspaceAccess>;
@@ -62,6 +71,21 @@ export function AdminAuthGate({ mode, children }: AdminAuthGateProps) {
     return (
       <main className="admin-auth-loading">
         <LoadingState label="در حال بررسی ورود امن…" />
+      </main>
+    );
+  }
+  if (state === 'unavailable') {
+    return (
+      <main className="admin-auth-loading">
+        <ErrorState
+          title="بررسی ورود امن انجام نشد"
+          description="وضعیت نشست نمایش داده نشد. بدون ارسال اطلاعات، دوباره تلاش کنید."
+          action={
+            <button className="btn" onClick={() => setRetry((value) => value + 1)} type="button">
+              تلاش دوباره
+            </button>
+          }
+        />
       </main>
     );
   }

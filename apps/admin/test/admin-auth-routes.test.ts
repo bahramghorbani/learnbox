@@ -311,8 +311,42 @@ describe('admin reauthentication routes', () => {
       }),
     );
 
-    expect(response.status).toBe(404);
+    expect(response.status).toBe(401);
     expect(issued).toBe(false);
+  });
+
+  it('reports 401 rather than an invalid ceremony if the session expires before reauth verification', async () => {
+    let verified = false;
+    const handler = createReauthVerifyRoute({
+      config,
+      now: () => new Date('2026-08-08T12:04:00.000Z'),
+      service: {
+        verifyReauth: async () => {
+          verified = true;
+          return { status: 'reauthenticated' as const };
+        },
+      },
+      sessionStore: {
+        findActiveSession: async () => undefined,
+        touchSession: async () => false,
+        touchRecentAuthentication: async () => false,
+      },
+    });
+
+    const response = await handler(
+      new Request('https://admin.learnbox.app/api/auth/reauth/verify', {
+        method: 'POST',
+        headers: {
+          origin: config.origin,
+          'content-type': 'application/json',
+          cookie: `__Host-learnbox_admin_session=${'t'.repeat(43)}; __Host-learnbox_admin_ceremony=${'n'.repeat(43)}`,
+        },
+        body: JSON.stringify({ response: { id: 'credential' } }),
+      }),
+    );
+
+    expect(response.status).toBe(401);
+    expect(verified).toBe(false);
   });
 
   it('requires session and CSRF proof before refreshing recent authentication', async () => {

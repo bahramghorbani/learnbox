@@ -3,6 +3,8 @@
 import React, { useState } from 'react';
 import { startRegistration } from '@simplewebauthn/browser';
 
+import { fetchWithStepUp, stepUpRefusal } from './step-up-reauth';
+
 function readCsrfCookie(): string | undefined {
   return document.cookie
     ?.split(';')
@@ -19,10 +21,15 @@ export function AddPasskeyButton() {
     setState('loading');
     setMessage('');
     try {
-      const optionsRes = await fetch('/api/auth/add-passkey/options', {
-        credentials: 'same-origin',
-      });
-      if (!optionsRes.ok) throw new Error('خطا در دریافت تنظیمات');
+      const { response: optionsRes, stepUp } = await fetchWithStepUp(
+        '/api/auth/add-passkey/options',
+        {
+          credentials: 'same-origin',
+        },
+      );
+      if (!optionsRes.ok) {
+        throw new Error(stepUpRefusal(stepUp, optionsRes.status) ?? 'خطا در دریافت تنظیمات');
+      }
       const options = await optionsRes.json();
 
       const registration = await startRegistration({ optionsJSON: options });

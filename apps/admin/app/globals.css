@@ -3040,3 +3040,77 @@ button {
     min-height: 260px;
   }
 }
+
+/* Stage 8 — access is intentionally limited to the current session and Passkey facts returned by
+   existing contracts. No prototype session/device/role data is styled as if it were real. */
+.access-workspace .access-summary-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--gap);
+  margin-bottom: var(--gap);
+}
+.access-workspace .access-honesty-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--gap);
+}
+.access-workspace .access-facts {
+  display: grid;
+  gap: 12px;
+  margin: 16px 0 0;
+}
+.access-workspace .access-facts div {
+  display: grid;
+  gap: 4px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.access-workspace .access-facts dt {
+  color: var(--muted);
+  font-size: 12px;
+}
+.access-workspace .access-facts dd {
+  margin: 0;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 700;
+}
+.access-workspace .add-passkey-section h3 {
+  margin: 0 0 8px;
+  font-size: 15px;
+}
+.access-workspace .add-passkey-hint {
+  margin: 0 0 14px;
+  color: var(--muted);
+  line-height: 1.8;
+}
+.access-workspace .add-passkey-button {
+  min-height: 38px;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--purple);
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+.access-workspace .add-passkey-button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+.access-workspace .add-passkey-message {
+  margin: 12px 0 0;
+}
+.access-workspace .add-passkey-message.error {
+  color: var(--rose-ink);
+}
+.access-workspace .add-passkey-message.success {
+  color: var(--green);
+}
+@media (max-width: 760px) {
+  .access-workspace .access-summary-grid,
+  .access-workspace .access-honesty-grid {
+    grid-template-columns: 1fr;
+  }
+}

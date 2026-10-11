@@ -2,7 +2,11 @@ import { Pool } from 'pg';
 import { readAdminDatabaseConfig } from '../../../../../lib/server/admin-database';
 import { getSharedAdminDatabasePool } from '../../../../../lib/server/admin-database-pool';
 import { guardAdminMutation } from '../../../../../lib/server/admin-mutation-guard';
-import { loadAdminSession, verifyAdminCsrf } from '../../../../../lib/server/admin-route-security';
+import {
+  loadAdminSession,
+  reauthenticationRequired,
+  verifyAdminCsrf,
+} from '../../../../../lib/server/admin-route-security';
 import { PostgresOwnerAuthStore } from '../../../../../lib/server/postgres-owner-auth-store';
 import { readAdminAuthConfig } from '../../../../../lib/server/admin-auth-policy';
 import { hashAdminSecret } from '../../../../../lib/server/admin-session';
@@ -44,6 +48,7 @@ export async function POST(request: Request) {
       headers: { 'content-type': 'application/json', 'cache-control': 'no-store' },
     });
   }
+  if (!session.recent) return reauthenticationRequired();
 
   const nonce = readCookie(request, '__Host-learnbox_admin_addkey');
   if (!nonce) return new Response('Missing ceremony', { status: 400 });

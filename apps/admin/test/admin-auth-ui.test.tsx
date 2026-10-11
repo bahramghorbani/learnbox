@@ -279,6 +279,23 @@ describe('admin passkey UI', () => {
     await rendered.unmount();
   });
 
+  it('shows a recoverable unavailable state instead of a sign-in prompt on session-server failure', async () => {
+    stubSessionFetch(503);
+    const rendered = await render(
+      createElement(
+        AdminAuthGate,
+        { mode: 'server-passkey' },
+        createElement('div', null, 'workspace'),
+      ),
+    );
+
+    expect(rendered.findText('بررسی ورود امن انجام نشد')).toBe(true);
+    expect(rendered.button('تلاش دوباره')).not.toBeNull();
+    expect(rendered.findText('ورود مدیر LearnBox')).toBe(false);
+    expect(rendered.text()).not.toContain('workspace');
+    await rendered.unmount();
+  });
+
   it('announces the loading state politely and falls back to the sign-in card', async () => {
     let resolveFetch: (value: Response) => void;
     const pendingFetch = new Promise<Response>((resolve) => {

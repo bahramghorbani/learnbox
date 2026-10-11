@@ -65,6 +65,13 @@ export function verifyAdminCsrf(
   }
 }
 
+export function reauthenticationRequired() {
+  return new Response('Reauthentication required', {
+    status: 428,
+    headers: { 'Cache-Control': 'no-store' },
+  });
+}
+
 export function clearAdminSessionCookie() {
   return `${sessionCookieName}=; Max-Age=0; Path=/; HttpOnly; Secure; SameSite=Strict`;
 }

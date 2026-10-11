@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 
+import { AccessWorkspace } from './AccessWorkspace';
 import { AdminSidebar } from './AdminSidebar';
 import { AuditLogWorkspace } from './AuditLogWorkspace';
 import { ContentPacksWorkspace } from './ContentPacksWorkspace';
@@ -31,8 +32,12 @@ import { UsersManagement } from './UsersManagement';
  * because nothing else did, and the frozen nine-item nav has no review entry, so review moves to
  * its own `#review` destination — reachable from the dashboard panel that previews its queue.
  * Replacing home without that link would have left a working, audited workspace unreachable.
+ * Stage 8 makes «نشست‌ها و دسترسی» a real route. It deliberately renders only the current-session
+ * and Passkey facts the existing security contracts provide; invented device, role or audit rows
+ * are forbidden here.
  */
-type AdminRoute = 'content' | 'store' | 'users' | 'audit' | 'presentation' | 'review' | 'home';
+type AdminRoute =
+  'content' | 'store' | 'users' | 'audit' | 'presentation' | 'access' | 'review' | 'home';
 
 function readRoute(hash: string): AdminRoute {
   const value = hash.replace(/^#/, '');
@@ -41,6 +46,7 @@ function readRoute(hash: string): AdminRoute {
   if (value === 'users') return 'users';
   if (value === 'audit') return 'audit';
   if (value === 'presentation') return 'presentation';
+  if (value === 'access') return 'access';
   if (value === 'review') return 'review';
   return 'home';
 }
@@ -59,6 +65,7 @@ export function AdminWorkspaceRouter() {
   if (route === 'store') return <StoreListingsWorkspace />;
   if (route === 'audit') return <AuditLogWorkspace />;
   if (route === 'presentation') return <PresentationWorkspace />;
+  if (route === 'access') return <AccessWorkspace />;
   if (route === 'review') return <ContentReviewWorkspace />;
   // The support screen renders its own section inside the shell frame. Stage 5 moved its markup
   // onto the approved vocabulary; the framing here is unchanged.
