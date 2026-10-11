@@ -16,9 +16,8 @@ type AdminIconName =
  * Navigation is the APPROVED, DESIGN FROZEN Admin prototype's nav, verbatim:
  * `prototypes/admin-ui-v1/assets/js/shell.js` (PDR-009), same labels, same order, same icons.
  *
- * `route` is set only for destinations that are really implemented. Every other entry renders as
- * a visibly disabled item rather than a link to nowhere, so the frozen design is preserved without
- * advertising screens that do not exist yet.
+ * All nine frozen-design destinations are now implemented as real routes. The sidebar therefore
+ * keeps the reference order and icons without advertising a destination that does not exist.
  */
 const navItems = [
   { label: 'خانه / نمای کلی', icon: 'home', route: 'home' },
@@ -28,8 +27,8 @@ const navItems = [
   { label: 'یادگیری', icon: 'chart', route: 'learning' },
   { label: 'نمایش اپ', icon: 'image', route: 'presentation' },
   { label: 'نشست‌ها و دسترسی', icon: 'shield', route: 'access' },
-  { label: 'عملیات', icon: 'ops', route: 'audit' },
-  { label: 'تنظیمات', icon: 'settings' },
+  { label: 'عملیات', icon: 'ops', route: 'ops' },
+  { label: 'تنظیمات', icon: 'settings', route: 'settings' },
 ] as const satisfies readonly {
   label: string;
   icon: AdminIconName;
@@ -142,22 +141,6 @@ export function AdminSidebar({ current = 'home' }: { current?: string } = {}) {
               <AdminIcon name={item.icon} />
             </span>
           );
-
-          if (!('route' in item) || !item.route) {
-            return (
-              <span
-                aria-disabled="true"
-                className="admin-nav-item is-pending"
-                data-admin-nav-pending="true"
-                key={item.label}
-                title="این بخش هنوز پیاده‌سازی نشده است"
-              >
-                {icon}
-                {item.label}
-              </span>
-            );
-          }
-
           const isCurrent = item.route === current;
           return (
             <a

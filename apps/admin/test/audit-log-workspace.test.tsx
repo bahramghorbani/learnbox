@@ -114,11 +114,11 @@ describe('Admin #audit destination (M3.3)', () => {
     expect(calls.some((url) => url.includes('/api/support/audit?'))).toBe(true);
   });
 
-  it('offers the frozen «عملیات» nav entry as a real link, not a disabled item', async () => {
+  it('preserves the audit viewer when Operations gains its own destination', async () => {
     const view = await mount('#audit');
-    const link = view.querySelector('a.admin-nav-item[href="#audit"]');
+    expect(view.querySelector('#audit')).not.toBeNull();
+    const link = view.querySelector('a.admin-nav-item[href="#ops"]');
     expect(link?.textContent).toContain('عملیات');
-    expect(link?.getAttribute('aria-current')).toBe('page');
   });
 
   it('resolves #users to the M3.1/M3.2 support screen inside the approved shell', async () => {
