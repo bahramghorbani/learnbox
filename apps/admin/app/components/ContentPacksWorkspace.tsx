@@ -21,6 +21,7 @@ import {
 } from './CardMediaPanel';
 import { PackLifecyclePanel } from './PackLifecyclePanel';
 import { EmptyState, ErrorState, LoadingState } from './AdminStates';
+import { faNum } from './fa-digits';
 import {
   CardFormModal,
   PackFormModal,
@@ -94,17 +95,6 @@ type ServerCard = {
 };
 
 type Phase = 'loading' | 'unauthorized' | 'disabled' | 'error' | 'empty' | 'ready';
-
-const FA_DIGITS = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
-
-/** Persian digit presentation, matching the frozen prototype's `fa()` helper. */
-function fa(value: string | number): string {
-  return String(value).replace(/\d/g, (digit) => FA_DIGITS[Number(digit)]);
-}
-
-function faNum(value: number): string {
-  return fa(value.toLocaleString('en-US'));
-}
 
 /** Canonical pack status → approved badge treatment, mirroring the prototype's `packBadge()`. */
 const PACK_BADGE: Record<string, readonly [string, string]> = {

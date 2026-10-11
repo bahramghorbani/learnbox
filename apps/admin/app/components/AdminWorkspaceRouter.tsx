@@ -52,8 +52,8 @@ export function AdminWorkspaceRouter() {
   if (route === 'store') return <StoreListingsWorkspace />;
   if (route === 'audit') return <AuditLogWorkspace />;
   if (route === 'presentation') return <PresentationWorkspace />;
-  // The support screen predates the approved shell and renders its own section, so it is framed
-  // here instead of being rewritten — the M3.1/M3.2 screen stays byte-for-byte the reviewed one.
+  // The support screen renders its own section inside the shell frame. Stage 5 moved its markup
+  // onto the approved vocabulary; the framing here is unchanged.
   if (route === 'users') {
     return (
       <main className="admin-shell cp-workspace" id="users">

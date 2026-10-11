@@ -2,7 +2,10 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { EmptyState, LoadingState } from './AdminStates';
+import { CpModal } from './AdminModal';
+import { EmptyState, ErrorState, LoadingState } from './AdminStates';
+import { faNum } from './fa-digits';
+import { fetchWithStepUp, stepUpMessage, type StepUpOutcome } from './step-up-reauth';
 
 type AccountStatus = 'active' | 'disabled';
 
@@ -60,6 +63,21 @@ function fullName(user: User): string {
   return name || '—';
 }
 
+/** Avatar letter. Falls back to a neutral glyph rather than inventing a name. */
+function initial(user: User): string {
+  const name = [user.firstName, user.lastName].filter(Boolean).join(' ').trim();
+  return name ? name.slice(0, 1) : '\u2022';
+}
+
+/** Account status in the approved badge treatment. `disabled` is a suspension, not a deletion. */
+function StatusBadge({ status }: { status: AccountStatus }) {
+  return (
+    <span className={status === 'disabled' ? 'badge b-rose' : 'badge b-green'}>
+      {status === 'disabled' ? 'غیرفعال موقت' : 'فعال'}
+    </span>
+  );
+}
+
 function readBrowserCookie(name: string): string | undefined {
   if (typeof document === 'undefined') return undefined;
   for (const part of document.cookie.split(';')) {
@@ -79,6 +97,22 @@ function createClientKey(): string {
   });
 }
 
+/**
+ * What to tell the operator when a guarded mutation did not go through for an authentication
+ * reason. `undefined` means "this was not a step-up problem" and the caller maps the status itself.
+ *
+ * A second 428 AFTER a confirmed passkey is reported rather than re-prompted: `fetchWithStepUp`
+ * retries exactly once, which is what keeps a stale clock or a revoked credential from turning
+ * into an endless prompt loop.
+ */
+function stepUpRefusal(stepUp: StepUpOutcome, httpStatus: number): string | undefined {
+  if (stepUp !== 'not-required' && stepUp !== 'confirmed') return stepUpMessage(stepUp);
+  if (httpStatus === 428) {
+    return 'تأیید هویت ثبت شد، اما سرور همچنان احراز هویت تازه می‌خواهد؛ داده‌های واردشده حفظ شده است — یک‌بار دیگر تلاش کنید.';
+  }
+  return undefined;
+}
+
 async function saveStatus(
   user: User,
   status: AccountStatus,
@@ -88,17 +122,20 @@ async function saveStatus(
   if (!csrfToken) {
     return { ok: false, message: 'نشان امنیتی CSRF در دسترس نیست؛ صفحه را تازه کنید.' };
   }
+  // Built once and reused verbatim by the retry inside `fetchWithStepUp`: same body, same
+  // idempotency key, so a suspension the server already applied cannot be applied twice.
+  const init: RequestInit = {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'content-type': 'application/json',
+      'x-learnbox-csrf-token': csrfToken,
+      'idempotency-key': createClientKey(),
+    },
+    body: JSON.stringify({ userId: user.id, status, reason: reason.trim() }),
+  };
   try {
-    const response = await fetch('/api/support/users/status', {
-      method: 'POST',
-      credentials: 'same-origin',
-      headers: {
-        'content-type': 'application/json',
-        'x-learnbox-csrf-token': csrfToken,
-        'idempotency-key': createClientKey(),
-      },
-      body: JSON.stringify({ userId: user.id, status, reason: reason.trim() }),
-    });
+    const { response, stepUp } = await fetchWithStepUp('/api/support/users/status', init);
     if (response.ok) {
       const payload = (await response.json()) as { status: string; user: User };
       return {
@@ -107,10 +144,10 @@ async function saveStatus(
         alreadyApplied: payload.status === 'idempotent' || payload.status === 'unchanged',
       };
     }
+    const refused = stepUpRefusal(stepUp, response.status);
+    if (refused) return { ok: false, message: refused };
     if (response.status === 401)
       return { ok: false, message: 'نشست معتبر نیست؛ دوباره وارد شوید.' };
-    if (response.status === 428)
-      return { ok: false, message: 'احراز هویت مجدد لازم است؛ دوباره وارد شوید.' };
     if (response.status === 400)
       return { ok: false, message: 'دلیل واردشده پذیرفته نشد؛ آن را کامل‌تر بنویسید.' };
     if (response.status === 404)
@@ -170,17 +207,18 @@ async function savePackEntitlement(
   if (!csrfToken) {
     return { ok: false, message: 'نشان امنیتی CSRF در دسترس نیست؛ صفحه را تازه کنید.' };
   }
+  const init: RequestInit = {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'content-type': 'application/json',
+      'x-learnbox-csrf-token': csrfToken,
+      'idempotency-key': createClientKey(),
+    },
+    body: JSON.stringify({ userId, packId, action, reason: reason.trim() }),
+  };
   try {
-    const response = await fetch('/api/support/users/packs', {
-      method: 'POST',
-      credentials: 'same-origin',
-      headers: {
-        'content-type': 'application/json',
-        'x-learnbox-csrf-token': csrfToken,
-        'idempotency-key': createClientKey(),
-      },
-      body: JSON.stringify({ userId, packId, action, reason: reason.trim() }),
-    });
+    const { response, stepUp } = await fetchWithStepUp('/api/support/users/packs', init);
     if (response.ok) {
       const payload = (await response.json()) as { status: string; pack: PackEntitlement };
       return { ok: true, pack: payload.pack, alreadyApplied: payload.status === 'idempotent' };
@@ -203,10 +241,10 @@ async function savePackEntitlement(
         pack: payload.pack,
       };
     }
+    const refused = stepUpRefusal(stepUp, response.status);
+    if (refused) return { ok: false, message: refused };
     if (response.status === 401)
       return { ok: false, message: 'نشست معتبر نیست؛ دوباره وارد شوید.' };
-    if (response.status === 428)
-      return { ok: false, message: 'احراز هویت مجدد لازم است؛ دوباره وارد شوید.' };
     if (response.status === 400)
       return { ok: false, message: 'دلیل واردشده پذیرفته نشد؛ آن را کامل‌تر بنویسید.' };
     if (response.status === 404)
@@ -223,6 +261,10 @@ export function UsersManagement() {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  /** The 404 the support gate returns to a role without `super_admin` — shown, never softened. */
+  const [denied, setDenied] = useState(false);
+  /** Refines the rows already loaded. Not a server query: see the footer, which says so. */
+  const [statusFilter, setStatusFilter] = useState<'all' | AccountStatus>('all');
   const [selected, setSelected] = useState<User | null>(null);
   const [reason, setReason] = useState('');
   const [saving, setSaving] = useState(false);
@@ -250,6 +292,15 @@ export function UsersManagement() {
         credentials: 'same-origin',
         cache: 'no-store',
       });
+      // 404 is the gate's deliberate answer to a role that may not use this surface: it must read
+      // as "not allowed", not as "the server broke", and it is not retried.
+      if (response.status === 404) {
+        setDenied(true);
+        setUsers([]);
+        setTotal(0);
+        return;
+      }
+      setDenied(false);
       if (!response.ok) throw new Error('خطا در دریافت لیست کاربران');
       const data = (await response.json()) as { users: User[]; total: number };
       setUsers(data.users);
@@ -360,334 +411,380 @@ export function UsersManagement() {
 
   const reasonTooShort = reason.trim().length < 3;
 
+  const visible =
+    statusFilter === 'all' ? users : users.filter((user) => user.status === statusFilter);
+  const activeCount = users.filter((user) => user.status === 'active').length;
+  const disabledCount = users.length - activeCount;
+  const filters: ReadonlyArray<{ key: 'all' | AccountStatus; label: string; count: number }> = [
+    { key: 'all', label: 'همه', count: users.length },
+    { key: 'active', label: 'فعال', count: activeCount },
+    { key: 'disabled', label: 'غیرفعال موقت', count: disabledCount },
+  ];
+
   return (
     <section className="users-management" aria-labelledby="users-title">
-      <div className="users-header">
-        <h2 id="users-title">مدیریت کاربران</h2>
-        <span className="users-total">{total} کاربر</span>
-      </div>
-
-      <div className="users-search">
-        <input
-          type="search"
-          placeholder="جستجو با شماره موبایل یا نام..."
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          className="users-search-input"
-        />
-      </div>
-
-      {error && (
-        <p className="users-error" role="alert">
-          {error}
-        </p>
-      )}
-
-      {loading ? (
-        <LoadingState label="در حال بارگذاری..." />
-      ) : (
-        <div className="users-table-wrap">
-          <table className="users-table">
-            <thead>
-              <tr>
-                <th>ردیف</th>
-                <th>شماره موبایل</th>
-                <th>نام</th>
-                <th>وضعیت حساب</th>
-                <th>تاریخ ثبت‌نام</th>
-                <th>کارت‌ها</th>
-                <th>مرورها</th>
-                <th>آخرین فعالیت</th>
-                <th>عملیات</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((user, index) => (
-                <tr key={user.id}>
-                  <td>{index + 1}</td>
-                  <td dir="ltr">{formatPhone(user.phone)}</td>
-                  <td>{fullName(user)}</td>
-                  <td>
-                    <span
-                      className={
-                        user.status === 'disabled'
-                          ? 'users-status users-status-disabled'
-                          : 'users-status users-status-active'
-                      }
-                    >
-                      {user.status === 'disabled' ? 'غیرفعال موقت' : 'فعال'}
-                    </span>
-                  </td>
-                  <td>{formatDate(user.createdAt)}</td>
-                  <td>{user.cardsStarted}</td>
-                  <td>{user.reviewCount}</td>
-                  <td>{formatDate(user.lastActivityAt)}</td>
-                  <td>
-                    <button
-                      type="button"
-                      className="users-detail-btn"
-                      onClick={() => openUser(user)}
-                    >
-                      جزئیات
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {users.length === 0 && (
-                <tr>
-                  <td colSpan={9}>
-                    <EmptyState title="کاربری یافت نشد." icon="search" />
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+      <div className="page-head">
+        <div>
+          <h2 id="users-title">کاربران</h2>
+          <p>همان کاربران canonical سامانهٔ LearnBox؛ وضعیت حساب و دسترسی بسته‌ها.</p>
         </div>
-      )}
+      </div>
 
-      {selected && (
-        <div className="user-detail-overlay" onClick={() => setSelected(null)}>
-          <div
-            className="user-detail-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="user-detail-title"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="user-detail-header">
-              <h3 id="user-detail-title">جزئیات کاربر</h3>
-              <button type="button" aria-label="بستن" onClick={() => setSelected(null)}>
-                ✕
+      <div className="card">
+        <div className="toolbar">
+          <span className="field grow">
+            <input
+              type="search"
+              className="users-search-input"
+              placeholder="جستجو با شماره موبایل یا نام…"
+              aria-label="جستجوی کاربر"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+            />
+          </span>
+          {/* Refines what is on screen. The server has no status filter, so the footer states how
+              many rows this is out of — a chip must never look like a query over every account. */}
+          <div className="chips">
+            {filters.map((filter) => (
+              <button
+                key={filter.key}
+                type="button"
+                className={statusFilter === filter.key ? 'chip on' : 'chip'}
+                aria-pressed={statusFilter === filter.key}
+                onClick={() => setStatusFilter(filter.key)}
+              >
+                {filter.label} ({faNum(filter.count)})
               </button>
-            </div>
-
-            <dl className="user-detail-info">
-              <div>
-                <dt>شماره</dt>
-                <dd dir="ltr">{formatPhone(selected.phone)}</dd>
-              </div>
-              <div>
-                <dt>نام</dt>
-                <dd>{fullName(selected)}</dd>
-              </div>
-              <div>
-                <dt>وضعیت حساب</dt>
-                <dd>
-                  <span
-                    className={
-                      selected.status === 'disabled'
-                        ? 'users-status users-status-disabled'
-                        : 'users-status users-status-active'
-                    }
-                  >
-                    {selected.status === 'disabled' ? 'غیرفعال موقت' : 'فعال'}
-                  </span>
-                </dd>
-              </div>
-              <div>
-                <dt>ثبت‌نام</dt>
-                <dd>{formatDate(selected.createdAt)}</dd>
-              </div>
-              <div>
-                <dt>کارت‌های شروع‌شده</dt>
-                <dd>{selected.cardsStarted}</dd>
-              </div>
-              <div>
-                <dt>کل مرورها</dt>
-                <dd>{selected.reviewCount}</dd>
-              </div>
-              <div>
-                <dt>آخرین مرور</dt>
-                <dd>{formatDate(selected.lastActivityAt)}</dd>
-              </div>
-            </dl>
-
-            <div className="user-status-form">
-              <p className="user-status-explainer">
-                {selected.status === 'disabled'
-                  ? 'فعال‌سازی مجدد، دسترسی کاربر را برمی‌گرداند. نشست‌های قطع‌شدهٔ قبلی برنمی‌گردند و کاربر باید دوباره وارد شود.'
-                  : 'غیرفعال‌سازی موقت است: داده‌ها، پیشرفت یادگیری، بسته‌ها و پرداخت‌ها حفظ می‌شوند و نشست‌های فعال فوراً قطع می‌شوند.'}
-              </p>
-              <label htmlFor="user-status-reason">دلیل (الزامی)</label>
-              <textarea
-                id="user-status-reason"
-                className="user-status-reason"
-                value={reason}
-                maxLength={500}
-                rows={3}
-                onChange={(event) => setReason(event.target.value)}
-                placeholder="مثلاً: درخواست پشتیبانی شمارهٔ ۱۲۳ / بررسی تخلف"
-              />
-              {formError && (
-                <p className="users-error" role="alert">
-                  {formError}
-                </p>
-              )}
-              {notice && (
-                <p className="users-notice" role="status">
-                  {notice}
-                </p>
-              )}
-              <div className="user-detail-actions">
-                {selected.status === 'active' ? (
-                  <button
-                    type="button"
-                    className="users-suspend-btn"
-                    disabled={saving || reasonTooShort}
-                    onClick={() => void applyStatus(selected, 'disabled')}
-                  >
-                    {saving ? 'در حال ثبت...' : 'غیرفعال‌سازی موقت حساب'}
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    className="users-reactivate-btn"
-                    disabled={saving || reasonTooShort}
-                    onClick={() => void applyStatus(selected, 'active')}
-                  >
-                    {saving ? 'در حال ثبت...' : 'فعال‌سازی مجدد حساب'}
-                  </button>
-                )}
-              </div>
-            </div>
-
-            <section className="user-packs" aria-labelledby="user-packs-title">
-              <h4 id="user-packs-title">دسترسی بسته‌ها</h4>
-              {packsLoading && <LoadingState label="در حال بارگذاری دسترسی‌ها..." />}
-              {packsError && (
-                <p className="users-error" role="alert">
-                  {packsError}
-                </p>
-              )}
-              {!packsLoading && !packsError && packs.length === 0 && (
-                <EmptyState title="بستهٔ فعالی برای نمایش وجود ندارد." />
-              )}
-              {packNotice && (
-                <p className="users-notice" role="status">
-                  {packNotice}
-                </p>
-              )}
-              {packError && (
-                <p className="users-error" role="alert">
-                  {packError}
-                </p>
-              )}
-              <ul className="user-packs-list">
-                {packs.map((pack) => {
-                  const label = accessLabel(pack);
-                  const blocked = blockedReason(pack);
-                  const isPending = pending?.packId === pack.packId;
-                  return (
-                    <li key={pack.packId} className="user-pack-row">
-                      <div className="user-pack-head">
-                        <span className="user-pack-title">{pack.title}</span>
-                        <span className={label.className}>{label.text}</span>
-                        {!pack.published && (
-                          <span className="pack-access pack-access-none">منتشر نشده</span>
-                        )}
-                      </div>
-                      {pack.purchase && (
-                        <p className="user-pack-meta">
-                          پرداخت تأییدشده
-                          {pack.purchase.amountTomans
-                            ? ` — ${pack.purchase.amountTomans.toLocaleString('fa-IR')} تومان`
-                            : ''}
-                          {pack.purchase.verifiedAt
-                            ? ` — ${formatDate(pack.purchase.verifiedAt)}`
-                            : ''}
-                        </p>
-                      )}
-                      {pack.acquisition === 'support' && (
-                        <p className="user-pack-meta">
-                          اعطای پشتیبانی — {formatDate(pack.acquiredAt)}
-                        </p>
-                      )}
-                      {blocked && <p className="user-pack-meta user-pack-blocked">{blocked}</p>}
-
-                      {/* A control appears only where the server has already said the action is
-                          legitimate; the request is validated again server-side regardless. */}
-                      {!isPending && pack.grant === 'allowed' && (
-                        <button
-                          type="button"
-                          className="users-reactivate-btn"
-                          onClick={() => {
-                            setPending({ packId: pack.packId, action: 'grant' });
-                            setPackReason('');
-                            setPackError(null);
-                            setPackNotice(null);
-                          }}
-                        >
-                          اعطای دسترسی
-                        </button>
-                      )}
-                      {!isPending && pack.revoke === 'allowed' && (
-                        <button
-                          type="button"
-                          className="users-suspend-btn"
-                          onClick={() => {
-                            setPending({ packId: pack.packId, action: 'revoke' });
-                            setPackReason('');
-                            setPackError(null);
-                            setPackNotice(null);
-                          }}
-                        >
-                          لغو دسترسی اعطایی
-                        </button>
-                      )}
-
-                      {isPending && (
-                        <div className="user-pack-confirm">
-                          <p className="user-status-explainer">
-                            {pending.action === 'grant'
-                              ? 'این بسته بدون هیچ پرداختی برای کاربر باز می‌شود و به‌عنوان «اعطای پشتیبانی» ثبت می‌گردد. سابقهٔ پرداخت ساخته یا تغییر داده نمی‌شود.'
-                              : 'هشدار: دسترسی کاربر به این بسته فوراً حذف می‌شود. این اقدام فقط دسترسی اعطایی پشتیبانی را برمی‌دارد و روی پرداخت‌ها اثری ندارد.'}
-                          </p>
-                          <label htmlFor={`pack-reason-${pack.packId}`}>دلیل (الزامی)</label>
-                          <textarea
-                            id={`pack-reason-${pack.packId}`}
-                            className="user-status-reason"
-                            value={packReason}
-                            maxLength={500}
-                            rows={2}
-                            onChange={(event) => setPackReason(event.target.value)}
-                            placeholder="مثلاً: تیکت ۴۵۶ — جبران پرداخت ناموفق"
-                          />
-                          <div className="user-detail-actions">
-                            <button
-                              type="button"
-                              className={
-                                pending.action === 'grant'
-                                  ? 'users-reactivate-btn'
-                                  : 'users-suspend-btn'
-                              }
-                              disabled={packSaving || packReason.trim().length < 3}
-                              onClick={() => void applyPackEntitlement(pack.packId, pending.action)}
-                            >
-                              {packSaving
-                                ? 'در حال ثبت...'
-                                : pending.action === 'grant'
-                                  ? 'تأیید و اعطای دسترسی'
-                                  : 'تأیید و لغو دسترسی'}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setPending(null);
-                                setPackReason('');
-                              }}
-                            >
-                              انصراف
-                            </button>
-                          </div>
-                        </div>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
-            </section>
+            ))}
           </div>
         </div>
+
+        {denied ? (
+          <div className="users-state-pad">
+            <ErrorState
+              tone="amber"
+              title="دسترسی به بخش کاربران مجاز نیست"
+              description="این صفحه فقط برای نقش super_admin باز است. اگر باید به آن دسترسی داشته باشید، از مالک سامانه بخواهید نقش شما را تنظیم کند."
+            />
+          </div>
+        ) : error ? (
+          <div className="users-state-pad">
+            <ErrorState
+              title="دریافت فهرست کاربران ناموفق بود"
+              description={error}
+              action={
+                <button type="button" className="btn" onClick={() => void fetchUsers()}>
+                  تلاش دوباره
+                </button>
+              }
+            />
+          </div>
+        ) : loading ? (
+          <div className="users-state-pad">
+            <LoadingState label="در حال بارگذاری کاربران…" />
+          </div>
+        ) : visible.length === 0 ? (
+          <div className="users-state-pad">
+            <EmptyState
+              icon="search"
+              title={search ? 'کاربری با این جست‌وجو پیدا نشد.' : 'هنوز کاربری ثبت نشده است.'}
+              description={
+                statusFilter === 'all'
+                  ? undefined
+                  : 'در میان کاربران بارگذاری‌شده، کسی با این وضعیت نیست.'
+              }
+            />
+          </div>
+        ) : (
+          <>
+            <table className="tbl">
+              <thead>
+                <tr>
+                  <th>کاربر</th>
+                  <th>وضعیت حساب</th>
+                  <th>کارت‌های شروع‌شده</th>
+                  <th>مرورها</th>
+                  <th>آخرین فعالیت</th>
+                  <th>تاریخ ثبت‌نام</th>
+                  <th />
+                </tr>
+              </thead>
+              <tbody>
+                {visible.map((user) => (
+                  <tr key={user.id}>
+                    <td>
+                      <div className="cell-main">
+                        <span className="avatar" aria-hidden="true">
+                          {initial(user)}
+                        </span>
+                        <div>
+                          <div className="t-name">{fullName(user)}</div>
+                          <div className="t-sub ltr">{formatPhone(user.phone)}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <StatusBadge status={user.status} />
+                    </td>
+                    <td>{faNum(user.cardsStarted)}</td>
+                    <td>{faNum(user.reviewCount)}</td>
+                    <td>{formatDate(user.lastActivityAt)}</td>
+                    <td>{formatDate(user.createdAt)}</td>
+                    <td style={{ textAlign: 'left' }}>
+                      <button type="button" className="btn sm" onClick={() => openUser(user)}>
+                        جزئیات
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div className="tbl-foot">
+              <span>
+                نمایش {faNum(visible.length)} از {faNum(users.length)} کاربر بارگذاری‌شده
+              </span>
+              <span>مجموع مطابق جست‌وجو: {faNum(total)}</span>
+            </div>
+          </>
+        )}
+      </div>
+
+      {selected && (
+        <CpModal
+          title="جزئیات کاربر"
+          wide
+          onClose={() => setSelected(null)}
+          footer={
+            <button type="button" className="btn ghost" onClick={() => setSelected(null)}>
+              بستن
+            </button>
+          }
+        >
+          <div className="user-identity">
+            <span className="avatar lg" aria-hidden="true">
+              {initial(selected)}
+            </span>
+            <div>
+              <div className="t-name">{fullName(selected)}</div>
+              <div className="t-sub ltr">{formatPhone(selected.phone)}</div>
+            </div>
+            <StatusBadge status={selected.status} />
+          </div>
+
+          <dl className="dl">
+            <div>
+              <dt>تاریخ ثبت‌نام</dt>
+              <dd>{formatDate(selected.createdAt)}</dd>
+            </div>
+            <div>
+              <dt>آخرین مرور</dt>
+              <dd>{formatDate(selected.lastActivityAt)}</dd>
+            </div>
+            <div>
+              <dt>کارت‌های شروع‌شده</dt>
+              <dd>{faNum(selected.cardsStarted)}</dd>
+            </div>
+            <div>
+              <dt>کل مرورها</dt>
+              <dd>{faNum(selected.reviewCount)}</dd>
+            </div>
+          </dl>
+
+          <div className="user-status-form">
+            <div className="card-title">وضعیت حساب</div>
+            <p className="user-status-explainer">
+              {selected.status === 'disabled'
+                ? 'فعال‌سازی مجدد، دسترسی کاربر را برمی‌گرداند. نشست‌های قطع‌شدهٔ قبلی برنمی‌گردند و کاربر باید دوباره وارد شود.'
+                : 'غیرفعال‌سازی موقت است: داده‌ها، پیشرفت یادگیری، بسته‌ها و پرداخت‌ها حفظ می‌شوند و نشست‌های فعال فوراً قطع می‌شوند.'}
+            </p>
+            <label htmlFor="user-status-reason">دلیل (الزامی)</label>
+            <textarea
+              id="user-status-reason"
+              className="user-status-reason"
+              value={reason}
+              maxLength={500}
+              rows={3}
+              onChange={(event) => setReason(event.target.value)}
+              placeholder="مثلاً: درخواست پشتیبانی شمارهٔ ۱۲۳ / بررسی تخلف"
+            />
+            {formError && (
+              <p className="users-error" role="alert">
+                {formError}
+              </p>
+            )}
+            {notice && (
+              <p className="users-notice" role="status">
+                {notice}
+              </p>
+            )}
+            <div className="user-detail-actions">
+              {selected.status === 'active' ? (
+                <button
+                  type="button"
+                  className="btn danger"
+                  disabled={saving || reasonTooShort}
+                  onClick={() => void applyStatus(selected, 'disabled')}
+                >
+                  {saving ? 'در حال ثبت...' : 'غیرفعال‌سازی موقت حساب'}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="btn primary"
+                  disabled={saving || reasonTooShort}
+                  onClick={() => void applyStatus(selected, 'active')}
+                >
+                  {saving ? 'در حال ثبت...' : 'فعال‌سازی مجدد حساب'}
+                </button>
+              )}
+            </div>
+          </div>
+
+          <section className="user-packs" aria-labelledby="user-packs-title">
+            <div className="card-title" id="user-packs-title">
+              دسترسی بسته‌ها
+            </div>
+            {packsLoading && <LoadingState label="در حال بارگذاری دسترسی‌ها..." />}
+            {packsError && (
+              <ErrorState
+                title="دریافت دسترسی بسته‌ها ناموفق بود"
+                description={packsError}
+                action={
+                  <button
+                    type="button"
+                    className="btn"
+                    onClick={() => void fetchPacks(selected.id)}
+                  >
+                    تلاش دوباره
+                  </button>
+                }
+              />
+            )}
+            {!packsLoading && !packsError && packs.length === 0 && (
+              <EmptyState title="بستهٔ فعالی برای نمایش وجود ندارد." />
+            )}
+            {packNotice && (
+              <p className="users-notice" role="status">
+                {packNotice}
+              </p>
+            )}
+            {packError && (
+              <p className="users-error" role="alert">
+                {packError}
+              </p>
+            )}
+            <ul className="user-packs-list">
+              {packs.map((pack) => {
+                const label = accessLabel(pack);
+                const blocked = blockedReason(pack);
+                const isPending = pending?.packId === pack.packId;
+                return (
+                  <li key={pack.packId} className="user-pack-row">
+                    <div className="user-pack-head">
+                      <span className="user-pack-title">{pack.title}</span>
+                      <span className={label.className}>{label.text}</span>
+                      {!pack.published && (
+                        <span className="pack-access pack-access-none">منتشر نشده</span>
+                      )}
+                    </div>
+                    {pack.purchase && (
+                      <p className="user-pack-meta">
+                        پرداخت تأییدشده
+                        {pack.purchase.amountTomans
+                          ? ` — ${pack.purchase.amountTomans.toLocaleString('fa-IR')} تومان`
+                          : ''}
+                        {pack.purchase.verifiedAt
+                          ? ` — ${formatDate(pack.purchase.verifiedAt)}`
+                          : ''}
+                      </p>
+                    )}
+                    {pack.acquisition === 'support' && (
+                      <p className="user-pack-meta">
+                        اعطای پشتیبانی — {formatDate(pack.acquiredAt)}
+                      </p>
+                    )}
+                    {blocked && <p className="user-pack-meta user-pack-blocked">{blocked}</p>}
+
+                    {/* A control appears only where the server has already said the action is
+                          legitimate; the request is validated again server-side regardless. */}
+                    {!isPending && pack.grant === 'allowed' && (
+                      <button
+                        type="button"
+                        className="btn primary"
+                        onClick={() => {
+                          setPending({ packId: pack.packId, action: 'grant' });
+                          setPackReason('');
+                          setPackError(null);
+                          setPackNotice(null);
+                        }}
+                      >
+                        اعطای دسترسی
+                      </button>
+                    )}
+                    {!isPending && pack.revoke === 'allowed' && (
+                      <button
+                        type="button"
+                        className="btn danger"
+                        onClick={() => {
+                          setPending({ packId: pack.packId, action: 'revoke' });
+                          setPackReason('');
+                          setPackError(null);
+                          setPackNotice(null);
+                        }}
+                      >
+                        لغو دسترسی اعطایی
+                      </button>
+                    )}
+
+                    {isPending && (
+                      <div className="user-pack-confirm">
+                        <p className="user-status-explainer">
+                          {pending.action === 'grant'
+                            ? 'این بسته بدون هیچ پرداختی برای کاربر باز می‌شود و به‌عنوان «اعطای پشتیبانی» ثبت می‌گردد. سابقهٔ پرداخت ساخته یا تغییر داده نمی‌شود.'
+                            : 'هشدار: دسترسی کاربر به این بسته فوراً حذف می‌شود. این اقدام فقط دسترسی اعطایی پشتیبانی را برمی‌دارد و روی پرداخت‌ها اثری ندارد.'}
+                        </p>
+                        <label htmlFor={`pack-reason-${pack.packId}`}>دلیل (الزامی)</label>
+                        <textarea
+                          id={`pack-reason-${pack.packId}`}
+                          className="user-status-reason"
+                          value={packReason}
+                          maxLength={500}
+                          rows={2}
+                          onChange={(event) => setPackReason(event.target.value)}
+                          placeholder="مثلاً: تیکت ۴۵۶ — جبران پرداخت ناموفق"
+                        />
+                        <div className="user-detail-actions">
+                          <button
+                            type="button"
+                            className={pending.action === 'grant' ? 'btn primary' : 'btn danger'}
+                            disabled={packSaving || packReason.trim().length < 3}
+                            onClick={() => void applyPackEntitlement(pack.packId, pending.action)}
+                          >
+                            {packSaving
+                              ? 'در حال ثبت...'
+                              : pending.action === 'grant'
+                                ? 'تأیید و اعطای دسترسی'
+                                : 'تأیید و لغو دسترسی'}
+                          </button>
+                          <button
+                            type="button"
+                            className="btn ghost"
+                            onClick={() => {
+                              setPending(null);
+                              setPackReason('');
+                            }}
+                          >
+                            انصراف
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        </CpModal>
       )}
     </section>
   );
