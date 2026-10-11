@@ -1,7 +1,10 @@
 import { Pool } from 'pg';
 import { readAdminDatabaseConfig } from '../../../../../lib/server/admin-database';
 import { getSharedAdminDatabasePool } from '../../../../../lib/server/admin-database-pool';
-import { loadAdminSession } from '../../../../../lib/server/admin-route-security';
+import {
+  loadAdminSession,
+  reauthenticationRequired,
+} from '../../../../../lib/server/admin-route-security';
 import { PostgresOwnerAuthStore } from '../../../../../lib/server/postgres-owner-auth-store';
 import { readAdminAuthConfig } from '../../../../../lib/server/admin-auth-policy';
 import { hashAdminSecret } from '../../../../../lib/server/admin-session';
@@ -23,6 +26,7 @@ export async function GET(request: Request) {
   const store = new PostgresOwnerAuthStore(pool);
   const session = await loadAdminSession(request, config, store);
   if (!session) return new Response('Unauthorized', { status: 401 });
+  if (!session.recent) return reauthenticationRequired();
 
   try {
     // Get existing owner's userHandle

@@ -100,6 +100,10 @@ function genericInvalid() {
   });
 }
 
+function unauthorized() {
+  return new Response('Unauthorized', { status: 401, headers: { 'Cache-Control': 'no-store' } });
+}
+
 export function createLoginOptionsRoute(dependencies: {
   config: AdminAuthConfig;
   randomNonce?: () => string;
@@ -312,7 +316,9 @@ export function createReauthOptionsRoute(dependencies: {
     const config: EnabledAdminAuthConfig = dependencies.config;
     const currentTime = (dependencies.now ?? (() => new Date()))();
     const session = await loadAdminSession(request, config, dependencies.sessionStore, currentTime);
-    if (!session) return notFound();
+    // This is a caller-owned, same-origin step-up flow. The session endpoint already reports the
+    // identical condition as 401, and the shared client maps it to a safe re-login instruction.
+    if (!session) return unauthorized();
     const nonce = (dependencies.randomNonce ?? createOpaqueNonce)();
     if (!/^[A-Za-z0-9_-]{40,}$/.test(nonce)) return notFound();
 
@@ -365,7 +371,9 @@ export function createReauthVerifyRoute(dependencies: {
 
     const currentTime = (dependencies.now ?? (() => new Date()))();
     const session = await loadAdminSession(request, config, dependencies.sessionStore, currentTime);
-    if (!session) return genericInvalid();
+    // A session can expire after options were issued. Return the same non-sensitive 401 contract so
+    // the client can stop the ceremony and send the operator to the normal Passkey sign-in gate.
+    if (!session) return unauthorized();
     try {
       verifyAdminCsrf(request, session.csrfHash, config);
     } catch {

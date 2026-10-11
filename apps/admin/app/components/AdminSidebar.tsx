@@ -27,7 +27,7 @@ const navItems = [
   { label: 'کاربران', icon: 'users', route: 'users' },
   { label: 'یادگیری', icon: 'chart' },
   { label: 'نمایش اپ', icon: 'image', route: 'presentation' },
-  { label: 'نشست‌ها و دسترسی', icon: 'shield' },
+  { label: 'نشست‌ها و دسترسی', icon: 'shield', route: 'access' },
   { label: 'عملیات', icon: 'ops', route: 'audit' },
   { label: 'تنظیمات', icon: 'settings' },
 ] as const satisfies readonly {
