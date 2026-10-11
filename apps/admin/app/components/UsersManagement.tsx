@@ -5,7 +5,12 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { CpModal } from './AdminModal';
 import { EmptyState, ErrorState, LoadingState } from './AdminStates';
 import { faNum } from './fa-digits';
-import { fetchWithStepUp, stepUpMessage, type StepUpOutcome } from './step-up-reauth';
+import {
+  createIdempotencyKey,
+  fetchWithStepUp,
+  readCsrfToken,
+  stepUpRefusal,
+} from './step-up-reauth';
 
 type AccountStatus = 'active' | 'disabled';
 
@@ -78,47 +83,12 @@ function StatusBadge({ status }: { status: AccountStatus }) {
   );
 }
 
-function readBrowserCookie(name: string): string | undefined {
-  if (typeof document === 'undefined') return undefined;
-  for (const part of document.cookie.split(';')) {
-    const [key, ...rest] = part.trim().split('=');
-    if (key === name) return decodeURIComponent(rest.join('='));
-  }
-  return undefined;
-}
-
-/** Per-attempt key, so a retry after a network error cannot apply the same change twice. */
-function createClientKey(): string {
-  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID();
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (part) => {
-    const random = Math.floor(Math.random() * 16);
-    const value = part === 'x' ? random : (random & 0x3) | 0x8;
-    return value.toString(16);
-  });
-}
-
-/**
- * What to tell the operator when a guarded mutation did not go through for an authentication
- * reason. `undefined` means "this was not a step-up problem" and the caller maps the status itself.
- *
- * A second 428 AFTER a confirmed passkey is reported rather than re-prompted: `fetchWithStepUp`
- * retries exactly once, which is what keeps a stale clock or a revoked credential from turning
- * into an endless prompt loop.
- */
-function stepUpRefusal(stepUp: StepUpOutcome, httpStatus: number): string | undefined {
-  if (stepUp !== 'not-required' && stepUp !== 'confirmed') return stepUpMessage(stepUp);
-  if (httpStatus === 428) {
-    return 'تأیید هویت ثبت شد، اما سرور همچنان احراز هویت تازه می‌خواهد؛ داده‌های واردشده حفظ شده است — یک‌بار دیگر تلاش کنید.';
-  }
-  return undefined;
-}
-
 async function saveStatus(
   user: User,
   status: AccountStatus,
   reason: string,
 ): Promise<{ ok: true; user: User; alreadyApplied: boolean } | { ok: false; message: string }> {
-  const csrfToken = readBrowserCookie('__Host-learnbox_admin_csrf');
+  const csrfToken = readCsrfToken();
   if (!csrfToken) {
     return { ok: false, message: 'نشان امنیتی CSRF در دسترس نیست؛ صفحه را تازه کنید.' };
   }
@@ -130,7 +100,7 @@ async function saveStatus(
     headers: {
       'content-type': 'application/json',
       'x-learnbox-csrf-token': csrfToken,
-      'idempotency-key': createClientKey(),
+      'idempotency-key': createIdempotencyKey(),
     },
     body: JSON.stringify({ userId: user.id, status, reason: reason.trim() }),
   };
@@ -203,7 +173,7 @@ async function savePackEntitlement(
   | { ok: true; pack: PackEntitlement; alreadyApplied: boolean }
   | { ok: false; message: string; pack?: PackEntitlement }
 > {
-  const csrfToken = readBrowserCookie('__Host-learnbox_admin_csrf');
+  const csrfToken = readCsrfToken();
   if (!csrfToken) {
     return { ok: false, message: 'نشان امنیتی CSRF در دسترس نیست؛ صفحه را تازه کنید.' };
   }
@@ -213,7 +183,7 @@ async function savePackEntitlement(
     headers: {
       'content-type': 'application/json',
       'x-learnbox-csrf-token': csrfToken,
-      'idempotency-key': createClientKey(),
+      'idempotency-key': createIdempotencyKey(),
     },
     body: JSON.stringify({ userId, packId, action, reason: reason.trim() }),
   };

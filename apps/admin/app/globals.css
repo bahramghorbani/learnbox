@@ -1493,6 +1493,122 @@ button {
 .cp-workspace .list-row:last-child {
   border-bottom: none;
 }
+/* Reference list, health and layout primitives — ported verbatim from the approved
+   `prototypes/admin-ui-v1/assets/css/app.css` for the Store screen (Stage 6). `.list-row` above
+   was ported earlier and had no markup using it until now. */
+.cp-workspace .list {
+  display: flex;
+  flex-direction: column;
+}
+.cp-workspace .list-grow {
+  flex: 1;
+  min-width: 0;
+}
+.cp-workspace .list-title {
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.55;
+}
+.cp-workspace .list-sub {
+  font-size: 10.5px;
+  color: var(--muted);
+  line-height: 1.55;
+}
+/* An id, a tracking code or an env var name read left-to-right inside Persian text. */
+.cp-workspace .keep-latin {
+  direction: ltr;
+  unicode-bidi: isolate;
+  display: inline-block;
+}
+.cp-workspace .hint {
+  font-size: 10.5px;
+  color: var(--muted);
+}
+.cp-workspace .health-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 11px 0;
+  border-bottom: 1px solid #f2f1f6;
+  font-size: 12px;
+}
+.cp-workspace .health-row:last-child {
+  border-bottom: none;
+}
+.cp-workspace .health-name {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 12px;
+}
+.cp-workspace .pulse {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+  background: var(--green);
+}
+.cp-workspace .pulse.warn {
+  background: var(--orange);
+}
+.cp-workspace .pulse.off {
+  background: #c3c2cf;
+}
+.cp-workspace .split-wide {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: var(--gap);
+  align-items: start;
+}
+.cp-workspace .stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+/* Store-specific, and only what the reference leaves undefined. */
+.cp-workspace .store-state-pad {
+  padding: 14px 0 4px;
+}
+.cp-workspace .store-order-amount {
+  text-align: left;
+  flex: none;
+}
+/* 50 transactions in a 320px column would run far past the pack table beside it. */
+.cp-workspace .store-orders .list {
+  max-height: 420px;
+  overflow-y: auto;
+}
+/* Four items on one line inside a 320px column squeezes the pack name to nothing, so the
+   identity wraps onto its own line and the amount, state and action share the second. */
+.cp-workspace .store-orders .list-row {
+  flex-wrap: wrap;
+}
+.cp-workspace .store-orders .list-grow {
+  flex: 1 0 100%;
+}
+.cp-workspace .list-title,
+.cp-workspace .list-sub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cp-workspace .store-gateway-note {
+  margin-top: 10px;
+  line-height: 1.75;
+}
+.cp-workspace .store-check {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+/* Used by the pack forms since Milestone 1.2 and by the Store editor; never had a rule. */
+.cp-workspace .cp-note {
+  font-size: 10.5px;
+  color: var(--muted);
+  line-height: 1.8;
+  margin-top: 12px;
+}
 .cp-workspace .badge {
   font-size: 10.5px;
   font-weight: 700;
@@ -1887,6 +2003,9 @@ button {
   .cp-workspace .grid-4 {
     grid-template-columns: 1fr 1fr;
   }
+  .cp-workspace .split-wide {
+    grid-template-columns: 1fr 1fr;
+  }
   /* Deviation from the reference, deliberate: the prototype lets a six-column pack table push the
      whole page sideways on a phone, which drags the header and nav off-screen with it. Scrolling
      the table inside its own card keeps every column reachable and the page itself still. */
@@ -1897,6 +2016,9 @@ button {
 @media (max-width: 760px) {
   .cp-workspace .kpi-row,
   .cp-workspace .grid-4 {
+    grid-template-columns: 1fr;
+  }
+  .cp-workspace .split-wide {
     grid-template-columns: 1fr;
   }
   .cp-workspace .pack-grid {

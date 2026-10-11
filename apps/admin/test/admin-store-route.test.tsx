@@ -82,11 +82,19 @@ describe('Admin #store destination (M2.1)', () => {
     const row = container?.querySelector('[data-store-pack="learnbox-start-a1-essentials"]');
     expect(row?.textContent).toContain('رایگان');
     expect(row?.textContent).toContain('essentials');
-    // Commercial controls exist...
-    expect(row?.querySelector('select')).not.toBeNull();
-    // ...and content fields do not: nothing here can rename a pack or edit a card.
+    // Commercial controls exist — Stage 6 moved them from nine inline table columns into the
+    // approved editor dialog, so the assertion follows the control rather than its old cell.
+    const edit = [...(row?.querySelectorAll('button') ?? [])].find((button) =>
+      button.textContent?.includes('ویرایش تجاری'),
+    );
+    expect(edit).toBeDefined();
+    await act(async () => edit?.click());
+    const dialog = container?.querySelector('[role="dialog"]');
+    expect(dialog?.querySelector('select')).not.toBeNull();
+    // ...and content fields do not: nothing here can rename a pack, edit a card or set a price.
     expect(container?.querySelector('[name="displayName"]')).toBeNull();
     expect(container?.textContent).not.toContain('افزودن کارت');
+    expect(dialog?.querySelector('#store-price')).toBeNull();
   });
 
   it('does not render the Store workspace on the default route', async () => {

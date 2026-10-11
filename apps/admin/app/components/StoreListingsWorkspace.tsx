@@ -2,20 +2,38 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
+import { CpModal } from './AdminModal';
 import { AdminSidebar } from './AdminSidebar';
+import { EmptyState, ErrorState, LoadingState } from './AdminStates';
 import { PaymentOperationsPanel } from './PaymentOperationsPanel';
+import { faNum } from './fa-digits';
+import {
+  createIdempotencyKey,
+  fetchWithStepUp,
+  readCsrfToken,
+  stepUpRefusal,
+} from './step-up-reauth';
 
 /**
- * Phase 2 / Milestone 2.1 — Store workspace («فروشگاه»).
+ * Phase 2 / Milestone 2.1 — Store workspace («فروشگاه»), on the approved vocabulary since Stage 6.
  *
- * The commercial listing surface. Every row is a REAL canonical pack read from
- * `/api/store/listings`; there is no static catalogue and no fabricated price, category or sales
- * number. Sales reporting is deliberately absent: no transaction data exists yet, and inventing it
- * would be worse than omitting it.
+ * Every row is a REAL canonical pack read from `/api/store/listings`; there is no static catalogue
+ * and no fabricated price, sales count or revenue figure. The reference screen shows «درآمد این
+ * ماه», «میانگین سبد» and a per-pack «فروش» column over mock data and says so in its own banner.
+ * None of those three has a backend aggregate, and deriving them from the rows on screen would
+ * print a number that silently means "among the packs currently loaded" — so they are stated as
+ * unavailable rather than invented. The KPI row carries the four counts that ARE canonical.
  *
  * This screen edits commercial state ONLY. Pack and card content — display name, description,
- * price, category, free/paid, cards, media — is read-only here and is authored exclusively in the
+ * price, category, free/paid, cards, media — is read-only here and authored exclusively in the
  * Content & Packs workspace, so the Store can never become a second source of truth for content.
+ * Price is deliberately NOT editable anywhere on this screen: base-price immutability and the
+ * paid→free prohibition are business rules, not UI preferences, and the reference's price/discount
+ * editor would have broken both.
+ *
+ * Stage 6 also ends the HTTP 428 dead end here (LB-B40): a commercial save refused for stale
+ * authentication now raises one inline passkey step-up and retries once with the identical body
+ * and idempotency key, with the dialog and every typed value left intact.
  */
 
 type ServerListing = {
@@ -45,25 +63,6 @@ type Draft = {
 
 type Phase = 'loading' | 'ready' | 'disabled' | 'unauthorized' | 'error';
 
-function readBrowserCookie(name: string): string | undefined {
-  return document.cookie
-    ?.split(';')
-    .map((item) => item.trim())
-    .find((item) => item.startsWith(`${name}=`))
-    ?.slice(name.length + 1);
-}
-
-function createClientKey(): string {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return crypto.randomUUID();
-  }
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (part) => {
-    const random = Math.floor(Math.random() * 16);
-    const value = part === 'x' ? random : (random & 0x3) | 0x8;
-    return value.toString(16);
-  });
-}
-
 function draftFrom(row: ServerListing): Draft {
   return {
     storeStatus: row.listing?.storeStatus ?? 'unlisted',
@@ -80,15 +79,27 @@ function priceLabel(row: ServerListing): string {
   return `${row.priceTomans.toLocaleString('fa-IR')} تومان`;
 }
 
+const packStatusLabels: Record<string, string> = {
+  draft: 'پیش‌نویس',
+  in_review: 'در بررسی',
+  approved: 'تأییدشده',
+  published: 'منتشرشده',
+  archived: 'بایگانی',
+};
+
 /**
  * Sends one commercial change. `expectedStoreStatus` carries the state the operator saw, so two
  * operators editing the same pack produce a 409 instead of silently overwriting each other.
+ *
+ * `init` is built once and handed to `fetchWithStepUp`, which reuses it verbatim for its single
+ * retry: same body, same idempotency key, so a listing the server already updated cannot be
+ * written twice.
  */
 async function saveListing(
   draft: Draft,
   row: ServerListing,
 ): Promise<{ ok: true; listing: ServerListing } | { ok: false; message: string }> {
-  const csrfToken = readBrowserCookie('__Host-learnbox_admin_csrf');
+  const csrfToken = readCsrfToken();
   if (!csrfToken) {
     return { ok: false, message: 'نشان امنیتی CSRF در دسترس نیست؛ صفحه را تازه کنید.' };
   }
@@ -96,39 +107,42 @@ async function saveListing(
   if (!Number.isInteger(displayOrder) || displayOrder < 0) {
     return { ok: false, message: 'ترتیب نمایش باید یک عدد صحیح و نامنفی باشد.' };
   }
+  const init: RequestInit = {
+    method: 'PUT',
+    credentials: 'same-origin',
+    headers: {
+      'content-type': 'application/json',
+      'x-learnbox-csrf-token': csrfToken,
+      'idempotency-key': createIdempotencyKey(),
+    },
+    body: JSON.stringify({
+      packId: row.packId,
+      storeStatus: draft.storeStatus,
+      featured: draft.featured,
+      displayOrder,
+      coverObjectKey: draft.coverObjectKey.trim() || null,
+      commercialSummary: draft.commercialSummary.trim() || null,
+      expectedStoreStatus: row.listing?.storeStatus ?? 'absent',
+    }),
+  };
   try {
-    const response = await fetch('/api/store/listings', {
-      method: 'PUT',
-      credentials: 'same-origin',
-      headers: {
-        'content-type': 'application/json',
-        'x-learnbox-csrf-token': csrfToken,
-        'idempotency-key': createClientKey(),
-      },
-      body: JSON.stringify({
-        packId: row.packId,
-        storeStatus: draft.storeStatus,
-        featured: draft.featured,
-        displayOrder,
-        coverObjectKey: draft.coverObjectKey.trim() || null,
-        commercialSummary: draft.commercialSummary.trim() || null,
-        expectedStoreStatus: row.listing?.storeStatus ?? 'absent',
-      }),
-    });
+    const { response, stepUp } = await fetchWithStepUp('/api/store/listings', init);
     if (response.ok) {
       const payload = (await response.json()) as { listing: ServerListing };
       return { ok: true, listing: payload.listing };
     }
+    const refused = stepUpRefusal(stepUp, response.status);
+    if (refused) return { ok: false, message: refused };
     if (response.status === 401)
       return { ok: false, message: 'نشست معتبر نیست؛ دوباره وارد شوید.' };
-    if (response.status === 428) {
-      return { ok: false, message: 'احراز هویت مجدد لازم است؛ دوباره وارد شوید.' };
-    }
     if (response.status === 409) {
       return {
         ok: false,
         message: 'وضعیت فروشگاهی این بسته توسط کاربر دیگری تغییر کرده است؛ صفحه را تازه کنید.',
       };
+    }
+    if (response.status === 400) {
+      return { ok: false, message: 'مقادیر واردشده پذیرفته نشد؛ آن‌ها را بازبینی کنید.' };
     }
     if (response.status === 404) {
       return { ok: false, message: 'نقش شما اجازهٔ تغییر وضعیت فروشگاه را ندارد.' };
@@ -142,10 +156,11 @@ async function saveListing(
 export function StoreListingsWorkspace() {
   const [phase, setPhase] = useState<Phase>('loading');
   const [rows, setRows] = useState<ServerListing[]>([]);
-  const [drafts, setDrafts] = useState<Record<string, Draft>>({});
-  const [savingPackId, setSavingPackId] = useState<string | undefined>(undefined);
+  const [editing, setEditing] = useState<ServerListing | undefined>(undefined);
+  const [draft, setDraft] = useState<Draft | undefined>(undefined);
+  const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState<string | undefined>(undefined);
   const [notice, setNotice] = useState<string | undefined>(undefined);
-  const [error, setError] = useState<string | undefined>(undefined);
 
   const load = useCallback(async () => {
     setPhase('loading');
@@ -168,7 +183,6 @@ export function StoreListingsWorkspace() {
       }
       const payload = (await response.json()) as { listings: ServerListing[] };
       setRows(payload.listings);
-      setDrafts(Object.fromEntries(payload.listings.map((row) => [row.packId, draftFrom(row)])));
       setPhase('ready');
     } catch {
       setPhase('error');
@@ -179,32 +193,50 @@ export function StoreListingsWorkspace() {
     void load();
   }, [load]);
 
-  const update = (packId: string, patch: Partial<Draft>) => {
-    setDrafts((current) => ({ ...current, [packId]: { ...current[packId], ...patch } }));
-  };
-
-  const submit = async (row: ServerListing) => {
-    const draft = drafts[row.packId];
-    if (!draft) return;
-    setSavingPackId(row.packId);
-    setError(undefined);
+  function openEditor(row: ServerListing) {
+    setEditing(row);
+    setDraft(draftFrom(row));
+    setFormError(undefined);
     setNotice(undefined);
-    const result = await saveListing(draft, row);
-    setSavingPackId(undefined);
+  }
+
+  function closeEditor() {
+    setEditing(undefined);
+    setDraft(undefined);
+    setFormError(undefined);
+  }
+
+  function update(patch: Partial<Draft>) {
+    setDraft((current) => (current ? { ...current, ...patch } : current));
+  }
+
+  async function submit() {
+    if (!editing || !draft) return;
+    setSaving(true);
+    setFormError(undefined);
+    const result = await saveListing(draft, editing);
+    setSaving(false);
     if (!result.ok) {
-      setError(result.message);
+      // The dialog stays open with every typed value, which is the whole point of the inline
+      // step-up: a refused save must never cost the operator their input.
+      setFormError(result.message);
       return;
     }
     setRows((current) =>
-      current.map((item) => (item.packId === row.packId ? result.listing : item)),
+      current.map((item) => (item.packId === result.listing.packId ? result.listing : item)),
     );
-    setDrafts((current) => ({ ...current, [row.packId]: draftFrom(result.listing) }));
     setNotice(
       result.listing.listing?.storeStatus === 'listed'
         ? `«${result.listing.packDisplayName}» در فروشگاه فهرست شد.`
         : `«${result.listing.packDisplayName}» از فروشگاه برداشته شد.`,
     );
-  };
+    closeEditor();
+  }
+
+  const paidCount = rows.filter((row) => !row.isFree).length;
+  const listedCount = rows.filter((row) => row.listing?.storeStatus === 'listed').length;
+  const featuredCount = rows.filter((row) => row.listing?.featured).length;
+  const pricelessPaidCount = rows.filter((row) => !row.isFree && row.priceTomans === null).length;
 
   return (
     <main className="admin-shell cp-workspace" id="store">
@@ -214,14 +246,26 @@ export function StoreListingsWorkspace() {
           <div>
             <h1>فروشگاه</h1>
             <p className="muted">
-              وضعیت تجاری بسته‌های کانونی LearnBox. محتوای بسته و کارت‌ها فقط در «محتوا و بسته‌ها»
-              ویرایش می‌شود.
+              وضعیت تجاری بسته‌های کانونی LearnBox و تراکنش‌های واقعی خرید. محتوای بسته، قیمت و
+              رایگان/پولی فقط در «محتوا و بسته‌ها» ویرایش می‌شود.
             </p>
+          </div>
+          <div className="head-actions">
+            {/* The reference has a sales-report button. There is no reporting endpoint, so it is
+                shown disabled rather than wired to nothing or quietly dropped. */}
+            <button
+              type="button"
+              className="btn"
+              disabled
+              title="گزارش فروش هنوز در backend وجود ندارد."
+            >
+              گزارش فروش
+            </button>
           </div>
         </div>
 
         {notice ? (
-          <div className="notice" role="status" aria-live="polite" data-store-state="saved">
+          <div className="notice mb" role="status" aria-live="polite" data-store-state="saved">
             <span>{notice}</span>
             <button className="btn" type="button" onClick={() => setNotice(undefined)}>
               بستن
@@ -229,173 +273,262 @@ export function StoreListingsWorkspace() {
           </div>
         ) : null}
 
-        {error ? (
-          <div className="notice" role="alert" data-store-state="error">
-            <span>{error}</span>
-            <button className="btn" type="button" onClick={() => setError(undefined)}>
-              بستن
-            </button>
-          </div>
-        ) : null}
+        {/* The reference banner warns that its figures are mock. Ours states which figures do not
+            exist at all, so nobody reads the KPI row as a sales dashboard. */}
+        <div className="notice mb" role="note" data-store-state="metrics-gap">
+          <span>
+            <b>ارقام درآمد و فروش در این صفحه نمایش داده نمی‌شود.</b> backend مرکزی هیچ تجمیع فروشی
+            ندارد — نه درآمد ماه، نه میانگین سبد، نه شمار فروش هر بسته. شمارنده‌های زیر فقط وضعیت
+            تجاری بسته‌ها را می‌شمارند. وضعیت واقعی درگاه در کارت «درگاه پرداخت» آمده است.
+          </span>
+        </div>
 
         {phase === 'disabled' ? (
-          <div className="notice" role="status" data-store-state="disabled">
-            <span>نمای «فروشگاه» در این محیط غیرفعال است؛ هیچ دادهٔ تجاری خوانده نمی‌شود.</span>
-          </div>
-        ) : null}
+          <ErrorState
+            tone="amber"
+            title="نمای «فروشگاه» در این محیط غیرفعال است"
+            description="هیچ دادهٔ تجاری خوانده نمی‌شود. این نما با پرچم محیطی فعال می‌شود."
+          />
+        ) : phase === 'unauthorized' ? (
+          <ErrorState
+            tone="amber"
+            title="برای دیدن فروشگاه باید وارد شوید"
+            description="این صفحه با گذرکلید محافظت می‌شود؛ پس از ورود دوباره تلاش کنید."
+          />
+        ) : phase === 'error' ? (
+          <ErrorState
+            title="خواندن وضعیت فروشگاه ممکن نشد"
+            description="ارتباط با backend مرکزی برقرار نشد یا پاسخ معتبر نبود."
+            action={
+              <button type="button" className="btn" onClick={() => void load()}>
+                تلاش دوباره
+              </button>
+            }
+          />
+        ) : phase === 'loading' ? (
+          <LoadingState label="در حال خواندن وضعیت فروشگاه…" />
+        ) : (
+          <>
+            <div className="grid-4 mb" aria-label="شمارنده‌های فروشگاه">
+              <div className="kpi">
+                <div className="kpi-top">
+                  <span className="kpi-label">بسته‌های پولی</span>
+                </div>
+                <div className="kpi-value sm" data-store-kpi="paid-packs">
+                  {faNum(paidCount)}
+                </div>
+              </div>
+              <div className="kpi">
+                <div className="kpi-top">
+                  <span className="kpi-label">فهرست‌شده در فروشگاه</span>
+                </div>
+                <div className="kpi-value sm" data-store-kpi="listed-packs">
+                  {faNum(listedCount)}
+                </div>
+              </div>
+              <div className="kpi">
+                <div className="kpi-top">
+                  <span className="kpi-label">بستهٔ ویژه</span>
+                </div>
+                <div className="kpi-value sm" data-store-kpi="featured-packs">
+                  {faNum(featuredCount)}
+                </div>
+              </div>
+              <div className="kpi">
+                <div className="kpi-top">
+                  <span className="kpi-label">پولی بدون قیمت</span>
+                </div>
+                <div className="kpi-value sm" data-store-kpi="priceless-paid-packs">
+                  {faNum(pricelessPaidCount)}
+                </div>
+              </div>
+            </div>
 
-        {phase === 'unauthorized' ? (
-          <div className="notice" role="status" data-store-state="unauthorized">
-            <span>برای دیدن فروشگاه باید با گذرکلید وارد شوید.</span>
-          </div>
-        ) : null}
+            <div className="split-wide">
+              <div className="card">
+                <div className="card-head">
+                  <span className="card-title">بسته‌های فروشگاه</span>
+                  <span className="muted-note">{faNum(paidCount)} بستهٔ پولی</span>
+                </div>
+                {rows.length === 0 ? (
+                  <div className="store-state-pad">
+                    <EmptyState
+                      icon="inbox"
+                      title="هیچ بستهٔ کانونی وجود ندارد."
+                      description="ابتدا در «محتوا و بسته‌ها» یک بسته بسازید؛ وضعیت تجاری پس از آن قابل تنظیم است."
+                    />
+                  </div>
+                ) : (
+                  <>
+                    <table className="tbl" data-store-table="listings">
+                      <thead>
+                        <tr>
+                          <th scope="col">بسته</th>
+                          <th scope="col">وضعیت محتوا</th>
+                          <th scope="col">قیمت</th>
+                          <th scope="col">وضعیت فروشگاه</th>
+                          <th />
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {rows.map((row) => (
+                          <tr key={row.packId} data-store-pack={row.packId}>
+                            <td>
+                              {/* The reference's cover thumbnail is omitted: no pack artwork
+                                  exists in canonical data, and unlike the content workspace's
+                                  cover — which carries the pack's own CEFR level — the store
+                                  payload has no datum to put in the square. An empty grey box
+                                  would be decoration pretending to be data. */}
+                              <div className="cell-main">
+                                <div>
+                                  <div className="t-name">{row.packDisplayName}</div>
+                                  <div className="t-sub">{row.category ?? 'بدون دسته'}</div>
+                                </div>
+                              </div>
+                            </td>
+                            {/* Canonical content state, read-only here. */}
+                            <td data-store-pack-status={row.packStatus}>
+                              <span className="lvl">
+                                {packStatusLabels[row.packStatus] ?? row.packStatus}
+                              </span>
+                            </td>
+                            <td>{priceLabel(row)}</td>
+                            <td>
+                              {row.listing?.storeStatus === 'listed' ? (
+                                <span className="badge b-green">فهرست‌شده</span>
+                              ) : (
+                                <span className="badge">فهرست‌نشده</span>
+                              )}
+                              {row.listing?.featured ? (
+                                <span className="badge b-amber">ویژه</span>
+                              ) : null}
+                            </td>
+                            <td style={{ textAlign: 'left' }}>
+                              <button
+                                type="button"
+                                className="btn sm"
+                                onClick={() => openEditor(row)}
+                              >
+                                ویرایش تجاری
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    <div className="tbl-foot">
+                      <span>
+                        {faNum(rows.length)} بستهٔ کانونی — {faNum(listedCount)} بسته در فروشگاه
+                        فهرست شده است
+                      </span>
+                      <span className="unavailable">شمار فروش هر بسته: در backend موجود نیست</span>
+                    </div>
+                  </>
+                )}
+              </div>
 
-        {phase === 'error' ? (
-          <div className="notice" role="alert" data-store-state="unavailable">
-            <span>خواندن وضعیت فروشگاه ممکن نشد.</span>
-            <button className="btn" type="button" onClick={() => void load()}>
-              تلاش دوباره
-            </button>
-          </div>
-        ) : null}
+              {/* M2.4 — payment operations live inside the Store workspace rather than as a new
+                  navigation destination, so the approved Admin nav model is unchanged. Stage 6
+                  moves them into the reference's right-hand stack. */}
+              <PaymentOperationsPanel />
+            </div>
+          </>
+        )}
 
-        {phase === 'loading' ? (
-          <p className="muted" data-store-state="loading">
-            در حال خواندن…
-          </p>
+        {editing && draft ? (
+          <CpModal
+            title={`وضعیت تجاری — ${editing.packDisplayName}`}
+            onClose={closeEditor}
+            footer={
+              <>
+                <button type="button" className="btn primary" onClick={submit} disabled={saving}>
+                  {saving ? 'در حال ذخیره…' : 'ذخیره'}
+                </button>
+                <button type="button" className="btn" onClick={closeEditor} disabled={saving}>
+                  انصراف
+                </button>
+              </>
+            }
+          >
+            {formError ? (
+              <p className="cp-form-status is-error" role="alert" data-store-form-error="true">
+                {formError}
+              </p>
+            ) : null}
+            <div className="cp-form-grid">
+              <div className="cp-form-row">
+                <label htmlFor="store-status">وضعیت فروشگاه</label>
+                <select
+                  id="store-status"
+                  className="cp-select"
+                  value={draft.storeStatus}
+                  disabled={saving}
+                  onChange={(event) =>
+                    update({ storeStatus: event.target.value as Draft['storeStatus'] })
+                  }
+                >
+                  <option value="unlisted">فهرست نشده</option>
+                  <option value="listed">فهرست شده</option>
+                </select>
+              </div>
+              <div className="cp-form-row">
+                <label htmlFor="store-order">ترتیب نمایش</label>
+                <input
+                  id="store-order"
+                  className="cp-input cp-ltr"
+                  type="number"
+                  min={0}
+                  inputMode="numeric"
+                  value={draft.displayOrder}
+                  disabled={saving}
+                  onChange={(event) => update({ displayOrder: event.target.value })}
+                />
+              </div>
+              <div className="cp-form-row">
+                <label htmlFor="store-featured">بستهٔ ویژه</label>
+                <span className="store-check">
+                  <input
+                    id="store-featured"
+                    type="checkbox"
+                    checked={draft.featured}
+                    disabled={saving}
+                    onChange={(event) => update({ featured: event.target.checked })}
+                  />
+                  <span className="hint">در ردیف «ویژه» فروشگاه اپ دیده می‌شود.</span>
+                </span>
+              </div>
+              <div className="cp-form-row">
+                <label htmlFor="store-cover">کلید کاور</label>
+                <input
+                  id="store-cover"
+                  className="cp-input cp-ltr"
+                  type="text"
+                  value={draft.coverObjectKey}
+                  disabled={saving}
+                  onChange={(event) => update({ coverObjectKey: event.target.value })}
+                />
+              </div>
+              <div className="cp-form-row is-full">
+                <label htmlFor="store-summary">توضیح تجاری</label>
+                <textarea
+                  id="store-summary"
+                  className="cp-textarea"
+                  rows={3}
+                  value={draft.commercialSummary}
+                  disabled={saving}
+                  onChange={(event) => update({ commercialSummary: event.target.value })}
+                />
+              </div>
+            </div>
+            {/* The reference's editor is a price-and-discount form. Price is immutable by business
+                rule and discount codes do not exist, so this dialog never shows either. */}
+            <p className="cp-note">
+              قیمت این بسته ({priceLabel(editing)}) و رایگان/پولی بودن آن در این صفحه قابل تغییر
+              نیست؛ این دو قاعدهٔ تجاری هستند و فقط در «محتوا و بسته‌ها» و مطابق سیاست‌های LearnBox
+              تعیین می‌شوند. تخفیف و کد تخفیف در سامانه پیاده‌سازی نشده است.
+            </p>
+          </CpModal>
         ) : null}
-
-        {phase === 'ready' && rows.length === 0 ? (
-          <p className="muted" data-store-state="empty">
-            هیچ بستهٔ کانونی وجود ندارد. ابتدا در «محتوا و بسته‌ها» یک بسته بسازید.
-          </p>
-        ) : null}
-
-        {phase === 'ready' && rows.length > 0 ? (
-          <table className="data-table" data-store-table="listings">
-            <thead>
-              <tr>
-                <th scope="col">بسته</th>
-                <th scope="col">وضعیت محتوا</th>
-                <th scope="col">دسته / قیمت</th>
-                <th scope="col">وضعیت فروشگاه</th>
-                <th scope="col">ویژه</th>
-                <th scope="col">ترتیب</th>
-                <th scope="col">کلید کاور</th>
-                <th scope="col">توضیح تجاری</th>
-                <th scope="col">اقدام</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => {
-                const draft = drafts[row.packId];
-                if (!draft) return null;
-                const busy = savingPackId === row.packId;
-                return (
-                  <tr key={row.packId} data-store-pack={row.packId}>
-                    <th scope="row">
-                      {row.packDisplayName}
-                      <span className="muted"> ({row.packId})</span>
-                    </th>
-                    {/* Canonical content state, read-only here. */}
-                    <td data-store-pack-status={row.packStatus}>{row.packStatus}</td>
-                    <td className="muted">
-                      {row.category ?? 'بدون دسته'} — {priceLabel(row)}
-                    </td>
-                    <td>
-                      <label className="sr-only" htmlFor={`store-status-${row.packId}`}>
-                        وضعیت فروشگاه {row.packDisplayName}
-                      </label>
-                      <select
-                        id={`store-status-${row.packId}`}
-                        disabled={busy}
-                        value={draft.storeStatus}
-                        onChange={(event) =>
-                          update(row.packId, {
-                            storeStatus: event.target.value as Draft['storeStatus'],
-                          })
-                        }
-                      >
-                        <option value="unlisted">فهرست نشده</option>
-                        <option value="listed">فهرست شده</option>
-                      </select>
-                    </td>
-                    <td>
-                      <label className="sr-only" htmlFor={`store-featured-${row.packId}`}>
-                        ویژه {row.packDisplayName}
-                      </label>
-                      <input
-                        id={`store-featured-${row.packId}`}
-                        type="checkbox"
-                        disabled={busy}
-                        checked={draft.featured}
-                        onChange={(event) => update(row.packId, { featured: event.target.checked })}
-                      />
-                    </td>
-                    <td>
-                      <label className="sr-only" htmlFor={`store-order-${row.packId}`}>
-                        ترتیب نمایش {row.packDisplayName}
-                      </label>
-                      <input
-                        id={`store-order-${row.packId}`}
-                        type="number"
-                        min={0}
-                        inputMode="numeric"
-                        disabled={busy}
-                        value={draft.displayOrder}
-                        onChange={(event) =>
-                          update(row.packId, { displayOrder: event.target.value })
-                        }
-                      />
-                    </td>
-                    <td>
-                      <label className="sr-only" htmlFor={`store-cover-${row.packId}`}>
-                        کلید کاور {row.packDisplayName}
-                      </label>
-                      <input
-                        id={`store-cover-${row.packId}`}
-                        type="text"
-                        disabled={busy}
-                        value={draft.coverObjectKey}
-                        onChange={(event) =>
-                          update(row.packId, { coverObjectKey: event.target.value })
-                        }
-                      />
-                    </td>
-                    <td>
-                      <label className="sr-only" htmlFor={`store-summary-${row.packId}`}>
-                        توضیح تجاری {row.packDisplayName}
-                      </label>
-                      <textarea
-                        id={`store-summary-${row.packId}`}
-                        rows={2}
-                        disabled={busy}
-                        value={draft.commercialSummary}
-                        onChange={(event) =>
-                          update(row.packId, { commercialSummary: event.target.value })
-                        }
-                      />
-                    </td>
-                    <td>
-                      <button
-                        className="btn primary"
-                        type="button"
-                        disabled={busy}
-                        onClick={() => void submit(row)}
-                      >
-                        {busy ? 'در حال ذخیره…' : 'ذخیره'}
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        ) : null}
-
-        {/* M2.4 — payment operations live inside the Store workspace rather than as a new
-            navigation destination, so the approved Admin nav model is unchanged. */}
-        <PaymentOperationsPanel />
       </section>
     </main>
   );

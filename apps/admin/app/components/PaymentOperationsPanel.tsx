@@ -2,20 +2,31 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
+import { CpModal } from './AdminModal';
+import { EmptyState, ErrorState, LoadingState } from './AdminStates';
+import { faNum } from './fa-digits';
+
 /**
- * Phase 2 / Milestone 2.4 — payment operations panel inside the Store workspace.
+ * Phase 2 / Milestone 2.4 — payment operations, the right-hand stack of the Store screen.
  *
  * Two read-only surfaces an operator genuinely needs once packs can be sold:
  *
- *   * gateway configuration status, so «تنظیم نشده» and «آماده» are distinguishable;
- *   * the real transaction list, so support can answer "I paid and nothing happened".
+ *   * the real transaction list, so support can answer "I paid and nothing happened";
+ *   * gateway configuration status, so «تنظیم نشده» and «آماده» are distinguishable.
  *
  * Everything shown comes from `purchase_events` or from a non-secret feature flag. There is no
  * merchant-credential field — not editable, not displayed, not masked — because the credential is
  * provisioned as a server environment variable and Admin never receives it. Changing it is a
  * deployment action, described in the panel itself so the operator is not left guessing.
  *
- * No totals, no charts, no revenue summary: a sales dashboard is explicitly out of scope.
+ * No totals, no charts, no revenue summary: a sales dashboard is explicitly out of scope. The
+ * reference shows invoicing and refunds as switched-off gateway rows; neither exists in the
+ * backend, so they are labelled «پیاده‌سازی نشده» rather than «غیرفعال», which would imply a
+ * switch an operator could go and find.
+ *
+ * Stage 6 moved this onto the approved card vocabulary. A transaction row opens a dialog carrying
+ * every field the previous eight-column table printed, so support loses nothing to the narrower
+ * column.
  */
 
 type Configuration = {
@@ -57,12 +68,29 @@ const statusLabels: Record<string, string> = {
   revoked: 'ابطال‌شده',
 };
 
+/** The reference's order badges, mapped onto the canonical purchase states. */
+const statusBadgeTone: Record<string, string> = {
+  verified: 'badge b-green',
+  pending: 'badge b-amber',
+  failed: 'badge b-rose',
+  cancelled: 'badge',
+  rejected: 'badge b-rose',
+  refunded: 'badge',
+  revoked: 'badge b-rose',
+};
+
 const configurationLabels: Record<Configuration['state'], string> = {
   disabled: 'تنظیم نشده',
   // Deliberately not «آماده»: the credential is present but has never completed a real payment,
   // so claiming readiness would be a guess.
   unproven: 'تنظیم شده — در انتظار نخستین پرداخت موفق',
   ready: 'آماده',
+};
+
+const configurationPulse: Record<Configuration['state'], string> = {
+  disabled: 'pulse off',
+  unproven: 'pulse warn',
+  ready: 'pulse',
 };
 
 function formatAmount(amount: number | null): string {
@@ -85,6 +113,7 @@ export function PaymentOperationsPanel() {
   const [phase, setPhase] = useState<Phase>('loading');
   const [configuration, setConfiguration] = useState<Configuration | undefined>();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [selected, setSelected] = useState<Transaction | undefined>();
 
   const load = useCallback(async (): Promise<void> => {
     setPhase('loading');
@@ -122,143 +151,218 @@ export function PaymentOperationsPanel() {
   }, [load]);
 
   return (
-    <section data-admin-panel="payments">
-      <div className="page-head">
-        <div>
-          <h2>پرداخت‌ها</h2>
-          <p className="muted">
-            وضعیت درگاه زرین‌پال و تراکنش‌های واقعی خرید بسته. پرداخت وب و PWA فقط از طریق زرین‌پال
-            انجام می‌شود.
-          </p>
+    <section className="stack" data-admin-panel="payments">
+      <div className="card store-orders">
+        <div className="card-head">
+          <span className="card-title">تراکنش‌های اخیر</span>
+          {phase === 'ready' ? (
+            <span className="muted-note">{faNum(transactions.length)} تراکنش</span>
+          ) : null}
+        </div>
+        <div className="card-body">
+          {phase === 'loading' ? (
+            <LoadingState label="در حال خواندن تراکنش‌ها…" />
+          ) : phase === 'disabled' ? (
+            <div data-payments-state="disabled">
+              <ErrorState
+                tone="amber"
+                title="نمای پرداخت‌ها در این محیط غیرفعال است"
+                description="این نما با پرچم محیطی فعال می‌شود؛ هیچ دادهٔ پرداختی خوانده نمی‌شود."
+              />
+            </div>
+          ) : phase === 'unauthorized' ? (
+            <div data-payments-state="unauthorized">
+              <ErrorState
+                tone="amber"
+                title="برای دیدن پرداخت‌ها باید وارد شوید"
+                description="این بخش با گذرکلید محافظت می‌شود؛ پس از ورود دوباره تلاش کنید."
+              />
+            </div>
+          ) : phase === 'error' ? (
+            <div data-payments-state="unavailable">
+              <ErrorState
+                title="خواندن وضعیت پرداخت‌ها ممکن نشد"
+                description="پاسخ backend مرکزی دریافت نشد."
+                action={
+                  <button className="btn" type="button" onClick={() => void load()}>
+                    تلاش دوباره
+                  </button>
+                }
+              />
+            </div>
+          ) : transactions.length === 0 ? (
+            <div data-payments-state="empty">
+              <EmptyState
+                icon="inbox"
+                title="هنوز هیچ تراکنشی ثبت نشده است."
+                description="این فهرست فقط پرداخت‌های واقعی را نشان می‌دهد؛ تا نخستین خرید، خالی می‌ماند."
+              />
+            </div>
+          ) : (
+            <div className="list" data-payments-table="transactions">
+              {transactions.map((transaction) => (
+                <div className="list-row" key={transaction.transactionId}>
+                  <div className="list-grow">
+                    <div className="list-title">
+                      {transaction.packDisplayName ?? transaction.packId ?? 'بستهٔ نامشخص'}
+                    </div>
+                    <div className="list-sub">
+                      <span className="keep-latin">{transaction.transactionId}</span>
+                      {transaction.environment === 'sandbox' ? ' · آزمایشی' : ''}
+                    </div>
+                  </div>
+                  <div className="store-order-amount">
+                    <div className="list-title">{formatAmount(transaction.amountTomans)}</div>
+                    <div className="list-sub">{formatDateTime(transaction.createdAt)}</div>
+                  </div>
+                  <span
+                    className={statusBadgeTone[transaction.status] ?? 'badge'}
+                    data-transaction-status={transaction.status}
+                  >
+                    {statusLabels[transaction.status] ?? transaction.status}
+                  </span>
+                  <button type="button" className="btn sm" onClick={() => setSelected(transaction)}>
+                    جزئیات
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
-      {phase === 'disabled' ? (
-        <div className="notice" role="status" data-payments-state="disabled">
-          <span>نمای پرداخت‌ها در این محیط غیرفعال است.</span>
+      <div className="card">
+        <div className="card-head">
+          <span className="card-title">درگاه پرداخت</span>
         </div>
-      ) : null}
-
-      {phase === 'unauthorized' ? (
-        <div className="notice" role="status" data-payments-state="unauthorized">
-          <span>برای دیدن پرداخت‌ها باید با گذرکلید وارد شوید.</span>
-        </div>
-      ) : null}
-
-      {phase === 'error' ? (
-        <div className="notice" role="alert" data-payments-state="unavailable">
-          <span>خواندن وضعیت پرداخت‌ها ممکن نشد.</span>
-          <button className="btn" type="button" onClick={() => void load()}>
-            تلاش دوباره
-          </button>
-        </div>
-      ) : null}
-
-      {phase === 'loading' ? (
-        <p className="muted" data-payments-state="loading">
-          در حال خواندن…
-        </p>
-      ) : null}
-
-      {phase === 'ready' && configuration ? (
-        <>
-          <div data-payments-config={configuration.state}>
-            <table className="data-table" data-payments-table="configuration">
-              <tbody>
-                <tr>
-                  <th scope="row">وضعیت درگاه</th>
-                  <td>{configurationLabels[configuration.state]}</td>
-                </tr>
-                <tr>
-                  <th scope="row">محیط درگاه</th>
-                  <td>
-                    {configuration.environment === 'production'
-                      ? 'عملیاتی'
-                      : configuration.environment === 'sandbox'
-                        ? 'آزمایشی (sandbox)'
-                        : '—'}
-                  </td>
-                </tr>
-                <tr>
-                  <th scope="row">پرداخت‌های تأییدشده</th>
-                  <td>{configuration.verifiedCount.toLocaleString('fa-IR')}</td>
-                </tr>
-                <tr>
-                  <th scope="row">در انتظار تأیید</th>
-                  <td>{configuration.pendingCount.toLocaleString('fa-IR')}</td>
-                </tr>
-                <tr>
-                  <th scope="row">ناموفق</th>
-                  <td>{configuration.failedCount.toLocaleString('fa-IR')}</td>
-                </tr>
-                <tr>
-                  <th scope="row">آخرین پرداخت تأییدشده</th>
-                  <td>{formatDateTime(configuration.lastVerifiedAt)}</td>
-                </tr>
-              </tbody>
-            </table>
-            {/* The operator must know WHERE the credential lives, since it is not editable here. */}
-            <p className="muted">
-              شناسهٔ پذیرندهٔ زرین‌پال (Merchant ID) به‌صورت متغیر محیطی روی سرور تنظیم می‌شود و در
-              پنل مدیریت نمایش داده یا ویرایش نمی‌شود. برای تنظیم یا تغییر آن،{' '}
-              <code>ZARINPAL_MERCHANT_ID</code> و <code>LEARNBOX_ZARINPAL_ENABLED</code> را در محیط
-              سرویس یادگیرنده تنظیم کنید و سرویس را دوباره راه‌اندازی کنید.
-            </p>
-            {configuration.state === 'unproven' ? (
-              <p className="muted">
-                تا زمانی که یک پرداخت واقعی با موفقیت تأیید نشود، درست‌بودن شناسهٔ پذیرنده قابل
-                اثبات نیست.
+        <div className="card-body">
+          {phase === 'ready' && configuration ? (
+            <div data-payments-config={configuration.state}>
+              {configuration.state === 'disabled' ? (
+                /* The plan asks for an explicit "the gateway is not active" warning. It is driven
+                   by the real flag, not hardcoded, so it disappears the day payments go live. */
+                <p className="notice" role="note" data-payments-warning="inactive">
+                  <span>
+                    <b>درگاه پرداخت فعال نیست.</b> هیچ خریدی در فروشگاه انجام نمی‌شود و هیچ تراکنش
+                    واقعی ثبت نمی‌گردد.
+                  </span>
+                </p>
+              ) : null}
+              <div className="health-row">
+                <span className="health-name">
+                  <i className={configurationPulse[configuration.state]} aria-hidden="true" />
+                  درگاه{' '}
+                  {configuration.provider === 'zarinpal' ? 'زرین‌پال' : configuration.provider}
+                </span>
+                <span className={configuration.state === 'ready' ? undefined : 'unavailable'}>
+                  {configurationLabels[configuration.state]}
+                </span>
+              </div>
+              <div className="health-row">
+                <span className="health-name">محیط درگاه</span>
+                <span className={configuration.environment ? undefined : 'unavailable'}>
+                  {configuration.environment === 'production'
+                    ? 'عملیاتی'
+                    : configuration.environment === 'sandbox'
+                      ? 'آزمایشی (sandbox)'
+                      : 'تعیین نشده'}
+                </span>
+              </div>
+              <div className="health-row">
+                <span className="health-name">پرداخت‌های تأییدشده</span>
+                <span>{faNum(configuration.verifiedCount)}</span>
+              </div>
+              <div className="health-row">
+                <span className="health-name">در انتظار تأیید</span>
+                <span>{faNum(configuration.pendingCount)}</span>
+              </div>
+              <div className="health-row">
+                <span className="health-name">ناموفق</span>
+                <span>{faNum(configuration.failedCount)}</span>
+              </div>
+              <div className="health-row">
+                <span className="health-name">آخرین پرداخت تأییدشده</span>
+                <span className={configuration.lastVerifiedAt ? undefined : 'unavailable'}>
+                  {formatDateTime(configuration.lastVerifiedAt)}
+                </span>
+              </div>
+              {/* The reference shows invoicing and refunds as switched-off rows. Neither exists in
+                  the backend, so they say exactly that. */}
+              <div className="health-row">
+                <span className="health-name">
+                  <i className="pulse off" aria-hidden="true" />
+                  صدور فاکتور
+                </span>
+                <span className="unavailable">پیاده‌سازی نشده</span>
+              </div>
+              <div className="health-row">
+                <span className="health-name">
+                  <i className="pulse off" aria-hidden="true" />
+                  بازگشت وجه
+                </span>
+                <span className="unavailable">پیاده‌سازی نشده</span>
+              </div>
+              {/* The operator must know WHERE the credential lives, since it is not editable here. */}
+              <p className="muted-note store-gateway-note">
+                شناسهٔ پذیرندهٔ زرین‌پال (Merchant ID) به‌صورت متغیر محیطی روی سرور تنظیم می‌شود و
+                در پنل مدیریت نمایش داده یا ویرایش نمی‌شود. برای تنظیم یا تغییر آن،{' '}
+                <code className="keep-latin">ZARINPAL_MERCHANT_ID</code> و{' '}
+                <code className="keep-latin">LEARNBOX_ZARINPAL_ENABLED</code> را در محیط سرویس
+                یادگیرنده تنظیم کنید و سرویس را دوباره راه‌اندازی کنید.
               </p>
-            ) : null}
-          </div>
-
-          <h3>تراکنش‌ها</h3>
-          {transactions.length === 0 ? (
-            <p className="muted" data-payments-state="empty">
-              هنوز هیچ تراکنشی ثبت نشده است.
-            </p>
-          ) : (
-            <div>
-              <table className="data-table" data-payments-table="transactions">
-                <thead>
-                  <tr>
-                    <th scope="col">شمارهٔ تراکنش</th>
-                    <th scope="col">بسته</th>
-                    <th scope="col">مبلغ</th>
-                    <th scope="col">وضعیت</th>
-                    <th scope="col">درگاه</th>
-                    <th scope="col">کد رهگیری</th>
-                    <th scope="col">ایجاد</th>
-                    <th scope="col">تأیید</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {transactions.map((transaction) => (
-                    <tr key={transaction.transactionId}>
-                      <td>
-                        <code>{transaction.transactionId}</code>
-                      </td>
-                      <td>{transaction.packDisplayName ?? transaction.packId ?? '—'}</td>
-                      <td>{formatAmount(transaction.amountTomans)}</td>
-                      <td data-transaction-status={transaction.status}>
-                        {statusLabels[transaction.status] ?? transaction.status}
-                      </td>
-                      <td>
-                        {transaction.provider}
-                        {transaction.environment === 'sandbox' ? ' (آزمایشی)' : ''}
-                      </td>
-                      <td>
-                        <code>{transaction.providerReference ?? '—'}</code>
-                      </td>
-                      <td>{formatDateTime(transaction.createdAt)}</td>
-                      <td>{formatDateTime(transaction.verifiedAt)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              {configuration.state === 'unproven' ? (
+                <p className="muted-note store-gateway-note">
+                  تا زمانی که یک پرداخت واقعی با موفقیت تأیید نشود، درست‌بودن شناسهٔ پذیرنده قابل
+                  اثبات نیست.
+                </p>
+              ) : null}
             </div>
+          ) : phase === 'loading' ? (
+            <LoadingState label="در حال خواندن وضعیت درگاه…" />
+          ) : (
+            <p className="muted-note">وضعیت درگاه در دسترس نیست.</p>
           )}
-        </>
+        </div>
+      </div>
+
+      {selected ? (
+        <CpModal
+          title="جزئیات تراکنش"
+          onClose={() => setSelected(undefined)}
+          footer={
+            <button type="button" className="btn ghost" onClick={() => setSelected(undefined)}>
+              بستن
+            </button>
+          }
+        >
+          <dl className="dl">
+            <dt>شمارهٔ تراکنش</dt>
+            <dd className="keep-latin">{selected.transactionId}</dd>
+            <dt>بسته</dt>
+            <dd>{selected.packDisplayName ?? selected.packId ?? '—'}</dd>
+            <dt>مبلغ</dt>
+            <dd>{formatAmount(selected.amountTomans)}</dd>
+            <dt>وضعیت</dt>
+            <dd>{statusLabels[selected.status] ?? selected.status}</dd>
+            <dt>درگاه</dt>
+            <dd>
+              {selected.provider}
+              {selected.environment === 'sandbox' ? ' (آزمایشی)' : ''}
+            </dd>
+            <dt>شناسهٔ خرید درگاه</dt>
+            <dd className="keep-latin">{selected.providerPurchaseId}</dd>
+            <dt>کد رهگیری</dt>
+            <dd className="keep-latin">{selected.providerReference ?? '—'}</dd>
+            <dt>شناسهٔ کاربر</dt>
+            <dd className="keep-latin">{selected.userId}</dd>
+            <dt>ایجاد</dt>
+            <dd>{formatDateTime(selected.createdAt)}</dd>
+            <dt>آخرین تغییر</dt>
+            <dd>{formatDateTime(selected.updatedAt)}</dd>
+            <dt>تأیید</dt>
+            <dd>{formatDateTime(selected.verifiedAt)}</dd>
+          </dl>
+        </CpModal>
       ) : null}
     </section>
   );
