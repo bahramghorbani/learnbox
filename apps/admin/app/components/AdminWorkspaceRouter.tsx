@@ -9,7 +9,9 @@ import { ContentPacksWorkspace } from './ContentPacksWorkspace';
 import { ContentReviewWorkspace } from './ContentReviewWorkspace';
 import { DashboardWorkspace } from './DashboardWorkspace';
 import { LearningWorkspace } from './LearningWorkspace';
+import { OperationsWorkspace } from './OperationsWorkspace';
 import { PresentationWorkspace } from './PresentationWorkspace';
+import { SettingsWorkspace } from './SettingsWorkspace';
 import { StoreListingsWorkspace } from './StoreListingsWorkspace';
 import { UsersManagement } from './UsersManagement';
 
@@ -38,12 +40,16 @@ import { UsersManagement } from './UsersManagement';
  * are forbidden here.
  * Stage 9 makes «یادگیری» read-only and only consumes the existing Dashboard aggregate; scheduler,
  * progress, retention and quality figures remain unavailable until a permitted read model exists.
+ * Stage 10 completes «عملیات» and «تنظیمات» with only existing read-only operational contracts;
+ * health, queue, deployment and environment details remain unavailable without a source.
  */
 type AdminRoute =
   | 'content'
   | 'store'
   | 'users'
   | 'learning'
+  | 'ops'
+  | 'settings'
   | 'audit'
   | 'presentation'
   | 'access'
@@ -56,6 +62,8 @@ function readRoute(hash: string): AdminRoute {
   if (value === 'store') return 'store';
   if (value === 'users') return 'users';
   if (value === 'learning') return 'learning';
+  if (value === 'ops') return 'ops';
+  if (value === 'settings') return 'settings';
   if (value === 'audit') return 'audit';
   if (value === 'presentation') return 'presentation';
   if (value === 'access') return 'access';
@@ -76,6 +84,8 @@ export function AdminWorkspaceRouter() {
   if (route === 'content') return <ContentPacksWorkspace />;
   if (route === 'store') return <StoreListingsWorkspace />;
   if (route === 'audit') return <AuditLogWorkspace />;
+  if (route === 'ops') return <OperationsWorkspace />;
+  if (route === 'settings') return <SettingsWorkspace />;
   if (route === 'presentation') return <PresentationWorkspace />;
   if (route === 'access') return <AccessWorkspace />;
   if (route === 'review') return <ContentReviewWorkspace />;

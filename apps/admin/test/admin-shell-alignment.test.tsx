@@ -85,10 +85,11 @@ describe('Admin shell alignment with the approved reference', () => {
     expect(html).toContain('aria-disabled="true"');
   });
 
-  it('still marks unimplemented destinations as pending rather than linking nowhere', () => {
+  it('makes every frozen navigation destination real after Stage 10', () => {
     const html = renderToStaticMarkup(<AdminSidebar current="users" />);
-    // تنظیمات has no route yet; Stage 9 makes learning a real destination.
-    expect((html.match(/data-admin-nav-pending="true"/g) ?? []).length).toBe(1);
+    expect((html.match(/data-admin-nav-pending="true"/g) ?? []).length).toBe(0);
+    expect(html).toContain('href="#ops"');
+    expect(html).toContain('href="#settings"');
     expect(html).not.toContain('href="#undefined"');
   });
 });
