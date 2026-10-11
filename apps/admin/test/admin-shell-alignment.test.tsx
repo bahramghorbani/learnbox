@@ -87,8 +87,8 @@ describe('Admin shell alignment with the approved reference', () => {
 
   it('still marks unimplemented destinations as pending rather than linking nowhere', () => {
     const html = renderToStaticMarkup(<AdminSidebar current="users" />);
-    // یادگیری / تنظیمات have no route yet; Stage 8 makes access a real destination.
-    expect((html.match(/data-admin-nav-pending="true"/g) ?? []).length).toBe(2);
+    // تنظیمات has no route yet; Stage 9 makes learning a real destination.
+    expect((html.match(/data-admin-nav-pending="true"/g) ?? []).length).toBe(1);
     expect(html).not.toContain('href="#undefined"');
   });
 });

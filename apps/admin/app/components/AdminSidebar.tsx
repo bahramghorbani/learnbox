@@ -25,7 +25,7 @@ const navItems = [
   { label: 'محتوا و بسته‌ها', icon: 'book', route: 'content' },
   { label: 'فروشگاه', icon: 'store', route: 'store' },
   { label: 'کاربران', icon: 'users', route: 'users' },
-  { label: 'یادگیری', icon: 'chart' },
+  { label: 'یادگیری', icon: 'chart', route: 'learning' },
   { label: 'نمایش اپ', icon: 'image', route: 'presentation' },
   { label: 'نشست‌ها و دسترسی', icon: 'shield', route: 'access' },
   { label: 'عملیات', icon: 'ops', route: 'audit' },

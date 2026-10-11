@@ -3114,3 +3114,33 @@ button {
     grid-template-columns: 1fr;
   }
 }
+
+/* Stage 9 — only the Dashboard's existing active-learner aggregate is displayable. */
+.learning-workspace .learning-real-grid,
+.learning-workspace .learning-unavailable-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--gap);
+}
+.learning-workspace .learning-real-grid {
+  margin-bottom: var(--gap);
+}
+.learning-workspace .learning-metric {
+  display: block;
+  color: var(--ink);
+  font-size: clamp(30px, 4vw, 44px);
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+.learning-workspace .learning-active-card {
+  border-inline-start: 4px solid var(--green);
+}
+.learning-workspace .learning-unavailable-card .empty-state {
+  min-height: 130px;
+}
+@media (max-width: 760px) {
+  .learning-workspace .learning-real-grid,
+  .learning-workspace .learning-unavailable-grid {
+    grid-template-columns: 1fr;
+  }
+}

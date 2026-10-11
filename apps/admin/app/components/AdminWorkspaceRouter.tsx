@@ -8,6 +8,7 @@ import { AuditLogWorkspace } from './AuditLogWorkspace';
 import { ContentPacksWorkspace } from './ContentPacksWorkspace';
 import { ContentReviewWorkspace } from './ContentReviewWorkspace';
 import { DashboardWorkspace } from './DashboardWorkspace';
+import { LearningWorkspace } from './LearningWorkspace';
 import { PresentationWorkspace } from './PresentationWorkspace';
 import { StoreListingsWorkspace } from './StoreListingsWorkspace';
 import { UsersManagement } from './UsersManagement';
@@ -35,15 +36,26 @@ import { UsersManagement } from './UsersManagement';
  * Stage 8 makes «نشست‌ها و دسترسی» a real route. It deliberately renders only the current-session
  * and Passkey facts the existing security contracts provide; invented device, role or audit rows
  * are forbidden here.
+ * Stage 9 makes «یادگیری» read-only and only consumes the existing Dashboard aggregate; scheduler,
+ * progress, retention and quality figures remain unavailable until a permitted read model exists.
  */
 type AdminRoute =
-  'content' | 'store' | 'users' | 'audit' | 'presentation' | 'access' | 'review' | 'home';
+  | 'content'
+  | 'store'
+  | 'users'
+  | 'learning'
+  | 'audit'
+  | 'presentation'
+  | 'access'
+  | 'review'
+  | 'home';
 
 function readRoute(hash: string): AdminRoute {
   const value = hash.replace(/^#/, '');
   if (value === 'content') return 'content';
   if (value === 'store') return 'store';
   if (value === 'users') return 'users';
+  if (value === 'learning') return 'learning';
   if (value === 'audit') return 'audit';
   if (value === 'presentation') return 'presentation';
   if (value === 'access') return 'access';
@@ -79,5 +91,6 @@ export function AdminWorkspaceRouter() {
       </main>
     );
   }
+  if (route === 'learning') return <LearningWorkspace />;
   return <DashboardWorkspace />;
 }
