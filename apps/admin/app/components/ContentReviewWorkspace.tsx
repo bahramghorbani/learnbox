@@ -6,7 +6,14 @@ import type { LearningVocabularyItem } from '@learnbox/content-models';
 
 import { AdminSidebar } from './AdminSidebar';
 import { useAdminWorkspaceAccess } from './AdminAuthGate';
-import { fetchWithStepUp, stepUpMessage } from './step-up-reauth';
+import { EmptyState, ErrorState, LoadingState } from './AdminStates';
+import { fa } from './fa-digits';
+import {
+  createIdempotencyKey,
+  fetchWithStepUp,
+  readCsrfToken,
+  stepUpMessage,
+} from './step-up-reauth';
 
 const partOfSpeechLabels: Record<LearningVocabularyItem['partOfSpeech'], string> = {
   noun: 'اسم',
@@ -36,6 +43,27 @@ const outcomeLabels: Record<ReviewOutcome, string> = {
   pending: 'در انتظار بررسی',
   passed: 'تأییدشده',
   failed: 'ناموفق',
+};
+
+/** Reference badge tones: green = done, rose = failed, grey = nothing has happened yet. */
+const outcomeBadges: Record<ReviewOutcome, string> = {
+  pending: 'b-grey',
+  passed: 'b-green',
+  failed: 'b-rose',
+};
+
+/**
+ * The queue status the server actually stores. It was carried in the payload but never shown, so a
+ * card already machine-validated looked identical to one nobody has touched.
+ */
+const queueStatusLabels: Record<ServerQueueItem['status'], string> = {
+  auto_validated: 'اعتبارسنجی خودکار',
+  needs_review: 'نیازمند بررسی',
+};
+
+const queueStatusBadges: Record<ServerQueueItem['status'], string> = {
+  auto_validated: 'b-grey',
+  needs_review: 'b-amber',
 };
 
 type ReviewDimension =
@@ -88,34 +116,12 @@ const dimensions: ReviewDimension[] = [
   'app_flow',
 ];
 
-const toPersianDigits = (value: number) =>
-  String(value).replace(/\d/g, (digit) => '۰۱۲۳۴۵۶۷۸۹'[Number(digit)]);
-
-function createClientKey(): string {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return crypto.randomUUID();
-  }
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (part) => {
-    const random = Math.floor(Math.random() * 16);
-    const value = part === 'x' ? random : (random & 0x3) | 0x8;
-    return value.toString(16);
-  });
-}
-
-function readBrowserCookie(name: string): string | undefined {
-  return document.cookie
-    ?.split(';')
-    .map((item) => item.trim())
-    .find((item) => item.startsWith(`${name}=`))
-    ?.slice(name.length + 1);
-}
-
 /**
  * Server-backed review queue. Reads only the authenticated GET /api/content/review payload and
  * submits check and decision mutations with a session CSRF token and per-attempt idempotency
- * keys. Every success label is persisted-server truth; local preview state is never presented
- * as persisted. When the server runtime is off (404) the queue falls back to the explicitly
- * labeled local-only preview below.
+ * keys. Every success label is persisted-server truth; nothing on this screen is derived from a
+ * local draft, a fixture or a prototype figure. Review decisions are editorial only — publication
+ * is a separate, deliberately disabled step.
  */
 export function ServerBackedContentReview() {
   const [phase, setPhase] = useState<ServerPhase>('loading');
@@ -170,6 +176,7 @@ export function ServerBackedContentReview() {
       )
     : [];
   const allChecksPassed = selected !== undefined && passedDimensions.length === dimensions.length;
+  const pendingReviewCount = items.filter((item) => item.status === 'needs_review').length;
 
   async function refreshAfterMutation() {
     await loadQueue(false);
@@ -177,8 +184,8 @@ export function ServerBackedContentReview() {
 
   async function submitCheck(dimension: ReviewDimension, outcome: 'passed' | 'failed') {
     if (!selected || busy !== 'none') return;
-    const idempotencyKey = pendingCheckKeys[dimension] ?? createClientKey();
-    const csrfToken = readBrowserCookie('__Host-learnbox_admin_csrf');
+    const idempotencyKey = pendingCheckKeys[dimension] ?? createIdempotencyKey();
+    const csrfToken = readCsrfToken();
     if (!csrfToken) {
       setNotice({ kind: 'error', text: 'نشان امنیتی CSRF در دسترس نیست؛ صفحه را تازه کنید.' });
       return;
@@ -263,8 +270,8 @@ export function ServerBackedContentReview() {
 
   async function submitDecision(action: 'approve' | 'return_for_revision') {
     if (!selected || busy !== 'none') return;
-    const idempotencyKey = pendingDecisionKey ?? createClientKey();
-    const csrfToken = readBrowserCookie('__Host-learnbox_admin_csrf');
+    const idempotencyKey = pendingDecisionKey ?? createIdempotencyKey();
+    const csrfToken = readCsrfToken();
     if (!csrfToken) {
       setNotice({ kind: 'error', text: 'نشان امنیتی CSRF در دسترس نیست؛ صفحه را تازه کنید.' });
       return;
@@ -354,216 +361,15 @@ export function ServerBackedContentReview() {
       data-review-state={phase}
       aria-labelledby="server-review-title"
     >
-      <h2 id="server-review-title">صف بررسی سرور</h2>
-      {phase === 'disabled' ? (
-        <p className="admin-preview-notice" role="status" data-review-unavailable="true">
-          ذخیره‌سازی سرور برای بازبینی محتوا غیرفعال است؛ هیچ محتوایی در این حالت نمایش داده نمی‌شود
-          و هیچ تغییری در پایگاه داده ثبت نمی‌شود.
-        </p>
-      ) : null}
-      {phase === 'loading' ? (
-        <p className="server-review-status" role="status" aria-live="polite">
-          در حال دریافت صف بررسی از سرور…
-        </p>
-      ) : null}
-      {phase === 'unauthorized' ? (
-        <p className="server-review-status" role="status">
-          نشست امن معتبر نیست؛ برای بازبینی سرور دوباره وارد شوید.
-        </p>
-      ) : null}
-      {phase === 'error' ? (
-        <div className="server-review-status" role="status">
-          <p>صف بررسی از سرور در دسترس نیست.</p>
-          <button type="button" className="retry-button" onClick={() => void loadQueue(true)}>
-            تلاش دوباره
-          </button>
-        </div>
-      ) : null}
-      {phase === 'empty' ? (
-        <p className="server-review-status" role="status">
-          صف بررسی خالی است؛ هیچ کارتی در انتظار بررسی نیست.
-        </p>
-      ) : null}
-      {phase === 'ready' && selected ? (
-        <div className="review-workspace" data-review-workspace="ready">
-          <header className="review-context" data-publication="disabled">
-            <p className="review-context-line">
-              صف بررسی سرور خوانده شد؛ تصمیم این پنل فقط سردبیری است و انتشار بسته غیرفعال است.
-            </p>
-            <dl className="review-metrics" aria-label="شمارنده‌های صف بررسی">
-              <div>
-                <dt>کارت‌های صف</dt>
-                <dd data-review-metric="queue-total">{toPersianDigits(items.length)}</dd>
-              </div>
-              <div>
-                <dt>بُعدهای تأییدشدهٔ کارت انتخاب‌شده</dt>
-                <dd data-review-metric="checks-passed">
-                  {toPersianDigits(passedDimensions.length)} از {toPersianDigits(dimensions.length)}
-                </dd>
-              </div>
-              <div>
-                <dt>رسانهٔ ثبت‌شدهٔ سرور</dt>
-                <dd data-review-metric="media-count">{toPersianDigits(selected.mediaCount)}</dd>
-              </div>
-            </dl>
-          </header>
-
-          <div className="review-workspace-grid">
-            <div
-              className="review-panel review-queue-panel"
-              data-review-panel="queue"
-              role="group"
-              aria-labelledby="review-queue-panel-title"
-            >
-              <h3 id="review-queue-panel-title">کارت‌های صف</h3>
-              <div className="server-queue-list">
-                {items.map((item) => (
-                  <button
-                    key={item.cardVersionId}
-                    type="button"
-                    className="server-queue-row"
-                    data-server-selected={item.cardVersionId === selected.cardVersionId}
-                    aria-pressed={item.cardVersionId === selected.cardVersionId}
-                    onClick={() => setSelectedId(item.cardVersionId)}
-                  >
-                    <span lang="de" dir="ltr">
-                      {item.article ? `${item.article} ${item.lemma}` : item.lemma}
-                    </span>
-                    <small lang="en" dir="ltr">
-                      {item.contentId}
-                    </small>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <article
-              className="review-panel review-content-panel"
-              data-review-panel="content"
-              aria-labelledby="review-content-panel-title"
-            >
-              <h3 id="review-content-panel-title">کارت انتخاب‌شده</h3>
-              <p className="review-content-id" lang="en" dir="ltr">
-                {selected.contentId}
-              </p>
-              <div className="server-card-detail" lang="de" dir="ltr">
-                <p className="review-word">
-                  {selected.article ? `${selected.article} ${selected.lemma}` : selected.lemma}
-                </p>
-                {selected.essentialInflection ? <p>{selected.essentialInflection}</p> : null}
-                {selected.pronunciationIpa ? <p>/{selected.pronunciationIpa}/</p> : null}
-              </div>
-              <div className="server-card-meanings">
-                <p lang="fa">
-                  {selected.persianMeanings.join('؛ ') || '—'}
-                  <span className="word-kind">
-                    {partOfSpeechLabels[
-                      selected.partOfSpeech as LearningVocabularyItem['partOfSpeech']
-                    ] ?? 'سایر'}
-                  </span>
-                </p>
-                {selected.examples[0] ? (
-                  <p>
-                    <span lang="de" dir="ltr">
-                      {selected.examples[0].german}
-                    </span>{' '}
-                    <span lang="fa">{selected.examples[0].persian}</span>
-                  </p>
-                ) : null}
-                <p>
-                  {selected.mediaCount > 0
-                    ? `${toPersianDigits(selected.mediaCount)} رسانه در محتوای ثبت‌شدهٔ سرور`
-                    : 'رسانه‌ای در محتوای ثبت‌شدهٔ سرور نیست.'}
-                </p>
-                <p className="provenance">
-                  {providerLabels[
-                    selected.sourceProvider as LearningVocabularyItem['source']['provider']
-                  ] ?? selected.sourceProvider}
-                  {selected.sourceReference ? (
-                    <small lang="en" dir="ltr">
-                      {' '}
-                      {selected.sourceReference}
-                    </small>
-                  ) : null}
-                </p>
-              </div>
-            </article>
-
-            <section
-              className="review-panel review-decision-panel"
-              data-review-panel="decision"
-              aria-labelledby="server-gate-title"
-            >
-              <h3 id="server-gate-title">گیت شش‌بُعدی</h3>
-              <p className="review-scope-note">
-                تصمیم این پنل فقط سردبیری است؛ انتشار در این نسخه غیرفعال می‌ماند.
-              </p>
-              <ul className="review-gate-list">
-                {dimensions.map((dimension) => {
-                  const check = selected.checks.find((entry) => entry.dimension === dimension);
-                  const outcome = check?.outcome ?? 'pending';
-                  const isBusy = busy === 'check' && busyDimension === dimension;
-                  return (
-                    <li key={dimension} data-dimension={dimension} data-outcome={outcome}>
-                      <span aria-hidden="true">
-                        {outcome === 'passed' ? '✓' : outcome === 'failed' ? '!' : '○'}
-                      </span>
-                      <span>{dimensionLabels[dimension]}</span>
-                      <small>{outcomeLabels[outcome]}</small>
-                      {outcome === 'pending' ? (
-                        <span className="server-check-actions">
-                          <button
-                            type="button"
-                            disabled={busy !== 'none'}
-                            onClick={() => void submitCheck(dimension, 'passed')}
-                          >
-                            {isBusy ? 'در حال ثبت…' : 'تأیید'}
-                          </button>
-                          <button
-                            type="button"
-                            disabled={busy !== 'none'}
-                            onClick={() => void submitCheck(dimension, 'failed')}
-                          >
-                            ناموفق
-                          </button>
-                        </span>
-                      ) : (
-                        <small lang="en" dir="ltr">
-                          {check?.reviewedAt ?? ''}
-                        </small>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
-
-              <div className="review-actions server-decisions">
-                <button
-                  type="button"
-                  className="approve-button"
-                  disabled={busy !== 'none' || !allChecksPassed}
-                  onClick={() => void submitDecision('approve')}
-                >
-                  {busy === 'decision' ? 'در حال ثبت…' : 'تأیید نهایی سردبیری'}
-                </button>
-                <button
-                  type="button"
-                  className="return-button"
-                  disabled={busy !== 'none'}
-                  onClick={() => void submitDecision('return_for_revision')}
-                >
-                  بازگرداندن برای اصلاح
-                </button>
-                {!allChecksPassed ? (
-                  <p className="prototype-note" role="status">
-                    تأیید نهایی فقط پس از تأیید هر شش بُعد در سرور ثبت می‌شود.
-                  </p>
-                ) : null}
-              </div>
-            </section>
-          </div>
-        </div>
-      ) : null}
+      <div className="server-review-head">
+        <h2 id="server-review-title">صف بررسی سرور</h2>
+        {phase === 'ready' ? (
+          <span className="muted-note">
+            {fa(items.length)} کارت خوانده‌شده از backend مرکزی · {fa(pendingReviewCount)} نیازمند
+            بررسی
+          </span>
+        ) : null}
+      </div>
 
       {notice.kind !== 'none' ? (
         <p
@@ -574,6 +380,266 @@ export function ServerBackedContentReview() {
         >
           {notice.text}
         </p>
+      ) : null}
+
+      {phase === 'disabled' ? (
+        <div data-review-unavailable="true" className="review-state-pad">
+          <ErrorState
+            tone="amber"
+            title="ذخیره‌سازی سرور برای بازبینی محتوا غیرفعال است"
+            description="هیچ محتوایی در این حالت نمایش داده نمی‌شود و هیچ تغییری در پایگاه داده ثبت نمی‌شود. این نما با پرچم محیطی فعال می‌شود."
+          />
+        </div>
+      ) : null}
+      {phase === 'loading' ? (
+        <div className="review-state-pad">
+          <LoadingState label="در حال دریافت صف بررسی از سرور…" />
+        </div>
+      ) : null}
+      {phase === 'unauthorized' ? (
+        <div className="review-state-pad">
+          <ErrorState
+            tone="amber"
+            title="نشست امن معتبر نیست؛ برای بازبینی سرور دوباره وارد شوید."
+            description="صف بررسی فقط با نشست گذرکلید خوانده می‌شود؛ هیچ کارتی بدون آن بارگذاری نمی‌شود."
+          />
+        </div>
+      ) : null}
+      {phase === 'error' ? (
+        <div className="review-state-pad">
+          <ErrorState
+            title="صف بررسی از سرور در دسترس نیست."
+            description="ارتباط با backend مرکزی برقرار نشد یا پاسخ معتبر نبود. هیچ تصمیمی ثبت نشده است."
+            action={
+              <button type="button" className="btn" onClick={() => void loadQueue(true)}>
+                تلاش دوباره
+              </button>
+            }
+          />
+        </div>
+      ) : null}
+      {phase === 'empty' ? (
+        <div className="review-state-pad">
+          <EmptyState
+            variant="page"
+            icon="inbox"
+            title="صف بررسی خالی است؛ هیچ کارتی در انتظار بررسی نیست."
+            description="کارت‌های تازه پس از تولید یا ورود محتوا در این صف ظاهر می‌شوند."
+          />
+        </div>
+      ) : null}
+      {phase === 'ready' && selected ? (
+        <div className="review-workspace" data-review-workspace="ready">
+          <p className="notice mb" role="note" data-publication="disabled">
+            <span>
+              صف بررسی سرور خوانده شد؛ تصمیم این پنل فقط سردبیری است و{' '}
+              <b>انتشار بسته غیرفعال است</b>.
+            </span>
+          </p>
+
+          <dl className="review-metrics" aria-label="شمارنده‌های صف بررسی">
+            <div className="kpi">
+              <dt className="kpi-label">کارت‌های صف</dt>
+              <dd className="kpi-value sm" data-review-metric="queue-total">
+                {fa(items.length)}
+              </dd>
+            </div>
+            <div className="kpi">
+              <dt className="kpi-label">بُعدهای تأییدشدهٔ کارت انتخاب‌شده</dt>
+              <dd className="kpi-value sm" data-review-metric="checks-passed">
+                {fa(passedDimensions.length)} از {fa(dimensions.length)}
+              </dd>
+            </div>
+            <div className="kpi">
+              <dt className="kpi-label">رسانهٔ ثبت‌شدهٔ سرور</dt>
+              <dd className="kpi-value sm" data-review-metric="media-count">
+                {fa(selected.mediaCount)}
+              </dd>
+            </div>
+          </dl>
+
+          <div className="review-workspace-grid">
+            <div
+              className="card review-panel review-queue-panel"
+              data-review-panel="queue"
+              role="group"
+              aria-labelledby="review-queue-panel-title"
+            >
+              <div className="card-head">
+                <h3 className="card-title" id="review-queue-panel-title">
+                  کارت‌های صف
+                </h3>
+              </div>
+              <div className="card-body">
+                <div className="server-queue-list">
+                  {items.map((item) => (
+                    <button
+                      key={item.cardVersionId}
+                      type="button"
+                      className="server-queue-row"
+                      data-server-selected={item.cardVersionId === selected.cardVersionId}
+                      aria-pressed={item.cardVersionId === selected.cardVersionId}
+                      onClick={() => setSelectedId(item.cardVersionId)}
+                    >
+                      <span className="list-grow">
+                        <span className="list-title" lang="de" dir="ltr">
+                          {item.article ? `${item.article} ${item.lemma}` : item.lemma}
+                        </span>
+                        <span className="list-sub keep-latin" title={item.contentId}>
+                          {item.contentId}
+                        </span>
+                      </span>
+                      <span className={`badge ${queueStatusBadges[item.status]}`}>
+                        {queueStatusLabels[item.status]}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <article
+              className="card review-panel review-content-panel"
+              data-review-panel="content"
+              aria-labelledby="review-content-panel-title"
+            >
+              <div className="card-head">
+                <h3 className="card-title" id="review-content-panel-title">
+                  کارت انتخاب‌شده
+                </h3>
+                <span className="muted-note review-content-id keep-latin">
+                  {selected.contentId}
+                </span>
+              </div>
+              <div className="card-body">
+                <div className="server-card-detail" lang="de" dir="ltr">
+                  <p className="review-word">
+                    {selected.article ? `${selected.article} ${selected.lemma}` : selected.lemma}
+                  </p>
+                  {selected.essentialInflection ? <p>{selected.essentialInflection}</p> : null}
+                  {selected.pronunciationIpa ? <p>/{selected.pronunciationIpa}/</p> : null}
+                </div>
+                <div className="server-card-meanings">
+                  <p lang="fa">
+                    {selected.persianMeanings.join('؛ ') || '—'}
+                    <span className="word-kind">
+                      {partOfSpeechLabels[
+                        selected.partOfSpeech as LearningVocabularyItem['partOfSpeech']
+                      ] ?? 'سایر'}
+                    </span>
+                  </p>
+                  {selected.examples[0] ? (
+                    <p>
+                      <span lang="de" dir="ltr">
+                        {selected.examples[0].german}
+                      </span>{' '}
+                      <span lang="fa">{selected.examples[0].persian}</span>
+                    </p>
+                  ) : null}
+                  <p>
+                    {selected.mediaCount > 0
+                      ? `${fa(selected.mediaCount)} رسانه در محتوای ثبت‌شدهٔ سرور`
+                      : 'رسانه‌ای در محتوای ثبت‌شدهٔ سرور نیست.'}
+                  </p>
+                  <p className="provenance">
+                    {providerLabels[
+                      selected.sourceProvider as LearningVocabularyItem['source']['provider']
+                    ] ?? selected.sourceProvider}
+                    {selected.sourceReference ? (
+                      <small className="keep-latin"> {selected.sourceReference}</small>
+                    ) : null}
+                  </p>
+                </div>
+              </div>
+            </article>
+
+            <section
+              className="card review-panel review-decision-panel"
+              data-review-panel="decision"
+              aria-labelledby="server-gate-title"
+            >
+              <div className="card-head">
+                <h3 className="card-title" id="server-gate-title">
+                  گیت شش‌بُعدی
+                </h3>
+                <span className={`badge ${allChecksPassed ? 'b-green' : 'b-amber'}`}>
+                  {fa(passedDimensions.length)} از {fa(dimensions.length)}
+                </span>
+              </div>
+              <div className="card-body">
+                <p className="review-scope-note">
+                  تصمیم این پنل فقط سردبیری است؛ انتشار در این نسخه غیرفعال می‌ماند.
+                </p>
+                <ul className="review-gate-list">
+                  {dimensions.map((dimension) => {
+                    const check = selected.checks.find((entry) => entry.dimension === dimension);
+                    const outcome = check?.outcome ?? 'pending';
+                    const isBusy = busy === 'check' && busyDimension === dimension;
+                    return (
+                      <li key={dimension} data-dimension={dimension} data-outcome={outcome}>
+                        <span className="list-grow">
+                          <span className="list-title">{dimensionLabels[dimension]}</span>
+                          {outcome !== 'pending' && check?.reviewedAt ? (
+                            <span className="list-sub keep-latin" title={check.reviewedAt}>
+                              {check.reviewedAt}
+                            </span>
+                          ) : null}
+                        </span>
+                        <span className={`badge ${outcomeBadges[outcome]}`}>
+                          {outcomeLabels[outcome]}
+                        </span>
+                        {outcome === 'pending' ? (
+                          <span className="server-check-actions">
+                            <button
+                              type="button"
+                              className="btn primary sm"
+                              disabled={busy !== 'none'}
+                              onClick={() => void submitCheck(dimension, 'passed')}
+                            >
+                              {isBusy ? 'در حال ثبت…' : 'تأیید'}
+                            </button>
+                            <button
+                              type="button"
+                              className="btn sm"
+                              disabled={busy !== 'none'}
+                              onClick={() => void submitCheck(dimension, 'failed')}
+                            >
+                              ناموفق
+                            </button>
+                          </span>
+                        ) : null}
+                      </li>
+                    );
+                  })}
+                </ul>
+
+                <div className="review-actions server-decisions">
+                  <button
+                    type="button"
+                    className="btn primary"
+                    disabled={busy !== 'none' || !allChecksPassed}
+                    onClick={() => void submitDecision('approve')}
+                  >
+                    {busy === 'decision' ? 'در حال ثبت…' : 'تأیید نهایی سردبیری'}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn"
+                    disabled={busy !== 'none'}
+                    onClick={() => void submitDecision('return_for_revision')}
+                  >
+                    بازگرداندن برای اصلاح
+                  </button>
+                  {!allChecksPassed ? (
+                    <p className="hint" role="status">
+                      تأیید نهایی فقط پس از تأیید هر شش بُعد در سرور ثبت می‌شود.
+                    </p>
+                  ) : null}
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
       ) : null}
     </section>
   );
@@ -591,32 +657,43 @@ export function ContentReviewWorkspace() {
   const serverAuthenticated = access === 'server-authenticated';
 
   return (
-    <main className="admin-shell" id="home">
+    <main className="admin-shell cp-workspace" id="home">
       <AdminSidebar current="home" />
       <section className="admin-workspace">
-        <header className="admin-topbar">
-          <h1>بازبینی محتوا</h1>
-          <div className="editor-identity" aria-label="وضعیت پنل">
-            <span className="editor-avatar" aria-hidden="true">
-              پ
-            </span>
-            <span>
-              <strong>{serverAuthenticated ? 'ورود امن فعال' : 'بدون ورود'}</strong>
-              <small>
-                {serverAuthenticated
-                  ? 'بازبینی سرور؛ انتشار همچنان غیرفعال'
-                  : 'محتوا فقط پس از ورود امن نمایش داده می‌شود'}
-              </small>
+        <div className="page-head">
+          <div>
+            <h1>بازبینی محتوا</h1>
+            <p className="muted">
+              صف بررسی سردبیری روی کارت‌های ثبت‌شدهٔ backend مرکزی. هر تصمیم در سرور ثبت و حسابرسی
+              می‌شود.
+            </p>
+            <p className="hint">
+              {serverAuthenticated
+                ? 'بازبینی سرور؛ انتشار همچنان غیرفعال'
+                : 'محتوا فقط پس از ورود امن نمایش داده می‌شود'}
+            </p>
+          </div>
+          <div className="head-actions">
+            <span
+              className={serverAuthenticated ? 'chip on' : 'chip'}
+              aria-label="وضعیت پنل"
+              data-review-session={serverAuthenticated ? 'server-authenticated' : 'signed-out'}
+            >
+              {serverAuthenticated ? 'ورود امن فعال' : 'بدون ورود'}
             </span>
           </div>
-        </header>
+        </div>
 
         {serverAuthenticated ? (
           <ServerBackedContentReview />
         ) : (
-          <p className="admin-preview-notice" role="status" data-review-unavailable="true">
-            برای مشاهدهٔ محتوای بازبینی باید با ورود امن وارد شوید.
-          </p>
+          <div data-review-unavailable="true">
+            <ErrorState
+              tone="amber"
+              title="برای مشاهدهٔ محتوای بازبینی باید با ورود امن وارد شوید."
+              description="بدون نشست گذرکلید هیچ کارتی خوانده نمی‌شود و هیچ محتوای یادگیری در بستهٔ مرورگر نیست."
+            />
+          </div>
         )}
       </section>
     </main>

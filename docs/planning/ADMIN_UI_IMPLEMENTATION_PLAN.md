@@ -240,9 +240,57 @@
 - **تست:** سوئیت موجود Admin + تست نقش واقعی + یک تست UI برای حفظ فرم پس از reauth.
 - **خطر:** از دست رفتن فرم در بازطراحی هنگام ۴۲۸. **بازگشت:** revert PR.
 
-### مرحلهٔ ۴ — بررسی و تأیید محتوا
+### مرحلهٔ ۴ — بررسی و تأیید محتوا — **انجام شد**
 
-- **فایل‌ها:** `ContentReviewWorkspace`, `ReviewQueueOverview`, `ReviewGateSummary`.
+> **وضعیت: کامل.** مجوز مالک ۱۱ اکتبر ۲۰۲۶ («AUTHORIZE STAGE 4»).
+>
+> آنچه از قبل درست بود و بازسازی **نشد**: کل چرخهٔ عمر محتوا. خواندن صف از
+> `GET /api/content/review`، ثبت شش بُعد با `POST /api/content/review/check`، تصمیم نهایی با
+> `POST /api/content/review/decision`، گیت نقش روی store، CSRF، idempotency، گارد ۴۰۹
+> (`not_reviewable` / `review_incomplete`)، ۴۲۸ step-up و حسابرسی سمت سرور — هیچ‌کدام لمس نشدند.
+> هیچ مسیر API، schema، migration، grant یا کد Learner در این مرحله تغییر نکرد.
+>
+> **شکاف مرجع (مستند شد):** نمونهٔ منجمد `prototypes/admin-ui-v1` روی `proto/admin-ui-concept@8b3e050d`
+> هیچ صفحهٔ `review.html` ندارد؛ بازبینی محتوا در طرح تأییدشده صفحهٔ اختصاصی ندارد. بنابراین مرجع این
+> مرحله **واژگان منجمد همان نمونه** است (`page-head`, `card`, `kpi`, `badge`, `btn`, `list-*`,
+> `chip`, `notice`) که در مرحله‌های ۰ تا ۶ پورت شده بود، نه یک صفحهٔ تازه. هیچ ترکیب‌بندی جدیدی
+> اختراع نشد. → `BACKLOG.md` → **LB-B50**.
+>
+> **کشف مرحله:** این تنها workspace باقی‌مانده بود که بیرون از `.cp-workspace` رندر می‌شد، یعنی
+> هیچ‌کدام از قاعده‌های مرجع (که همگی زیر `.cp-workspace` تعریف شده‌اند) روی آن اعمال نمی‌شد و
+> به‌جای آن یک تم موازی (`admin-topbar`, `editor-identity`, `review-context`, دکمه‌های
+> `approve-button`/`return-button`) داشت. همچنین `ReviewQueueOverview` و `ReviewGateSummary` —
+> که این سند جزو فایل‌های این مرحله فهرست‌شان کرده بود — **هیچ‌جا mount نمی‌شدند** (فقط تست خودشان
+> import می‌کرد) و شکل دادهٔ کهنه‌ای داشتند (`batchId`، وضعیت `returned`) که API هرگز برنمی‌گرداند.
+>
+> آنچه اصلاح شد:
+>
+> - پوستهٔ صفحه به `admin-shell cp-workspace` + `page-head` منتقل شد (مثل بقیهٔ workspaceها)؛
+>   `admin-topbar`/`editor-identity` حذف شد و وضعیت نشست روی `chip` مرجع نشست.
+> - سه شمارندهٔ واقعی روی کارت‌های `kpi` مرجع؛ سه پنل صف/کارت/گیت روی `card` + `card-head` +
+>   `card-body`؛ ردیف‌های صف و گیت روی `list-title`/`list-sub`/`badge`؛ دکمه‌ها روی `btn`/`btn sm`.
+> - **وضعیت ذخیره‌شدهٔ هر کارت (`auto_validated` / `needs_review`) که در payload بود و هرگز نمایش
+>   داده نمی‌شد**، حالا به‌صورت badge نمایش داده می‌شود؛ کارتی که ماشین تأیید کرده دیگر شبیه کارتی
+>   که کسی لمسش نکرده نیست.
+> - حالت‌های Loading/Empty/Error روی کامپوننت‌های مشترک مرحلهٔ ۰؛ «نشست نامعتبر» با لحن کهربایی
+>   (اجازه ندارید) از «خطای سرور» با لحن سرخ (خراب شد) جدا شد.
+> - `createClientKey`/`readBrowserCookie`/`toPersianDigits` محلی حذف و به
+>   `createIdempotencyKey`/`readCsrfToken` (از `step-up-reauth.ts`) و `fa()` مشترک تبدیل شد —
+>   سومین کپی از قرارداد retry از بین رفت.
+> - دو کامپوننت مردهٔ بالا و تست‌هایشان حذف شدند؛ ۵۲۷ خط CSS مرده و موازی (شامل بازماندهٔ
+>   پیش‌نمایش محلیِ حذف‌شده در LB-B30) از `globals.css` پاک شد.
+>
+> **ارقام:** هر سه شمارنده از payload مشتق می‌شوند. هیچ عدد ساختگی، درصد، درآمد یا «میانگین» روی
+> این صفحه نیست و تست، نبودشان را pin می‌کند.
+>
+> **سنجش:** ۱۴۴۰px بدون سرریز (`262px 586px 330px`, `clipped: []`)؛ ۳۹۰px بدون سرریز (تک‌ستونه،
+> KPI دوتایی، هر کنترل ≥۴۴px, `clipped: []`).
+>
+> **تست:** سوئیت Admin **۷۷۷ pass / ۴۹ skip**؛ `content-review-presentation.test.tsx` تازه
+> (۱۲ تست) و `content-review-workspace.test.tsx` موجود (۱۸ تست) بدون تغییر سبز؛ **۱۶ از ۱۶ mutant
+> کشته‌شده**. PR #407.
+
+- **فایل‌ها:** `ContentReviewWorkspace`, `ReviewQueueOverview` (حذف شد), `ReviewGateSummary` (حذف شد).
 - **کار:** صف بازبینی و تصمیم‌ها در زبان طراحی جدید؛ وضعیت gate به‌صورت شاخص‌های روشن مرجع.
 - **وابستگی:** مرحلهٔ ۳ (الگوی جدول و drawer مشترک).
 - **معیار پذیرش:** تصمیم‌های approve/reject و gateها بدون تغییر رفتار؛ ردیف حسابرسی برای هر تصمیم.
