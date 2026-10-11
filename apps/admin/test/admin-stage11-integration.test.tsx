@@ -118,5 +118,55 @@ describe('Admin Stage 11 integration guards', () => {
       });
       expect(document.activeElement?.id).toBe('confirm');
     });
+
+    it('survives a parent re-render without ejecting focus to the opener', async () => {
+      // Callers pass fresh inline arrows, so an `onClose` effect dependency would tear the effect
+      // down on every parent state update and hand focus back while the dialog is still open.
+      function ReRenderingHarness() {
+        const [open, setOpen] = useState(false);
+        const [tick, setTick] = useState(0);
+        return createElement(
+          'div',
+          null,
+          createElement(
+            'button',
+            { type: 'button', id: 'opener', onClick: () => setOpen(true) },
+            'باز کردن',
+          ),
+          createElement(
+            'button',
+            { type: 'button', id: 'tick', onClick: () => setTick(tick + 1) },
+            [tick],
+          ),
+          open
+            ? createElement(CpModal, {
+                title: 'تأیید',
+                // A new arrow identity on every render, exactly as the real callers do.
+                onClose: () => setOpen(false),
+                footer: createElement('button', { type: 'button', id: 'confirm' }, 'تأیید'),
+                children: createElement('input', { id: 'first-field' }),
+              })
+            : null,
+        );
+      }
+
+      await act(async () => root?.render(createElement(ReRenderingHarness)));
+      await act(async () => container?.querySelector<HTMLButtonElement>('#opener')?.click());
+      expect(document.activeElement?.id).toBe('first-field');
+
+      const confirm = container?.querySelector<HTMLButtonElement>('#confirm');
+      confirm?.focus();
+      // Parent state churn while the dialog is open — a data fetch settling, a counter ticking.
+      await act(async () => container?.querySelector<HTMLButtonElement>('#tick')?.click());
+
+      expect(container?.querySelector('[role="dialog"]')).not.toBeNull();
+      expect(document.activeElement?.id).toBe('confirm');
+
+      // And the latest onClose is still the one Escape calls.
+      await act(async () => {
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+      });
+      expect(container?.querySelector('[role="dialog"]')).toBeNull();
+    });
   });
 });

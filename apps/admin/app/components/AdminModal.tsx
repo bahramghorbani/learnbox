@@ -31,6 +31,13 @@ export function CpModal({
   const dialogRef = useRef<HTMLDivElement | null>(null);
   const closeRef = useRef<HTMLButtonElement | null>(null);
 
+  // Every caller passes a fresh inline arrow, so `onClose` cannot be an effect dependency: the
+  // effect would tear down and re-run on every parent render, and its cleanup would hand focus
+  // back to the opener while the dialog is still on screen. The ref keeps the latest callback
+  // without making the setup depend on its identity.
+  const closeRequest = useRef(onClose);
+  closeRequest.current = onClose;
+
   // Escape closes, focus moves into the dialog, Tab stays inside it, and the control that opened
   // the dialog gets focus back on close — otherwise a keyboard operator is returned to the top of
   // the page and a screen reader loses its place after every confirmation.
@@ -48,7 +55,7 @@ export function CpModal({
     }
 
     function onKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') return onClose();
+      if (event.key === 'Escape') return closeRequest.current();
       if (event.key !== 'Tab') return;
       const items = focusables();
       if (items.length === 0) return;
@@ -74,7 +81,7 @@ export function CpModal({
       document.removeEventListener('keydown', onKeyDown);
       if (opener && document.contains(opener)) opener.focus();
     };
-  }, [onClose]);
+  }, []);
 
   return (
     <div

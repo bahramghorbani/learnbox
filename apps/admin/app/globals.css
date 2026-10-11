@@ -3270,18 +3270,17 @@ button {
     align-items: center;
     min-height: 44px;
   }
-  /* A taller box needs its label centred again; the frozen padding stays the minimum. */
-  .admin-shell .admin-nav-item,
-  .admin-shell .collapse-control,
-  .admin-shell .btn,
-  .admin-shell .chip,
-  .admin-shell .qa {
-    display: flex;
+  /*
+   * `.chip` is the only control here with no base `display`, so a min-height alone would do
+   * nothing to it. Everything else is already flex with `align-items: center`.
+   *
+   * No `justify-content` anywhere in this block: `.cp-workspace .qa` uses `space-between` to push
+   * its text and icon capsule to opposing ends, and a later rule of equal specificity would
+   * silently re-centre them — redesigning the approved card to reach a height floor it already
+   * meets through `align-items`.
+   */
+  .admin-shell .chip {
+    display: inline-flex;
     align-items: center;
-    justify-content: center;
-  }
-  .admin-shell .admin-nav-item,
-  .admin-shell .collapse-control {
-    justify-content: flex-start;
   }
 }
