@@ -3,6 +3,8 @@
 import { startAuthentication } from '@simplewebauthn/browser';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
+import { faDate } from './fa-dates';
+
 type CurrentSplash = {
   revision: string;
   width: number;
@@ -259,11 +261,7 @@ export function SplashReplacementPanel() {
                 </div>
                 <div>
                   <dt>آخرین تغییر</dt>
-                  <dd>
-                    {new Intl.DateTimeFormat('fa-IR', { dateStyle: 'medium' }).format(
-                      new Date(current.updatedAt),
-                    )}
-                  </dd>
+                  <dd>{faDate(current.updatedAt)}</dd>
                 </div>
               </dl>
             ) : null}

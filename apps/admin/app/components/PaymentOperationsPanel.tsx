@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import { CpModal } from './AdminModal';
 import { EmptyState, ErrorState, LoadingState } from './AdminStates';
+import { faDateTime } from './fa-dates';
 import { faNum } from './fa-digits';
 
 /**
@@ -95,18 +96,11 @@ const configurationPulse: Record<Configuration['state'], string> = {
 
 function formatAmount(amount: number | null): string {
   if (amount === null) return '—';
-  return `${amount.toLocaleString('fa-IR')} تومان`;
+  return `${faNum(amount)} تومان`;
 }
 
 function formatDateTime(iso: string | null): string {
-  if (!iso) return '—';
-  try {
-    return new Intl.DateTimeFormat('fa-IR', { dateStyle: 'short', timeStyle: 'short' }).format(
-      new Date(iso),
-    );
-  } catch {
-    return '—';
-  }
+  return faDateTime(iso);
 }
 
 export function PaymentOperationsPanel() {

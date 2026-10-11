@@ -22,6 +22,7 @@ import {
 import { PackLifecyclePanel } from './PackLifecyclePanel';
 import { EmptyState, ErrorState, LoadingState } from './AdminStates';
 import { faNum } from './fa-digits';
+import { CARD_BADGE, PACK_BADGE, badgeFor } from './status-badges';
 import {
   CardFormModal,
   PackFormModal,
@@ -97,27 +98,8 @@ type ServerCard = {
 type Phase = 'loading' | 'unauthorized' | 'disabled' | 'error' | 'empty' | 'ready';
 
 /** Canonical pack status → approved badge treatment, mirroring the prototype's `packBadge()`. */
-const PACK_BADGE: Record<string, readonly [string, string]> = {
-  draft: ['b-grey', 'پیش‌نویس'],
-  ai_generated: ['b-grey', 'ساخته‌شده با هوش مصنوعی'],
-  needs_review: ['b-amber', 'در انتظار بررسی'],
-  approved: ['b-amber', 'تأییدشده'],
-  published: ['b-green', 'منتشر شده'],
-  archived: ['b-grey', 'بایگانی‌شده'],
-};
-
-const CARD_BADGE: Record<string, readonly [string, string]> = {
-  draft: ['b-grey', 'پیش‌نویس'],
-  auto_validated: ['b-amber', 'در انتظار بررسی'],
-  needs_review: ['b-amber', 'در انتظار بررسی'],
-  approved: ['b-green', 'تأییدشده'],
-  published: ['b-green', 'منتشر شده'],
-  rejected: ['b-rose', 'ردشده'],
-  deprecated: ['b-grey', 'بایگانی‌شده'],
-};
-
 function PackBadge({ status }: { status: string }) {
-  const [tone, label] = PACK_BADGE[status] ?? ['b-grey', status];
+  const [tone, label] = badgeFor(PACK_BADGE, status);
   return <span className={`badge ${tone}`}>{label}</span>;
 }
 
@@ -155,7 +137,7 @@ function PackProgress({ pack }: { pack: ServerPack }) {
 
 function CardBadge({ status }: { status: string | null }) {
   if (!status) return <span className="badge b-grey">بدون نسخه</span>;
-  const [tone, label] = CARD_BADGE[status] ?? ['b-grey', status];
+  const [tone, label] = badgeFor(CARD_BADGE, status);
   return <span className={`badge ${tone}`}>{label}</span>;
 }
 

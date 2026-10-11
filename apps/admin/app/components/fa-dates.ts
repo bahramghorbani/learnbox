@@ -24,6 +24,11 @@ const dateTimeFormat = new Intl.DateTimeFormat('fa-IR', {
   timeStyle: 'short',
 });
 
+const dateFormat = new Intl.DateTimeFormat('fa-IR', {
+  timeZone: tehran,
+  dateStyle: 'medium',
+});
+
 function parse(value: string | null | undefined): Date | undefined {
   if (!value) return undefined;
   const parsed = new Date(value);
@@ -40,6 +45,12 @@ export function faDay(value: string | null | undefined): string {
 export function faDateTime(value: string | null | undefined): string {
   const parsed = parse(value);
   return parsed ? dateTimeFormat.format(parsed) : (value ?? '—');
+}
+
+/** Calendar day with its year, e.g. «۱۵ مهر ۱۴۰۵» — for rows where the clock time is noise. */
+export function faDate(value: string | null | undefined): string {
+  const parsed = parse(value);
+  return parsed ? dateFormat.format(parsed) : (value ?? '—');
 }
 
 /**

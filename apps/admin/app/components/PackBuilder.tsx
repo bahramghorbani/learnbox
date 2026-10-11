@@ -2,6 +2,8 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
+import { faNum } from './fa-digits';
+
 type Pack = {
   id: string;
   display_name: string;
@@ -354,7 +356,7 @@ export function PackBuilder() {
                   {pack.is_free
                     ? '🆓 رایگان'
                     : pack.price_tomans
-                      ? `💰 ${Number(pack.price_tomans).toLocaleString('fa-IR')} تومان`
+                      ? `💰 ${faNum(Number(pack.price_tomans))} تومان`
                       : '💰 قیمت‌گذاری نشده'}
                 </span>
                 <span>📅 {new Date(pack.created_at).toLocaleDateString('fa-IR')}</span>

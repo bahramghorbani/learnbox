@@ -7,6 +7,7 @@ import type { LearningVocabularyItem } from '@learnbox/content-models';
 import { AdminSidebar } from './AdminSidebar';
 import { useAdminWorkspaceAccess } from './AdminAuthGate';
 import { EmptyState, ErrorState, LoadingState } from './AdminStates';
+import { faDateTime } from './fa-dates';
 import { fa } from './fa-digits';
 import {
   createIdempotencyKey,
@@ -580,8 +581,8 @@ export function ServerBackedContentReview() {
                         <span className="list-grow">
                           <span className="list-title">{dimensionLabels[dimension]}</span>
                           {outcome !== 'pending' && check?.reviewedAt ? (
-                            <span className="list-sub keep-latin" title={check.reviewedAt}>
-                              {check.reviewedAt}
+                            <span className="list-sub" title={check.reviewedAt}>
+                              {faDateTime(check.reviewedAt)}
                             </span>
                           ) : null}
                         </span>

@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import { CpModal } from './AdminModal';
 import { EmptyState, ErrorState, LoadingState } from './AdminStates';
+import { faDateTime } from './fa-dates';
 import { faNum } from './fa-digits';
 import {
   createIdempotencyKey,
@@ -46,16 +47,7 @@ type PackEntitlement = {
 };
 
 function formatDate(iso: string | null): string {
-  if (!iso) return '—';
-  const parsed = new Date(iso);
-  if (Number.isNaN(parsed.getTime())) return '—';
-  return new Intl.DateTimeFormat('fa-IR', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(parsed);
+  return faDateTime(iso);
 }
 
 function formatPhone(phone: string): string {
@@ -661,7 +653,7 @@ export function UsersManagement() {
                       <p className="user-pack-meta">
                         پرداخت تأییدشده
                         {pack.purchase.amountTomans
-                          ? ` — ${pack.purchase.amountTomans.toLocaleString('fa-IR')} تومان`
+                          ? ` — ${faNum(pack.purchase.amountTomans)} تومان`
                           : ''}
                         {pack.purchase.verifiedAt
                           ? ` — ${formatDate(pack.purchase.verifiedAt)}`
