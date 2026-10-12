@@ -4,11 +4,24 @@
 
 ## Active work
 
-**Versioning, GitHub Releases and AI continuity — on `feature/versioning-release-foundation`,
-unmerged (2026-10-12).** Establishes independent Semantic Versioning for the Learner PWA, Admin
+**Learner PWA v1.2.2 release candidate — merged, NOT deployed (2026-10-12).** Enables four
+previously merged and separately reviewed Learner client features in one coordinated build:
+`NEXT_PUBLIC_LEARNBOX_QUEUE_QUARANTINE`, `NEXT_PUBLIC_LEARNBOX_SESSION_EXPIRY_UX`,
+`NEXT_PUBLIC_LEARNBOX_SERVER_SESSION_PLAN` and `NEXT_PUBLIC_LEARNBOX_GOAL_UX_REMOVED`, all `true`
+as Dockerfile/compose build-arg defaults and in `app.env.example`, with the Learner version source
+`apps/website/package.json` at `1.2.2`. Their server counterparts were already enabled in
+Production; no server configuration, migration, grant or learner row was touched. The already-live
+binary review UI and every unrelated flag are unchanged. Because Next.js inlines `NEXT_PUBLIC_*` at
+build time, the values were verified differentially in the built artifact (candidate vs a
+live-equivalent control build), not only in configuration. **Production still runs v1.2.1 from
+`fa44d21`; deploying this candidate, tagging it and publishing a release remain three separate
+owner-authorized actions.**
+
+**Versioning, GitHub Releases and AI continuity — merged as PR #419 (`main` at
+`6aedc70f`, 2026-10-12).** Establishes independent Semantic Versioning for the Learner PWA, Admin
 Web and the future Android app, each from its own authoritative source
-(`apps/website/package.json` = `1.2.1`, `apps/admin/package.json` = `0.1.0`,
-`apps/mobile/pubspec.yaml` = `0.1.0+1`), with the component tag namespaces `learner/vX.Y.Z`,
+(`apps/website/package.json`, now `1.2.2` for the v1.2.2 candidate; `apps/admin/package.json` =
+`0.1.0`, `apps/mobile/pubspec.yaml` = `0.1.0+1`), with the component tag namespaces `learner/vX.Y.Z`,
 `admin/vX.Y.Z` and `android/vX.Y.Z` and prerelease identifiers `-beta.N` / `-rc.N`. The existing
 `v1.0.0`–`v1.2.1` tags and their GitHub Releases are preserved untouched as the historical
 learner line; no published version was invented, and Admin and Android keep pre-release package
@@ -28,15 +41,17 @@ credentials and payment activation pending, Android not started, and merge/tag/r
 four distinct owner-gated actions. **No tag was created, no GitHub Release published and nothing
 deployed** — all three remain owner-authorized actions.
 
-**Admin stabilization — two confirmed defects fixed and merged, neither live yet (2026-10-09).**
+**Admin stabilization — two confirmed defects fixed, merged and now LIVE (2026-10-12).**
 The Admin panel is deployed and reachable behind Passkey, the owner's real sign-in is recorded in
 `admin_passkey_credentials`, and Support, content read, content review, presentation and store
 administration are enabled. Two defects found by running real statements as the real
-`learnbox_admin` role are fixed on `main` and **not** in Production:
-`postgres-admin-payments-store.ts` read admin roles from a non-existent `admin_user_roles`
+`learnbox_admin` role are fixed on `main` and, since the Admin deployment from `079a94a7` on
+2026-10-12, **in Production**: `postgres-admin-payments-store.ts` read admin roles from a
+non-existent `admin_user_roles`
 (`42P01`), fixed in PR #394 (`f5c27a08`); and the content workspace had `SELECT`-only privileges, so
 every content mutation would have been a `500`, addressed by `0033_admin_content_management_grants`
-in PR #395 (`8631565a`) — Production is still at head `0032`. Both carry regression tests that fail
+in PR #395 (`8631565a`) — applied to Production, whose head is now
+`0034_admin_pack_metadata_grants` (34 ledger entries). Both carry regression tests that fail
 without their fix. Content mutations, both AI capabilities, splash replacement and payments stay off;
 AI needs `LEARNBOX_AI_API_KEY` and splash needs `BLOB_READ_WRITE_TOKEN`, both owner-supplied.
 Capability states, flags, prerequisites and the exact owner authorizations still required:
@@ -56,7 +71,8 @@ cannot repeat the failure — and `pnpm verify:migrations` enforces the three au
 `docs/release/PRODUCTION_SYNC_0024_0032.md`; the operational half is in
 `docs/operations/BACKUP_RESTORE.md`.
 
-Production schema head is now `0032_role_grant_repair` (32 ledger entries, 45 tables), applied as
+Production schema head was `0032_role_grant_repair` (32 ledger entries, 45 tables) after this
+synchronization, applied as
 `neondb_owner` after a verified backup and isolated restore drill: `applied 9`, all 9 new ledger
 checksums matching the repository, 0 objects unreadable by the backup role, `pg_dump` through the
 restricted role succeeding, and every learner `xmin` digest unchanged. Full evidence:
@@ -65,8 +81,9 @@ restricted role succeeding, and every learner `xmin` digest unchanged. Full evid
 **The learner application was then deployed from `fa44d21` on 2026-10-09T14:33Z** (separate owner
 authorization, learner only). Production runs digest
 `sha256:65cd79695c1c0352c49e5c2b69d7c31be058ac034f26a4355390c45bf0e7c495` with
-`APP_SOURCE_SHA=fa44d21a0e0604960becd66a8ab6e2d935911700`, healthy, `RestartCount=0`, on schema
-head `0032` — application and schema are now in sync. The learner fingerprint (counts, `md5`,
+`APP_SOURCE_SHA=fa44d21a0e0604960becd66a8ab6e2d935911700`, healthy, `RestartCount=0`, then on schema
+head `0032` and still the running learner image today (schema has since moved to `0034`). The learner
+fingerprint (counts, `md5`,
 `xmin`) is identical before and after the switch, and the two sample banner rows that M4.3's wider
 delivery predicate would newly have surfaced (`banner_sample1`, `banner_sample2`) were deactivated
 with owner authorization, leaving `banner_sample3` as the only delivered slide, exactly as before.
@@ -85,8 +102,9 @@ a rendered RTL workspace shell — but a single page, placeholder navigation, an
 group (`banners`, `packs` write paths, `gateways`, `transactions`, `users`) that is
 **fail-closed to 404 in any production build** and still carries raw SQL plus at least one real
 schema mismatch (`users/[userId]` selects `rating`/`created_at`; the real columns are
-`grade`/`occurred_at`). Admin is **not reachable in Production**: Caddy answers
-`admin.learnboxapp.com` with a fixed 404 and the container publishes no ports.
+`grade`/`occurred_at`). Admin **is reachable in Production** since the 2026-10-12 deployment
+(`admin.learnboxapp.com`, Passkey-gated, bootstrap enrollment closed); the earlier fixed Caddy 404
+no longer applies.
 
 **Phase 3 — Users & Support Control — M3.1, M3.2 and M3.3 merged. Phase 3 development COMPLETE (implemented in repository, not activated).**
 Admin can temporarily suspend a learner account and restore it. This is the first support _action_
