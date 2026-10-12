@@ -130,11 +130,18 @@ capabilities beyond the shipped v1 scope unless this section says otherwise.
 
 ## Current Production state
 
-**As of 2026-10-12.** Learner application: `APP_SOURCE_SHA=fa44d21a0e0604960becd66a8ab6e2d935911700`,
-image `sha256:65cd7969…`, healthy, `RestartCount=0`, Learner PWA version **1.2.1**. Learner PWA
-**1.2.2 is a merged release candidate on `main` and is NOT deployed**; it enables four client flags
-(queue quarantine, session-expiry UX, server session plan, goal-UX removal) and leaves the live
-binary review UI unchanged. Database schema head `0034_admin_pack_metadata_grants` (34 ledger rows,
+**As of 2026-10-12.** Learner application: `APP_SOURCE_SHA=54ba3042c02edd22c87872650ef2bdcb41836f2d`,
+image `sha256:051f8697037fa4da68bb81499f4e0d4c220fff0a45cdf67e97487ab4a5adf190`, healthy,
+`RestartCount=0`, failing streak `0`, Learner PWA version **1.2.2**, deployed `2026-10-12T17:48:55Z`
+by digest pin in `/home/ubuntu/learnbox/app/compose.yaml`. The release enables four client flags —
+queue quarantine, session-expiry UX, server session plan, goal-UX removal — and leaves the binary
+review UI on and unchanged; the five build args are proven in the built artifact and in the chunks
+Production actually serves. Rollback is the previous known-good image
+`sha256:65cd79695c1c0352c49e5c2b69d7c31be058ac034f26a4355390c45bf0e7c495`
+(`APP_SOURCE_SHA=fa44d21a…`, Learner 1.2.1), kept on the host as
+`learnbox-app:fa44d21-candidate-amd64` plus `images/learnbox-app-fa44d21-amd64.tar`, with the
+pre-switch compose file at `app/compose.yaml.pre-v122`; no migration shipped with this release, so
+rollback is an image swap only. Database schema head `0034_admin_pack_metadata_grants` (34 ledger rows,
 45 tables), so the Store transaction role-table fix (#394) and migrations `0033`/`0034` are applied.
 Admin: **deployed and reachable** at `admin.learnboxapp.com` from `079a94a7` as image
 `sha256:756abad3…`, behind Passkey authentication with bootstrap enrollment closed; the owner's real
