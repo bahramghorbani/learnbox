@@ -315,42 +315,41 @@ The v1.0 critical path (S0–S5) is retained in `ROADMAP.md` as history. The fix
 All of its release-blocking outcomes were met and the release activated on 2026-09-28, ahead of
 the planned date. That sequence no longer controls delivery.
 
-## Binary UI Activation — MANDATORY future gate (D-3 deferred from CP9, 2026-10-02)
+## Binary UI Activation — D-3 CLOSED / PASSED (CP9 deferral resolved 2026-10-12)
 
-**Not approved for implementation.** Recorded so the deferred obligation cannot be lost.
+**Resolved. No implementation is approved or required by this entry; it is kept as the audit trail.**
 
 CP9 deployed the **server-side** binary review path (`LEARNBOX_BINARY_REVIEW=true`, permissive-only)
-but intentionally shipped `NEXT_PUBLIC_LEARNBOX_BINARY_REVIEW_UI=false` (owner decision D-2).
-Because Next inlines `NEXT_PUBLIC_*` at build time, the binary UI branch is dead-code-eliminated from
-the approved artifact (**D-H**): `grade-grid-binary` in served JS = 0 (only an unused CSS rule),
-binary instruction string = 0 files. The live learner UI is the legacy four-grade UI.
+and intentionally shipped `NEXT_PUBLIC_LEARNBOX_BINARY_REVIEW_UI=false` (owner decision D-2), which
+dead-code-eliminated the binary UI from that artifact (**D-H**). **That is no longer the live state:**
+CP13 built the flag-`true` artifact and CP14 deployed it by immutable digest on 2026-10-02
+(`sha256:cb3090da…`, `APP_SOURCE_SHA=d4ea6558…`), and the live learner UI has been the **binary** UI
+(«بلد بودم» / «بلد نیستم») ever since. The four-grade branch is absent from the active build path.
 
-Consequently the CP9 **D-3** gate (N=20 real-browser binary reviews on Production) **could not be
-executed and is DEFERRED — not waived, not passed.** No Production browser binary-review observation
-exists. The 21/21 isolated E2E/store/wire proof covers the server-side path only.
+**D-3 is PASSED**, on the existing evidence — no new observation campaign was run and no review event
+was manufactured:
 
-**This future checkpoint must NOT be called PASS until D-3 actually passes.** Mandatory requirements
-(full text in `docs/evidence/LB_B35_CP9_IMPLEMENTATION_EVIDENCE.md` §19):
-
-1. Approved Production artifact built with `NEXT_PUBLIC_LEARNBOX_BINARY_REVIEW_UI=true`.
-2. **Structural** proof the binary UI is in the built artifact — `grade-grid-binary` and the binary
-   instruction present in served JS bundles. Surviving label strings or CSS are NOT proof.
-3. Full artifact/security/regression verification for the new digest.
-4. Deployment only after explicit owner approval of that exact digest.
-5. Test account `b4efb0a4…` (Mona); control `451b0433…` (Bahram).
-6. N=20 reviews through browser/UI → client → HTTP → service → store → Production PostgreSQL.
-   No direct API calls, in-process handlers, staging writes, synthetic inserts or elapsed-time substitutes.
-7. Both «بلد بودم» / known and «بلد نیستم» / unknown exercised.
-8. Exact event/write/schedule accounting per review.
-9. Control account proven fingerprint-identical throughout.
-10. Today/session-plan/queue coherence, refresh persistence, idempotency, response↔shadow-grade
-    mapping, and zero unexplained Production writes.
+1. **Artifact (gate items 1–4):** flag-`true` digest deployed after explicit owner approval; real
+   browser proof of exactly 2 answer controls and 0 four-grade controls
+   (`docs/PRODUCT_STATUS.md` §Binary review, CP14).
+2. **Observation (gate items 5–10):** CP14, 2026-10-02 — 7 real browser reviews on Production
+   (4 `known` → `remembered`, 3 `unknown` → `forgot`), exact per-review event/write/schedule
+   accounting, 0 duplicates, 0 lost, `engine_version` NULL 97/97, offline/reconnect proven, control
+   account fingerprint-identical throughout.
+3. **Cumulative real-world usage (supersedes the single-campaign N=20 target):** the read-only
+   Production learning-data review of 2026-10-12 found **176 of 234** review events across both owner
+   accounts carrying the binary `response` path, replayed against the shipped engine with **zero**
+   defects, duplicates or orphaned writes (34 ledger entries, 40 schedules, 25 cards, 2 accounts).
+   The gate asked for 20 observed reviews to prove the path; Production has since recorded 176.
 
 **Preserved baselines (do NOT delete or reset either owner account):**
 `b4efb0a4…` 32 events md5 `d105b78e…`, 15 schedules md5 `8793e62b…`;
 `451b0433…` 58 events md5 `3da4b653…`, 16 schedules md5 `a6cd0e28…`.
+(Baselines are the CP9-era snapshot and are intentionally historical — both accounts have reviewed
+since; see the 2026-10-12 counts above.)
 
 **Related deferred items (not approved):** **P1** `learnbox_migrator` lacks table ownership for
 `ALTER TABLE`; **P2** `learnbox_app` holds UPDATE/DELETE on `users`/`review_events`/`card_schedules`
 (pre-dates CP9); **D16** native 422 `schedulerRejected` handling is **CLOSED in CP10** and no longer
-blocks, though the remaining Scheduler V2 readiness items still do.
+blocks, though the remaining Scheduler V2 readiness items still do. **Native** binary review remains
+default-off and its rollout is still not authorized — D-3 closure covers the **web** learner UI only.

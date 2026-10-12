@@ -26,7 +26,7 @@
   --bg: #f1f0ff;
   --surface: #ffffff;
   --text: #1e1b4b;
-  --muted: #6b7280;
+  --muted: #646b78;
   --light: #a5b4fc;
   --card-radius: 16px;
   --card-shadow: 0 4px 24px rgba(109, 40, 217, 0.08);
@@ -451,7 +451,7 @@ button {
   min-height: 58px;
   border: 0;
   border-radius: 18px;
-  background: #4d6bfe;
+  background: #4560ef;
   box-shadow: 0 12px 22px #4d6bfe35;
   color: #fff;
   cursor: pointer;
@@ -752,6 +752,31 @@ button {
   color: #bd3f3f;
   font-size: 14px;
 }
+/* LB-B35 CP5-D: the session-ended notice. It is the first thing a learner sees after an expired
+   session, so it needs the same card treatment as the other auth notices instead of raw text. */
+.session-ended-notice {
+  margin: 0 6px 18px;
+  border: 1px solid #ded7ff;
+  border-radius: 16px;
+  padding: 14px;
+  background: #f7f5ff;
+  color: #514779;
+  font-size: 14px;
+  line-height: 1.9;
+  text-align: right;
+}
+.session-ended-notice strong {
+  display: block;
+  margin-bottom: 4px;
+  color: #3b3263;
+  font-size: 15px;
+}
+.session-ended-notice p {
+  margin: 0;
+}
+.session-ended-notice p + p {
+  margin-top: 6px;
+}
 .auth-back {
   margin-bottom: 8px;
   padding-right: 0;
@@ -852,7 +877,7 @@ button {
   align-items: center;
   border-radius: 16px;
   padding: 0 20px;
-  background: #4d6bfe;
+  background: #4560ef;
   box-shadow: 0 10px 20px #4d6bfe30;
   color: #fff;
   font-size: 16px;

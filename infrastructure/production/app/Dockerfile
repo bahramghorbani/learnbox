@@ -38,16 +38,23 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ARG NEXT_PUBLIC_LEARNBOX_PROFILE_IDENTITY_ENABLED=false
 ENV NEXT_PUBLIC_LEARNBOX_PROFILE_IDENTITY_ENABLED=$NEXT_PUBLIC_LEARNBOX_PROFILE_IDENTITY_ENABLED
 
-# LB-B35 CP4 client flags. Inlined at build time exactly like the flag above, so a runtime env var
-# cannot enable them in this image. Default off = v1.2.1 client behaviour.
-ARG NEXT_PUBLIC_LEARNBOX_QUEUE_QUARANTINE=false
-ARG NEXT_PUBLIC_LEARNBOX_SERVER_SESSION_PLAN=false
-# LB-B35 CP5-B binary review UI («بلد بودم» / «بلد نیستم»), web only. Default off = four grades.
+# LB-B35 CP4/CP5 client flags. Inlined at build time exactly like the flag above, so a runtime env
+# var cannot enable or disable them in a built image — the value here IS the released behaviour.
+#
+# v1.2.2 activates four of them (their server counterparts are already enabled in Production):
+#   QUEUE_QUARANTINE    per-item queue parsing + flush-before-logout. Default off was the v1.2.1
+#                       whole-queue reset, which discarded unrelated unsent answers.
+#   SERVER_SESSION_PLAN resume a review session by card identity instead of by queue index.
+#   GOAL_UX_REMOVED     drop the unused learning-goal UX (onboarding gate + Profile/Settings rows).
+#   SESSION_EXPIRY_UX   Persian session-ended notice + kept-answers count on the login gate.
+ARG NEXT_PUBLIC_LEARNBOX_QUEUE_QUARANTINE=true
+ARG NEXT_PUBLIC_LEARNBOX_SERVER_SESSION_PLAN=true
+ARG NEXT_PUBLIC_LEARNBOX_GOAL_UX_REMOVED=true
+ARG NEXT_PUBLIC_LEARNBOX_SESSION_EXPIRY_UX=true
+# LB-B35 CP5-B binary review UI («بلد بودم» / «بلد نیستم»), web only. Already live in Production
+# since CP13/D-FV-1: the deploy build passes =true explicitly, so this default must NOT be relied
+# on — a build that omits the arg would ship four grades again. Left unchanged by v1.2.2.
 ARG NEXT_PUBLIC_LEARNBOX_BINARY_REVIEW_UI=false
-# LB-B35 CP5-C: remove the unused learning-goal UX (onboarding gate + Profile/Settings rows).
-ARG NEXT_PUBLIC_LEARNBOX_GOAL_UX_REMOVED=false
-# LB-B35 CP5-D: Persian session-ended notice + kept-answers count on the login gate.
-ARG NEXT_PUBLIC_LEARNBOX_SESSION_EXPIRY_UX=false
 ENV NEXT_PUBLIC_LEARNBOX_QUEUE_QUARANTINE=$NEXT_PUBLIC_LEARNBOX_QUEUE_QUARANTINE
 ENV NEXT_PUBLIC_LEARNBOX_GOAL_UX_REMOVED=$NEXT_PUBLIC_LEARNBOX_GOAL_UX_REMOVED
 ENV NEXT_PUBLIC_LEARNBOX_SESSION_EXPIRY_UX=$NEXT_PUBLIC_LEARNBOX_SESSION_EXPIRY_UX
