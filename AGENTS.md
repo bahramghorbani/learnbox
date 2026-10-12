@@ -6,6 +6,11 @@
 - Prefer privacy, offline resilience, measurable learning value, and rollback capability. Production, payment, legal, public-release, and destructive actions require owner approval.
 - Every feature needs acceptance criteria, tests proportionate to risk, analytics intent, documentation, and a rollback/feature-flag assessment.
 - Keep Bobo canonical assets versioned and do not alter their canonical appearance without owner approval.
+- Version each product independently from its own source of truth, per
+  [`docs/release/VERSIONING.md`](./docs/release/VERSIONING.md). Merging a PR, creating a tag,
+  publishing a GitHub Release and deploying to Production are four distinct actions; the last
+  three each need their own owner authorization, and a deployed artifact is never described as a
+  published release.
 - Run `pnpm check`, migration validation, and relevant Flutter checks before committing. Keep `main` runnable.
 - The repository is the source of truth across providers. Before meaningful work, follow
   [`AI_BOOTSTRAP.md`](./AI_BOOTSTRAP.md); keep stable-main facts in

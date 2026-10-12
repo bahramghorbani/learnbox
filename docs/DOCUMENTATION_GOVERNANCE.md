@@ -9,6 +9,8 @@
 - `docs/product/MASTER_SPEC.md` — long-horizon vision only; lower precedence than current status, roadmap and PRD.
 - `docs/architecture/SYSTEM_CONTEXT.md` — system boundaries.
 - `.ai/WORK_QUEUE.md` — active milestone/workstream assignments.
+- `docs/release/VERSIONING.md` — per-product versions, release-tag namespaces and GitHub Release contents.
+- `docs/operations/AGENT_ACTIVE_BRIEF.md` — the provider-neutral entry point: deployed state, blockers and the next permitted task. An index only; it never overrides the documents it links to.
 - `CURRENT_WORK.md` — only unmerged work.
 - `PROJECT_STATE.md` — facts true on stable `main`.
 
@@ -36,6 +38,7 @@ Update the relevant canonical documents in the same PR when changing:
 - AI content generation, validation, media or release gates;
 - an admin workflow or operational capability;
 - a milestone, dependency, blocker or release criterion;
+- a product version, release-tag namespace or the deployed-versus-released status of a component;
 - a security, privacy, legal or store requirement.
 
 ## Status discipline

@@ -1,7 +1,13 @@
+import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const appDirectory = path.dirname(fileURLToPath(import.meta.url));
+
+// Single authoritative version source for Admin Web: this app's own package.json.
+// Admin versions independently of the Learner PWA and Android; nothing here is shared
+// with another product (see docs/release/VERSIONING.md).
+const { version: adminAppVersion } = createRequire(import.meta.url)('./package.json');
 
 // `next dev` compiles modules with eval-based source maps, so hydration throws EvalError under a
 // CSP without 'unsafe-eval' and the UI freezes on its server-rendered shell. Production builds use
@@ -15,6 +21,7 @@ const scriptSrc =
 const nextConfig = {
   output: 'standalone',
   outputFileTracingRoot: path.join(appDirectory, '../..'),
+  env: { NEXT_PUBLIC_LEARNBOX_ADMIN_VERSION: adminAppVersion },
   async headers() {
     return [
       {

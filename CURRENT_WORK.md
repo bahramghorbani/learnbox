@@ -4,6 +4,30 @@
 
 ## Active work
 
+**Versioning, GitHub Releases and AI continuity — on `feature/versioning-release-foundation`,
+unmerged (2026-10-12).** Establishes independent Semantic Versioning for the Learner PWA, Admin
+Web and the future Android app, each from its own authoritative source
+(`apps/website/package.json` = `1.2.1`, `apps/admin/package.json` = `0.1.0`,
+`apps/mobile/pubspec.yaml` = `0.1.0+1`), with the component tag namespaces `learner/vX.Y.Z`,
+`admin/vX.Y.Z` and `android/vX.Y.Z` and prerelease identifiers `-beta.N` / `-rc.N`. The existing
+`v1.0.0`–`v1.2.1` tags and their GitHub Releases are preserved untouched as the historical
+learner line; no published version was invented, and Admin and Android keep pre-release package
+versions because neither has ever published a release. Subtle version labels now render at the
+bottom of the Learner Profile screen and the bottom of the Admin RTL sidebar, each from its own
+build-injected source (`NEXT_PUBLIC_LEARNBOX_LEARNER_VERSION`,
+`NEXT_PUBLIC_LEARNBOX_ADMIN_VERSION`) with no shared constant and no hardcoded fallback — an
+uninjected build renders no label rather than a placeholder.
+`scripts/validate-version-sources.mjs` (`pnpm verify:version-sources`, wired into `pnpm check`)
+fails if either product can display the other's version. The release architecture, including
+Android `versionName`/`versionCode`, signed-artifact handling, shared-backend compatibility and
+the separation of GitHub Release from Café Bazaar / Google Play publication, is in
+`docs/release/VERSIONING.md`. `docs/operations/AGENT_ACTIVE_BRIEF.md` is now the single
+provider-neutral entry point and records the unambiguous current state: Admin and Dashboard
+deployed and operator-verified, Learner PWA Production separate and untouched, Zarinpal
+credentials and payment activation pending, Android not started, and merge/tag/release/deploy as
+four distinct owner-gated actions. **No tag was created, no GitHub Release published and nothing
+deployed** — all three remain owner-authorized actions.
+
 **Admin stabilization — two confirmed defects fixed and merged, neither live yet (2026-10-09).**
 The Admin panel is deployed and reachable behind Passkey, the owner's real sign-in is recorded in
 `admin_passkey_credentials`, and Support, content read, content review, presentation and store

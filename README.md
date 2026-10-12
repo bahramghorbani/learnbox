@@ -15,8 +15,9 @@ The deployed application source is recorded in [`PROJECT_STATE.md`](PROJECT_STAT
 3. [`ROADMAP.md`](ROADMAP.md) — outcome-based milestones and release criteria.
 4. [`docs/architecture/SYSTEM_CONTEXT.md`](docs/architecture/SYSTEM_CONTEXT.md) — product and system boundaries.
 5. [`docs/DOCUMENTATION_GOVERNANCE.md`](docs/DOCUMENTATION_GOVERNANCE.md) — rule for keeping docs current.
-6. [`.ai/WORK_QUEUE.md`](.ai/WORK_QUEUE.md) and [`.ai/WORKSTREAMS.md`](.ai/WORKSTREAMS.md) — active work and worker model.
-7. [`AI_BOOTSTRAP.md`](AI_BOOTSTRAP.md) and [`AGENTS.md`](AGENTS.md) — contributor rules.
+6. [`docs/release/VERSIONING.md`](docs/release/VERSIONING.md) — per-product versions, release tags and GitHub Release contents.
+7. [`.ai/WORK_QUEUE.md`](.ai/WORK_QUEUE.md) and [`.ai/WORKSTREAMS.md`](.ai/WORKSTREAMS.md) — active work and worker model.
+8. [`AI_BOOTSTRAP.md`](AI_BOOTSTRAP.md) and [`AGENTS.md`](AGENTS.md) — contributor rules.
 
 ## Surfaces
 

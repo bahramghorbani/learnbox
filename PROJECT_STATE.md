@@ -26,20 +26,20 @@ These are the current live facts. The table above is the v1.0.0 activation recor
 read as current; the earlier CP11 (2026-10-02) reconciliation of this table is superseded by the
 rows below.
 
-| Fact                                    | Value                                                                                                                  |
-| --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| Production application source           | `fa44d21a0e0604960becd66a8ab6e2d935911700` (learner; deployed 2026-10-09T14:33Z)                                       |
-| Production image digest                 | `sha256:65cd79695c1c0352c49e5c2b69d7c31be058ac034f26a4355390c45bf0e7c495`                                              |
-| Rollback artifact retained              | `sha256:953b7b6240c266ec22d1ed6bc4dad5998ae679cd907276d39c232676f7709d24` (`6d6aa724`) plus `compose.yaml.pre-fa44d21` |
-| Migration ledger applied                | `0001`–`0032` (head `0032_role_grant_repair`, 45 tables, applied 2026-10-09)                                           |
-| Server flags ON                         | `TZ_PERSIST`, `SERVER_SESSION_PLAN`, `TODAY_WORKLOAD`, `QUEUE_QUARANTINE`, `BINARY_REVIEW`, `DYNAMIC_SPLASH_ENABLED`   |
-| `LEARNBOX_SCHEDULER_V2`                 | **ABSENT / not authorized**                                                                                            |
-| `LEARNBOX_ZARINPAL_ENABLED`             | **ABSENT** — payment inactive; `store_listings = 0`, `purchase_events = 0`                                             |
-| `BLOB_READ_WRITE_TOKEN`                 | **ABSENT** — splash bytes are served from `splash_versions.image_data`                                                 |
-| `NEXT_PUBLIC_LEARNBOX_BINARY_REVIEW_UI` | `true` (baked into the artifact since CP14; learner UI is binary)                                                      |
-| Admin application                       | `e601d8a118ec915d1a3c18cca7fb018025ad9a1c`, **not deployed from `main`**, unreachable (fixed 404, no published ports)  |
-| Deliverable learner banner slides       | `1` (`banner_sample3`); `banner_sample1`/`2` deactivated 2026-10-09 with owner authorization                           |
-| Latest release tag                      | `v1.0.0` still targets `2acdcef4` and is **not** moved                                                                 |
+| Fact                                    | Value                                                                                                                                                   |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Production application source           | `fa44d21a0e0604960becd66a8ab6e2d935911700` (learner; deployed 2026-10-09T14:33Z)                                                                        |
+| Production image digest                 | `sha256:65cd79695c1c0352c49e5c2b69d7c31be058ac034f26a4355390c45bf0e7c495`                                                                               |
+| Rollback artifact retained              | `sha256:953b7b6240c266ec22d1ed6bc4dad5998ae679cd907276d39c232676f7709d24` (`6d6aa724`) plus `compose.yaml.pre-fa44d21`                                  |
+| Migration ledger applied                | `0001`–`0032` (head `0032_role_grant_repair`, 45 tables, applied 2026-10-09)                                                                            |
+| Server flags ON                         | `TZ_PERSIST`, `SERVER_SESSION_PLAN`, `TODAY_WORKLOAD`, `QUEUE_QUARANTINE`, `BINARY_REVIEW`, `DYNAMIC_SPLASH_ENABLED`                                    |
+| `LEARNBOX_SCHEDULER_V2`                 | **ABSENT / not authorized**                                                                                                                             |
+| `LEARNBOX_ZARINPAL_ENABLED`             | **ABSENT** — payment inactive; `store_listings = 0`, `purchase_events = 0`                                                                              |
+| `BLOB_READ_WRITE_TOKEN`                 | **ABSENT** — splash bytes are served from `splash_versions.image_data`                                                                                  |
+| `NEXT_PUBLIC_LEARNBOX_BINARY_REVIEW_UI` | `true` (baked into the artifact since CP14; learner UI is binary)                                                                                       |
+| Admin application                       | `079a94a76dc63aac052f5a3e1dc7d8de660bc42a`, deployed 2026-10-12, image `sha256:756abad30bc7…`, healthy; operator Passkey sign-in and Dashboard verified |
+| Deliverable learner banner slides       | `1` (`banner_sample3`); `banner_sample1`/`2` deactivated 2026-10-09 with owner authorization                                                            |
+| Latest release tag                      | `v1.2.1` targets `4ade0a88` and is **not** moved; `v1.0.0` still targets `2acdcef4`                                                                     |
 
 Deployment evidence: `docs/release/LEARNER_DEPLOY_FA44D21.md`. Open items from that deployment:
 device-level learner QA (OTP login, review round trip, progress) was not exercised, and the first
@@ -57,6 +57,19 @@ and that difference must not be "fixed" by a deployment.
 
 Android/Cafe Bazaar, every payment path, premium packs and native iOS remain v1.1 or later.
 Future work begins at v1.1; the normalized backlog lives in `BACKLOG.md`.
+
+## Versioning position
+
+Products version independently; `docs/release/VERSIONING.md` is the authoritative rule.
+
+| Product     | Version on `main`                      | Tag namespace    | Published releases                                                                 |
+| ----------- | -------------------------------------- | ---------------- | ---------------------------------------------------------------------------------- |
+| Learner PWA | `1.2.1` (`apps/website/package.json`)  | `learner/vX.Y.Z` | `v1.0.0`, `v1.2.0`, `v1.2.1` (legacy repository-wide tags, preserved)              |
+| Admin Web   | `0.1.0` (`apps/admin/package.json`)    | `admin/vX.Y.Z`   | **none** — deployed is not released; the first `admin/v1.0.0` is an owner decision |
+| Android     | `0.1.0+1` (`apps/mobile/pubspec.yaml`) | `android/vX.Y.Z` | **none** — development has not started                                             |
+
+Merging a PR, creating a tag, publishing a GitHub Release and deploying to Production are four
+distinct actions. The last three each require separate owner authorization.
 
 ## Product
 

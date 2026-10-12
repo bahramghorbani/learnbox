@@ -1986,6 +1986,20 @@ p {
   font-size: 13.5px;
   line-height: 1.9;
 }
+/* Build identity at the very bottom of Profile, above the learner nav. Subtle by design:
+ * it is provenance, not a profile fact, so it uses the muted token and the smallest step. */
+.profile-app-version {
+  margin: 26px 0 0;
+  text-align: center;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.8;
+  opacity: 0.8;
+}
+.profile-app-version-number {
+  font-variant-numeric: tabular-nums;
+  unicode-bidi: isolate;
+}
 .profile-fact {
   display: flex;
   align-items: flex-start;

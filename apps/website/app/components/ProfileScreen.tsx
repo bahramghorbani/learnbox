@@ -3,6 +3,7 @@ import type { RefObject } from 'react';
 import { LearnerNav, type LearnerDestination } from './LearnerNav';
 import { ProfileDetailsPanel } from './ProfileDetailsPanel';
 import { toPersianDigits } from '../persian-digits';
+import { learnerAppVersion } from '../../lib/learner-app-version';
 import type { ProfileDetails } from '../../lib/learner-profile-fields';
 import { supportLinkFor } from '../../lib/support-contact';
 
@@ -224,7 +225,29 @@ export function ProfileScreen({
           </a>
         </div>
       </section>
+      <LearnerAppVersionLabel />
       <LearnerNav current="profile" onNavigate={onNavigate} />
     </main>
+  );
+}
+
+/**
+ * The learner's own build identity, at the very bottom of Profile. It renders the Learner PWA's
+ * independent version (`apps/website/package.json`) and never Admin's or Android's. A version is
+ * an identifier, so it stays LTR inside this RTL screen. When a build injected no version the
+ * label is omitted entirely rather than showing a placeholder.
+ */
+function LearnerAppVersionLabel() {
+  const version = learnerAppVersion();
+  if (!version) {
+    return null;
+  }
+  return (
+    <p className="profile-app-version" data-learner-app-version={version}>
+      نسخهٔ اپ{' '}
+      <span className="profile-app-version-number" dir="ltr">
+        v{version}
+      </span>
+    </p>
   );
 }

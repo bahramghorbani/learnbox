@@ -1,5 +1,17 @@
 # Changelog
 
+Entries record what a **published release** contained. Products version independently and each
+has its own tag namespace (`learner/vX.Y.Z`, `admin/vX.Y.Z`, `android/vX.Y.Z`); the rules and the
+required contents of a GitHub Release are in [`docs/release/VERSIONING.md`](docs/release/VERSIONING.md).
+
+The `v1.0.0`–`v1.2.1` entries below are the historical repository-wide line. They described
+learner-facing releases, they remain valid history, and their tags never move. The Learner PWA
+continues that numbering under `learner/v…`; Admin Web and Android have published no release yet,
+so they have no entry here.
+
+A deployment is not a release. A component may run in Production without appearing in this file;
+its deployment evidence belongs in `docs/release/` and its live facts in `PROJECT_STATE.md`.
+
 ## v1.2.1 — LB-B29 shared mutation guard (released 2026-09-30)
 
 Released as commit `4ade0a885fa93a418db8cde94b81a206bcd80860`, tag `v1.2.1`, image
