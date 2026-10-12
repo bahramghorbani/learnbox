@@ -139,8 +139,23 @@ Admin را به `APP_SOURCE_SHA` تغییر داد تا یک readback برای �
 
 image انتشار از **commit ادغام PR #415** ساخته شده، یعنی خود تغییرات آماده‌سازی هم درونش
 هستند، و با ۱۰ بررسی تأیید شد (label، متغیر runtime، معماری amd64، کاربر غیرroot، entrypoint
-Admin، صفر متغیر secret-شکل، و تطابق sha256 یک فایل bundle با blob همان commit). دستور
-بازتولیدش: `infrastructure/production/admin/build-admin-image.sh 9829c8819c347609578225cc2d1ccc8f453646da release`.
+Admin، صفر متغیر secret-شکل، و تطابق sha256 یک فایل bundle با blob همان commit).
+
+> **اصلاح ۲۰۲۶-۱۰-۱۲ (دوم).** آن ۱۰ بررسی **ناقص بودند** و `sha256:bfb9db8c…` در ممیزی آمادگی
+> نهایی **رد شد**. هیچ‌یک از آن ۱۰ بررسی حالت احراز هویت inline‌شده را نمی‌سنجید، و اسکریپت build
+> مقدار `NEXT_PUBLIC_LEARNBOX_ADMIN_PASSKEY_UI_ENABLED` را به `false` پیش‌فرض می‌گرفت. نتیجه:
+> آن image با `local-prototype` ساخته شد. اندازه‌گیری روی خود دو artifact: HTML از پیش رندرشدهٔ
+> image اجراشده ۴۸۷۶ بایت است و فقط گیت ورود امن را دارد، در حالی که همان فایل در
+> `bfb9db8c…` ۱۰۸۱۹ بایت است و کل workspace را رندر کرده — یعنی گیت دور زده شده بود.
+> اسکریپت build حالا fail closed می‌شود و نتیجه را از artifact اثبات می‌کند (بخش ۵-۱)؛
+> `sha256:bfb9db8c…` **مستقر نمی‌شود** و جایش یک build تازه با پرچم صریح می‌گیرد.
+
+دستور بازتولید یک candidate تولیدی (متغیر build اجباری است، بخش ۵-۱):
+
+```bash
+NEXT_PUBLIC_LEARNBOX_ADMIN_PASSKEY_UI_ENABLED=true \
+  infrastructure/production/admin/build-admin-image.sh <full-40-char-commit> release
+```
 
 image فقط روی هاست ساخته شده: **به هیچ registry ای push نشده، `production` tag نخورده، و
 هیچ سرویسی restart نشده.**
@@ -153,7 +168,7 @@ Production از زمان شروع این مجموعه مراحل **دست‌نخ
 
 ## ۵. پرچم‌های محیطی لازم
 
-همهٔ پرچم‌ها پیش‌فرض خاموش‌اند و فقط حضور/غیاب در UI دیده می‌شود، نه مقدارشان.
+همهٔ پرچم‌های زیر پیش‌فرض خاموش‌اند و فقط حضور/غیاب در UI دیده می‌شود، نه مقدارشان.
 
 - `LEARNBOX_ADMIN_DASHBOARD_ENABLED`
 - `LEARNBOX_ADMIN_CONTENT_PACKS_ENABLED` / `…_MANAGE_ENABLED` / `…_REVIEW_ENABLED`
@@ -161,10 +176,44 @@ Production از زمان شروع این مجموعه مراحل **دست‌نخ
 - `LEARNBOX_ADMIN_SUPPORT_ENABLED`
 - `LEARNBOX_ADMIN_PRESENTATION_ENABLED`
 - `LEARNBOX_ADMIN_SPLASH_REPLACEMENT_ENABLED`
-- `LEARNBOX_ADMIN_PASSKEY_ENABLED` / `…_PASSKEY_UI_ENABLED`
+- `LEARNBOX_ADMIN_PASSKEY_ENABLED`
 - `LEARNBOX_ADMIN_ORIGIN`، `LEARNBOX_ADMIN_RP_ID`، `LEARNBOX_ADMIN_TOKEN_HASH_KEY`
 - `LEARNBOX_ADMIN_BOOTSTRAP_ENABLED` باید **false** بماند.
 - `LEARNBOX_ADMIN_CONTENT_AI_ENABLED` و `…_MEDIA_AI_ENABLED` بدون مجوز جداگانه روشن نمی‌شوند.
+
+### ۵-۱. `NEXT_PUBLIC_LEARNBOX_ADMIN_PASSKEY_UI_ENABLED` پرچم زمان اجرا **نیست**
+
+این یکی در فهرست بالا نیست چون رفتارش بنیادی متفاوت است: Next هر `NEXT_PUBLIC_*` را **در زمان
+build** به‌صورت literal داخل bundle سمت کلاینت inline می‌کند. پس مقدارش جزئی از **هویت image**
+است، نه از پیکربندی آن — و پس از build با هیچ متغیر محیطی، هیچ `env_file` و هیچ restart قابل
+تغییر نیست. دو image از یک commit با دو مقدار متفاوت، دو image متفاوت‌اند.
+
+اهمیتش امنیتی است، نه ظاهری. `resolveAdminAuthMode()` فقط با مقدار دقیقِ `true` حالت
+`server-passkey` را برمی‌گرداند؛ در غیر این صورت `local-prototype` می‌شود و `AdminAuthGate`
+مقدار اولیهٔ state را `signed-in` می‌گذارد، فراخوانی `/api/auth/session` را رد می‌کند و کل
+workspace را بدون هیچ درخواست Passkey رندر می‌کند. در آن حالت `PasskeySignIn` هرگز رندر نمی‌شود،
+یعنی صفحهٔ ورود **وجود ندارد**. مرزهای سمت سرور (`loadAdminSession`، `verifyAdminCsrf`،
+`reauthenticationRequired()` با ۴۲۸) مستقل از این پرچم سر جایشان می‌مانند، پس افشای داده رخ
+نمی‌دهد؛ نتیجه یک پوستهٔ گمراه‌کنندهٔ «وارد شده» است که داده‌هایش ۴۰۱ می‌گیرند و راه ورودی ندارد.
+
+بنابراین:
+
+- در build هر image تولیدی **اجباری** است: `infrastructure/production/admin/build-admin-image.sh`
+  اگر این متغیر غایب باشد یا دقیقاً `true` نباشد با کد ۲ **fail closed** می‌شود.
+- اسکریپت به آرگومانی که خودش پاس داده اعتماد نمی‌کند و نتیجه را از **خود artifact** می‌خواند:
+  HTML از پیش رندرشدهٔ `/app/apps/admin/.next/server/app/index.html` داخل image باید
+  `server-passkey` داشته باشد و `local-prototype` نداشته باشد.
+- `scripts/validate-admin-passkey-boundary.mjs` (داخل `pnpm check`) همین الزام را در اسکریپت build
+  قفل می‌کند، تا برگرداندنش یک CI قرمز بدهد نه یک image خراب.
+- بررسی `.env` هاست کافی نیست: مقدار آن روی bundle **هیچ اثری ندارد**. تنها پاسخ معتبر از bundle
+  همان image می‌آید.
+
+دستور ساخت یک candidate تولیدی:
+
+```bash
+NEXT_PUBLIC_LEARNBOX_ADMIN_PASSKEY_UI_ENABLED=true \
+  infrastructure/production/admin/build-admin-image.sh <full-40-char-commit> release
+```
 
 ---
 
@@ -203,8 +252,13 @@ Production از زمان شروع این مجموعه مراحل **دست‌نخ
 | --- | --------------------------------------------------------------- | ------------------------------------------------------- |
 | ۰   | استقرار image candidate با **همان ۷ پرچم غایب**                 | رفتار Admin بدون تغییر؛ `healthy`، صفر restart          |
 | ۱   | `LEARNBOX_ADMIN_DASHBOARD_ENABLED=true`                         | داشبورد اعداد واقعی یا «در دسترس نیست»؛ هیچ عدد بی‌منبع |
-| ۲   | `LEARNBOX_ADMIN_PASSKEY_UI_ENABLED=true`                        | افزودن Passkey در UI؛ ورود موجود نشکند                  |
 | —   | `SPLASH_REPLACEMENT`، `CONTENT_AI`، `MEDIA_AI`، `LEGACY_ROUTES` | **غایب می‌مانند** — خارج از مجوز این انتشار             |
+
+**`NEXT_PUBLIC_LEARNBOX_ADMIN_PASSKEY_UI_ENABLED` گام ندارد.** نسخهٔ پیشین این جدول آن را گام ۲
+نوشته بود؛ آن ردیف **غلط بود** و حذف شد. این پرچم در زمان build داخل bundle inline می‌شود (بخش
+۵-۱)، پس تا گام ۰ برسد از قبل داخل image فعال است و روشن‌کردن زمان‌اجرای آن هیچ کاری نمی‌کند.
+جایش یک **دروازهٔ پیش از استقرار** است، نه یک گام پس از آن: در HTML از پیش رندرشدهٔ image باید
+`server-passkey` باشد و `local-prototype` نباشد. اگر نبود، همان‌جا توقف — آن image مستقر نمی‌شود.
 
 `LEARNBOX_ADMIN_BOOTSTRAP_ENABLED` باید `false` بماند و `LEARNBOX_ADMIN_PASSKEY_ENABLED`
 همان `true` فعلی. `LEARNBOX_ADMIN_BOOTSTRAP_SECRET` غایب بماند.
