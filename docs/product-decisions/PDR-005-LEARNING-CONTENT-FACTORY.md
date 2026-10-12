@@ -30,7 +30,10 @@ rollback, analytics and user reports.
 The status model includes `draft`, `ai_generated`, `auto_validated`, `needs_review`, `approved`,
 `published`, `deprecated` and `rejected`. AI output is never trusted merely because it succeeds:
 human review and a separate publisher remain mandatory. Paid providers/API keys require local
-preparation, cost estimate, alternatives and explicit owner approval before activation.
+preparation, cost estimate, alternatives and explicit owner approval before activation. Article-aware
+German voice qualification, audio evidence, and the binding visual-media boundary are specified in
+[`PDR-010`](./PDR-010-ARTICLE-AWARE-AUDIO-AND-MEDIA-STANDARDS.md); that decision does not activate
+a provider or authorize generation.
 
 ## Metrics
 

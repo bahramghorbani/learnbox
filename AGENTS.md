@@ -3,6 +3,7 @@
 - Treat `docs/PRODUCT_STATUS.md` as current capability truth, `ROADMAP.md` as release scope/sequence, and `docs/product/PRD.md` as release requirements. `docs/product/MASTER_SPEC.md` is long-horizon product context and cannot expand the current release without an explicit decision record. Choose safe reversible defaults and record material choices in an ADR.
 - Persian is RTL-first. Isolate German, code, URLs, and identifiers as LTR and test RTL, accessibility, empty, loading, error, and offline states.
 - Do not commit secrets, production credentials, real personal data, or generated content without QA. Use synthetic test data only.
+- For vocabulary media, follow [`PDR-010`](./docs/product-decisions/PDR-010-ARTICLE-AWARE-AUDIO-AND-MEDIA-STANDARDS.md): keep `der`/`die`/`das` voices distinct, speak each noun as article plus lemma with its role voice, preserve the approved `flux.2-pro` Start V2 visual contract, and never choose or replace a voice without recorded de-DE listening QA and owner-approved candidate spend. This rule does not authorize provider activation, paid generation, media replacement, or Production changes.
 - Prefer privacy, offline resilience, measurable learning value, and rollback capability. Production, payment, legal, public-release, and destructive actions require owner approval.
 - Every feature needs acceptance criteria, tests proportionate to risk, analytics intent, documentation, and a rollback/feature-flag assessment.
 - Keep Bobo canonical assets versioned and do not alter their canonical appearance without owner approval.
