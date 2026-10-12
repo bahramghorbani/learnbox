@@ -42,9 +42,20 @@ fi
 
 # The build-time public flag. Next.js inlines NEXT_PUBLIC_* into the client bundle, so it is part of
 # the artifact's identity, not of its configuration: two images built from one commit with different
-# values are different images. The default matches the value the live Production image was built
-# with, so a rebuild of the same commit is comparable to it.
-PASSKEY_UI="${NEXT_PUBLIC_LEARNBOX_ADMIN_PASSKEY_UI_ENABLED:-false}"
+# values are different images, and no runtime environment variable can change the value an image
+# already carries.
+#
+# It is therefore required rather than defaulted. Built as anything but "true", resolveAdminAuthMode()
+# returns 'local-prototype', and AdminAuthGate then renders the workspace as already signed in
+# without ever calling /api/auth/session or offering the passkey prompt. A default would make that
+# the quiet consequence of forgetting one variable, so this script fails closed instead.
+PASSKEY_UI="${NEXT_PUBLIC_LEARNBOX_ADMIN_PASSKEY_UI_ENABLED:-}"
+if [ "$PASSKEY_UI" != "true" ]; then
+  echo "build-admin-image: NEXT_PUBLIC_LEARNBOX_ADMIN_PASSKEY_UI_ENABLED must be exactly 'true'" >&2
+  echo "build-admin-image: for a production Admin image, got '${PASSKEY_UI:-<unset>}'." >&2
+  echo "build-admin-image: a lower value ships an Admin that signs itself in without a passkey." >&2
+  exit 2
+fi
 
 IMAGE_TAG="learnbox-admin:${SOURCE_SHA:0:7}-${TAG_SUFFIX}"
 
@@ -112,6 +123,26 @@ expected_pkg="$(git show "$SOURCE_SHA:apps/admin/package.json" | sha256sum | cut
 actual_pkg="$(docker run --rm --entrypoint sh "$IMAGE_TAG" -c \
   'sha256sum /app/apps/admin/package.json 2>/dev/null | cut -d" " -f1' || true)"
 check "apps/admin/package.json in the image matches the commit" "$expected_pkg" "$actual_pkg"
+
+# The authentication mode the image will actually serve, read from the artifact's own rendered
+# output. Everything above proves what the build was asked for; this proves what came out. Next
+# prerenders the Admin root page during the build and serialises the gate's mode into that HTML, so
+# the shipped mode is a fact on disk inside the image — not something to infer from a label, a build
+# argument or a runtime variable, none of which can still influence it.
+#
+# A 'true' build renders only the gate's secure-sign-in check. A 'false' build renders the whole
+# workspace instead, because AdminAuthGate short-circuits to signed-in for 'local-prototype'. So the
+# mode must be present and its bypass counterpart must be absent.
+rendered="$(docker run --rm --network none --entrypoint sh "$IMAGE_TAG" -c \
+  'cat /app/apps/admin/.next/server/app/index.html 2>/dev/null' || true)"
+rendered_has() { printf '%s' "$rendered" | grep -cF -- "$1" || true; }
+
+check "root page is prerendered into the image" present \
+  "$([ -n "$rendered" ] && echo present || echo absent)"
+check "shipped authentication mode is server-passkey" present \
+  "$([ "$(rendered_has 'server-passkey')" != 0 ] && echo present || echo absent)"
+check "shipped authentication mode cannot bypass the gate as local-prototype" absent \
+  "$([ "$(rendered_has 'local-prototype')" = 0 ] && echo absent || echo present)"
 
 DIGEST="$(inspect '{{.Id}}')"
 echo
