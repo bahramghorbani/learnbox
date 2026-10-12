@@ -1,5 +1,7 @@
 import React from 'react';
 
+import { adminAppVersion } from '../../lib/admin-app-version';
+
 type AdminIconName =
   | 'home'
   | 'book'
@@ -166,6 +168,28 @@ export function AdminSidebar({ current = 'home' }: { current?: string } = {}) {
         </span>
         جمع کردن
       </button>
+      <AdminSidebarVersionLabel />
     </aside>
+  );
+}
+
+/**
+ * Admin's own build identity, at the very bottom of the RTL sidebar. It renders Admin Web's
+ * independent version (`apps/admin/package.json`) and never the Learner PWA's or Android's.
+ * A version is an identifier, so it stays LTR inside the RTL sidebar. When a build injected no
+ * version the label is omitted entirely rather than showing a placeholder.
+ */
+function AdminSidebarVersionLabel() {
+  const version = adminAppVersion();
+  if (!version) {
+    return null;
+  }
+  return (
+    <p className="admin-sidebar-version" data-admin-app-version={version}>
+      نسخهٔ پنل{' '}
+      <span className="admin-sidebar-version-number" dir="ltr">
+        v{version}
+      </span>
+    </p>
   );
 }

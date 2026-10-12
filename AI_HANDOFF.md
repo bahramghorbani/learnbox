@@ -36,6 +36,16 @@ state are synchronized, the rollback or flag posture is recorded, and its change
 privacy, canonical Bobo governance, or the closed-alpha boundary. If CI is unavailable, leave the
 PR unmerged and record the exact limitation in `CURRENT_WORK.md`.
 
+## Release handoff standard
+
+A release handoff states, per product, which of the four actions has actually happened: merged,
+tagged, released on GitHub, deployed to Production. Never imply one from another — a merged PR is
+not a release, a GitHub Release is not a deployment, and a running Production artifact is not a
+published version. Name the exact commit, the tag if one exists, the image digest or artifact
+checksum if one exists, and the deployment status. Versions, tag namespaces and the required
+contents of a GitHub Release are defined in [`docs/release/VERSIONING.md`](./docs/release/VERSIONING.md);
+tagging, publishing and deploying each require their own owner authorization.
+
 ## Current native-audio continuity gate
 
 - The native offline-pronunciation attempt was rejected during physical Android QA: the candidate

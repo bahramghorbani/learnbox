@@ -253,6 +253,23 @@ button {
   width: 17px;
   height: 17px;
 }
+/* Build identity at the very bottom of the sidebar. Subtle by design: it is operator
+ * provenance, not navigation, so it borrows the muted token and sits below every control
+ * without taking vertical space from the frozen PDR-009 nav rhythm. */
+.admin-sidebar-version {
+  margin: 10px 10px 0;
+  padding: 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.6;
+  opacity: 0.8;
+  white-space: nowrap;
+  flex: none;
+}
+.admin-sidebar-version-number {
+  font-variant-numeric: tabular-nums;
+  unicode-bidi: isolate;
+}
 .admin-workspace {
   flex: 1;
   min-width: 0;
@@ -1468,6 +1485,11 @@ button {
   }
   .collapse-control {
     display: none;
+  }
+  /* In the horizontal bar there is no "bottom", so the version rides at the end of the
+   * scrolling row instead of stacking — the frozen nav rhythm is unchanged. */
+  .admin-sidebar-version {
+    margin: 0 8px 0 12px;
   }
 }
 
