@@ -4,7 +4,7 @@
 
 ## Active work
 
-**Learner PWA v1.2.2 release candidate — merged, NOT deployed (2026-10-12).** Enables four
+**Learner PWA v1.2.2 — DEPLOYED to Production (2026-10-12T17:48:55Z).** Enables four
 previously merged and separately reviewed Learner client features in one coordinated build:
 `NEXT_PUBLIC_LEARNBOX_QUEUE_QUARANTINE`, `NEXT_PUBLIC_LEARNBOX_SESSION_EXPIRY_UX`,
 `NEXT_PUBLIC_LEARNBOX_SERVER_SESSION_PLAN` and `NEXT_PUBLIC_LEARNBOX_GOAL_UX_REMOVED`, all `true`
@@ -13,9 +13,16 @@ as Dockerfile/compose build-arg defaults and in `app.env.example`, with the Lear
 Production; no server configuration, migration, grant or learner row was touched. The already-live
 binary review UI and every unrelated flag are unchanged. Because Next.js inlines `NEXT_PUBLIC_*` at
 build time, the values were verified differentially in the built artifact (candidate vs a
-live-equivalent control build), not only in configuration. **Production still runs v1.2.1 from
-`fa44d21`; deploying this candidate, tagging it and publishing a release remain three separate
-owner-authorized actions.**
+live-equivalent control build), not only in configuration. **Production now runs this release** as
+image `sha256:051f8697037fa4da68bb81499f4e0d4c220fff0a45cdf67e97487ab4a5adf190`
+(`APP_SOURCE_SHA=54ba3042c02edd22c87872650ef2bdcb41836f2d`), built `linux/amd64` on the development
+machine with all five client build args passed explicitly, transferred by `docker save` + `scp` with
+`sha256 ae4ffc77…` identical on both ends, checked first as a throwaway container off the edge
+network (`/api/health` 200 with `database: ok`, `/api/banners` 401, store purchase 403, clean logs),
+then switched by digest pin: healthy, `RestartCount=0`, failing streak `0`, and the chunks Production
+serves carry all five markers. Rollback remains `sha256:65cd7969…` (Learner 1.2.1), kept as image,
+tar and `app/compose.yaml.pre-v122`; no migration shipped, so rollback is an image swap only.
+**Tagging this release and publishing it on GitHub remain separate owner-authorized actions.**
 
 **Versioning, GitHub Releases and AI continuity — merged as PR #419 (`main` at
 `6aedc70f`, 2026-10-12).** Establishes independent Semantic Versioning for the Learner PWA, Admin
