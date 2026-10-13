@@ -247,3 +247,15 @@ Shutdown procedure (owner-approved only):
 5. Back-out: Production does not depend on Germany, so nothing in Production is rolled back. If
    something unexpected needed Germany, power it on again from the panel and re-enable its timers.
    Deleting the Germany VM is a separate owner decision.
+
+### Executed 2026-10-13
+
+- Pre-checks passed 18:41Z (domains, DB, Healthchecks pings, backup + offsite `ok`, CDN SSH, console
+  password set, PR #423 required checks green on `abace8c`).
+- Germany: all six `learnbox-*.timer` disabled + stopped (list and re-enable command in
+  `/home/ubuntu/learnbox/DISABLED-TIMERS-2026-10-13.txt` on Germany), no jobs running, graceful
+  `systemctl poweroff` at ~18:42:03Z. Not deleted; keep ≥14 days. SSH to it times out; Iran cannot reach
+  its port 22.
+- Iran: UFW rule `22/tcp ALLOW 185.204.168.178` and the `learnbox-iran-status` forced-command key
+  removed (pre-change copies in `ops/state/pre-germany-removal-20261013/`). Port 22 now has no internet
+  allow rule; admin = `learnbox-iran-cdn` or the AbrArvan console. Mac alias `learnbox-iran` is dead.
