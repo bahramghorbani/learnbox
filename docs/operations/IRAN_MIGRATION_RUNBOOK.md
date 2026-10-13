@@ -1,6 +1,9 @@
 # LearnBox Iran server migration — runbook
 
-Status: **Phases 1–3 complete. Phase 4 (cutover) waits for explicit owner approval.**
+Status: **Cutover DONE 2026-10-13 (owner-approved).** Germany write-freeze 15:38:04Z; final sync
+15:38:22Z (34 s, parity 158/158, 45 tables / 1027 rows); Iran public 15:39Z; Arvan origin switched by owner.
+Write outage ≈ 2 min. Germany stays frozen (503 on app/admin) and Neon untouched as rollback point.
+Germany rehearsal DB + dump deleted (owner-approved). Iran landing `compose.yaml` is now the public bind.
 No secret values appear in this document or anywhere in the repository.
 
 ## Topology
