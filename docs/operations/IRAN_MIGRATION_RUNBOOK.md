@@ -79,7 +79,12 @@ Secrets on Iran (mode 600, directory 700, never in Git): `/home/ubuntu/learnbox/
   (hourly, `infrastructure/production/iran/monitor/`): it pulls the three Iran status files with a
   forced-command key (`from=185.204.168.178,restrict`, `grep -H` of the status files only) and alerts via
   Telegram once per state change (backup >26 h, offsite >27 h, restore drill >8 d, or unreachable).
-  Germany's uptime monitor covers the public URLs. Before Germany is retired, this must move elsewhere.
+  Germany's uptime monitor covers the public URLs. **Replacement independent of Germany:**
+  `learnbox-iran-monitor.timer` on Iran (every 5 min) pings two Healthchecks.io checks —
+  `learnbox-iran-uptime` (3 domains via CDN, Learner `/api/health`, Admin, Enamad, container health;
+  silence for 15 min = host/network down) and `learnbox-iran-backups` (same freshness limits). Healthchecks
+  alerts the owner (Telegram/email) on down and on recovery. Ping URLs only in
+  `secrets/healthchecks.env` (0600), written by `monitor/learnbox-iran-monitor-enroll.sh` run on the Mac.
 - **Offsite (Dropbox, active 2026-10-13):** owner-authorized App Folder app, remote `dropbox:learnbox-iran/db`,
   copy-only/immutable, GPG to `FF1C441D…0289` (no secret key on Iran). `learnbox-offsite.timer` enabled
   (04:10 UTC). First point `learnbox-20261013T164948Z` uploaded, downloaded from Dropbox to the owner Mac,
@@ -98,6 +103,10 @@ Why the Mac cannot reach Iran directly (evidence 2026-10-13 16:15Z):
   sshd or Docker.
 - Germany → `185.226.118.146` 22/443: open. Mac → `185.226.118.1:443` (same /24) and the Arvan CDN edge
   `185.143.233/234.132`: open.
+- Re-check 17:20Z: the Mac sits behind OpenWrt (`192.168.20.1`) doing split routing — foreign
+  destinations exit via an OVH proxy (`168.222.43.234`), Iranian ones directly via MCI. A second 30 s SYN
+  capture again saw 0 packets from the Mac, while the VM does receive internet scan traffic (601 UFW
+  blocks from many foreign sources in 6 h), so there is no blanket inbound whitelist in front of it.
 - Remaining candidates, not yet distinguishable from here: an AbrArvan cloud-firewall / security-group /
   DDoS rule in front of this VM, or MCI-side filtering of this specific address. Owner check: Arvan panel
   → this server → Firewall/Security groups (inbound rules and any geo/ISP filter).
@@ -168,3 +177,37 @@ Rehearsal dumps and parity outputs (`/home/ubuntu/learnbox/backups/rehearsal/`, 
 user data. Delete them 14 days after a successful cutover, or immediately if the migration is
 abandoned. The cutover dump is kept until the end of stabilisation. The temporary Germany rehearsal
 database and its dump were deleted with owner approval on 2026-10-13.
+
+## Disaster recovery without Germany
+
+Where the recovery material lives (none of it on Germany):
+
+| Item | Location |
+|---|---|
+| DB backups | Dropbox app folder `learnbox-iran/db/*.sql.gz.gpg` (daily 04:10 UTC, never auto-deleted); Iran local 30 days |
+| Recovery key | GPG `FF1C…0289` (encryption subkey `D1B7C975D8DC014A`), passphrase-protected, **only** in owner Mac `~/.gnupg`. Owner keeps an offline export (`gpg --export-secret-keys --armor FF1C441D77781F99F2ABADE4A4CAE7A288970289`) on USB, passphrase stored separately. Revocation cert: `~/LearnBox-Recovery/` |
+| Server config + secrets | `~/LearnBox-Recovery/iran-config-<stamp>.tar.gz.gpg` on the Mac, encrypted on Iran to the recovery key (app/admin `.env`, `secrets/`, DB TLS, compose, Caddyfile, systemd units, ops + offsite scripts, `rclone.conf`). Refresh after any config change with the command below. Never uploaded to Dropbox. |
+| Images | `/Volumes/LearnBox-Dev/LearnBox-Recovery/images/` (app, admin, landing, postgres:17-alpine + `SHA256SUMS`); caddy digest in Mac Docker. Source fallback: rebuild from the Git SHAs in the deployment record. |
+
+Refresh the config bundle (from the Mac):
+`ssh learnbox-iran-cdn 'O=/home/ubuntu/learnbox/offsite; sudo tar -czf - /home/ubuntu/learnbox/{admin,app,db,db-tls,secrets} /home/ubuntu/learnbox/ops/*.sh $O/config $O/scripts /srv/learnbox/landing /opt/learnbox-ops-access /etc/systemd/system/learnbox-* /etc/docker/daemon.json /etc/ufw/user*.rules /etc/ssh/sshd_config.d | gpg --homedir $O/gnupg --batch --trust-model always -e -r FF1C441D77781F99F2ABADE4A4CAE7A288970289' > ~/LearnBox-Recovery/iran-config-$(date -u +%Y%m%dT%H%M%SZ).tar.gz.gpg`
+
+Scenarios:
+
+- **A. Database damaged, server fine** (RTO ~30 min, RPO ≤24 h): stop app + admin; take a safety dump of
+  the damaged DB; download the newest `.gpg` (Dropbox web or `rclone` on Iran); decrypt on the Mac
+  (`gpg -d`, pinentry asks for the passphrase); verify `sha256` against `offsite.status`; restore into a
+  recreated `neondb` (locale `C.UTF-8`, builtin provider, roles from `secrets/db-roles.env`); run
+  `parity.sql` sanity; start app + admin.
+- **B. Iran server lost** (RTO ~2–4 h, RPO ≤24 h): new Arvan VM (Ubuntu 24.04) → Docker + `daemon.json`
+  DNS → `docker load` the images → decrypt the config bundle into place → start PostgreSQL, restore the
+  newest Dropbox dump → start app/admin/landing/Caddy → owner changes the Arvan CDN origin to the new IP
+  → re-enroll Dropbox (new token) and re-enable timers. Healthchecks URLs come back with the bundle.
+- **C. CDN admin path down:** Arvan panel → server → web console, user `ubuntu` (console-only password;
+  SSH password login stays disabled).
+
+Limits: RPO is the nightly schedule (≤24 h). Neon is frozen at the 2026-10-13 15:38Z cutover and holds
+none of the later data; after Germany is retired `rollback-to-neon.sh` has no application host to fail
+over to, so Neon is a historical copy, not a DR target. If Iran loses international connectivity,
+Dropbox uploads and Healthchecks pings stop (local backups continue; Healthchecks alerts as down).
+
