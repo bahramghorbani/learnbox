@@ -89,6 +89,8 @@ test('reads the least-privilege backup credential, falling back to the legacy DS
 });
 
 test('never passes the credential as a command argument', () => {
-  assert.match(script, /docker run --rm -i -e PGURL="\$PGURL"/);
+  // Optional operator docker args (network/CA mount) may precede it; the DSN still travels only via -e.
+  assert.match(script, /docker run --rm -i (\$\{PG_DOCKER_ARGS\[@\]\+"\$\{PG_DOCKER_ARGS\[@\]\}"\} )?-e PGURL="\$PGURL"/);
+  assert.equal(/LEARNBOX_PG_DOCKER_ARGS[^\n]*PGURL/.test(script), false);
   assert.equal(/pg_dump[^\n]*\$PGURL"[^\n]*\$\{?PGURL/.test(script), false);
 });
