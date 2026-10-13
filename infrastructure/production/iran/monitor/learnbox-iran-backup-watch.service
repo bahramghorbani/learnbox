@@ -1,0 +1,12 @@
+[Unit]
+Description=LearnBox: alert on Iran backup/offsite/restore-drill failure (runs on Germany)
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=ubuntu
+ExecStart=/home/ubuntu/learnbox/ops/learnbox-iran-backup-watch.sh
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

@@ -75,17 +75,18 @@ Secrets on Iran (mode 600, directory 700, never in Git): `/home/ubuntu/learnbox/
   `10-iran-selfhost.conf` sets `LEARNBOX_PG_DOCKER_ARGS` (network + CA mount); the role DSNs pin
   `sslrootcert=/run/db-tls/ca.crt`. Manual proof via the real units: backup ok (45 tables), drill ok
   (45 tables, 34 migrations, 0 orphans) on the same sha256. Scheduled runs not yet observed.
-- **Telegram is unreachable from the Iran host**, so `learnbox-alert.sh` cannot deliver from there.
-  Until an alert path exists, the Germany uptime monitor (which already checks the public URLs and can
-  reach Telegram) is the alerting vantage point and must stay running.
-- Encrypted offsite copy (Dropbox): staged on Iran at `/home/ubuntu/learnbox/offsite` — same script
-  (sha256 `115643ec…` + `EXPECTED_REMOTE_PATH` changed to `learnbox-iran`), same rclone v1.75.2 binary,
-  public recipient key `FF1C441D…0289` only (0 secret keys), `REMOTE_PATH=learnbox-iran` (separate from the
-  frozen Germany/Neon recovery points). `--self-check` OK, `--plan` OK. Units installed, **timer disabled**.
-  Missing only `config/rclone.conf`, which the owner creates via the Germany runbook §6b with
-  `learnbox-iran-cdn` as the SSH host (helper: `~/learnbox-iran-dropbox-enroll.sh` on the owner Mac).
-  Germany's `rclone.conf` is never copied. After enrolment: one manual upload, owner-Mac decrypt
-  round-trip, then `systemctl enable --now learnbox-offsite.timer`.
+- **Alerting:** Telegram is unreachable from Iran, so Germany runs `learnbox-iran-backup-watch.timer`
+  (hourly, `infrastructure/production/iran/monitor/`): it pulls the three Iran status files with a
+  forced-command key (`from=185.204.168.178,restrict`, `grep -H` of the status files only) and alerts via
+  Telegram once per state change (backup >26 h, offsite >27 h, restore drill >8 d, or unreachable).
+  Germany's uptime monitor covers the public URLs. Before Germany is retired, this must move elsewhere.
+- **Offsite (Dropbox, active 2026-10-13):** owner-authorized App Folder app, remote `dropbox:learnbox-iran/db`,
+  copy-only/immutable, GPG to `FF1C441D…0289` (no secret key on Iran). `learnbox-offsite.timer` enabled
+  (04:10 UTC). First point `learnbox-20261013T164948Z` uploaded, downloaded from Dropbox to the owner Mac,
+  sha256 (encrypted + plaintext) matched, decrypted, restored into an isolated container: 45 tables /
+  1045 rows / 34 migrations / 0 orphans, identical row counts to Iran live, newest row 16:16Z
+  (post-cutover, so the source is Iran, not Neon). Remote retention: none (never auto-deleted);
+  ~0.4 MB/day. Local retention 30 days.
 
 ## Admin access independent of Germany (2026-10-13)
 
