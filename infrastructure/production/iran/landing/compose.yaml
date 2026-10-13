@@ -17,7 +17,13 @@ services:
       - ./enamad/index.rsc:/app/apps/learnbox-website/.next/server/app/index.rsc:ro
     mem_limit: 512m
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3000/').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))",
+        ]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -32,8 +38,8 @@ services:
       landing:
         condition: service_healthy
     ports:
-      - "127.0.0.1:80:80"
-      - "127.0.0.1:443:443"
+      - '127.0.0.1:80:80'
+      - '127.0.0.1:443:443'
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
