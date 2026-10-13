@@ -78,8 +78,43 @@ Secrets on Iran (mode 600, directory 700, never in Git): `/home/ubuntu/learnbox/
 - **Telegram is unreachable from the Iran host**, so `learnbox-alert.sh` cannot deliver from there.
   Until an alert path exists, the Germany uptime monitor (which already checks the public URLs and can
   reach Telegram) is the alerting vantage point and must stay running.
-- Encrypted offsite copy (Dropbox) is not configured on Iran: `rclone.conf` must never be copied, so
-  it needs a new owner-authorised Dropbox token on the Iran host.
+- Encrypted offsite copy (Dropbox): staged on Iran at `/home/ubuntu/learnbox/offsite` — same script
+  (sha256 `115643ec…` + `EXPECTED_REMOTE_PATH` changed to `learnbox-iran`), same rclone v1.75.2 binary,
+  public recipient key `FF1C441D…0289` only (0 secret keys), `REMOTE_PATH=learnbox-iran` (separate from the
+  frozen Germany/Neon recovery points). `--self-check` OK, `--plan` OK. Units installed, **timer disabled**.
+  Missing only `config/rclone.conf`, which the owner creates via the Germany runbook §6b with
+  `learnbox-iran-cdn` as the SSH host (helper: `~/learnbox-iran-dropbox-enroll.sh` on the owner Mac).
+  Germany's `rclone.conf` is never copied. After enrolment: one manual upload, owner-Mac decrypt
+  round-trip, then `systemctl enable --now learnbox-offsite.timer`.
+
+## Admin access independent of Germany (2026-10-13)
+
+Why the Mac cannot reach Iran directly (evidence 2026-10-13 16:15Z):
+- The Mac leaves via MCI mobile (`5.210.91.249`, MCCI, IR — as seen by Arvan in `Ar-Real-Ip`), no VPN
+  active, default route `en0`.
+- Mac → `185.226.118.146` TCP 22/443/2222 and ICMP: timeout. A SYN capture on the Iran host (all
+  interfaces) during those probes saw **0 packets** — the drop happens before the VM, so it is not UFW,
+  sshd or Docker.
+- Germany → `185.226.118.146` 22/443: open. Mac → `185.226.118.1:443` (same /24) and the Arvan CDN edge
+  `185.143.233/234.132`: open.
+- Remaining candidates, not yet distinguishable from here: an AbrArvan cloud-firewall / security-group /
+  DDoS rule in front of this VM, or MCI-side filtering of this specific address. Owner check: Arvan panel
+  → this server → Firewall/Security groups (inbound rules and any geo/ISP filter).
+
+Fix (no new public port): SSH over WebSocket through the CDN that already serves the site.
+- `admin.learnboxapp.com/_lb-ops/ssh` → Caddy `basic_auth` (bcrypt) → `reverse_proxy 172.19.0.1:8022`.
+- `learnbox-ws-ssh.service` (`infrastructure/production/iran/ops-access/`): python3-websockets bridge,
+  user `nobody`, bound to the `learnbox-edge` gateway only; UFW allows 8022 only from `172.19.0.0/16`.
+- The bridge carries opaque SSH bytes: host key and Ed25519 user-key auth stay end to end; the CDN sees
+  only TLS + ciphertext. Password/root login remain disabled.
+- Mac: `ssh learnbox-iran-cdn` (`ProxyCommand websocat … wss://admin.learnboxapp.com/_lb-ops/ssh`,
+  basic-auth string in `~/.ssh/learnbox-ops-ws.b64`, mode 600). Verified: login, 30 MB scp sha match,
+  idle 75 s, `-L` port forwarding.
+- Port 22 is no longer open to the internet: UFW `22/tcp` now allows only `185.204.168.178` (Germany
+  jump, kept as the second path). Disable the CDN path: delete the `@lb_ops` block + `caddy reload`,
+  `systemctl disable --now learnbox-ws-ssh`. Pre-change copies: `/home/ubuntu/learnbox/evidence/ops-access-*`.
+- Before Germany is retired, replace its UFW rule with another fixed admin IP (or rely on the CDN path +
+  AbrArvan web console as break-glass).
 
 ## Cutover (Phase 4 — only after owner approval)
 
@@ -101,12 +136,28 @@ Expected impact: learner/admin writes unavailable **~5–10 min** (503 with Retr
 
 ## Rollback
 
+DNS alone is **not** a rollback after step 5: Iran is the only writer, so pointing traffic back at
+Germany/Neon would silently drop every signup, review and payment written since 15:38Z
+(already 17 rows within 30 min). Rollback is therefore a data move first, DNS last.
+
 - R1 before step 5: restore the live Caddyfile from `iran-cutover-prep/Caddyfile.live-*` and
   `caddy reload` on Germany. Nothing else changed; Neon is untouched.
-- R2 after step 5: Arvan origin back to `185.204.168.178`, then R1. Writes that reached Iran after the
-  switch exist only on Iran: export them (`pg_dump` of the Iran DB, filtered to rows newer than the
-  cutover time) and replay them into Neon as `neondb_owner` — a manual, owner-approved data step.
-  The earlier the rollback, the smaller this delta.
+- R2 after step 5 (`infrastructure/production/iran/db/rollback-to-neon.sh`, on Iran):
+  1. `rollback-to-neon.sh drift-check` (read-only). Proves Neon still equals the cutover snapshot,
+     so Iran ⊇ Neon and a full replace loses nothing. If Neon changed: stop, manual merge.
+  2. Freeze Iran writes: install `Caddyfile.maintenance` on Iran + `caddy reload` (Germany stays frozen).
+  3. Owner approval + `neondb_owner` DSN supplied only in the environment (secure path, never stored).
+  4. `LEARNBOX_IRAN_WRITES_FROZEN=yes LEARNBOX_ROLLBACK_APPROVED=yes NEON_OWNER_DATABASE_URL=… \
+     rollback-to-neon.sh execute` — drift-check, safety `pg_dump` of Neon, dump Iran, single-transaction
+     `pg_restore --clean` into Neon as `neondb_owner` (Neon platform objects filtered), parity Iran == Neon.
+  5. Only on `ROLLBACK DATA OK`: unfreeze Germany (R1), Arvan origin → `185.204.168.178`, then keep
+     Iran frozen as the new rollback point. On parity failure: stay on Iran (unfreeze it).
+- `rehearsal` mode proves steps 1/4 against a disposable Neon-like container (non-superuser
+  `neondb_owner`, `cloud_admin`-owned pgcrypto, seeded from the cutover Neon dump). 2026-10-13 16:10Z:
+  **REHEARSAL OK** — 45 tables, 1044 rows, 158 checks equal; seed == Neon at cutover; Neon unchanged.
+  Write outage for a real R2 ≈ 2–3 min.
+- Neon PITR is only 6 h, so the script's own pre-overwrite Neon dump plus
+  `backups/cutover/neon-*.dump` are the Neon restore points.
 - Neon, the Germany server and its backups are kept until the stabilisation period ends and the owner
   separately approves retirement (Phase 5).
 
@@ -115,4 +166,4 @@ Expected impact: learner/admin writes unavailable **~5–10 min** (503 with Retr
 Rehearsal dumps and parity outputs (`/home/ubuntu/learnbox/backups/rehearsal/`, mode 600) contain real
 user data. Delete them 14 days after a successful cutover, or immediately if the migration is
 abandoned. The cutover dump is kept until the end of stabilisation. The temporary Germany rehearsal
-database (`learnbox-selfhost-db-postgres-1`, stopped) and its dump are deleted only with owner approval.
+database and its dump were deleted with owner approval on 2026-10-13.
