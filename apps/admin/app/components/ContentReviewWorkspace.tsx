@@ -94,7 +94,131 @@ type ServerQueueItem = {
   sourceProvider: string;
   sourceReference: string | null;
   checks: ServerCheck[];
+  aiReview: ServerAiReview | null;
 };
+
+type ServerAiFinding = {
+  field: string;
+  severity: 'critical' | 'major' | 'minor';
+  reason: string;
+  suggestion: string;
+  source: 'reviewer' | 'validator';
+  round: number;
+  status: 'resolved' | 'remaining';
+};
+
+/** The independent AI reviewer's record for exactly this version (advisory, never a check). */
+type ServerAiReview = {
+  state: string;
+  repaired: boolean;
+  repairRounds: number;
+  reviewerModel: string | null;
+  repairModel: string | null;
+  findings: ServerAiFinding[];
+};
+
+const severityLabels: Record<ServerAiFinding['severity'], string> = {
+  critical: 'بحرانی',
+  major: 'مهم',
+  minor: 'جزئی',
+};
+
+const severityBadges: Record<ServerAiFinding['severity'], string> = {
+  critical: 'b-rose',
+  major: 'b-amber',
+  minor: 'b-grey',
+};
+
+const findingStatusLabels: Record<ServerAiFinding['status'], string> = {
+  resolved: 'با اصلاح خودکار رفع شد',
+  remaining: 'باقی‌مانده؛ نیاز به داوری شما',
+};
+
+/** One-line verdict for the AI review: what happened, in the order an editor needs it. */
+function aiVerdict(review: ServerAiReview): { text: string; badge: string } {
+  const remaining = review.findings.filter((finding) => finding.status === 'remaining').length;
+  if (review.state !== 'passed') {
+    return { text: 'حل‌نشده — بازبین هوش مصنوعی رد کرد', badge: 'b-rose' };
+  }
+  if (review.repaired) {
+    return {
+      text: `پس از ${fa(review.repairRounds)} دور اصلاح خودکار تأیید شد`,
+      badge: 'b-amber',
+    };
+  }
+  if (remaining > 0) return { text: 'تأیید با نکتهٔ جزئی', badge: 'b-amber' };
+  return { text: 'بدون یافته در بار اول تأیید شد', badge: 'b-green' };
+}
+
+/**
+ * Shows the independent AI reviewer's findings beside the human gate: field, severity, reason,
+ * the suggested fix and whether the automatic repair resolved it. Purely informational — it is
+ * never a gate dimension, and approving still needs every human check.
+ */
+function AiReviewPanel({ review }: { review: ServerAiReview }) {
+  const verdict = aiVerdict(review);
+  return (
+    <section
+      className="card review-panel review-ai-panel"
+      data-review-panel="ai"
+      aria-labelledby="ai-review-panel-title"
+    >
+      <div className="card-head">
+        <h3 className="card-title" id="ai-review-panel-title">
+          یافته‌های بازبین هوش مصنوعی
+        </h3>
+        <span className={`badge ${verdict.badge}`} data-ai-verdict={review.state}>
+          {verdict.text}
+        </span>
+      </div>
+      <div className="card-body">
+        <p className="review-scope-note">
+          این بازبینی مستقل و فقط مشورتی است؛ جای هیچ‌یک از بررسی‌های انسانی را نمی‌گیرد.
+          {review.reviewerModel ? (
+            <>
+              {' '}
+              بازبین: <bdi dir="ltr">{review.reviewerModel}</bdi>
+            </>
+          ) : null}
+        </p>
+        {review.findings.length === 0 ? (
+          <p className="muted-note">بازبین هیچ ایرادی ثبت نکرد.</p>
+        ) : (
+          <ul className="ai-finding-list">
+            {review.findings.map((finding, index) => (
+              <li
+                key={`${finding.round}-${finding.field}-${index}`}
+                data-finding-status={finding.status}
+              >
+                <div className="ai-finding-head">
+                  <span className={`badge ${severityBadges[finding.severity]}`}>
+                    {severityLabels[finding.severity]}
+                  </span>
+                  <span className="keep-latin ai-finding-field">{finding.field}</span>
+                  <span
+                    className={`badge ${finding.status === 'resolved' ? 'b-green' : 'b-amber'}`}
+                  >
+                    {findingStatusLabels[finding.status]}
+                  </span>
+                </div>
+                <p>
+                  <strong>علت:</strong>{' '}
+                  {finding.source === 'validator' ? 'اعتبارسنج LearnBox — ' : ''}
+                  {finding.reason}
+                </p>
+                {finding.suggestion ? (
+                  <p>
+                    <strong>پیشنهاد اصلاح:</strong> {finding.suggestion}
+                  </p>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </section>
+  );
+}
 
 type ServerPhase = 'loading' | 'unauthorized' | 'disabled' | 'error' | 'empty' | 'ready';
 
@@ -493,66 +617,78 @@ export function ServerBackedContentReview() {
                       <span className={`badge ${queueStatusBadges[item.status]}`}>
                         {queueStatusLabels[item.status]}
                       </span>
+                      {item.aiReview ? (
+                        <span
+                          className={`badge ${aiVerdict(item.aiReview).badge}`}
+                          title={aiVerdict(item.aiReview).text}
+                        >
+                          {item.aiReview.repaired ? 'AI: اصلاح‌شده' : 'AI: بازبینی‌شده'}
+                        </span>
+                      ) : null}
                     </button>
                   ))}
                 </div>
               </div>
             </div>
 
-            <article
-              className="card review-panel review-content-panel"
-              data-review-panel="content"
-              aria-labelledby="review-content-panel-title"
-            >
-              <div className="card-head">
-                <h3 className="card-title" id="review-content-panel-title">
-                  کارت انتخاب‌شده
-                </h3>
-                <span className="muted-note review-content-id keep-latin">
-                  {selected.contentId}
-                </span>
-              </div>
-              <div className="card-body">
-                <div className="server-card-detail" lang="de" dir="ltr">
-                  <p className="review-word">
-                    {selected.article ? `${selected.article} ${selected.lemma}` : selected.lemma}
-                  </p>
-                  {selected.essentialInflection ? <p>{selected.essentialInflection}</p> : null}
-                  {selected.pronunciationIpa ? <p>/{selected.pronunciationIpa}/</p> : null}
+            <div className="review-center-stack">
+              <article
+                className="card review-panel review-content-panel"
+                data-review-panel="content"
+                aria-labelledby="review-content-panel-title"
+              >
+                <div className="card-head">
+                  <h3 className="card-title" id="review-content-panel-title">
+                    کارت انتخاب‌شده
+                  </h3>
+                  <span className="muted-note review-content-id keep-latin">
+                    {selected.contentId}
+                  </span>
                 </div>
-                <div className="server-card-meanings">
-                  <p lang="fa">
-                    {selected.persianMeanings.join('؛ ') || '—'}
-                    <span className="word-kind">
-                      {partOfSpeechLabels[
-                        selected.partOfSpeech as LearningVocabularyItem['partOfSpeech']
-                      ] ?? 'سایر'}
-                    </span>
-                  </p>
-                  {selected.examples[0] ? (
-                    <p>
-                      <span lang="de" dir="ltr">
-                        {selected.examples[0].german}
-                      </span>{' '}
-                      <span lang="fa">{selected.examples[0].persian}</span>
+                <div className="card-body">
+                  <div className="server-card-detail" lang="de" dir="ltr">
+                    <p className="review-word">
+                      {selected.article ? `${selected.article} ${selected.lemma}` : selected.lemma}
                     </p>
-                  ) : null}
-                  <p>
-                    {selected.mediaCount > 0
-                      ? `${fa(selected.mediaCount)} رسانه در محتوای ثبت‌شدهٔ سرور`
-                      : 'رسانه‌ای در محتوای ثبت‌شدهٔ سرور نیست.'}
-                  </p>
-                  <p className="provenance">
-                    {providerLabels[
-                      selected.sourceProvider as LearningVocabularyItem['source']['provider']
-                    ] ?? selected.sourceProvider}
-                    {selected.sourceReference ? (
-                      <small className="keep-latin"> {selected.sourceReference}</small>
+                    {selected.essentialInflection ? <p>{selected.essentialInflection}</p> : null}
+                    {selected.pronunciationIpa ? <p>/{selected.pronunciationIpa}/</p> : null}
+                  </div>
+                  <div className="server-card-meanings">
+                    <p lang="fa">
+                      {selected.persianMeanings.join('؛ ') || '—'}
+                      <span className="word-kind">
+                        {partOfSpeechLabels[
+                          selected.partOfSpeech as LearningVocabularyItem['partOfSpeech']
+                        ] ?? 'سایر'}
+                      </span>
+                    </p>
+                    {selected.examples[0] ? (
+                      <p>
+                        <span lang="de" dir="ltr">
+                          {selected.examples[0].german}
+                        </span>{' '}
+                        <span lang="fa">{selected.examples[0].persian}</span>
+                      </p>
                     ) : null}
-                  </p>
+                    <p>
+                      {selected.mediaCount > 0
+                        ? `${fa(selected.mediaCount)} رسانه در محتوای ثبت‌شدهٔ سرور`
+                        : 'رسانه‌ای در محتوای ثبت‌شدهٔ سرور نیست.'}
+                    </p>
+                    <p className="provenance">
+                      {providerLabels[
+                        selected.sourceProvider as LearningVocabularyItem['source']['provider']
+                      ] ?? selected.sourceProvider}
+                      {selected.sourceReference ? (
+                        <small className="keep-latin"> {selected.sourceReference}</small>
+                      ) : null}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            </article>
+              </article>
+
+              {selected.aiReview ? <AiReviewPanel review={selected.aiReview} /> : null}
+            </div>
 
             <section
               className="card review-panel review-decision-panel"

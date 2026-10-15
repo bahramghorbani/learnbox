@@ -470,6 +470,62 @@ button {
   display: grid;
   gap: 12px;
 }
+/* Card plus its advisory AI review share the middle column, so the 3-column grid never wraps. */
+.review-center-stack {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+.review-ai-panel .card-body {
+  display: grid;
+  gap: 12px;
+}
+.ai-finding-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ai-finding-list li {
+  display: grid;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+.ai-finding-list li[data-finding-status='resolved'] {
+  opacity: 0.85;
+}
+.ai-review-details {
+  margin-top: 6px;
+  font-size: 12.5px;
+  line-height: 1.8;
+}
+.ai-review-details > summary {
+  cursor: pointer;
+  margin-bottom: 6px;
+}
+.ai-finding-list p {
+  margin: 0;
+  color: var(--ink-strong);
+  font-size: 13.5px;
+  line-height: 1.9;
+}
+.ai-finding-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.ai-finding-field {
+  color: var(--ink-muted);
+  font-size: 12px;
+}
+.server-queue-row .badge + .badge {
+  margin-inline-start: -4px;
+}
 .review-scope-note {
   margin: 0;
   padding: 10px 12px;
@@ -1632,7 +1688,8 @@ button {
 .cp-workspace .cp-form-row.is-full {
   grid-column: 1 / -1;
 }
-.cp-workspace .cp-form-row > label {
+.cp-workspace .cp-form-row > label,
+.cp-workspace .cp-form-field > label {
   font-size: 11.5px;
   font-weight: 600;
   color: var(--muted);
@@ -1774,6 +1831,12 @@ button {
 }
 .cp-workspace .cp-plan-grid dd {
   margin: 0;
+}
+.cp-workspace [data-plan-editor] .cp-form-grid {
+  margin: 0 0 12px;
+}
+.cp-workspace .cp-finding {
+  display: block;
 }
 .cp-workspace .cp-progress {
   inline-size: 100%;

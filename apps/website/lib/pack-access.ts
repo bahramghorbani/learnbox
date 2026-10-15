@@ -9,11 +9,12 @@
  * The rule:
  *
  *   Pack content is accessible only when
- *     1. packs.status = 'published'
+ *     1. it is published, or archived with an existing entitlement
  *   AND
- *     2. packs.is_free = true  OR  the learner holds the canonical entitlement in user_packs.
+ *     2. published packs may be free or entitled; archived packs require entitlement.
  *
- * Both halves matter and neither is sufficient alone.
+ * This keeps a buyer's paid (or previously acquired free) content readable after archival while
+ * making an archived free pack unavailable to learners who never acquired it.
  *
  * A Store Listing is NOT an entitlement. `store_listings` is commercial presentation only and is
  * deliberately absent from this predicate: a listed pack whose content is unpublished must never
@@ -56,10 +57,12 @@ export function isLearnerUserId(value: unknown): value is string {
  */
 export function packAccessSql(packAlias: string, userParam: string): string {
   return `(
-    ${packAlias}.status = 'published'
-    AND (
-      ${packAlias}.is_free = true
-      OR EXISTS (
+    (
+      ${packAlias}.status = 'published' AND ${packAlias}.is_free = true
+    )
+    OR (
+      ${packAlias}.status IN ('published', 'archived')
+      AND EXISTS (
         SELECT 1 FROM user_packs up
         WHERE up.pack_id = ${packAlias}.id AND up.user_id = ${userParam}::uuid
       )

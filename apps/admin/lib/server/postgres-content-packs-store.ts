@@ -54,6 +54,7 @@ export interface ContentPackEntry {
   category: string | null;
   isFree: boolean;
   priceTomans: number | null;
+  priceLocked?: boolean;
   status: ContentPackStatus;
   createdAt: string | null;
   publishedAt: string | null;
@@ -63,7 +64,7 @@ export interface ContentPackEntry {
 }
 
 export type ContentPacksListResult =
-  { status: 'forbidden' } | { status: 'ok'; packs: ContentPackEntry[] };
+  { status: 'forbidden' } | { status: 'ok'; packs: ContentPackEntry[]; canSetPrice?: boolean };
 
 export type ContentPackCardsResult =
   | { status: 'forbidden' }
@@ -146,6 +147,7 @@ function mapPackRow(row: Record<string, unknown>): ContentPackEntry {
       row.price_tomans === null || row.price_tomans === undefined
         ? null
         : toCount(row.price_tomans),
+    priceLocked: row.price_locked === true,
     status: normalizeStatus(row.status),
     createdAt: toIsoString(row.created_at),
     publishedAt: toIsoString(row.published_at),
@@ -165,6 +167,8 @@ const packSelect = `
          p.category,
          p.is_free,
          p.price_tomans,
+         (EXISTS (SELECT 1 FROM purchase_events pe WHERE pe.pack_id = p.id AND pe.status = 'verified')
+          OR EXISTS (SELECT 1 FROM user_packs up WHERE up.pack_id = p.id AND up.acquisition_type = 'purchased')) AS price_locked,
          p.status,
          p.created_at,
          p.published_at,
@@ -207,7 +211,15 @@ export class PostgresContentPacksStore {
     try {
       if (!(await this.roleQuery(client, actorUserId))) return { status: 'forbidden' };
       const result = await client.query(`${packSelect} ORDER BY p.created_at DESC, p.id`);
-      return { status: 'ok', packs: result.rows.map(mapPackRow) };
+      const role = await client.query(
+        `SELECT 1 FROM admin_role_assignments WHERE user_id = $1 AND role = 'super_admin'`,
+        [actorUserId],
+      );
+      return {
+        status: 'ok',
+        packs: result.rows.map(mapPackRow),
+        canSetPrice: role.rows.length > 0,
+      };
     } finally {
       client.release();
     }

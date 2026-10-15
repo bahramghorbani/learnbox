@@ -52,6 +52,7 @@ const queueItem: ContentReviewQueueEntry = {
   sourceProvider: 'ai_suggestion',
   sourceReference: 'Goethe A1 scope reference.',
   checks: [],
+  aiReview: null,
 };
 
 function queueStore(

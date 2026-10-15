@@ -185,8 +185,11 @@ describe('PostgresContentLifecycleStore draft to review', () => {
     expect(client.calls.map((call) => call.sql)).toContain('ROLLBACK');
   });
 
-  it('never reopens a published or archived pack for review', async () => {
-    for (const status of ['published', 'archived']) {
+  it('allows draft revisions in a published pack into the human review queue but keeps archives closed', async () => {
+    for (const [status, expected] of [
+      ['published', 'nothing_to_submit'],
+      ['archived', 'stale'],
+    ] as const) {
       const client = createClient((sql) => {
         if (sql.includes('FROM admin_role_assignments')) return [{ role: 'content_reviewer' }];
         if (sql.includes('FROM packs')) return [{ id: packId, status }];
@@ -194,7 +197,8 @@ describe('PostgresContentLifecycleStore draft to review', () => {
       });
       const store = new PostgresContentLifecycleStore(poolFor(client));
       const result = await store.submitPackForReview({ packId, actorUserId, idempotencyKey });
-      expect(result).toMatchObject({ status: 'stale', currentStatus: status });
+      expect(result.status).toBe(expected);
+      if (expected === 'stale') expect(result).toMatchObject({ currentStatus: status });
     }
   });
 
@@ -315,13 +319,16 @@ describe('PostgresContentLifecycleStore publish', () => {
     expect(client.calls.some((call) => call.sql.startsWith('UPDATE'))).toBe(false);
   });
 
-  it('is idempotent on an already published pack and never rewrites it', async () => {
+  it('publishes an approved revision in an already published pack', async () => {
     const client = createClient(readyWorld({ packStatus: 'published' }));
     const store = new PostgresContentLifecycleStore(poolFor(client));
-    expect(await store.publishPack({ packId, actorUserId, idempotencyKey })).toEqual({
-      status: 'idempotent',
+    expect(await store.publishPack({ packId, actorUserId, idempotencyKey })).toMatchObject({
+      status: 'applied',
+      publishedCardCount: 1,
     });
-    expect(client.calls.some((call) => call.sql.startsWith('UPDATE'))).toBe(false);
+    const sqls = client.calls.map((call) => call.sql);
+    expect(sqls.some((sql) => sql.includes("SET status = 'deprecated'"))).toBe(true);
+    expect(sqls.some((sql) => sql.includes("SET status = 'published'"))).toBe(true);
   });
 
   it('refuses a publish authorised against a stale lifecycle view', async () => {
@@ -348,23 +355,16 @@ describe('PostgresContentLifecycleStore publish', () => {
 });
 
 describe('PostgresContentLifecycleStore archive', () => {
-  it('deactivates published cards by status only and audits the deactivation', async () => {
-    const client = createClient((sql, params) => {
-      const respond = readyWorld({ packStatus: 'published' });
-      if (sql.startsWith('UPDATE card_versions')) return [{ id: versionOne }];
-      return respond(sql, params);
-    });
+  it('archives without mutating buyer-visible card versions', async () => {
+    const client = createClient(readyWorld({ packStatus: 'published' }));
     const store = new PostgresContentLifecycleStore(poolFor(client));
     const result = await store.archivePack({ packId, actorUserId, idempotencyKey });
-    expect(result).toMatchObject({ status: 'applied', deactivatedCardCount: 1 });
+    expect(result).toMatchObject({ status: 'applied', deactivatedCardCount: 0 });
 
     const sqls = client.calls.map((call) => call.sql);
-    expect(sqls.some((sql) => sql.includes("SET status = 'deprecated'"))).toBe(true);
+    expect(sqls.some((sql) => sql.includes("SET status = 'deprecated'"))).toBe(false);
     expect(sqls.some((sql) => sql.includes("UPDATE packs SET status = 'archived'"))).toBe(true);
-    expect(auditActions(client.calls)).toEqual([
-      'content_lifecycle.deprecate',
-      'content_lifecycle.archive_pack',
-    ]);
+    expect(auditActions(client.calls)).toEqual(['content_lifecycle.archive_pack']);
     // Historical integrity: deactivation never deletes rows of any kind.
     expect(sqls.some((sql) => /\bDELETE\b|\bTRUNCATE\b|\bDROP\b/i.test(sql))).toBe(false);
     expect(sqls).toContain('COMMIT');

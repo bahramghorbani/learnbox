@@ -9,6 +9,7 @@ import {
   normalizeGermanArticle,
   resolveEffectiveGermanVoice,
   resolveGermanVoiceRole,
+  validateGermanArticleVoices,
   type GermanVoiceMapping,
 } from '../src/card-media-generation.js';
 
@@ -92,6 +93,17 @@ describe('canonical article to voice mapping', () => {
   };
   const withoutYounger: GermanVoiceMapping = { ...mapping, das: undefined };
 
+  it('requires three pairwise-distinct article voices', () => {
+    expect(validateGermanArticleVoices(mapping)).toBeUndefined();
+    expect(validateGermanArticleVoices(withoutYounger)).toBe('das_voice_unconfigured');
+    expect(validateGermanArticleVoices({ ...mapping, das: mapping.die })).toBe(
+      'das_voice_unconfigured',
+    );
+    expect(validateGermanArticleVoices({ ...mapping, die: mapping.der })).toBe(
+      'article_voices_not_distinct',
+    );
+  });
+
   it('derives the role from canonical card data only', () => {
     expect(resolveGermanVoiceRole({ article: 'der', lemma: 'Tisch' })).toBe('der_masculine');
     expect(resolveGermanVoiceRole({ article: 'die', lemma: 'Lampe' })).toBe('die_feminine');
@@ -123,24 +135,19 @@ describe('canonical article to voice mapping', () => {
     });
   });
 
-  it('falls back to exactly the DIE female voice when no younger voice is configured', () => {
-    const effective = resolveEffectiveGermanVoice(
-      { article: 'das', lemma: 'Buch' },
-      withoutYounger,
-    );
-    expect(effective.voice).toBe(withoutYounger.die);
-    expect(effective.role).toBe('das_neuter');
-    // The fallback must be identifiable after the fact, not silent.
-    expect(effective.usesDieFallbackForDas).toBe(true);
+  it('refuses DAS fallback when no distinct younger voice is configured', () => {
+    expect(() =>
+      resolveEffectiveGermanVoice({ article: 'das', lemma: 'Buch' }, withoutYounger),
+    ).toThrow('A distinct DAS voice is required.');
   });
 
-  it('treats a blank younger voice as not configured', () => {
-    const effective = resolveEffectiveGermanVoice(
-      { article: 'das', lemma: 'Buch' },
-      { ...mapping, das: '   ' },
-    );
-    expect(effective.voice).toBe(mapping.die);
-    expect(effective.usesDieFallbackForDas).toBe(true);
+  it('refuses DAS when it equals the DIE voice', () => {
+    expect(() =>
+      resolveEffectiveGermanVoice(
+        { article: 'das', lemma: 'Buch' },
+        { ...mapping, das: mapping.die },
+      ),
+    ).toThrow('A distinct DAS voice is required.');
   });
 
   it('maps no-article vocabulary to the configured default German voice', () => {
@@ -154,7 +161,7 @@ describe('canonical article to voice mapping', () => {
   it('is deterministic for the same card and mapping', () => {
     const card = { article: 'das', lemma: 'Buch' };
     const runs = Array.from({ length: 5 }, () =>
-      JSON.stringify(resolveEffectiveGermanVoice(card, withoutYounger)),
+      JSON.stringify(resolveEffectiveGermanVoice(card, mapping)),
     );
     expect(new Set(runs).size).toBe(1);
   });
@@ -199,11 +206,10 @@ describe('canonical image prompt composition', () => {
       },
       standard,
     );
-    expect(prompt).toBe(
-      'One simple wooden dining table, large and centered. CANONICAL_LEARNBOX_STYLE no text, no logos.',
-    );
-    // The canonical style must always be present — Admin never substitutes its own visual language.
-    expect(prompt.endsWith(standard.style)).toBe(true);
+    expect(prompt).toContain('One simple wooden dining table, large and centered.');
+    expect(prompt).toContain(standard.style);
+    expect(prompt).toContain('Iranian learners');
+    expect(prompt).toMatch(/no text, letters, numbers.*brand logos.*watermarks/i);
   });
 
   it('prefers a curated brief, then a curated visual concept', () => {

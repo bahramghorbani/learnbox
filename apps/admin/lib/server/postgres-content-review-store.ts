@@ -1,5 +1,7 @@
 import { createHash } from 'node:crypto';
 
+import { queueAiReviewOf, type QueueAiReview, type RowReview } from './ai-card-review';
+
 export const contentReviewDimensions = [
   'german_linguistic',
   'persian_translation',
@@ -35,6 +37,12 @@ export interface ContentReviewQueueEntry {
   sourceProvider: string;
   sourceReference: string | null;
   checks: ContentReviewCheckState[];
+  /**
+   * The independent AI reviewer's findings for exactly this version, when it was created by AI
+   * pack generation. Advisory only: it never counts as a check, and approval still needs every
+   * human dimension. `null` for imported, hand-written or later-edited versions.
+   */
+  aiReview: QueueAiReview | null;
 }
 
 export type ContentReviewQueueResult =
@@ -181,6 +189,25 @@ export class PostgresContentReviewStore {
         checksByVersion.set(versionId, entry);
       }
 
+      // Findings are bound to the draft version they were produced for (recorded at acceptance),
+      // so an edited version — a new card_versions row — never inherits stale AI findings.
+      const aiRows = await client.query(
+        `SELECT generated.value -> '_review' AS review
+           FROM ai_generation_jobs job
+           CROSS JOIN LATERAL jsonb_array_elements(job.generated_rows) AS generated(value)
+          WHERE job.status = 'accepted'
+            AND generated.value -> '_review' ->> 'cardVersionId' = ANY($1::text[])`,
+        [versionIds],
+      );
+      const aiByVersion = new Map<string, QueueAiReview>();
+      for (const aiRow of aiRows.rows) {
+        const review = (
+          typeof aiRow.review === 'string' ? JSON.parse(aiRow.review) : aiRow.review
+        ) as RowReview | null;
+        if (!review || typeof review.cardVersionId !== 'string') continue;
+        aiByVersion.set(review.cardVersionId, queueAiReviewOf(review));
+      }
+
       const items: ContentReviewQueueEntry[] = candidates.rows.map((row) => {
         const content = (row.content_json ?? {}) as Record<string, unknown>;
         const pronunciation = content.pronunciation as Record<string, unknown> | undefined;
@@ -222,6 +249,7 @@ export class PostgresContentReviewStore {
               ? null
               : String(source.reference),
           checks: checksByVersion.get(String(row.id)) ?? [],
+          aiReview: aiByVersion.get(String(row.id)) ?? null,
         };
       });
       return { status: 'ok', items };

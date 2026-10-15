@@ -26,7 +26,11 @@ import {
 } from '@learnbox/content-models';
 
 import { AiProviderError } from './ai-generation-provider';
-import type { AiMediaLimits } from './ai-media-config';
+import {
+  germanVoiceIssue,
+  GERMAN_VOICE_ISSUE_MESSAGES,
+  type AiMediaLimits,
+} from './ai-media-config';
 import type { AiMediaProvider } from './ai-media-provider';
 import { readCanonicalCardBrief } from './canonical-image-standard';
 import type { CardMediaKind, CardMediaStorage } from './card-media-storage';
@@ -74,7 +78,7 @@ export type GenerateOutcome =
   | { status: 'already_generating' }
   | { status: 'card_not_found' }
   | { status: 'forbidden' }
-  | { status: 'unprocessable'; reason: string }
+  | { status: 'unprocessable'; reason: string; code?: string }
   | { status: 'provider_failed'; code: string; message: string };
 
 export type AcceptOutcome =
@@ -223,6 +227,15 @@ export class CardMediaGenerationService {
       let usesDieFallback = false;
 
       if (capability === 'audio') {
+        // Any roster problem refuses all audio (single and bulk alike); no voice is substituted.
+        const voiceIssue = germanVoiceIssue(this.voices, model);
+        if (voiceIssue) {
+          return {
+            status: 'unprocessable',
+            code: voiceIssue,
+            reason: GERMAN_VOICE_ISSUE_MESSAGES[voiceIssue],
+          };
+        }
         // Canonical rules decide what is spoken and who speaks it.
         try {
           spokenTarget =

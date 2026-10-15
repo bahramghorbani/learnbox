@@ -154,6 +154,7 @@ type ServerQueueItem = {
     notes: string | null;
     reviewedAt: string | null;
   }>;
+  aiReview: unknown;
 };
 
 const allDimensions: ReviewDimension[] = [
@@ -196,6 +197,7 @@ function makeItem(
       notes: null,
       reviewedAt: null,
     })),
+    aiReview: null,
   };
 }
 
@@ -599,6 +601,76 @@ describe('ServerBackedContentReview (authenticated review composition)', () => {
       expect(context?.textContent).toContain('انتشار بسته غیرفعال است');
       expect(decisionPanel?.textContent).toContain('تصمیم این پنل فقط سردبیری است');
       expect(decisionPanel?.textContent).toContain('انتشار در این نسخه غیرفعال می‌ماند');
+    } finally {
+      await rendered.unmount();
+    }
+  });
+
+  it('shows the AI reviewer findings with reason, suggestion and final status, advisory only', async () => {
+    const reviewed = {
+      ...itemTisch,
+      aiReview: {
+        state: 'passed',
+        repaired: true,
+        repairRounds: 1,
+        reviewerModel: 'claude-fable-5-1',
+        repairModel: 'claude-fable-5-1',
+        findings: [
+          {
+            field: 'persian_meanings',
+            severity: 'critical',
+            reason: 'معنای فارسی با واژه هم‌خوان نیست.',
+            suggestion: 'میز بنویسید.',
+            source: 'reviewer',
+            round: 0,
+            status: 'resolved',
+          },
+          {
+            field: 'example',
+            severity: 'minor',
+            reason: 'مثال کمی طولانی است.',
+            suggestion: 'کوتاه‌تر شود.',
+            source: 'reviewer',
+            round: 1,
+            status: 'remaining',
+          },
+        ],
+      },
+    };
+    stubReviewFetch({
+      '/api/content/review': () => jsonResponse({ items: [itemHaus, reviewed] }),
+    });
+    const rendered = await renderServer();
+    try {
+      // A card without AI provenance shows no AI panel at all.
+      expect(rendered.container.querySelector('[data-review-panel="ai"]')).toBeNull();
+
+      // The queue marks the AI-reviewed card so an editor can find it without opening it.
+      const rows = Array.from(rendered.container.querySelectorAll('.server-queue-row'));
+      expect(rows[1]?.textContent).toContain('AI: اصلاح‌شده');
+      expect(rows[0]?.textContent).not.toContain('AI:');
+
+      await rendered.clickButton('Tisch');
+      const panel = rendered.container.querySelector('[data-review-panel="ai"]');
+      expect(panel).not.toBeNull();
+      const labelledBy = panel?.getAttribute('aria-labelledby');
+      expect(rendered.container.querySelector(`#${labelledBy}`)).not.toBeNull();
+      expect(panel?.textContent).toContain('پس از ۱ دور اصلاح خودکار تأیید شد');
+      expect(panel?.textContent).toContain('معنای فارسی با واژه هم‌خوان نیست.');
+      expect(panel?.textContent).toContain('میز بنویسید.');
+      expect(panel?.textContent).toContain('با اصلاح خودکار رفع شد');
+      expect(panel?.textContent).toContain('باقی‌مانده؛ نیاز به داوری شما');
+      expect(panel?.textContent).toContain('جای هیچ‌یک از بررسی‌های انسانی را نمی‌گیرد');
+      expect(panel?.querySelectorAll('[data-finding-status="resolved"]')).toHaveLength(1);
+      expect(panel?.querySelectorAll('[data-finding-status="remaining"]')).toHaveLength(1);
+
+      // Advisory only: the six human dimensions are untouched and approval stays blocked.
+      const decision = rendered.container.querySelector('[data-review-panel="decision"]');
+      expect(decision?.querySelectorAll('.review-gate-list li')).toHaveLength(6);
+      const approve = Array.from(decision?.querySelectorAll('button') ?? []).find((button) =>
+        button.textContent?.includes('تأیید نهایی سردبیری'),
+      );
+      expect(approve?.hasAttribute('disabled')).toBe(true);
     } finally {
       await rendered.unmount();
     }

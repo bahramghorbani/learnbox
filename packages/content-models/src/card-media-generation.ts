@@ -81,16 +81,30 @@ export function buildSpokenSentenceTarget(germanSentence: string | null | undefi
 export type GermanVoiceRole =
   'der_masculine' | 'die_feminine' | 'das_neuter' | 'default_no_article';
 
-/**
- * Configured German voices per role. `das` is optional: a genuinely younger/teen-sounding German
- * voice is used when the selected TTS capability provides one, and is otherwise absent so the
- * deterministic DIE fallback applies.
- */
+/** Configured German voices per role. All three article voices must be distinct before audio runs. */
 export interface GermanVoiceMapping {
   der: string;
   die: string;
   das?: string;
   default: string;
+}
+
+export type GermanVoiceConfigurationIssue =
+  'das_voice_unconfigured' | 'article_voices_not_distinct';
+
+/**
+ * Validates the qualification boundary independently from provider configuration. The default
+ * voice is deliberately excluded: it is not a fourth required article voice.
+ */
+export function validateGermanArticleVoices(
+  mapping: GermanVoiceMapping,
+): GermanVoiceConfigurationIssue | undefined {
+  const der = mapping.der.trim();
+  const die = mapping.die.trim();
+  const das = mapping.das?.trim();
+  if (!das || das === die) return 'das_voice_unconfigured';
+  if (!der || !die || der === die || der === das) return 'article_voices_not_distinct';
+  return undefined;
 }
 
 export interface EffectiveGermanVoice {
@@ -114,11 +128,8 @@ export function resolveGermanVoiceRole(card: SpokenTargetCard): GermanVoiceRole 
 }
 
 /**
- * Resolves the effective voice for a card. Deterministic by construction: the same card and the
- * same mapping always yield the same voice, with no provider-side or model-side inference.
- *
- * DAS uses the configured younger German voice when one exists; otherwise it uses exactly the
- * voice configured for DIE, flagged so the fallback is explicit in stored metadata.
+ * Resolves the effective voice for a card. A missing or duplicated article voice is invalid; the
+ * caller must refuse generation rather than substituting a different article's voice.
  */
 export function resolveEffectiveGermanVoice(
   card: SpokenTargetCard,
@@ -131,9 +142,10 @@ export function resolveEffectiveGermanVoice(
 
   if (role === 'das_neuter') {
     const younger = mapping.das?.trim();
-    return younger
-      ? { role, voice: younger, usesDieFallbackForDas: false }
-      : { role, voice: mapping.die, usesDieFallbackForDas: true };
+    if (!younger || younger === mapping.die.trim()) {
+      throw new Error('A distinct DAS voice is required.');
+    }
+    return { role, voice: younger, usesDieFallbackForDas: false };
   }
 
   return { role, voice: mapping.default, usesDieFallbackForDas: false };
@@ -181,9 +193,13 @@ export function deriveCardImageSubject(card: CardImageSubjectSource): string {
   return `One clear, unambiguous depiction of the German concept "${subject}", large and centered as the single dominant teaching concept.`;
 }
 
+const REQUIRED_IMAGE_POLICY =
+  'Depict the card meaning clearly and respectfully for Iranian learners; no text, letters, numbers, typography, brand logos, watermarks, UI, labels, or clutter.';
+
 /**
- * Composes the final image prompt exactly as the canonical visual contract does: the card's
- * subject brief followed by the canonical LearnBox style. Admin never substitutes its own style.
+ * Composes the final image prompt with the canonical visual contract and non-negotiable quality
+ * policy. The explicit policy keeps every current and future contract from omitting learner-safe
+ * constraints.
  */
 export function buildCardImagePrompt(
   card: CardImageSubjectSource,
@@ -191,5 +207,5 @@ export function buildCardImagePrompt(
 ): string {
   const style = standard.style?.trim();
   if (!style) throw new Error('The canonical LearnBox image standard must define a style.');
-  return `${deriveCardImageSubject(card)} ${style}`;
+  return `${deriveCardImageSubject(card)} ${style} ${REQUIRED_IMAGE_POLICY}`;
 }

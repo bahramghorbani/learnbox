@@ -8,6 +8,7 @@ import {
   type WordCardDraft,
   canArchivePackFrom,
   canSubmitCardForReview,
+  evaluateCardPublishReadiness,
   evaluatePackPublishReadiness,
   isPackLifecycleStatus,
 } from '@learnbox/content-models';
@@ -46,6 +47,8 @@ export interface PackLifecycleView {
   targetItemCount: number;
   cards: PackLifecycleCard[];
   submittableCardCount: number;
+  /** Latest non-published versions in a live pack; learners still receive the previous version. */
+  pendingRevisionCount: number;
   readiness: PackPublishReadiness;
   canSubmitForReview: boolean;
   canPublish: boolean;
@@ -306,7 +309,13 @@ export class PostgresContentLifecycleStore {
       const submittableCardCount = cards.filter((card) =>
         canSubmitCardForReview(card.status),
       ).length;
+      const pendingRevisionCount =
+        packStatus === 'published' ? cards.filter((card) => card.status !== 'published').length : 0;
       const canPublish = await this.hasRole(client, input.actorUserId, publisherRoles);
+      const approvedRevisions = cards
+        .filter((card) => card.status === 'approved')
+        .map((card) => toPublishCandidate(card, contentByVersion.get(card.cardVersionId)))
+        .filter((candidate) => evaluateCardPublishReadiness(candidate) === null).length;
 
       return {
         status: 'ok',
@@ -317,9 +326,11 @@ export class PostgresContentLifecycleStore {
           targetItemCount,
           cards,
           submittableCardCount,
+          pendingRevisionCount,
           readiness,
           canSubmitForReview: submittableCardCount > 0,
-          canPublish: canPublish && readiness.ready,
+          canPublish:
+            canPublish && (packStatus === 'published' ? approvedRevisions > 0 : readiness.ready),
           canArchive: canPublish && canArchivePackFrom(packStatus),
         },
       };
@@ -371,7 +382,7 @@ export class PostgresContentLifecycleStore {
         await client.query('ROLLBACK');
         return { status: 'stale', currentStatus: packStatus };
       }
-      if (packStatus === 'published' || packStatus === 'archived') {
+      if (packStatus === 'archived') {
         await client.query('ROLLBACK');
         return { status: 'stale', currentStatus: packStatus };
       }
@@ -411,7 +422,11 @@ export class PostgresContentLifecycleStore {
         `UPDATE card_versions SET status = 'needs_review' WHERE id = ANY($1::uuid[])`,
         [versionIds],
       );
-      await client.query(`UPDATE packs SET status = 'needs_review' WHERE id = $1`, [input.packId]);
+      if (packStatus !== 'published') {
+        await client.query(`UPDATE packs SET status = 'needs_review' WHERE id = $1`, [
+          input.packId,
+        ]);
+      }
 
       for (const versionId of versionIds) {
         await this.audit(
@@ -436,7 +451,7 @@ export class PostgresContentLifecycleStore {
       return {
         status: 'applied',
         submittedCardCount: versionIds.length,
-        packStatus: 'needs_review',
+        packStatus: packStatus === 'published' ? 'published' : 'needs_review',
       };
     } catch (error) {
       await client.query('ROLLBACK');
@@ -482,11 +497,108 @@ export class PostgresContentLifecycleStore {
         return { status: 'stale', currentStatus: packStatus };
       }
       if (
-        packStatus === 'published' ||
-        (await this.alreadyApplied(client, 'content_lifecycle.publish_pack', input.idempotencyKey))
+        await this.alreadyApplied(client, 'content_lifecycle.publish_pack', input.idempotencyKey)
       ) {
         await client.query('ROLLBACK');
         return { status: 'idempotent' };
+      }
+      if (packStatus === 'published') {
+        // Lock card heads before selecting latest versions: editing a card also locks its head, so
+        // the revision released here is the one that was actually reviewed.
+        await client.query(
+          `SELECT c.id
+             FROM pack_cards pc
+             JOIN cards c ON c.id = pc.card_id
+            WHERE pc.pack_id = $1
+            FOR UPDATE`,
+          [input.packId],
+        );
+        const cards = await this.readPackCards(client, input.packId);
+        const locked = await client.query(
+          `SELECT id, status, content_json
+             FROM card_versions
+            WHERE id = ANY($1::uuid[])
+            ORDER BY id
+            FOR UPDATE`,
+          [cards.map((card) => card.cardVersionId)],
+        );
+        const lockedByVersion = new Map(locked.rows.map((row) => [String(row.id), row]));
+        const candidates = cards
+          .filter((card) => lockedByVersion.get(card.cardVersionId)?.status === 'approved')
+          .map((card) => {
+            const row = lockedByVersion.get(card.cardVersionId)!;
+            return toPublishCandidate({ ...card, status: 'approved' }, row.content_json);
+          });
+        if (candidates.length === 0) {
+          await client.query('ROLLBACK');
+          return { status: 'idempotent' };
+        }
+        const cardBlockers = candidates
+          .map((candidate) => evaluateCardPublishReadiness(candidate))
+          .filter((blocker): blocker is NonNullable<typeof blocker> => blocker !== null);
+        if (cardBlockers.length > 0) {
+          await client.query('ROLLBACK');
+          return {
+            status: 'not_ready',
+            readiness: {
+              ready: false,
+              packStatus,
+              publishableCardCount: candidates.length - cardBlockers.length,
+              blockers: [{ code: 'cards_not_ready' }],
+              cardBlockers,
+            },
+          };
+        }
+
+        for (const candidate of candidates) {
+          // This transaction is the visibility boundary: the old published version remains readable
+          // until the replacement is committed, then exactly one published version remains.
+          await client.query(
+            `UPDATE card_versions
+                SET status = 'deprecated'
+              WHERE card_id = $1 AND status = 'published'`,
+            [cards.find((card) => card.cardVersionId === candidate.cardVersionId)!.cardId],
+          );
+          await client.query(
+            `UPDATE card_versions
+                SET status = 'published', published_at = now(), content_json = $2
+              WHERE id = $1`,
+            [candidate.cardVersionId, { ...candidate.content, status: 'published' }],
+          );
+          await this.audit(
+            client,
+            input.actorUserId,
+            'content_lifecycle.publish_revision',
+            'card_version',
+            candidate.cardVersionId,
+            {
+              pack_id: input.packId,
+              content_id: candidate.contentId,
+              idempotency_key: input.idempotencyKey,
+            },
+          );
+        }
+        await this.audit(
+          client,
+          input.actorUserId,
+          'content_lifecycle.publish_revisions',
+          'pack',
+          input.packId,
+          { published_card_count: candidates.length, idempotency_key: input.idempotencyKey },
+        );
+        await client.query('COMMIT');
+        return { status: 'applied', publishedCardCount: candidates.length };
+      }
+      if (packStatus === 'archived') {
+        await client.query('ROLLBACK');
+        return {
+          status: 'not_ready',
+          readiness: evaluatePackPublishReadiness({
+            packStatus,
+            targetItemCount: toCount(pack.target_item_count),
+            cards: [],
+          }),
+        };
       }
 
       const cards = await this.readPackCards(client, input.packId);
@@ -573,9 +685,9 @@ export class PostgresContentLifecycleStore {
   }
 
   /**
-   * Deactivates a pack without destroying anything. Published card versions move to `deprecated`,
-   * which removes them from the learner curriculum while every schedule, review event and audit
-   * row that references them survives untouched.
+   * Archives a pack without destroying anything. Published versions stay published so a learner
+   * holding `user_packs` entitlement can continue the pack; access control denies everyone else.
+   * Schedules, events and audit rows are never touched.
    */
   async archivePack(input: PackLifecycleMutation): Promise<ArchivePackResult> {
     if (!canonicalUuidPattern.test(input.actorUserId)) {
@@ -616,36 +728,8 @@ export class PostgresContentLifecycleStore {
         return { status: 'idempotent' };
       }
 
-      const deactivated = await client.query(
-        `UPDATE card_versions
-            SET status = 'deprecated'
-          WHERE id IN (
-                  SELECT cv.id
-                    FROM pack_cards pc
-                    JOIN LATERAL (
-                           SELECT inner_cv.id, inner_cv.status
-                             FROM card_versions inner_cv
-                            WHERE inner_cv.card_id = pc.card_id
-                            ORDER BY inner_cv.version DESC
-                            LIMIT 1
-                         ) cv ON true
-                   WHERE pc.pack_id = $1 AND cv.status = 'published'
-                )
-          RETURNING id`,
-        [input.packId],
-      );
       await client.query(`UPDATE packs SET status = 'archived' WHERE id = $1`, [input.packId]);
 
-      for (const row of deactivated.rows) {
-        await this.audit(
-          client,
-          input.actorUserId,
-          'content_lifecycle.deprecate',
-          'card_version',
-          String(row.id),
-          { pack_id: input.packId, idempotency_key: input.idempotencyKey },
-        );
-      }
       await this.audit(
         client,
         input.actorUserId,
@@ -653,14 +737,14 @@ export class PostgresContentLifecycleStore {
         'pack',
         input.packId,
         {
-          deactivated_card_count: deactivated.rows.length,
+          deactivated_card_count: 0,
           previous_status: packStatus,
           idempotency_key: input.idempotencyKey,
         },
       );
 
       await client.query('COMMIT');
-      return { status: 'applied', deactivatedCardCount: deactivated.rows.length };
+      return { status: 'applied', deactivatedCardCount: 0 };
     } catch (error) {
       await client.query('ROLLBACK');
       throw error;

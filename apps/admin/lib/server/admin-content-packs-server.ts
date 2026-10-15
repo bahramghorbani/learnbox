@@ -27,6 +27,7 @@ import {
   createAiJobStatusRoute,
   createAiModelsRoute,
   createAiPlanRoute,
+  createAiRevisePlanRoute,
   createAiRunBatchRoute,
 } from './admin-ai-generation-routes';
 import {
@@ -49,6 +50,8 @@ import { getSharedAdminDatabasePool } from './admin-database-pool';
 import { PostgresOwnerAuthStore } from './postgres-owner-auth-store';
 import { PostgresContentPacksStore } from './postgres-content-packs-store';
 import { PostgresContentPacksWriteStore } from './postgres-content-packs-write-store';
+import { PostgresPackPriceStore } from './postgres-pack-price-store';
+import { createPackPriceRoute } from './admin-pack-price-routes';
 import { PostgresContentLifecycleStore } from './postgres-content-lifecycle-store';
 import { PostgresStoreListingsStore } from './postgres-store-listings-store';
 import { PostgresAdminPaymentsStore } from './postgres-admin-payments-store';
@@ -98,6 +101,7 @@ export function createAdminContentPacksServer(dependencies: {
     // read workspace keeps working.
     const manageConfig = readAdminContentPacksManageConfig(dependencies.environment);
     const writeStore = new PostgresContentPacksWriteStore(pool);
+    const priceStore = new PostgresPackPriceStore(pool);
     const writeShared = {
       enabled: manageConfig.enabled,
       config: manageConfig,
@@ -133,6 +137,7 @@ export function createAdminContentPacksServer(dependencies: {
             aiConfig.limits,
             importService,
             writeStore,
+            aiConfig.models,
           )
         : undefined,
       // Only the model-catalog route needs the provider itself; it is the sole holder of the key.
@@ -214,6 +219,7 @@ export function createAdminContentPacksServer(dependencies: {
       cards: createContentPackCardsRoute(shared),
       createPack: createContentPackCreateRoute(writeShared),
       editPack: createContentPackEditRoute(writeShared),
+      setPackPrice: createPackPriceRoute({ ...writeShared, store: priceStore }),
       createCard: createContentCardCreateRoute(writeShared),
       editCard: createContentCardEditRoute(writeShared),
       importPreview: createContentImportPreviewRoute(importShared),
@@ -224,6 +230,7 @@ export function createAdminContentPacksServer(dependencies: {
       aiModels: createAiModelsRoute(aiShared),
       aiPlan: createAiPlanRoute(aiShared),
       aiApprovePlan: createAiApprovePlanRoute(aiShared),
+      aiRevisePlan: createAiRevisePlanRoute(aiShared),
       aiRunBatch: createAiRunBatchRoute(aiShared),
       aiJobStatus: createAiJobStatusRoute(aiShared),
       aiAccept: createAiAcceptRoute(aiShared),

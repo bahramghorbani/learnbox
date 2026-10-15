@@ -52,6 +52,7 @@ const packId = 'm16-start';
 const aiPackId = 'm16-ai';
 const operator = randomUUID();
 const learner = randomUUID();
+const nonBuyer = randomUUID();
 const cards: { cardId: string; versionId: string; contentId: string }[] = [];
 let aiCard: { cardId: string; versionId: string };
 
@@ -124,6 +125,12 @@ async function humanApprove(versionId: string) {
   expect(decision).toMatchObject({ status: 'applied', nextStatus: 'approved' });
 }
 
+async function reviewQueueItems() {
+  const result = await review.listReviewQueue(operator);
+  if (result.status !== 'ok') throw new Error('expected queue');
+  return result.items;
+}
+
 async function curriculumCardIds(): Promise<string[]> {
   const result = await pool.query(CURRICULUM_SQL);
   return result.rows.map((row) => String(row.card_id)).sort();
@@ -136,7 +143,7 @@ async function statuses(pack: string) {
        FROM pack_cards pc
        JOIN card_versions cv ON cv.card_id = pc.card_id
       WHERE pc.pack_id = $1
-      ORDER BY cv.id`,
+      ORDER BY cv.status::text, cv.id`, // ids are random UUIDs; status text gives a stable order
     [pack],
   );
   return {
@@ -145,6 +152,16 @@ async function statuses(pack: string) {
     cards: versions.rows.map((row) => String(row.status)),
     cardPublishedAt: versions.rows.map((row) => row.published_at as Date | null),
   };
+}
+
+async function publishedLemma(cardId: string): Promise<string | null> {
+  const result = await pool.query(
+    `SELECT cv.content_json->>'lemma' AS lemma
+       FROM card_versions cv
+      WHERE cv.card_id = $1 AND cv.status = 'published'`,
+    [cardId],
+  );
+  return (result.rows[0]?.lemma as string | undefined) ?? null;
 }
 
 beforeAll(async () => {
@@ -166,11 +183,13 @@ beforeAll(async () => {
   lifecycle = new PostgresContentLifecycleStore(pool as never);
   review = new PostgresContentReviewStore(pool as never);
 
-  await pool.query('INSERT INTO users (id, phone_e164) VALUES ($1, $2), ($3, $4)', [
+  await pool.query('INSERT INTO users (id, phone_e164) VALUES ($1, $2), ($3, $4), ($5, $6)', [
     operator,
-    '+989120000001',
+    '+989****0001',
     learner,
-    '+989120000002',
+    '+989****0002',
+    nonBuyer,
+    '+989****0003',
   ]);
   // One operator holds both canonical roles; the role split itself is proven by the unit suite.
   await pool.query(
@@ -245,6 +264,83 @@ suite('M1.6 — draft to review', () => {
     expect(added).toEqual(['m16-stuhl', 'm16-tisch']);
     // Submission alone never publishes.
     expect(await curriculumCardIds()).toEqual([]);
+  });
+
+  it('shows the AI reviewer findings beside exactly the version they were produced for', async () => {
+    const [tisch] = cards;
+    const finding = (field: string, severity: string, reason: string, suggestion: string) => ({
+      field,
+      severity,
+      reason,
+      suggestion,
+      source: severity === 'critical' && field === 'persian_meanings' ? 'validator' : 'reviewer',
+    });
+    const review = {
+      state: 'passed',
+      repaired: true,
+      repairRounds: 1,
+      reviewerModel: 'claude-fable-5-1',
+      repairModel: 'claude-fable-5-1',
+      cardVersionId: tisch!.versionId,
+      findings: [finding('example', 'minor', 'مثال کمی طولانی است.', 'کوتاه‌تر شود.')],
+      history: [
+        { round: 0, findings: [finding('persian_meanings', 'critical', 'معنی خالی است.', '')] },
+        {
+          round: 1,
+          findings: [finding('example', 'minor', 'مثال کمی طولانی است.', 'کوتاه‌تر شود.')],
+        },
+      ],
+    };
+    // A non-accepted job's rows must never surface, even if they name the same version.
+    for (const status of ['accepted', 'generated']) {
+      await pool.query(
+        `INSERT INTO ai_generation_jobs
+           (id, actor_user_id, prompt, plan, plan_fingerprint, status, requested_count, batch_size,
+            generated_rows)
+         VALUES ($1, $2, 'p', '{}'::jsonb, $3, $4, 1, 1, $5::jsonb)`,
+        [
+          randomUUID(),
+          operator,
+          'f'.repeat(64),
+          status,
+          JSON.stringify([
+            {
+              lemma: 'Tisch',
+              _review:
+                status === 'accepted'
+                  ? review
+                  : { ...review, findings: [finding('lemma', 'major', 'STALE', '')], history: [] },
+            },
+          ]),
+        ],
+      );
+    }
+
+    const queue = await reviewQueueItems();
+    const tischEntry = queue.find((entry) => entry.contentId === 'm16-tisch');
+    const stuhlEntry = queue.find((entry) => entry.contentId === 'm16-stuhl');
+    expect(stuhlEntry?.aiReview).toBeNull();
+    expect(tischEntry?.aiReview).toMatchObject({
+      state: 'passed',
+      repaired: true,
+      repairRounds: 1,
+      reviewerModel: 'claude-fable-5-1',
+    });
+    expect(tischEntry?.aiReview?.findings).toEqual([
+      expect.objectContaining({
+        field: 'persian_meanings',
+        source: 'validator',
+        status: 'resolved',
+        round: 0,
+      }),
+      expect.objectContaining({
+        field: 'example',
+        suggestion: 'کوتاه‌تر شود.',
+        status: 'remaining',
+        round: 1,
+      }),
+    ]);
+    expect(JSON.stringify(tischEntry?.aiReview)).not.toContain('STALE');
   });
 
   it('audits the submission under the canonical pack surrogate identity', async () => {
@@ -379,6 +475,72 @@ suite('M1.6 — publish is gated on real review state', () => {
   });
 });
 
+suite('M1.6 — published-pack revisions', () => {
+  it('keeps the published version visible through human review, then atomically replaces it', async () => {
+    const card = cards[0]!;
+    await pool.query(
+      `INSERT INTO card_schedules (user_id, card_id, state, stability_days, due_at)
+       VALUES ($1, $2, 'review'::learning_state, 5, now() - interval '1 day')`,
+      [learner, card.cardId],
+    );
+    await pool.query(
+      `INSERT INTO review_events (id, user_id, card_id, grade, occurred_at, client_event_id)
+       VALUES ($1, $2, $3, 'remembered', now(), $4)`,
+      [randomUUID(), learner, card.cardId, randomUUID()],
+    );
+    const revision = await pool.query(
+      `INSERT INTO card_versions (card_id, version, status, content_json, source_provider)
+       VALUES ($1, 2, 'draft', $2::jsonb, 'editorial') RETURNING id`,
+      [card.cardId, JSON.stringify(cardContent(card.contentId, 'Tischchen', 'das', 'editorial'))],
+    );
+    const revisionId = String(revision.rows[0]!.id);
+
+    expect(await publishedLemma(card.cardId)).toBe('Tisch');
+    expect(
+      await lifecycle.submitPackForReview({
+        packId,
+        actorUserId: operator,
+        idempotencyKey: randomUUID(),
+        expectedStatus: 'published',
+      }),
+    ).toMatchObject({ status: 'applied', packStatus: 'published', submittedCardCount: 1 });
+    await humanApprove(revisionId);
+    expect(await publishedLemma(card.cardId)).toBe('Tisch');
+
+    expect(
+      await lifecycle.publishPack({
+        packId,
+        actorUserId: operator,
+        idempotencyKey: randomUUID(),
+        expectedStatus: 'published',
+      }),
+    ).toMatchObject({ status: 'applied', publishedCardCount: 1 });
+    expect(await publishedLemma(card.cardId)).toBe('Tischchen');
+
+    const versions = await pool.query(
+      `SELECT card_id, status FROM card_versions WHERE card_id = $1 ORDER BY version`,
+      [card.cardId],
+    );
+    expect(versions.rows.map((row) => String(row.card_id))).toEqual([card.cardId, card.cardId]);
+    expect(versions.rows.map((row) => String(row.status))).toEqual(['deprecated', 'published']);
+    expect(versions.rows.filter((row) => row.status === 'published')).toHaveLength(1);
+    expect(
+      (
+        await pool.query('SELECT count(*)::int AS count FROM card_schedules WHERE card_id = $1', [
+          card.cardId,
+        ])
+      ).rows[0]?.count,
+    ).toBe(1);
+    expect(
+      (
+        await pool.query('SELECT count(*)::int AS count FROM review_events WHERE card_id = $1', [
+          card.cardId,
+        ])
+      ).rows[0]?.count,
+    ).toBe(1);
+  });
+});
+
 suite('M1.6 — AI output cannot bypass human publication', () => {
   it('refuses to publish AI-sourced content that no human approved', async () => {
     await lifecycle.submitPackForReview({
@@ -432,18 +594,12 @@ suite('M1.6 — AI output cannot bypass human publication', () => {
   });
 });
 
-suite('M1.6 — archive preserves history', () => {
-  it('removes archived content from the curriculum without destroying learner history', async () => {
-    // Real learner history on a published card, which must survive deactivation.
+suite('M1.6 — archive preserves buyer access and history', () => {
+  it('keeps an entitled learner’s curriculum and due review while denying a non-buyer', async () => {
     await pool.query(
-      `INSERT INTO card_schedules (user_id, card_id, state, stability_days, due_at)
-       VALUES ($1, $2, 'review'::learning_state, 5, now() + interval '1 day')`,
-      [learner, cards[0]!.cardId],
-    );
-    await pool.query(
-      `INSERT INTO review_events (id, user_id, card_id, grade, occurred_at, client_event_id)
-       VALUES ($1, $2, $3, 'remembered', now(), $4)`,
-      [randomUUID(), learner, cards[0]!.cardId, randomUUID()],
+      `INSERT INTO user_packs (user_id, pack_id, acquisition_type)
+       VALUES ($1, $2, 'free')`,
+      [learner, packId],
     );
 
     const result = await lifecycle.archivePack({
@@ -452,41 +608,69 @@ suite('M1.6 — archive preserves history', () => {
       idempotencyKey: randomUUID(),
       expectedStatus: 'published',
     });
-    expect(result).toMatchObject({ status: 'applied', deactivatedCardCount: 2 });
+    expect(result).toMatchObject({ status: 'applied', deactivatedCardCount: 0 });
 
     const state = await statuses(packId);
     expect(state.pack).toBe('archived');
-    expect(state.cards).toEqual(['deprecated', 'deprecated']);
+    expect(state.cards).toEqual(['deprecated', 'published', 'published']);
 
-    // The archived pack leaves the curriculum; the independently published AI pack stays.
-    expect(await curriculumCardIds()).toEqual([aiCard.cardId]);
+    const buyerAccess = await pool.query(
+      `SELECT EXISTS (
+         SELECT 1 FROM packs p
+          WHERE p.id = $1 AND p.status IN ('published', 'archived')
+            AND EXISTS (SELECT 1 FROM user_packs up WHERE up.pack_id = p.id AND up.user_id = $2)
+       ) AS allowed`,
+      [packId, learner],
+    );
+    const nonBuyerAccess = await pool.query(
+      `SELECT EXISTS (
+         SELECT 1 FROM packs p
+          WHERE p.id = $1 AND (
+            (p.status = 'published' AND p.is_free = true)
+            OR (p.status IN ('published', 'archived') AND EXISTS (
+              SELECT 1 FROM user_packs up WHERE up.pack_id = p.id AND up.user_id = $2
+            ))
+          )
+       ) AS allowed`,
+      [packId, nonBuyer],
+    );
+    expect(buyerAccess.rows[0]?.allowed).toBe(true);
+    expect(nonBuyerAccess.rows[0]?.allowed).toBe(false);
 
-    // Nothing historical was deleted.
-    const schedules = await pool.query(
-      'SELECT count(*)::int AS count FROM card_schedules WHERE card_id = $1',
-      [cards[0]!.cardId],
+    // The canonical learner predicate preserves the entitled learner’s cards and due schedule.
+    const buyerCurriculum = await pool.query(
+      `SELECT count(*)::int AS count FROM pack_cards pc
+       JOIN card_versions cv ON cv.card_id = pc.card_id AND cv.status = 'published'
+       JOIN user_packs up ON up.pack_id = pc.pack_id AND up.user_id = $1
+       JOIN packs p ON p.id = pc.pack_id AND p.status = 'archived'
+       WHERE pc.pack_id = $2`,
+      [learner, packId],
     );
-    const events = await pool.query(
-      'SELECT count(*)::int AS count FROM review_events WHERE card_id = $1',
-      [cards[0]!.cardId],
-    );
-    const versions = await pool.query(
-      'SELECT count(*)::int AS count FROM card_versions WHERE card_id = $1',
-      [cards[0]!.cardId],
-    );
-    expect(schedules.rows[0].count).toBe(1);
-    expect(events.rows[0].count).toBe(1);
-    expect(versions.rows[0].count).toBe(1);
+    expect(buyerCurriculum.rows[0]?.count).toBe(2);
+    expect(
+      (
+        await pool.query('SELECT count(*)::int AS count FROM card_schedules WHERE card_id = $1', [
+          cards[0]!.cardId,
+        ])
+      ).rows[0]?.count,
+    ).toBe(1);
+    expect(
+      (
+        await pool.query('SELECT count(*)::int AS count FROM review_events WHERE card_id = $1', [
+          cards[0]!.cardId,
+        ])
+      ).rows[0]?.count,
+    ).toBe(1);
   });
 
-  it('audits the deactivation and refuses to republish an archived pack', async () => {
+  it('audits archive without deprecating buyer-visible card versions and refuses republish', async () => {
     const audit = await pool.query(
       `SELECT action FROM audit_logs WHERE action LIKE 'content_lifecycle.%'
-        AND action IN ('content_lifecycle.deprecate', 'content_lifecycle.archive_pack')`,
+        AND action IN ('content_lifecycle.publish_revision', 'content_lifecycle.archive_pack')`,
     );
-    expect(audit.rows.filter((row) => row.action === 'content_lifecycle.deprecate')).toHaveLength(
-      2,
-    );
+    expect(
+      audit.rows.filter((row) => row.action === 'content_lifecycle.publish_revision'),
+    ).toHaveLength(1);
     expect(
       audit.rows.filter((row) => row.action === 'content_lifecycle.archive_pack'),
     ).toHaveLength(1);

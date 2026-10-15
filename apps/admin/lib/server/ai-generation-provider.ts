@@ -17,7 +17,7 @@ export interface AiTextCompletionRequest {
   maxOutputTokens: number;
   /** Abort budget for a single provider call. */
   timeoutMs: number;
-  /** Per-job model override chosen by the Admin; falls back to the configured default. */
+  /** Per-call model selected by the trusted server; never browser input for reviewer/repair. */
   model?: string;
 }
 
@@ -208,19 +208,31 @@ export type AiGenerationConfig =
       provider?: AiTextProvider;
       reason?: 'provider_not_configured';
       limits: AiGenerationLimits;
+      /** Default models per role; the generator default may be overridden per job by the Admin. */
+      models: AiModelRoles;
     };
 
-/** Server-side cost/scale ceilings. A prompt can ask for more; the plan is clamped to these. */
+/**
+ * Server-side technical ceilings. They exist to stop runaway loops, accidental repeats and broken
+ * operations, not to budget money: a prompt can ask for more, the plan is clamped to these.
+ */
 export interface AiGenerationLimits {
   /** Hard ceiling on cards per job, whatever the prompt says. */
   maxCards: number;
   /** Cards requested per provider call. */
   batchSize: number;
-  /** Retries of a single failing batch before the job fails honestly. */
+  /** Retries of a single failing step before the job fails honestly. */
   maxBatchAttempts: number;
   maxPromptChars: number;
   perCallTimeoutMs: number;
+  /** Output budget of one generator call (adaptive thinking draws on the same budget). */
   maxOutputTokens: number;
+  /** Output budget of one reviewer or repair call. */
+  reviewerMaxOutputTokens: number;
+  /** Automatic repair rounds per card before its findings are reported as unresolved. */
+  maxRepairRounds: number;
+  /** Extra generation batches allowed to replace invalid, duplicate or unresolved cards. */
+  maxReplacementBatches: number;
 }
 
 export const DEFAULT_AI_GENERATION_LIMITS: AiGenerationLimits = {
@@ -228,17 +240,36 @@ export const DEFAULT_AI_GENERATION_LIMITS: AiGenerationLimits = {
   batchSize: 25,
   maxBatchAttempts: 3,
   maxPromptChars: 2000,
-  perCallTimeoutMs: 120_000,
-  maxOutputTokens: 8000,
+  perCallTimeoutMs: 240_000,
+  maxOutputTokens: 32_000,
+  reviewerMaxOutputTokens: 32_000,
+  maxRepairRounds: 2,
+  maxReplacementBatches: 3,
 };
 
-const DEFAULT_MODEL = 'claude-sonnet-4-5';
+/**
+ * The models the owner chose (2026-10-15). Generation (plan, vocabulary, cards) and independent
+ * review/repair are configured separately so either can be replaced without touching the other.
+ */
+export const DEFAULT_GENERATOR_MODEL = 'claude-opus-5-5';
+export const DEFAULT_REVIEWER_MODEL = 'claude-fable-5-1';
+
+/** Models used by one job, pinned at plan time. */
+export interface AiModelRoles {
+  generator: string;
+  reviewer: string;
+  repair: string;
+}
+
+function boundedInt(raw: string | undefined, fallback: number, minimum: number, ceiling: number) {
+  if (raw === undefined || raw.trim() === '') return fallback;
+  const value = Number(raw);
+  if (!Number.isSafeInteger(value) || value < minimum) return fallback;
+  return Math.min(value, ceiling);
+}
 
 function positiveInt(raw: string | undefined, fallback: number, ceiling: number): number {
-  if (!raw) return fallback;
-  const value = Number(raw);
-  if (!Number.isSafeInteger(value) || value <= 0) return fallback;
-  return Math.min(value, ceiling);
+  return boundedInt(raw, fallback, 1, ceiling);
 }
 
 /**
@@ -254,28 +285,58 @@ export function readAiGenerationConfig(
   if (environment.LEARNBOX_ADMIN_CONTENT_AI_ENABLED !== 'true') {
     return { enabled: false, reason: 'disabled' };
   }
+  const defaults = DEFAULT_AI_GENERATION_LIMITS;
   const limits: AiGenerationLimits = {
-    ...DEFAULT_AI_GENERATION_LIMITS,
-    maxCards: positiveInt(
-      environment.LEARNBOX_AI_MAX_CARDS,
-      DEFAULT_AI_GENERATION_LIMITS.maxCards,
-      DEFAULT_AI_GENERATION_LIMITS.maxCards,
+    ...defaults,
+    maxCards: positiveInt(environment.LEARNBOX_AI_MAX_CARDS, defaults.maxCards, defaults.maxCards),
+    batchSize: positiveInt(environment.LEARNBOX_AI_BATCH_SIZE, defaults.batchSize, 100),
+    perCallTimeoutMs: positiveInt(
+      environment.LEARNBOX_AI_CALL_TIMEOUT_MS,
+      defaults.perCallTimeoutMs,
+      600_000,
     ),
-    batchSize: positiveInt(
-      environment.LEARNBOX_AI_BATCH_SIZE,
-      DEFAULT_AI_GENERATION_LIMITS.batchSize,
-      100,
+    maxOutputTokens: positiveInt(
+      environment.LEARNBOX_AI_MAX_OUTPUT_TOKENS,
+      defaults.maxOutputTokens,
+      128_000,
+    ),
+    reviewerMaxOutputTokens: positiveInt(
+      environment.LEARNBOX_AI_REVIEWER_MAX_OUTPUT_TOKENS,
+      defaults.reviewerMaxOutputTokens,
+      128_000,
+    ),
+    // 0 is meaningful: review only, never repair automatically.
+    maxRepairRounds: boundedInt(
+      environment.LEARNBOX_AI_MAX_REPAIR_ROUNDS,
+      defaults.maxRepairRounds,
+      0,
+      5,
+    ),
+    maxReplacementBatches: boundedInt(
+      environment.LEARNBOX_AI_MAX_REPLACEMENT_BATCHES,
+      defaults.maxReplacementBatches,
+      0,
+      10,
     ),
   };
+  const generator = environment.LEARNBOX_AI_MODEL?.trim() || DEFAULT_GENERATOR_MODEL;
+  const reviewer = environment.LEARNBOX_AI_REVIEWER_MODEL?.trim() || DEFAULT_REVIEWER_MODEL;
+  const models: AiModelRoles = {
+    generator,
+    reviewer,
+    // Repair belongs to the reviewing side by default (owner decision), but is separately settable.
+    repair: environment.LEARNBOX_AI_REPAIR_MODEL?.trim() || reviewer,
+  };
   const apiKey = environment.LEARNBOX_AI_API_KEY?.trim();
-  if (!apiKey) return { enabled: true, reason: 'provider_not_configured', limits };
+  if (!apiKey) return { enabled: true, reason: 'provider_not_configured', limits, models };
   return {
     enabled: true,
     provider: new AnthropicTextProvider(
       apiKey,
-      environment.LEARNBOX_AI_MODEL?.trim() || DEFAULT_MODEL,
+      generator,
       environment.LEARNBOX_AI_BASE_URL?.trim() || undefined,
     ),
     limits,
+    models,
   };
 }

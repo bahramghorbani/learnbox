@@ -122,6 +122,10 @@ suite('restricted-role grant matrix (real Postgres, real roles)', () => {
       [ids.learner, ids.admin],
     );
     await admin.query(
+      `INSERT INTO admin_role_assignments (user_id, role) VALUES ($1, 'super_admin')`,
+      [ids.admin],
+    );
+    await admin.query(
       `INSERT INTO packs (id, display_name, target_item_count, status, price_tomans)
        VALUES ($1, 'Roles Test Pack', 10, 'published', 50000)`,
       [PACK],
@@ -426,6 +430,50 @@ suite('restricted-role grant matrix (real Postgres, real roles)', () => {
         lemma: 'Apfelbaum',
         version_status: 'published',
       });
+    });
+
+    it('keeps direct price updates denied but permits the audited owner-only function before a sale', async () => {
+      const pricePack = 'price-lock-test';
+      await admin.query(
+        `INSERT INTO packs (id, display_name, target_item_count, status, price_tomans)
+         VALUES ($1, 'Price Lock Pack', 1, 'published', 50000)`,
+        [pricePack],
+      );
+      await expectDenied(adminRole, `UPDATE packs SET price_tomans = 1 WHERE id = $1`, [pricePack]);
+      await expectDenied(app, `SELECT admin_set_pack_price($1, $2, $3)`, [
+        pricePack,
+        75000,
+        ids.admin,
+      ]);
+      await adminRole.query(`SELECT admin_set_pack_price($1, $2, $3)`, [
+        pricePack,
+        75000,
+        ids.admin,
+      ]);
+      await expect(
+        admin.query(`SELECT price_tomans FROM packs WHERE id = $1`, [pricePack]),
+      ).resolves.toMatchObject({ rows: [{ price_tomans: 75000 }] });
+      await expect(
+        admin.query(`SELECT metadata FROM audit_logs WHERE action = 'content_pack.price_set'`),
+      ).resolves.toMatchObject({
+        rows: [
+          { metadata: { pack_id: pricePack, old_price_tomans: 50000, new_price_tomans: 75000 } },
+        ],
+      });
+      await admin.query(
+        `INSERT INTO purchase_events (user_id, provider, environment, provider_purchase_id, pack_id, amount_tomans, status)
+         VALUES ($1, 'zarinpal', 'sandbox', 'sale-lock', $2, 75000, 'verified')`,
+        [ids.learner, pricePack],
+      );
+      await expect(
+        adminRole.query(`SELECT admin_set_pack_price($1, $2, $3)`, [pricePack, 80000, ids.admin]),
+      ).rejects.toMatchObject({ code: '55000' });
+      await admin.query(
+        `INSERT INTO packs (id, display_name, target_item_count, is_free) VALUES ('free-price-test', 'Free', 1, true)`,
+      );
+      await expect(
+        adminRole.query(`SELECT admin_set_pack_price('free-price-test', 1, $1)`, [ids.admin]),
+      ).rejects.toMatchObject({ code: 'P0002' });
     });
 
     it('keeps the deliberate limits of the contained Admin surface', async () => {

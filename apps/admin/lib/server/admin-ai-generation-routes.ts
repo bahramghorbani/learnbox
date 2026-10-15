@@ -128,6 +128,7 @@ export function createAiPlanRoute(dependencies: RouteDependencies) {
     if ('response' in authorized) return authorized.response;
     const body = await readJson(request);
     if (!body || typeof body.prompt !== 'string') return genericInvalid();
+    if (body.isFree !== undefined && typeof body.isFree !== 'boolean') return genericInvalid();
 
     try {
       const result = await dependencies.service!.plan({
@@ -136,6 +137,7 @@ export function createAiPlanRoute(dependencies: RouteDependencies) {
         // Optional: an unrecognised value is ignored by the service, which falls back to the
         // configured default rather than failing the request.
         model: typeof body.model === 'string' ? body.model : undefined,
+        ...(body.isFree === true ? { isFree: true } : {}),
       });
       if (result.status === 'provider_not_configured') return providerNotConfigured();
       if (result.status === 'invalid') {
@@ -174,6 +176,61 @@ export function createAiModelsRoute(dependencies: RouteDependencies) {
       });
     } catch {
       return json({ models: [], defaultModel: provider.model, provider: provider.provider });
+    }
+  };
+}
+
+/**
+ * POST — the Admin's direct edits to a plan that has not started generating. Calls no provider and
+ * writes no canonical content; it only rewrites the pending plan and returns its new fingerprint.
+ */
+export function createAiRevisePlanRoute(dependencies: RouteDependencies) {
+  return async function POST(request: Request) {
+    const authorized = await authorize(request, dependencies);
+    if ('response' in authorized) return authorized.response;
+    const body = await readJson(request);
+    if (!body) return genericInvalid();
+    const { jobId, planFingerprint, plan } = body;
+    if (typeof jobId !== 'string' || !uuidPattern.test(jobId)) return genericInvalid();
+    if (typeof planFingerprint !== 'string' || !/^[0-9a-f]{64}$/.test(planFingerprint)) {
+      return genericInvalid();
+    }
+    if (typeof plan !== 'object' || plan === null || Array.isArray(plan)) return genericInvalid();
+    const edits = plan as Record<string, unknown>;
+    const allowed = [
+      'packId',
+      'title',
+      'description',
+      'audience',
+      'cefr',
+      'cardCount',
+      'topics',
+      'strategy',
+      'scope',
+      'isFree',
+    ];
+    if (Object.keys(edits).some((key) => !allowed.includes(key))) return genericInvalid();
+
+    try {
+      const result = await dependencies.service!.revisePlan({
+        jobId,
+        actorUserId: authorized.actorUserId,
+        expectedPlanFingerprint: planFingerprint,
+        edits,
+      });
+      if (result.status === 'not_found') return notFound();
+      if (result.status === 'invalid') {
+        return json({ code: 'invalid_plan', message: result.message }, { status: 422 });
+      }
+      if (result.status === 'stale') {
+        return json({ code: 'stale_plan', message: result.message }, { status: 409 });
+      }
+      if (result.status === 'conflict') {
+        return json({ code: 'conflict', message: result.message }, { status: 409 });
+      }
+      return json({ status: 'planned', job: result.job });
+    } catch {
+      return json({ code: 'revise_failed' }, { status: 503 });
     }
   };
 }
@@ -261,7 +318,13 @@ export function createAiJobStatusRoute(dependencies: RouteDependencies) {
         actorUserId: authorized.actorUserId,
       });
       if (result.status === 'not_found') return notFound();
-      return json({ status: 'ok', job: result.job, analysis: result.analysis });
+      return json({
+        status: 'ok',
+        job: result.job,
+        analysis: result.analysis,
+        quality: result.quality,
+        reviews: result.reviews,
+      });
     } catch {
       return json({ code: 'status_failed' }, { status: 503 });
     }

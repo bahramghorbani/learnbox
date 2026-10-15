@@ -10,7 +10,11 @@
  * role, and this mapping supplies the configured voice for that role.
  */
 
-import type { GermanVoiceMapping } from '@learnbox/content-models';
+import {
+  validateGermanArticleVoices,
+  type GermanVoiceConfigurationIssue,
+  type GermanVoiceMapping,
+} from '@learnbox/content-models';
 
 import {
   AvalAiMediaProvider,
@@ -40,19 +44,58 @@ export const DEFAULT_AI_MEDIA_LIMITS: AiMediaLimits = {
 };
 
 /**
- * The shipped German voice mapping.
- *
- * These are verified: each produces distinct audio, and each was transcribed back as German by
- * the gateway's ASR. DAS is intentionally left unset — no voice in the configured family is
- * documented or verified as genuinely younger-sounding, so DAS deterministically uses the DIE
- * female voice and that fallback is recorded on every asset. Setting `LEARNBOX_AI_VOICE_DAS`
- * switches DAS to a younger voice with no code change.
+ * The shipped German voice mapping: the product owner's final choice of 2026-10-15, made by
+ * listening to real `eleven_multilingual_v2` samples of all candidate voices (PDR-010). It is not a
+ * native-speaker pronunciation certification. `LEARNBOX_AI_VOICE_*` may override a role, but the
+ * result is still checked by `germanVoiceIssue` and never silently replaced.
  */
 export const DEFAULT_GERMAN_VOICE_MAPPING: GermanVoiceMapping = {
-  der: 'onyx',
+  der: 'sage',
   die: 'nova',
-  das: undefined,
+  das: 'fable',
   default: 'nova',
+};
+
+/** The model the article voices were chosen on; the voice ids below are only valid for it. */
+export const QUALIFIED_AUDIO_MODEL = DEFAULT_AUDIO_MODEL;
+
+/** Voice ids AvalAI accepts for `eleven_multilingual_v2` (docs.avalai.ir/en/providers/elevenlabs). */
+export const AVALAI_ELEVEN_VOICES: readonly string[] = [
+  'alloy',
+  'coral',
+  'echo',
+  'fable',
+  'nova',
+  'onyx',
+  'sage',
+  'shimmer',
+];
+
+export type GermanVoiceIssue =
+  GermanVoiceConfigurationIssue | 'voice_not_supported' | 'audio_model_not_qualified';
+
+/**
+ * The one check every audio path runs before speaking: a qualified model, voice ids the gateway
+ * accepts, and three distinct article voices. Any issue refuses audio; nothing substitutes a voice.
+ */
+export function germanVoiceIssue(
+  voices: GermanVoiceMapping,
+  model: string,
+): GermanVoiceIssue | undefined {
+  if (model.trim() !== QUALIFIED_AUDIO_MODEL) return 'audio_model_not_qualified';
+  const ids = [voices.der, voices.die, voices.das, voices.default];
+  if (ids.some((id) => id !== undefined && !AVALAI_ELEVEN_VOICES.includes(id.trim()))) {
+    return 'voice_not_supported';
+  }
+  return validateGermanArticleVoices(voices);
+}
+
+export const GERMAN_VOICE_ISSUE_MESSAGES: Record<GermanVoiceIssue, string> = {
+  das_voice_unconfigured: 'صدای جداگانه و تأییدشده برای اسم‌های «das» پیکربندی نشده است.',
+  article_voices_not_distinct: 'سه صدای der، die و das باید متفاوت و تأییدشده باشند.',
+  voice_not_supported: 'یکی از صداهای پیکربندی‌شده برای مدل صوتی AvalAI معتبر نیست.',
+  audio_model_not_qualified:
+    'صداهای der، die و das فقط برای مدل eleven_multilingual_v2 تأیید شده‌اند.',
 };
 
 export type AiMediaConfig =
@@ -100,8 +143,6 @@ export function readAiMediaConfig(environment: Record<string, string | undefined
   const apiKey = environment.LEARNBOX_AI_API_KEY?.trim();
   if (!apiKey) return { enabled: true, reason: 'provider_not_configured', limits };
 
-  const dasVoice = environment.LEARNBOX_AI_VOICE_DAS?.trim();
-
   return {
     enabled: true,
     provider: new AvalAiMediaProvider(
@@ -113,8 +154,7 @@ export function readAiMediaConfig(environment: Record<string, string | undefined
     voices: {
       der: voice(environment.LEARNBOX_AI_VOICE_DER, DEFAULT_GERMAN_VOICE_MAPPING.der),
       die: voice(environment.LEARNBOX_AI_VOICE_DIE, DEFAULT_GERMAN_VOICE_MAPPING.die),
-      // Absent stays absent: that is what triggers the deterministic DIE fallback.
-      das: dasVoice || undefined,
+      das: voice(environment.LEARNBOX_AI_VOICE_DAS, DEFAULT_GERMAN_VOICE_MAPPING.das ?? ''),
       default: voice(environment.LEARNBOX_AI_VOICE_DEFAULT, DEFAULT_GERMAN_VOICE_MAPPING.default),
     },
     limits,
