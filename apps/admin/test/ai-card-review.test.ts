@@ -7,6 +7,7 @@ import {
   parseRepairReply,
   parseReviewReply,
   REVIEWER_SYSTEM_PROMPT,
+  REPAIR_SYSTEM_PROMPT,
   stateAfterReview,
   type GeneratedRow,
 } from '../lib/server/ai-card-review';
@@ -37,6 +38,15 @@ describe('independent AI card review contract', () => {
     expect(REVIEWER_SYSTEM_PROMPT).toContain('Standard German');
     expect(REVIEWER_SYSTEM_PROMPT).toContain('Persian meaning');
     expect(REVIEWER_SYSTEM_PROMPT).toContain('CEFR');
+  });
+
+  it('requires fluent Persian grammar guidance, while allowing German terms and examples inside it', () => {
+    expect(REVIEWER_SYSTEM_PROMPT).toContain('grammar_note');
+    expect(REVIEWER_SYSTEM_PROMPT).toContain('fluent Persian');
+    expect(REVIEWER_SYSTEM_PROMPT).toContain('specialist terms');
+    expect(REVIEWER_SYSTEM_PROMPT).toContain('German-only explanation is a major issue');
+    expect(REPAIR_SYSTEM_PROMPT).toContain('grammar_note');
+    expect(REPAIR_SYSTEM_PROMPT).toContain('never German-only text');
   });
 
   it('parses a critical semantic finding as blocking, with its reason and repair suggestion intact', () => {
