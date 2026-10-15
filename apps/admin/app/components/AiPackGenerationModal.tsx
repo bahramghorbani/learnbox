@@ -221,6 +221,7 @@ export function AiPackGenerationModal({
   const [summary, setSummary] = useState<AcceptSummary | null>(null);
   const [error, setError] = useState<string | undefined>(undefined);
   const [busy, setBusy] = useState(false);
+  const [planSaved, setPlanSaved] = useState(false);
   // Generated rows the Admin explicitly ticked. Valid rows start selected, because reviewing a
   // generated pack is an opt-OUT exercise; conflicts and invalid rows are never selectable.
   const [selected, setSelected] = useState<ReadonlySet<number>>(new Set());
@@ -377,7 +378,8 @@ export function AiPackGenerationModal({
   async function handleSavePlan() {
     setBusy(true);
     setError(undefined);
-    await savePlanEdits();
+    setPlanSaved(false);
+    if (await savePlanEdits()) setPlanSaved(true);
     setBusy(false);
   }
 
@@ -586,10 +588,18 @@ export function AiPackGenerationModal({
         <PlanEditor
           job={job}
           draft={draft}
-          onChange={setDraft}
+          onChange={(next) => {
+            setPlanSaved(false);
+            setDraft(next);
+          }}
           disabled={busy}
           dirty={hasPendingEdits}
         />
+      ) : null}
+      {stage === 'plan' && planSaved && !hasPendingEdits ? (
+        <p className="cp-form-status is-success" role="status">
+          تغییرات طرح ذخیره شد. هنوز چیزی تولید نشده است؛ برای شروع «تأیید طرح و تولید» را بزنید.
+        </p>
       ) : null}
 
       {(stage === 'generating' || stage === 'failed') && job ? <Progress job={job} /> : null}
@@ -871,6 +881,43 @@ function Progress({ job }: { job: GenerationJobView }) {
   );
 }
 
+/** Review verdict plus what the repair fixed and which advisory findings remain. */
+export function ReviewCell({ review }: { review?: ReviewRowView }) {
+  if (!review) return <>—</>;
+  const fixed = review.repaired
+    ? (review.history ?? []).slice(0, -1).flatMap((pass) => pass.findings)
+    : [];
+  const items = [
+    ...fixed.map((finding) => ({ finding, label: 'رفع‌شده' })),
+    ...review.findings.map((finding) => ({ finding, label: 'باقی‌مانده (توصیه)' })),
+  ];
+  return (
+    <>
+      {review.repaired ? (
+        <span className="cp-import-badge is-warn">اصلاح خودکار و تأیید بازبین</span>
+      ) : (
+        <span className="cp-import-badge is-ok">تأیید در بار اول</span>
+      )}
+      {items.length > 0 ? (
+        <details className="ai-review-details">
+          <summary>جزئیات ({items.length})</summary>
+          <ul className="ai-finding-list">
+            {items.map(({ finding, label }, index) => (
+              <li key={index} className="ai-finding-item">
+                <span className="ai-finding-meta">
+                  {label} · <span className="keep-latin">{finding.field}</span>
+                </span>
+                <span>{finding.reason}</span>
+                {finding.suggestion ? <span>پیشنهاد: {finding.suggestion}</span> : null}
+              </li>
+            ))}
+          </ul>
+        </details>
+      ) : null}
+    </>
+  );
+}
+
 function GeneratedPreview({
   analysis,
   job,
@@ -982,13 +1029,7 @@ function GeneratedPreview({
                   <td>{row.contentId || '—'}</td>
                   <td>{job.plan.cefr}</td>
                   <td>
-                    {reviews[row.rowNumber]?.repaired ? (
-                      <span className="cp-import-badge is-warn">اصلاح خودکار و تأیید بازبین</span>
-                    ) : reviews[row.rowNumber] ? (
-                      <span className="cp-import-badge is-ok">تأیید در بار اول</span>
-                    ) : (
-                      '—'
-                    )}
+                    <ReviewCell review={reviews[row.rowNumber]} />
                   </td>
                 </tr>
               ))}

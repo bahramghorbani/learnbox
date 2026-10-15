@@ -498,6 +498,15 @@ button {
 .ai-finding-list li[data-finding-status='resolved'] {
   opacity: 0.85;
 }
+.ai-review-details {
+  margin-top: 6px;
+  font-size: 12.5px;
+  line-height: 1.8;
+}
+.ai-review-details > summary {
+  cursor: pointer;
+  margin-bottom: 6px;
+}
 .ai-finding-list p {
   margin: 0;
   color: var(--ink-strong);
@@ -1679,7 +1688,8 @@ button {
 .cp-workspace .cp-form-row.is-full {
   grid-column: 1 / -1;
 }
-.cp-workspace .cp-form-row > label {
+.cp-workspace .cp-form-row > label,
+.cp-workspace .cp-form-field > label {
   font-size: 11.5px;
   font-weight: 600;
   color: var(--muted);

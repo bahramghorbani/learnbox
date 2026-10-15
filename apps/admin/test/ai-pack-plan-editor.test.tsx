@@ -4,7 +4,7 @@ import { act, createElement } from 'react';
 import { createRoot } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { AiPackGenerationModal } from '../app/components/AiPackGenerationModal';
+import { AiPackGenerationModal, ReviewCell } from '../app/components/AiPackGenerationModal';
 
 (
   globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }
@@ -210,5 +210,62 @@ describe('AI plan editor', () => {
       );
     }
     expect(p.onApprovePlan).not.toHaveBeenCalled();
+  });
+
+  it('confirms a saved plan, and drops the confirmation on the next edit', async () => {
+    const p = props();
+    await openPlan(p);
+    await act(async () => setValue(field('ai-plan-count'), '8'));
+    await act(async () => button('ذخیرهٔ تغییرات طرح')!.click());
+    expect(container.querySelector('[role="status"]')?.textContent).toContain(
+      'تغییرات طرح ذخیره شد',
+    );
+    expect(p.onApprovePlan).not.toHaveBeenCalled();
+    await act(async () => setValue(field('ai-plan-count'), '9'));
+    expect(container.textContent).not.toContain('تغییرات طرح ذخیره شد');
+  });
+});
+
+describe('generated row review cell', () => {
+  const finding = (field: string, reason: string, suggestion = '') => ({
+    field,
+    severity: 'critical',
+    reason,
+    suggestion,
+    source: 'reviewer',
+  });
+
+  async function renderCell(review: unknown) {
+    root = createRoot(container);
+    await act(async () => root.render(createElement(ReviewCell, { review } as never)));
+  }
+
+  it('lists what a repair fixed and the advisory findings that remain', async () => {
+    await renderCell({
+      state: 'passed',
+      repaired: true,
+      repairRounds: 1,
+      findings: [{ ...finding('example_persian', 'روشن‌تر شود'), severity: 'minor' }],
+      history: [
+        { round: 0, findings: [finding('persian_meanings', 'معنی غلط است', 'بورسیه')] },
+        {
+          round: 1,
+          findings: [{ ...finding('example_persian', 'روشن‌تر شود'), severity: 'minor' }],
+        },
+      ],
+    });
+    const text = container.textContent!;
+    expect(text).toContain('اصلاح خودکار و تأیید بازبین');
+    expect(text).toContain('رفع‌شده · persian_meanings');
+    expect(text).toContain('پیشنهاد: بورسیه');
+    expect(text).toContain('باقی‌مانده (توصیه) · example_persian');
+    // The final pass is the current state, so it is never also listed as fixed.
+    expect(text.match(/example_persian/g)).toHaveLength(1);
+  });
+
+  it('shows a clean first-pass card without a details list', async () => {
+    await renderCell({ state: 'passed', repaired: false, repairRounds: 0, findings: [] });
+    expect(container.textContent).toBe('تأیید در بار اول');
+    expect(container.querySelector('details')).toBeNull();
   });
 });
