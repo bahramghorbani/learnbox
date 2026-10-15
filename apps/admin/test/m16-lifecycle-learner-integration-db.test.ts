@@ -137,7 +137,7 @@ async function statuses(pack: string) {
        FROM pack_cards pc
        JOIN card_versions cv ON cv.card_id = pc.card_id
       WHERE pc.pack_id = $1
-      ORDER BY cv.id`,
+      ORDER BY cv.status::text, cv.id`, // ids are random UUIDs; status text gives a stable order
     [pack],
   );
   return {
