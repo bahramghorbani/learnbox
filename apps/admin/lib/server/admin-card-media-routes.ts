@@ -210,7 +210,10 @@ export function createMediaGenerateRoute(dependencies: RouteDependencies) {
         return json({ code: 'already_generating' }, { status: 409 });
       }
       if (result.status === 'unprocessable') {
-        return json({ code: 'unprocessable', message: result.reason }, { status: 422 });
+        return json(
+          { code: result.code ?? 'unprocessable', message: result.reason },
+          { status: 422 },
+        );
       }
       if (result.status === 'provider_failed') {
         // The real failure is reported; no other model or voice is silently substituted.

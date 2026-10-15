@@ -21,6 +21,8 @@ import {
   buildSpokenSentenceTarget,
   buildSpokenWordTarget,
   resolveEffectiveGermanVoice,
+  resolveGermanVoiceRole,
+  validateGermanArticleVoices,
   type GermanVoiceMapping,
   type LearnBoxImageStandard,
 } from '@learnbox/content-models';
@@ -74,7 +76,7 @@ export type GenerateOutcome =
   | { status: 'already_generating' }
   | { status: 'card_not_found' }
   | { status: 'forbidden' }
-  | { status: 'unprocessable'; reason: string }
+  | { status: 'unprocessable'; reason: string; code?: string }
   | { status: 'provider_failed'; code: string; message: string };
 
 export type AcceptOutcome =
@@ -223,6 +225,20 @@ export class CardMediaGenerationService {
       let usesDieFallback = false;
 
       if (capability === 'audio') {
+        const voiceIssue = validateGermanArticleVoices(this.voices);
+        if (
+          voiceIssue === 'article_voices_not_distinct' ||
+          (voiceIssue === 'das_voice_unconfigured' && resolveGermanVoiceRole(card) === 'das_neuter')
+        ) {
+          return {
+            status: 'unprocessable',
+            code: voiceIssue,
+            reason:
+              voiceIssue === 'das_voice_unconfigured'
+                ? 'صدای جداگانه و تأییدشده برای اسم‌های «das» پیکربندی نشده است.'
+                : 'سه صدای der، die و das باید متفاوت و تأییدشده باشند.',
+          };
+        }
         // Canonical rules decide what is spoken and who speaks it.
         try {
           spokenTarget =

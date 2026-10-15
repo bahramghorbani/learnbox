@@ -9,8 +9,8 @@
 LearnBox teaches German grammatical gender as part of the word, not as optional metadata. The
 media engine already constructs noun word audio from canonical `article + lemma` and resolves a
 voice role deterministically from that article. Its shipped mapping has only two distinct voices:
-`der=onyx`, `die=nova`, and `das` falls back to `nova`. That fallback conflicts with the intended
-three-way educational distinction.
+`der=onyx`, `die=nova`, and DAS is unset. Audio generation for a `das` noun is refused until an
+owner-approved distinct DAS voice is configured; it must never fall back to `nova`.
 
 The approved Start V2 visual contract already names `flux.2-pro` and defines the LearnBox visual
 language. Its model and contract remain the image standard.
@@ -50,9 +50,9 @@ decision.
 
 ## Current configuration and selection boundary
 
-The current runtime defaults are `der=onyx`, `die=nova`, `das=undefined -> die/nova`, and
-default=`nova` in `apps/admin/lib/server/ai-media-config.ts`. They are a two-voice provisional
-mapping, not the approved three-article roster. The configuration already supports explicit
+The current runtime defaults are `der=onyx`, `die=nova`, `das=undefined` (DAS generation is
+blocked), and default=`nova` in `apps/admin/lib/server/ai-media-config.ts`. They are a two-voice
+provisional mapping, not the approved three-article roster. The configuration already supports explicit
 `LEARNBOX_AI_VOICE_DER`, `LEARNBOX_AI_VOICE_DIE`, `LEARNBOX_AI_VOICE_DAS`, and
 `LEARNBOX_AI_VOICE_DEFAULT` values without code changes.
 

@@ -13,8 +13,8 @@ import type { GermanVoiceMapping } from '@learnbox/content-models';
  * These tests protect the invariants M1.5 exists to guarantee:
  *
  *   * a noun's word audio is always spoken as article + lemma, decided by the application;
- *   * the voice is derived deterministically from the canonical article, and a DAS card that has
- *     no younger voice available records the DIE female fallback explicitly;
+ *   * the voice is derived deterministically from the canonical article, and DAS generation is
+ *     refused until a distinct qualified voice is configured;
  *   * generation NEVER changes which asset a card points at, so a failed, rejected or retried
  *     regeneration cannot destroy media that is already accepted;
  *   * acceptance is idempotent, so a replay cannot create a second canonical association.
@@ -297,7 +297,6 @@ describe('word audio speaks the canonical article', () => {
   it.each([
     ['der', 'Tisch', 'der Tisch', 'onyx', 'der_masculine'],
     ['die', 'Lampe', 'die Lampe', 'nova', 'die_feminine'],
-    ['das', 'Buch', 'das Buch', 'nova', 'das_neuter'],
   ])('%s %s is spoken as "%s"', async (article, lemma, expected, expectedVoice, expectedRole) => {
     const { service, provider } = createService({ lemma, article });
     const result = await service.generate({
@@ -334,17 +333,31 @@ describe('word audio speaks the canonical article', () => {
     );
   });
 
-  it('records the DIE female fallback when no younger German voice is configured', async () => {
-    const { service } = createService({ lemma: 'Buch', article: 'das' });
+  it('refuses DAS audio when no distinct voice is configured', async () => {
+    const { service, provider } = createService({ lemma: 'Buch', article: 'das' });
     const result = await service.generate({
       cardId: CARD_ID,
       kind: 'word_audio',
       actorUserId: ACTOR,
     });
 
-    if (result.status !== 'generated') throw new Error('expected generation');
-    expect(result.candidate.voice).toBe(DEFAULT_GERMAN_VOICE_MAPPING.die);
-    expect(result.candidate.usesDieFallbackForDas).toBe(true);
+    expect(result).toMatchObject({ status: 'unprocessable', code: 'das_voice_unconfigured' });
+    expect(provider.synthesizeSpeech).not.toHaveBeenCalled();
+  });
+
+  it('refuses all audio when article voices are duplicated', async () => {
+    const { service, provider } = createService(
+      { lemma: 'Tisch', article: 'der' },
+      { voices: { ...DEFAULT_GERMAN_VOICE_MAPPING, das: 'german-teen', die: 'onyx' } },
+    );
+    const result = await service.generate({
+      cardId: CARD_ID,
+      kind: 'word_audio',
+      actorUserId: ACTOR,
+    });
+
+    expect(result).toMatchObject({ status: 'unprocessable', code: 'article_voices_not_distinct' });
+    expect(provider.synthesizeSpeech).not.toHaveBeenCalled();
   });
 
   it('uses the configured younger voice for DAS when one exists', async () => {
@@ -426,6 +439,8 @@ describe('image generation reuses the canonical standard', () => {
     const prompt = provider.generateImage.mock.calls[0]![0].prompt;
     expect(prompt).toContain('der Tisch');
     expect(prompt).toContain(IMAGE_STANDARD.style);
+    expect(prompt).toContain('Iranian learners');
+    expect(prompt).toMatch(/no text, letters, numbers.*brand logos/i);
     expect(result.candidate.imageStandardVersion).toBe('v2');
   });
 });

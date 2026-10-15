@@ -42,11 +42,9 @@ export const DEFAULT_AI_MEDIA_LIMITS: AiMediaLimits = {
 /**
  * The shipped German voice mapping.
  *
- * These are verified: each produces distinct audio, and each was transcribed back as German by
- * the gateway's ASR. DAS is intentionally left unset — no voice in the configured family is
- * documented or verified as genuinely younger-sounding, so DAS deterministically uses the DIE
- * female voice and that fallback is recorded on every asset. Setting `LEARNBOX_AI_VOICE_DAS`
- * switches DAS to a younger voice with no code change.
+ * These are provisional defaults. DAS is intentionally unset, so DAS audio generation is refused
+ * until an owner-approved distinct voice is configured. The three article voices must be pairwise
+ * distinct; setting `LEARNBOX_AI_VOICE_DAS` supplies the third voice with no code change.
  */
 export const DEFAULT_GERMAN_VOICE_MAPPING: GermanVoiceMapping = {
   der: 'onyx',
@@ -113,7 +111,7 @@ export function readAiMediaConfig(environment: Record<string, string | undefined
     voices: {
       der: voice(environment.LEARNBOX_AI_VOICE_DER, DEFAULT_GERMAN_VOICE_MAPPING.der),
       die: voice(environment.LEARNBOX_AI_VOICE_DIE, DEFAULT_GERMAN_VOICE_MAPPING.die),
-      // Absent stays absent: that is what triggers the deterministic DIE fallback.
+      // Absent stays absent and blocks DAS audio; it must never fall back to DIE.
       das: dasVoice || undefined,
       default: voice(environment.LEARNBOX_AI_VOICE_DEFAULT, DEFAULT_GERMAN_VOICE_MAPPING.default),
     },
