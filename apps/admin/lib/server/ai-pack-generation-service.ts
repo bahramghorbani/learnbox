@@ -93,6 +93,8 @@ export interface JobView {
     batchesTotal: number;
     attemptsOnCurrentBatch: number;
   };
+  /** A batch currently holds the lease, i.e. its provider calls may still be running. */
+  batchInFlight: boolean;
   error?: { code: string; message: string };
   packId?: string;
 }
@@ -312,7 +314,9 @@ export class AiPackGenerationService {
       reply = await provider.complete({
         system: PLAN_SYSTEM_PROMPT,
         user: prompt,
-        maxOutputTokens: 1500,
+        // Same generator budget as card batches: a hard-coded small cap here could cut a plan
+        // off, and the provider rejects any reply that did not finish on its own.
+        maxOutputTokens: this.limits.maxOutputTokens,
         timeoutMs: this.limits.perCallTimeoutMs,
         model,
       });
@@ -603,14 +607,20 @@ export class AiPackGenerationService {
     // Checked before the lease is taken, so a missing credential never leaves a job leased.
     const provider = this.provider;
     if (!provider) return { status: 'provider_not_configured' };
-    const leaseSeconds = Math.ceil(this.limits.perCallTimeoutMs / 1000) + 30;
-    // Single-flight: whoever wins this UPDATE owns the batch until the lease expires.
+    // The lease must outlive the WHOLE batch, not one call: generation, then up to
+    // 1 + maxRepairRounds reviewer calls and maxRepairRounds repair calls, each bounded by the
+    // per-call timeout. A lease that expired mid-batch would let a reconnecting browser start the
+    // same batch again and pay for it twice.
+    const callsPerBatch = this.models ? 2 + 2 * this.limits.maxRepairRounds : 1;
+    const leaseSeconds = Math.ceil(this.limits.perCallTimeoutMs / 1000) * callsPerBatch + 60;
+    // Single-flight: whoever wins this UPDATE owns the batch until the lease expires. The exact
+    // lease value is the owner's fencing token: every write that ends this batch requires it.
     const leased = await this.pool.query(
       `UPDATE ai_generation_jobs
           SET lease_until = now() + ($3 || ' seconds')::interval, updated_at = now()
         WHERE id = $1 AND actor_user_id = $2 AND status = 'generating'
           AND (lease_until IS NULL OR lease_until < now())
-        RETURNING id`,
+        RETURNING lease_until::text AS lease_token`,
       [input.jobId, input.actorUserId, String(leaseSeconds)],
     );
     if (leased.rows.length === 0) {
@@ -621,6 +631,7 @@ export class AiPackGenerationService {
       }
       return { status: 'conflict', message: 'یک دستهٔ دیگر در حال تولید است.' };
     }
+    const owner = { ...input, leaseToken: String(leased.rows[0]!.lease_token) };
 
     const job = await this.load(input.jobId, input.actorUserId);
     if (!job) return { status: 'not_found' };
@@ -649,13 +660,13 @@ export class AiPackGenerationService {
     } catch (error) {
       const code = error instanceof AiProviderError ? error.code : 'provider_unavailable';
       const message = error instanceof AiProviderError ? error.message : 'تولید با خطا روبه‌رو شد.';
-      return this.recordBatchFailure(input, code, message);
+      return this.recordBatchFailure(owner, code, message);
     }
 
     const records = this.extractRecords(reply);
     if (records.length === 0) {
       return this.recordBatchFailure(
-        input,
+        owner,
         'provider_empty_response',
         'این دسته هیچ کارت قابل استفاده‌ای برنگرداند.',
       );
@@ -673,13 +684,13 @@ export class AiPackGenerationService {
         const code = error instanceof AiProviderError ? error.code : 'reviewer_unavailable';
         const message =
           error instanceof AiProviderError ? error.message : 'بازبینی مستقل با خطا روبه‌رو شد.';
-        return this.recordBatchFailure(input, code, message);
+        return this.recordBatchFailure(owner, code, message);
       }
     }
 
     // Checkpoint: append the reviewed batch, advance the resume point, clear the retry counter and
     // lease. A later batch failing can never discard a completed review.
-    await this.pool.query(
+    const checkpoint = await this.pool.query(
       `UPDATE ai_generation_jobs
           SET generated_rows = generated_rows || $3::jsonb,
               next_batch_index = next_batch_index + 1,
@@ -688,9 +699,15 @@ export class AiPackGenerationService {
               error_message = NULL,
               lease_until = NULL,
               updated_at = now()
-        WHERE id = $1 AND actor_user_id = $2`,
-      [input.jobId, input.actorUserId, JSON.stringify(reviewed)],
+        WHERE id = $1 AND actor_user_id = $2 AND lease_until = $4::timestamptz
+        RETURNING id`,
+      [input.jobId, input.actorUserId, JSON.stringify(reviewed), owner.leaseToken],
     );
+    if (checkpoint.rows.length === 0) {
+      // The lease was lost (it expired and another run took the batch). Appending here too would
+      // duplicate the batch, so this late result is discarded and the job is left to its owner.
+      return { status: 'conflict', message: 'نتیجهٔ این دسته پس از پایان مهلت رسید و ثبت نشد.' };
+    }
 
     const after = await this.load(input.jobId, input.actorUserId);
     if (!after) return { status: 'not_found' };
@@ -866,7 +883,7 @@ export class AiPackGenerationService {
   }
 
   private async recordBatchFailure(
-    input: { jobId: string; actorUserId: string },
+    input: { jobId: string; actorUserId: string; leaseToken: string },
     code: string,
     message: string,
   ): Promise<RunBatchResult> {
@@ -879,11 +896,21 @@ export class AiPackGenerationService {
               lease_until = NULL,
               status = CASE WHEN batch_attempts + 1 >= $5 THEN 'failed' ELSE status END,
               updated_at = now()
-        WHERE id = $1 AND actor_user_id = $2
+        WHERE id = $1 AND actor_user_id = $2 AND lease_until = $6::timestamptz
         RETURNING status`,
-      [input.jobId, input.actorUserId, code, message, this.limits.maxBatchAttempts],
+      [
+        input.jobId,
+        input.actorUserId,
+        code,
+        message,
+        this.limits.maxBatchAttempts,
+        input.leaseToken,
+      ],
     );
-    if (updated.rows.length === 0) return { status: 'not_found' };
+    // Lease lost: another run owns this batch now, so this failure must not count as its attempt.
+    if (updated.rows.length === 0) {
+      return { status: 'conflict', message: 'یک دستهٔ دیگر در حال تولید است.' };
+    }
     const job = await this.load(input.jobId, input.actorUserId);
     if (!job) return { status: 'not_found' };
     // Exhausted retries → the job reports failure honestly and keeps its partial rows.
@@ -1078,7 +1105,8 @@ export class AiPackGenerationService {
       `SELECT id, prompt, plan, plan_fingerprint, status, requested_count, batch_size,
               next_batch_index, batch_attempts, provider, model, reviewer_model, repair_model,
               error_code, error_message, pack_id, generated_rows,
-              jsonb_array_length(generated_rows) AS generated_count
+              jsonb_array_length(generated_rows) AS generated_count,
+              COALESCE(lease_until > now(), false) AS batch_in_flight
          FROM ai_generation_jobs
         WHERE id = $1 AND actor_user_id = $2`,
       [jobId, actorUserId],
@@ -1108,6 +1136,7 @@ export class AiPackGenerationService {
         batchesTotal: Math.max(1, Math.ceil(Number(row.requested_count) / batchSize)),
         attemptsOnCurrentBatch: Number(row.batch_attempts),
       },
+      batchInFlight: row.batch_in_flight === true,
       error: errorCode ? { code: errorCode, message: String(row.error_message ?? '') } : undefined,
       packId: row.pack_id ? String(row.pack_id) : undefined,
     };

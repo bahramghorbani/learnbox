@@ -232,13 +232,17 @@ async function postAiJson<T>(
     if (response.status === 428) {
       return { ok: false, message: stepUpMessage(stepUp) };
     }
+    // A proxy or CDN gave up waiting; the Admin server may still be finishing the request.
+    if (response.status === 502 || response.status === 504) {
+      return { ok: false, message: 'پاسخ سرور در مسیر شبکه قطع شد.', code: 'gateway' };
+    }
     const payload = (await response.json().catch(() => undefined)) as
       { message?: string; code?: string } | undefined;
     // The server's own reason is preferred, so an unconfigured provider says exactly that.
     if (payload?.message) return { ok: false, message: payload.message, code: payload.code };
     return { ok: false, message: 'درخواست تولید با خطا روبه‌رو شد.' };
   } catch {
-    return { ok: false, message: 'ارتباط با سرور برقرار نشد.' };
+    return { ok: false, message: 'ارتباط با سرور برقرار نشد.', code: 'network' };
   }
 }
 

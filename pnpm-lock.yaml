@@ -76,6 +76,9 @@ importers:
       sharp:
         specifier: '>=0.35.5'
         version: 0.35.5(@types/node@24.13.3)
+      undici:
+        specifier: 7.30.0
+        version: 7.30.0
     devDependencies:
       '@types/node':
         specifier: ^24.1.0
@@ -4093,6 +4096,13 @@ packages:
       }
     engines: { node: '>=20.18.1' }
 
+  undici@7.30.0:
+    resolution:
+      {
+        integrity: sha512-dkrQXeHSaoamnItlYbmzG0wFYrM0ZwDxCIg0A7aKjTyyhh9svRzCNFEzV+Vm05/yehjCzjDZ31KXfGEjYSztDQ==,
+      }
+    engines: { node: '>=20.18.1' }
+
   universalify@2.0.1:
     resolution:
       {
@@ -6564,6 +6574,8 @@ snapshots:
   undici@6.29.0: {}
 
   undici@7.29.0: {}
+
+  undici@7.30.0: {}
 
   universalify@2.0.1: {}
 

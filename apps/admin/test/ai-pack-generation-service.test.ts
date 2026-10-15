@@ -159,26 +159,33 @@ function makeJobPool(options: { existingContentIds?: string[]; existingPackIds?:
           return { rows: [] };
         }
         job.lease_until = now + Number(seconds) * 1000;
-        return { rows: [{ id }] };
+        return { rows: [{ lease_token: String(job.lease_until) }] };
       }
 
       if (/generated_rows \|\| \$3::jsonb/.test(sql)) {
-        const [id, actor, appended] = parameters as string[];
+        const [id, actor, appended, token] = parameters as string[];
         const job = jobs.get(id);
-        if (!job || job.actor_user_id !== actor) return { rows: [] };
+        // The fence is honoured only when the statement actually carries it.
+        const fenced = /lease_until = \$4::timestamptz/.test(sql);
+        if (!job || job.actor_user_id !== actor || (fenced && String(job.lease_until) !== token)) {
+          return { rows: [] };
+        }
         job.generated_rows = [...job.generated_rows, ...(JSON.parse(appended) as unknown[])];
         job.next_batch_index += 1;
         job.batch_attempts = 0;
         job.error_code = null;
         job.error_message = null;
         job.lease_until = null;
-        return { rows: [] };
+        return { rows: [{ id }] };
       }
 
       if (/SET batch_attempts = batch_attempts \+ 1/.test(sql)) {
-        const [id, actor, code, message, maxAttempts] = parameters as string[];
+        const [id, actor, code, message, maxAttempts, token] = parameters as string[];
         const job = jobs.get(id);
-        if (!job || job.actor_user_id !== actor) return { rows: [] };
+        const fenced = /lease_until = \$6::timestamptz/.test(sql);
+        if (!job || job.actor_user_id !== actor || (fenced && String(job.lease_until) !== token)) {
+          return { rows: [] };
+        }
         job.batch_attempts += 1;
         job.error_code = code;
         job.error_message = message;
@@ -249,7 +256,15 @@ function makeJobPool(options: { existingContentIds?: string[]; existingPackIds?:
         const [id, actor] = parameters as string[];
         const job = jobs.get(id);
         if (!job || job.actor_user_id !== actor) return { rows: [] };
-        return { rows: [{ ...job, generated_count: job.generated_rows.length }] };
+        return {
+          rows: [
+            {
+              ...job,
+              generated_count: job.generated_rows.length,
+              batch_in_flight: job.lease_until !== null && job.lease_until >= now,
+            },
+          ],
+        };
       }
 
       // Canonical content queries, reached through the import service.
@@ -498,6 +513,19 @@ describe('AiPackGenerationService without a provider', () => {
 });
 
 describe('AiPackGenerationService.plan', () => {
+  it('gives the plan call the generator output ceiling, not a hard-coded small cap', async () => {
+    const ceilings: number[] = [];
+    const harness = makeHarness({
+      complete: async (request) => {
+        ceilings.push(request.maxOutputTokens);
+        return planReply();
+      },
+    });
+    const result = await harness.service.plan({ prompt: 'تحصیل', actorUserId: ACTOR });
+    expect(result.status).toBe('ok');
+    expect(ceilings).toEqual([DEFAULT_AI_GENERATION_LIMITS.maxOutputTokens]);
+  });
+
   it('turns a natural-language prompt into a structured plan', async () => {
     const harness = makeHarness({ replies: [planReply()] });
     const result = await harness.service.plan({
@@ -736,6 +764,104 @@ describe('AiPackGenerationService generation job', () => {
     release?.();
     await inFlight;
     expect(call).toBe(2);
+  });
+
+  /** Plans and approves a job whose first batch blocks until `release` is called. */
+  async function hangingBatch(options: Parameters<typeof makeHarness>[0]) {
+    let release: (() => void) | undefined;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    let generatorCalls = 0;
+    const harness = makeHarness({
+      limits: { batchSize: 2, perCallTimeoutMs: 600_000, maxRepairRounds: 2 },
+      ...options,
+      complete: async () => {
+        generatorCalls += 1;
+        if (generatorCalls === 1) return planReply({ cardCount: 4 });
+        if (generatorCalls === 2) await gate;
+        return JSON.stringify({ cards: [card(), card()] });
+      },
+    });
+    const planned = await harness.service.plan({ prompt: 'بساز', actorUserId: ACTOR });
+    if (planned.status !== 'ok') throw new Error('plan failed');
+    await harness.service.approvePlan({
+      jobId: planned.job.jobId,
+      actorUserId: ACTOR,
+      expectedPlanFingerprint: planned.job.planFingerprint,
+    });
+    const jobId = planned.job.jobId;
+    const first = harness.service.runNextBatch({ jobId, actorUserId: ACTOR });
+    return { harness, jobId, first, release: () => release?.(), calls: () => generatorCalls };
+  }
+
+  it('holds the lease for every call a batch may make, not just one', async () => {
+    // generator + 3 reviewer + 2 repair calls at 600 s each: a reconnect after 35 minutes must
+    // still be refused instead of paying for the same batch again.
+    const { harness, jobId, first, release, calls } = await hangingBatch({
+      models: {
+        generator: 'claude-opus-5-5',
+        reviewer: 'claude-fable-5-1',
+        repair: 'claude-fable-5-1',
+      },
+    });
+    harness.pool.advance(35 * 60_000);
+    const job = await harness.service.load(jobId, ACTOR);
+    expect(job?.batchInFlight).toBe(true);
+    const again = await harness.service.runNextBatch({ jobId, actorUserId: ACTOR });
+    expect(again.status).toBe('conflict');
+    expect(calls()).toBe(2);
+    release();
+    await first;
+  });
+
+  it('discards a batch that finishes after losing its lease, so nothing is appended twice', async () => {
+    const { harness, jobId, first, release } = await hangingBatch({});
+    // Without reviewer roles the lease is one call long: 600 s + 60 s.
+    harness.pool.advance(661_000);
+    const takeover = await harness.service.runNextBatch({ jobId, actorUserId: ACTOR });
+    expect(takeover.status).toBe('ok');
+    release();
+    const late = await first;
+    expect(late.status).toBe('conflict');
+    const stored = harness.pool.jobs.get(jobId)!;
+    expect(stored.generated_rows).toHaveLength(2);
+    expect(stored.next_batch_index).toBe(1);
+    expect(stored.batch_attempts).toBe(0);
+  });
+
+  it('does not count a late failure against a batch another run now owns', async () => {
+    let fail: ((error: Error) => void) | undefined;
+    let call = 0;
+    const harness = makeHarness({
+      limits: { batchSize: 2, perCallTimeoutMs: 600_000 },
+      complete: async () => {
+        call += 1;
+        if (call === 1) return planReply({ cardCount: 4 });
+        if (call === 2) {
+          return new Promise<string>((_resolve, reject) => {
+            fail = reject;
+          });
+        }
+        return JSON.stringify({ cards: [card(), card()] });
+      },
+    });
+    const planned = await harness.service.plan({ prompt: 'بساز', actorUserId: ACTOR });
+    if (planned.status !== 'ok') throw new Error('plan failed');
+    await harness.service.approvePlan({
+      jobId: planned.job.jobId,
+      actorUserId: ACTOR,
+      expectedPlanFingerprint: planned.job.planFingerprint,
+    });
+    const jobId = planned.job.jobId;
+    const first = harness.service.runNextBatch({ jobId, actorUserId: ACTOR });
+    harness.pool.advance(661_000);
+    await harness.service.runNextBatch({ jobId, actorUserId: ACTOR });
+    fail?.(new AiProviderError('provider_timeout', 'late'));
+    expect((await first).status).toBe('conflict');
+    const stored = harness.pool.jobs.get(jobId)!;
+    expect(stored.batch_attempts).toBe(0);
+    expect(stored.error_code).toBeNull();
   });
 
   it('keeps earlier batches when a later batch fails, and resumes at the failed batch', async () => {
