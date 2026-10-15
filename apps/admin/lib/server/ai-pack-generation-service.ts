@@ -312,7 +312,9 @@ export class AiPackGenerationService {
       reply = await provider.complete({
         system: PLAN_SYSTEM_PROMPT,
         user: prompt,
-        maxOutputTokens: 1500,
+        // Same generator budget as card batches: a hard-coded small cap here could cut a plan
+        // off, and the provider rejects any reply that did not finish on its own.
+        maxOutputTokens: this.limits.maxOutputTokens,
         timeoutMs: this.limits.perCallTimeoutMs,
         model,
       });

@@ -498,6 +498,19 @@ describe('AiPackGenerationService without a provider', () => {
 });
 
 describe('AiPackGenerationService.plan', () => {
+  it('gives the plan call the generator output ceiling, not a hard-coded small cap', async () => {
+    const ceilings: number[] = [];
+    const harness = makeHarness({
+      complete: async (request) => {
+        ceilings.push(request.maxOutputTokens);
+        return planReply();
+      },
+    });
+    const result = await harness.service.plan({ prompt: 'تحصیل', actorUserId: ACTOR });
+    expect(result.status).toBe('ok');
+    expect(ceilings).toEqual([DEFAULT_AI_GENERATION_LIMITS.maxOutputTokens]);
+  });
+
   it('turns a natural-language prompt into a structured plan', async () => {
     const harness = makeHarness({ replies: [planReply()] });
     const result = await harness.service.plan({

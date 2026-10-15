@@ -34,7 +34,11 @@ export interface AiTextProvider {
 }
 
 export type AiProviderErrorCode =
-  'provider_unavailable' | 'provider_rejected' | 'provider_timeout' | 'provider_empty_response';
+  | 'provider_unavailable'
+  | 'provider_rejected'
+  | 'provider_timeout'
+  | 'provider_empty_response'
+  | 'provider_incomplete_response';
 
 export class AiProviderError extends Error {
   constructor(
@@ -132,6 +136,17 @@ export class AnthropicTextProvider implements AiTextProvider {
       throw new AiProviderError('provider_empty_response', 'پاسخ سرویس هوش مصنوعی خوانا نبود.');
     }
 
+    // Only a reply the model finished on its own is usable. `max_tokens` (the model's own output
+    // ceiling), `refusal`, a missing reason or anything else means the text may be cut off; a
+    // cut-off JSON prefix can still parse, so this is checked before any content is read.
+    const stopReason = (payload as { stop_reason?: unknown } | null)?.stop_reason;
+    if (stopReason !== 'end_turn') {
+      throw new AiProviderError(
+        'provider_incomplete_response',
+        'پاسخ سرویس هوش مصنوعی کامل نشد و پذیرفته نشد.',
+      );
+    }
+
     const text = extractAnthropicText(payload);
     if (!text) {
       throw new AiProviderError('provider_empty_response', 'سرویس هوش مصنوعی پاسخ خالی برگرداند.');
@@ -225,9 +240,12 @@ export interface AiGenerationLimits {
   maxBatchAttempts: number;
   maxPromptChars: number;
   perCallTimeoutMs: number;
-  /** Output budget of one generator call (adaptive thinking draws on the same budget). */
+  /**
+   * `max_tokens` of one plan or generator call (adaptive thinking draws on the same budget).
+   * Defaults to the model's own maximum: it is a required API parameter, not a spending cap.
+   */
   maxOutputTokens: number;
-  /** Output budget of one reviewer or repair call. */
+  /** `max_tokens` of one reviewer or repair call; defaults to the model's own maximum. */
   reviewerMaxOutputTokens: number;
   /** Automatic repair rounds per card before its findings are reported as unresolved. */
   maxRepairRounds: number;
@@ -235,14 +253,22 @@ export interface AiGenerationLimits {
   maxReplacementBatches: number;
 }
 
+/**
+ * Largest `max_tokens` the synchronous Messages API accepts for the owner's models (Claude Opus
+ * 5.5 and Claude Fable 5.1 both document 128K). The Anthropic protocol makes `max_tokens`
+ * required, so the field cannot simply be omitted; sending the model maximum means the only
+ * output ceiling left is the model's own. A model with a lower maximum needs the env override.
+ */
+export const MODEL_MAX_OUTPUT_TOKENS = 128_000;
+
 export const DEFAULT_AI_GENERATION_LIMITS: AiGenerationLimits = {
   maxCards: 500,
   batchSize: 25,
   maxBatchAttempts: 3,
   maxPromptChars: 2000,
   perCallTimeoutMs: 240_000,
-  maxOutputTokens: 32_000,
-  reviewerMaxOutputTokens: 32_000,
+  maxOutputTokens: MODEL_MAX_OUTPUT_TOKENS,
+  reviewerMaxOutputTokens: MODEL_MAX_OUTPUT_TOKENS,
   maxRepairRounds: 2,
   maxReplacementBatches: 3,
 };
@@ -298,12 +324,12 @@ export function readAiGenerationConfig(
     maxOutputTokens: positiveInt(
       environment.LEARNBOX_AI_MAX_OUTPUT_TOKENS,
       defaults.maxOutputTokens,
-      128_000,
+      MODEL_MAX_OUTPUT_TOKENS,
     ),
     reviewerMaxOutputTokens: positiveInt(
       environment.LEARNBOX_AI_REVIEWER_MAX_OUTPUT_TOKENS,
       defaults.reviewerMaxOutputTokens,
-      128_000,
+      MODEL_MAX_OUTPUT_TOKENS,
     ),
     // 0 is meaningful: review only, never repair automatically.
     maxRepairRounds: boundedInt(
