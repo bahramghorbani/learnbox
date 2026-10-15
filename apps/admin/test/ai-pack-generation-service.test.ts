@@ -1217,14 +1217,22 @@ describe('content-pack workflow: title to human-approved draft (fake provider)',
     expect(planned.status).toBe('invalid');
   });
 
-  it('marks every card unresolved when the reviewer reply is unusable, never passing them', async () => {
+  // The second shape is what the real Fable 5.1 smoke returned when it hit max_tokens: a valid
+  // prefix with the first card's verdict complete. No card may pass on a cut-off reply.
+  it.each([
+    ['not json', 'not json'],
+    [
+      'a reply cut off at max_tokens',
+      `${reviewOf([[0, []]]).slice(0, -2)},{"index":1,"findings":[{"field":"grammar_note","severity":"minor","reason":"نکته`,
+    ],
+  ])('marks every card unresolved when the reviewer reply is %s', async (_label, reviewReply) => {
     const harness = makeHarness({
       models: MODELS,
       limits: { maxRepairRounds: 0 },
       replies: [
         planReply(),
         JSON.stringify({ cards: lemmas.map((lemma) => card({ lemma })) }),
-        'not json',
+        reviewReply,
       ],
     });
     const jobId = await generate(harness);
