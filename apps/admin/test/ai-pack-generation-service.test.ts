@@ -5,6 +5,7 @@ import {
   DEFAULT_AI_GENERATION_LIMITS,
   readAiGenerationConfig,
   type AiGenerationLimits,
+  type AiModelRoles,
   type AiTextProvider,
 } from '../lib/server/ai-generation-provider';
 import {
@@ -63,7 +64,7 @@ function planReply(overrides: Record<string, unknown> = {}): string {
  * It interprets only the statements the service issues, including the single-flight lease and the
  * jsonb append, so the checkpoint and concurrency behaviour is exercised rather than mocked away.
  */
-function makeJobPool(options: { existingContentIds?: string[] } = {}) {
+function makeJobPool(options: { existingContentIds?: string[]; existingPackIds?: string[] } = {}) {
   type Job = {
     id: string;
     actor_user_id: string;
@@ -78,6 +79,8 @@ function makeJobPool(options: { existingContentIds?: string[] } = {}) {
     generated_rows: unknown[];
     provider: string | null;
     model: string | null;
+    reviewer_model: string | null;
+    repair_model: string | null;
     error_code: string | null;
     error_message: string | null;
     lease_until: number | null;
@@ -96,8 +99,19 @@ function makeJobPool(options: { existingContentIds?: string[] } = {}) {
     jobs,
     query: vi.fn(async (sql: string, parameters: readonly unknown[] = []) => {
       if (/INSERT INTO ai_generation_jobs/.test(sql)) {
-        const [id, actor, prompt, plan, fingerprint, requested, batchSize, provider, model] =
-          parameters as string[];
+        const [
+          id,
+          actor,
+          prompt,
+          plan,
+          fingerprint,
+          requested,
+          batchSize,
+          provider,
+          model,
+          reviewerModel,
+          repairModel,
+        ] = parameters as string[];
         jobs.set(id, {
           id,
           actor_user_id: actor,
@@ -112,6 +126,8 @@ function makeJobPool(options: { existingContentIds?: string[] } = {}) {
           generated_rows: [],
           provider,
           model,
+          reviewer_model: reviewerModel ?? null,
+          repair_model: repairModel ?? null,
           error_code: null,
           error_message: null,
           lease_until: null,
@@ -217,6 +233,12 @@ function makeJobPool(options: { existingContentIds?: string[] } = {}) {
       }
 
       // Canonical content queries, reached through the import service.
+      if (/SELECT 1 FROM packs/.test(sql)) {
+        const [packId] = parameters as string[];
+        return {
+          rows: (options.existingPackIds ?? []).includes(packId!) ? [{ '?column?': 1 }] : [],
+        };
+      }
       if (/FROM packs/.test(sql)) {
         return { rows: [] };
       }
@@ -241,6 +263,8 @@ function makeHarness(
     existingContentIds?: string[];
     limits?: Partial<AiGenerationLimits>;
     createPackStatus?: 'applied' | 'conflict' | 'invalid' | 'forbidden';
+    existingPackIds?: string[];
+    models?: AiModelRoles;
   } = {},
 ) {
   const replies = [...(options.replies ?? [])];
@@ -261,7 +285,10 @@ function makeHarness(
       }),
   };
 
-  const pool = makeJobPool({ existingContentIds: options.existingContentIds });
+  const pool = makeJobPool({
+    existingContentIds: options.existingContentIds,
+    existingPackIds: options.existingPackIds,
+  });
   let created = 0;
   const writeStore = {
     createCard: vi.fn<(input: Record<string, unknown>) => Promise<CardWriteResult>>(async () => {
@@ -293,6 +320,7 @@ function makeHarness(
     { ...DEFAULT_AI_GENERATION_LIMITS, ...options.limits },
     importService,
     writeStore as never,
+    options.models,
   );
   return { service, pool, writeStore, provider, completeCalls };
 }
@@ -1029,5 +1057,160 @@ describe('AiPackGenerationService acceptance', () => {
     });
     expect(result.status).toBe('conflict');
     expect(harness.writeStore.createCard).not.toHaveBeenCalled();
+  });
+});
+
+describe('content-pack workflow: title to human-approved draft (fake provider)', () => {
+  const MODELS: AiModelRoles = {
+    generator: 'claude-opus-5-5',
+    reviewer: 'claude-fable-5-1',
+    repair: 'claude-fable-5-1',
+  };
+  const lemmas = ['Hörsaal', 'Mensa', 'Miete', 'Antrag'];
+  const reviewOf = (entries: Array<[number, string[]]>) =>
+    JSON.stringify({
+      reviews: entries.map(([index, severities]) => ({
+        index,
+        findings: severities.map((severity) => ({
+          field: 'persian_meanings',
+          severity,
+          reason: 'ترجمه با معنای آلمانی هماهنگ نیست.',
+          suggestion: 'معادل دقیق فارسی را بنویسید.',
+        })),
+      })),
+    });
+
+  it('plans, generates, independently reviews, repairs, reports, and lets only a human accept', async () => {
+    const harness = makeHarness({
+      models: MODELS,
+      limits: { maxRepairRounds: 1 },
+      replies: [
+        planReply(),
+        JSON.stringify({ cards: lemmas.map((lemma) => card({ lemma })) }),
+        // First review: card 1 major (repairable), card 2 critical (repairable), 0 and 3 clean.
+        reviewOf([
+          [0, []],
+          [1, ['major']],
+          [2, ['critical']],
+          [3, ['minor']],
+        ]),
+        // Repair both flagged cards.
+        JSON.stringify({
+          cards: [1, 2].map((index) => ({ index, card: card({ lemma: lemmas[index]! }) })),
+        }),
+        // Re-review: card 1 fixed, card 2 still critical → repair budget (1) exhausted.
+        reviewOf([
+          [1, []],
+          [2, ['critical']],
+        ]),
+      ],
+    });
+
+    const planned = await harness.service.plan({
+      prompt: 'PROMPT-MARKER-7f3 تحصیل',
+      actorUserId: ACTOR,
+      isFree: true,
+    });
+    expect(planned.status).toBe('ok');
+    if (planned.status !== 'ok') return;
+    expect(planned.job.plan.isFree).toBe(true);
+    expect(planned.job.reviewerModel).toBe('claude-fable-5-1');
+
+    const approved = await harness.service.approvePlan({
+      jobId: planned.job.jobId,
+      actorUserId: ACTOR,
+      expectedPlanFingerprint: planned.job.planFingerprint,
+    });
+    expect(approved.status).toBe('ok');
+    await harness.service.runNextBatch({ jobId: planned.job.jobId, actorUserId: ACTOR });
+
+    // Generator and reviewer are separate calls on separate models; the reviewer never sees the
+    // generator's instructions or the original request.
+    const [planCall, genCall, reviewCall, repairCall, rereviewCall] = harness.completeCalls;
+    expect(planCall!.model).toBe('claude-opus-5-5');
+    expect(genCall!.model).toBe('claude-opus-5-5');
+    expect(reviewCall!.model).toBe('claude-fable-5-1');
+    expect(repairCall!.model).toBe('claude-fable-5-1');
+    expect(rereviewCall!.model).toBe('claude-fable-5-1');
+    expect(reviewCall!.system).not.toBe(genCall!.system);
+    expect(reviewCall!.user).not.toContain('PROMPT-MARKER-7f3');
+    expect(genCall!.user).toContain('PROMPT-MARKER-7f3');
+    expect(reviewCall!.user).not.toContain(genCall!.system);
+    expect(harness.completeCalls).toHaveLength(5); // bounded: no further repair loop
+
+    const analyzed = await harness.service.analyzeJob({
+      jobId: planned.job.jobId,
+      actorUserId: ACTOR,
+    });
+    expect(analyzed.status).toBe('ok');
+    if (analyzed.status !== 'ok') return;
+    expect(analyzed.quality).toMatchObject({
+      target: 4,
+      ready: 3,
+      passedFirstReview: 2,
+      repaired: 1,
+      withIssues: 1,
+      minorWarnings: 1,
+      shortfall: 1,
+    });
+    expect(analyzed.reviews[3]!.state).toBe('unresolved');
+    expect(analyzed.reviews[3]!.findings[0]!.reason).toContain('ترجمه');
+
+    // Nothing canonical exists before the human acts.
+    expect(harness.writeStore.createCard).not.toHaveBeenCalled();
+    expect(harness.writeStore.createPack).not.toHaveBeenCalled();
+
+    // The unresolved card cannot be smuggled in by selecting it.
+    const forced = await harness.service.accept({
+      jobId: planned.job.jobId,
+      actorUserId: ACTOR,
+      expectedFingerprint: analyzed.analysis.importableFingerprint,
+      selectedRows: [1, 2, 3, 4],
+      acceptKey: '66666666-6666-4666-8666-666666666666',
+    });
+    expect(forced).toMatchObject({ status: 'stale', message: expect.stringContaining('حل‌نشده') });
+    expect(harness.writeStore.createCard).not.toHaveBeenCalled();
+
+    const accepted = await harness.service.accept({
+      jobId: planned.job.jobId,
+      actorUserId: ACTOR,
+      expectedFingerprint: analyzed.analysis.importableFingerprint,
+      selectedRows: [1, 2, 4],
+      acceptKey: '77777777-7777-4777-8777-777777777777',
+    });
+    expect(accepted.status).toBe('ok');
+    expect(harness.writeStore.createCard).toHaveBeenCalledTimes(3);
+    // The pack keeps its planned target; the shortfall stays visible as a publish blocker
+    // instead of being hidden by shrinking the target.
+    expect(harness.writeStore.createPack).toHaveBeenCalledWith(
+      expect.objectContaining({ targetItemCount: 4, isFree: true }),
+    );
+  });
+
+  it('rejects a plan whose pack id already exists', async () => {
+    const harness = makeHarness({
+      models: MODELS,
+      existingPackIds: ['studium-b1'],
+      replies: [planReply()],
+    });
+    const planned = await harness.service.plan({ prompt: 'تحصیل', actorUserId: ACTOR });
+    expect(planned.status).toBe('invalid');
+  });
+
+  it('marks every card unresolved when the reviewer reply is unusable, never passing them', async () => {
+    const harness = makeHarness({
+      models: MODELS,
+      limits: { maxRepairRounds: 0 },
+      replies: [
+        planReply(),
+        JSON.stringify({ cards: lemmas.map((lemma) => card({ lemma })) }),
+        'not json',
+      ],
+    });
+    const jobId = await generate(harness);
+    const analyzed = await harness.service.analyzeJob({ jobId, actorUserId: ACTOR });
+    if (analyzed.status !== 'ok') throw new Error('analysis failed');
+    expect(analyzed.quality.ready).toBe(0);
+    expect(analyzed.quality.withIssues).toBe(4);
   });
 });

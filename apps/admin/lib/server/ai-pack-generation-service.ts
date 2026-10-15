@@ -108,7 +108,27 @@ export type RunBatchResult =
   | { status: 'failed'; job: JobView };
 
 export type JobAnalysisResult =
-  | { status: 'ok'; job: JobView; analysis: ImportAnalysis; quality: QualityReport; reviews: Record<number, { state: string; findings: Array<{ field: string; severity: string; reason: string; suggestion: string; source: string }>; repairRounds: number; repaired: boolean }> }
+  | {
+      status: 'ok';
+      job: JobView;
+      analysis: ImportAnalysis;
+      quality: QualityReport;
+      reviews: Record<
+        number,
+        {
+          state: string;
+          findings: Array<{
+            field: string;
+            severity: string;
+            reason: string;
+            suggestion: string;
+            source: string;
+          }>;
+          repairRounds: number;
+          repaired: boolean;
+        }
+      >;
+    }
   | { status: 'not_found' };
 
 export type AcceptResult =
@@ -312,9 +332,14 @@ export class AiPackGenerationService {
 
     // A plan must never target an existing pack: accepting into it could accidentally mingle an
     // AI proposal with canonical content. The Admin can revise the title/topic and request a new plan.
-    const existingPack = await this.pool.query('SELECT 1 FROM packs WHERE id = $1 LIMIT 1', [plan.packId]);
+    const existingPack = await this.pool.query('SELECT 1 FROM packs WHERE id = $1 LIMIT 1', [
+      plan.packId,
+    ]);
     if (existingPack.rows.length > 0) {
-      return { status: 'invalid', message: 'شناسهٔ پیشنهادی بسته تکراری است؛ عنوان یا موضوع را اصلاح کنید.' };
+      return {
+        status: 'invalid',
+        message: 'شناسهٔ پیشنهادی بسته تکراری است؛ عنوان یا موضوع را اصلاح کنید.',
+      };
     }
     const jobId = randomUUID();
     const fingerprint = planFingerprintOf(plan);
@@ -344,7 +369,11 @@ export class AiPackGenerationService {
   }
 
   /** Validates and clamps the model's plan. Returns undefined when required parts are unusable. */
-  private buildPlan(raw: Record<string, unknown>, prompt: string, isFree: boolean): GenerationPlan | undefined {
+  private buildPlan(
+    raw: Record<string, unknown>,
+    prompt: string,
+    isFree: boolean,
+  ): GenerationPlan | undefined {
     const title = asString(raw.title);
     const cefrRaw = asString(raw.cefr).toUpperCase();
     if (!title) return undefined;
@@ -486,7 +515,8 @@ export class AiPackGenerationService {
         reviewed = await this.reviewAndRepairBatch(reviewed, job);
       } catch (error) {
         const code = error instanceof AiProviderError ? error.code : 'reviewer_unavailable';
-        const message = error instanceof AiProviderError ? error.message : 'بازبینی مستقل با خطا روبه‌رو شد.';
+        const message =
+          error instanceof AiProviderError ? error.message : 'بازبینی مستقل با خطا روبه‌رو شد.';
         return this.recordBatchFailure(input, code, message);
       }
     }
@@ -526,11 +556,18 @@ export class AiPackGenerationService {
     const repairModel = job.repairModel ?? this.models!.repair;
     let indexes = rows.map((_, index) => index);
     for (let reviewPass = 0; indexes.length > 0; reviewPass += 1) {
-      const reviewed = (await this.callReviewer(rows, indexes, job.plan, reviewerModel)) ?? new Map();
+      const reviewed =
+        (await this.callReviewer(rows, indexes, job.plan, reviewerModel)) ?? new Map();
       for (const index of indexes) {
         const prior = rows[index]!._review;
         const findings = reviewed.get(index) ?? [
-          { field: 'card', severity: 'critical' as const, reason: 'بازبین برای این کارت پاسخ معتبر نداد.', suggestion: '', source: 'reviewer' as const },
+          {
+            field: 'card',
+            severity: 'critical' as const,
+            reason: 'بازبین برای این کارت پاسخ معتبر نداد.',
+            suggestion: '',
+            source: 'reviewer' as const,
+          },
         ];
         const repairRounds = prior?.repairRounds ?? 0;
         rows[index]!._review = {
@@ -545,12 +582,17 @@ export class AiPackGenerationService {
       }
       const repairable = indexes.filter((index) => rows[index]!._review?.state === 'needs_repair');
       if (repairable.length === 0) break;
-      const repaired = (await this.callRepair(rows, repairable, job.plan, repairModel)) ?? new Map();
+      const repaired =
+        (await this.callRepair(rows, repairable, job.plan, repairModel)) ?? new Map();
       for (const index of repairable) {
         const replacement = repaired.get(index);
         const prior = rows[index]!._review!;
         if (!replacement) {
-          rows[index]!._review = { ...prior, repairRounds: prior.repairRounds + 1, state: 'unresolved' };
+          rows[index]!._review = {
+            ...prior,
+            repairRounds: prior.repairRounds + 1,
+            state: 'unresolved',
+          };
           continue;
         }
         rows[index] = {
@@ -709,7 +751,13 @@ export class AiPackGenerationService {
       analyzed.analysis.rows.map((row) => row.classification),
       job.plan.cardCount,
     );
-    return { status: 'ok', job, analysis: analyzed.analysis, quality, reviews: reviewSummaryByRow(records as GeneratedRow[]) };
+    return {
+      status: 'ok',
+      job,
+      analysis: analyzed.analysis,
+      quality,
+      reviews: reviewSummaryByRow(records as GeneratedRow[]),
+    };
   }
 
   /**
@@ -816,9 +864,7 @@ export class AiPackGenerationService {
     };
   }
 
-  private async loadRecords(
-    jobId: string,
-  ): Promise<GeneratedRow[]> {
+  private async loadRecords(jobId: string): Promise<GeneratedRow[]> {
     const result = await this.pool.query(
       'SELECT generated_rows FROM ai_generation_jobs WHERE id = $1',
       [jobId],
