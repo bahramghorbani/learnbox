@@ -11,6 +11,8 @@
  * model names only, which is what the Admin UI and the audit trail need.
  */
 
+import { Agent, fetch as undiciFetch } from 'undici';
+
 export interface AiTextCompletionRequest {
   system: string;
   user: string;
@@ -77,7 +79,9 @@ export class AnthropicTextProvider implements AiTextProvider {
     apiKey: string,
     readonly model: string,
     baseUrl: string = DEFAULT_BASE_URL,
-    fetchImpl: typeof fetch = fetch,
+    // undici's own fetch, not Node's bundled one: the per-call Agent below must come from the same
+    // undici version as the fetch that uses it.
+    fetchImpl: typeof fetch = undiciFetch as unknown as typeof fetch,
   ) {
     this.#apiKey = apiKey;
     this.#baseUrl = baseUrl.replace(/\/+$/, '');
@@ -91,11 +95,25 @@ export class AnthropicTextProvider implements AiTextProvider {
   }
 
   async complete(request: AiTextCompletionRequest): Promise<string> {
+    // One deadline for the whole call: connecting, waiting for headers AND reading the body. The
+    // timer stays armed until the body is fully read. undici's own limits default to 300 s, which
+    // would end a longer allowed call early, so this call's Agent uses the same budget. The Agent
+    // is local to this provider call; the process-wide dispatcher is never touched.
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), request.timeoutMs);
-    let response: Response;
+    const dispatcher = new Agent({
+      headersTimeout: request.timeoutMs,
+      bodyTimeout: request.timeoutMs,
+    });
+    const timedOut = (error: unknown) =>
+      controller.signal.aborted ||
+      ['UND_ERR_HEADERS_TIMEOUT', 'UND_ERR_BODY_TIMEOUT'].includes(
+        String((error as { cause?: { code?: unknown } })?.cause?.code ?? ''),
+      );
+    const timeoutError = () =>
+      new AiProviderError('provider_timeout', 'پاسخ سرویس هوش مصنوعی در زمان مجاز نرسید.');
     try {
-      response = await this.#fetchImpl(this.#endpoint, {
+      const init = {
         method: 'POST',
         headers: {
           'content-type': 'application/json',
@@ -110,48 +128,57 @@ export class AnthropicTextProvider implements AiTextProvider {
           messages: [{ role: 'user', content: request.user }],
         }),
         signal: controller.signal,
-      });
-    } catch (error) {
-      // An abort and a transport failure are reported distinctly so the job can say which it was.
-      if (error instanceof Error && error.name === 'AbortError') {
-        throw new AiProviderError('provider_timeout', 'پاسخ سرویس هوش مصنوعی در زمان مجاز نرسید.');
+        dispatcher,
+      };
+      let response: Response;
+      try {
+        response = await this.#fetchImpl(this.#endpoint, init);
+      } catch (error) {
+        // An abort and a transport failure are reported distinctly so the job can say which it was.
+        if (timedOut(error)) throw timeoutError();
+        throw new AiProviderError('provider_unavailable', 'اتصال به سرویس هوش مصنوعی برقرار نشد.');
       }
-      throw new AiProviderError('provider_unavailable', 'اتصال به سرویس هوش مصنوعی برقرار نشد.');
+
+      if (!response.ok) {
+        // The provider body may echo request content; only the status is surfaced or logged.
+        throw new AiProviderError(
+          'provider_rejected',
+          `سرویس هوش مصنوعی درخواست را نپذیرفت (کد ${response.status}).`,
+        );
+      }
+
+      let payload: unknown;
+      try {
+        payload = await response.json();
+      } catch (error) {
+        if (timedOut(error)) throw timeoutError();
+        throw new AiProviderError('provider_empty_response', 'پاسخ سرویس هوش مصنوعی خوانا نبود.');
+      }
+
+      // Only a reply the model finished on its own is usable. `max_tokens` (the model's own output
+      // ceiling), `refusal`, a missing reason or anything else means the text may be cut off; a
+      // cut-off JSON prefix can still parse, so this is checked before any content is read.
+      const stopReason = (payload as { stop_reason?: unknown } | null)?.stop_reason;
+      if (stopReason !== 'end_turn') {
+        throw new AiProviderError(
+          'provider_incomplete_response',
+          'پاسخ سرویس هوش مصنوعی کامل نشد و پذیرفته نشد.',
+        );
+      }
+
+      const text = extractAnthropicText(payload);
+      if (!text) {
+        throw new AiProviderError(
+          'provider_empty_response',
+          'سرویس هوش مصنوعی پاسخ خالی برگرداند.',
+        );
+      }
+      return text;
     } finally {
+      // Every path — success, rejection, timeout — releases the timer and this call's sockets.
       clearTimeout(timer);
+      void dispatcher.destroy().catch(() => undefined);
     }
-
-    if (!response.ok) {
-      // The provider body may echo request content; only the status is surfaced or logged.
-      throw new AiProviderError(
-        'provider_rejected',
-        `سرویس هوش مصنوعی درخواست را نپذیرفت (کد ${response.status}).`,
-      );
-    }
-
-    let payload: unknown;
-    try {
-      payload = await response.json();
-    } catch {
-      throw new AiProviderError('provider_empty_response', 'پاسخ سرویس هوش مصنوعی خوانا نبود.');
-    }
-
-    // Only a reply the model finished on its own is usable. `max_tokens` (the model's own output
-    // ceiling), `refusal`, a missing reason or anything else means the text may be cut off; a
-    // cut-off JSON prefix can still parse, so this is checked before any content is read.
-    const stopReason = (payload as { stop_reason?: unknown } | null)?.stop_reason;
-    if (stopReason !== 'end_turn') {
-      throw new AiProviderError(
-        'provider_incomplete_response',
-        'پاسخ سرویس هوش مصنوعی کامل نشد و پذیرفته نشد.',
-      );
-    }
-
-    const text = extractAnthropicText(payload);
-    if (!text) {
-      throw new AiProviderError('provider_empty_response', 'سرویس هوش مصنوعی پاسخ خالی برگرداند.');
-    }
-    return text;
   }
 }
 
