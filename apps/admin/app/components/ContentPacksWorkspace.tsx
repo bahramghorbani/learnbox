@@ -56,6 +56,7 @@ type ServerPack = {
   category: string | null;
   isFree: boolean;
   priceTomans: number | null;
+  priceLocked: boolean;
   status: string;
   cardCount: number;
   publishedCardCount: number;
@@ -403,6 +404,78 @@ function cardRequestBody(values: CardFormValues) {
   };
 }
 
+function PackPrice({
+  pack,
+  canSetPrice,
+  onSaved,
+}: {
+  pack: ServerPack;
+  canSetPrice: boolean;
+  onSaved: () => void;
+}) {
+  const [value, setValue] = useState(pack.priceTomans === null ? '' : String(pack.priceTomans));
+  const [message, setMessage] = useState<string>();
+  if (pack.isFree) return <span className="muted-note">رایگان</span>;
+  if (!canSetPrice)
+    return (
+      <span className="muted-note">
+        قیمت: <bdi dir="ltr">{pack.priceTomans === null ? '—' : faNum(pack.priceTomans)}</bdi> تومان
+      </span>
+    );
+  if (pack.priceLocked)
+    return (
+      <span className="muted-note">
+        قیمت: <bdi dir="ltr">{faNum(pack.priceTomans ?? 0)}</bdi> تومان — پس از اولین فروش قابل
+        تغییر نیست.
+      </span>
+    );
+  return (
+    <form
+      className="head-actions"
+      onSubmit={async (event) => {
+        event.preventDefault();
+        const outcome = await sendMutation(
+          `/api/content/packs/${encodeURIComponent(pack.id)}/price`,
+          'POST',
+          { priceTomans: value },
+        );
+        if (!outcome.ok) {
+          setMessage(outcome.message);
+          return;
+        }
+        setMessage('قیمت ذخیره شد.');
+        onSaved();
+      }}
+    >
+      <label htmlFor={`pack-price-${pack.id}`} className="sr-only">
+        قیمت بسته به تومان
+      </label>
+      <input
+        id={`pack-price-${pack.id}`}
+        className="cp-input cp-ltr"
+        inputMode="numeric"
+        value={value}
+        onChange={(event) => setValue(event.target.value)}
+        aria-label="قیمت بسته به تومان"
+      />
+      <span className="muted-note">
+        <bdi dir="ltr">
+          {Number.isInteger(Number(value)) && Number(value) > 0 ? faNum(Number(value)) : '—'}
+        </bdi>{' '}
+        تومان
+      </span>
+      <button className="btn sm" type="submit">
+        ذخیرهٔ قیمت
+      </button>
+      {message ? (
+        <span className="muted-note" role="status">
+          {message}
+        </span>
+      ) : null}
+    </form>
+  );
+}
+
 export function ContentPacksWorkspace() {
   const [phase, setPhase] = useState<Phase>('loading');
   const [packs, setPacks] = useState<ServerPack[]>([]);
@@ -414,6 +487,7 @@ export function ContentPacksWorkspace() {
   // Management surface (Phase 1 / M1.2). `manageEnabled` comes from the server, so create/edit
   // controls never render when the write routes would 404.
   const [manageEnabled, setManageEnabled] = useState(false);
+  const [canSetPrice, setCanSetPrice] = useState(false);
   const [packForm, setPackForm] = useState<{ mode: 'create' | 'edit'; values: PackFormValues }>();
   const [cardForm, setCardForm] = useState<{
     mode: 'create' | 'edit';
@@ -452,12 +526,14 @@ export function ContentPacksWorkspace() {
       if (!response.ok) throw new Error('packs unavailable');
       const payload = (await response.json()) as {
         packs?: ServerPack[];
+        canSetPrice?: boolean;
         manageEnabled?: boolean;
         aiEnabled?: boolean;
         mediaEnabled?: boolean;
       };
       const list = Array.isArray(payload.packs) ? payload.packs : [];
       setPacks(list);
+      setCanSetPrice(payload.canSetPrice === true);
       setManageEnabled(payload.manageEnabled === true);
       setAiEnabled(payload.aiEnabled === true);
       setMediaEnabled(payload.mediaEnabled === true);
@@ -767,7 +843,11 @@ export function ContentPacksWorkspace() {
                       {pack.description ? <p className="muted-note">{pack.description}</p> : null}
                       <PackProgress pack={pack} />
                       <div className="pack-foot">
-                        <span className="muted-note">{pack.isFree ? 'رایگان' : 'غیررایگان'}</span>
+                        <PackPrice
+                          pack={pack}
+                          canSetPrice={canSetPrice}
+                          onSaved={() => void loadPacks()}
+                        />
                         <div className="head-actions">
                           <button
                             className="btn sm"

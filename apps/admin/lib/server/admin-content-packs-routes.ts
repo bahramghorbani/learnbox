@@ -75,6 +75,7 @@ export function createContentPacksListRoute(dependencies: ListDependencies) {
       if (result.status === 'forbidden') return notFound();
       return json({
         packs: result.packs,
+        canSetPrice: result.canSetPrice,
         manageEnabled: dependencies.manageEnabled === true,
         aiEnabled: dependencies.aiEnabled === true,
         mediaEnabled: dependencies.mediaEnabled === true,
