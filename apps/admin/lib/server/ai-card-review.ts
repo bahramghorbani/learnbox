@@ -335,8 +335,13 @@ export function buildQualityReport(
 }
 
 /** Maps generated-row order (one-based) to UI review state without leaking prompts or model output. */
-export function reviewSummaryByRow(rows: readonly GeneratedRow[]): Record<number, Pick<RowReview, 'state' | 'findings' | 'repairRounds' | 'repaired'>> {
-  const result: Record<number, Pick<RowReview, 'state' | 'findings' | 'repairRounds' | 'repaired'>> = {};
+export function reviewSummaryByRow(
+  rows: readonly GeneratedRow[],
+): Record<number, Pick<RowReview, 'state' | 'findings' | 'repairRounds' | 'repaired'>> {
+  const result: Record<
+    number,
+    Pick<RowReview, 'state' | 'findings' | 'repairRounds' | 'repaired'>
+  > = {};
   rows.forEach((row, index) => {
     if (!row._review) return;
     const { state, findings, repairRounds, repaired } = row._review;

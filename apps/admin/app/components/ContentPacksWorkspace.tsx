@@ -1352,10 +1352,12 @@ export function ContentPacksWorkspace() {
             return result.ok ? { ok: true as const, job: result.payload.job } : result;
           }}
           onRefresh={async (jobId) => {
-            const result = await postAiJson<{ job: GenerationJobView; analysis: ImportAnalysis; quality?: import('./AiPackGenerationModal').QualityReport; reviews?: Record<number, import('./AiPackGenerationModal').ReviewRowView> }>(
-              '/api/content/ai/job',
-              { jobId },
-            );
+            const result = await postAiJson<{
+              job: GenerationJobView;
+              analysis: ImportAnalysis;
+              quality?: import('./AiPackGenerationModal').QualityReport;
+              reviews?: Record<number, import('./AiPackGenerationModal').ReviewRowView>;
+            }>('/api/content/ai/job', { jobId });
             return result.ok
               ? {
                   ok: true as const,

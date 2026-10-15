@@ -263,7 +263,13 @@ export function createAiJobStatusRoute(dependencies: RouteDependencies) {
         actorUserId: authorized.actorUserId,
       });
       if (result.status === 'not_found') return notFound();
-      return json({ status: 'ok', job: result.job, analysis: result.analysis, quality: result.quality, reviews: result.reviews });
+      return json({
+        status: 'ok',
+        job: result.job,
+        analysis: result.analysis,
+        quality: result.quality,
+        reviews: result.reviews,
+      });
     } catch {
       return json({ code: 'status_failed' }, { status: 503 });
     }

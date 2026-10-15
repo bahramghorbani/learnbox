@@ -20,7 +20,7 @@ describe('independent AI card review contract', () => {
     cefr: 'A1',
     persian_meanings: 'خانه',
     example_german: 'Das Haus ist groß.',
-    example_persian: 'خانه بزرگ است.'
+    example_persian: 'خانه بزرگ است.',
   };
 
   it('gives the reviewer card fields and learning context, but no generation prompt or provenance', () => {

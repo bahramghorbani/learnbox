@@ -139,7 +139,13 @@ export function AiPackGenerationModal({
   onRefresh: (
     jobId: string,
   ) => Promise<
-    | { ok: true; job: GenerationJobView; analysis: ImportAnalysis; quality?: QualityReport; reviews?: Record<number, ReviewRowView> }
+    | {
+        ok: true;
+        job: GenerationJobView;
+        analysis: ImportAnalysis;
+        quality?: QualityReport;
+        reviews?: Record<number, ReviewRowView>;
+      }
     | { ok: false; message: string }
   >;
   onAccept: (
@@ -179,11 +185,25 @@ export function AiPackGenerationModal({
   }, [onLoadModels]);
 
   const validRows = useMemo(
-    () => (analysis ? analysis.rows.filter((row) => row.classification === 'new' && (!reviews[row.rowNumber] || reviews[row.rowNumber]?.state === 'passed')) : []),
+    () =>
+      analysis
+        ? analysis.rows.filter(
+            (row) =>
+              row.classification === 'new' &&
+              (!reviews[row.rowNumber] || reviews[row.rowNumber]?.state === 'passed'),
+          )
+        : [],
     [analysis, reviews],
   );
   const problemRows = useMemo(
-    () => (analysis ? analysis.rows.filter((row) => row.classification !== 'new' || (reviews[row.rowNumber] !== undefined && reviews[row.rowNumber]?.state !== 'passed')) : []),
+    () =>
+      analysis
+        ? analysis.rows.filter(
+            (row) =>
+              row.classification !== 'new' ||
+              (reviews[row.rowNumber] !== undefined && reviews[row.rowNumber]?.state !== 'passed'),
+          )
+        : [],
     [analysis, reviews],
   );
   const selectedCount = validRows.filter((row) => selected.has(row.rowNumber)).length;
@@ -220,7 +240,12 @@ export function AiPackGenerationModal({
    * repainted from the server's own count after every batch.
    */
   /** Shows the generated cards for review, preselecting the ones that are new. */
-  function enterReview(nextJob: GenerationJobView, nextAnalysis: ImportAnalysis, nextQuality?: QualityReport, nextReviews: Record<number, ReviewRowView> = {}) {
+  function enterReview(
+    nextJob: GenerationJobView,
+    nextAnalysis: ImportAnalysis,
+    nextQuality?: QualityReport,
+    nextReviews: Record<number, ReviewRowView> = {},
+  ) {
     setJob(nextJob);
     setAnalysis(nextAnalysis);
     setQuality(nextQuality ?? nextJob.quality ?? null);
@@ -427,7 +452,9 @@ export function AiPackGenerationModal({
               <option value="paid">پولی</option>
               <option value="free">رایگان</option>
             </select>
-            <p className="cp-note">این انتخاب توسط مدیر انجام می‌شود و هوش مصنوعی آن را تغییر نمی‌دهد.</p>
+            <p className="cp-note">
+              این انتخاب توسط مدیر انجام می‌شود و هوش مصنوعی آن را تغییر نمی‌دهد.
+            </p>
           </div>
           {models.length > 1 ? (
             <div className="cp-form-field">
@@ -502,8 +529,16 @@ function PlanPreview({ job }: { job: GenerationJobView }) {
       <div className="cp-import-meta">
         <span>شناسهٔ بسته: {plan.packId}</span>
         <span>سطح: {plan.cefr}</span>
-        {job.model ? <span>مدل تولید: <bdi dir="ltr">{job.model}</bdi></span> : null}
-        {job.reviewerModel ? <span>بازبین مستقل: <bdi dir="ltr">{job.reviewerModel}</bdi></span> : null}
+        {job.model ? (
+          <span>
+            مدل تولید: <bdi dir="ltr">{job.model}</bdi>
+          </span>
+        ) : null}
+        {job.reviewerModel ? (
+          <span>
+            بازبین مستقل: <bdi dir="ltr">{job.reviewerModel}</bdi>
+          </span>
+        ) : null}
       </div>
 
       <dl className="cp-plan-grid">
@@ -622,12 +657,27 @@ function GeneratedPreview({
         <section className="cp-import-issues" aria-label="گزارش بازبینی مستقل">
           <h4>گزارش بازبینی مستقل</h4>
           <ul className="cp-import-statement">
-            <li>هدف طرح: <strong>{quality.target}</strong>؛ آماده برای پذیرش: <strong>{quality.ready}</strong></li>
-            <li>پذیرفته در بار اول: <strong>{quality.passedFirstReview}</strong>؛ اصلاح و پذیرفته: <strong>{quality.repaired}</strong></li>
-            <li>خطای حل‌نشده: <strong>{quality.withIssues}</strong>؛ هشدار جزئی: <strong>{quality.minorWarnings}</strong></li>
-            <li>کسری نسبت به هدف: <strong>{quality.shortfall}</strong> — تعداد هدف خودکار کاهش نمی‌یابد.</li>
+            <li>
+              هدف طرح: <strong>{quality.target}</strong>؛ آماده برای پذیرش:{' '}
+              <strong>{quality.ready}</strong>
+            </li>
+            <li>
+              پذیرفته در بار اول: <strong>{quality.passedFirstReview}</strong>؛ اصلاح و پذیرفته:{' '}
+              <strong>{quality.repaired}</strong>
+            </li>
+            <li>
+              خطای حل‌نشده: <strong>{quality.withIssues}</strong>؛ هشدار جزئی:{' '}
+              <strong>{quality.minorWarnings}</strong>
+            </li>
+            <li>
+              کسری نسبت به هدف: <strong>{quality.shortfall}</strong> — تعداد هدف خودکار کاهش
+              نمی‌یابد.
+            </li>
           </ul>
-          <p className="cp-note">بازبین مستقل است و هیچ تأیید یا انتشار خودکاری انجام نمی‌دهد؛ فقط کارت‌های بدون خطای حل‌نشده در انتخاب پیش‌فرض قرار می‌گیرند.</p>
+          <p className="cp-note">
+            بازبین مستقل است و هیچ تأیید یا انتشار خودکاری انجام نمی‌دهد؛ فقط کارت‌های بدون خطای
+            حل‌نشده در انتخاب پیش‌فرض قرار می‌گیرند.
+          </p>
         </section>
       ) : null}
 
@@ -713,7 +763,10 @@ function GeneratedPreview({
                   </td>
                   <td>
                     {reviews[row.rowNumber]?.findings.length
-                      ? reviews[row.rowNumber]!.findings.map((finding) => `${finding.reason}${finding.suggestion ? ` — پیشنهاد: ${finding.suggestion}` : ''}`).join(' ')
+                      ? reviews[row.rowNumber]!.findings.map(
+                          (finding) =>
+                            `${finding.reason}${finding.suggestion ? ` — پیشنهاد: ${finding.suggestion}` : ''}`,
+                        ).join(' ')
                       : Array.isArray(row.issues) && row.issues.length > 0
                         ? row.issues.map((issue) => issue.message).join(' ')
                         : 'خطای بازبین حل‌نشده یا کارت بررسی‌نشده'}
