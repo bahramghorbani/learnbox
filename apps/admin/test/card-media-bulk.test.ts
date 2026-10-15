@@ -28,10 +28,25 @@ describe('bulk card media runner', () => {
     expect(accept).not.toHaveBeenCalled();
   });
 
-  it('flags blocked DAS audio and stops at a provider error', async () => {
+  it.each(['das_voice_unconfigured', 'article_voices_not_distinct', 'voice_not_supported'])(
+    'stops the whole run as blocked on a voice-roster error (%s)',
+    async (code) => {
+      const generate = vi.fn().mockResolvedValue({ ok: false, code, message: 'blocked' });
+      const results: string[] = [];
+      await runBulkCardMediaGeneration(cards.slice(0, 3), 'audio', {
+        loadState: async () => [],
+        generate,
+        onResult: (result) => results.push(result.status),
+      });
+
+      expect(results).toEqual(['blocked']);
+      expect(generate).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it('stops at a provider error', async () => {
     const generate = vi
       .fn()
-      .mockResolvedValueOnce({ ok: false, code: 'das_voice_unconfigured', message: 'blocked' })
       .mockResolvedValueOnce({ ok: false, code: 'provider_failed', message: 'failed' });
     const results: string[] = [];
     await runBulkCardMediaGeneration(cards.slice(0, 3), 'audio', {
@@ -40,7 +55,7 @@ describe('bulk card media runner', () => {
       onResult: (result) => results.push(result.status),
     });
 
-    expect(results).toEqual(['blocked', 'failed']);
-    expect(generate).toHaveBeenCalledTimes(2);
+    expect(results).toEqual(['failed']);
+    expect(generate).toHaveBeenCalledTimes(1);
   });
 });

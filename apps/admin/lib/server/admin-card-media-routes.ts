@@ -16,6 +16,7 @@ import {
 } from './admin-auth-policy';
 import { loadAdminSession, verifyAdminCsrf } from './admin-route-security';
 import { AiProviderError } from './ai-generation-provider';
+import { germanVoiceIssue, GERMAN_VOICE_ISSUE_MESSAGES } from './ai-media-config';
 import type { AiMediaProvider } from './ai-media-provider';
 import type { CardMediaGenerationService } from './card-media-generation-service';
 import type { CardMediaKind } from './card-media-storage';
@@ -145,13 +146,13 @@ export function createMediaModelsRoute(dependencies: RouteDependencies) {
       gateway: dependencies.provider.provider,
       image: { defaultModel: dependencies.provider.imageModel, models: imageModels },
       audio: { defaultModel: dependencies.provider.audioModel, models: audioModels },
-      // The effective voice per role, including whether DAS falls back to the DIE female voice.
+      // The configured voice per role and any roster problem; there is no DAS fallback.
       voices: voices
         ? {
             der: voices.der,
             die: voices.die,
             das: voices.das ?? null,
-            dasUsesDieFallback: !voices.das,
+            issue: germanVoiceIssue(voices, dependencies.provider.audioModel) ?? null,
             default: voices.default,
             language: 'de',
             locale: 'de-DE',
@@ -326,11 +327,18 @@ export function createVoicePreviewRoute(dependencies: RouteDependencies) {
         : role === 'die'
           ? voices.die
           : role === 'das'
-            ? (voices.das ?? voices.die)
+            ? voices.das
             : role === 'default'
               ? voices.default
               : undefined;
-    if (!voice) return genericInvalid();
+    if (role !== 'der' && role !== 'die' && role !== 'das' && role !== 'default') {
+      return genericInvalid();
+    }
+    const issue = germanVoiceIssue(voices, dependencies.provider.audioModel);
+    if (issue || !voice) {
+      const code = issue ?? 'das_voice_unconfigured';
+      return json({ code, message: GERMAN_VOICE_ISSUE_MESSAGES[code] }, { status: 422 });
+    }
 
     try {
       const audio = await dependencies.provider.synthesizeSpeech({
@@ -345,9 +353,8 @@ export function createVoicePreviewRoute(dependencies: RouteDependencies) {
           'Content-Length': String(audio.bytes.length),
           'Cache-Control': 'private, no-store',
           'X-Content-Type-Options': 'nosniff',
-          // Tells the Admin which voice actually spoke, and whether DAS used the DIE fallback.
+          // Tells the Admin which voice actually spoke.
           'X-LearnBox-Voice': voice,
-          'X-LearnBox-Voice-Fallback': role === 'das' && !voices.das ? 'die_female' : 'none',
         },
       });
     } catch (error) {

@@ -21,14 +21,16 @@ import {
   buildSpokenSentenceTarget,
   buildSpokenWordTarget,
   resolveEffectiveGermanVoice,
-  resolveGermanVoiceRole,
-  validateGermanArticleVoices,
   type GermanVoiceMapping,
   type LearnBoxImageStandard,
 } from '@learnbox/content-models';
 
 import { AiProviderError } from './ai-generation-provider';
-import type { AiMediaLimits } from './ai-media-config';
+import {
+  germanVoiceIssue,
+  GERMAN_VOICE_ISSUE_MESSAGES,
+  type AiMediaLimits,
+} from './ai-media-config';
 import type { AiMediaProvider } from './ai-media-provider';
 import { readCanonicalCardBrief } from './canonical-image-standard';
 import type { CardMediaKind, CardMediaStorage } from './card-media-storage';
@@ -225,18 +227,13 @@ export class CardMediaGenerationService {
       let usesDieFallback = false;
 
       if (capability === 'audio') {
-        const voiceIssue = validateGermanArticleVoices(this.voices);
-        if (
-          voiceIssue === 'article_voices_not_distinct' ||
-          (voiceIssue === 'das_voice_unconfigured' && resolveGermanVoiceRole(card) === 'das_neuter')
-        ) {
+        // Any roster problem refuses all audio (single and bulk alike); no voice is substituted.
+        const voiceIssue = germanVoiceIssue(this.voices, model);
+        if (voiceIssue) {
           return {
             status: 'unprocessable',
             code: voiceIssue,
-            reason:
-              voiceIssue === 'das_voice_unconfigured'
-                ? 'صدای جداگانه و تأییدشده برای اسم‌های «das» پیکربندی نشده است.'
-                : 'سه صدای der، die و das باید متفاوت و تأییدشده باشند.',
+            reason: GERMAN_VOICE_ISSUE_MESSAGES[voiceIssue],
           };
         }
         // Canonical rules decide what is spoken and who speaks it.

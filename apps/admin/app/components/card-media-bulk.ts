@@ -1,6 +1,12 @@
 import type { CardMediaKind, MediaKindState } from './CardMediaPanel';
 
 export const BULK_MEDIA_CARD_CAP = 25;
+const VOICE_ROSTER_CODES = new Set([
+  'das_voice_unconfigured',
+  'article_voices_not_distinct',
+  'voice_not_supported',
+  'audio_model_not_qualified',
+]);
 export type BulkMediaKind = 'image' | 'audio';
 export type BulkMediaResult = {
   cardId: string;
@@ -44,15 +50,14 @@ export async function runBulkCardMediaGeneration(
     }
     const result = await generate(card.cardId, candidateKind);
     if (!result.ok) {
-      const blocked = result.code === 'das_voice_unconfigured';
+      // A voice-roster problem blocks every card the same way, so the run stops at the first one.
       onResult({
         cardId: card.cardId,
         label: card.label,
-        status: blocked ? 'blocked' : 'failed',
+        status: result.code && VOICE_ROSTER_CODES.has(result.code) ? 'blocked' : 'failed',
         message: result.message ?? 'تولید رسانه متوقف شد.',
       });
-      if (!blocked) return;
-      continue;
+      return;
     }
     onResult({
       cardId: card.cardId,

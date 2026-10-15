@@ -295,8 +295,9 @@ function createService(
 
 describe('word audio speaks the canonical article', () => {
   it.each([
-    ['der', 'Tisch', 'der Tisch', 'onyx', 'der_masculine'],
+    ['der', 'Tisch', 'der Tisch', 'sage', 'der_masculine'],
     ['die', 'Lampe', 'die Lampe', 'nova', 'die_feminine'],
+    ['das', 'Buch', 'das Buch', 'fable', 'das_neuter'],
   ])('%s %s is spoken as "%s"', async (article, lemma, expected, expectedVoice, expectedRole) => {
     const { service, provider } = createService({ lemma, article });
     const result = await service.generate({
@@ -307,10 +308,13 @@ describe('word audio speaks the canonical article', () => {
 
     expect(result.status).toBe('generated');
     // The application decided the spoken text; the provider merely received it.
+    expect(provider.synthesizeSpeech).toHaveBeenCalledTimes(1);
     expect(provider.synthesizeSpeech).toHaveBeenCalledWith(
       expect.objectContaining({ text: expected, voice: expectedVoice }),
     );
     if (result.status !== 'generated') throw new Error('expected generation');
+    expect(result.candidate.voice).toBe(expectedVoice);
+    expect(result.candidate.usesDieFallbackForDas).toBe(false);
     expect(result.candidate.spokenTarget).toBe(expected);
     expect(result.candidate.voiceRole).toBe(expectedRole);
     expect(result.candidate.language).toBe('de');
@@ -333,47 +337,40 @@ describe('word audio speaks the canonical article', () => {
     );
   });
 
-  it('refuses DAS audio when no distinct voice is configured', async () => {
-    const { service, provider } = createService({ lemma: 'Buch', article: 'das' });
-    const result = await service.generate({
-      cardId: CARD_ID,
-      kind: 'word_audio',
-      actorUserId: ACTOR,
-    });
-
-    expect(result).toMatchObject({ status: 'unprocessable', code: 'das_voice_unconfigured' });
-    expect(provider.synthesizeSpeech).not.toHaveBeenCalled();
+  // A wrong roster refuses every article, not just the broken one, and never borrows a voice.
+  it.each([
+    ['das unset', { das: undefined }, 'das_voice_unconfigured'],
+    ['das = die', { das: 'nova' }, 'das_voice_unconfigured'],
+    ['der = die', { der: 'nova' }, 'article_voices_not_distinct'],
+    ['der = das', { der: 'fable' }, 'article_voices_not_distinct'],
+    ['unknown voice id', { das: 'german-teen' }, 'voice_not_supported'],
+    ['misspelled voice id', { der: 'Sage ' }, 'voice_not_supported'],
+  ])('refuses all audio when %s', async (_label, override, code) => {
+    for (const article of ['der', 'die', 'das']) {
+      const { service, provider } = createService(
+        { lemma: 'Buch', article },
+        { voices: { ...DEFAULT_GERMAN_VOICE_MAPPING, ...override } as GermanVoiceMapping },
+      );
+      const result = await service.generate({
+        cardId: CARD_ID,
+        kind: 'word_audio',
+        actorUserId: ACTOR,
+      });
+      expect(result).toMatchObject({ status: 'unprocessable', code });
+      expect(provider.synthesizeSpeech).not.toHaveBeenCalled();
+    }
   });
 
-  it('refuses all audio when article voices are duplicated', async () => {
-    const { service, provider } = createService(
-      { lemma: 'Tisch', article: 'der' },
-      { voices: { ...DEFAULT_GERMAN_VOICE_MAPPING, das: 'german-teen', die: 'onyx' } },
-    );
+  it('refuses the article voices on an audio model they were not chosen on', async () => {
+    const { service, provider } = createService({ lemma: 'Tisch', article: 'der' });
     const result = await service.generate({
       cardId: CARD_ID,
       kind: 'word_audio',
+      model: 'gpt-4o-mini-tts',
       actorUserId: ACTOR,
     });
-
-    expect(result).toMatchObject({ status: 'unprocessable', code: 'article_voices_not_distinct' });
+    expect(result).toMatchObject({ status: 'unprocessable', code: 'audio_model_not_qualified' });
     expect(provider.synthesizeSpeech).not.toHaveBeenCalled();
-  });
-
-  it('uses the configured younger voice for DAS when one exists', async () => {
-    const { service } = createService(
-      { lemma: 'Buch', article: 'das' },
-      { voices: { ...DEFAULT_GERMAN_VOICE_MAPPING, das: 'german-teen' } },
-    );
-    const result = await service.generate({
-      cardId: CARD_ID,
-      kind: 'word_audio',
-      actorUserId: ACTOR,
-    });
-
-    if (result.status !== 'generated') throw new Error('expected generation');
-    expect(result.candidate.voice).toBe('german-teen');
-    expect(result.candidate.usesDieFallbackForDas).toBe(false);
   });
 });
 
@@ -393,7 +390,7 @@ describe('sentence audio', () => {
     if (result.status !== 'generated') throw new Error('expected generation');
     expect(result.candidate.spokenTarget).toBe('Der Tisch ist aus Holz.');
     expect(provider.synthesizeSpeech).toHaveBeenCalledWith(
-      expect.objectContaining({ text: 'Der Tisch ist aus Holz.', voice: 'onyx' }),
+      expect.objectContaining({ text: 'Der Tisch ist aus Holz.', voice: 'sage' }),
     );
   });
 

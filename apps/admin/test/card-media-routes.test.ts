@@ -261,15 +261,24 @@ describe('the credential never leaves the server', () => {
     // Attribution only: gateway host, model ids, configured voice roles.
     expect(payload.image.defaultModel).toBe('flux.2-pro');
     expect(payload.audio.defaultModel).toBe('eleven_multilingual_v2');
-    expect(payload.voices).toMatchObject({ der: 'onyx', die: 'nova', locale: 'de-DE' });
+    expect(payload.voices).toEqual({
+      der: 'sage',
+      die: 'nova',
+      das: 'fable',
+      issue: null,
+      default: 'nova',
+      language: 'de',
+      locale: 'de-DE',
+    });
   });
 
-  it('reports that DAS falls back to the DIE female voice when none is configured', async () => {
-    const route = createMediaModelsRoute(dependencies() as never);
-    const response = await route(get('https://admin.learnbox.app/api/content/media/models'));
-    const payload = await response.json();
-    expect(payload.voices.das).toBeNull();
-    expect(payload.voices.dasUsesDieFallback).toBe(true);
+  it('reports a broken voice roster instead of a fallback', async () => {
+    const deps = { ...dependencies(), voices: { ...DEFAULT_GERMAN_VOICE_MAPPING, das: 'nova' } };
+    const route = createMediaModelsRoute(deps as never);
+    const payload = await (
+      await route(get('https://admin.learnbox.app/api/content/media/models'))
+    ).json();
+    expect(payload.voices.issue).toBe('das_voice_unconfigured');
   });
 
   it('is absent from a generation response', async () => {
@@ -290,20 +299,40 @@ describe('voice preview', () => {
 
     expect(response.status).toBe(200);
     expect(deps.provider.synthesizeSpeech).toHaveBeenCalledWith(
-      expect.objectContaining({ text: VOICE_PREVIEW_SAMPLE, voice: 'onyx' }),
+      expect.objectContaining({ text: VOICE_PREVIEW_SAMPLE, voice: 'sage' }),
     );
     expect(response.headers.get('Cache-Control')).toBe('private, no-store');
   });
 
-  it('marks the DAS preview as using the DIE female fallback', async () => {
+  it.each([
+    ['der', 'sage'],
+    ['die', 'nova'],
+    ['das', 'fable'],
+  ])('previews %s only in its own voice %s', async (role, voice) => {
     const deps = dependencies();
+    const route = createVoicePreviewRoute(deps as never);
+    const response = await route(post({ role }));
+
+    expect(response.status).toBe(200);
+    expect(deps.provider.synthesizeSpeech).toHaveBeenCalledTimes(1);
+    expect(deps.provider.synthesizeSpeech).toHaveBeenCalledWith(expect.objectContaining({ voice }));
+    expect(response.headers.get('X-LearnBox-Voice')).toBe(voice);
+    expect(response.headers.get('X-LearnBox-Voice-Fallback')).toBeNull();
+  });
+
+  it.each([
+    [{ das: undefined }, 'das_voice_unconfigured'],
+    [{ das: 'nova' }, 'das_voice_unconfigured'],
+    [{ der: 'nova' }, 'article_voices_not_distinct'],
+    [{ der: 'german-male' }, 'voice_not_supported'],
+  ])('refuses a preview for a broken roster %j', async (override, code) => {
+    const deps = { ...dependencies(), voices: { ...DEFAULT_GERMAN_VOICE_MAPPING, ...override } };
     const route = createVoicePreviewRoute(deps as never);
     const response = await route(post({ role: 'das' }));
 
-    expect(deps.provider.synthesizeSpeech).toHaveBeenCalledWith(
-      expect.objectContaining({ voice: DEFAULT_GERMAN_VOICE_MAPPING.die }),
-    );
-    expect(response.headers.get('X-LearnBox-Voice-Fallback')).toBe('die_female');
+    expect(response.status).toBe(422);
+    expect((await response.json()).code).toBe(code);
+    expect(deps.provider.synthesizeSpeech).not.toHaveBeenCalled();
   });
 
   it('cannot be reached anonymously', async () => {
