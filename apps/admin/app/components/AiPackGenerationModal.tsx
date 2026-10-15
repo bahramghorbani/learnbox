@@ -136,9 +136,7 @@ export function AiPackGenerationModal({
   onRunBatch: (
     jobId: string,
   ) => Promise<{ ok: true; job: GenerationJobView } | { ok: false; message: string }>;
-  onRefresh: (
-    jobId: string,
-  ) => Promise<
+  onRefresh: (jobId: string) => Promise<
     | {
         ok: true;
         job: GenerationJobView;
