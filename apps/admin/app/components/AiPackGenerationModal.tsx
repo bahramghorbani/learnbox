@@ -58,9 +58,19 @@ export interface GenerationJobView {
     batchesTotal: number;
     attemptsOnCurrentBatch: number;
   };
+  /** True while a batch holds the server lease, i.e. its AI calls may still be running. */
+  batchInFlight?: boolean;
   error?: { code: string; message: string };
   packId?: string;
 }
+
+/**
+ * Responses that say nothing about the batch itself: the connection or a proxy gave up, or another
+ * request already owns the batch. The server keeps working either way, so the client must wait
+ * for the job instead of sending the batch again.
+ */
+const UNANSWERED_BATCH_CODES = new Set(['network', 'gateway', 'batch_conflict']);
+const BATCH_POLL_MS = 10_000;
 
 export interface ReviewFindingView {
   field: string;
@@ -187,7 +197,9 @@ export function AiPackGenerationModal({
   ) => Promise<{ ok: true; job: GenerationJobView } | { ok: false; message: string }>;
   onRunBatch: (
     jobId: string,
-  ) => Promise<{ ok: true; job: GenerationJobView } | { ok: false; message: string }>;
+  ) => Promise<
+    { ok: true; job: GenerationJobView } | { ok: false; message: string; code?: string }
+  >;
   onRefresh: (jobId: string) => Promise<
     | {
         ok: true;
@@ -319,13 +331,53 @@ export function AiPackGenerationModal({
     setStage('review');
   }
 
+  /**
+   * Polls the job (read-only) until no batch holds the server lease, and returns it. Returns
+   * undefined after showing the error when the status itself cannot be read.
+   */
+  async function awaitServerBatch(jobId: string): Promise<GenerationJobView | undefined> {
+    for (;;) {
+      const refreshed = await onRefresh(jobId);
+      if (!refreshed.ok) {
+        setBusy(false);
+        setError(refreshed.message);
+        return undefined;
+      }
+      setJob(refreshed.job);
+      setAnalysis(refreshed.analysis);
+      // ponytail: fixed 10 s poll; the server lease bounds how long this can last.
+      if (!refreshed.job.batchInFlight) return refreshed.job;
+      await new Promise((resolve) => setTimeout(resolve, BATCH_POLL_MS));
+    }
+  }
+
   /** Runs batches until the job stops generating, then moves to review. */
   async function runGeneration(startJob: GenerationJobView) {
     let current = startJob;
     setStage('generating');
 
     while (current.status === 'generating') {
+      const batchesBefore = current.progress.batchesDone;
       const batch = await onRunBatch(current.jobId);
+      if (!batch.ok && UNANSWERED_BATCH_CODES.has(batch.code ?? '')) {
+        const settled = await awaitServerBatch(current.jobId);
+        if (!settled) return;
+        // Continue only when the batch really completed on the server. Anything else — a
+        // recorded failure, or a result that never landed — stops for the Admin to retry, so a
+        // lost response never turns into an automatic second paid attempt.
+        const advanced = settled.progress.batchesDone > batchesBefore && !settled.error;
+        if (settled.status === 'generated' || (settled.status === 'generating' && advanced)) {
+          current = settled;
+          continue;
+        }
+        setBusy(false);
+        setError(
+          settled.error?.message ??
+            'پاسخ این دسته دریافت نشد و چیزی ثبت نشد؛ برای ادامه «تلاش دوباره برای این دسته» را بزنید.',
+        );
+        setStage(settled.status === 'failed' ? 'failed' : 'generating');
+        return;
+      }
       if (!batch.ok) {
         setBusy(false);
         setError(batch.message);
@@ -864,6 +916,12 @@ function Progress({ job }: { job: GenerationJobView }) {
         max={requested}
         aria-label={`کارت تولیدشده: ${generated} از ${requested}`}
       />
+      {job.batchInFlight ? (
+        <p className="cp-note" role="status">
+          ارتباط با این دسته قطع شد، اما تولید آن روی سرور ادامه دارد. وضعیت هر ۱۰ ثانیه بررسی
+          می‌شود و دسته دوباره ارسال نمی‌شود.
+        </p>
+      ) : null}
       {attemptsOnCurrentBatch > 0 ? (
         <p className="cp-note">تلاش‌های ناموفق روی دستهٔ جاری: {attemptsOnCurrentBatch}</p>
       ) : null}

@@ -29,8 +29,9 @@ const plan = {
   scope: '',
 };
 
-function jobWith(status: string) {
+function jobWith(status: string, extra: Record<string, unknown> = {}) {
   return {
+    ...extra,
     jobId: '33333333-3333-4333-8333-333333333333',
     status,
     prompt: 'میوه‌ها',
@@ -45,6 +46,7 @@ function jobWith(status: string) {
       batchesDone: 1,
       batchesTotal: 1,
       attemptsOnCurrentBatch: 0,
+      ...(extra.progress as object | undefined),
     },
   };
 }
@@ -167,6 +169,78 @@ describe('M1.4 generation retry', () => {
     // The failed batch is retried rather than abandoned.
     expect(onRunBatch.mock.calls.length).toBeGreaterThan(1);
 
+    await act(async () => root.unmount());
+  });
+});
+
+describe('a lost batch response never re-sends the batch', () => {
+  const notStarted = { progress: { generated: 0, batchesDone: 0 } };
+
+  async function startWithLostResponse(p: ReturnType<typeof props>) {
+    const root = await renderStrandedJob(p);
+    await act(async () => {
+      findButton('تأیید طرح و تولید')!.click();
+    });
+    return root;
+  }
+
+  it.each(['network', 'gateway', 'batch_conflict'])(
+    'waits for the server batch after a %s response and continues only once it landed',
+    async (code) => {
+      vi.useFakeTimers({ shouldAdvanceTime: false });
+      try {
+        const onApprovePlan = vi.fn(async () => ({
+          ok: true as const,
+          job: jobWith('generating', notStarted),
+        }));
+        const onRunBatch = vi.fn(async () => ({ ok: false as const, message: 'قطع', code }));
+        const onRefresh = vi
+          .fn()
+          // still running on the server: keep waiting, do not call the batch again
+          .mockResolvedValueOnce({
+            ok: true as const,
+            job: jobWith('generating', { ...notStarted, batchInFlight: true }),
+            analysis,
+          })
+          .mockResolvedValue({ ok: true as const, job: jobWith('generated'), analysis });
+        const p = props({ onApprovePlan, onRunBatch, onRefresh });
+        const root = await startWithLostResponse(p);
+        expect(container.textContent).toContain('تولید آن روی سرور ادامه دارد');
+        await act(async () => {
+          await vi.advanceTimersByTimeAsync(10_000);
+        });
+        expect(onRunBatch).toHaveBeenCalledTimes(1);
+        expect(container.textContent).toContain('پذیرش 4 کارت به‌عنوان Draft');
+        await act(async () => root.unmount());
+      } finally {
+        vi.useRealTimers();
+      }
+    },
+  );
+
+  it('stops for the Admin when the lost batch did not land, instead of retrying it', async () => {
+    const onApprovePlan = vi.fn(async () => ({
+      ok: true as const,
+      job: jobWith('generating', notStarted),
+    }));
+    // A second call would succeed, so a client that wrongly re-sends is caught, not hung.
+    const onRunBatch = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: false as const, message: 'قطع', code: 'network' })
+      .mockResolvedValue({ ok: true as const, job: jobWith('generated') });
+    const onRefresh = vi.fn(async () => ({
+      ok: true as const,
+      job: jobWith('generating', {
+        progress: { generated: 0, batchesDone: 0, attemptsOnCurrentBatch: 1 },
+        error: { code: 'provider_incomplete_response', message: 'پاسخ کامل نشد.' },
+      }),
+      analysis,
+    }));
+    const p = props({ onApprovePlan, onRunBatch, onRefresh });
+    const root = await startWithLostResponse(p);
+    expect(onRunBatch).toHaveBeenCalledTimes(1);
+    expect(findButton('تلاش دوباره برای این دسته')).toBeDefined();
+    expect(container.textContent).toContain('پاسخ کامل نشد.');
     await act(async () => root.unmount());
   });
 });
