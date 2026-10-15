@@ -128,6 +128,7 @@ export function createAiPlanRoute(dependencies: RouteDependencies) {
     if ('response' in authorized) return authorized.response;
     const body = await readJson(request);
     if (!body || typeof body.prompt !== 'string') return genericInvalid();
+    if (body.isFree !== undefined && typeof body.isFree !== 'boolean') return genericInvalid();
 
     try {
       const result = await dependencies.service!.plan({
@@ -136,6 +137,7 @@ export function createAiPlanRoute(dependencies: RouteDependencies) {
         // Optional: an unrecognised value is ignored by the service, which falls back to the
         // configured default rather than failing the request.
         model: typeof body.model === 'string' ? body.model : undefined,
+        ...(body.isFree === true ? { isFree: true } : {}),
       });
       if (result.status === 'provider_not_configured') return providerNotConfigured();
       if (result.status === 'invalid') {
@@ -261,7 +263,7 @@ export function createAiJobStatusRoute(dependencies: RouteDependencies) {
         actorUserId: authorized.actorUserId,
       });
       if (result.status === 'not_found') return notFound();
-      return json({ status: 'ok', job: result.job, analysis: result.analysis });
+      return json({ status: 'ok', job: result.job, analysis: result.analysis, quality: result.quality, reviews: result.reviews });
     } catch {
       return json({ code: 'status_failed' }, { status: 503 });
     }

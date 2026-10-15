@@ -133,6 +133,7 @@ export function createAdminContentPacksServer(dependencies: {
             aiConfig.limits,
             importService,
             writeStore,
+            aiConfig.models,
           )
         : undefined,
       // Only the model-catalog route needs the provider itself; it is the sole holder of the key.

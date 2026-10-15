@@ -3,8 +3,24 @@ import { createHash, randomUUID } from 'node:crypto';
 import {
   AiProviderError,
   type AiGenerationLimits,
+  type AiModelRoles,
   type AiTextProvider,
 } from './ai-generation-provider';
+import {
+  buildQualityReport,
+  REPAIR_SYSTEM_PROMPT,
+  REVIEWER_SYSTEM_PROMPT,
+  buildRepairPrompt,
+  buildReviewPrompt,
+  reviewSummaryByRow,
+  contentFields,
+  isReadyRow,
+  parseRepairReply,
+  parseReviewReply,
+  stateAfterReview,
+  type GeneratedRow,
+  type QualityReport,
+} from './ai-card-review';
 import { IMPORT_COLUMNS, type ImportColumnKey } from './content-import-contract';
 import {
   rowIdempotencyKey,
@@ -50,6 +66,8 @@ export interface GenerationPlan {
   strategy: string;
   fields: string[];
   scope: string;
+  /** Admin-selected commercial state; never inferred by the model. */
+  isFree: boolean;
 }
 
 export interface JobView {
@@ -60,6 +78,9 @@ export interface JobView {
   planFingerprint: string;
   provider?: string;
   model?: string;
+  reviewerModel?: string;
+  repairModel?: string;
+  quality?: QualityReport;
   progress: {
     requested: number;
     generated: number;
@@ -87,7 +108,8 @@ export type RunBatchResult =
   | { status: 'failed'; job: JobView };
 
 export type JobAnalysisResult =
-  { status: 'ok'; job: JobView; analysis: ImportAnalysis } | { status: 'not_found' };
+  | { status: 'ok'; job: JobView; analysis: ImportAnalysis; quality: QualityReport; reviews: Record<number, { state: string; findings: Array<{ field: string; severity: string; reason: string; suggestion: string; source: string }>; repairRounds: number; repaired: boolean }> }
+  | { status: 'not_found' };
 
 export type AcceptResult =
   | { status: 'ok'; job: JobView; created: number; skipped: number; packId: string }
@@ -222,6 +244,8 @@ export class AiPackGenerationService {
     private readonly limits: AiGenerationLimits,
     private readonly importService: ContentImportService,
     private readonly writeStore: Pick<PostgresContentPacksWriteStore, 'createPack'>,
+    /** Supplied by the canonical server. Omitted only by legacy unit harnesses. */
+    private readonly models?: AiModelRoles,
   ) {}
 
   /**
@@ -233,10 +257,12 @@ export class AiPackGenerationService {
     actorUserId: string;
     /** Admin-selected text model; the configured default is used when absent. */
     model?: string;
+    /** Explicit Admin choice. Defaults to paid to preserve historical behavior. */
+    isFree?: boolean;
   }): Promise<PlanResult> {
     const provider = this.provider;
     if (!provider) return { status: 'provider_not_configured' };
-    const model = normalizeModelSelection(input.model) ?? provider.model;
+    const model = normalizeModelSelection(input.model) ?? this.models?.generator ?? provider.model;
     const prompt = input.prompt.trim();
     if (!prompt) return { status: 'invalid', message: 'توضیح بسته را وارد کنید.' };
     if (prompt.length > this.limits.maxPromptChars) {
@@ -275,7 +301,7 @@ export class AiPackGenerationService {
       };
     }
 
-    const plan = this.buildPlan(parsed, prompt);
+    const plan = this.buildPlan(parsed, prompt, input.isFree === true);
     if (!plan) {
       return {
         status: 'provider_error',
@@ -284,14 +310,20 @@ export class AiPackGenerationService {
       };
     }
 
+    // A plan must never target an existing pack: accepting into it could accidentally mingle an
+    // AI proposal with canonical content. The Admin can revise the title/topic and request a new plan.
+    const existingPack = await this.pool.query('SELECT 1 FROM packs WHERE id = $1 LIMIT 1', [plan.packId]);
+    if (existingPack.rows.length > 0) {
+      return { status: 'invalid', message: 'شناسهٔ پیشنهادی بسته تکراری است؛ عنوان یا موضوع را اصلاح کنید.' };
+    }
     const jobId = randomUUID();
     const fingerprint = planFingerprintOf(plan);
     const batchSize = Math.min(this.limits.batchSize, plan.cardCount);
     await this.pool.query(
       `INSERT INTO ai_generation_jobs
          (id, actor_user_id, prompt, plan, plan_fingerprint, status, requested_count, batch_size,
-          provider, model)
-       VALUES ($1, $2, $3, $4::jsonb, $5, 'planned', $6, $7, $8, $9)`,
+          provider, model, reviewer_model, repair_model)
+       VALUES ($1, $2, $3, $4::jsonb, $5, 'planned', $6, $7, $8, $9, $10, $11)`,
       [
         jobId,
         input.actorUserId,
@@ -302,6 +334,8 @@ export class AiPackGenerationService {
         batchSize,
         provider.provider,
         model,
+        this.models?.reviewer,
+        this.models?.repair,
       ],
     );
 
@@ -310,7 +344,7 @@ export class AiPackGenerationService {
   }
 
   /** Validates and clamps the model's plan. Returns undefined when required parts are unusable. */
-  private buildPlan(raw: Record<string, unknown>, prompt: string): GenerationPlan | undefined {
+  private buildPlan(raw: Record<string, unknown>, prompt: string, isFree: boolean): GenerationPlan | undefined {
     const title = asString(raw.title);
     const cefrRaw = asString(raw.cefr).toUpperCase();
     if (!title) return undefined;
@@ -342,6 +376,7 @@ export class AiPackGenerationService {
       scope: asString(raw.scope) || prompt,
       // Reported, not model-chosen: the canonical contract decides which fields a card carries.
       fields: GENERATED_COLUMNS,
+      isFree,
     };
   }
 
@@ -424,7 +459,7 @@ export class AiPackGenerationService {
         timeoutMs: this.limits.perCallTimeoutMs,
         // Pinned to the job's recorded model, so every batch of one pack is generated by the
         // model the Admin approved the plan under — not whatever the default later becomes.
-        model: job.model,
+        model: job.model ?? this.models?.generator ?? provider.model,
       });
     } catch (error) {
       const code = error instanceof AiProviderError ? error.code : 'provider_unavailable';
@@ -441,8 +476,23 @@ export class AiPackGenerationService {
       );
     }
 
-    // Checkpoint: append this batch, advance the resume point, clear the retry counter and the
-    // lease. A later batch failing can therefore never discard what already succeeded.
+    // Reviewer and repair calls are intentionally independent from generation. The reviewer gets
+    // the card fields and the published learning context only, never the generation prompt or model
+    // reasoning. A reviewer failure fails this batch: silently treating it as approval would let
+    // unreviewed content enter the human queue.
+    let reviewed = records.slice(0, batchCount) as GeneratedRow[];
+    if (this.models) {
+      try {
+        reviewed = await this.reviewAndRepairBatch(reviewed, job);
+      } catch (error) {
+        const code = error instanceof AiProviderError ? error.code : 'reviewer_unavailable';
+        const message = error instanceof AiProviderError ? error.message : 'بازبینی مستقل با خطا روبه‌رو شد.';
+        return this.recordBatchFailure(input, code, message);
+      }
+    }
+
+    // Checkpoint: append the reviewed batch, advance the resume point, clear the retry counter and
+    // lease. A later batch failing can never discard a completed review.
     await this.pool.query(
       `UPDATE ai_generation_jobs
           SET generated_rows = generated_rows || $3::jsonb,
@@ -453,7 +503,7 @@ export class AiPackGenerationService {
               lease_until = NULL,
               updated_at = now()
         WHERE id = $1 AND actor_user_id = $2`,
-      [input.jobId, input.actorUserId, JSON.stringify(records.slice(0, batchCount))],
+      [input.jobId, input.actorUserId, JSON.stringify(reviewed)],
     );
 
     const after = await this.load(input.jobId, input.actorUserId);
@@ -464,6 +514,99 @@ export class AiPackGenerationService {
       return done ? { status: 'ok', job: done } : { status: 'not_found' };
     }
     return { status: 'ok', job: after };
+  }
+
+  /** Runs the independent reviewer, then bounded repair/re-review rounds. */
+  private async reviewAndRepairBatch(
+    initial: GeneratedRow[],
+    job: JobView,
+  ): Promise<GeneratedRow[]> {
+    const rows = initial.map((row) => ({ ...row }));
+    const reviewerModel = job.reviewerModel ?? this.models!.reviewer;
+    const repairModel = job.repairModel ?? this.models!.repair;
+    let indexes = rows.map((_, index) => index);
+    for (let reviewPass = 0; indexes.length > 0; reviewPass += 1) {
+      const reviewed = (await this.callReviewer(rows, indexes, job.plan, reviewerModel)) ?? new Map();
+      for (const index of indexes) {
+        const prior = rows[index]!._review;
+        const findings = reviewed.get(index) ?? [
+          { field: 'card', severity: 'critical' as const, reason: 'بازبین برای این کارت پاسخ معتبر نداد.', suggestion: '', source: 'reviewer' as const },
+        ];
+        const repairRounds = prior?.repairRounds ?? 0;
+        rows[index]!._review = {
+          state: stateAfterReview(findings, repairRounds, this.limits.maxRepairRounds),
+          findings,
+          repairRounds,
+          repaired: prior?.repaired ?? false,
+          reviewerModel,
+          repairModel,
+          original: prior?.original,
+        };
+      }
+      const repairable = indexes.filter((index) => rows[index]!._review?.state === 'needs_repair');
+      if (repairable.length === 0) break;
+      const repaired = (await this.callRepair(rows, repairable, job.plan, repairModel)) ?? new Map();
+      for (const index of repairable) {
+        const replacement = repaired.get(index);
+        const prior = rows[index]!._review!;
+        if (!replacement) {
+          rows[index]!._review = { ...prior, repairRounds: prior.repairRounds + 1, state: 'unresolved' };
+          continue;
+        }
+        rows[index] = {
+          ...replacement,
+          _review: {
+            ...prior,
+            repairRounds: prior.repairRounds + 1,
+            repaired: true,
+            original: prior.original ?? contentFields(rows[index]!),
+            state: 'pending',
+          },
+        };
+      }
+      indexes = repairable.filter((index) => rows[index]!._review?.state === 'pending');
+    }
+    return rows;
+  }
+
+  private async callReviewer(
+    rows: GeneratedRow[],
+    indexes: number[],
+    plan: GenerationPlan,
+    reviewerModel: string,
+  ) {
+    const reply = await this.provider!.complete({
+      system: REVIEWER_SYSTEM_PROMPT,
+      user: buildReviewPrompt({
+        packTitle: plan.title,
+        cefr: plan.cefr,
+        cards: indexes.map((index) => ({ index, row: rows[index]! })),
+      }),
+      maxOutputTokens: this.limits.reviewerMaxOutputTokens,
+      timeoutMs: this.limits.perCallTimeoutMs,
+      model: reviewerModel,
+    });
+    return parseReviewReply(parseJsonObject(reply), indexes);
+  }
+
+  private async callRepair(
+    rows: GeneratedRow[],
+    indexes: number[],
+    plan: GenerationPlan,
+    repairModel: string,
+  ) {
+    const reply = await this.provider!.complete({
+      system: REPAIR_SYSTEM_PROMPT,
+      user: buildRepairPrompt({
+        packTitle: plan.title,
+        cefr: plan.cefr,
+        cards: indexes.map((index) => ({ index, row: rows[index]! })),
+      }),
+      maxOutputTokens: this.limits.reviewerMaxOutputTokens,
+      timeoutMs: this.limits.perCallTimeoutMs,
+      model: repairModel,
+    });
+    return parseRepairReply(parseJsonObject(reply), indexes);
   }
 
   private buildBatchPrompt(job: JobView, batchCount: number, taken: string[]): string {
@@ -561,7 +704,12 @@ export class AiPackGenerationService {
       filename: `${job.plan.packId}.ai`,
     });
     if (analyzed.status !== 'ok') return { status: 'not_found' };
-    return { status: 'ok', job, analysis: analyzed.analysis };
+    const quality = buildQualityReport(
+      records as GeneratedRow[],
+      analyzed.analysis.rows.map((row) => row.classification),
+      job.plan.cardCount,
+    );
+    return { status: 'ok', job, analysis: analyzed.analysis, quality, reviews: reviewSummaryByRow(records as GeneratedRow[]) };
   }
 
   /**
@@ -607,6 +755,16 @@ export class AiPackGenerationService {
     if (input.selectedRows.length === 0) {
       return { status: 'stale', message: 'هیچ کارتی برای پذیرش انتخاب نشده است.' };
     }
+    const records = await this.loadRecords(input.jobId);
+    const selected = new Set(input.selectedRows);
+    const nonReady = analysis.rows.find((row) => {
+      if (!selected.has(row.rowNumber)) return false;
+      const record = records[row.rowNumber - 1];
+      return !record || !isReadyRow(record, row.classification);
+    });
+    if (nonReady) {
+      return { status: 'stale', message: 'کارت دارای خطای حل‌نشده یا بررسی‌نشده قابل پذیرش نیست.' };
+    }
 
     // The pack is canonical from the start: created through M1.2's store as a DRAFT pack, keyed by
     // the accept key so a retried acceptance reuses it instead of failing or duplicating.
@@ -616,7 +774,7 @@ export class AiPackGenerationService {
       description: job.plan.description,
       targetCefr: job.plan.cefr,
       targetItemCount: job.plan.cardCount,
-      isFree: false,
+      isFree: job.plan.isFree,
       idempotencyKey: rowIdempotencyKey(input.acceptKey, `pack:${job.plan.packId}`),
       actorUserId: input.actorUserId,
     });
@@ -660,7 +818,7 @@ export class AiPackGenerationService {
 
   private async loadRecords(
     jobId: string,
-  ): Promise<Array<Partial<Record<ImportColumnKey, string>>>> {
+  ): Promise<GeneratedRow[]> {
     const result = await this.pool.query(
       'SELECT generated_rows FROM ai_generation_jobs WHERE id = $1',
       [jobId],
@@ -668,7 +826,7 @@ export class AiPackGenerationService {
     if (result.rows.length === 0) return [];
     const raw = result.rows[0]!.generated_rows;
     const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
-    return Array.isArray(parsed) ? (parsed as Array<Partial<Record<ImportColumnKey, string>>>) : [];
+    return Array.isArray(parsed) ? (parsed as GeneratedRow[]) : [];
   }
 
   private async loadLemmas(jobId: string): Promise<string[]> {
@@ -679,7 +837,8 @@ export class AiPackGenerationService {
   async load(jobId: string, actorUserId: string): Promise<JobView | undefined> {
     const result = await this.pool.query(
       `SELECT id, prompt, plan, plan_fingerprint, status, requested_count, batch_size,
-              next_batch_index, batch_attempts, provider, model, error_code, error_message, pack_id,
+              next_batch_index, batch_attempts, provider, model, reviewer_model, repair_model,
+              error_code, error_message, pack_id, generated_rows,
               jsonb_array_length(generated_rows) AS generated_count
          FROM ai_generation_jobs
         WHERE id = $1 AND actor_user_id = $2`,
@@ -700,6 +859,8 @@ export class AiPackGenerationService {
       planFingerprint: String(row.plan_fingerprint),
       provider: row.provider ? String(row.provider) : undefined,
       model: row.model ? String(row.model) : undefined,
+      reviewerModel: row.reviewer_model ? String(row.reviewer_model) : undefined,
+      repairModel: row.repair_model ? String(row.repair_model) : undefined,
       progress: {
         requested: Number(row.requested_count),
         generated,

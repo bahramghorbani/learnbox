@@ -1141,10 +1141,11 @@ export function ContentPacksWorkspace() {
             // Acceptance may have created a new draft pack, so refresh the canonical read model.
             void loadPacks();
           }}
-          onPlan={async (prompt, model) => {
+          onPlan={async (prompt, model, isFree) => {
             const result = await postAiJson<{ job: GenerationJobView }>('/api/content/ai/plan', {
               prompt,
               model,
+              isFree,
             });
             return result.ok ? { ok: true as const, job: result.payload.job } : result;
           }}
@@ -1181,7 +1182,7 @@ export function ContentPacksWorkspace() {
             return result.ok ? { ok: true as const, job: result.payload.job } : result;
           }}
           onRefresh={async (jobId) => {
-            const result = await postAiJson<{ job: GenerationJobView; analysis: ImportAnalysis }>(
+            const result = await postAiJson<{ job: GenerationJobView; analysis: ImportAnalysis; quality?: import('./AiPackGenerationModal').QualityReport; reviews?: Record<number, import('./AiPackGenerationModal').ReviewRowView> }>(
               '/api/content/ai/job',
               { jobId },
             );
@@ -1190,6 +1191,8 @@ export function ContentPacksWorkspace() {
                   ok: true as const,
                   job: result.payload.job,
                   analysis: result.payload.analysis,
+                  quality: result.payload.quality,
+                  reviews: result.payload.reviews,
                 }
               : result;
           }}
