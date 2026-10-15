@@ -192,6 +192,20 @@ suite('M2.2 canonical pack access enforcement (real Postgres)', () => {
       ).resolves.toBe(false);
     });
 
+    it('keeps an entitled archived pack accessible but unlisted and denies a non-buyer', async () => {
+      await pool.query(`UPDATE packs SET status = 'archived' WHERE id = $1`, [packs.paidListed]);
+      await expect(canLearnerAccessPack(pool, packs.paidListed, alice)).resolves.toBe(true);
+      await expect(canLearnerAccessContentId(pool, content.paidListed, alice)).resolves.toBe(true);
+      await expect(canLearnerAccessPack(pool, packs.paidListed, bob)).resolves.toBe(false);
+      expect((await readLearnerPacks(pool, alice)).map((pack) => pack.id)).toContain(
+        packs.paidListed,
+      );
+      expect((await readStoreCatalogue(pool, alice)).map((pack) => pack.id)).not.toContain(
+        packs.paidListed,
+      );
+      await pool.query(`UPDATE packs SET status = 'published' WHERE id = $1`, [packs.paidListed]);
+    });
+
     it('reports exactly the accessible packs per learner', async () => {
       await expect(readAccessiblePackIds(pool, bob)).resolves.toEqual([packs.freeStart]);
       await expect(readAccessiblePackIds(pool, alice)).resolves.toEqual([
@@ -203,11 +217,11 @@ suite('M2.2 canonical pack access enforcement (real Postgres)', () => {
   });
 
   describe('adversarial edges', () => {
-    it.each(['draft', 'needs_review', 'approved', 'archived', 'deprecated'])(
+    it.each(['draft', 'needs_review', 'approved', 'deprecated'])(
       'denies a pack in lifecycle state %s even when entitled',
       async (status) => {
-        // M1.6 added these states. Only 'published' may serve content, so a pack pulled back for
-        // review or retired stops serving immediately without anyone revoking entitlements.
+        // Draft/review/deprecated packs never serve content, regardless of entitlement. Archived
+        // packs are intentionally covered above: only an existing entitlement keeps them readable.
         await pool.query(`UPDATE packs SET status = $2 WHERE id = $1`, [packs.paidListed, status]);
         await expect(canLearnerAccessPack(pool, packs.paidListed, alice)).resolves.toBe(false);
         await expect(canLearnerAccessContentId(pool, content.paidListed, alice)).resolves.toBe(
