@@ -19,6 +19,11 @@ import {
   type MediaCandidateView,
   type MediaKindState,
 } from './CardMediaPanel';
+import {
+  runBulkCardMediaGeneration,
+  type BulkMediaKind,
+  type BulkMediaResult,
+} from './card-media-bulk';
 import { PackLifecyclePanel } from './PackLifecyclePanel';
 import { EmptyState, ErrorState, LoadingState } from './AdminStates';
 import { faNum } from './fa-digits';
@@ -205,7 +210,7 @@ function splitList(value: string): string[] {
 async function postAiJson<T>(
   path: string,
   body: unknown,
-): Promise<{ ok: true; payload: T } | { ok: false; message: string }> {
+): Promise<{ ok: true; payload: T } | { ok: false; message: string; code?: string }> {
   const csrfToken = readBrowserCookie('__Host-learnbox_admin_csrf');
   if (!csrfToken) {
     return { ok: false, message: 'نشان امنیتی CSRF در دسترس نیست؛ صفحه را تازه کنید.' };
@@ -230,7 +235,7 @@ async function postAiJson<T>(
     const payload = (await response.json().catch(() => undefined)) as
       { message?: string; code?: string } | undefined;
     // The server's own reason is preferred, so an unconfigured provider says exactly that.
-    if (payload?.message) return { ok: false, message: payload.message };
+    if (payload?.message) return { ok: false, message: payload.message, code: payload.code };
     return { ok: false, message: 'درخواست تولید با خطا روبه‌رو شد.' };
   } catch {
     return { ok: false, message: 'ارتباط با سرور برقرار نشد.' };
@@ -502,6 +507,11 @@ export function ContentPacksWorkspace() {
   // AI generation (M1.4) has its own default-off gate on top of `manageEnabled`.
   const [aiEnabled, setAiEnabled] = useState(false);
   const [mediaEnabled, setMediaEnabled] = useState(false);
+  const [bulkMedia, setBulkMedia] = useState<{
+    kind: BulkMediaKind;
+    running: boolean;
+    results: BulkMediaResult[];
+  }>();
   /** The card whose media panel is open, if any. */
   const [mediaCard, setMediaCard] = useState<{ cardId: string; label: string } | undefined>(
     undefined,
@@ -625,6 +635,48 @@ export function ContentPacksWorkspace() {
       );
     }
     return outcome;
+  }
+
+  async function startBulkMedia(kind: BulkMediaKind) {
+    if (!mediaEnabled || bulkMedia?.running) return;
+    if (!window.confirm('این کار برای هر کارت از سرویس خارجیِ پولی استفاده می‌کند. ادامه می‌دهید؟'))
+      return;
+    setBulkMedia({ kind, running: true, results: [] });
+    await runBulkCardMediaGeneration(
+      cards.map((card) => ({
+        cardId: card.cardId,
+        label: `${card.article ? `${card.article} ` : ''}${card.lemma}`,
+      })),
+      kind,
+      {
+        loadState: async (cardId) => {
+          const response = await fetch(
+            `/api/content/media/state?cardId=${encodeURIComponent(cardId)}`,
+            {
+              credentials: 'same-origin',
+              headers: { accept: 'application/json' },
+            },
+          );
+          if (!response.ok) return undefined;
+          return ((await response.json()) as { media?: MediaKindState[] }).media;
+        },
+        generate: async (cardId, candidateKind) => {
+          const result = await postAiJson<{ candidate: MediaCandidateView }>(
+            '/api/content/media/generate',
+            { cardId, kind: candidateKind },
+          );
+          return result.ok
+            ? { ok: true }
+            : { ok: false, message: result.message, code: result.code };
+        },
+        onResult: (result) =>
+          setBulkMedia((current) =>
+            current ? { ...current, results: [...current.results, result] } : current,
+          ),
+      },
+    );
+    setBulkMedia((current) => (current ? { ...current, running: false } : current));
+    if (openPackId) void loadCards(openPackId);
   }
 
   const visible = packs.filter((pack) => (filter === 'all' ? true : pack.status === filter));
@@ -968,6 +1020,26 @@ export function ContentPacksWorkspace() {
                       درون‌ریزی CSV / XLSX
                     </button>
                   ) : null}
+                  {mediaEnabled && cardsPhase === 'ready' && cards.length > 0 ? (
+                    <>
+                      <button
+                        className="btn"
+                        type="button"
+                        disabled={bulkMedia?.running}
+                        onClick={() => void startBulkMedia('image')}
+                      >
+                        تولید تصویر برای کارت‌های این بسته
+                      </button>
+                      <button
+                        className="btn"
+                        type="button"
+                        disabled={bulkMedia?.running}
+                        onClick={() => void startBulkMedia('audio')}
+                      >
+                        تولید صدای واژه برای کارت‌های این بسته
+                      </button>
+                    </>
+                  ) : null}
                 </div>
                 <div className="card-body">
                   {manageEnabled ? (
@@ -981,6 +1053,24 @@ export function ContentPacksWorkspace() {
                         void loadCards(openPackId);
                       }}
                     />
+                  ) : null}
+                  {bulkMedia ? (
+                    <div className="notice" role="status" data-cp-state="bulk-media">
+                      <span>
+                        {bulkMedia.running
+                          ? 'در حال تولید ترتیبی رسانه…'
+                          : 'اجرای تولید رسانه تمام شد.'}{' '}
+                        {faNum(bulkMedia.results.length)} کارت پردازش شد؛ هیچ نامزدی خودکار پذیرفته
+                        نشده است.
+                      </span>
+                      <ul>
+                        {bulkMedia.results.map((result) => (
+                          <li key={result.cardId} className="ltr">
+                            {result.label}: {result.message}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   ) : null}
                   {cardsPhase === 'loading' ? (
                     <LoadingState label="در حال دریافت کارت‌ها…" />
