@@ -248,6 +248,7 @@ describe('PostgresContentReviewStore queue reads', () => {
             notes: null,
             reviewedAt: null,
           })),
+          aiReview: null,
         },
       ],
     });

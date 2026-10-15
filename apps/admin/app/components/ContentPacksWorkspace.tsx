@@ -1344,6 +1344,13 @@ export function ContentPacksWorkspace() {
             );
             return result.ok ? { ok: true as const, job: result.payload.job } : result;
           }}
+          onRevisePlan={async (jobId, planFingerprint, edits) => {
+            const result = await postAiJson<{ job: GenerationJobView }>(
+              '/api/content/ai/plan/revise',
+              { jobId, planFingerprint, plan: edits },
+            );
+            return result.ok ? { ok: true as const, job: result.payload.job } : result;
+          }}
           onRunBatch={async (jobId) => {
             const result = await postAiJson<{ job: GenerationJobView }>(
               '/api/content/ai/generate',

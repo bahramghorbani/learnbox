@@ -49,9 +49,23 @@ export interface RowReview {
   repairModel?: string;
   /** First generated version, kept when a repair replaces the content, so nothing is hidden. */
   original?: Partial<Record<ImportColumnKey, string>>;
-  /** Canonical content id, recorded on acceptance so the review queue can show these findings. */
-  contentId?: string;
+  /**
+   * Every review pass in order (first review, then one per repair round), so the findings an
+   * automatic repair fixed stay visible after the content was replaced.
+   */
+  history?: ReviewPass[];
+  /**
+   * The canonical draft version this row became, recorded on acceptance. The Admin review queue
+   * uses it to show these findings beside that exact version (and never beside a later edit).
+   */
+  cardVersionId?: string;
   excludedReason?: 'duplicate' | 'existing';
+}
+
+export interface ReviewPass {
+  /** 0 = first review; n = review after the n-th repair. */
+  round: number;
+  findings: ReviewFinding[];
 }
 
 export type GeneratedRow = Partial<Record<ImportColumnKey, string>> & { _review?: RowReview };
@@ -334,18 +348,58 @@ export function buildQualityReport(
   return report;
 }
 
+export type RowReviewSummary = Pick<
+  RowReview,
+  'state' | 'findings' | 'repairRounds' | 'repaired'
+> & {
+  history: ReviewPass[];
+};
+
 /** Maps generated-row order (one-based) to UI review state without leaking prompts or model output. */
 export function reviewSummaryByRow(
   rows: readonly GeneratedRow[],
-): Record<number, Pick<RowReview, 'state' | 'findings' | 'repairRounds' | 'repaired'>> {
-  const result: Record<
-    number,
-    Pick<RowReview, 'state' | 'findings' | 'repairRounds' | 'repaired'>
-  > = {};
+): Record<number, RowReviewSummary> {
+  const result: Record<number, RowReviewSummary> = {};
   rows.forEach((row, index) => {
     if (!row._review) return;
-    const { state, findings, repairRounds, repaired } = row._review;
-    result[index + 1] = { state, findings, repairRounds, repaired };
+    const { state, findings, repairRounds, repaired, history } = row._review;
+    result[index + 1] = { state, findings, repairRounds, repaired, history: history ?? [] };
   });
   return result;
+}
+
+/**
+ * What the Admin review queue shows for one AI-generated version. `resolved` findings were raised
+ * in an earlier pass and are gone after automatic repair; `remaining` are the final pass's findings
+ * (only minor ones can remain on an accepted card, since unresolved cards cannot be accepted).
+ */
+export interface QueueAiReview {
+  state: ReviewState;
+  repaired: boolean;
+  repairRounds: number;
+  reviewerModel: string | null;
+  repairModel: string | null;
+  findings: Array<ReviewFinding & { status: 'resolved' | 'remaining'; round: number }>;
+}
+
+export function queueAiReviewOf(review: RowReview): QueueAiReview {
+  const history =
+    review.history && review.history.length > 0
+      ? review.history
+      : [{ round: review.repairRounds, findings: review.findings }];
+  const last = history.length - 1;
+  return {
+    state: review.state,
+    repaired: review.repaired,
+    repairRounds: review.repairRounds,
+    reviewerModel: review.reviewerModel ?? null,
+    repairModel: review.repairModel ?? null,
+    findings: history.flatMap((pass, position) =>
+      pass.findings.map((finding) => ({
+        ...finding,
+        round: pass.round,
+        status: position === last ? ('remaining' as const) : ('resolved' as const),
+      })),
+    ),
+  };
 }

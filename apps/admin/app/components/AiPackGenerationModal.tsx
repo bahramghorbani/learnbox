@@ -74,6 +74,51 @@ export interface ReviewRowView {
   findings: ReviewFindingView[];
   repairRounds: number;
   repaired: boolean;
+  /** Each review pass in order; earlier passes hold the findings a repair already fixed. */
+  history?: Array<{ round: number; findings: ReviewFindingView[] }>;
+}
+
+/** The fields of a plan the Admin may change before generation. */
+export interface PlanDraft {
+  packId: string;
+  title: string;
+  description: string;
+  audience: string;
+  cefr: string;
+  cardCount: number;
+  topics: string[];
+  strategy: string;
+  scope: string;
+  isFree: boolean;
+}
+
+const CEFR_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'] as const;
+
+function draftOf(plan: GenerationPlanView): PlanDraft {
+  return {
+    packId: plan.packId,
+    title: plan.title,
+    description: plan.description,
+    audience: plan.audience,
+    cefr: plan.cefr,
+    cardCount: plan.cardCount,
+    topics: [...plan.topics],
+    strategy: plan.strategy,
+    scope: plan.scope,
+    isFree: plan.isFree,
+  };
+}
+
+/** Only the fields that differ from the server plan are sent, so an untouched plan is not revised. */
+export function planEditsOf(plan: GenerationPlanView, draft: PlanDraft): Partial<PlanDraft> {
+  const original = draftOf(plan);
+  const edits: Partial<PlanDraft> = {};
+  (Object.keys(original) as Array<keyof PlanDraft>).forEach((key) => {
+    if (JSON.stringify(original[key]) !== JSON.stringify(draft[key])) {
+      (edits as Record<string, unknown>)[key] = draft[key];
+    }
+  });
+  return edits;
 }
 export interface QualityReport {
   target: number;
@@ -117,6 +162,7 @@ export function AiPackGenerationModal({
   onPlan,
   onLoadModels,
   onApprovePlan,
+  onRevisePlan,
   onRunBatch,
   onRefresh,
   onAccept,
@@ -132,6 +178,12 @@ export function AiPackGenerationModal({
   onApprovePlan: (
     jobId: string,
     planFingerprint: string,
+  ) => Promise<{ ok: true; job: GenerationJobView } | { ok: false; message: string }>;
+  /** Saves the Admin's direct plan edits; the server re-validates and returns a new fingerprint. */
+  onRevisePlan: (
+    jobId: string,
+    planFingerprint: string,
+    edits: Partial<PlanDraft>,
   ) => Promise<{ ok: true; job: GenerationJobView } | { ok: false; message: string }>;
   onRunBatch: (
     jobId: string,
@@ -160,6 +212,9 @@ export function AiPackGenerationModal({
   const [isFree, setIsFree] = useState(false);
   const [stage, setStage] = useState<GenerationStage>('prompt');
   const [job, setJob] = useState<GenerationJobView | null>(null);
+  // The Admin's working copy of the plan. Approval always saves it first, so what is generated is
+  // exactly what the Admin last saw on screen.
+  const [draft, setDraft] = useState<PlanDraft | null>(null);
   const [analysis, setAnalysis] = useState<ImportAnalysis | null>(null);
   const [quality, setQuality] = useState<QualityReport | null>(null);
   const [reviews, setReviews] = useState<Record<number, ReviewRowView>>({});
@@ -223,6 +278,7 @@ export function AiPackGenerationModal({
     setBusy(false);
     if (result.ok) {
       setJob(result.job);
+      setDraft(draftOf(result.job.plan));
       setStage('plan');
     } else {
       setError(result.message);
@@ -301,11 +357,40 @@ export function AiPackGenerationModal({
     enterReview(refreshed.job, refreshed.analysis, refreshed.quality, refreshed.reviews);
   }
 
+  const pendingEdits = job && draft ? planEditsOf(job.plan, draft) : {};
+  const hasPendingEdits = Object.keys(pendingEdits).length > 0;
+
+  /** Saves pending plan edits. Returns the job to approve, or undefined when the save failed. */
+  async function savePlanEdits(): Promise<GenerationJobView | undefined> {
+    if (!job || !draft) return undefined;
+    if (!hasPendingEdits) return job;
+    const revised = await onRevisePlan(job.jobId, job.planFingerprint, pendingEdits);
+    if (!revised.ok) {
+      setError(revised.message);
+      return undefined;
+    }
+    setJob(revised.job);
+    setDraft(draftOf(revised.job.plan));
+    return revised.job;
+  }
+
+  async function handleSavePlan() {
+    setBusy(true);
+    setError(undefined);
+    await savePlanEdits();
+    setBusy(false);
+  }
+
   async function handleApproveAndGenerate() {
     if (!job) return;
     setBusy(true);
     setError(undefined);
-    const approved = await onApprovePlan(job.jobId, job.planFingerprint);
+    const toApprove = await savePlanEdits();
+    if (!toApprove) {
+      setBusy(false);
+      return;
+    }
+    const approved = await onApprovePlan(toApprove.jobId, toApprove.planFingerprint);
     if (!approved.ok) {
       setBusy(false);
       setError(approved.message);
@@ -381,14 +466,28 @@ export function AiPackGenerationModal({
           {busy ? 'در حال ساخت طرح…' : 'ساخت طرح'}
         </button>
       ) : stage === 'plan' ? (
-        <button
-          type="button"
-          className="btn primary"
-          onClick={handleApproveAndGenerate}
-          disabled={busy}
-        >
-          {`تأیید طرح و تولید ${job?.plan.cardCount ?? 0} کارت`}
-        </button>
+        <>
+          <button
+            type="button"
+            className="btn primary"
+            onClick={handleApproveAndGenerate}
+            disabled={busy || !draft || !planDraftUsable(draft, job!.plan)}
+          >
+            {busy
+              ? 'در حال ثبت طرح…'
+              : `${hasPendingEdits ? 'ذخیره، تأیید طرح' : 'تأیید طرح'} و تولید ${draft?.cardCount ?? job?.plan.cardCount ?? 0} کارت`}
+          </button>
+          {hasPendingEdits ? (
+            <button
+              type="button"
+              className="btn"
+              onClick={handleSavePlan}
+              disabled={busy || !draft || !planDraftUsable(draft, job!.plan)}
+            >
+              ذخیرهٔ تغییرات طرح
+            </button>
+          ) : null}
+        </>
       ) : stage === 'generating' ? (
         <button type="button" className="btn primary" onClick={handleRetry} disabled={busy}>
           {busy ? 'در حال تولید…' : 'تلاش دوباره برای این دسته'}
@@ -483,7 +582,15 @@ export function AiPackGenerationModal({
         </div>
       ) : null}
 
-      {stage === 'plan' && job ? <PlanPreview job={job} /> : null}
+      {stage === 'plan' && job && draft ? (
+        <PlanEditor
+          job={job}
+          draft={draft}
+          onChange={setDraft}
+          disabled={busy}
+          dirty={hasPendingEdits}
+        />
+      ) : null}
 
       {(stage === 'generating' || stage === 'failed') && job ? <Progress job={job} /> : null}
 
@@ -519,14 +626,48 @@ export function AiPackGenerationModal({
   );
 }
 
-/** The plan gate: everything the Admin approves BEFORE any card is generated. */
-function PlanPreview({ job }: { job: GenerationJobView }) {
-  const plan = job.plan;
+/**
+ * Mirrors the server's edit rules so the form can guide the Admin; the server stays authoritative.
+ * Topics are only required once the Admin edits them, exactly like the server.
+ */
+export function planDraftUsable(draft: PlanDraft, plan: GenerationPlanView): boolean {
+  const topicsEdited = JSON.stringify(draft.topics) !== JSON.stringify(plan.topics);
   return (
-    <div className="cp-import-preview">
+    draft.title.trim().length > 0 &&
+    /^[a-z0-9][a-z0-9-]{0,59}$/.test(draft.packId.trim()) &&
+    Number.isSafeInteger(draft.cardCount) &&
+    draft.cardCount >= 1 &&
+    (!topicsEdited || draft.topics.some((topic) => topic.trim().length > 0))
+  );
+}
+
+/**
+ * The plan gate: everything the Admin approves BEFORE any card is generated, editable in place.
+ * Client checks only guide the form; the server re-validates every field (and caps the count) when
+ * the edits are saved, and approval binds to the fingerprint of the saved plan.
+ */
+function PlanEditor({
+  job,
+  draft,
+  onChange,
+  disabled,
+  dirty,
+}: {
+  job: GenerationJobView;
+  draft: PlanDraft;
+  onChange: (next: PlanDraft) => void;
+  disabled: boolean;
+  dirty: boolean;
+}) {
+  const plan = job.plan;
+  const set = <K extends keyof PlanDraft>(key: K, value: PlanDraft[K]) =>
+    onChange({ ...draft, [key]: value });
+  const topicsText = draft.topics.join('\n');
+  const batchSize = Math.max(1, job.progress.batchSize);
+  const batches = Math.ceil(Math.max(1, draft.cardCount) / batchSize);
+  return (
+    <div className="cp-import-preview" data-plan-editor>
       <div className="cp-import-meta">
-        <span>شناسهٔ بسته: {plan.packId}</span>
-        <span>سطح: {plan.cefr}</span>
         {job.model ? (
           <span>
             مدل تولید: <bdi dir="ltr">{job.model}</bdi>
@@ -537,51 +678,158 @@ function PlanPreview({ job }: { job: GenerationJobView }) {
             بازبین مستقل: <bdi dir="ltr">{job.reviewerModel}</bdi>
           </span>
         ) : null}
+        {dirty ? <span className="cp-import-badge is-warn">تغییرات ذخیره‌نشده</span> : null}
+      </div>
+
+      <div className="cp-form-grid">
+        <div className="cp-form-row is-full">
+          <label htmlFor="ai-plan-title">عنوان بسته</label>
+          <input
+            id="ai-plan-title"
+            className="cp-input"
+            value={draft.title}
+            maxLength={120}
+            disabled={disabled}
+            onChange={(event) => set('title', event.target.value)}
+          />
+        </div>
+        <div className="cp-form-row">
+          <label htmlFor="ai-plan-pack-id">شناسهٔ بسته</label>
+          <input
+            id="ai-plan-pack-id"
+            className="cp-input keep-latin"
+            dir="ltr"
+            value={draft.packId}
+            maxLength={60}
+            disabled={disabled}
+            aria-describedby="ai-plan-pack-id-hint"
+            onChange={(event) => set('packId', event.target.value.toLowerCase())}
+          />
+          <p className="cp-note" id="ai-plan-pack-id-hint">
+            حروف کوچک لاتین، عدد و خط تیره؛ پس از ساخت بسته قابل تغییر نیست.
+          </p>
+        </div>
+        <div className="cp-form-row">
+          <label htmlFor="ai-plan-cefr">سطح</label>
+          <select
+            id="ai-plan-cefr"
+            className="cp-input"
+            value={draft.cefr}
+            disabled={disabled}
+            onChange={(event) => set('cefr', event.target.value)}
+          >
+            {CEFR_LEVELS.map((level) => (
+              <option key={level} value={level}>
+                {level}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="cp-form-row">
+          <label htmlFor="ai-plan-count">تعداد کارت</label>
+          <input
+            id="ai-plan-count"
+            className="cp-input"
+            type="number"
+            inputMode="numeric"
+            min={1}
+            step={1}
+            value={Number.isFinite(draft.cardCount) ? draft.cardCount : ''}
+            disabled={disabled}
+            aria-describedby="ai-plan-count-hint"
+            onChange={(event) => set('cardCount', Number.parseInt(event.target.value, 10))}
+          />
+          <p className="cp-note" id="ai-plan-count-hint">
+            {batches} دسته، هر دسته حداکثر {batchSize} کارت. سقف مجاز را سرور هنگام ذخیره بررسی
+            می‌کند.
+          </p>
+        </div>
+        <div className="cp-form-row">
+          <label htmlFor="ai-plan-access">نوع دسترسی</label>
+          <select
+            id="ai-plan-access"
+            className="cp-input"
+            value={draft.isFree ? 'free' : 'paid'}
+            disabled={disabled}
+            onChange={(event) => set('isFree', event.target.value === 'free')}
+          >
+            <option value="paid">پولی</option>
+            <option value="free">رایگان</option>
+          </select>
+        </div>
+        <div className="cp-form-row is-full">
+          <label htmlFor="ai-plan-topics">موضوع‌ها (هر خط یک موضوع)</label>
+          <textarea
+            id="ai-plan-topics"
+            className="cp-textarea"
+            rows={4}
+            value={topicsText}
+            disabled={disabled}
+            onChange={(event) => set('topics', event.target.value.split('\n'))}
+          />
+        </div>
+        <div className="cp-form-row is-full">
+          <label htmlFor="ai-plan-audience">مخاطب</label>
+          <input
+            id="ai-plan-audience"
+            className="cp-input"
+            value={draft.audience}
+            maxLength={300}
+            disabled={disabled}
+            onChange={(event) => set('audience', event.target.value)}
+          />
+        </div>
+        <div className="cp-form-row is-full">
+          <label htmlFor="ai-plan-description">توضیح</label>
+          <textarea
+            id="ai-plan-description"
+            className="cp-textarea"
+            rows={2}
+            value={draft.description}
+            maxLength={1000}
+            disabled={disabled}
+            onChange={(event) => set('description', event.target.value)}
+          />
+        </div>
+        <div className="cp-form-row is-full">
+          <label htmlFor="ai-plan-strategy">راهبرد موضوعی</label>
+          <textarea
+            id="ai-plan-strategy"
+            className="cp-textarea"
+            rows={2}
+            value={draft.strategy}
+            maxLength={1000}
+            disabled={disabled}
+            onChange={(event) => set('strategy', event.target.value)}
+          />
+        </div>
+        <div className="cp-form-row is-full">
+          <label htmlFor="ai-plan-scope">دامنه و مشخصات ضروری</label>
+          <textarea
+            id="ai-plan-scope"
+            className="cp-textarea"
+            rows={2}
+            value={draft.scope}
+            maxLength={1000}
+            disabled={disabled}
+            onChange={(event) => set('scope', event.target.value)}
+          />
+        </div>
       </div>
 
       <dl className="cp-plan-grid">
-        <dt>عنوان</dt>
-        <dd>{plan.title}</dd>
-        <dt>توضیح</dt>
-        <dd>{plan.description || '—'}</dd>
-        <dt>مخاطب</dt>
-        <dd>{plan.audience || '—'}</dd>
-        <dt>نوع دسترسی</dt>
-        <dd>{plan.isFree ? 'رایگان' : 'پولی'}</dd>
-        <dt>تعداد کارت</dt>
-        <dd>
-          {plan.cardCount}
-          {plan.requestedCount !== plan.cardCount ? (
-            <span className="cp-note">
-              {' '}
-              (درخواست: {plan.requestedCount} — به سقف مجاز سرور محدود شد)
-            </span>
-          ) : null}
-        </dd>
-        <dt>راهبرد موضوعی</dt>
-        <dd>{plan.strategy || '—'}</dd>
-        <dt>موضوع‌ها</dt>
-        <dd>{plan.topics.length > 0 ? plan.topics.join('، ') : '—'}</dd>
-        <dt>دامنه</dt>
-        <dd>{plan.scope || '—'}</dd>
         <dt>فیلدهای تولیدی</dt>
         <dd>{plan.fields.join('، ')}</dd>
       </dl>
 
-      <ul className="cp-import-statement">
-        <li>
-          کارت‌هایی که تولید می‌شوند: <strong>{plan.cardCount}</strong>
-        </li>
-        <li>
-          اندازهٔ هر دسته: <strong>{job.progress.batchSize}</strong>
-        </li>
-        <li>
-          تعداد دسته‌ها: <strong>{job.progress.batchesTotal}</strong>
-        </li>
-      </ul>
+      {!planDraftUsable(draft, plan) ? (
+        <p className="cp-form-status is-error" role="alert">
+          عنوان، شناسهٔ معتبر، تعداد کارت مثبت و دست‌کم یک موضوع لازم است.
+        </p>
+      ) : null}
       <p className="cp-note">
         تا زمانی که این طرح را تأیید نکنید هیچ کارتی تولید نمی‌شود، و تولید هم به‌تنهایی چیزی در
-        محتوای اصلی نمی‌نویسد.
+        محتوای اصلی نمی‌نویسد. ویرایش طرح هیچ فراخوانی هوش مصنوعی انجام نمی‌دهد.
       </p>
     </div>
   );
@@ -716,6 +964,7 @@ function GeneratedPreview({
                 <th scope="col">واژه</th>
                 <th scope="col">شناسهٔ محتوا</th>
                 <th scope="col">سطح</th>
+                <th scope="col">بازبینی</th>
               </tr>
             </thead>
             <tbody>
@@ -732,6 +981,15 @@ function GeneratedPreview({
                   <td>{row.lemma || '—'}</td>
                   <td>{row.contentId || '—'}</td>
                   <td>{job.plan.cefr}</td>
+                  <td>
+                    {reviews[row.rowNumber]?.repaired ? (
+                      <span className="cp-import-badge is-warn">اصلاح خودکار و تأیید بازبین</span>
+                    ) : reviews[row.rowNumber] ? (
+                      <span className="cp-import-badge is-ok">تأیید در بار اول</span>
+                    ) : (
+                      '—'
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -760,14 +1018,26 @@ function GeneratedPreview({
                     </span>
                   </td>
                   <td>
-                    {reviews[row.rowNumber]?.findings.length
-                      ? reviews[row.rowNumber]!.findings.map(
-                          (finding) =>
-                            `${finding.reason}${finding.suggestion ? ` — پیشنهاد: ${finding.suggestion}` : ''}`,
-                        ).join(' ')
-                      : Array.isArray(row.issues) && row.issues.length > 0
-                        ? row.issues.map((issue) => issue.message).join(' ')
-                        : 'خطای بازبین حل‌نشده یا کارت بررسی‌نشده'}
+                    {reviews[row.rowNumber]?.findings.length ? (
+                      <>
+                        {reviews[row.rowNumber]!.findings.map((finding, index) => (
+                          <span key={index} className="cp-finding">
+                            {finding.source === 'validator' ? 'اعتبارسنج: ' : 'بازبین: '}
+                            {finding.reason}
+                            {finding.suggestion ? ` — پیشنهاد: ${finding.suggestion}` : ''}
+                          </span>
+                        ))}
+                        {reviews[row.rowNumber]!.repairRounds > 0 ? (
+                          <span className="cp-note">
+                            پس از {reviews[row.rowNumber]!.repairRounds} دور اصلاح خودکار حل نشد.
+                          </span>
+                        ) : null}
+                      </>
+                    ) : Array.isArray(row.issues) && row.issues.length > 0 ? (
+                      row.issues.map((issue) => issue.message).join(' ')
+                    ) : (
+                      'خطای بازبین حل‌نشده یا کارت بررسی‌نشده'
+                    )}
                   </td>
                 </tr>
               ))}

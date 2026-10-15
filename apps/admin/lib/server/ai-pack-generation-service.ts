@@ -18,12 +18,16 @@ import {
   parseRepairReply,
   parseReviewReply,
   stateAfterReview,
+  validatorFindings,
   type GeneratedRow,
   type QualityReport,
+  type ReviewFinding,
+  type RowReviewSummary,
 } from './ai-card-review';
 import { IMPORT_COLUMNS, type ImportColumnKey } from './content-import-contract';
 import {
   rowIdempotencyKey,
+  validateImportRecord,
   type ContentImportService,
   type ImportAnalysis,
 } from './content-import-service';
@@ -113,23 +117,30 @@ export type JobAnalysisResult =
       job: JobView;
       analysis: ImportAnalysis;
       quality: QualityReport;
-      reviews: Record<
-        number,
-        {
-          state: string;
-          findings: Array<{
-            field: string;
-            severity: string;
-            reason: string;
-            suggestion: string;
-            source: string;
-          }>;
-          repairRounds: number;
-          repaired: boolean;
-        }
-      >;
+      reviews: Record<number, RowReviewSummary>;
     }
   | { status: 'not_found' };
+
+export type RevisePlanResult =
+  | { status: 'ok'; job: JobView }
+  | { status: 'invalid'; message: string }
+  | { status: 'stale'; message: string }
+  | { status: 'conflict'; message: string }
+  | { status: 'not_found' };
+
+/** Fields the Admin may edit on a plan before generation starts. */
+export interface PlanEdits {
+  packId?: unknown;
+  title?: unknown;
+  description?: unknown;
+  audience?: unknown;
+  cefr?: unknown;
+  cardCount?: unknown;
+  topics?: unknown;
+  strategy?: unknown;
+  scope?: unknown;
+  isFree?: unknown;
+}
 
 export type AcceptResult =
   | { status: 'ok'; job: JobView; created: number; skipped: number; packId: string }
@@ -200,6 +211,8 @@ function planFingerprintOf(plan: GenerationPlan): string {
         plan.topics,
         plan.strategy,
         plan.scope,
+        // Commercial state is part of what the Admin approves, so changing it must re-bind.
+        plan.isFree === true,
       ]),
     )
     .digest('hex');
@@ -252,6 +265,8 @@ export function normalizeModelSelection(raw: unknown): string | undefined {
   if (!value.toLowerCase().includes('claude')) return undefined;
   return value;
 }
+
+class PlanEditError extends Error {}
 
 export class AiPackGenerationService {
   constructor(
@@ -410,6 +425,147 @@ export class AiPackGenerationService {
   }
 
   /**
+   * Applies the Admin's direct edits to a plan that has not started generating.
+   *
+   * Every field is re-validated server-side with the same limits a model-proposed plan gets (the
+   * card count is still capped by `maxCards`), the pack id must stay unique, and the update is bound
+   * to the fingerprint the Admin edited, so two tabs cannot silently overwrite each other. The new
+   * fingerprint is what `approvePlan` then requires: the approved plan is exactly the edited one.
+   */
+  async revisePlan(input: {
+    jobId: string;
+    actorUserId: string;
+    expectedPlanFingerprint: string;
+    edits: PlanEdits;
+  }): Promise<RevisePlanResult> {
+    const job = await this.load(input.jobId, input.actorUserId);
+    if (!job) return { status: 'not_found' };
+    if (job.status !== 'planned') {
+      return { status: 'conflict', message: 'تولید این طرح شروع شده و طرح دیگر قابل ویرایش نیست.' };
+    }
+    if (job.planFingerprint !== input.expectedPlanFingerprint) {
+      return {
+        status: 'stale',
+        message: 'طرح در این فاصله تغییر کرده است؛ آن را دوباره باز کنید.',
+      };
+    }
+
+    const edited = this.applyPlanEdits(job.plan, input.edits);
+    if ('message' in edited) return { status: 'invalid', message: edited.message };
+    const plan = edited.plan;
+    if (plan.packId !== job.plan.packId) {
+      const existing = await this.pool.query('SELECT 1 FROM packs WHERE id = $1 LIMIT 1', [
+        plan.packId,
+      ]);
+      if (existing.rows.length > 0) {
+        return { status: 'invalid', message: 'این شناسهٔ بسته قبلاً استفاده شده است.' };
+      }
+    }
+
+    const fingerprint = planFingerprintOf(plan);
+    const updated = await this.pool.query(
+      `UPDATE ai_generation_jobs
+          SET plan = $4::jsonb, plan_fingerprint = $5, requested_count = $6, batch_size = $7,
+              updated_at = now()
+        WHERE id = $1 AND actor_user_id = $2 AND status = 'planned' AND plan_fingerprint = $3
+        RETURNING id`,
+      [
+        input.jobId,
+        input.actorUserId,
+        input.expectedPlanFingerprint,
+        JSON.stringify(plan),
+        fingerprint,
+        plan.cardCount,
+        Math.min(this.limits.batchSize, plan.cardCount),
+      ],
+    );
+    if (updated.rows.length === 0) {
+      return {
+        status: 'stale',
+        message: 'طرح در این فاصله تغییر کرده است؛ آن را دوباره باز کنید.',
+      };
+    }
+    const after = await this.load(input.jobId, input.actorUserId);
+    return after ? { status: 'ok', job: after } : { status: 'not_found' };
+  }
+
+  /** Validates Admin edits against the same rules as a generated plan. Pure. */
+  private applyPlanEdits(
+    current: GenerationPlan,
+    edits: PlanEdits,
+  ): { plan: GenerationPlan } | { message: string } {
+    const textField = (value: unknown, fallback: string, maximum: number, label: string) => {
+      if (value === undefined) return fallback;
+      if (typeof value !== 'string') throw new PlanEditError(`${label} معتبر نیست.`);
+      const trimmed = value.trim();
+      if (trimmed.length > maximum) {
+        throw new PlanEditError(`${label} باید حداکثر ${maximum} نویسه باشد.`);
+      }
+      return trimmed;
+    };
+    try {
+      const title = textField(edits.title, current.title, 120, 'عنوان');
+      if (!title) throw new PlanEditError('عنوان بسته خالی است.');
+      const packId = textField(edits.packId, current.packId, 60, 'شناسهٔ بسته');
+      if (!PACK_ID_PATTERN.test(packId)) {
+        throw new PlanEditError(
+          'شناسهٔ بسته فقط حروف کوچک لاتین، عدد و خط تیره می‌پذیرد و با حرف یا عدد شروع می‌شود.',
+        );
+      }
+      const cefr = textField(edits.cefr, current.cefr, 2, 'سطح').toUpperCase();
+      if (!CEFR_PATTERN.test(cefr)) throw new PlanEditError('سطح باید یکی از A1 تا C2 باشد.');
+
+      let cardCount = current.cardCount;
+      if (edits.cardCount !== undefined) {
+        const value = edits.cardCount;
+        if (typeof value !== 'number' || !Number.isSafeInteger(value) || value < 1) {
+          throw new PlanEditError('تعداد کارت باید عدد صحیح مثبت باشد.');
+        }
+        if (value > this.limits.maxCards) {
+          throw new PlanEditError(`تعداد کارت حداکثر ${this.limits.maxCards} است.`);
+        }
+        cardCount = value;
+      }
+
+      let topics = current.topics;
+      if (edits.topics !== undefined) {
+        if (!Array.isArray(edits.topics) || !edits.topics.every((t) => typeof t === 'string')) {
+          throw new PlanEditError('فهرست موضوع‌ها معتبر نیست.');
+        }
+        topics = [...new Set((edits.topics as string[]).map((t) => t.trim()).filter(Boolean))];
+        if (topics.length === 0) throw new PlanEditError('دست‌کم یک موضوع لازم است.');
+        if (topics.length > 12) throw new PlanEditError('حداکثر ۱۲ موضوع مجاز است.');
+        if (topics.some((t) => t.length > 80)) {
+          throw new PlanEditError('هر موضوع باید حداکثر ۸۰ نویسه باشد.');
+        }
+      }
+
+      if (edits.isFree !== undefined && typeof edits.isFree !== 'boolean') {
+        throw new PlanEditError('وضعیت رایگان/پولی معتبر نیست.');
+      }
+
+      return {
+        plan: {
+          ...current,
+          packId,
+          title,
+          description: textField(edits.description, current.description, 1000, 'توضیح'),
+          audience: textField(edits.audience, current.audience, 300, 'مخاطب'),
+          cefr,
+          cardCount,
+          topics,
+          strategy: textField(edits.strategy, current.strategy, 1000, 'راهبرد'),
+          scope: textField(edits.scope, current.scope, 1000, 'دامنه'),
+          isFree: edits.isFree === undefined ? current.isFree : (edits.isFree as boolean),
+        },
+      };
+    } catch (error) {
+      if (error instanceof PlanEditError) return { message: error.message };
+      throw error;
+    }
+  }
+
+  /**
    * Moves an approved plan into generation. Requires the fingerprint of the plan the Admin saw,
    * so a plan that changed underneath cannot be silently generated.
    */
@@ -556,19 +712,36 @@ export class AiPackGenerationService {
     const repairModel = job.repairModel ?? this.models!.repair;
     let indexes = rows.map((_, index) => index);
     for (let reviewPass = 0; indexes.length > 0; reviewPass += 1) {
+      // Canonical validation first. A card LearnBox itself rejects gets its validator issues as
+      // critical findings and goes through the SAME bounded repair and re-check as a reviewer
+      // finding; spending a reviewer call on it first would review content that cannot be kept.
+      const invalid = new Map<number, ReviewFinding[]>();
+      for (const index of indexes) {
+        const checked = validateImportRecord(
+          contentFields(rows[index]!),
+          index + 1,
+          job.plan.packId,
+          job.plan.cefr,
+        );
+        if (!checked.ok) invalid.set(index, validatorFindings(checked.issues));
+      }
+      const toReview = indexes.filter((index) => !invalid.has(index));
       const reviewed =
-        (await this.callReviewer(rows, indexes, job.plan, reviewerModel)) ?? new Map();
+        toReview.length > 0
+          ? ((await this.callReviewer(rows, toReview, job.plan, reviewerModel)) ?? new Map())
+          : new Map<number, ReviewFinding[]>();
       for (const index of indexes) {
         const prior = rows[index]!._review;
-        const findings = reviewed.get(index) ?? [
-          {
-            field: 'card',
-            severity: 'critical' as const,
-            reason: 'بازبین برای این کارت پاسخ معتبر نداد.',
-            suggestion: '',
-            source: 'reviewer' as const,
-          },
-        ];
+        const findings = invalid.get(index) ??
+          reviewed.get(index) ?? [
+            {
+              field: 'card',
+              severity: 'critical' as const,
+              reason: 'بازبین برای این کارت پاسخ معتبر نداد.',
+              suggestion: '',
+              source: 'reviewer' as const,
+            },
+          ];
         const repairRounds = prior?.repairRounds ?? 0;
         rows[index]!._review = {
           state: stateAfterReview(findings, repairRounds, this.limits.maxRepairRounds),
@@ -578,6 +751,7 @@ export class AiPackGenerationService {
           reviewerModel,
           repairModel,
           original: prior?.original,
+          history: [...(prior?.history ?? []), { round: repairRounds, findings }],
         };
       }
       const repairable = indexes.filter((index) => rows[index]!._review?.state === 'needs_repair');
@@ -847,12 +1021,31 @@ export class AiPackGenerationService {
     if (applied.status === 'not_found') return { status: 'not_found' };
     if (applied.status === 'stale') return { status: 'stale', message: applied.message };
 
+    // Bind each accepted row's review to the draft version it became, in the same update that
+    // records acceptance. The Admin review queue reads it from here, so the findings appear beside
+    // exactly that version; a later human edit creates a new version that carries none of them.
+    const versionByRow = new Map<number, string>();
+    for (const outcome of applied.outcomes) {
+      if (outcome.cardVersionId) versionByRow.set(outcome.rowNumber, outcome.cardVersionId);
+    }
+    const linked = records.map((record, index) => {
+      const cardVersionId = versionByRow.get(index + 1);
+      if (!cardVersionId || !record._review) return record;
+      return { ...record, _review: { ...record._review, cardVersionId } };
+    });
     await this.pool.query(
       `UPDATE ai_generation_jobs
           SET status = 'accepted', pack_id = $3, accepted_import_key = $4,
-              accepted_card_count = $5, updated_at = now()
+              accepted_card_count = $5, generated_rows = $6::jsonb, updated_at = now()
         WHERE id = $1 AND actor_user_id = $2`,
-      [input.jobId, input.actorUserId, job.plan.packId, input.acceptKey, applied.created],
+      [
+        input.jobId,
+        input.actorUserId,
+        job.plan.packId,
+        input.acceptKey,
+        applied.created,
+        JSON.stringify(linked),
+      ],
     );
     const after = await this.load(input.jobId, input.actorUserId);
     return {

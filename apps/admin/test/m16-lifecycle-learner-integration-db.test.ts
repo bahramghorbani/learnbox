@@ -125,6 +125,12 @@ async function humanApprove(versionId: string) {
   expect(decision).toMatchObject({ status: 'applied', nextStatus: 'approved' });
 }
 
+async function reviewQueueItems() {
+  const result = await review.listReviewQueue(operator);
+  if (result.status !== 'ok') throw new Error('expected queue');
+  return result.items;
+}
+
 async function curriculumCardIds(): Promise<string[]> {
   const result = await pool.query(CURRICULUM_SQL);
   return result.rows.map((row) => String(row.card_id)).sort();
@@ -258,6 +264,83 @@ suite('M1.6 — draft to review', () => {
     expect(added).toEqual(['m16-stuhl', 'm16-tisch']);
     // Submission alone never publishes.
     expect(await curriculumCardIds()).toEqual([]);
+  });
+
+  it('shows the AI reviewer findings beside exactly the version they were produced for', async () => {
+    const [tisch] = cards;
+    const finding = (field: string, severity: string, reason: string, suggestion: string) => ({
+      field,
+      severity,
+      reason,
+      suggestion,
+      source: severity === 'critical' && field === 'persian_meanings' ? 'validator' : 'reviewer',
+    });
+    const review = {
+      state: 'passed',
+      repaired: true,
+      repairRounds: 1,
+      reviewerModel: 'claude-fable-5-1',
+      repairModel: 'claude-fable-5-1',
+      cardVersionId: tisch!.versionId,
+      findings: [finding('example', 'minor', 'مثال کمی طولانی است.', 'کوتاه‌تر شود.')],
+      history: [
+        { round: 0, findings: [finding('persian_meanings', 'critical', 'معنی خالی است.', '')] },
+        {
+          round: 1,
+          findings: [finding('example', 'minor', 'مثال کمی طولانی است.', 'کوتاه‌تر شود.')],
+        },
+      ],
+    };
+    // A non-accepted job's rows must never surface, even if they name the same version.
+    for (const status of ['accepted', 'generated']) {
+      await pool.query(
+        `INSERT INTO ai_generation_jobs
+           (id, actor_user_id, prompt, plan, plan_fingerprint, status, requested_count, batch_size,
+            generated_rows)
+         VALUES ($1, $2, 'p', '{}'::jsonb, $3, $4, 1, 1, $5::jsonb)`,
+        [
+          randomUUID(),
+          operator,
+          'f'.repeat(64),
+          status,
+          JSON.stringify([
+            {
+              lemma: 'Tisch',
+              _review:
+                status === 'accepted'
+                  ? review
+                  : { ...review, findings: [finding('lemma', 'major', 'STALE', '')], history: [] },
+            },
+          ]),
+        ],
+      );
+    }
+
+    const queue = await reviewQueueItems();
+    const tischEntry = queue.find((entry) => entry.contentId === 'm16-tisch');
+    const stuhlEntry = queue.find((entry) => entry.contentId === 'm16-stuhl');
+    expect(stuhlEntry?.aiReview).toBeNull();
+    expect(tischEntry?.aiReview).toMatchObject({
+      state: 'passed',
+      repaired: true,
+      repairRounds: 1,
+      reviewerModel: 'claude-fable-5-1',
+    });
+    expect(tischEntry?.aiReview?.findings).toEqual([
+      expect.objectContaining({
+        field: 'persian_meanings',
+        source: 'validator',
+        status: 'resolved',
+        round: 0,
+      }),
+      expect.objectContaining({
+        field: 'example',
+        suggestion: 'کوتاه‌تر شود.',
+        status: 'remaining',
+        round: 1,
+      }),
+    ]);
+    expect(JSON.stringify(tischEntry?.aiReview)).not.toContain('STALE');
   });
 
   it('audits the submission under the canonical pack surrogate identity', async () => {

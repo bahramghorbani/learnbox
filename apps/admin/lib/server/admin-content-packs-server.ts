@@ -27,6 +27,7 @@ import {
   createAiJobStatusRoute,
   createAiModelsRoute,
   createAiPlanRoute,
+  createAiRevisePlanRoute,
   createAiRunBatchRoute,
 } from './admin-ai-generation-routes';
 import {
@@ -229,6 +230,7 @@ export function createAdminContentPacksServer(dependencies: {
       aiModels: createAiModelsRoute(aiShared),
       aiPlan: createAiPlanRoute(aiShared),
       aiApprovePlan: createAiApprovePlanRoute(aiShared),
+      aiRevisePlan: createAiRevisePlanRoute(aiShared),
       aiRunBatch: createAiRunBatchRoute(aiShared),
       aiJobStatus: createAiJobStatusRoute(aiShared),
       aiAccept: createAiAcceptRoute(aiShared),

@@ -70,6 +70,8 @@ export interface ImportApplyOutcome {
   status: 'created' | 'versioned' | 'skipped';
   reason?: string;
   cardId?: string;
+  /** The draft version a `created` row produced; lets callers attach provenance to it. */
+  cardVersionId?: string;
 }
 
 export type ApplyResult =
@@ -120,6 +122,39 @@ export function rowIdempotencyKey(
   digest[8] = (digest[8]! & 0x3f) | 0x80;
   const hex = digest.toString('hex');
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20, 32)}`;
+}
+
+/**
+ * Canonical validation of ONE record: contract mapping, content identity and the canonical
+ * content-model validator. Pure — no database access. `analyzeRecords` classifies with it, and AI
+ * generation runs it before review so an invalid card goes through the same repair path as a
+ * reviewer finding. One implementation, so the two can never disagree.
+ */
+export function validateImportRecord(
+  record: Partial<Record<ImportColumnKey, string>>,
+  rowNumber: number,
+  packId: string,
+  effectiveCefr: string,
+):
+  | { ok: true; contentId: string; content: CardContentInput }
+  | { ok: false; contentId?: string; issues: RowIssue[] } {
+  const mapped = mapRow(record, rowNumber);
+  if (!mapped.content) return { ok: false, issues: mapped.issues };
+  const cefr = mapped.content.cefr ?? effectiveCefr;
+  const contentId = deriveContentId(packId, cefr, mapped.content.lemma);
+  // Canonical content rules — the same validator the write path runs, never a parallel copy.
+  const candidate = buildCardContent(
+    { ...mapped.content, cefr },
+    { contentId, version: 1, media: [], status: 'draft' },
+  );
+  let issues: RowIssue[] = [];
+  try {
+    issues = validateLearningVocabularyItem(candidate);
+  } catch {
+    issues = [{ field: 'content', message: 'محتوای این سطر معتبر نیست.' }];
+  }
+  if (issues.length > 0) return { ok: false, contentId, issues };
+  return { ok: true, contentId, content: { ...mapped.content, cefr } };
 }
 
 export class ContentImportService {
@@ -197,38 +232,30 @@ export class ContentImportService {
 
     input.records.forEach((record, index) => {
       const rowNumber = index + firstRowNumber;
-      const mapped = mapRow(record, rowNumber);
       const lemma = (record.lemma ?? '').trim();
 
-      if (missingRequiredColumns.length > 0 || !mapped.content) {
-        rows.push({ rowNumber, lemma, classification: 'invalid', issues: mapped.issues });
-        return;
-      }
-
-      const cefr = mapped.content.cefr ?? effectiveCefr;
-      const contentId = deriveContentId(input.packId, cefr, mapped.content.lemma);
-
-      // Canonical content rules — the same validator the write path runs, never a parallel copy.
-      const candidate = buildCardContent(
-        { ...mapped.content, cefr },
-        { contentId, version: 1, media: [], status: 'draft' },
-      );
-      let canonicalIssues: RowIssue[] = [];
-      try {
-        canonicalIssues = validateLearningVocabularyItem(candidate);
-      } catch {
-        canonicalIssues = [{ field: 'content', message: 'محتوای این سطر معتبر نیست.' }];
-      }
-      if (canonicalIssues.length > 0) {
+      if (missingRequiredColumns.length > 0) {
         rows.push({
           rowNumber,
           lemma,
-          contentId,
           classification: 'invalid',
-          issues: canonicalIssues,
+          issues: mapRow(record, rowNumber).issues,
         });
         return;
       }
+
+      const validated = validateImportRecord(record, rowNumber, input.packId, effectiveCefr);
+      if (!validated.ok) {
+        rows.push({
+          rowNumber,
+          lemma,
+          contentId: validated.contentId,
+          classification: 'invalid',
+          issues: validated.issues,
+        });
+        return;
+      }
+      const { contentId, content } = validated;
 
       const earlier = claimedInFile.get(contentId);
       if (earlier !== undefined) {
@@ -255,7 +282,7 @@ export class ContentImportService {
         contentId,
         classification: 'new',
         issues: [],
-        content: { ...mapped.content, cefr },
+        content,
       });
     });
 
@@ -541,6 +568,7 @@ export class ContentImportService {
           contentId: row.contentId,
           status: 'created',
           cardId: result.cardId,
+          cardVersionId: result.cardVersionId,
         });
       } else if (result.status === 'idempotent') {
         replayed += 1;
@@ -550,6 +578,7 @@ export class ContentImportService {
           status: 'skipped',
           reason: 'already_applied',
           cardId: result.cardId,
+          cardVersionId: result.cardVersionId,
         });
       } else {
         skipped += 1;

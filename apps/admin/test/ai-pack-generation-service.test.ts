@@ -198,15 +198,35 @@ function makeJobPool(options: { existingContentIds?: string[]; existingPackIds?:
       }
 
       if (/SET status = 'accepted'/.test(sql)) {
-        const [id, actor, packId, key, count] = parameters as string[];
+        const [id, actor, packId, key, count, rows] = parameters as string[];
         const job = jobs.get(id);
         if (job && job.actor_user_id === actor) {
           job.status = 'accepted';
           job.pack_id = packId;
           job.accepted_import_key = key;
           job.accepted_card_count = Number(count);
+          if (rows !== undefined) job.generated_rows = JSON.parse(rows) as unknown[];
         }
         return { rows: [] };
+      }
+
+      if (/SET plan = \$4::jsonb/.test(sql)) {
+        const [id, actor, expected, plan, fingerprint, requested, batchSize] =
+          parameters as string[];
+        const job = jobs.get(id);
+        if (
+          !job ||
+          job.actor_user_id !== actor ||
+          job.status !== 'planned' ||
+          job.plan_fingerprint !== expected
+        ) {
+          return { rows: [] };
+        }
+        job.plan = plan;
+        job.plan_fingerprint = fingerprint;
+        job.requested_count = Number(requested);
+        job.batch_size = Number(batchSize);
+        return { rows: [{ id }] };
       }
 
       // Acceptance replay lookup. Must precede the generic job SELECT below, which ignores status.
@@ -1212,5 +1232,277 @@ describe('content-pack workflow: title to human-approved draft (fake provider)',
     if (analyzed.status !== 'ok') throw new Error('analysis failed');
     expect(analyzed.quality.ready).toBe(0);
     expect(analyzed.quality.withIssues).toBe(4);
+  });
+});
+
+describe('AiPackGenerationService.revisePlan (Admin edits before generation)', () => {
+  async function planned(options: Parameters<typeof makeHarness>[0] = {}) {
+    const harness = makeHarness({ replies: [planReply()], ...options });
+    const result = await harness.service.plan({ prompt: 'تحصیل', actorUserId: ACTOR });
+    if (result.status !== 'ok') throw new Error('plan failed');
+    return { harness, job: result.job };
+  }
+
+  it('applies edited count, level, topics and essentials, and re-binds the fingerprint', async () => {
+    const { harness, job } = await planned();
+    const revised = await harness.service.revisePlan({
+      jobId: job.jobId,
+      actorUserId: ACTOR,
+      expectedPlanFingerprint: job.planFingerprint,
+      edits: {
+        cardCount: 6,
+        cefr: 'a2',
+        topics: [' مسکن ', 'مسکن', '', 'بانک'],
+        scope: 'فقط اسم‌ها',
+        title: 'بستهٔ زندگی دانشجویی',
+        isFree: true,
+      },
+    });
+    expect(revised.status).toBe('ok');
+    if (revised.status !== 'ok') return;
+    expect(revised.job.plan).toMatchObject({
+      cardCount: 6,
+      cefr: 'A2',
+      topics: ['مسکن', 'بانک'],
+      scope: 'فقط اسم‌ها',
+      title: 'بستهٔ زندگی دانشجویی',
+      isFree: true,
+    });
+    expect(revised.job.planFingerprint).not.toBe(job.planFingerprint);
+    // Editing a plan is not a provider call.
+    expect(harness.completeCalls).toHaveLength(1);
+
+    // The pre-edit fingerprint can no longer approve: what is generated is the edited plan.
+    const old = await harness.service.approvePlan({
+      jobId: job.jobId,
+      actorUserId: ACTOR,
+      expectedPlanFingerprint: job.planFingerprint,
+    });
+    expect(old.status).not.toBe('ok');
+    const approved = await harness.service.approvePlan({
+      jobId: job.jobId,
+      actorUserId: ACTOR,
+      expectedPlanFingerprint: revised.job.planFingerprint,
+    });
+    expect(approved.status).toBe('ok');
+  });
+
+  it('changing only paid/free changes the fingerprint (commercial state is approved too)', async () => {
+    const { harness, job } = await planned();
+    const revised = await harness.service.revisePlan({
+      jobId: job.jobId,
+      actorUserId: ACTOR,
+      expectedPlanFingerprint: job.planFingerprint,
+      edits: { isFree: !job.plan.isFree },
+    });
+    expect(revised.status).toBe('ok');
+    if (revised.status !== 'ok') return;
+    expect(revised.job.planFingerprint).not.toBe(job.planFingerprint);
+  });
+
+  it('keeps the server card ceiling: an edit cannot exceed maxCards', async () => {
+    const { harness, job } = await planned({ limits: { maxCards: 10 } });
+    const result = await harness.service.revisePlan({
+      jobId: job.jobId,
+      actorUserId: ACTOR,
+      expectedPlanFingerprint: job.planFingerprint,
+      edits: { cardCount: 11 },
+    });
+    expect(result).toMatchObject({ status: 'invalid' });
+  });
+
+  it.each([
+    [{ cardCount: 0 }],
+    [{ cardCount: 2.5 }],
+    [{ cardCount: '5' }],
+    [{ cefr: 'D1' }],
+    [{ topics: [] }],
+    [{ topics: ['  '] }],
+    [{ topics: 'مسکن' }],
+    [{ packId: 'Bad Id' }],
+    [{ title: '   ' }],
+    [{ isFree: 'yes' }],
+  ])('rejects an invalid edit %j without changing the plan', async (edits) => {
+    const { harness, job } = await planned();
+    const result = await harness.service.revisePlan({
+      jobId: job.jobId,
+      actorUserId: ACTOR,
+      expectedPlanFingerprint: job.planFingerprint,
+      edits,
+    });
+    expect(result.status).toBe('invalid');
+    const stored = harness.pool.jobs.get(job.jobId)!;
+    expect(stored.plan_fingerprint).toBe(job.planFingerprint);
+  });
+
+  it('refuses a pack id that already exists', async () => {
+    const { harness, job } = await planned({ existingPackIds: ['taken-pack'] });
+    const result = await harness.service.revisePlan({
+      jobId: job.jobId,
+      actorUserId: ACTOR,
+      expectedPlanFingerprint: job.planFingerprint,
+      edits: { packId: 'taken-pack' },
+    });
+    expect(result).toMatchObject({ status: 'invalid' });
+  });
+
+  it('refuses a stale fingerprint (two tabs editing the same plan)', async () => {
+    const { harness, job } = await planned();
+    const first = await harness.service.revisePlan({
+      jobId: job.jobId,
+      actorUserId: ACTOR,
+      expectedPlanFingerprint: job.planFingerprint,
+      edits: { cardCount: 3 },
+    });
+    expect(first.status).toBe('ok');
+    const second = await harness.service.revisePlan({
+      jobId: job.jobId,
+      actorUserId: ACTOR,
+      expectedPlanFingerprint: job.planFingerprint,
+      edits: { cardCount: 5 },
+    });
+    expect(second.status).toBe('stale');
+  });
+
+  it('refuses edits once generation has started, and another owner cannot edit', async () => {
+    const { harness, job } = await planned();
+    const other = await harness.service.revisePlan({
+      jobId: job.jobId,
+      actorUserId: '99999999-9999-4999-8999-999999999999',
+      expectedPlanFingerprint: job.planFingerprint,
+      edits: { cardCount: 3 },
+    });
+    expect(other.status).toBe('not_found');
+    await harness.service.approvePlan({
+      jobId: job.jobId,
+      actorUserId: ACTOR,
+      expectedPlanFingerprint: job.planFingerprint,
+    });
+    const late = await harness.service.revisePlan({
+      jobId: job.jobId,
+      actorUserId: ACTOR,
+      expectedPlanFingerprint: job.planFingerprint,
+      edits: { cardCount: 3 },
+    });
+    expect(late.status).toBe('conflict');
+  });
+});
+
+describe('automatic repair of cards the canonical validator rejects', () => {
+  const MODELS: AiModelRoles = {
+    generator: 'claude-opus-5-5',
+    reviewer: 'claude-fable-5-1',
+    repair: 'claude-fable-5-1',
+  };
+  const lemmas = ['Hörsaal', 'Mensa', 'Miete', 'Antrag'];
+  const clean = (indexes: number[]) =>
+    JSON.stringify({ reviews: indexes.map((index) => ({ index, findings: [] })) });
+
+  it('repairs an invalid card, re-validates and re-reviews it, and keeps the fixed finding', async () => {
+    const harness = makeHarness({
+      models: MODELS,
+      limits: { maxRepairRounds: 2 },
+      replies: [
+        planReply(),
+        JSON.stringify({
+          cards: lemmas.map((lemma, index) =>
+            index === 1 ? card({ lemma, persian_meanings: '' }) : card({ lemma }),
+          ),
+        }),
+        // Reviewer sees only the three valid cards.
+        clean([0, 2, 3]),
+        // Repair fixes the invalid card.
+        JSON.stringify({ cards: [{ index: 1, card: card({ lemma: 'Mensa' }) }] }),
+        // Re-review of the repaired card only.
+        clean([1]),
+      ],
+    });
+    const jobId = await generate(harness);
+    const [, , firstReview, repair, rereview] = harness.completeCalls;
+    // The invalid card was never sent to the reviewer before it was repaired.
+    expect(firstReview!.user).not.toContain('"index":1');
+    expect(repair!.user).toContain('"index":1');
+    expect(rereview!.user).toContain('"index":1');
+    expect(harness.completeCalls).toHaveLength(5);
+
+    const analyzed = await harness.service.analyzeJob({ jobId, actorUserId: ACTOR });
+    if (analyzed.status !== 'ok') throw new Error('analysis failed');
+    expect(analyzed.analysis.rows.map((row) => row.classification)).toEqual([
+      'new',
+      'new',
+      'new',
+      'new',
+    ]);
+    const review = analyzed.reviews[2]!;
+    expect(review).toMatchObject({ state: 'passed', repaired: true, repairRounds: 1 });
+    expect(review.history[0]!.findings[0]).toMatchObject({
+      source: 'validator',
+      severity: 'critical',
+    });
+    expect(review.history.at(-1)!.findings).toEqual([]);
+    expect(analyzed.quality).toMatchObject({ ready: 4, repaired: 1, withIssues: 0 });
+  });
+
+  it('marks a card unresolved when repair keeps producing invalid content, bounded by the budget', async () => {
+    const harness = makeHarness({
+      models: MODELS,
+      limits: { maxRepairRounds: 2 },
+      replies: [
+        planReply(),
+        JSON.stringify({
+          cards: lemmas.map((lemma, index) =>
+            index === 0 ? card({ lemma, persian_meanings: '' }) : card({ lemma }),
+          ),
+        }),
+        clean([1, 2, 3]),
+        JSON.stringify({
+          cards: [{ index: 0, card: card({ lemma: 'Hörsaal', persian_meanings: '' }) }],
+        }),
+        JSON.stringify({
+          cards: [{ index: 0, card: card({ lemma: 'Hörsaal', persian_meanings: '' }) }],
+        }),
+      ],
+    });
+    const jobId = await generate(harness);
+    // generate + review + 2 repairs; no reviewer call is spent on content that cannot be kept.
+    expect(harness.completeCalls).toHaveLength(5);
+    const analyzed = await harness.service.analyzeJob({ jobId, actorUserId: ACTOR });
+    if (analyzed.status !== 'ok') throw new Error('analysis failed');
+    expect(analyzed.reviews[1]).toMatchObject({ state: 'unresolved', repairRounds: 2 });
+    expect(analyzed.reviews[1]!.findings[0]!.source).toBe('validator');
+    // Still invalid after repair: counted as invalid, never as ready, and the shortfall stays visible.
+    expect(analyzed.quality).toMatchObject({ ready: 3, invalid: 1, shortfall: 1 });
+    expect(analyzed.analysis.rows[0]!.classification).toBe('invalid');
+  });
+
+  it('binds each accepted review to the draft version it became, for the review queue', async () => {
+    const harness = makeHarness({
+      models: MODELS,
+      replies: [
+        planReply(),
+        JSON.stringify({ cards: lemmas.map((lemma) => card({ lemma })) }),
+        clean([0, 1, 2, 3]),
+      ],
+    });
+    const jobId = await generate(harness);
+    const analyzed = await harness.service.analyzeJob({ jobId, actorUserId: ACTOR });
+    if (analyzed.status !== 'ok') throw new Error('analysis failed');
+    const accepted = await harness.service.accept({
+      jobId,
+      actorUserId: ACTOR,
+      expectedFingerprint: analyzed.analysis.importableFingerprint,
+      selectedRows: [1, 3],
+      acceptKey: '88888888-8888-4888-8888-888888888888',
+    });
+    expect(accepted.status).toBe('ok');
+    const rows = harness.pool.jobs.get(jobId)!.generated_rows as Array<{
+      _review?: { cardVersionId?: string };
+    }>;
+    const linked = rows.map((row) => row._review?.cardVersionId);
+    // Only the two accepted rows are linked, each to the version the write store returned.
+    expect(linked.filter(Boolean)).toHaveLength(2);
+    expect(linked[1]).toBeUndefined();
+    expect(linked[3]).toBeUndefined();
+    expect(new Set(linked.filter(Boolean)).size).toBe(2);
   });
 });

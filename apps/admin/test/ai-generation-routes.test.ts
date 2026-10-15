@@ -5,6 +5,7 @@ import {
   createAiApprovePlanRoute,
   createAiJobStatusRoute,
   createAiPlanRoute,
+  createAiRevisePlanRoute,
   createAiRunBatchRoute,
 } from '../lib/server/admin-ai-generation-routes';
 import { hashAdminSecret } from '../lib/server/admin-session.js';
@@ -100,6 +101,10 @@ function service(overrides: Record<string, unknown> = {}) {
       job,
     })),
     approvePlan: vi.fn(async () => ({ status: 'ok', job })),
+    revisePlan: vi.fn<(input: Record<string, unknown>) => Promise<unknown>>(async () => ({
+      status: 'ok',
+      job,
+    })),
     runNextBatch: vi.fn(async () => ({ status: 'ok', job })),
     analyzeJob: vi.fn(async () => ({ status: 'ok', job, analysis })),
     accept: vi.fn<(input: { selectedRows: number[]; acceptKey: string }) => Promise<unknown>>(
@@ -145,6 +150,11 @@ function post(
 const allRoutes = [
   ['plan', createAiPlanRoute, { prompt: 'بساز' }],
   ['approve', createAiApprovePlanRoute, { jobId, planFingerprint: 'b'.repeat(64) }],
+  [
+    'revise',
+    createAiRevisePlanRoute,
+    { jobId, planFingerprint: 'b'.repeat(64), plan: { cardCount: 3 } },
+  ],
   ['generate', createAiRunBatchRoute, { jobId }],
   ['status', createAiJobStatusRoute, { jobId }],
   ['accept', createAiAcceptRoute, { jobId, fingerprint, acceptKey, selectedRows: [1] }],
@@ -352,6 +362,54 @@ describe('M1.4 plan approval route', () => {
       }),
     );
     expect((await route(post({ jobId, planFingerprint: 'b'.repeat(64) }))).status).toBe(409);
+  });
+});
+
+describe('plan revision route (Admin edits before generation)', () => {
+  const body = { jobId, planFingerprint: 'b'.repeat(64), plan: { cardCount: 3, cefr: 'A2' } };
+
+  it('forwards the edits with the session actor, never a body actor', async () => {
+    const svc = service();
+    const route = createAiRevisePlanRoute(deps({ service: svc }));
+    const response = await route(post({ ...body, actorUserId: 'someone-else' }));
+    expect(response.status).toBe(200);
+    expect(svc.revisePlan).toHaveBeenCalledWith({
+      jobId,
+      actorUserId,
+      expectedPlanFingerprint: 'b'.repeat(64),
+      edits: { cardCount: 3, cefr: 'A2' },
+    });
+  });
+
+  it('rejects unknown plan fields, so edits cannot reach model or progress state', async () => {
+    const svc = service();
+    const route = createAiRevisePlanRoute(deps({ service: svc }));
+    for (const plan of [{ model: 'x' }, { requestedCount: 9 }, { fields: [] }, [1], 'x', null]) {
+      const response = await route(post({ ...body, plan }));
+      expect(response.status).toBe(400);
+    }
+    expect(svc.revisePlan).not.toHaveBeenCalled();
+  });
+
+  it('requires a well-formed fingerprint and job id', async () => {
+    const svc = service();
+    const route = createAiRevisePlanRoute(deps({ service: svc }));
+    expect((await route(post({ ...body, planFingerprint: 'nope' }))).status).toBe(400);
+    expect((await route(post({ ...body, jobId: 'nope' }))).status).toBe(400);
+    expect(svc.revisePlan).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    [{ status: 'invalid', message: 'تعداد کارت حداکثر ۱۰۰ است.' }, 422, 'invalid_plan'],
+    [{ status: 'stale', message: 'changed' }, 409, 'stale_plan'],
+    [{ status: 'conflict', message: 'started' }, 409, 'conflict'],
+  ])('maps %j to %i', async (outcome, statusCode, code) => {
+    const route = createAiRevisePlanRoute(
+      deps({ service: service({ revisePlan: async () => outcome }) }),
+    );
+    const response = await route(post(body));
+    expect(response.status).toBe(statusCode);
+    expect(await response.json()).toMatchObject({ code });
   });
 });
 
