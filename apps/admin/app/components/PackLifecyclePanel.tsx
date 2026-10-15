@@ -39,6 +39,7 @@ export type PackLifecycleView = {
   targetItemCount: number;
   cards: { cardVersionId: string; contentId: string; lemma: string; status: string }[];
   submittableCardCount: number;
+  pendingRevisionCount: number;
   readiness: {
     ready: boolean;
     packStatus: PackLifecycleStatus;
@@ -188,8 +189,14 @@ export function PackLifecyclePanel({
       <div className="card-body">
         <p className="muted">
           {faNum(view.cards.length)} کارت
-          {view.targetItemCount > 0 ? ` از ${faNum(view.targetItemCount)} کارت هدف` : ''} —{' '}
-          {faNum(readiness.publishableCardCount)} کارت آمادهٔ انتشار
+          {view.status === 'published' ? (
+            ` — ${faNum(view.pendingRevisionCount)} بازبینیِ در انتظار انتشار`
+          ) : (
+            <>
+              {view.targetItemCount > 0 ? ` از ${faNum(view.targetItemCount)} کارت هدف` : ''} —{' '}
+              {faNum(readiness.publishableCardCount)} کارت آمادهٔ انتشار
+            </>
+          )}
           {view.submittableCardCount > 0
             ? ` — ${faNum(view.submittableCardCount)} پیش‌نویس آمادهٔ ارسال به بررسی`
             : ''}
@@ -201,11 +208,11 @@ export function PackLifecyclePanel({
           </div>
         ) : null}
 
-        {readiness.ready ? (
+        {view.status !== 'published' && readiness.ready ? (
           <div className="notice green" role="status" data-cp-state="lifecycle-ready">
             <span>همهٔ شرط‌های کانونی انتشار برآورده شده است.</span>
           </div>
-        ) : (
+        ) : view.status !== 'published' ? (
           <div className="notice" role="status" data-cp-state="lifecycle-blocked">
             <span>این بسته آمادهٔ انتشار نیست:</span>
             <ul>
@@ -216,7 +223,7 @@ export function PackLifecyclePanel({
                 ))}
             </ul>
           </div>
-        )}
+        ) : null}
 
         {readiness.cardBlockers.length > 0 ? (
           <table className="tbl" data-cp-lifecycle-blockers="cards">
@@ -267,22 +274,42 @@ export function PackLifecyclePanel({
               className="btn primary"
               type="button"
               disabled={busy || !view.canPublish}
-              onClick={() =>
-                void act(
-                  '/api/content/lifecycle/publish',
-                  'بسته منتشر شد و برای زبان‌آموز احراز هویت‌شده قابل دریافت است.',
-                )
-              }
+              onClick={() => {
+                const isRevision = view.status === 'published';
+                if (
+                  window.confirm(
+                    isRevision
+                      ? 'نسخه‌های تأییدشده منتشر شوند؟ زبان‌آموز تا این لحظه نسخهٔ قبلی را می‌بیند.'
+                      : 'بسته منتشر شود؟',
+                  )
+                ) {
+                  void act(
+                    '/api/content/lifecycle/publish',
+                    isRevision
+                      ? 'نسخه‌های تأییدشده منتشر شد.'
+                      : 'بسته منتشر شد و برای زبان‌آموز احراز هویت‌شده قابل دریافت است.',
+                  );
+                }
+              }}
             >
-              انتشار
+              {view.status === 'published' ? 'انتشار نسخه‌های تأییدشده' : 'انتشار'}
             </button>
             <button
               className="btn"
               type="button"
               disabled={busy || !view.canArchive}
-              onClick={() =>
-                void act('/api/content/lifecycle/archive', 'بسته بایگانی شد؛ هیچ داده‌ای حذف نشد.')
-              }
+              onClick={() => {
+                if (
+                  window.confirm(
+                    'بسته بایگانی شود؟ خریداران و دارندگان دسترسی قبلی همچنان به آن دسترسی دارند.',
+                  )
+                ) {
+                  void act(
+                    '/api/content/lifecycle/archive',
+                    'بسته بایگانی شد؛ خریداران دسترسی خود را حفظ می‌کنند.',
+                  );
+                }
+              }}
             >
               بایگانی
             </button>
