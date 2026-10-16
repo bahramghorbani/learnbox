@@ -25,7 +25,8 @@ if [ -z "$archive" ]; then
 fi
 [ -n "$archive" ] && [ -f "$archive" ] || { echo "restore-drill: no backup archive found" >&2; exit 1; }
 
-cleanup() { docker rm -f "$SCRATCH" >/dev/null 2>&1 || true; }
+CID=""  # set only once this run has created the container; cleanup never touches anything else
+cleanup() { [ -n "$CID" ] && docker rm -fv "$CID" >/dev/null 2>&1 || true; }
 trap cleanup EXIT
 
 fail() {
@@ -40,10 +41,10 @@ fail() {
 echo "restore-drill: target archive $(basename "$archive")"
 
 # Isolated scratch database. No published ports: reachable only via docker exec.
-docker run -d --rm --name "$SCRATCH" \
+CID=$(docker run -d --rm --name "$SCRATCH" \
   -e POSTGRES_PASSWORD="$DRILL_PASSWORD" \
   -e POSTGRES_DB=drill \
-  "$PG_IMAGE" >/dev/null 2>&1 || fail "could not start scratch postgres container"
+  "$PG_IMAGE" 2>/dev/null) || fail "could not start scratch postgres container"
 
 ready=0
 for _ in $(seq 1 45); do

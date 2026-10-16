@@ -5,10 +5,11 @@ set -uo pipefail
 NAME="lb-del-$$"
 PGI=postgres:17-alpine
 ARCHIVE="$(ls -1t /home/ubuntu/learnbox/backups/learnbox-*.sql.gz | head -1)"
-cleanup(){ docker rm -f "$NAME" >/dev/null 2>&1 || true; }
+CID=""  # set only once this run has created the container; cleanup never touches anything else
+cleanup(){ [ -n "$CID" ] && docker rm -fv "$CID" >/dev/null 2>&1 || true; }
 trap cleanup EXIT
 
-docker run -d --rm --name "$NAME" -e POSTGRES_PASSWORD=x -e POSTGRES_DB=d "$PGI" >/dev/null
+CID=$(docker run -d --rm --name "$NAME" -e POSTGRES_PASSWORD=x -e POSTGRES_DB=d "$PGI")
 for _ in $(seq 1 60); do docker exec "$NAME" psql -U postgres -d d -c "select 1" >/dev/null 2>&1 && break; sleep 2; done
 gzip -dc "$ARCHIVE" | docker exec -i "$NAME" psql -q -v ON_ERROR_STOP=1 -U postgres -d d >/dev/null
 docker exec -i "$NAME" psql -q -v ON_ERROR_STOP=1 -U postgres -d d < /tmp/0019.sql >/dev/null
