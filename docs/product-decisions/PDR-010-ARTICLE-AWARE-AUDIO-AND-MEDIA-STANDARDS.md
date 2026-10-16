@@ -100,9 +100,13 @@ card in a different article's voice. `eleven_multilingual_v2` takes no language 
 spoken language comes from the canonical German text. Every candidate records `language=de` and
 `locale=de-DE`.
 
-Staging and Production environments are unchanged by this record. An older
-`LEARNBOX_AI_VOICE_DER=onyx` or `LEARNBOX_AI_VOICE_DAS` value set there would override the shipped
-roster and must be checked before media generation is enabled in that environment.
+This record itself changed no environment. **Update 2026-10-16:** the owner enabled Media AI in the
+Production Admin with this exact roster set explicitly (`der=sage`, `die=nova`, `das=fable`,
+default `nova`), image model `flux.2-pro`, audio model `eleven_multilingual_v2`, and
+`LEARNBOX_AI_AUDIO_OUTPUT_FORMAT` unset. Live state:
+[`ADMIN_PRODUCTION_STATUS.md`](../operations/ADMIN_PRODUCTION_STATUS.md). Any other environment
+must be checked for an older `LEARNBOX_AI_VOICE_DER=onyx` or missing DAS value before media
+generation is enabled there.
 
 The repository records `coral` with `eleven_flash_v2_5` for historical Start candidates and
 `alloy` with `gpt-4o-mini-tts` for an isolated repair attempt. Neither is qualification evidence
@@ -118,6 +122,34 @@ an owner-gated qualification question, not an assumption.
   voice, format checks, listening QA and recorded provenance.
 - All six content-review dimensions remain required before publication. Candidate generation,
   acceptance and publication remain separate actions; AI cannot publish.
+
+## Owner pack-content decisions (2026-10-16)
+
+These are binding for every new pack and are implemented by the shared card standard
+(`packages/content-models/src/card-standard.ts`) and the Admin media services in release `15e6783`.
+
+1. **Starter is the reference.** New cards keep the appearance, field set and layout of the 35
+   approved Starter cards. The card standard restates that shape; it does not invent a new one.
+2. **No Bobo in new images.** Newly generated card images never contain Bobo or any mascot, and
+   never contain text. A subject that names Bobo is refused before the provider is called. This
+   supersedes, for newly generated vocabulary images, the Bobo-presence guidance of
+   [PDR-003](./PDR-003-BOBO-VISUAL-VOCABULARY.md) and the matching sentence in `QUALITY_RULES.md`.
+   The five approved Starter images that show Bobo (`start-a1-familie`, `-freund`, `-freundin`,
+   `-mutter`, `-schwester`) are historical, stay valid, and are not regenerated.
+3. **Voices.** `der=sage`, `die=nova`, `das=fable`, default `nova`. The example-sentence audio uses
+   the same voice as the card's word audio.
+4. **Completeness and the human gate.** A card is complete only when its canonical text passes the
+   card standard and it has accepted, valid image, word audio and example audio. An incomplete card
+   may be saved as Draft. Submitting for review requires complete text; publishing additionally
+   requires the accepted, valid media. Generation never accepts;
+   acceptance never publishes; publication is an explicit human action per pack after all six review
+   dimensions. AI never publishes.
+5. **Starter is never changed automatically.** No generation, Repair, import or media run edits
+   the Starter pack, its 35 cards or its 105 media. A Starter correction (for example #427) is a new
+   reviewed card version under its own owner decision.
+6. **AvalAI cost is owned by the owner.** The product has no programmatic budget cap or spend
+   manager, and none is to be added. The UI shows the paid-call estimate before each paid action;
+   the owner manages the AvalAI credit. An agent makes no paid call without explicit owner approval.
 
 ## Explicit exclusions
 

@@ -4,17 +4,20 @@ Use this brief after `AGENTS.md` and `AI_BOOTSTRAP.md`. The canonical product st
 
 **This is the single provider-neutral entry point.** Hermes, Claude, Codex and any future agent start here to learn what is done, what is deployed, what is blocked, what is approved next and what it may actually do. It is a short index, not a second source of truth: every claim below links to the canonical document that owns it, and when the two disagree the canonical document wins.
 
-## State of the system (reviewed 2026-10-12)
+## State of the system (reviewed 2026-10-16)
 
-**Deployed and verified**
+**Start here for current Production and content work:** [`ADMIN_PRODUCTION_STATUS.md`](./ADMIN_PRODUCTION_STATUS.md) — running release, rollback, capabilities, the Admin workflow from title to publication, and collaboration rules. Product rules for new packs: [`PDR-010`](../product-decisions/PDR-010-ARTICLE-AWARE-AUDIO-AND-MEDIA-STANDARDS.md#owner-pack-content-decisions-2026-10-16).
 
-- **Learner PWA** is LIVE at `app.learnboxapp.com` from `fa44d21a`, image `sha256:65cd79695c1c…`, schema head `0034`. It is a **separate production surface from Admin and must remain untouched** by Admin or versioning work: do not rebuild, redeploy or restart it without its own owner authorization.
-- **Admin Web** is deployed from `079a94a7`, image `sha256:756abad30bc7…`, healthy, and **operator-verified**: real operator Passkey sign-in and re-authentication were exercised against Production.
-- **Admin Dashboard** is **activated and operator-verified** in Production (`LEARNBOX_ADMIN_DASHBOARD_ENABLED=true`, Admin service only). Its KPIs and charts were checked against real database aggregates; metrics with no data source render an explicit unavailable state rather than a fabricated number.
+**Deployed and verified (Iran Production host, 2026-10-16)**
+
+- Product source `15e6783` (PR #426). Learner App `sha256:87490d60…`, Admin `sha256:ba7cfcf5…`, both healthy, schema head `0038_card_media_completion`. Software rollback: App `175daeb8…`, Admin `6e77c2f7…` (image swap only; `0038` stays).
+- `main` is `93794c3` (PR #429): release tooling and docs only on top of the deployed source. Do not deploy to equalize SHAs.
+- Text AI and Media AI are on in the Admin only; Learner Profile Identity is on; payments are off; private Starter-media attachment is off and unrelated to new pack media.
+- Open: #427 (Starter editorial values), #428 (Starter pack id rejected by Admin routes), #430 (cause of the earlier lost Profile flag unproven; live symptom fixed). The ArvanCloud timeout risk for long Admin AI requests is unverified.
 
 **Not done, and not to be assumed**
 
-- **Payments are inactive.** Zarinpal credentials have never been supplied and payment activation is pending an owner decision. `LEARNBOX_ZARINPAL_ENABLED` is absent in Production; `store_listings = 0`, `purchase_events = 0`. Revenue and sales metrics are therefore `unavailable`, not zero-valued facts.
+- **Payments are inactive.** Zarinpal credentials have never been supplied and payment activation is pending an owner decision. `LEARNBOX_ZARINPAL_ENABLED` is absent in Production. Revenue and sales metrics are therefore `unavailable`, not zero-valued facts.
 - **Android development has not started.** `apps/mobile` holds no shipped product. No build, signing key, store listing or placeholder artifact exists, and none may be created without a separate owner decision.
 - **No component has a published release under the new tag scheme.** Admin and Android have never published any release at all.
 
@@ -28,26 +31,26 @@ The Learner PWA and the future Android app are two clients of **one** backend. T
 
 ## Versions
 
-| Product     | Version on `main` | Tag namespace    | Published releases                                                               |
-| ----------- | ----------------- | ---------------- | -------------------------------------------------------------------------------- |
-| Learner PWA | `1.2.1`           | `learner/vX.Y.Z` | `v1.0.0`, `v1.2.0`, `v1.2.1` (legacy repository-wide tags, preserved as history) |
-| Admin Web   | `0.1.0`           | `admin/vX.Y.Z`   | none — deployed is not released                                                  |
-| Android     | `0.1.0+1`         | `android/vX.Y.Z` | none — not started                                                               |
+| Product     | Version on `main` | Tag namespace    | Published releases                                                             |
+| ----------- | ----------------- | ---------------- | ------------------------------------------------------------------------------ |
+| Learner PWA | `1.2.2`           | `learner/vX.Y.Z` | `v1.0.0`–`v1.2.1` (legacy repository-wide tags, history); tag `learner/v1.2.2` |
+| Admin Web   | `0.1.0`           | `admin/vX.Y.Z`   | none — deployed is not released                                                |
+| Android     | `0.1.0+1`         | `android/vX.Y.Z` | none — not started                                                             |
 
 Each version comes from that product's own file and is shown in its own UI (Learner: bottom of the Profile screen; Admin: bottom of the RTL sidebar). `pnpm verify:version-sources` fails if a product can display another's version.
 
 ## Next permitted task
 
-Nothing in this brief authorizes new work. Before starting anything, read [`.ai/WORK_QUEUE.md`](../../.ai/WORK_QUEUE.md) for the authorized task and [`CURRENT_WORK.md`](../../CURRENT_WORK.md) for unmerged branches, and confirm no open PR already covers it. Work that is **explicitly not approved** right now: payment activation, Android implementation, Production deployment, tag creation, GitHub Release publication, and any change to the live Learner PWA.
+Nothing in this brief authorizes new work. Before starting anything, read [`.ai/WORK_QUEUE.md`](../../.ai/WORK_QUEUE.md) for the authorized task and [`CURRENT_WORK.md`](../../CURRENT_WORK.md) for unmerged branches, and confirm no open PR already covers it. Work that is **explicitly not approved** right now: payment activation, Android implementation, Production deployment or configuration change, Merge, tag creation, GitHub Release publication, any change to the live Learner PWA, Starter changes, and any paid AI call by an agent. Each needs its own explicit owner authorization; paid generation is done by the owner in the Admin UI.
 
-## Current Admin release handoff
+## Release rules
 
-Admin release preparation is complete on `main` at `4d077214d05e7dc363fbfc968c0d74c6d7b3ee15`; Production deployment remains owner-gated. Read [`ADMIN_RELEASE_HANDOFF.md`](./ADMIN_RELEASE_HANDOFF.md) before any Admin release, recovery, or Production task. It is an index to the canonical readiness and recovery records, not a deployment authorization.
+Release artifacts follow [`RELEASE_ARTIFACT_PREFLIGHT.md`](./RELEASE_ARTIFACT_PREFLIGHT.md): build from the exact pushed source SHA for `linux/amd64`, compare the public build-flag matrix against the running image, and stop on any missing or changed approved flag. Never bypass the preflight. Production steps (backup, migration, deploy, rollback) are in the Iran runbook on the open PR #423 branch (`docs/operations/IRAN_MIGRATION_RUNBOOK.md`; not yet on `main`). [`ADMIN_RELEASE_HANDOFF.md`](./ADMIN_RELEASE_HANDOFF.md) describes the earlier Admin release and is historical.
 
 ## Current product truth
 
 - LearnBox is an online-first German vocabulary Leitner product, not an offline-only app and not a prototype.
-- Web/PWA v1.0 targets 2026-10-12 with 35 complete A1 words; Android, premium packs and payment are v1.1+.
+- Web/PWA v1 is live with the 35-word A1 Starter pack; Android and payment are not active. New packs are built in the Admin and published only by a human.
 - Temporary connectivity loss is tolerated by a durable local queue and idempotent reconnect sync.
 - `learnboxapp.com` is an independent informational landing site and must not be coupled to learner, admin, API or private media.
 - Web is the current learner/iOS interim surface; Android is native; native iOS is a later App Store milestone.
