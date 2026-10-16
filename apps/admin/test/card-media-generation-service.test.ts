@@ -288,6 +288,7 @@ function createProvider(overrides: Partial<Record<'image' | 'speech', unknown>> 
     synthesizeSpeech: vi.fn(async (request: { text: string; voice: string }) => {
       calls.push({ text: request.text, voice: request.voice });
       if (overrides.speech instanceof Error) throw overrides.speech;
+      if (overrides.speech instanceof Promise) await overrides.speech;
       return {
         bytes: Buffer.from('ID3payload'),
         contentType: 'audio/mpeg' as const,
@@ -668,6 +669,42 @@ describe('guards', () => {
     });
     expect(second.status).toBe('already_generating');
     void inFlight;
+  });
+
+  it('records a lost-response generation durably and never resends its paid call', async () => {
+    let release!: () => void;
+    const providerWait = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const { service, provider } = createService(
+      { lemma: 'Tisch', article: 'der' },
+      { providerOverrides: { speech: providerWait } },
+    );
+    // Simulate the browser losing the response: it no longer awaits this request.
+    const sent = service.generate({ cardId: CARD_ID, kind: 'word_audio', actorUserId: ACTOR });
+    await vi.waitFor(() => expect(provider.synthesizeSpeech).toHaveBeenCalledTimes(1));
+
+    const whileInFlight = await service.getCardMediaState(CARD_ID);
+    expect(
+      whileInFlight.find((entry) => entry.kind === 'word_audio')?.latestCandidate?.status,
+    ).toBe('generating');
+    const duplicate = await service.generate({
+      cardId: CARD_ID,
+      kind: 'word_audio',
+      actorUserId: ACTOR,
+    });
+    expect(duplicate.status).toBe('already_generating');
+    expect(provider.synthesizeSpeech).toHaveBeenCalledTimes(1);
+
+    release();
+    expect((await sent).status).toBe('generated');
+    const retryAfterReconnect = await service.generate({
+      cardId: CARD_ID,
+      kind: 'word_audio',
+      actorUserId: ACTOR,
+    });
+    expect(retryAfterReconnect).toMatchObject({ status: 'not_needed', reason: 'ready_valid' });
+    expect(provider.synthesizeSpeech).toHaveBeenCalledTimes(1);
   });
 
   it('reports per-kind state for the workspace', async () => {

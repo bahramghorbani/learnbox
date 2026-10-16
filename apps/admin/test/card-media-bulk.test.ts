@@ -54,6 +54,41 @@ describe('whole-pack media completion', () => {
     expect(scan.unreadable).toEqual([{ cardId: 'c', label: 'das Ei' }]);
   });
 
+  it('does not start another paid request after its panel is closed mid-call', async () => {
+    let release!: () => void;
+    const first = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    let panelOpen = true;
+    const generate = vi
+      .fn()
+      .mockImplementationOnce(async () => {
+        await first;
+        return { ok: true };
+      })
+      .mockResolvedValue({ ok: true });
+    const results: PackMediaResult[] = [];
+    const running = runPackMedia(
+      [
+        { cardId: 'a', label: 'A', kind: 'image' },
+        { cardId: 'b', label: 'B', kind: 'image' },
+      ],
+      {
+        generate,
+        onResult: (result) => results.push(result),
+        shouldContinue: () => panelOpen,
+      },
+    );
+
+    await vi.waitFor(() => expect(generate).toHaveBeenCalledTimes(1));
+    panelOpen = false;
+    release();
+    await running;
+
+    expect(generate).toHaveBeenCalledTimes(1);
+    expect(results).toEqual([]);
+  });
+
   it('stops at the first failure, then resumes only the failed and untouched items', async () => {
     const items = [
       { cardId: 'a', label: 'A', kind: 'image' as const },

@@ -12,8 +12,9 @@ import type { CardMediaKind, MediaKindState } from './CardMediaPanel';
  *    must not turn into a string of paid attempts); the failed and not-yet-run items are then
  *    resumed on their own. Nothing is ever accepted automatically.
  *
- * ponytail: runs in the open Admin tab, one request in flight. Progress is durable because every
- * candidate is a database row; closing the tab stops the run and a new scan picks up exactly what
+ * ponytail: runs in the open Admin tab, one request in flight. Leaving the panel permits an
+ * already-sent request to finish at the server, but stops this runner before a further paid call.
+ * Progress is durable because every candidate is a database row; a new scan picks up exactly what
  * is still needed. Move to a server-side job if packs outgrow one sitting.
  */
 
@@ -80,17 +81,24 @@ export async function runPackMedia(
   {
     generate,
     onResult,
+    shouldContinue = () => true,
   }: {
     generate: (
       cardId: string,
       kind: CardMediaKind,
     ) => Promise<{ ok: boolean; status?: string; message?: string; code?: string }>;
     onResult: (result: PackMediaResult) => void;
+    /** Panel lifetime guard: never begin a second paid request after the panel was left. */
+    shouldContinue?: () => boolean;
   },
 ): Promise<void> {
   for (let index = 0; index < items.length; index += 1) {
+    if (!shouldContinue()) return;
     const item = items[index]!;
     const result = await generate(item.cardId, item.kind);
+    // An already-sent HTTP request may finish after unmount. Its durable server-side candidate is
+    // recovered by the next scan, but this tab must not continue to another paid request.
+    if (!shouldContinue()) return;
     if (result.ok) {
       const notNeeded = result.status === 'not_needed';
       onResult({

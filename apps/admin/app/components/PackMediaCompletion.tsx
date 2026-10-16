@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import {
   resumableItems,
@@ -59,6 +59,13 @@ export function PackMediaCompletion({
   const [scan, setScan] = useState<PackMediaScan>();
   const [planned, setPlanned] = useState<PackMediaItem[]>([]);
   const [results, setResults] = useState<PackMediaResult[]>([]);
+  const panelOpen = useRef(true);
+  useEffect(() => {
+    panelOpen.current = true;
+    return () => {
+      panelOpen.current = false;
+    };
+  }, []);
 
   async function rescan() {
     setBusy('scanning');
@@ -75,8 +82,12 @@ export function PackMediaCompletion({
     setResults([]);
     await runPackMedia(items, {
       generate,
-      onResult: (result) => setResults((current) => [...current, result]),
+      onResult: (result) => {
+        if (panelOpen.current) setResults((current) => [...current, result]);
+      },
+      shouldContinue: () => panelOpen.current,
     });
+    if (!panelOpen.current) return;
     setBusy(undefined);
     onFinished();
   }
@@ -101,6 +112,11 @@ export function PackMediaCompletion({
 
       {scan && !busy && results.length === 0 ? (
         <div data-pack-media="estimate">
+          <p>
+            ساخت ترتیبی فقط تا وقتی این صفحه باز است ادامه می‌یابد. اگر صفحه/بسته را ببندید یا پاسخ
+            شبکه قطع شود، «تأیید و ساخت» را دوباره نزنید: با بازگشت، «بررسی دوباره» وضعیت پایدارِ
+            مورد درحال‌ساخت یا پیشنهاد آماده را می‌خواند و آن را دوباره تولید نمی‌کند.
+          </p>
           {scan.needed.length > 0 ? (
             <>
               <p>
