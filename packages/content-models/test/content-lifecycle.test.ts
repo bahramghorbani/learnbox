@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  type CardMediaReadiness,
   type CardPublishCandidate,
   type ContentStatus,
   type WordCardDraft,
@@ -28,9 +29,23 @@ function card(overrides: Partial<WordCardDraft> = {}): WordCardDraft {
     examples: [{ german: 'Der Apfel ist rot.', persian: 'سیب سرخ است.' }],
     media: [],
     source: { provider: 'editorial', reference: 'learnbox-start' },
+    // Shared card standard: a releasable card is also complete (IPA, inflection, definition, note).
+    ...({
+      pronunciation: { ipa: 'ˈapfəl', locale: 'de-DE' },
+      essentialInflection: 'die Äpfel',
+      simpleGermanDefinition: 'Eine runde Frucht.',
+      grammarNote: 'اسم مذکر؛ جمع با تغییر واکه.',
+      imagePrompt: 'One red apple, large and centered.',
+    } as Partial<WordCardDraft>),
     ...overrides,
   };
 }
+
+const VALID_MEDIA: CardMediaReadiness[] = [
+  { kind: 'image', state: 'valid', source: 'admin_candidate' },
+  { kind: 'word_audio', state: 'valid', source: 'admin_candidate' },
+  { kind: 'sentence_audio', state: 'valid', source: 'admin_candidate' },
+];
 
 function candidate(overrides: Partial<CardPublishCandidate> = {}): CardPublishCandidate {
   const content = overrides.content ?? card();
@@ -39,6 +54,7 @@ function candidate(overrides: Partial<CardPublishCandidate> = {}): CardPublishCa
     contentId: content.id,
     lemma: content.lemma,
     status: content.status,
+    media: VALID_MEDIA,
     ...overrides,
     content,
   };
@@ -161,6 +177,30 @@ describe('card publish readiness', () => {
     });
     expect(evaluateCardPublishReadiness(candidate({ content }))).toBeNull();
     expect(content.source.provider).toBe('ai_suggestion');
+  });
+
+  it('blocks an approved card that misses IPA, as an incomplete card', () => {
+    const blocker = evaluateCardPublishReadiness(
+      candidate({ content: card({ pronunciation: { locale: 'de-DE' } } as Partial<WordCardDraft>) }),
+    );
+    expect(blocker?.code).toBe('incomplete_content');
+    expect(blocker?.issues.map((issue) => issue.field)).toContain('pronunciation.ipa');
+  });
+
+  it('blocks a complete card whose media is missing, stale or unaccepted', () => {
+    for (const state of ['missing', 'stale', 'unverifiable', 'pending_acceptance'] as const) {
+      const blocker = evaluateCardPublishReadiness(
+        candidate({ media: [...VALID_MEDIA.slice(0, 2), { kind: 'sentence_audio', state }] }),
+      );
+      expect(blocker?.code).toBe('media_not_ready');
+      expect(blocker?.issues.map((issue) => issue.field)).toEqual(['media.sentence_audio']);
+    }
+  });
+
+  it('never passes when media readiness was not resolved by the server', () => {
+    const blocker = evaluateCardPublishReadiness(candidate({ media: undefined }));
+    expect(blocker?.code).toBe('media_not_ready');
+    expect(blocker?.issues).toHaveLength(3);
   });
 
   it('keeps the AI publish rule unsatisfiable by whitespace', () => {

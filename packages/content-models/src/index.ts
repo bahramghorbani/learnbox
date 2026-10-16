@@ -1,3 +1,5 @@
+import { readCardMediaReferences } from './card-standard.js';
+
 export type CefrLevel = 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
 export type ContentStatus =
   | 'draft'
@@ -137,13 +139,20 @@ export function validateWordCard(card: WordCardDraft): ContentValidationIssue[] 
   if (card.examples.some((example) => !example.german.trim() || !example.persian.trim())) {
     issues.push({ field: 'examples', message: 'مثال باید آلمانی و ترجمهٔ فارسی داشته باشد.' });
   }
+  // Persisted media is read through the one shared reader: the Starter array and kind-map shapes,
+  // the bundled-file and pinned-candidate references are all understood, and a malformed entry is
+  // a clear, fixable issue instead of a crash.
+  const media = readCardMediaReferences(card.media);
+  issues.push(...media.issues.map(({ field, message }) => ({ field, message })));
   const assetIds = new Set<string>();
-  for (const asset of card.media) {
-    if (!asset.assetId.trim() || !asset.url.startsWith('https://')) {
-      issues.push({ field: 'media', message: 'رسانه باید شناسه و نشانی HTTPS داشته باشد.' });
-    }
-    if (!Number.isInteger(asset.version) || asset.version < 1) {
-      issues.push({ field: 'media.version', message: 'نسخهٔ رسانه باید عدد صحیحِ مثبت باشد.' });
+  for (const asset of media.references) {
+    if (asset.source === 'url') {
+      if (!asset.url.startsWith('https://')) {
+        issues.push({ field: 'media', message: 'رسانه باید شناسه و نشانی HTTPS داشته باشد.' });
+      }
+      if (!Number.isInteger(asset.version) || asset.version < 1) {
+        issues.push({ field: 'media.version', message: 'نسخهٔ رسانه باید عدد صحیحِ مثبت باشد.' });
+      }
     }
     if (assetIds.has(asset.assetId)) {
       issues.push({ field: 'media', message: 'شناسهٔ رسانه نباید تکراری باشد.' });
@@ -152,7 +161,7 @@ export function validateWordCard(card: WordCardDraft): ContentValidationIssue[] 
   }
   if (
     card.status === 'published' &&
-    card.media.some((asset) => asset.qualityStatus !== 'approved')
+    media.references.some((asset) => asset.source === 'url' && asset.qualityStatus !== 'approved')
   ) {
     issues.push({
       field: 'media.qualityStatus',
@@ -202,7 +211,7 @@ export function validateLearningVocabularyItem(
 }
 
 /**
- * A media QA pass enforces the approved Bobo vocabulary policy before a card can be released.
+ * A media QA pass enforces the approved vocabulary-image policy (no Bobo) before release.
  * It is intentionally provider-free and only validates recorded reviewer observations.
  */
 export function validateVocabularyMediaQa(qa: VocabularyMediaQa): ContentValidationIssue[] {
@@ -220,14 +229,12 @@ export function validateVocabularyMediaQa(qa: VocabularyMediaQa): ContentValidat
       message: 'تصویر نباید متن، واترمارک یا شلوغی غیرضروری داشته باشد.',
     });
   }
-  if (
-    visual.boboRole !== 'absent' &&
-    (visual.boboCanonicalVersion !== '1.0.0' ||
-      (visual.semanticRole !== 'action_or_emotion' && visual.boboRole === 'primary'))
-  ) {
+  // Owner decision 2026-10-16 (PDR-010): Bobo appears in no educational card image, for any part
+  // of speech. The earlier allowance for actions and emotions is superseded.
+  if (visual.boboRole !== 'absent') {
     issues.push({
       field: 'mediaQa.visual.bobo',
-      message: 'بوبو باید نسخهٔ رسمی باشد و در اسم‌ها و مکان‌ها موضوع اصلی تصویر نباشد.',
+      message: 'بوبو نباید در تصویر آموزشی کارت حضور داشته باشد.',
     });
   }
   if (!audio.wordAudioVerified || !audio.sentenceAudioVerified || !audio.noTruncationOrDistortion) {
@@ -282,6 +289,7 @@ export function transitionContentReview(
 }
 
 export * from './card-media-generation.js';
+export * from './card-standard.js';
 export * from './content-lifecycle.js';
 export * from './content-pack-release.js';
 export * from './launch-experience.js';

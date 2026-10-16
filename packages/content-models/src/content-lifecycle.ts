@@ -4,6 +4,11 @@ import {
   type WordCardDraft,
   validateWordCard,
 } from './index.js';
+import {
+  type CardMediaReadiness,
+  evaluateCardCompleteness,
+  mediaReadinessIssues,
+} from './card-standard.js';
 
 /**
  * Canonical LearnBox content lifecycle rules (M1.6).
@@ -87,7 +92,11 @@ export type CardPublishBlockerCode =
   /** Approved, but the persisted content fails the published-card contract. */
   | 'invalid_content'
   /** AI-sourced content with no recorded human reviewer. */
-  | 'unreviewed_ai_content';
+  | 'unreviewed_ai_content'
+  /** The shared card standard reports text gaps (missing IPA, example, inflection, ...). */
+  | 'incomplete_content'
+  /** An image, word audio or sentence audio is missing, unaccepted, or no longer matches the text. */
+  | 'media_not_ready';
 
 export interface CardPublishBlocker {
   cardVersionId: string;
@@ -104,6 +113,13 @@ export interface CardPublishCandidate {
   lemma: string;
   status: ContentStatus;
   content: WordCardDraft;
+  /**
+   * Media readiness resolved by the server from the media's real source (accepted Admin candidates
+   * or the bundled Starter manifest). Absent means "not checked", which never passes.
+   */
+  media?: readonly CardMediaReadiness[];
+  /** The curated visual-contract brief, when one exists; it is the effective image subject. */
+  imageBrief?: string | null;
 }
 
 /**
@@ -126,14 +142,43 @@ export function evaluateCardPublishReadiness(
   }
 
   const issues = validateWordCard({ ...candidate.content, status: 'published' });
-  if (issues.length === 0) return null;
+  const completeness = evaluateCardCompleteness(
+    candidate.content as unknown as Record<string, unknown>,
+    { imageBrief: candidate.imageBrief },
+  );
+  const media = mediaReadinessIssues(candidate.media ?? []);
+  if (issues.length === 0 && completeness.length === 0 && media.length === 0) return null;
 
   const unreviewedAi = issues.some((issue) => issue.field === 'source');
+  const code: CardPublishBlockerCode = unreviewedAi
+    ? 'unreviewed_ai_content'
+    : issues.length > 0
+      ? 'invalid_content'
+      : completeness.length > 0
+        ? 'incomplete_content'
+        : 'media_not_ready';
   return {
     ...base,
-    code: unreviewedAi ? 'unreviewed_ai_content' : 'invalid_content',
-    issues,
+    code,
+    issues: [
+      ...issues,
+      ...[...completeness, ...media].map(({ field, message }) => ({ field, message })),
+    ],
   };
+}
+
+/**
+ * Whether a card may be declared ready (submitted for human review). Only text completeness is
+ * required here; media is required at publish, after the reviewer has checked it.
+ */
+export function evaluateCardSubmitReadiness(
+  content: Record<string, unknown>,
+  options: { imageBrief?: string | null } = {},
+): ContentValidationIssue[] {
+  return evaluateCardCompleteness(content, options).map(({ field, message }) => ({
+    field,
+    message,
+  }));
 }
 
 export type PackPublishBlockerCode =
