@@ -75,8 +75,24 @@ ENV PORT=3000
 # --build-arg APP_SOURCE_SHA=<full sha> and recorded both as a standard OCI label and as a runtime
 # environment variable, so `docker image inspect` and the running container agree on one answer.
 ARG APP_SOURCE_SHA=unknown
+# Repeat client build arguments in the runner stage so their public values can be recorded as labels.
+# They remain build-time only; runtime env cannot change the compiled Next.js client.
+ARG NEXT_PUBLIC_LEARNBOX_PROFILE_IDENTITY_ENABLED
+ARG NEXT_PUBLIC_LEARNBOX_QUEUE_QUARANTINE
+ARG NEXT_PUBLIC_LEARNBOX_SERVER_SESSION_PLAN
+ARG NEXT_PUBLIC_LEARNBOX_GOAL_UX_REMOVED
+ARG NEXT_PUBLIC_LEARNBOX_SESSION_EXPIRY_UX
+ARG NEXT_PUBLIC_LEARNBOX_BINARY_REVIEW_UI
 LABEL org.opencontainers.image.revision="${APP_SOURCE_SHA}"
 LABEL org.opencontainers.image.title="learnbox-app"
+# Public build-time configuration is artifact identity. Keep it inspectable for the next release's
+# preflight diff; no secret or runtime configuration belongs in these labels.
+LABEL io.learnbox.release.profile_identity="${NEXT_PUBLIC_LEARNBOX_PROFILE_IDENTITY_ENABLED}"
+LABEL io.learnbox.release.queue_quarantine="${NEXT_PUBLIC_LEARNBOX_QUEUE_QUARANTINE}"
+LABEL io.learnbox.release.server_session_plan="${NEXT_PUBLIC_LEARNBOX_SERVER_SESSION_PLAN}"
+LABEL io.learnbox.release.goal_ux_removed="${NEXT_PUBLIC_LEARNBOX_GOAL_UX_REMOVED}"
+LABEL io.learnbox.release.session_expiry_ux="${NEXT_PUBLIC_LEARNBOX_SESSION_EXPIRY_UX}"
+LABEL io.learnbox.release.binary_review_ui="${NEXT_PUBLIC_LEARNBOX_BINARY_REVIEW_UI}"
 ENV APP_SOURCE_SHA=${APP_SOURCE_SHA}
 
 RUN groupadd --system --gid 1001 nodejs \
