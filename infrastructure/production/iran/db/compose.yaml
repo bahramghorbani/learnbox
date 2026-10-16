@@ -1,0 +1,70 @@
+name: learnbox-db
+
+# Self-hosted LearnBox PostgreSQL (Iran host). No published port: reachable only from containers
+# attached to the internal `learnbox-db` network, over TLS (apps pin sslmode=verify-full).
+services:
+  postgres:
+    image: postgres:17-alpine@sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24
+    restart: unless-stopped
+    env_file: /home/ubuntu/learnbox/secrets/db-superuser.env
+    command:
+      - postgres
+      - -c
+      - hba_file=/etc/postgresql/pg_hba.conf
+      - -c
+      - ssl=on
+      - -c
+      - ssl_cert_file=/run/db-tls/server.crt
+      - -c
+      - ssl_key_file=/run/db-tls/server.key
+      - -c
+      - ssl_min_protocol_version=TLSv1.2
+      - -c
+      - password_encryption=scram-sha-256
+      - -c
+      - max_connections=60
+      - -c
+      - shared_buffers=768MB
+      - -c
+      - effective_cache_size=2GB
+      - -c
+      - work_mem=8MB
+      - -c
+      - maintenance_work_mem=128MB
+      - -c
+      - max_wal_size=1GB
+      - -c
+      - log_connections=on
+      - -c
+      - log_min_duration_statement=1000
+      - -c
+      - timezone=UTC
+    shm_size: 256m
+    mem_limit: 3g
+    cpus: 2
+    pids_limit: 512
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./pg_hba.conf:/etc/postgresql/pg_hba.conf:ro
+      - /home/ubuntu/learnbox/db-tls/server.crt:/run/db-tls/server.crt:ro
+      - /home/ubuntu/learnbox/db-tls/server.key:/run/db-tls/server.key:ro
+    networks:
+      db:
+        aliases: [learnbox-db]
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -h 127.0.0.1 -U postgres -d postgres']
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+
+volumes:
+  pgdata:
+    name: learnbox-db-data
+
+networks:
+  db:
+    name: learnbox-db
+    internal: true

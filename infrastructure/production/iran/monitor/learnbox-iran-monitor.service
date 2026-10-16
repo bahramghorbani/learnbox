@@ -1,0 +1,9 @@
+[Unit]
+Description=LearnBox Iran monitor (uptime + backup freshness -> Healthchecks.io)
+After=docker.service network-online.target
+
+[Service]
+Type=oneshot
+User=ubuntu
+ExecStart=/home/ubuntu/learnbox/ops/learnbox-iran-monitor.sh
+NoNewPrivileges=true

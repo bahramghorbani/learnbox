@@ -1,0 +1,35 @@
+[Unit]
+Description=LearnBox encrypted offsite replication (copy-only, Dropbox App Folder)
+Documentation=file:/home/ubuntu/learnbox/offsite/docs/OFFSITE_BACKUP_RUNBOOK.md
+After=network-online.target docker.service learnbox-backup.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/learnbox/offsite
+Environment=HOME=/home/ubuntu
+Environment=XDG_CONFIG_HOME=/tmp
+ExecStart=/usr/bin/flock -n /home/ubuntu/learnbox/offsite/state/offsite.lock /usr/bin/python3 /home/ubuntu/learnbox/offsite/scripts/learnbox-offsite-sync.py --run --automated
+TimeoutStartSec=1800
+
+Nice=15
+CPUQuota=20%
+CPUWeight=20
+IOSchedulingClass=idle
+IOWeight=10
+MemoryMax=384M
+TasksMax=48
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+
+StandardOutput=journal
+StandardError=journal

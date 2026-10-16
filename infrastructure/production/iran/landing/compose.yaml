@@ -1,0 +1,52 @@
+name: learnbox-production
+
+# Iran host. Same services as Germany; landing runs the transferred image (ID verified at deploy).
+# CUTOVER: public bind (generated from compose.yaml).
+services:
+  landing:
+    image: learnbox-landing:0a36cce8a0a2-phase1
+    restart: unless-stopped
+    init: true
+    environment:
+      NODE_ENV: production
+      HOSTNAME: 0.0.0.0
+      PORT: 3000
+    volumes:
+      # TEMPORARY Enamad title (41346530), copied from the patched Germany container.
+      - ./enamad/index.html:/app/apps/learnbox-website/.next/server/app/index.html:ro
+      - ./enamad/index.rsc:/app/apps/learnbox-website/.next/server/app/index.rsc:ro
+    mem_limit: 512m
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    networks:
+      - edge
+
+  caddy:
+    image: caddy:2-alpine@sha256:5f5c8640aae01df9654968d946d8f1a56c497f1dd5c5cda4cf95ab7c14d58648
+    restart: unless-stopped
+    depends_on:
+      landing:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    mem_limit: 256m
+    networks:
+      - edge
+
+networks:
+  edge:
+    name: learnbox-edge
+
+volumes:
+  caddy_data:
+  caddy_config:
