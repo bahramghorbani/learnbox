@@ -1609,6 +1609,40 @@ describe('automatic repair of cards the canonical validator rejects', () => {
     expect(analyzed.analysis.rows[0]!.classification).toBe('invalid');
   });
 
+  it('sends a card standard gap (missing IPA) through the same bounded repair, then leaves it unresolved', async () => {
+    const harness = makeHarness({
+      models: MODELS,
+      limits: { maxRepairRounds: 1 },
+      replies: [
+        planReply(),
+        JSON.stringify({
+          cards: lemmas.map((lemma, index) =>
+            index === 0 ? card({ lemma, pronunciation_ipa: '' }) : card({ lemma }),
+          ),
+        }),
+        clean([1, 2, 3]),
+        // Repair returns the card still without IPA.
+        JSON.stringify({
+          cards: [{ index: 0, card: card({ lemma: 'Hörsaal', pronunciation_ipa: '' }) }],
+        }),
+      ],
+    });
+    const jobId = await generate(harness);
+    const [, , firstReview, repair] = harness.completeCalls;
+    expect(firstReview!.user).not.toContain('"index":0');
+    expect(repair!.user).toContain('"index":0');
+    expect(harness.completeCalls).toHaveLength(4);
+    const analyzed = await harness.service.analyzeJob({ jobId, actorUserId: ACTOR });
+    if (analyzed.status !== 'ok') throw new Error('analysis failed');
+    const review = analyzed.reviews[1]!;
+    expect(review).toMatchObject({ state: 'unresolved', repairRounds: 1 });
+    expect(review.findings).toEqual([
+      expect.objectContaining({ field: 'pronunciation.ipa', source: 'validator' }),
+    ]);
+    // Shown to the editor, never declared ready.
+    expect(analyzed.quality.ready).toBe(3);
+  });
+
   it('binds each accepted review to the draft version it became, for the review queue', async () => {
     const harness = makeHarness({
       models: MODELS,

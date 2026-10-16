@@ -251,6 +251,20 @@ async function postAiJson<T>(
  * idempotency key, exactly like the content-review workspace. Server status codes map to the
  * outcomes the forms render, so no mutation can report success it did not get.
  */
+type IncompleteCardPayload = { lemma: string; issues: { message: string }[] };
+
+/** Names every card kept as a draft and why, so the editor can fix it (owner rule 2026-10-16). */
+function incompleteCardsMessage(cards: IncompleteCardPayload[], partlySubmitted: boolean): string {
+  const lines = cards.map(
+    (card) => `${card.lemma}: ${card.issues.map((issue) => issue.message).join('؛ ')}`,
+  );
+  return `${
+    partlySubmitted
+      ? 'کارت‌های کامل برای بررسی ارسال شد؛ این کارت‌ها ناقص‌اند و پیش‌نویس ماندند —'
+      : 'هیچ کارتی ارسال نشد؛ این کارت‌ها ناقص‌اند و پیش‌نویس ماندند —'
+  } ${lines.join(' | ')}`;
+}
+
 async function sendMutation(
   path: string,
   method: 'POST' | 'PATCH',
@@ -271,7 +285,17 @@ async function sendMutation(
       },
       body: JSON.stringify(body),
     });
-    if (response.ok) return { ok: true };
+    if (response.ok) {
+      // Submit-for-review keeps incomplete cards as drafts and names them; say so instead of a
+      // plain success, so a partially submitted pack is never read as fully ready.
+      const payload = (await response.json().catch(() => undefined)) as
+        | { incompleteCards?: IncompleteCardPayload[] }
+        | undefined;
+      const incomplete = payload?.incompleteCards ?? [];
+      return incomplete.length > 0
+        ? { ok: true, message: incompleteCardsMessage(incomplete, true) }
+        : { ok: true };
+    }
     if (response.status === 401) {
       return { ok: false, message: 'نشست معتبر نیست؛ دوباره وارد شوید.' };
     }
@@ -292,7 +316,10 @@ async function sendMutation(
     }
     if (response.status === 409) {
       const payload = (await response.json().catch(() => undefined)) as
-        { reason?: string } | undefined;
+        { reason?: string; code?: string; incompleteCards?: IncompleteCardPayload[] } | undefined;
+      if (payload?.code === 'incomplete_content') {
+        return { ok: false, message: incompleteCardsMessage(payload.incompleteCards ?? [], false) };
+      }
       return {
         ok: false,
         message:

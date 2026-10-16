@@ -172,7 +172,19 @@ function submitResponse(result: SubmitForReviewResult) {
         status: 'applied',
         submittedCardCount: result.submittedCardCount,
         packStatus: result.packStatus,
+        incompleteCards: result.incompleteCards,
       });
+    case 'incomplete':
+      // Nothing moved: every submittable card fails the card standard. The issues are returned so
+      // the editor can fix them; the cards stay drafts.
+      return json(
+        {
+          code: 'incomplete_content',
+          packStatus: result.packStatus,
+          incompleteCards: result.incompleteCards,
+        },
+        { status: 409 },
+      );
     case 'idempotent':
       return json({ status: 'idempotent', packStatus: result.packStatus });
     case 'nothing_to_submit':

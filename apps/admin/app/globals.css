@@ -1593,6 +1593,9 @@ button {
   background: var(--rose-soft);
   border-color: #ffd5dc;
 }
+.cp-workspace .notice.amber {
+  background: var(--amber-soft);
+}
 .cp-workspace .page-head {
   display: flex;
   align-items: flex-start;

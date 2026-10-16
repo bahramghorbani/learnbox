@@ -21,7 +21,9 @@ export { CpModal };
 
 export type FieldIssue = { field: string; message: string };
 
-export type SubmitOutcome = { ok: true } | { ok: false; message?: string; issues?: FieldIssue[] };
+export type SubmitOutcome =
+  | { ok: true; message?: string }
+  | { ok: false; message?: string; issues?: FieldIssue[] };
 
 function issueFor(issues: FieldIssue[], field: string): string | undefined {
   return issues.find((issue) => issue.field === field)?.message;
