@@ -271,6 +271,7 @@ export type CardMediaReference =
       kind: CardMediaKind;
       assetId: string;
       candidateId: string;
+      objectKey: string;
       checksum: string;
       mediaType: string;
       qualityStatus: 'approved';
@@ -286,6 +287,10 @@ export interface CardMediaReadResult {
 const BUNDLED_PATHNAME =
   /^learnbox-start\/[a-z0-9-]+\/(image|word_audio|sentence_audio)\/v[0-9]+\.(jpg|png|mp3)$/;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+/** Same shape `card_media_candidates.object_key` is constrained to (migration 0025). */
+const ADMIN_OBJECT_KEY =
+  /^admin\/card-media\/[a-z0-9-]{1,128}\/(image|word_audio|sentence_audio)\/[0-9a-f-]{36}\.(png|jpg|mp3)$/;
+const PINNED_MEDIA_TYPES = new Set(['image/png', 'image/jpeg', 'audio/mpeg']);
 const SHA256 = /^[a-f0-9]{64}$/;
 
 function isMediaKind(value: unknown): value is CardMediaKind {
@@ -304,10 +309,14 @@ function readOne(entry: unknown, position: string): CardMediaReference | CardRea
   const assetId = text(record.assetId);
   if (!isMediaKind(kind) || !assetId) return invalid;
   if (typeof record.candidateId === 'string') {
+    const objectKey = text(record.objectKey);
+    const keyMatch = ADMIN_OBJECT_KEY.exec(objectKey);
     if (
       !UUID.test(record.candidateId) ||
+      !keyMatch ||
+      keyMatch[1] !== kind ||
       !SHA256.test(text(record.checksum)) ||
-      !text(record.mediaType) ||
+      !PINNED_MEDIA_TYPES.has(text(record.mediaType)) ||
       record.qualityStatus !== 'approved'
     ) {
       return invalid;
@@ -317,6 +326,7 @@ function readOne(entry: unknown, position: string): CardMediaReference | CardRea
       kind,
       assetId,
       candidateId: record.candidateId,
+      objectKey,
       checksum: text(record.checksum),
       mediaType: text(record.mediaType),
       qualityStatus: 'approved',
@@ -514,4 +524,49 @@ export function mediaReadinessIssues(media: readonly CardMediaReadiness[]): Card
     );
   }
   return issues;
+}
+
+/** A pinned reference to an accepted Admin candidate, written into a published version. */
+export interface PinnedCardMedia {
+  kind: CardMediaKind;
+  assetId: string;
+  candidateId: string;
+  objectKey: string;
+  checksum: string;
+  mediaType: string;
+  qualityStatus: 'approved';
+}
+
+/**
+ * Replaces the references of the pinned kinds and keeps every other reference verbatim, in the
+ * persisted container shape (array or kind-keyed map), so Starter data is never reshaped.
+ */
+export function pinCardMedia(media: unknown, pins: readonly PinnedCardMedia[]): unknown {
+  if (pins.length === 0) return media;
+  const kinds = new Set(pins.map((pin) => pin.kind));
+  if (media && typeof media === 'object' && !Array.isArray(media)) {
+    const next: Record<string, unknown> = { ...(media as Record<string, unknown>) };
+    for (const pin of pins) next[pin.kind] = { ...pin };
+    return next;
+  }
+  const kept = Array.isArray(media)
+    ? media.filter(
+        (entry) =>
+          !(entry && typeof entry === 'object' && kinds.has((entry as { kind?: CardMediaKind }).kind!)),
+      )
+    : [];
+  return [...kept, ...pins.map((pin) => ({ ...pin }))];
+}
+
+/** Two contents need the same medium when that medium's expected inputs are identical. */
+export function sameMediaInputs(
+  kind: CardMediaKind,
+  current: CardStandardContent,
+  previous: CardStandardContent,
+  options: { imageBrief?: string | null } = {},
+): boolean {
+  const a = expectedCardMedia(current, options)[kind];
+  const b = expectedCardMedia(previous, options)[kind];
+  if ('error' in a || 'error' in b) return false;
+  return JSON.stringify(a) === JSON.stringify(b);
 }

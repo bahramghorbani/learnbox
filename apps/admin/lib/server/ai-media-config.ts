@@ -120,6 +120,21 @@ function voice(raw: string | undefined, fallback: string): string {
 }
 
 /**
+ * The effective article-voice mapping, with the same `LEARNBOX_AI_VOICE_*` overrides generation
+ * uses. Publish readiness needs it even while Media AI is disabled, to judge accepted audio.
+ */
+export function readGermanVoiceMapping(
+  environment: Record<string, string | undefined>,
+): GermanVoiceMapping {
+  return {
+    der: voice(environment.LEARNBOX_AI_VOICE_DER, DEFAULT_GERMAN_VOICE_MAPPING.der),
+    die: voice(environment.LEARNBOX_AI_VOICE_DIE, DEFAULT_GERMAN_VOICE_MAPPING.die),
+    das: voice(environment.LEARNBOX_AI_VOICE_DAS, DEFAULT_GERMAN_VOICE_MAPPING.das ?? ''),
+    default: voice(environment.LEARNBOX_AI_VOICE_DEFAULT, DEFAULT_GERMAN_VOICE_MAPPING.default),
+  };
+}
+
+/**
  * Resolves the media provider from the environment.
  *
  * Returns `provider_not_configured` rather than throwing when the credential is absent, so a route
@@ -153,12 +168,7 @@ export function readAiMediaConfig(environment: Record<string, string | undefined
       // Unset by default: the native format is only requested once AvalAI support is qualified.
       environment.LEARNBOX_AI_AUDIO_OUTPUT_FORMAT?.trim() || undefined,
     ),
-    voices: {
-      der: voice(environment.LEARNBOX_AI_VOICE_DER, DEFAULT_GERMAN_VOICE_MAPPING.der),
-      die: voice(environment.LEARNBOX_AI_VOICE_DIE, DEFAULT_GERMAN_VOICE_MAPPING.die),
-      das: voice(environment.LEARNBOX_AI_VOICE_DAS, DEFAULT_GERMAN_VOICE_MAPPING.das ?? ''),
-      default: voice(environment.LEARNBOX_AI_VOICE_DEFAULT, DEFAULT_GERMAN_VOICE_MAPPING.default),
-    },
+    voices: readGermanVoiceMapping(environment),
     limits,
   };
 }

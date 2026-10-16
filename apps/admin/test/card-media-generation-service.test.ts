@@ -689,7 +689,7 @@ describe('guards', () => {
 
 
 /** A minimal MPEG-1 Layer III frame header: 44.1 kHz, 128 kbps, mono. */
-function mp3Bytes(): Buffer {
+function mp3Bytes() {
   const frame = Buffer.alloc(64);
   frame.set([0xff, 0xfb, 0x90, 0xc4]);
   return frame;
@@ -818,14 +818,14 @@ describe('media is generated only when actually needed (owner rule 2026-10-16)',
 
   it('records the measured MP3 format, not the requested one', async () => {
     const { service, provider } = createService(card());
-    provider.synthesizeSpeech.mockImplementationOnce(async (request: { voice: string }) => ({
+    provider.synthesizeSpeech.mockImplementationOnce((async (request: { voice: string }) => ({
       bytes: mp3Bytes(),
       contentType: 'audio/mpeg' as const,
       model: 'eleven_multilingual_v2',
       provider: 'avalai.ir',
       voice: request.voice,
       format: { sampleRateHz: 44100, bitrateKbps: 128, channels: 1 as const, variableBitrate: false },
-    }));
+    })) as never);
     const generated = await service.generate({ cardId: CARD_ID, kind: 'word_audio', actorUserId: ACTOR });
     if (generated.status !== 'generated') throw new Error('expected generation');
     expect(generated.candidate.audioFormat).toEqual({ sampleRateHz: 44100, bitrateKbps: 128, channels: 1 });
