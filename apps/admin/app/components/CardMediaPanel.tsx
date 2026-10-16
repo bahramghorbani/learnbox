@@ -2,6 +2,8 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
+import { StepUpRefusedError } from './step-up-reauth';
+
 /**
  * Phase 1 / Milestone 1.5 — per-card media operations.
  *
@@ -159,7 +161,13 @@ export function CardMediaPanel(props: CardMediaPanelProps) {
   const [loadFailed, setLoadFailed] = useState(false);
 
   const refresh = useCallback(async () => {
-    const next = await props.onLoadState();
+    let next: MediaKindState[] | undefined;
+    try {
+      next = await props.onLoadState();
+    } catch (failure) {
+      if (failure instanceof StepUpRefusedError) setError(failure.message);
+      next = undefined;
+    }
     if (!next) {
       setLoadFailed(true);
       return;

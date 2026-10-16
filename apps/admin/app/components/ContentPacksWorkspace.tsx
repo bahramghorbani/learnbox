@@ -7,7 +7,12 @@ import {
   type ImportAnalysis,
   type ImportResultSummary,
 } from './ContentImportModal';
-import { fetchWithStepUp, stepUpMessage } from './step-up-reauth';
+import {
+  fetchWithStepUp,
+  stepUpMessage,
+  stepUpRefusal,
+  StepUpRefusedError,
+} from './step-up-reauth';
 import {
   AiPackGenerationModal,
   type AcceptSummary,
@@ -36,6 +41,19 @@ import {
 
 import { AdminSidebar } from './AdminSidebar';
 import { PackMediaCompletion } from './PackMediaCompletion';
+
+// Media state sits behind the same recent-auth guard as every media route: a 428 re-authenticates
+// in place. A refused step-up throws, so a pack scan stops instead of prompting once per card.
+export async function loadMediaState(cardId: string) {
+  const { response, stepUp } = await fetchWithStepUp(
+    `/api/content/media/state?cardId=${encodeURIComponent(cardId)}`,
+    { credentials: 'same-origin', headers: { accept: 'application/json' } },
+  );
+  const refusal = stepUpRefusal(stepUp, response.status);
+  if (refusal) throw new StepUpRefusedError(refusal);
+  if (!response.ok) return undefined;
+  return ((await response.json()) as { media?: MediaKindState[] }).media;
+}
 
 /**
  * Phase 1 / Milestone 1.1 — Content & Packs workspace.
@@ -658,15 +676,6 @@ export function ContentPacksWorkspace() {
     return outcome;
   }
 
-  async function loadMediaState(cardId: string) {
-    const response = await fetch(`/api/content/media/state?cardId=${encodeURIComponent(cardId)}`, {
-      credentials: 'same-origin',
-      headers: { accept: 'application/json' },
-    });
-    if (!response.ok) return undefined;
-    return ((await response.json()) as { media?: MediaKindState[] }).media;
-  }
-
   async function generatePackMedia(cardId: string, kind: CardMediaKind) {
     const result = await postAiJson<{ status?: string }>('/api/content/media/generate', {
       cardId,
@@ -1183,19 +1192,7 @@ export function ContentPacksWorkspace() {
             // Accepted media changes the canonical read model, so refresh the card table.
             void loadPacks();
           }}
-          onLoadState={async () => {
-            try {
-              const response = await fetch(
-                `/api/content/media/state?cardId=${encodeURIComponent(mediaCard.cardId)}`,
-                { credentials: 'same-origin', headers: { accept: 'application/json' } },
-              );
-              if (!response.ok) return undefined;
-              const payload = (await response.json()) as { media?: MediaKindState[] };
-              return payload.media;
-            } catch {
-              return undefined;
-            }
-          }}
+          onLoadState={() => loadMediaState(mediaCard.cardId)}
           onGenerate={async (kind: CardMediaKind, regenerate: boolean) => {
             const result = await postAiJson<{ candidate: MediaCandidateView }>(
               '/api/content/media/generate',

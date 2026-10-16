@@ -12,6 +12,7 @@ import {
 } from './card-media-bulk';
 import type { CardMediaKind, MediaKindState } from './CardMediaPanel';
 import { faNum } from './fa-digits';
+import { StepUpRefusedError } from './step-up-reauth';
 
 const KIND_LABEL: Record<CardMediaKind, string> = {
   image: 'تصویر',
@@ -56,6 +57,7 @@ export function PackMediaCompletion({
   onFinished: () => void;
 }) {
   const [busy, setBusy] = useState<'scanning' | 'running'>();
+  const [scanError, setScanError] = useState<string>();
   const [scan, setScan] = useState<PackMediaScan>();
   const [planned, setPlanned] = useState<PackMediaItem[]>([]);
   const [results, setResults] = useState<PackMediaResult[]>([]);
@@ -70,10 +72,20 @@ export function PackMediaCompletion({
   async function rescan() {
     setBusy('scanning');
     setResults([]);
-    const next = await scanPackMedia(cards, loadState);
-    setScan(next);
-    setPlanned(next.needed);
-    setBusy(undefined);
+    setScanError(undefined);
+    try {
+      const next = await scanPackMedia(cards, loadState);
+      setScan(next);
+      setPlanned(next.needed);
+    } catch (failure) {
+      // A refused step-up (or a network failure) ends the scan; nothing is estimated or run.
+      setScan(undefined);
+      setScanError(
+        failure instanceof StepUpRefusedError ? failure.message : 'خواندن وضعیت رسانه ناموفق بود.',
+      );
+    } finally {
+      setBusy(undefined);
+    }
   }
 
   async function run(items: PackMediaItem[]) {
@@ -109,6 +121,11 @@ export function PackMediaCompletion({
         </button>
       </div>
       {busy === 'scanning' ? <p>در حال خواندن وضعیت رسانهٔ کارت‌ها…</p> : null}
+      {scanError ? (
+        <p className="notice error" role="alert">
+          {scanError}
+        </p>
+      ) : null}
 
       {scan && !busy && results.length === 0 ? (
         <div data-pack-media="estimate">

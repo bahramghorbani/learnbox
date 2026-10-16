@@ -544,6 +544,14 @@ suite('M1.6 — publish is gated on real review state', () => {
     expect(result.status).toBe('idempotent');
     expect((await statuses(packId)).pack).toBe('published');
   });
+
+  it('does not report already-published cards as awaiting human review', async () => {
+    const view = await lifecycle.getPackLifecycle({ packId, actorUserId: operator });
+    if (view.status !== 'ok') throw new Error('expected ok');
+    expect(view.view.status).toBe('published');
+    expect(view.view.readiness.cardBlockers).toEqual([]);
+    expect(view.view.pendingRevisionCount).toBe(0);
+  });
 });
 
 suite('M1.6 — published-pack revisions', () => {

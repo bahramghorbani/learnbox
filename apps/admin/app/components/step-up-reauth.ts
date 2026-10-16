@@ -58,6 +58,11 @@ function isCancellation(error: unknown): boolean {
   );
 }
 
+/** A read refused for an authentication reason; `message` is the operator-facing text. */
+export class StepUpRefusedError extends Error {
+  override name = 'StepUpRefusedError';
+}
+
 /** What the operator is told. Every message states that the typed data is still there. */
 export function stepUpMessage(outcome: StepUpOutcome): string {
   switch (outcome) {

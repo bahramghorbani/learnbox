@@ -379,16 +379,18 @@ export class PostgresContentLifecycleStore {
       const pendingRevisionCount =
         packStatus === 'published' ? cards.filter((card) => card.status !== 'published').length : 0;
       const canPublish = await this.hasRole(client, input.actorUserId, publisherRoles);
-      const approvedRevisions = cards
+      const revisionBlockers = cards
         .filter((card) => card.status === 'approved')
         .map((card) =>
-          toPublishCandidate(
-            card,
-            contentByVersion.get(card.cardVersionId),
-            media.get(card.cardVersionId),
+          evaluateCardPublishReadiness(
+            toPublishCandidate(
+              card,
+              contentByVersion.get(card.cardVersionId),
+              media.get(card.cardVersionId),
+            ),
           ),
-        )
-        .filter((candidate) => evaluateCardPublishReadiness(candidate) === null).length;
+        );
+      const approvedRevisions = revisionBlockers.filter((blocker) => blocker === null).length;
 
       return {
         status: 'ok',
@@ -400,7 +402,17 @@ export class PostgresContentLifecycleStore {
           cards,
           submittableCardCount,
           pendingRevisionCount,
-          readiness,
+          // A published pack only ever publishes its APPROVED revisions (publishApprovedRevisions),
+          // so only those can block; an already-published card is not "awaiting human review".
+          readiness:
+            packStatus === 'published'
+              ? {
+                  ...readiness,
+                  cardBlockers: revisionBlockers.filter(
+                    (blocker): blocker is NonNullable<typeof blocker> => blocker !== null,
+                  ),
+                }
+              : readiness,
           canSubmitForReview: submittableCardCount > 0,
           canPublish:
             canPublish && (packStatus === 'published' ? approvedRevisions > 0 : readiness.ready),
