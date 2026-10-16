@@ -6,18 +6,18 @@
 
 **Production release 2026-10-16 — DEPLOYED; next is the first real pack (owner-operated).**
 Product source `15e6783` runs on the Iran host (App `87490d60…`, Admin `ba7cfcf5…`, schema `0038`);
-`main` = `93794c3` adds release tooling only. Text AI and Media AI are on in the Admin. Payments
+`main` adds release tooling and documentation only (no deploy needed). Text AI and Media AI are on in the Admin. Payments
 stay off. Current truth, the title-to-publication workflow, and rollback:
-`docs/operations/ADMIN_PRODUCTION_STATUS.md`. Unfinished items:
+`docs/operations/ADMIN_PRODUCTION_STATUS.md`. Host operations, backups and disaster recovery:
+`docs/operations/IRAN_PRODUCTION_RUNBOOK.md`, with host-mirrored files under
+`infrastructure/production/iran/`. It replaced Draft PR #423, which is closed; its branch is kept as
+history. Unfinished items:
 
 - First real pack: owner runs it in the Admin; paid steps are owner clicks only.
 - #427 Starter adjective values: open, owner editorial decision.
 - #428 Admin rejects the Starter pack id: open, separate fix PR.
-- #430 Profile Identity regression: live symptom fixed by `87490d60`; root cause (omitted vs explicit
-  `false`) unproven; open until an owner decision.
 - ArvanCloud timeout on long Admin AI requests: unverified risk, not reproduced.
-- Iran operations runbook: `docs/operations/IRAN_PRODUCTION_RUNBOOK.md` with host-mirrored files
-  under `infrastructure/production/iran/`. It replaces the Draft PR #423, which is kept as history.
+- Host leftover `secrets/neon-source.env`: unused; removal is a separate owner decision.
 - The private media-smoke pack `internal-media-test-20261016` stays Draft with three unaccepted
   candidates until the owner reviews it.
 
