@@ -27,7 +27,12 @@ type CardBlocker = {
   cardVersionId: string;
   contentId: string;
   lemma: string;
-  code: 'not_approved' | 'invalid_content' | 'unreviewed_ai_content';
+  code:
+    | 'not_approved'
+    | 'invalid_content'
+    | 'unreviewed_ai_content'
+    | 'incomplete_content'
+    | 'media_not_ready';
   status: string;
   issues: { field: string; message: string }[];
 };
@@ -70,6 +75,8 @@ const CARD_BLOCKER_LABEL: Record<CardBlocker['code'], string> = {
   not_approved: 'بازبینی انسانی کامل نشده است',
   invalid_content: 'فیلدهای کانونی ناقص یا نامعتبر است',
   unreviewed_ai_content: 'محتوای هوش مصنوعی بدون ثبت بازبین انسانی',
+  incomplete_content: 'کارت با استاندارد کارت کامل نیست',
+  media_not_ready: 'تصویر یا صدای پذیرفته‌شده و معتبر کامل نیست',
 };
 
 function packBlockerLabel(blocker: PackBlocker): string {
@@ -103,7 +110,7 @@ export function PackLifecyclePanel({
   const [view, setView] = useState<PackLifecycleView>();
   const [phase, setPhase] = useState<'loading' | 'ready' | 'error'>('loading');
   const [busy, setBusy] = useState(false);
-  const [notice, setNotice] = useState<{ tone: 'green' | 'rose'; message: string }>();
+  const [notice, setNotice] = useState<{ tone: 'green' | 'amber' | 'rose'; message: string }>();
 
   const load = useCallback(async () => {
     setPhase('loading');
@@ -139,7 +146,11 @@ export function PackLifecyclePanel({
     // is refused by the server instead of being overwritten.
     const outcome = await onAction(path, { packId, expectedStatus: view.status });
     if (outcome.ok) {
-      setNotice({ tone: 'green', message: successMessage });
+      setNotice(
+        outcome.message
+          ? { tone: 'amber', message: outcome.message }
+          : { tone: 'green', message: successMessage },
+      );
       onChanged();
     } else {
       setNotice({

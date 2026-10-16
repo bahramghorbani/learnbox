@@ -129,7 +129,7 @@ export const IMPORT_COLUMNS: readonly ImportColumn[] = [
     label: 'یادداشت دستوری',
     required: true,
     hint: 'نکتهٔ دستوری کوتاه.',
-    example: 'Maskulin, Plural mit -e.',
+    example: 'اسم مذکر؛ جمع با پسوند -e.',
   },
   {
     key: 'topic_tags',

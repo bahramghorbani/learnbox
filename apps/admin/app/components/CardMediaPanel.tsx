@@ -2,6 +2,8 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
+import { StepUpRefusedError } from './step-up-reauth';
+
 /**
  * Phase 1 / Milestone 1.5 — per-card media operations.
  *
@@ -46,8 +48,10 @@ export interface CardMediaPanelProps {
   cardLabel: string;
   onClose: () => void;
   onLoadState: () => Promise<MediaKindState[] | undefined>;
+  /** `regenerate` is the explicit Admin request to replace existing media (a paid call). */
   onGenerate: (
     kind: CardMediaKind,
+    regenerate: boolean,
   ) => Promise<{ ok: true; candidate: MediaCandidateView } | { ok: false; message: string }>;
   onAccept: (
     kind: CardMediaKind,
@@ -157,7 +161,19 @@ export function CardMediaPanel(props: CardMediaPanelProps) {
   const [loadFailed, setLoadFailed] = useState(false);
 
   const refresh = useCallback(async () => {
-    const next = await props.onLoadState();
+    let next: MediaKindState[] | undefined;
+    try {
+      next = await props.onLoadState();
+    } catch (failure) {
+      // A refused step-up is an authentication outcome, not a read failure: show only its message.
+      if (failure instanceof StepUpRefusedError) {
+        setLoadFailed(false);
+        setState(undefined); // never show a state the server just refused to confirm
+        setError(failure.message);
+        return;
+      }
+      next = undefined;
+    }
     if (!next) {
       setLoadFailed(true);
       return;
@@ -166,14 +182,28 @@ export function CardMediaPanel(props: CardMediaPanelProps) {
     setState(next);
   }, [props]);
 
+  async function retryRead() {
+    setError(undefined);
+    await refresh();
+  }
+
   useEffect(() => {
     void refresh();
   }, [refresh]);
 
-  async function generate(kind: CardMediaKind) {
+  async function generate(kind: CardMediaKind, regenerate: boolean) {
+    // Replacing existing media is a deliberate, paid act; it is never implied by a plain click.
+    if (
+      regenerate &&
+      !window.confirm(
+        'برای این مورد رسانه یا پیشنهاد وجود دارد. ساخت دوباره فراخوانی پولی است؛ ادامه می‌دهید؟',
+      )
+    ) {
+      return;
+    }
     setBusyKind(kind);
     setError(undefined);
-    const result = await props.onGenerate(kind);
+    const result = await props.onGenerate(kind, regenerate);
     if (!result.ok) setError(result.message);
     // Always re-read: the authoritative state is the job row, not this component's memory.
     await refresh();
@@ -212,13 +242,21 @@ export function CardMediaPanel(props: CardMediaPanelProps) {
           </p>
         ) : null}
 
+        {error && state === undefined && !loadFailed ? (
+          <button className="btn" type="button" onClick={() => void retryRead()}>
+            خواندن دوباره
+          </button>
+        ) : null}
+
         {loadFailed ? (
           <p className="notice error" role="alert">
             خواندن وضعیت رسانه ناموفق بود.
           </p>
         ) : null}
 
-        {state === undefined && !loadFailed ? <p className="notice">در حال خواندن…</p> : null}
+        {state === undefined && !loadFailed && !error ? (
+          <p className="notice">در حال خواندن…</p>
+        ) : null}
 
         {state?.map((kindState) => {
           const candidate = kindState.latestCandidate;
@@ -310,7 +348,9 @@ export function CardMediaPanel(props: CardMediaPanelProps) {
                     className="btn"
                     type="button"
                     disabled={isGenerating}
-                    onClick={() => void generate(kindState.kind)}
+                    onClick={() =>
+                      void generate(kindState.kind, Boolean(kindState.accepted || candidate))
+                    }
                   >
                     {kindState.accepted || candidate ? 'تولید دوباره' : 'تولید'}
                   </button>

@@ -25,9 +25,23 @@ interface NewCardRow {
 const START_CONTENT_ID_PATTERN = 'start-a1-%';
 const MAX_NEW_CARD_CANDIDATES = 12;
 
+/**
+ * The learner pack-access rule as a SQL predicate over a `packs` alias and a user-id parameter
+ * (the Website passes its single-sourced `packAccessSql`: published AND (free OR entitled)).
+ */
+export type PackAccessPredicate = (packAlias: string, userParam: string) => string;
+
 /** Read-only learner state projection. No writes; the review write path owns mutations. */
 export class PostgresLearnerStateRepository implements LearnerStateRepository, DailyPlanStore {
-  constructor(private readonly pool: Pool) {}
+  /**
+   * Without `packAccess` new cards stay the v1 Starter slice (`start-a1-%`, approved or
+   * published). With it, new cards are every published card of a pack the learner may open —
+   * the same curriculum the Website shows, so a purchased pack becomes learnable.
+   */
+  constructor(
+    private readonly pool: Pool,
+    private readonly packAccess?: PackAccessPredicate,
+  ) {}
 
   async findSchedules(userId: string): Promise<LearnerScheduleRow[]> {
     const result = await this.pool.query<ScheduleRow>(
@@ -52,6 +66,32 @@ export class PostgresLearnerStateRepository implements LearnerStateRepository, D
   async findNewCardCandidates(userId: string, limit: number): Promise<LearnerNewCardCandidate[]> {
     if (!Number.isInteger(limit) || limit < 1 || limit > MAX_NEW_CARD_CANDIDATES) {
       throw new RangeError(`candidate limit must be between 1 and ${MAX_NEW_CARD_CANDIDATES}`);
+    }
+    if (this.packAccess) {
+      const scoped = await this.pool.query<NewCardRow>(
+        `SELECT c.id AS card_id, c.content_id
+           FROM cards c
+           LEFT JOIN card_schedules s
+             ON s.user_id = $1 AND s.card_id = c.id
+          WHERE s.card_id IS NULL
+            AND EXISTS (
+              SELECT 1 FROM card_versions cv WHERE cv.card_id = c.id AND cv.status = 'published'
+            )
+            AND EXISTS (
+              SELECT 1
+                FROM pack_cards pc
+                JOIN packs p ON p.id = pc.pack_id
+               WHERE pc.card_id = c.id AND ${this.packAccess('p', '$1')}
+            )
+          ORDER BY c.content_id
+          LIMIT $2`,
+        [userId, limit],
+      );
+      return scoped.rows.map((row) => ({
+        cardId: row.card_id,
+        contentId: row.content_id,
+        importance: 1,
+      }));
     }
     const result = await this.pool.query<NewCardRow>(
       `SELECT c.id AS card_id, c.content_id

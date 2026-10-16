@@ -12,6 +12,7 @@
  */
 
 import { AiProviderError } from './ai-generation-provider';
+import { type Mp3Format, readMp3Format } from './mp3-format';
 
 /** AvalAI fronts both the image and the speech protocols used here. */
 const DEFAULT_BASE_URL = 'https://api.avalai.ir';
@@ -51,6 +52,8 @@ export interface GeneratedAudio {
   provider: string;
   /** The voice actually requested, for attribution and for proving the voice mapping. */
   voice: string;
+  /** Measured from the returned bytes — never inferred from a request parameter. */
+  format: Mp3Format | null;
 }
 
 export interface ImageGenerationRequest {
@@ -170,6 +173,11 @@ export class AvalAiMediaProvider implements AiMediaProvider {
     readonly imageModel: string = DEFAULT_IMAGE_MODEL,
     readonly audioModel: string = DEFAULT_AUDIO_MODEL,
     private readonly baseUrl: string = DEFAULT_BASE_URL,
+    /**
+     * Optional native output format (e.g. ElevenLabs `mp3_44100_128`). Sent only when configured:
+     * AvalAI support for it is not yet qualified, and the measured file format is what counts.
+     */
+    private readonly audioOutputFormat?: string,
   ) {
     this.provider = new URL(this.baseUrl).host;
   }
@@ -231,7 +239,13 @@ export class AvalAiMediaProvider implements AiMediaProvider {
     const response = await postJson(
       `${this.baseUrl}/v1/audio/speech`,
       this.apiKey,
-      { model, voice, input: text, response_format: 'mp3' },
+      {
+        model,
+        voice,
+        input: text,
+        response_format: 'mp3',
+        ...(this.audioOutputFormat ? { output_format: this.audioOutputFormat } : {}),
+      },
       request.timeoutMs,
       'تولید صدا',
     );
@@ -241,7 +255,14 @@ export class AvalAiMediaProvider implements AiMediaProvider {
       throw new AiProviderError('provider_empty_response', 'سرویس صدایی تولید نکرد.');
     assertMp3(bytes);
 
-    return { bytes, contentType: 'audio/mpeg', model, provider: this.provider, voice };
+    return {
+      bytes,
+      contentType: 'audio/mpeg',
+      model,
+      provider: this.provider,
+      voice,
+      format: readMp3Format(bytes),
+    };
   }
 
   private async listModels(pattern: RegExp): Promise<string[]> {

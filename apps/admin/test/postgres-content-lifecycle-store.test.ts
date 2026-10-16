@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest';
 
 import type { Pool } from 'pg';
 
+import { CARD_MEDIA_KINDS, expectedCardMedia } from '@learnbox/content-models';
+
+import { readCanonicalImageStandard } from '../lib/server/canonical-image-standard.js';
 import { PostgresContentLifecycleStore } from '../lib/server/postgres-content-lifecycle-store.js';
 
 const actorUserId = '71b5b438-99c7-4a2e-a09a-859f7c9f95cb';
@@ -46,15 +49,52 @@ function approvedContent(overrides: Record<string, unknown> = {}) {
     examples: [{ german: 'Der Apfel ist rot.', persian: 'سیب سرخ است.' }],
     media: [],
     source: { provider: 'editorial', reference: 'learnbox-start' },
+    // Shared card standard: IPA, plural, definition, grammar note and an English image subject.
+    pronunciation: { ipa: 'ˈapfəl', locale: 'de-DE' },
+    essentialInflection: 'die Äpfel',
+    simpleGermanDefinition: 'Eine runde Frucht.',
+    grammarNote: 'اسم مذکر؛ جمع با تغییر واکه.',
+    imagePrompt: 'One red apple, large and centered.',
     ...overrides,
   };
 }
 
+const CARD_ID = '0a4e5f6b-7c8d-4e9f-a0b1-c2d3e4f5a6b7';
+
+/** Accepted Admin media for every kind, attributed to exactly what `content` needs. */
+function acceptedMediaRows(content: Row): Row[] {
+  const expected = expectedCardMedia(content as Record<string, unknown>);
+  const voice: Record<string, string> = { der: 'sage', die: 'nova', das: 'fable', default: 'nova' };
+  return CARD_MEDIA_KINDS.map((kind, index) => {
+    const entry = expected[kind] as Record<string, string>;
+    const id = `5b1e2c3d-4e5f-4a6b-8c7d-${String(index).padStart(12, '0')}`;
+    return {
+      id,
+      card_id: CARD_ID,
+      kind,
+      object_key: `admin/card-media/start-a1-apfel/${kind}/${id}.${kind === 'image' ? 'png' : 'mp3'}`,
+      checksum: 'a'.repeat(64),
+      media_type: kind === 'image' ? 'image/png' : 'audio/mpeg',
+      spoken_target: entry.spokenTarget ?? null,
+      voice: kind === 'image' ? null : voice[entry.voiceRole!],
+      voice_role: entry.voiceRole ?? null,
+      image_subject: entry.subject ?? null,
+      image_standard_version: kind === 'image' ? readCanonicalImageStandard().version : null,
+    };
+  });
+}
+
 /** One approved card in a pack that declares no fixed composition: the ready baseline. */
-function readyWorld(options: { packStatus?: string; cardStatus?: string; content?: Row } = {}) {
+function readyWorld(
+  options: { packStatus?: string; cardStatus?: string; content?: Row; media?: Row[] } = {},
+) {
   const cardStatus = options.cardStatus ?? 'approved';
   const content = options.content ?? approvedContent({ status: cardStatus });
+  const media = options.media ?? acceptedMediaRows(content);
   return (sql: string, params?: readonly unknown[]): Row[] => {
+    if (sql.includes('FROM card_media_assets')) return media;
+    if (sql.includes('FROM card_media_candidates')) return [];
+    if (sql.includes("status IN ('published', 'deprecated')")) return [];
     if (sql.includes('FROM admin_role_assignments')) {
       const roles = (params?.[1] ?? []) as string[];
       return roles.includes('content_publisher')
@@ -84,7 +124,15 @@ function readyWorld(options: { packStatus?: string; cardStatus?: string; content
       ];
     }
     if (sql.includes('FROM card_versions')) {
-      return [{ id: versionOne, status: cardStatus, content_json: content }];
+      return [
+        {
+          id: versionOne,
+          status: cardStatus,
+          content_json: content,
+          content_id: 'start-a1-apfel',
+          lemma: 'Apfel',
+        },
+      ];
     }
     if (sql.startsWith('UPDATE card_versions')) return [{ id: versionOne }];
     return [];
@@ -140,7 +188,14 @@ describe('PostgresContentLifecycleStore draft to review', () => {
       if (sql.includes('FROM admin_role_assignments')) return [{ role: 'content_reviewer' }];
       if (sql.includes('FROM packs')) return [{ id: packId, status: 'draft' }];
       if (sql.includes('FROM pack_cards')) return [{ id: versionOne }, { id: versionTwo }];
-      if (sql.includes('FOR UPDATE')) return [{ id: versionOne }, { id: versionTwo }];
+      if (sql.includes('FOR UPDATE')) {
+        return [versionOne, versionTwo].map((id) => ({
+          id,
+          content_json: approvedContent({ status: 'draft' }),
+          content_id: 'start-a1-apfel',
+          lemma: 'Apfel',
+        }));
+      }
       return [];
     });
     const store = new PostgresContentLifecycleStore(poolFor(client));
@@ -149,6 +204,7 @@ describe('PostgresContentLifecycleStore draft to review', () => {
       status: 'applied',
       submittedCardCount: 2,
       packStatus: 'needs_review',
+      incompleteCards: [],
     });
 
     const sqls = client.calls.map((call) => call.sql);
@@ -391,5 +447,117 @@ describe('PostgresContentLifecycleStore archive', () => {
       status: 'idempotent',
     });
     expect(client.calls.some((call) => call.sql.startsWith('UPDATE'))).toBe(false);
+  });
+});
+
+describe('PostgresContentLifecycleStore card standard and media gates (owner rules 2026-10-16)', () => {
+  function draftWorld(rows: Row[]) {
+    return (sql: string): Row[] => {
+      if (sql.includes('FROM admin_role_assignments')) return [{ role: 'content_reviewer' }];
+      if (sql.includes('FROM packs')) return [{ id: packId, status: 'draft' }];
+      if (sql.includes('FROM pack_cards')) return rows.map((row) => ({ id: row.id }));
+      if (sql.includes('FOR UPDATE')) return rows;
+      return [];
+    };
+  }
+
+  it('keeps a card without IPA as a draft, reports why, and submits the complete one', async () => {
+    const withoutIpa = approvedContent({ status: 'draft', pronunciation: undefined });
+    const client = createClient(
+      draftWorld([
+        {
+          id: versionOne,
+          content_json: approvedContent({ status: 'draft' }),
+          content_id: 'start-a1-apfel',
+          lemma: 'Apfel',
+        },
+        { id: versionTwo, content_json: withoutIpa, content_id: 'start-a1-birne', lemma: 'Birne' },
+      ]),
+    );
+    const result = await new PostgresContentLifecycleStore(poolFor(client)).submitPackForReview({
+      packId,
+      actorUserId,
+      idempotencyKey,
+    });
+    if (result.status !== 'applied') throw new Error(`expected applied, got ${result.status}`);
+    expect(result.submittedCardCount).toBe(1);
+    expect(result.incompleteCards).toHaveLength(1);
+    expect(result.incompleteCards[0]!.contentId).toBe('start-a1-birne');
+    expect(result.incompleteCards[0]!.issues.map((issue) => issue.field)).toContain(
+      'pronunciation.ipa',
+    );
+    const moved = client.calls.find((call) => call.sql.includes("SET status = 'needs_review'"));
+    expect(JSON.stringify(moved?.params)).not.toContain(versionTwo);
+  });
+
+  it('submits nothing and says so when every card is incomplete', async () => {
+    const client = createClient(
+      draftWorld([
+        {
+          id: versionOne,
+          content_json: approvedContent({ status: 'draft', pronunciation: undefined }),
+          content_id: 'start-a1-apfel',
+          lemma: 'Apfel',
+        },
+      ]),
+    );
+    const result = await new PostgresContentLifecycleStore(poolFor(client)).submitPackForReview({
+      packId,
+      actorUserId,
+      idempotencyKey,
+    });
+    expect(result.status).toBe('incomplete');
+    expect(client.calls.map((call) => call.sql)).toContain('ROLLBACK');
+  });
+
+  it('blocks publishing when accepted media no longer matches the example text', async () => {
+    const content = approvedContent();
+    const media = acceptedMediaRows({
+      ...content,
+      examples: [{ german: 'Der Apfel ist grün.', persian: 'سیب سبز است.' }],
+    });
+    const client = createClient(readyWorld({ content, media }));
+    const result = await new PostgresContentLifecycleStore(poolFor(client)).getPackLifecycle({
+      packId,
+      actorUserId,
+    });
+    if (result.status !== 'ok') throw new Error('expected ok');
+    expect(result.view.readiness.ready).toBe(false);
+    const blocker = result.view.readiness.cardBlockers[0]!;
+    expect(blocker.code).toBe('media_not_ready');
+    expect(blocker.issues.map((issue) => issue.field)).toEqual(['media.sentence_audio']);
+  });
+
+  it('blocks publishing a card with no media at all', async () => {
+    const client = createClient(readyWorld({ media: [] }));
+    const result = await new PostgresContentLifecycleStore(poolFor(client)).getPackLifecycle({
+      packId,
+      actorUserId,
+    });
+    if (result.status !== 'ok') throw new Error('expected ok');
+    expect(result.view.readiness.cardBlockers[0]!.code).toBe('media_not_ready');
+    expect(result.view.canPublish).toBe(false);
+  });
+
+  it('pins accepted media by object key and checksum into the published version', async () => {
+    const client = createClient(readyWorld());
+    const result = await new PostgresContentLifecycleStore(poolFor(client)).publishPack({
+      packId,
+      actorUserId,
+      idempotencyKey,
+    });
+    expect(result.status).toBe('applied');
+    const update = client.calls.find((call) => call.sql.startsWith('UPDATE card_versions'));
+    const published = update?.params?.[1] as { media: Array<Record<string, unknown>> };
+    expect(published.media.map((entry) => entry.kind)).toEqual([
+      'image',
+      'word_audio',
+      'sentence_audio',
+    ]);
+    for (const entry of published.media) {
+      expect(entry.objectKey).toMatch(/^admin\/card-media\/start-a1-apfel\//);
+      expect(entry.checksum).toBe('a'.repeat(64));
+      expect(entry.qualityStatus).toBe('approved');
+    }
   });
 });

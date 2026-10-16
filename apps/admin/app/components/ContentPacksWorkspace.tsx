@@ -7,7 +7,12 @@ import {
   type ImportAnalysis,
   type ImportResultSummary,
 } from './ContentImportModal';
-import { fetchWithStepUp, stepUpMessage } from './step-up-reauth';
+import {
+  fetchWithStepUp,
+  stepUpMessage,
+  stepUpReadRefusal,
+  StepUpRefusedError,
+} from './step-up-reauth';
 import {
   AiPackGenerationModal,
   type AcceptSummary,
@@ -19,11 +24,6 @@ import {
   type MediaCandidateView,
   type MediaKindState,
 } from './CardMediaPanel';
-import {
-  runBulkCardMediaGeneration,
-  type BulkMediaKind,
-  type BulkMediaResult,
-} from './card-media-bulk';
 import { PackLifecyclePanel } from './PackLifecyclePanel';
 import { EmptyState, ErrorState, LoadingState } from './AdminStates';
 import { faNum } from './fa-digits';
@@ -40,6 +40,20 @@ import {
 } from './ContentPackForms';
 
 import { AdminSidebar } from './AdminSidebar';
+import { PackMediaCompletion } from './PackMediaCompletion';
+
+// Media state sits behind the same recent-auth guard as every media route: a 428 re-authenticates
+// in place. A refused step-up throws, so a pack scan stops instead of prompting once per card.
+export async function loadMediaState(cardId: string) {
+  const { response, stepUp } = await fetchWithStepUp(
+    `/api/content/media/state?cardId=${encodeURIComponent(cardId)}`,
+    { credentials: 'same-origin', headers: { accept: 'application/json' } },
+  );
+  const refusal = stepUpReadRefusal(stepUp, response.status);
+  if (refusal) throw new StepUpRefusedError(refusal);
+  if (!response.ok) return undefined;
+  return ((await response.json()) as { media?: MediaKindState[] }).media;
+}
 
 /**
  * Phase 1 / Milestone 1.1 — Content & Packs workspace.
@@ -251,6 +265,20 @@ async function postAiJson<T>(
  * idempotency key, exactly like the content-review workspace. Server status codes map to the
  * outcomes the forms render, so no mutation can report success it did not get.
  */
+type IncompleteCardPayload = { lemma: string; issues: { message: string }[] };
+
+/** Names every card kept as a draft and why, so the editor can fix it (owner rule 2026-10-16). */
+function incompleteCardsMessage(cards: IncompleteCardPayload[], partlySubmitted: boolean): string {
+  const lines = cards.map(
+    (card) => `${card.lemma}: ${card.issues.map((issue) => issue.message).join('؛ ')}`,
+  );
+  return `${
+    partlySubmitted
+      ? 'کارت‌های کامل برای بررسی ارسال شد؛ این کارت‌ها ناقص‌اند و پیش‌نویس ماندند —'
+      : 'هیچ کارتی ارسال نشد؛ این کارت‌ها ناقص‌اند و پیش‌نویس ماندند —'
+  } ${lines.join(' | ')}`;
+}
+
 async function sendMutation(
   path: string,
   method: 'POST' | 'PATCH',
@@ -271,7 +299,16 @@ async function sendMutation(
       },
       body: JSON.stringify(body),
     });
-    if (response.ok) return { ok: true };
+    if (response.ok) {
+      // Submit-for-review keeps incomplete cards as drafts and names them; say so instead of a
+      // plain success, so a partially submitted pack is never read as fully ready.
+      const payload = (await response.json().catch(() => undefined)) as
+        { incompleteCards?: IncompleteCardPayload[] } | undefined;
+      const incomplete = payload?.incompleteCards ?? [];
+      return incomplete.length > 0
+        ? { ok: true, message: incompleteCardsMessage(incomplete, true) }
+        : { ok: true };
+    }
     if (response.status === 401) {
       return { ok: false, message: 'نشست معتبر نیست؛ دوباره وارد شوید.' };
     }
@@ -292,7 +329,10 @@ async function sendMutation(
     }
     if (response.status === 409) {
       const payload = (await response.json().catch(() => undefined)) as
-        { reason?: string } | undefined;
+        { reason?: string; code?: string; incompleteCards?: IncompleteCardPayload[] } | undefined;
+      if (payload?.code === 'incomplete_content') {
+        return { ok: false, message: incompleteCardsMessage(payload.incompleteCards ?? [], false) };
+      }
       return {
         ok: false,
         message:
@@ -511,11 +551,6 @@ export function ContentPacksWorkspace() {
   // AI generation (M1.4) has its own default-off gate on top of `manageEnabled`.
   const [aiEnabled, setAiEnabled] = useState(false);
   const [mediaEnabled, setMediaEnabled] = useState(false);
-  const [bulkMedia, setBulkMedia] = useState<{
-    kind: BulkMediaKind;
-    running: boolean;
-    results: BulkMediaResult[];
-  }>();
   /** The card whose media panel is open, if any. */
   const [mediaCard, setMediaCard] = useState<{ cardId: string; label: string } | undefined>(
     undefined,
@@ -641,46 +676,14 @@ export function ContentPacksWorkspace() {
     return outcome;
   }
 
-  async function startBulkMedia(kind: BulkMediaKind) {
-    if (!mediaEnabled || bulkMedia?.running) return;
-    if (!window.confirm('این کار برای هر کارت از سرویس خارجیِ پولی استفاده می‌کند. ادامه می‌دهید؟'))
-      return;
-    setBulkMedia({ kind, running: true, results: [] });
-    await runBulkCardMediaGeneration(
-      cards.map((card) => ({
-        cardId: card.cardId,
-        label: `${card.article ? `${card.article} ` : ''}${card.lemma}`,
-      })),
+  async function generatePackMedia(cardId: string, kind: CardMediaKind) {
+    const result = await postAiJson<{ status?: string }>('/api/content/media/generate', {
+      cardId,
       kind,
-      {
-        loadState: async (cardId) => {
-          const response = await fetch(
-            `/api/content/media/state?cardId=${encodeURIComponent(cardId)}`,
-            {
-              credentials: 'same-origin',
-              headers: { accept: 'application/json' },
-            },
-          );
-          if (!response.ok) return undefined;
-          return ((await response.json()) as { media?: MediaKindState[] }).media;
-        },
-        generate: async (cardId, candidateKind) => {
-          const result = await postAiJson<{ candidate: MediaCandidateView }>(
-            '/api/content/media/generate',
-            { cardId, kind: candidateKind },
-          );
-          return result.ok
-            ? { ok: true }
-            : { ok: false, message: result.message, code: result.code };
-        },
-        onResult: (result) =>
-          setBulkMedia((current) =>
-            current ? { ...current, results: [...current.results, result] } : current,
-          ),
-      },
-    );
-    setBulkMedia((current) => (current ? { ...current, running: false } : current));
-    if (openPackId) void loadCards(openPackId);
+    });
+    return result.ok
+      ? { ok: true, status: result.payload.status }
+      : { ok: false, message: result.message, code: result.code };
   }
 
   const visible = packs.filter((pack) => (filter === 'all' ? true : pack.status === filter));
@@ -1024,26 +1027,6 @@ export function ContentPacksWorkspace() {
                       درون‌ریزی CSV / XLSX
                     </button>
                   ) : null}
-                  {mediaEnabled && cardsPhase === 'ready' && cards.length > 0 ? (
-                    <>
-                      <button
-                        className="btn"
-                        type="button"
-                        disabled={bulkMedia?.running}
-                        onClick={() => void startBulkMedia('image')}
-                      >
-                        تولید تصویر برای کارت‌های این بسته
-                      </button>
-                      <button
-                        className="btn"
-                        type="button"
-                        disabled={bulkMedia?.running}
-                        onClick={() => void startBulkMedia('audio')}
-                      >
-                        تولید صدای واژه برای کارت‌های این بسته
-                      </button>
-                    </>
-                  ) : null}
                 </div>
                 <div className="card-body">
                   {manageEnabled ? (
@@ -1058,23 +1041,20 @@ export function ContentPacksWorkspace() {
                       }}
                     />
                   ) : null}
-                  {bulkMedia ? (
-                    <div className="notice" role="status" data-cp-state="bulk-media">
-                      <span>
-                        {bulkMedia.running
-                          ? 'در حال تولید ترتیبی رسانه…'
-                          : 'اجرای تولید رسانه تمام شد.'}{' '}
-                        {faNum(bulkMedia.results.length)} کارت پردازش شد؛ هیچ نامزدی خودکار پذیرفته
-                        نشده است.
-                      </span>
-                      <ul>
-                        {bulkMedia.results.map((result) => (
-                          <li key={result.cardId} className="ltr">
-                            {result.label}: {result.message}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
+                  {mediaEnabled && cardsPhase === 'ready' && cards.length > 0 ? (
+                    <PackMediaCompletion
+                      key={openPackId}
+                      cards={cards.map((card) => ({
+                        cardId: card.cardId,
+                        label: `${card.article ? `${card.article} ` : ''}${card.lemma}`,
+                      }))}
+                      loadState={loadMediaState}
+                      generate={generatePackMedia}
+                      onOpenCard={setMediaCard}
+                      onFinished={() => {
+                        if (openPackId) void loadCards(openPackId);
+                      }}
+                    />
                   ) : null}
                   {cardsPhase === 'loading' ? (
                     <LoadingState label="در حال دریافت کارت‌ها…" />
@@ -1212,23 +1192,11 @@ export function ContentPacksWorkspace() {
             // Accepted media changes the canonical read model, so refresh the card table.
             void loadPacks();
           }}
-          onLoadState={async () => {
-            try {
-              const response = await fetch(
-                `/api/content/media/state?cardId=${encodeURIComponent(mediaCard.cardId)}`,
-                { credentials: 'same-origin', headers: { accept: 'application/json' } },
-              );
-              if (!response.ok) return undefined;
-              const payload = (await response.json()) as { media?: MediaKindState[] };
-              return payload.media;
-            } catch {
-              return undefined;
-            }
-          }}
-          onGenerate={async (kind: CardMediaKind) => {
+          onLoadState={() => loadMediaState(mediaCard.cardId)}
+          onGenerate={async (kind: CardMediaKind, regenerate: boolean) => {
             const result = await postAiJson<{ candidate: MediaCandidateView }>(
               '/api/content/media/generate',
-              { cardId: mediaCard.cardId, kind },
+              { cardId: mediaCard.cardId, kind, regenerate },
             );
             return result.ok
               ? { ok: true as const, candidate: result.payload.candidate }

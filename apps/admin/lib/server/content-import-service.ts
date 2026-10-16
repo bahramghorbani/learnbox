@@ -136,7 +136,7 @@ export function validateImportRecord(
   packId: string,
   effectiveCefr: string,
 ):
-  | { ok: true; contentId: string; content: CardContentInput }
+  | { ok: true; contentId: string; content: CardContentInput; card: Record<string, unknown> }
   | { ok: false; contentId?: string; issues: RowIssue[] } {
   const mapped = mapRow(record, rowNumber);
   if (!mapped.content) return { ok: false, issues: mapped.issues };
@@ -154,7 +154,12 @@ export function validateImportRecord(
     issues = [{ field: 'content', message: 'محتوای این سطر معتبر نیست.' }];
   }
   if (issues.length > 0) return { ok: false, contentId, issues };
-  return { ok: true, contentId, content: { ...mapped.content, cefr } };
+  return {
+    ok: true,
+    contentId,
+    content: { ...mapped.content, cefr },
+    card: candidate as unknown as Record<string, unknown>,
+  };
 }
 
 export class ContentImportService {

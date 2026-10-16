@@ -3,6 +3,7 @@ import { accessSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { NextResponse } from 'next/server';
 import { authenticateLearner } from '../../../../../lib/learner-auth';
+import { readPublishedCardMedia } from '../../../../../lib/published-card-media';
 import { canLearnerAccessStartContentId } from '../../../../../lib/published-start-card';
 
 export const runtime = 'nodejs';
@@ -106,7 +107,29 @@ export async function GET(
 
   const result = await tryReadFile(candidates);
   if (!result) {
-    return NextResponse.json({ error: 'not found' }, { status: 404 });
+    // Not a Starter file: Admin-generated packs serve the media pinned at publication from the
+    // database, behind the same per-learner access check above. Never a public URL.
+    let stored: Awaited<ReturnType<typeof readPublishedCardMedia>>;
+    try {
+      stored = await readPublishedCardMedia(
+        contentId,
+        kind === 'image' ? 'image' : kind === 'word-audio' ? 'word_audio' : 'sentence_audio',
+      );
+    } catch {
+      return NextResponse.json(
+        { error: 'unavailable' },
+        { status: 503, headers: { 'Cache-Control': 'no-store' } },
+      );
+    }
+    if (!stored) return NextResponse.json({ error: 'not found' }, { status: 404 });
+    return new NextResponse(new Uint8Array(stored.bytes), {
+      status: 200,
+      headers: {
+        'Content-Type': stored.mediaType,
+        'Cache-Control': 'private, no-store',
+        'X-Content-Type-Options': 'nosniff',
+      },
+    });
   }
 
   const contentType = mimeTypes[result.ext] ?? 'application/octet-stream';

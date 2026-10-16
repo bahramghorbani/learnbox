@@ -1,5 +1,7 @@
 import { createHash, randomUUID } from 'node:crypto';
 
+import { evaluateCardCompleteness } from '@learnbox/content-models';
+
 import {
   AiProviderError,
   type AiGenerationLimits,
@@ -168,8 +170,10 @@ const PLAN_SYSTEM_PROMPT = [
   '- packId: lowercase ascii slug, hyphens only, 3-60 chars, descriptive of the pack.',
   '- title and description: Persian, written for an Iranian learner.',
   '- audience: Persian, who this pack is for.',
-  '- cefr: exactly one of A1, A2, B1, B2, C1, C2 (pick the primary level if a range is asked).',
-  '- cardCount: integer, how many cards the request asks for.',
+  '- cefr: exactly one of A1, A2, B1, B2, C1, C2 (pick the primary level if a range is asked;',
+  '  if the request is only a title, propose the level that fits it).',
+  '- cardCount: integer, how many cards the request asks for (if not stated, propose a fitting',
+  '  number; the editor reviews and edits the plan before any card is generated).',
   '- topics: 3-12 short Persian topic labels covering the requested domain.',
   '- strategy: Persian, one or two sentences on how topics are divided across the pack.',
   '- scope: Persian, what is explicitly in and out of scope.',
@@ -184,8 +188,12 @@ const CARD_SYSTEM_PROMPT = [
   '- lemma: the German headword, correctly capitalised (nouns capitalised).',
   '- article: der, die or das for nouns; empty string otherwise.',
   '- part_of_speech: one of noun, verb, adjective, adverb, phrase, other.',
-  '- essential_inflection: plural for nouns, key forms for verbs; may be empty.',
-  '- pronunciation_ipa: IPA without slashes; may be empty.',
+  '- essential_inflection: nouns: the plural with its article ("die Häuser"), or "kein Plural" /',
+  '  "nur Plural" only when that is linguistically true; verbs: third person singular present,',
+  '  simple past and Perfekt ("geht, ging, ist gegangen"); adjectives: positive, comparative and',
+  '  superlative ("klein, kleiner, am kleinsten"), or "nicht steigerbar" only for an adjective that',
+  '  truly has no comparison; adverbs and phrases: may be empty.',
+  '- pronunciation_ipa: IPA without slashes; required.',
   '- persian_meanings: one or more Persian meanings separated by «؛».',
   '- example_german and example_persian: one natural sentence and its Persian translation.',
   '  Supply BOTH or leave BOTH empty.',
@@ -195,7 +203,8 @@ const CARD_SYSTEM_PROMPT = [
   '- difficulty: integer 1-5.',
   '- cefr: the requested CEFR level for this card.',
   '- visual_concept: a short Persian description of an image that would teach this word.',
-  '- image_prompt: a short English prompt describing that image.',
+  '- image_prompt: a short English prompt describing that image: only the concept of the word,',
+  '  with no mascot or recurring character.',
   '- source_reference: a short provenance string.',
   'Every field must be a string. Never return null. Never repeat a lemma already listed as taken.',
 ].join('\n');
@@ -740,7 +749,15 @@ export class AiPackGenerationService {
           job.plan.packId,
           job.plan.cefr,
         );
-        if (!checked.ok) invalid.set(index, validatorFindings(checked.issues));
+        if (!checked.ok) {
+          invalid.set(index, validatorFindings(checked.issues));
+          continue;
+        }
+        // The shared card standard (IPA, inflection by word type, example, English image subject
+        // without Bobo) is a text gap too: it goes through the same bounded repair, and a card that
+        // still misses it ends `unresolved` and is shown to the editor, never declared ready.
+        const gaps = evaluateCardCompleteness(checked.card);
+        if (gaps.length > 0) invalid.set(index, validatorFindings(gaps));
       }
       const toReview = indexes.filter((index) => !invalid.has(index));
       const reviewed =

@@ -14,6 +14,7 @@ import { PostgresReviewEventStore } from '../../api/dist/reviews/postgres-review
 
 import type { WebReviewDependencies } from './learner-review-web-http';
 import { readWebLearnerStateRuntimeConfig } from './learner-state-web-runtime';
+import { packAccessSql } from './pack-access';
 
 type Environment = Record<string, string | undefined>;
 type ReviewGlobal = typeof globalThis & {
@@ -32,6 +33,7 @@ export function webReviewDependenciesFromEnvironment(
   const store = new PostgresReviewEventStore(
     pool,
     isBinaryReviewEnabled(environment) ? createBinaryReviewPreflight(pool) : undefined,
+    packAccessSql,
   );
   // LB-B35 CP7 (default off): scheduler V2 fails closed unless the 0023 schema is present.
   const schedulerV2 = isSchedulerV2Enabled(environment);

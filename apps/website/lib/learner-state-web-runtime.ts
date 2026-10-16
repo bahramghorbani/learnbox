@@ -5,6 +5,7 @@ import { PostgresLearnerStateRepository } from '../../api/dist/learner-state/pos
 import { requireVerifiedDatabaseTls } from '../../api/dist/database/migration-runner.js';
 
 import type { WebLearnerStateDependencies } from './learner-state-web-http';
+import { packAccessSql } from './pack-access';
 
 export type WebLearnerStateRuntimeConfig = {
   databaseUrl: string;
@@ -31,7 +32,10 @@ export function webLearnerStateDependenciesFromEnvironment(
 ): WebLearnerStateDependencies | null {
   const config = readWebLearnerStateRuntimeConfig(environment);
   if (!config) return null;
-  const repository = new PostgresLearnerStateRepository(statePool(config.databaseUrl));
+  const repository = new PostgresLearnerStateRepository(
+    statePool(config.databaseUrl),
+    packAccessSql,
+  );
   // LEARNBOX_SERVER_SESSION_PLAN (default off): the server owns the day's new-card allowance. Off =
   // v1.2.1 behaviour exactly, and the daily-plan tables (migration 0023) are never touched.
   const service = new LearnerStateService(

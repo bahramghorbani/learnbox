@@ -168,6 +168,11 @@ export interface CardImageSubjectSource {
   article?: string | null;
   /** Curated canonical visual concept, when editorial review has recorded one. */
   visualConcept?: string | null;
+  /**
+   * The card's English image prompt. Image models are prompted in English, while the AI generator
+   * writes `visualConcept` in Persian for the reviewer, so the prompt outranks the concept.
+   */
+  imagePrompt?: string | null;
   /** Curated canonical per-card brief from the versioned visual contract, when one exists. */
   brief?: string | null;
 }
@@ -175,12 +180,12 @@ export interface CardImageSubjectSource {
 /**
  * Derives the subject brief for a card image from canonical card data.
  *
- * A curated brief or visual concept always wins — those are human-reviewed canonical values. Only
- * when neither exists is a conservative brief derived from the lemma, following the composition
- * the existing contract briefs use (one dominant, centered subject).
+ * A curated brief, then the card's English image prompt, then its visual concept wins — those are
+ * reviewed canonical values. Only when none exists is a conservative brief derived from the lemma,
+ * following the composition the existing contract briefs use (one dominant, centered subject).
  */
 export function deriveCardImageSubject(card: CardImageSubjectSource): string {
-  const curated = card.brief?.trim() || card.visualConcept?.trim();
+  const curated = card.brief?.trim() || card.imagePrompt?.trim() || card.visualConcept?.trim();
   if (curated) return curated;
 
   const lemma = card.lemma?.trim();
@@ -194,7 +199,7 @@ export function deriveCardImageSubject(card: CardImageSubjectSource): string {
 }
 
 const REQUIRED_IMAGE_POLICY =
-  'Depict the card meaning clearly and respectfully for Iranian learners; no text, letters, numbers, typography, brand logos, watermarks, UI, labels, or clutter.';
+  'Depict only the card meaning, clearly and respectfully for Iranian learners; for an abstract word show one clear, directly related situation; no Bobo or any mascot character; no text, letters, numbers, typography, brand logos, watermarks, UI, labels, or clutter.';
 
 /**
  * Composes the final image prompt with the canonical visual contract and non-negotiable quality

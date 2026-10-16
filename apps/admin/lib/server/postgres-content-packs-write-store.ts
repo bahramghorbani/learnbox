@@ -720,8 +720,13 @@ export class PostgresContentPacksWriteStore {
       const currentStatus = String(currentRow.status);
       const currentVersion = Number(currentRow.version);
       const currentContent = (currentRow.content_json ?? {}) as Record<string, unknown>;
-      // Media is preserved verbatim: attaching or replacing media is a separate authorized flow.
-      const preservedMedia = Array.isArray(currentContent.media) ? currentContent.media : [];
+      // Media is preserved verbatim, in its persisted container (array or kind-keyed map): attaching
+      // or replacing media is a separate authorized flow, and an edit must never drop a reference.
+      const preservedMedia = (
+        currentContent.media !== null && typeof currentContent.media === 'object'
+          ? currentContent.media
+          : []
+      ) as VersionedMediaAsset[];
 
       const editsInPlace = inPlaceEditableStatuses.has(currentStatus);
       const nextVersion = editsInPlace ? currentVersion : currentVersion + 1;

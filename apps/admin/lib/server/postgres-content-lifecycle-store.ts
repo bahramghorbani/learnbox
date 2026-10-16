@@ -9,9 +9,17 @@ import {
   canArchivePackFrom,
   canSubmitCardForReview,
   evaluateCardPublishReadiness,
+  evaluateCardSubmitReadiness,
   evaluatePackPublishReadiness,
   isPackLifecycleStatus,
+  pinCardMedia,
+  type ContentValidationIssue,
+  type GermanVoiceMapping,
 } from '@learnbox/content-models';
+
+import { readGermanVoiceMapping } from './ai-media-config';
+import { readCanonicalCardBrief } from './canonical-image-standard';
+import { type ResolvedCardMedia, resolveCardMediaReadiness } from './card-media-readiness';
 
 const canonicalUuidPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
@@ -69,10 +77,26 @@ export interface PackLifecycleMutation {
   expectedStatus?: PackLifecycleStatus;
 }
 
+/** A card that was not declared ready because the shared card standard reports gaps. */
+export interface IncompleteCard {
+  cardVersionId: string;
+  contentId: string;
+  lemma: string;
+  issues: ContentValidationIssue[];
+}
+
 export type SubmitForReviewResult =
-  | { status: 'applied'; submittedCardCount: number; packStatus: PackLifecycleStatus }
+  | {
+      status: 'applied';
+      submittedCardCount: number;
+      packStatus: PackLifecycleStatus;
+      /** Cards left in draft because they are incomplete; they are never declared ready. */
+      incompleteCards: IncompleteCard[];
+    }
   | { status: 'idempotent'; packStatus: PackLifecycleStatus }
   | { status: 'nothing_to_submit'; packStatus: PackLifecycleStatus }
+  /** Every submittable card is incomplete: nothing moved to review. */
+  | { status: 'incomplete'; packStatus: PackLifecycleStatus; incompleteCards: IncompleteCard[] }
   | { status: 'stale'; currentStatus: PackLifecycleStatus }
   | { status: 'forbidden' }
   | { status: 'not_found' };
@@ -114,7 +138,11 @@ function toIsoString(value: unknown): string | null {
  * is never rewritten, so an AI-suggested card stays AI-suggested forever while still being able
  * to prove that a human approved its release.
  */
-function toPublishCandidate(card: PackLifecycleCard, contentJson: unknown): CardPublishCandidate {
+function toPublishCandidate(
+  card: PackLifecycleCard,
+  contentJson: unknown,
+  resolved?: ResolvedCardMedia,
+): CardPublishCandidate {
   const content = (contentJson ?? {}) as WordCardDraft;
   const source = (content.source ?? { provider: 'editorial' }) as WordCardDraft['source'];
   return {
@@ -122,6 +150,9 @@ function toPublishCandidate(card: PackLifecycleCard, contentJson: unknown): Card
     contentId: card.contentId,
     lemma: card.lemma,
     status: card.status,
+    // Media readiness comes from the media's real source; unresolved means "not ready".
+    media: resolved?.media,
+    imageBrief: resolved?.imageBrief ?? null,
     content: {
       ...content,
       status: card.status,
@@ -157,7 +188,38 @@ function toPublishCandidate(card: PackLifecycleCard, contentJson: unknown): Card
  *    learning schedules, review events, audit history and entitlements stay intact.
  */
 export class PostgresContentLifecycleStore {
-  constructor(private readonly pool: DatabasePool) {}
+  constructor(
+    private readonly pool: DatabasePool,
+    private readonly voiceMapping: GermanVoiceMapping = readGermanVoiceMapping(process.env),
+  ) {}
+
+  /** Media readiness for the given card versions, read through `client` (locked rows if any). */
+  private resolveMedia(
+    client: Queryable,
+    cards: readonly PackLifecycleCard[],
+    contentByVersion: Map<string, unknown>,
+  ): Promise<Map<string, ResolvedCardMedia>> {
+    return resolveCardMediaReadiness(
+      client,
+      cards.map((card) => ({
+        cardId: card.cardId,
+        cardVersionId: card.cardVersionId,
+        contentId: card.contentId,
+        content: (contentByVersion.get(card.cardVersionId) ?? {}) as Record<string, unknown>,
+      })),
+      this.voiceMapping,
+    );
+  }
+
+  /** The published content: status published, accepted Admin media pinned by key and checksum. */
+  private publishedContent(
+    candidate: CardPublishCandidate,
+    resolved: ResolvedCardMedia | undefined,
+  ): Record<string, unknown> {
+    const content = { ...candidate.content, status: 'published' } as Record<string, unknown>;
+    if (resolved?.pins.length) content.media = pinCardMedia(content.media, resolved.pins);
+    return content;
+  }
 
   private async hasRole(
     client: Queryable,
@@ -299,11 +361,16 @@ export class PostgresContentLifecycleStore {
 
       const packStatus = toPackStatus(pack.status);
       const targetItemCount = toCount(pack.target_item_count);
+      const media = await this.resolveMedia(client, cards, contentByVersion);
       const readiness = evaluatePackPublishReadiness({
         packStatus,
         targetItemCount,
         cards: cards.map((card) =>
-          toPublishCandidate(card, contentByVersion.get(card.cardVersionId)),
+          toPublishCandidate(
+            card,
+            contentByVersion.get(card.cardVersionId),
+            media.get(card.cardVersionId),
+          ),
         ),
       });
       const submittableCardCount = cards.filter((card) =>
@@ -312,10 +379,18 @@ export class PostgresContentLifecycleStore {
       const pendingRevisionCount =
         packStatus === 'published' ? cards.filter((card) => card.status !== 'published').length : 0;
       const canPublish = await this.hasRole(client, input.actorUserId, publisherRoles);
-      const approvedRevisions = cards
+      const revisionBlockers = cards
         .filter((card) => card.status === 'approved')
-        .map((card) => toPublishCandidate(card, contentByVersion.get(card.cardVersionId)))
-        .filter((candidate) => evaluateCardPublishReadiness(candidate) === null).length;
+        .map((card) =>
+          evaluateCardPublishReadiness(
+            toPublishCandidate(
+              card,
+              contentByVersion.get(card.cardVersionId),
+              media.get(card.cardVersionId),
+            ),
+          ),
+        );
+      const approvedRevisions = revisionBlockers.filter((blocker) => blocker === null).length;
 
       return {
         status: 'ok',
@@ -327,7 +402,17 @@ export class PostgresContentLifecycleStore {
           cards,
           submittableCardCount,
           pendingRevisionCount,
-          readiness,
+          // A published pack only ever publishes its APPROVED revisions (publishApprovedRevisions),
+          // so only those can block; an already-published card is not "awaiting human review".
+          readiness:
+            packStatus === 'published'
+              ? {
+                  ...readiness,
+                  cardBlockers: revisionBlockers.filter(
+                    (blocker): blocker is NonNullable<typeof blocker> => blocker !== null,
+                  ),
+                }
+              : readiness,
           canSubmitForReview: submittableCardCount > 0,
           canPublish:
             canPublish && (packStatus === 'published' ? approvedRevisions > 0 : readiness.ready),
@@ -404,16 +489,39 @@ export class PostgresContentLifecycleStore {
       // Re-select under a row lock: PostgreSQL cannot lock a LATERAL sub-select alias, and the
       // status is re-checked so a version that moved between the two reads is skipped.
       const locked = await client.query(
-        `SELECT id
-           FROM card_versions
-          WHERE id = ANY($1::uuid[]) AND status IN ('draft', 'ai_generated')
-          ORDER BY id
-          FOR UPDATE`,
+        `SELECT cv.id, cv.content_json, c.content_id, c.lemma
+           FROM card_versions cv
+           JOIN cards c ON c.id = cv.card_id
+          WHERE cv.id = ANY($1::uuid[]) AND cv.status IN ('draft', 'ai_generated')
+          ORDER BY cv.id
+          FOR UPDATE OF cv`,
         [submittable.rows.map((row) => String(row.id))],
       );
-      const versionIds = locked.rows.map((row) => String(row.id));
+      // Declaring a card ready requires the shared card standard (IPA, example, part-of-speech
+      // inflection, ...). An incomplete card stays a draft and is reported, never submitted.
+      const incompleteCards: IncompleteCard[] = [];
+      const versionIds: string[] = [];
+      for (const row of locked.rows) {
+        const contentId = String(row.content_id);
+        const issues = evaluateCardSubmitReadiness(
+          (row.content_json ?? {}) as Record<string, unknown>,
+          { imageBrief: readCanonicalCardBrief(contentId) ?? null },
+        );
+        if (issues.length === 0) {
+          versionIds.push(String(row.id));
+        } else {
+          incompleteCards.push({
+            cardVersionId: String(row.id),
+            contentId,
+            lemma: String(row.lemma),
+            issues,
+          });
+        }
+      }
       if (versionIds.length === 0) {
         await client.query('ROLLBACK');
+        if (incompleteCards.length > 0)
+          return { status: 'incomplete', packStatus, incompleteCards };
         if (packStatus === 'needs_review') return { status: 'idempotent', packStatus };
         return { status: 'nothing_to_submit', packStatus };
       }
@@ -452,6 +560,7 @@ export class PostgresContentLifecycleStore {
         status: 'applied',
         submittedCardCount: versionIds.length,
         packStatus: packStatus === 'published' ? 'published' : 'needs_review',
+        incompleteCards,
       };
     } catch (error) {
       await client.query('ROLLBACK');
@@ -523,12 +632,27 @@ export class PostgresContentLifecycleStore {
           [cards.map((card) => card.cardVersionId)],
         );
         const lockedByVersion = new Map(locked.rows.map((row) => [String(row.id), row]));
-        const candidates = cards
-          .filter((card) => lockedByVersion.get(card.cardVersionId)?.status === 'approved')
-          .map((card) => {
-            const row = lockedByVersion.get(card.cardVersionId)!;
-            return toPublishCandidate({ ...card, status: 'approved' }, row.content_json);
-          });
+        const approvedCards = cards.filter(
+          (card) => lockedByVersion.get(card.cardVersionId)?.status === 'approved',
+        );
+        const revisionMedia = await this.resolveMedia(
+          client,
+          approvedCards,
+          new Map(
+            approvedCards.map((card) => [
+              card.cardVersionId,
+              lockedByVersion.get(card.cardVersionId)!.content_json,
+            ]),
+          ),
+        );
+        const candidates = approvedCards.map((card) => {
+          const row = lockedByVersion.get(card.cardVersionId)!;
+          return toPublishCandidate(
+            { ...card, status: 'approved' },
+            row.content_json,
+            revisionMedia.get(card.cardVersionId),
+          );
+        });
         if (candidates.length === 0) {
           await client.query('ROLLBACK');
           return { status: 'idempotent' };
@@ -563,7 +687,10 @@ export class PostgresContentLifecycleStore {
             `UPDATE card_versions
                 SET status = 'published', published_at = now(), content_json = $2
               WHERE id = $1`,
-            [candidate.cardVersionId, { ...candidate.content, status: 'published' }],
+            [
+              candidate.cardVersionId,
+              this.publishedContent(candidate, revisionMedia.get(candidate.cardVersionId)),
+            ],
           );
           await this.audit(
             client,
@@ -614,13 +741,27 @@ export class PostgresContentLifecycleStore {
 
       // The locked row is authoritative: a concurrent review decision may have moved the version
       // between the unlocked read and the lock.
+      const packMedia = await this.resolveMedia(
+        client,
+        cards,
+        new Map(
+          cards.map((card) => [
+            card.cardVersionId,
+            lockedByVersion.get(card.cardVersionId)?.content_json,
+          ]),
+        ),
+      );
       const candidates = cards.map((card) => {
         const row = lockedByVersion.get(card.cardVersionId);
         const authoritative: PackLifecycleCard = {
           ...card,
           status: row ? (String(row.status) as ContentStatus) : card.status,
         };
-        return toPublishCandidate(authoritative, row?.content_json);
+        return toPublishCandidate(
+          authoritative,
+          row?.content_json,
+          packMedia.get(card.cardVersionId),
+        );
       });
 
       const readiness = evaluatePackPublishReadiness({
@@ -638,7 +779,10 @@ export class PostgresContentLifecycleStore {
           `UPDATE card_versions
               SET status = 'published', published_at = now(), content_json = $2
             WHERE id = $1`,
-          [candidate.cardVersionId, { ...candidate.content, status: 'published' }],
+          [
+            candidate.cardVersionId,
+            this.publishedContent(candidate, packMedia.get(candidate.cardVersionId)),
+          ],
         );
         await this.audit(
           client,
