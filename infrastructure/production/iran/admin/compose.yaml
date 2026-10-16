@@ -1,0 +1,38 @@
+name: learnbox-admin-production
+
+# Iran host. Mirrors the Germany compose; adds the internal DB network and the private DB CA
+# (apps force sslmode=verify-full; NODE_EXTRA_CA_CERTS is the repo's established pattern).
+services:
+  admin:
+    image: sha256:ba7cfcf5e7c2bb843807e91b50e933e14db9d610c13d511ec82f5f4f2562386c
+    restart: unless-stopped
+    init: true
+    env_file: .env
+    environment:
+      NODE_EXTRA_CA_CERTS: /run/db-tls/ca.crt
+    volumes:
+      - /home/ubuntu/learnbox/db-tls/ca.crt:/run/db-tls/ca.crt:ro
+    mem_limit: 1g
+    healthcheck:
+      test: ['CMD', 'node', '-e', "fetch('http://127.0.0.1:3000/').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: local
+      options:
+        max-size: 10m
+        max-file: '3'
+    networks:
+      edge:
+        aliases: [admin-app]
+      db: {}
+
+networks:
+  edge:
+    name: learnbox-edge
+    external: true
+  db:
+    name: learnbox-db
+    external: true

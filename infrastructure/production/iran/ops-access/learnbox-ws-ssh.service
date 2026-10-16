@@ -1,0 +1,22 @@
+[Unit]
+Description=LearnBox admin SSH over WebSocket (CDN path, edge-gateway bind only)
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+User=nobody
+Group=nogroup
+# Bind address must exist: wait for the learnbox-edge bridge gateway.
+ExecStartPre=/bin/sh -c 'for i in $(seq 1 60); do ip -4 addr | grep -q "inet 172.19.0.1/" && exit 0; sleep 2; done; exit 1'
+ExecStart=/usr/bin/python3 /opt/learnbox-ops-access/ws-ssh-bridge.py 172.19.0.1
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+MemoryMax=64M
+TasksMax=32
+
+[Install]
+WantedBy=multi-user.target

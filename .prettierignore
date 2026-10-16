@@ -1,2 +1,5 @@
 # Git-ignored local execution workspace for the learner OTP plan.
 .superpowers/sdd/2026-08-08-learner-otp-ui/
+
+# Byte-for-byte copies of Iran host files; checksums are compared with the host, never reformat.
+infrastructure/production/iran/

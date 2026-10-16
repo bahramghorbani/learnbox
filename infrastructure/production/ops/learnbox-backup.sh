@@ -69,9 +69,13 @@ sanitize_error() {
 }
 
 PG_IMAGE="${LEARNBOX_PG_IMAGE:-postgres:17-alpine}"
+# Extra `docker run` arguments for a self-hosted database on a private Docker network, e.g.
+# "--network learnbox-db -v /home/ubuntu/learnbox/db-tls/ca.crt:/run/db-tls/ca.crt:ro".
+# Word-split on purpose; empty (the default) keeps the managed-Neon behaviour unchanged.
+read -r -a PG_DOCKER_ARGS <<< "${LEARNBOX_PG_DOCKER_ARGS:-}"
 
 # pg_dump runs in a throwaway client container; only the compressed stream crosses to the host.
-if ! docker run --rm -i -e PGURL="$PGURL" "$PG_IMAGE" \
+if ! docker run --rm -i ${PG_DOCKER_ARGS[@]+"${PG_DOCKER_ARGS[@]}"} -e PGURL="$PGURL" "$PG_IMAGE" \
   sh -c 'pg_dump --no-owner --no-privileges --format=plain "$PGURL"' 2>/tmp/lb-backup-err.$$ | gzip -9 > "$target"; then
   err="$(sanitize_error < /tmp/lb-backup-err.$$ 2>/dev/null || true)"
   rm -f /tmp/lb-backup-err.$$ "$target"

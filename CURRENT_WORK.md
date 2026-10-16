@@ -16,8 +16,8 @@ stay off. Current truth, the title-to-publication workflow, and rollback:
 - #430 Profile Identity regression: live symptom fixed by `87490d60`; root cause (omitted vs explicit
   `false`) unproven; open until an owner decision.
 - ArvanCloud timeout on long Admin AI requests: unverified risk, not reproduced.
-- PR #423 (Iran stack + runbook) is still a Draft, although the Iran cutover has been executed; its
-  runbook is not yet on `main`.
+- Iran operations runbook: `docs/operations/IRAN_PRODUCTION_RUNBOOK.md` with host-mirrored files
+  under `infrastructure/production/iran/`. It replaces the Draft PR #423, which is kept as history.
 - The private media-smoke pack `internal-media-test-20261016` stays Draft with three unaccepted
   candidates until the owner reviews it.
 

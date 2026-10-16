@@ -2,7 +2,8 @@
 
 **Current section reviewed 2026-10-16** against the Iran Production host, the release evidence of
 the 2026-10-16 release and the deployed product source `15e6783`. It is the canonical operational
-truth for the Production Admin panel at `https://admin.learnboxapp.com`. Release identity also
+truth for the Production Admin panel at `https://admin.learnboxapp.com`. Host operations are in
+[`IRAN_PRODUCTION_RUNBOOK.md`](./IRAN_PRODUCTION_RUNBOOK.md). Release identity also
 appears in [`PROJECT_STATE.md`](../../PROJECT_STATE.md); product decisions live in
 [`PDR-010`](../product-decisions/PDR-010-ARTICLE-AWARE-AUDIO-AND-MEDIA-STANDARDS.md). The numbered
 sections after "Historical record" describe the 2026-10-09 state and are kept as history only.

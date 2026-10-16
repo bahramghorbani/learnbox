@@ -1,0 +1,13 @@
+[Unit]
+Description=Daily LearnBox encrypted offsite replication
+Documentation=file:/home/ubuntu/learnbox/offsite/docs/OFFSITE_BACKUP_RUNBOOK.md
+
+[Timer]
+OnCalendar=*-*-* 04:10:00 UTC
+RandomizedDelaySec=900
+AccuracySec=1min
+Persistent=true
+Unit=learnbox-offsite.service
+
+[Install]
+WantedBy=timers.target

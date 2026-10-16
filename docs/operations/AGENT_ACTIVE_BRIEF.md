@@ -45,7 +45,7 @@ Nothing in this brief authorizes new work. Before starting anything, read [`.ai/
 
 ## Release rules
 
-Release artifacts follow [`RELEASE_ARTIFACT_PREFLIGHT.md`](./RELEASE_ARTIFACT_PREFLIGHT.md): build from the exact pushed source SHA for `linux/amd64`, compare the public build-flag matrix against the running image, and stop on any missing or changed approved flag. Never bypass the preflight. Production steps (backup, migration, deploy, rollback) are in the Iran runbook on the open PR #423 branch (`docs/operations/IRAN_MIGRATION_RUNBOOK.md`; not yet on `main`). [`ADMIN_RELEASE_HANDOFF.md`](./ADMIN_RELEASE_HANDOFF.md) describes the earlier Admin release and is historical.
+Release artifacts follow [`RELEASE_ARTIFACT_PREFLIGHT.md`](./RELEASE_ARTIFACT_PREFLIGHT.md): build from the exact pushed source SHA for `linux/amd64`, compare the public build-flag matrix against the running image, and stop on any missing or changed approved flag. Never bypass the preflight. Host operations (access, backups, offsite, monitoring, disaster recovery) are in [`IRAN_PRODUCTION_RUNBOOK.md`](./IRAN_PRODUCTION_RUNBOOK.md). [`ADMIN_RELEASE_HANDOFF.md`](./ADMIN_RELEASE_HANDOFF.md) describes the earlier Admin release and is historical.
 
 ## Current product truth
 
