@@ -120,6 +120,12 @@ The drop-in `10-iran-selfhost.conf` sets `LEARNBOX_PG_DOCKER_ARGS` (DB network +
 `learnbox-backup.sh` passes it to its `docker run`; without it, the backup cannot reach the
 internal database. The repository restore-drill script does not read this variable.
 
+Scratch database containers (restore drill, recovery drill, account-deletion check) must be
+removed with `docker rm -fv`. The postgres image declares a data volume, and `docker rm -f` on a
+`--rm` container leaves it behind with the restored copy of the data in it. A host that ran the
+older scripts can hold such volumes; list them with `docker volume ls -f dangling=true` and treat
+their contents as Production data.
+
 Status files: `/home/ubuntu/learnbox/ops/state/backup.status` and
 `/home/ubuntu/learnbox/offsite/state/offsite.status`.
 

@@ -128,7 +128,7 @@ SCRATCH="lb-recovery-drill-$$"
 rand() { head -c 18 /dev/urandom | od -An -tx1 | tr -d ' \n'; }
 PW_APP="$(rand)"; PW_ADMIN="$(rand)"; PW_MIGRATOR="$(rand)"
 
-cleanup() { docker rm -f "$SCRATCH" >/dev/null 2>&1 || true; }
+cleanup() { docker rm -fv "$SCRATCH" >/dev/null 2>&1 || true; }
 trap cleanup EXIT
 
 checks=0; failures=0

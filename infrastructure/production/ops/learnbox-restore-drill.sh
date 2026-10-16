@@ -25,7 +25,7 @@ if [ -z "$archive" ]; then
 fi
 [ -n "$archive" ] && [ -f "$archive" ] || { echo "restore-drill: no backup archive found" >&2; exit 1; }
 
-cleanup() { docker rm -f "$SCRATCH" >/dev/null 2>&1 || true; }
+cleanup() { docker rm -fv "$SCRATCH" >/dev/null 2>&1 || true; }
 trap cleanup EXIT
 
 fail() {

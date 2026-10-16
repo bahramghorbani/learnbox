@@ -5,7 +5,7 @@ set -uo pipefail
 NAME="lb-del-$$"
 PGI=postgres:17-alpine
 ARCHIVE="$(ls -1t /home/ubuntu/learnbox/backups/learnbox-*.sql.gz | head -1)"
-cleanup(){ docker rm -f "$NAME" >/dev/null 2>&1 || true; }
+cleanup(){ docker rm -fv "$NAME" >/dev/null 2>&1 || true; }
 trap cleanup EXIT
 
 docker run -d --rm --name "$NAME" -e POSTGRES_PASSWORD=x -e POSTGRES_DB=d "$PGI" >/dev/null
