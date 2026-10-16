@@ -74,18 +74,31 @@ esac
 # platform is arm64, and such an image starts and then dies on exec format in Production.
 PLATFORM=linux/amd64
 
+# Build from the commit, not the working tree. Create this before reading the app matrix because the
+# matrix itself is part of the exact source tree to be built.
+BUILD_DIR="$(mktemp -d)"
+cleanup() { rm -rf "$BUILD_DIR"; }
+trap cleanup EXIT
+
 # Learner app client flags. Like the passkey flag they are inlined at build time, and the Dockerfile
 # and compose.yaml defaults have drifted from what Production runs (Production has binary review
 # on, which both default to off). So every flag must be stated for the build; none is defaulted.
 APP_FLAGS="PROFILE_IDENTITY_ENABLED QUEUE_QUARANTINE SERVER_SESSION_PLAN GOAL_UX_REMOVED SESSION_EXPIRY_UX BINARY_REVIEW_UI"
 FLAG_ARGS=(--build-arg "APP_SOURCE_SHA=$SOURCE_SHA")
 if [ "$TARGET" = app ]; then
+  # One tracked non-secret matrix, read from the SAME commit being built. Direct environment
+  # overrides are rejected: relying on Dockerfile/compose defaults hid the profile in a release.
+  APP_RELEASE_CONFIG="infrastructure/production/app/release-build.env"
+  if ! git cat-file -e "$SOURCE_SHA:$APP_RELEASE_CONFIG" 2>/dev/null; then
+    echo "build-admin-image: $APP_RELEASE_CONFIG is missing from $SOURCE_SHA" >&2; exit 2
+  fi
+  config_file="$BUILD_DIR/release-build.env"
+  git show "$SOURCE_SHA:$APP_RELEASE_CONFIG" > "$config_file"
+  set -a; . "$config_file"; set +a
   for flag in $APP_FLAGS; do
     name="NEXT_PUBLIC_LEARNBOX_$flag"; value="${!name:-}"
     if [ "$value" != true ] && [ "$value" != false ]; then
-      echo "build-admin-image: $name must be set to 'true' or 'false' for an app image, got '${value:-<unset>}'" >&2
-      echo "build-admin-image: copy the values from the image currently in Production; do not rely on defaults." >&2
-      exit 2
+      echo "build-admin-image: $name in $APP_RELEASE_CONFIG must be true or false" >&2; exit 2
     fi
     FLAG_ARGS+=(--build-arg "$name=$value")
   done
@@ -97,9 +110,6 @@ IMAGE_TAG="learnbox-$TARGET:${SOURCE_SHA:0:7}-${TAG_SUFFIX}"
 
 # Build from the commit, not the working tree. A dirty checkout is a normal state during release
 # preparation and must not be able to leak into a candidate.
-BUILD_DIR="$(mktemp -d)"
-cleanup() { rm -rf "$BUILD_DIR"; }
-trap cleanup EXIT
 git archive --format=tar "$SOURCE_SHA" | tar -x -C "$BUILD_DIR"
 
 echo "build-admin-image: commit        $SOURCE_SHA"
@@ -136,6 +146,43 @@ check "OCI label records the requested commit" "$SOURCE_SHA" \
   "$(inspect '{{index .Config.Labels "org.opencontainers.image.revision"}}')"
 check "runtime APP_SOURCE_SHA records the requested commit" "$SOURCE_SHA" "$(image_env APP_SOURCE_SHA)"
 check "image title is set" "learnbox-$TARGET" "$(inspect '{{index .Config.Labels "org.opencontainers.image.title"}}')"
+if [ "$TARGET" = app ]; then
+  # These labels are deliberately public and become the runnable image's comparable release record.
+  # Verify every configured flag was baked into the artifact, rather than trusting the build command.
+  for flag in $APP_FLAGS; do
+    key="$(printf '%s' "$flag" | tr '[:upper:]' '[:lower:]')"
+    key="$(printf '%s' "$key" | tr '_' '-')"
+    label="io.learnbox.release.$key"
+    # Labels use short keys for stable, readable release evidence.
+    case "$label" in
+      *profile-identity*) label=io.learnbox.release.profile_identity ;;
+      *queue-quarantine*) label=io.learnbox.release.queue_quarantine ;;
+      *server-session-plan*) label=io.learnbox.release.server_session_plan ;;
+      *goal-ux-removed*) label=io.learnbox.release.goal_ux_removed ;;
+      *session-expiry-ux*) label=io.learnbox.release.session_expiry_ux ;;
+      *binary-review-ui*) label=io.learnbox.release.binary_review_ui ;;
+    esac
+    name="NEXT_PUBLIC_LEARNBOX_$flag"
+    check "release label $label matches the approved matrix" "${!name}" "$(inspect "{{index .Config.Labels \"$label\"}}")"
+  done
+  if [ "${LEARNBOX_RUNNING_IMAGE:-}" != "" ]; then
+    echo "build-admin-image: running-to-candidate public configuration diff"
+    for flag in $APP_FLAGS; do
+      key="$(printf '%s' "$flag" | tr '[:upper:]' '[:lower:]' | tr '_' '-')"
+      case "$key" in profile-identity-enabled) label=io.learnbox.release.profile_identity;; queue-quarantine) label=io.learnbox.release.queue_quarantine;; server-session-plan) label=io.learnbox.release.server_session_plan;; goal-ux-removed) label=io.learnbox.release.goal_ux_removed;; session-expiry-ux) label=io.learnbox.release.session_expiry_ux;; binary-review-ui) label=io.learnbox.release.binary_review_ui;; esac
+      running="$(docker image inspect "$LEARNBOX_RUNNING_IMAGE" --format "{{index .Config.Labels \"$label\"}}" 2>/dev/null || true)"
+      name="NEXT_PUBLIC_LEARNBOX_$flag"
+      if [ "$running" != true ] && [ "$running" != false ]; then
+        echo "FAIL running image lacks comparable $label; record an owner decision before release" >&2
+        failures=$((failures + 1)); checks=$((checks + 1))
+      else
+        check "running $label → candidate $label" "${!name}" "$running"
+      fi
+    done
+  else
+    echo "build-admin-image: no LEARNBOX_RUNNING_IMAGE; candidate cannot be release-approved until a running-image diff is recorded" >&2
+  fi
+fi
 check "provenance is not the forgotten-argument default" absent \
   "$([ "$(image_env APP_SOURCE_SHA)" = unknown ] && echo present || echo absent)"
 
