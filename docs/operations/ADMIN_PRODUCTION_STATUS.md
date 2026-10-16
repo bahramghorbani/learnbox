@@ -1,10 +1,176 @@
 # Admin Production status
 
-**As of 2026-10-09.** Canonical operational truth for the Production Admin panel at
-`https://admin.learnboxapp.com`. Learner deployment truth stays in
-`docs/release/LEARNER_DEPLOY_FA44D21.md`; schema/migration truth in
-`docs/release/PRODUCTION_SYNC_0024_0032_EXECUTION.md`; capability inventory in
-`docs/PRODUCT_STATUS.md`.
+**Current section reviewed 2026-10-16** against the Iran Production host, the release evidence of
+the 2026-10-16 release and the deployed product source `15e6783`. It is the canonical operational
+truth for the Production Admin panel at `https://admin.learnboxapp.com`. Release identity also
+appears in [`PROJECT_STATE.md`](../../PROJECT_STATE.md); product decisions live in
+[`PDR-010`](../product-decisions/PDR-010-ARTICLE-AWARE-AUDIO-AND-MEDIA-STANDARDS.md). The numbered
+sections after "Historical record" describe the 2026-10-09 state and are kept as history only.
+
+## Current state (2026-10-16)
+
+### Running release
+
+| Item              | Value                                                                                                   |
+| ----------------- | ------------------------------------------------------------------------------------------------------- |
+| Host              | Iran Production host (behind ArvanCloud CDN), `linux/amd64`                                             |
+| Product source    | `15e6783b8f3efed2dbf1de382161099fd8b0b7fe` (PR #426)                                                    |
+| Admin image       | `sha256:ba7cfcf5e7c2bb843807e91b50e933e14db9d610c13d511ec82f5f4f2562386c`, healthy, restarts `0`        |
+| Learner App image | `sha256:87490d60978e83cff664df31e5820ff47fb085d41754c8f666b0a6d7e82355d5`, healthy, restarts `0`        |
+| Schema head       | `0038_card_media_completion` (file checksum `3f1da56a…c8ccb3`), applied in the 2026-10-16 window        |
+| Software rollback | Admin `sha256:6e77c2f7…e69f`, App `sha256:175daeb8…83cc2` (recorded in `ops/deploy-state/*.previous`)   |
+| Release window    | 2026-10-16 17:50–18:09 UTC; Admin writes frozen; fresh backup, checksum, offsite copy and restore drill |
+
+Rollback is an image swap only. Migration `0038` has no down migration and stays applied; a
+database restore or compensating DDL needs a separate owner approval. Rolling the App back to
+`175daeb8` would remove Profile Identity again (see #430).
+
+`main` is `93794c3` (PR #429), one commit after the product source. That commit changes only the
+release build/preflight tooling, the learner Dockerfile's OCI labels, the public build matrix and
+`RELEASE_ARTIFACT_PREFLIGHT.md`; no runtime code differs. The running images were **not** rebuilt
+from `main`, and `main` must not be deployed merely to equalize SHAs.
+
+### Capabilities and non-secret configuration
+
+| Capability                         | State           | Detail                                                                                                                                                     |
+| ---------------------------------- | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Passkey authentication             | on              | Bootstrap enrollment closed                                                                                                                                |
+| Content & Packs read/manage/review | on              | `LEARNBOX_ADMIN_CONTENT_PACKS_ENABLED`, `..._MANAGE_ENABLED`, `LEARNBOX_ADMIN_CONTENT_REVIEW_ENABLED` = `true`                                             |
+| Text AI                            | on (Admin only) | AvalAI; generator `claude-opus-5-5`, reviewer and repair `claude-fable-5-1`, per-call timeout `600000` ms                                                  |
+| Media AI                           | on (Admin only) | Enabled by the owner 2026-10-16; image `flux.2-pro`, audio `eleven_multilingual_v2`; voices `der=sage`, `die=nova`, `das=fable`, default `nova`            |
+| Audio output format override       | unset           | `LEARNBOX_AI_AUDIO_OUTPUT_FORMAT` must stay unset unless a separate AvalAI qualification decision changes it                                               |
+| Dashboard, Support, Presentation   | on              | Store administration is on, but no payment path exists                                                                                                     |
+| Splash replacement                 | off             | Flag absent                                                                                                                                                |
+| Payments                           | off             | `LEARNBOX_ZARINPAL_ENABLED` absent in Admin and App                                                                                                        |
+| Learner Profile Identity           | on              | Build-time flag compiled `true` into App `87490d60`                                                                                                        |
+| Private Starter-media attachment   | off             | App `LEARNBOX_PRIVATE_MEDIA_ATTACHMENT_ENABLED=false`. This switch serves the historical Starter private-media path only; it is not used by new pack media |
+
+New pack media reaches a learner only through `/api/content-media/{contentId}/{image|word-audio|sentence-audio}`
+after the candidate is accepted and the card version is published, and only for a learner with access
+to the pack. Draft media is visible only in the Admin private preview.
+
+Secrets, provider keys, private URLs and balances never belong in this document.
+
+**Private test fixture.** Production holds one private Draft pack created for the authorized media
+smoke: `internal-media-test-20261016` («آزمون داخلی رسانه — منتشر نشود») with one non-Starter Draft card
+(`der Tisch`). It has exactly three `ready`, unaccepted candidates (image, word audio, sentence audio;
+both audio candidates `sage`). It is not published or assigned. Do not publish, accept or delete it
+without an owner decision.
+
+## Operator workflow: title to publication
+
+Use the owner Passkey session in the Admin UI. Content writes and media-state reads may ask for
+recent re-authentication; complete that prompt. Do not bypass the UI with raw API calls. An agent
+never presses a paid button; every paid step below is an owner click.
+
+### 1. Plan — one paid call
+
+1. **«محتوا و بسته‌ها»** → **«ساخت بسته با هوش مصنوعی»**.
+2. Write the request (title/subject, level, audience) and choose free/paid, then **«ساخت طرح»**. This
+   is **one paid Text AI call**.
+3. Check and edit the proposed plan (pack id: lowercase letters, digits and `-`; title, CEFR, card
+   count, topics, audience). **«ذخیرهٔ تغییرات طرح»** is unpaid.
+
+### 2. Text generation with automatic review and Repair — paid
+
+1. **«تأیید طرح و تولید N کارت»** starts generation. It is the paid step. The modal shows the
+   estimate first: each batch makes at least two paid calls (generation + independent review), and
+   cards that fail review get up to two bounded automatic Repair + re-review rounds, which are
+   further paid calls. Repair is automatic inside generation; this release has no separate Repair
+   button.
+2. Progress is the server's real count. If a batch response is lost (network/502/504), the modal
+   says the server is still working, polls every 10 s, and **does not resend** the batch.
+   **«تلاش دوباره برای این دسته»** after a recorded failure is a new paid attempt and an owner decision.
+3. **Keep the modal and page open until the review list appears.** This release has no screen that
+   reopens an AI job after its modal is closed. The server keeps completed batches, but starting a new
+   «ساخت بسته با هوش مصنوعی» is a new paid run.
+
+### 3. Accept the text as Draft — unpaid
+
+1. The review list shows validator and reviewer findings per card. Cards that passed (directly or
+   after Repair) are preselected. Cards still failing after the Repair rounds are not.
+2. **«پذیرش N کارت به‌عنوان Draft»** writes the selected cards into the pack as Draft. It is not
+   approval and not publication.
+3. Fix remaining text by hand: pack → **«مشاهدهٔ کارت‌ها»** → card **«ویرایش»** (unpaid). The shared
+   card standard is the gate. An incomplete card can be saved. Submitting for review needs complete
+   text; publishing also needs accepted, valid media.
+
+### 4. Complete media for the whole pack — paid after confirmation
+
+1. Pack card → **«مشاهدهٔ کارت‌ها»**. The **«تکمیل رسانهٔ بسته»** panel sits above the card table. It is
+   shown only when Media AI is on, the cards loaded successfully and the pack has at least one card.
+   It is a different control from the per-card **«رسانه»** dialog.
+2. **«بررسی رسانه‌های لازم»** reads the media state of every card. It is unpaid. It shows the exact
+   number of paid calls by kind (image, word audio, example audio). Valid accepted media, candidates
+   awaiting acceptance and items still generating are excluded.
+3. **«تأیید و ساخت N مورد»** is the paid step. It runs one request at a time and stops at the first
+   failure. **«ادامهٔ N مورد ناموفق یا اجرانشده (فراخوانی پولی)»** resumes only the failed and unrun
+   items, and is paid.
+4. **Keep the page open on this pack while it runs.** The runner lives in the browser tab. Leaving
+   the pack or closing the page lets an already-sent request finish on the server but starts no
+   further request.
+5. After a disconnect or a closed page, **do not press «تأیید و ساخت» again.** Reopen the same pack
+   and press **«بررسی رسانه‌های لازم»** / **«بررسی دوباره»**. It reads the stored `generating` and
+   `ready` candidates and does not generate them again. Accepted media without provable provenance is
+   listed for an owner decision and is never regenerated automatically.
+
+### 5. Accept media — unpaid
+
+1. In **«منتظر پذیرش شما»**, open each item. It opens the card **«رسانه»** dialog with private preview,
+   model, spoken text and voice.
+2. Check the image subject and quality. Check the spoken text and the voice: word and example use
+   the same article voice; a `der` card uses `sage` for both.
+3. **«پذیرش این نامزد»** attaches that candidate. `ready` alone is not a reason to accept. In the
+   same dialog, **«تولید دوباره»** is a paid call behind a confirmation.
+
+### 6. Review and publish — unpaid, human only
+
+1. In the pack panel, **«چرخهٔ بررسی و انتشار»** lists every blocker: missing human review, invalid
+   or incomplete card, unreviewed AI content, media not accepted/valid.
+2. **«ارسال به بررسی»** sends complete Drafts to the content review workspace (reached from the
+   Dashboard). The reviewer records all six dimensions, then **«تأیید نهایی سردبیری»**.
+3. Back in the lifecycle panel, **«انتشار»** (or **«انتشار نسخه‌های تأییدشده»** for a published pack)
+   is the first step that makes content learner-visible. It is an explicit owner decision per pack.
+   AI generation, acceptance and readiness never publish anything.
+4. Payments are off, so a paid (`is_free=false`) pack cannot be bought even after publication.
+
+Known limitation: the Admin lifecycle, listing and price routes reject the Starter pack id
+`learnbox_start_a1_essentials` (#428). New pack ids use `-` and are not affected.
+
+## Disconnects, provider errors and the unverified Arvan timeout risk
+
+- A stored `ready`/`failed` candidate or job state is evidence. A browser error, a CDN error page or
+  a generic timeout is **not** evidence that the provider was not called or billed.
+- **Unverified risk.** Admin traffic passes through the ArvanCloud CDN. Its upstream timeout for
+  `admin.learnboxapp.com` is not recorded and was not measured. The Admin allows one provider call up
+  to 600 s, and one Text AI batch request can contain several calls, so a long request may outlast
+  the CDN and reach the browser as 502/504 while the server keeps working. The code is built for this
+  case (the Text AI modal polls without resending; the media runner stops and the next scan reads
+  stored state). It has **not** been reproduced or exercised in Production through Arvan. Recorded
+  Production evidence is three single-card media calls, all completed normally. Do not change timeout
+  or retry settings, and do not infer the cause of a future gateway error, from this note alone.
+- On any unknown result: stop paid work, reopen the pack, read the stored state, and ask the owner
+  before another paid call. A retry is never assumed free or idempotent.
+
+## Collaboration rules
+
+- Merge, Production deploy/restart/configuration, migration, database restore or DDL, payment
+  activation, content publication, Starter changes and every paid provider call each need explicit
+  owner authorization for that action. Preparing a branch or PR is not that authorization.
+- Non-Production work runs in its own environment with its own database and credentials. Never copy
+  Production keys, private media or user data into it. Paid calls there still need owner approval.
+- Releases follow [`RELEASE_ARTIFACT_PREFLIGHT.md`](./RELEASE_ARTIFACT_PREFLIGHT.md): exact source
+  SHA, `linux/amd64`, digest pins and the approved public build-flag matrix. A missing or changed
+  approved flag stops the release; never silence the preflight.
+
+---
+
+## Historical record (as of 2026-10-09)
+
+Everything below describes the Admin on the earlier Production host before the Iran move and the
+2026-10-16 release. Where it conflicts with "Current state" above, it is superseded. In particular:
+§4 and §5 (AI capabilities "absent/BLOCKED", Dashboard off), §6 (Anthropic API key requirement; the
+Admin now uses AvalAI), the Neon references, and the §7–§8 next steps no longer describe Production.
 
 Every row below carries one of five states, and they are not interchangeable:
 
@@ -143,7 +309,7 @@ and 8 `xmin` digests identical). Full record: `docs/release/ADMIN_RELEASE_0033_8
   build whatever the environment says, and the opt-in key is `LEARNBOX_ADMIN_LEGACY_ROUTES_ENABLED`.
   The stray key is inert, and the routes are fail-closed either way — no action required.
 
-## 4. Production Admin feature flags (current)
+## 4. Production Admin feature flags (as of 2026-10-09)
 
 | Flag                                            | Value   | Effect                                                      |
 | ----------------------------------------------- | ------- | ----------------------------------------------------------- |

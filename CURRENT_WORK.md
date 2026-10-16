@@ -4,6 +4,25 @@
 
 ## Active work
 
+**Production release 2026-10-16 — DEPLOYED; next is the first real pack (owner-operated).**
+Product source `15e6783` runs on the Iran host (App `87490d60…`, Admin `ba7cfcf5…`, schema `0038`);
+`main` = `93794c3` adds release tooling only. Text AI and Media AI are on in the Admin. Payments
+stay off. Current truth, the title-to-publication workflow, and rollback:
+`docs/operations/ADMIN_PRODUCTION_STATUS.md`. Unfinished items:
+
+- First real pack: owner runs it in the Admin; paid steps are owner clicks only.
+- #427 Starter adjective values: open, owner editorial decision.
+- #428 Admin rejects the Starter pack id: open, separate fix PR.
+- #430 Profile Identity regression: live symptom fixed by `87490d60`; root cause (omitted vs explicit
+  `false`) unproven; open until an owner decision.
+- ArvanCloud timeout on long Admin AI requests: unverified risk, not reproduced.
+- PR #423 (Iran stack + runbook) is still a Draft, although the Iran cutover has been executed; its
+  runbook is not yet on `main`.
+- The private media-smoke pack `internal-media-test-20261016` stays Draft with three unaccepted
+  candidates until the owner reviews it.
+
+The entries below are earlier work. They are history unless they say otherwise.
+
 **Learner PWA v1.2.2 — DEPLOYED to Production (2026-10-12T17:48:55Z).** Enables four
 previously merged and separately reviewed Learner client features in one coordinated build:
 `NEXT_PUBLIC_LEARNBOX_QUEUE_QUARANTINE`, `NEXT_PUBLIC_LEARNBOX_SESSION_EXPIRY_UX`,

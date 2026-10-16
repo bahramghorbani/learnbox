@@ -1,6 +1,6 @@
 # LearnBox stable project state
 
-**Last reviewed:** 2026-10-02
+**Last reviewed:** 2026-10-16 (Production release reconciliation)
 
 ## Release position
 
@@ -20,11 +20,48 @@
 | Release record                 | annotated tag `v1.0.0` + GitHub Release, targeting `2acdcef4`             |
 | Repository visibility          | private (security decision, 2026-09-28)                                   |
 
-### Production as deployed today (reconciled 2026-10-09)
+### Production as deployed today (reconciled 2026-10-16)
 
-These are the current live facts. The table above is the v1.0.0 activation record and must not be
-read as current; the earlier CP11 (2026-10-02) reconciliation of this table is superseded by the
-rows below.
+These are the current live facts, read on 2026-10-16 from the Iran Production host and the release
+evidence of the 2026-10-16 window. Every older table in this document is history.
+
+| Fact                       | Value                                                                                                                                                          |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Host                       | Iran Production host (`linux/amd64`) behind ArvanCloud CDN, since 2026-10-13. The Neon database is not Production or DR.                                       |
+| Product source deployed    | `15e6783b8f3efed2dbf1de382161099fd8b0b7fe` (PR #426), deployed 2026-10-16, window 17:50–18:09 UTC                                                              |
+| Learner App image          | `sha256:87490d60978e83cff664df31e5820ff47fb085d41754c8f666b0a6d7e82355d5`, healthy                                                                             |
+| Admin image                | `sha256:ba7cfcf5e7c2bb843807e91b50e933e14db9d610c13d511ec82f5f4f2562386c`, healthy                                                                             |
+| Software rollback          | App `sha256:175daeb8a23542d6a1201483a2de928ed54b98c4b6d8840f8c9e1b0688783cc2`, Admin `sha256:6e77c2f7b7f3ea48b35adf7edf43fc92bea69744632037fcc645eb58da34e69f` |
+| Schema head                | `0038_card_media_completion` (38 ledger rows); no down migration; restore/DDL needs separate owner approval                                                    |
+| Pre-migration safety       | Fresh backup (sha256 `3bcbb980…3c964`), offsite copy, successful disposable restore drill (45 tables, 37 migrations)                                           |
+| Learner server flags ON    | `TZ_PERSIST`, `SERVER_SESSION_PLAN`, `TODAY_WORKLOAD`, `QUEUE_QUARANTINE`, `BINARY_REVIEW`, `DYNAMIC_SPLASH_ENABLED`                                           |
+| Learner build flags        | per `infrastructure/production/app/release-build.env`; Profile Identity compiled `true`                                                                        |
+| Private Starter attachment | `LEARNBOX_PRIVATE_MEDIA_ATTACHMENT_ENABLED=false`; unrelated to new pack media                                                                                 |
+| Admin AI                   | Text AI on (AvalAI); Media AI on (owner decision 2026-10-16). Detail: `docs/operations/ADMIN_PRODUCTION_STATUS.md`                                             |
+| Payments                   | off: `LEARNBOX_ZARINPAL_ENABLED` absent                                                                                                                        |
+| `main` vs deployed source  | `main` = `93794c3` (PR #429) = product source + release-tooling/doc changes only. Images were not rebuilt from `main`.                                         |
+
+The full operational state, the Admin workflow from title to publication, and the unverified Arvan
+timeout risk are in [`docs/operations/ADMIN_PRODUCTION_STATUS.md`](./docs/operations/ADMIN_PRODUCTION_STATUS.md).
+Release evidence (not in Git): `/home/ubuntu/learnbox/ops/release-evidence/20261016T175036Z-15e6783/`
+on the Production host.
+
+Open issues that touch this release:
+
+- #427 — open. Two Starter adjective cards carry an invalid value; owner editorial decision, then a
+  new reviewed Starter version. Starter data was not changed.
+- #428 — open. Admin pack-id validation rejects the Starter id `learnbox_start_a1_essentials`, so
+  its lifecycle, listing and price screens fail. Learner access is unaffected; new pack ids are
+  unaffected.
+- #430 — open. The live symptom is fixed: App `87490d60` restores Profile Identity, and the PR #429
+  preflight blocks a future silent flag change. Whether `175daeb8` was built by omitting the flag or
+  with an explicit `false` is not proven; close it only with an owner decision.
+- ArvanCloud upstream timeout for long Admin AI requests — unverified risk, see the Admin status
+  document. Not reproduced in Production.
+
+### Production as deployed on 2026-10-09 (historical)
+
+Superseded by the 2026-10-16 table above; kept as history.
 
 | Fact                                    | Value                                                                                                                                                   |
 | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |

@@ -130,6 +130,21 @@ capabilities beyond the shipped v1 scope unless this section says otherwise.
 
 ## Current Production state
 
+**As of 2026-10-16.** Production runs on the Iran host. Product source `15e6783` (PR #426):
+Learner App `sha256:87490d60978e83cff664df31e5820ff47fb085d41754c8f666b0a6d7e82355d5` and Admin
+`sha256:ba7cfcf5e7c2bb843807e91b50e933e14db9d610c13d511ec82f5f4f2562386c`, both healthy; schema head
+`0038_card_media_completion`. Learner capabilities: the four v1.2.2 client flags and binary review
+stay on, and Profile Identity is on again (it was off in the intermediate `175daeb8` build, #430).
+Admin capabilities: Passkey, Dashboard, Support, Presentation, Store administration, Content & Packs
+(read, manage, review), Text AI and Media AI are on. Payments are off. New packs are generated, their
+media is generated and accepted, and they are published in the Admin by a human. Nothing publishes
+automatically. Paid AI calls run only on an owner click. Private Starter-media attachment is off and
+does not serve new pack media. Rollback is an image swap to App `175daeb8…` / Admin `6e77c2f7…`.
+Operational truth, workflow and open risks:
+`docs/operations/ADMIN_PRODUCTION_STATUS.md`.
+
+### Production state as of 2026-10-12 (historical)
+
 **As of 2026-10-12.** Learner application: `APP_SOURCE_SHA=54ba3042c02edd22c87872650ef2bdcb41836f2d`,
 image `sha256:051f8697037fa4da68bb81499f4e0d4c220fff0a45cdf67e97487ab4a5adf190`, healthy,
 `RestartCount=0`, failing streak `0`, Learner PWA version **1.2.2**, deployed `2026-10-12T17:48:55Z`

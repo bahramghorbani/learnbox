@@ -1,6 +1,8 @@
 # PDR-003 — Bobo visual vocabulary
 
-- **Status:** approved
+- **Status:** approved; **superseded for newly generated card images** on 2026-10-16 by
+  [PDR-010 owner pack-content decisions](./PDR-010-ARTICLE-AWARE-AUDIO-AND-MEDIA-STANDARDS.md#owner-pack-content-decisions-2026-10-16)
+  (new images contain no Bobo). It still describes the approved historical Starter images.
 - **Date:** 2026-07-27
 
 ## Context
