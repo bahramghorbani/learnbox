@@ -450,7 +450,6 @@ describe('PostgresContentLifecycleStore archive', () => {
   });
 });
 
-
 describe('PostgresContentLifecycleStore card standard and media gates (owner rules 2026-10-16)', () => {
   function draftWorld(rows: Row[]) {
     return (sql: string): Row[] => {
@@ -466,7 +465,12 @@ describe('PostgresContentLifecycleStore card standard and media gates (owner rul
     const withoutIpa = approvedContent({ status: 'draft', pronunciation: undefined });
     const client = createClient(
       draftWorld([
-        { id: versionOne, content_json: approvedContent({ status: 'draft' }), content_id: 'start-a1-apfel', lemma: 'Apfel' },
+        {
+          id: versionOne,
+          content_json: approvedContent({ status: 'draft' }),
+          content_id: 'start-a1-apfel',
+          lemma: 'Apfel',
+        },
         { id: versionTwo, content_json: withoutIpa, content_id: 'start-a1-birne', lemma: 'Birne' },
       ]),
     );
@@ -479,7 +483,9 @@ describe('PostgresContentLifecycleStore card standard and media gates (owner rul
     expect(result.submittedCardCount).toBe(1);
     expect(result.incompleteCards).toHaveLength(1);
     expect(result.incompleteCards[0]!.contentId).toBe('start-a1-birne');
-    expect(result.incompleteCards[0]!.issues.map((issue) => issue.field)).toContain('pronunciation.ipa');
+    expect(result.incompleteCards[0]!.issues.map((issue) => issue.field)).toContain(
+      'pronunciation.ipa',
+    );
     const moved = client.calls.find((call) => call.sql.includes("SET status = 'needs_review'"));
     expect(JSON.stringify(moved?.params)).not.toContain(versionTwo);
   });

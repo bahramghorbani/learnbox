@@ -1,69 +1,118 @@
 import type { CardMediaKind, MediaKindState } from './CardMediaPanel';
 
-export const BULK_MEDIA_CARD_CAP = 25;
-const VOICE_ROSTER_CODES = new Set([
-  'das_voice_unconfigured',
-  'article_voices_not_distinct',
-  'voice_not_supported',
-  'audio_model_not_qualified',
-]);
-export type BulkMediaKind = 'image' | 'audio';
-export type BulkMediaResult = {
-  cardId: string;
-  label: string;
-  status: 'generated' | 'skipped' | 'blocked' | 'failed';
+/**
+ * Whole-pack media completion (owner rules 2026-10-16).
+ *
+ * 1. `scanPackMedia` reads every card's media state (no provider call) and lists only media that is
+ *    actually needed: the server's `needsGeneration` already excludes valid accepted media, a valid
+ *    candidate awaiting acceptance and anything still generating.
+ * 2. The Admin sees the counts — the paid-call estimate — and confirms before anything runs.
+ * 3. `runPackMedia` generates the confirmed items one at a time through the existing guarded
+ *    per-card route and records each outcome. The first failure stops the run (a provider outage
+ *    must not turn into a string of paid attempts); the failed and not-yet-run items are then
+ *    resumed on their own. Nothing is ever accepted automatically.
+ *
+ * ponytail: runs in the open Admin tab, one request in flight. Progress is durable because every
+ * candidate is a database row; closing the tab stops the run and a new scan picks up exactly what
+ * is still needed. Move to a server-side job if packs outgrow one sitting.
+ */
+
+export const MEDIA_KIND_ORDER: readonly CardMediaKind[] = ['image', 'word_audio', 'sentence_audio'];
+
+export type PackMediaItem = { cardId: string; label: string; kind: CardMediaKind };
+
+export interface PackMediaScan {
+  /** Media to generate: paid calls, run only after confirmation. */
+  needed: PackMediaItem[];
+  /** Valid candidates waiting for a human to accept them. */
+  awaitingAcceptance: PackMediaItem[];
+  /** Still generating from an earlier request; never started again. */
+  generating: PackMediaItem[];
+  /** Accepted media whose provenance cannot be proven: an owner decision, never auto-regenerated. */
+  unverifiable: PackMediaItem[];
+  /** Cards whose state could not be read; reported, never guessed. */
+  unreadable: { cardId: string; label: string }[];
+}
+
+export type PackMediaResult = PackMediaItem & {
+  status: 'generated' | 'not_needed' | 'failed' | 'stopped';
   message: string;
 };
 
-type Card = { cardId: string; label: string };
-type Dependencies = {
-  loadState: (cardId: string) => Promise<MediaKindState[] | undefined>;
-  generate: (
-    cardId: string,
-    kind: CardMediaKind,
-  ) => Promise<{ ok: boolean; message?: string; code?: string }>;
-  onResult: (result: BulkMediaResult) => void;
+type MediaState = MediaKindState & {
+  needsGeneration?: boolean;
+  latestValidity?: string | null;
+  acceptedValidity?: string | null;
 };
 
-/** Single-flight client runner: every request uses the existing guarded per-card route. */
-export async function runBulkCardMediaGeneration(
-  cards: Card[],
-  kind: BulkMediaKind,
-  { loadState, generate, onResult }: Dependencies,
+export async function scanPackMedia(
+  cards: { cardId: string; label: string }[],
+  loadState: (cardId: string) => Promise<MediaKindState[] | undefined>,
+): Promise<PackMediaScan> {
+  const scan: PackMediaScan = {
+    needed: [],
+    awaitingAcceptance: [],
+    generating: [],
+    unverifiable: [],
+    unreadable: [],
+  };
+  for (const card of cards) {
+    const states = (await loadState(card.cardId)) as MediaState[] | undefined;
+    if (!states) {
+      scan.unreadable.push(card);
+      continue;
+    }
+    for (const kind of MEDIA_KIND_ORDER) {
+      const state = states.find((entry) => entry.kind === kind);
+      const item = { ...card, kind };
+      if (state?.latestCandidate?.status === 'generating') scan.generating.push(item);
+      else if (state?.latestCandidate?.status === 'ready' && state.latestValidity === 'valid')
+        scan.awaitingAcceptance.push(item);
+      else if (state?.acceptedValidity === 'unverifiable') scan.unverifiable.push(item);
+      else if (state?.needsGeneration) scan.needed.push(item);
+    }
+  }
+  return scan;
+}
+
+export async function runPackMedia(
+  items: PackMediaItem[],
+  {
+    generate,
+    onResult,
+  }: {
+    generate: (
+      cardId: string,
+      kind: CardMediaKind,
+    ) => Promise<{ ok: boolean; status?: string; message?: string; code?: string }>;
+    onResult: (result: PackMediaResult) => void;
+  },
 ): Promise<void> {
-  const candidateKind: CardMediaKind = kind === 'image' ? 'image' : 'word_audio';
-  for (const card of cards.slice(0, BULK_MEDIA_CARD_CAP)) {
-    const media = await loadState(card.cardId);
-    const state = media?.find((item) => item.kind === candidateKind);
-    if (
-      state?.accepted ||
-      state?.latestCandidate?.status === 'generating' ||
-      state?.latestCandidate?.status === 'ready'
-    ) {
+  for (let index = 0; index < items.length; index += 1) {
+    const item = items[index]!;
+    const result = await generate(item.cardId, item.kind);
+    if (result.ok) {
+      const notNeeded = result.status === 'not_needed';
       onResult({
-        cardId: card.cardId,
-        label: card.label,
-        status: 'skipped',
-        message: 'رسانهٔ پذیرفته‌شده یا نامزدِ در انتظار بررسی وجود دارد.',
+        ...item,
+        status: notNeeded ? 'not_needed' : 'generated',
+        message: notNeeded
+          ? 'رسانهٔ معتبر از قبل وجود دارد؛ دوباره ساخته نشد.'
+          : 'پیشنهاد ساخته شد و باید دستی پذیرفته شود.',
       });
       continue;
     }
-    const result = await generate(card.cardId, candidateKind);
-    if (!result.ok) {
-      // A voice-roster problem blocks every card the same way, so the run stops at the first one.
-      onResult({
-        cardId: card.cardId,
-        label: card.label,
-        status: result.code && VOICE_ROSTER_CODES.has(result.code) ? 'blocked' : 'failed',
-        message: result.message ?? 'تولید رسانه متوقف شد.',
-      });
-      return;
+    onResult({ ...item, status: 'failed', message: result.message ?? 'تولید ناموفق بود.' });
+    for (const rest of items.slice(index + 1)) {
+      onResult({ ...rest, status: 'stopped', message: 'اجرا پیش از این مورد متوقف شد.' });
     }
-    onResult({
-      cardId: card.cardId,
-      label: card.label,
-      status: 'generated',
-      message: 'نامزد تولید شد و هنوز باید دستی پذیرفته شود.',
-    });
+    return;
   }
+}
+
+/** Items a resumed run picks up: the failure and everything the stop left untouched. */
+export function resumableItems(results: readonly PackMediaResult[]): PackMediaItem[] {
+  return results
+    .filter((result) => result.status === 'failed' || result.status === 'stopped')
+    .map(({ cardId, label, kind }) => ({ cardId, label, kind }));
 }

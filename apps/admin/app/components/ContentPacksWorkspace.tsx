@@ -19,11 +19,6 @@ import {
   type MediaCandidateView,
   type MediaKindState,
 } from './CardMediaPanel';
-import {
-  runBulkCardMediaGeneration,
-  type BulkMediaKind,
-  type BulkMediaResult,
-} from './card-media-bulk';
 import { PackLifecyclePanel } from './PackLifecyclePanel';
 import { EmptyState, ErrorState, LoadingState } from './AdminStates';
 import { faNum } from './fa-digits';
@@ -40,6 +35,7 @@ import {
 } from './ContentPackForms';
 
 import { AdminSidebar } from './AdminSidebar';
+import { PackMediaCompletion } from './PackMediaCompletion';
 
 /**
  * Phase 1 / Milestone 1.1 — Content & Packs workspace.
@@ -289,8 +285,7 @@ async function sendMutation(
       // Submit-for-review keeps incomplete cards as drafts and names them; say so instead of a
       // plain success, so a partially submitted pack is never read as fully ready.
       const payload = (await response.json().catch(() => undefined)) as
-        | { incompleteCards?: IncompleteCardPayload[] }
-        | undefined;
+        { incompleteCards?: IncompleteCardPayload[] } | undefined;
       const incomplete = payload?.incompleteCards ?? [];
       return incomplete.length > 0
         ? { ok: true, message: incompleteCardsMessage(incomplete, true) }
@@ -538,11 +533,6 @@ export function ContentPacksWorkspace() {
   // AI generation (M1.4) has its own default-off gate on top of `manageEnabled`.
   const [aiEnabled, setAiEnabled] = useState(false);
   const [mediaEnabled, setMediaEnabled] = useState(false);
-  const [bulkMedia, setBulkMedia] = useState<{
-    kind: BulkMediaKind;
-    running: boolean;
-    results: BulkMediaResult[];
-  }>();
   /** The card whose media panel is open, if any. */
   const [mediaCard, setMediaCard] = useState<{ cardId: string; label: string } | undefined>(
     undefined,
@@ -668,46 +658,23 @@ export function ContentPacksWorkspace() {
     return outcome;
   }
 
-  async function startBulkMedia(kind: BulkMediaKind) {
-    if (!mediaEnabled || bulkMedia?.running) return;
-    if (!window.confirm('این کار برای هر کارت از سرویس خارجیِ پولی استفاده می‌کند. ادامه می‌دهید؟'))
-      return;
-    setBulkMedia({ kind, running: true, results: [] });
-    await runBulkCardMediaGeneration(
-      cards.map((card) => ({
-        cardId: card.cardId,
-        label: `${card.article ? `${card.article} ` : ''}${card.lemma}`,
-      })),
+  async function loadMediaState(cardId: string) {
+    const response = await fetch(`/api/content/media/state?cardId=${encodeURIComponent(cardId)}`, {
+      credentials: 'same-origin',
+      headers: { accept: 'application/json' },
+    });
+    if (!response.ok) return undefined;
+    return ((await response.json()) as { media?: MediaKindState[] }).media;
+  }
+
+  async function generatePackMedia(cardId: string, kind: CardMediaKind) {
+    const result = await postAiJson<{ status?: string }>('/api/content/media/generate', {
+      cardId,
       kind,
-      {
-        loadState: async (cardId) => {
-          const response = await fetch(
-            `/api/content/media/state?cardId=${encodeURIComponent(cardId)}`,
-            {
-              credentials: 'same-origin',
-              headers: { accept: 'application/json' },
-            },
-          );
-          if (!response.ok) return undefined;
-          return ((await response.json()) as { media?: MediaKindState[] }).media;
-        },
-        generate: async (cardId, candidateKind) => {
-          const result = await postAiJson<{ candidate: MediaCandidateView }>(
-            '/api/content/media/generate',
-            { cardId, kind: candidateKind },
-          );
-          return result.ok
-            ? { ok: true }
-            : { ok: false, message: result.message, code: result.code };
-        },
-        onResult: (result) =>
-          setBulkMedia((current) =>
-            current ? { ...current, results: [...current.results, result] } : current,
-          ),
-      },
-    );
-    setBulkMedia((current) => (current ? { ...current, running: false } : current));
-    if (openPackId) void loadCards(openPackId);
+    });
+    return result.ok
+      ? { ok: true, status: result.payload.status }
+      : { ok: false, message: result.message, code: result.code };
   }
 
   const visible = packs.filter((pack) => (filter === 'all' ? true : pack.status === filter));
@@ -1051,26 +1018,6 @@ export function ContentPacksWorkspace() {
                       درون‌ریزی CSV / XLSX
                     </button>
                   ) : null}
-                  {mediaEnabled && cardsPhase === 'ready' && cards.length > 0 ? (
-                    <>
-                      <button
-                        className="btn"
-                        type="button"
-                        disabled={bulkMedia?.running}
-                        onClick={() => void startBulkMedia('image')}
-                      >
-                        تولید تصویر برای کارت‌های این بسته
-                      </button>
-                      <button
-                        className="btn"
-                        type="button"
-                        disabled={bulkMedia?.running}
-                        onClick={() => void startBulkMedia('audio')}
-                      >
-                        تولید صدای واژه برای کارت‌های این بسته
-                      </button>
-                    </>
-                  ) : null}
                 </div>
                 <div className="card-body">
                   {manageEnabled ? (
@@ -1085,23 +1032,20 @@ export function ContentPacksWorkspace() {
                       }}
                     />
                   ) : null}
-                  {bulkMedia ? (
-                    <div className="notice" role="status" data-cp-state="bulk-media">
-                      <span>
-                        {bulkMedia.running
-                          ? 'در حال تولید ترتیبی رسانه…'
-                          : 'اجرای تولید رسانه تمام شد.'}{' '}
-                        {faNum(bulkMedia.results.length)} کارت پردازش شد؛ هیچ نامزدی خودکار پذیرفته
-                        نشده است.
-                      </span>
-                      <ul>
-                        {bulkMedia.results.map((result) => (
-                          <li key={result.cardId} className="ltr">
-                            {result.label}: {result.message}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
+                  {mediaEnabled && cardsPhase === 'ready' && cards.length > 0 ? (
+                    <PackMediaCompletion
+                      key={openPackId}
+                      cards={cards.map((card) => ({
+                        cardId: card.cardId,
+                        label: `${card.article ? `${card.article} ` : ''}${card.lemma}`,
+                      }))}
+                      loadState={loadMediaState}
+                      generate={generatePackMedia}
+                      onOpenCard={setMediaCard}
+                      onFinished={() => {
+                        if (openPackId) void loadCards(openPackId);
+                      }}
+                    />
                   ) : null}
                   {cardsPhase === 'loading' ? (
                     <LoadingState label="در حال دریافت کارت‌ها…" />
@@ -1252,10 +1196,10 @@ export function ContentPacksWorkspace() {
               return undefined;
             }
           }}
-          onGenerate={async (kind: CardMediaKind) => {
+          onGenerate={async (kind: CardMediaKind, regenerate: boolean) => {
             const result = await postAiJson<{ candidate: MediaCandidateView }>(
               '/api/content/media/generate',
-              { cardId: mediaCard.cardId, kind },
+              { cardId: mediaCard.cardId, kind, regenerate },
             );
             return result.ok
               ? { ok: true as const, candidate: result.payload.candidate }

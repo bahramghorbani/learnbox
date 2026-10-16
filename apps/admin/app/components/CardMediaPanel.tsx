@@ -46,8 +46,10 @@ export interface CardMediaPanelProps {
   cardLabel: string;
   onClose: () => void;
   onLoadState: () => Promise<MediaKindState[] | undefined>;
+  /** `regenerate` is the explicit Admin request to replace existing media (a paid call). */
   onGenerate: (
     kind: CardMediaKind,
+    regenerate: boolean,
   ) => Promise<{ ok: true; candidate: MediaCandidateView } | { ok: false; message: string }>;
   onAccept: (
     kind: CardMediaKind,
@@ -170,10 +172,19 @@ export function CardMediaPanel(props: CardMediaPanelProps) {
     void refresh();
   }, [refresh]);
 
-  async function generate(kind: CardMediaKind) {
+  async function generate(kind: CardMediaKind, regenerate: boolean) {
+    // Replacing existing media is a deliberate, paid act; it is never implied by a plain click.
+    if (
+      regenerate &&
+      !window.confirm(
+        'برای این مورد رسانه یا پیشنهاد وجود دارد. ساخت دوباره فراخوانی پولی است؛ ادامه می‌دهید؟',
+      )
+    ) {
+      return;
+    }
     setBusyKind(kind);
     setError(undefined);
-    const result = await props.onGenerate(kind);
+    const result = await props.onGenerate(kind, regenerate);
     if (!result.ok) setError(result.message);
     // Always re-read: the authoritative state is the job row, not this component's memory.
     await refresh();
@@ -310,7 +321,9 @@ export function CardMediaPanel(props: CardMediaPanelProps) {
                     className="btn"
                     type="button"
                     disabled={isGenerating}
-                    onClick={() => void generate(kindState.kind)}
+                    onClick={() =>
+                      void generate(kindState.kind, Boolean(kindState.accepted || candidate))
+                    }
                   >
                     {kindState.accepted || candidate ? 'تولید دوباره' : 'تولید'}
                   </button>
