@@ -471,6 +471,17 @@ describe('image generation reuses the canonical standard', () => {
     expect(prompt).toMatch(/no text, letters, numbers.*brand logos/i);
     expect(result.candidate.imageStandardVersion).toBe('v2');
   });
+  it('refuses a new image that mentions Bobo without calling the provider', async () => {
+    const { service, provider } = createService({
+      lemma: 'Apfel',
+      article: 'der',
+      imagePrompt: 'Bobo points to a red apple.',
+    });
+    const result = await service.generate({ cardId: CARD_ID, kind: 'image', actorUserId: ACTOR });
+
+    expect(result).toMatchObject({ status: 'unprocessable' });
+    expect(provider.generateImage).not.toHaveBeenCalled();
+  });
 });
 
 describe('generation never disturbs accepted media', () => {

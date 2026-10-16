@@ -9,6 +9,7 @@ import {
   canPublishPackFrom,
   canSubmitCardForReview,
   evaluateCardPublishReadiness,
+  evaluateCardCompleteness,
   evaluatePackPublishReadiness,
   isCardInReview,
   isPackLifecycleStatus,
@@ -104,6 +105,35 @@ describe('draft to review transition', () => {
     expect(isCardInReview('auto_validated')).toBe(true);
     expect(isCardInReview('draft')).toBe(false);
     expect(isCardInReview('approved')).toBe(false);
+  });
+});
+
+describe('historical Starter image exceptions', () => {
+  it('preserves an approved bundled Bobo image but still rejects Bobo on a new card', () => {
+    const withBobo = card({ imagePrompt: 'Bobo points to a red apple.' });
+    expect(
+      evaluateCardCompleteness(withBobo).some(
+        (issue) => issue.code === 'image_subject_mentions_bobo',
+      ),
+    ).toBe(true);
+
+    const preserved = {
+      ...withBobo,
+      media: [
+        {
+          source: 'bundled',
+          kind: 'image',
+          assetId: 'historic-image',
+          pathname: 'learnbox-start/start-a1-apfel/image/v1.jpg',
+          mimeType: 'image/jpeg',
+        },
+      ],
+    };
+    expect(
+      evaluateCardCompleteness(preserved).some(
+        (issue) => issue.code === 'image_subject_mentions_bobo',
+      ),
+    ).toBe(false);
   });
 });
 

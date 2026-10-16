@@ -23,6 +23,7 @@ import {
   deriveCardImageSubject,
   effectiveImageSubjectSource,
   evaluateMediaValidity,
+  imageSubjectMentionsBobo,
   resolveEffectiveGermanVoice,
   type GermanVoiceMapping,
   type LearnBoxImageStandard,
@@ -335,6 +336,13 @@ export class CardMediaGenerationService {
         capability === 'image'
           ? deriveCardImageSubject(effectiveImageSubjectSource(card.content, card.brief))
           : null;
+      // Bundled historical Starter images may remain, but a new candidate may never reproduce Bobo.
+      if (imageSubject && imageSubjectMentionsBobo(imageSubject)) {
+        return {
+          status: 'unprocessable',
+          reason: 'تصویر جدید نباید شامل بوبو یا شخصیت ماسکات باشد.',
+        };
+      }
 
       if (capability === 'audio') {
         // Any roster problem refuses all audio (single and bulk alike); no voice is substituted.

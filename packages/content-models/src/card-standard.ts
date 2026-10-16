@@ -38,6 +38,28 @@ export type CardStandardContent = Record<string, unknown>;
 
 const PERSIAN_LETTER = /[\u0600-\u06FF]/;
 const BOBO_MENTION = /bobo|بوبو/i;
+
+/** New generated imagery must never include the historic mascot. */
+export function imageSubjectMentionsBobo(subject: string): boolean {
+  return BOBO_MENTION.test(subject);
+}
+
+function preservesHistoricalStarterImage(content: CardStandardContent): boolean {
+  if (!text(content.id).startsWith('start-a1-')) return false;
+  const media = content.media;
+  const entries = Array.isArray(media)
+    ? media
+    : media && typeof media === 'object'
+      ? Object.values(media as Record<string, unknown>)
+      : [];
+  return entries.some(
+    (entry) =>
+      entry &&
+      typeof entry === 'object' &&
+      (entry as { kind?: unknown; source?: unknown }).kind === 'image' &&
+      (entry as { source?: unknown }).source === 'bundled',
+  );
+}
 /** Explicit, linguistically valid "no plural" statements (uncountable / singulare tantum). */
 const NOUN_NO_PLURAL = /kein(en)? Plural|nur (im )?Singular|ohne Plural|Singularetantum/i;
 /** Plurale tantum: the headword itself is plural, so there is no separate plural form. */
@@ -232,7 +254,7 @@ export function evaluateCardCompleteness(
     const subject = deriveCardImageSubject(
       effectiveImageSubjectSource(content, options.imageBrief),
     );
-    if (BOBO_MENTION.test(subject)) {
+    if (imageSubjectMentionsBobo(subject) && !preservesHistoricalStarterImage(content)) {
       issues.push(
         issue(
           'imagePrompt',
