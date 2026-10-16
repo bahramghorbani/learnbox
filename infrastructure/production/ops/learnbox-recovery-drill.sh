@@ -128,7 +128,8 @@ SCRATCH="lb-recovery-drill-$$"
 rand() { head -c 18 /dev/urandom | od -An -tx1 | tr -d ' \n'; }
 PW_APP="$(rand)"; PW_ADMIN="$(rand)"; PW_MIGRATOR="$(rand)"
 
-cleanup() { docker rm -fv "$SCRATCH" >/dev/null 2>&1 || true; }
+CID=""  # set only once this run has created the container; cleanup never touches anything else
+cleanup() { [ -n "$CID" ] && docker rm -fv "$CID" >/dev/null 2>&1 || true; }
 trap cleanup EXIT
 
 checks=0; failures=0
@@ -163,8 +164,8 @@ echo "recovery-drill: archive $(basename "$archive")"
 echo "recovery-drill: archive sha256 $(sha256sum "$archive" 2>/dev/null | cut -d' ' -f1 || shasum -a 256 "$archive" | cut -d' ' -f1)"
 
 # --- step 0: disposable target. No published ports: reachable only through docker exec.
-docker run -d --rm --name "$SCRATCH" -e POSTGRES_PASSWORD="$(rand)" -e POSTGRES_DB=drill \
-  "$PG_IMAGE" >/dev/null
+CID=$(docker run -d --rm --name "$SCRATCH" -e POSTGRES_PASSWORD="$(rand)" -e POSTGRES_DB=drill \
+  "$PG_IMAGE")
 ready=0
 for _ in $(seq 1 45); do
   docker exec "$SCRATCH" pg_isready -U postgres -d drill >/dev/null 2>&1 && { ready=1; break; }
