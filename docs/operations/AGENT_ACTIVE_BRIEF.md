@@ -8,6 +8,8 @@ Use this brief after `AGENTS.md` and `AI_BOOTSTRAP.md`. The canonical product st
 
 **Start here for current Production and content work:** [`ADMIN_PRODUCTION_STATUS.md`](./ADMIN_PRODUCTION_STATUS.md) — running release, rollback, capabilities, the Admin workflow from title to publication, and collaboration rules. Product rules for new packs: [`PDR-010`](../product-decisions/PDR-010-ARTICLE-AWARE-AUDIO-AND-MEDIA-STANDARDS.md#owner-pack-content-decisions-2026-10-16).
 
+Host operations (access, backups, offsite, monitoring, Caddy and disaster recovery): [`IRAN_PRODUCTION_RUNBOOK.md`](./IRAN_PRODUCTION_RUNBOOK.md).
+
 **Deployed and verified (Iran Production host, 2026-10-16)**
 
 - Product source `15e6783` (PR #426). Learner App `sha256:87490d60…`, Admin `sha256:ba7cfcf5…`, both healthy, schema head `0038_card_media_completion`. Software rollback: App `175daeb8…`, Admin `6e77c2f7…` (image swap only; `0038` stays).

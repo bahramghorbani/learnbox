@@ -16,37 +16,39 @@ are not reformatted, so their checksums can be compared with the host. They were
 file changes only through an authorized release or operation, and the copy here is updated in a PR
 afterwards.
 
-| Repository path (`infrastructure/production/…`)                  | Host path                                                                |
-| ---------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| `iran/app/compose.yaml`                                          | `/home/ubuntu/learnbox/app/compose.yaml`                                 |
-| `iran/admin/compose.yaml`                                        | `/home/ubuntu/learnbox/admin/compose.yaml`                               |
-| `iran/landing/compose.yaml`                                      | `/srv/learnbox/landing/compose.yaml` (Landing + Caddy, public 80/443)    |
-| `iran/db/compose.yaml`, `iran/db/pg_hba.conf`                    | `/home/ubuntu/learnbox/db/`                                              |
-| `ops/learnbox-backup.sh`, `ops/learnbox-restore-drill.sh`        | `/home/ubuntu/learnbox/ops/`                                             |
-| `ops/learnbox-alert.sh`                                          | `/home/ubuntu/learnbox/ops/` (Telegram is unreachable from Iran)         |
-| `ops/systemd/learnbox-{backup,restore-drill}.{service,timer}`    | `/etc/systemd/system/`                                                   |
-| `iran/systemd/learnbox-{backup,restore-drill}.service.d/*.conf`  | `/etc/systemd/system/<unit>.d/10-iran-selfhost.conf`                     |
-| `iran/offsite/learnbox-offsite-sync.py`                          | `/home/ubuntu/learnbox/offsite/scripts/`                                 |
-| `iran/offsite/learnbox-offsite.{service,timer}`                  | `/etc/systemd/system/`                                                   |
-| `iran/monitor/learnbox-iran-monitor.sh`                          | `/home/ubuntu/learnbox/ops/`                                             |
-| `iran/monitor/learnbox-iran-monitor.{service,timer}`             | `/etc/systemd/system/`                                                   |
-| `iran/ops-access/ws-ssh-bridge.py`                               | `/opt/learnbox-ops-access/`                                              |
-| `iran/ops-access/learnbox-ws-ssh.service`                        | `/etc/systemd/system/`                                                   |
-| `iran/monitor/learnbox-iran-monitor-enroll.sh`, `…-disk-test.sh` | not installed; enrollment runs on the owner Mac, the disk test on demand |
+| Repository path (`infrastructure/production/…`)                          | Host path                                                                   |
+| ------------------------------------------------------------------------ | --------------------------------------------------------------------------- |
+| `iran/app/compose.yaml`                                                  | `/home/ubuntu/learnbox/app/compose.yaml`                                    |
+| `iran/admin/compose.yaml`                                                | `/home/ubuntu/learnbox/admin/compose.yaml`                                  |
+| `iran/landing/compose.yaml`                                              | `/srv/learnbox/landing/compose.yaml` (Landing + Caddy, public 80/443)       |
+| `iran/landing/Caddyfile.template` (credential replaced by a placeholder) | `/srv/learnbox/landing/Caddyfile` (see below; not byte-identical by design) |
+| `iran/db/compose.yaml`, `iran/db/pg_hba.conf`                            | `/home/ubuntu/learnbox/db/`                                                 |
+| `ops/learnbox-backup.sh`, `ops/learnbox-restore-drill.sh`                | `/home/ubuntu/learnbox/ops/`                                                |
+| `ops/learnbox-alert.sh`                                                  | `/home/ubuntu/learnbox/ops/` (Telegram is unreachable from Iran)            |
+| `ops/systemd/learnbox-{backup,restore-drill}.{service,timer}`            | `/etc/systemd/system/`                                                      |
+| `iran/systemd/learnbox-{backup,restore-drill}.service.d/*.conf`          | `/etc/systemd/system/<unit>.d/10-iran-selfhost.conf`                        |
+| `iran/offsite/learnbox-offsite-sync.py`                                  | `/home/ubuntu/learnbox/offsite/scripts/`                                    |
+| `iran/offsite/learnbox-offsite.{service,timer}`                          | `/etc/systemd/system/`                                                      |
+| `iran/monitor/learnbox-iran-monitor.sh`                                  | `/home/ubuntu/learnbox/ops/`                                                |
+| `iran/monitor/learnbox-iran-monitor.{service,timer}`                     | `/etc/systemd/system/`                                                      |
+| `iran/ops-access/ws-ssh-bridge.py`                                       | `/opt/learnbox-ops-access/`                                                 |
+| `iran/ops-access/learnbox-ws-ssh.service`                                | `/etc/systemd/system/`                                                      |
+| `iran/monitor/learnbox-iran-monitor-enroll.sh`, `…-disk-test.sh`         | not installed; enrollment runs on the owner Mac, the disk test on demand    |
 
 App and Admin compose files reference images by local image ID (`sha256:…`). The image IDs are
 the deployed digests in `ADMIN_PRODUCTION_STATUS.md`. A release changes exactly that line.
 
 **Host-only files that intentionally differ from the repository:**
 
-- `/srv/learnbox/landing/Caddyfile` differs from `infrastructure/production/landing/Caddyfile` in
-  two places. (1) It serves the Enamad verification file `/41346530.txt` from `/config`. (2) In the
-  `admin.learnboxapp.com` site, the repository's 2026-09-30 containment `respond "Not Found" 404` is
-  replaced by the admin SSH path (`/_lb-ops/ssh`: `basic_auth` with a bcrypt hash, then
-  `reverse_proxy 172.19.0.1:8022`) followed by `import admin_app`, which serves the Admin. **A
-  Caddyfile rebuilt from the repository would therefore return 404 for the Admin.** Restore the
-  live file from the encrypted config bundle. The bcrypt hash is a credential and stays on the host
-  only.
+- `/srv/learnbox/landing/Caddyfile` contains a credential (a bcrypt hash), so it is not mirrored.
+  Its non-secret twin is `iran/landing/Caddyfile.template`. The template is byte-identical to the
+  live file, except that the hash is replaced by the Caddy environment placeholder
+  `{$LEARNBOX_OPS_SSH_BCRYPT_HASH}`. Without that value the template fails `caddy validate` (fail
+  closed). Restore it as described in [Restoring Caddy](#restoring-caddy). The older
+  `infrastructure/production/landing/Caddyfile` still carries the 2026-09-30 Admin containment
+  (`respond "Not Found" 404`). It is **not** a recovery source for this host. The `TEMPORARY
+CONTAINMENT` comment inside the live file and the template is stale text: the block below it
+  serves the Admin.
 - `/srv/learnbox/landing/enamad/` holds the temporary Enamad title files mounted into Landing.
 
 ## Topology
@@ -146,18 +148,59 @@ To check the disk thresholds without pinging, run
 
 ## Recovery material
 
-| Item                    | Location                                                                                                                                                         |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Database backups        | Dropbox App Folder `learnbox-iran/db/*.sql.gz.gpg` (never auto-deleted); host local copies for 30 days                                                           |
-| Recovery key            | GPG `FF1C441D77781F99F2ABADE4A4CAE7A288970289`, passphrase-protected, on the owner Mac and the owner's offline USB                                               |
-| Server config + secrets | `~/LearnBox-Recovery/iran-config-<stamp>.tar.gz.gpg` on the owner Mac, encrypted to the recovery key. Never uploaded to Dropbox                                  |
-| Images                  | Release images are rebuilt from the exact source SHA per `RELEASE_ARTIFACT_PREFLIGHT.md`; offline copies under `/Volumes/LearnBox-Dev/LearnBox-Recovery/images/` |
+| Item                    | Location                                                                                                                                                              |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Database backups        | Dropbox App Folder `learnbox-iran/db/*.sql.gz.gpg` (never auto-deleted); host local copies for 30 days                                                                |
+| Recovery key            | GPG `FF1C441D77781F99F2ABADE4A4CAE7A288970289`, passphrase-protected, on the owner Mac and the owner's offline USB                                                    |
+| Server config + secrets | `iran-config-<stamp>.tar.gz.gpg` (incl. live Caddyfile + Caddy volumes) on the owner Mac and external drive, encrypted to the recovery key. Never uploaded to Dropbox |
+| Images                  | Release images are rebuilt from the exact source SHA per `RELEASE_ARTIFACT_PREFLIGHT.md`; offline copies under `/Volumes/LearnBox-Dev/LearnBox-Recovery/images/`      |
 
-Refresh the config bundle after any host configuration change (run from the Mac):
+The bundle also contains both Caddy volumes (`learnbox-production_caddy_config`, with the Enamad
+file, and `learnbox-production_caddy_data`, with the ACME account and certificates). Keep one copy on
+the owner Mac (`~/LearnBox-Recovery/`) and one on the owner's external drive
+(`/Volumes/LearnBox-Dev/LearnBox-Recovery/`). Never upload it to Dropbox. Never overwrite or delete
+an older bundle; add a new stamped one.
+
+Refresh the bundle after any host configuration change (run from the Mac; nothing on the host
+changes). Compare the two printed ciphertext hashes:
 
 ```sh
-ssh learnbox-iran-cdn 'O=/home/ubuntu/learnbox/offsite; sudo tar -czf - /home/ubuntu/learnbox/{admin,app,db,db-tls,secrets} /home/ubuntu/learnbox/ops/*.sh $O/config $O/scripts /srv/learnbox/landing /opt/learnbox-ops-access /etc/systemd/system/learnbox-* /etc/docker/daemon.json /etc/ufw/user*.rules /etc/ssh/sshd_config.d | gpg --homedir $O/gnupg --batch --trust-model always -e -r FF1C441D77781F99F2ABADE4A4CAE7A288970289' > ~/LearnBox-Recovery/iran-config-$(date -u +%Y%m%dT%H%M%SZ).tar.gz.gpg
+OUT=~/LearnBox-Recovery/iran-config-$(date -u +%Y%m%dT%H%M%SZ).tar.gz.gpg
+ssh learnbox-iran-cdn 'set -o pipefail; O=/home/ubuntu/learnbox/offsite; V=/var/lib/docker/volumes; sudo tar -czf - /home/ubuntu/learnbox/{admin,app,db,db-tls,secrets} /home/ubuntu/learnbox/ops/*.sh $O/config $O/scripts /srv/learnbox/landing /opt/learnbox-ops-access /etc/systemd/system/learnbox-* /etc/docker/daemon.json /etc/ufw/user*.rules /etc/ssh/sshd_config.d $V/learnbox-production_caddy_config/_data $V/learnbox-production_caddy_data/_data | gpg --homedir $O/gnupg --batch --trust-model always -e -r FF1C441D77781F99F2ABADE4A4CAE7A288970289 | tee >(sha256sum >&2)' > "$OUT"
+shasum -a 256 "$OUT"; cp -n "$OUT" /Volumes/LearnBox-Dev/LearnBox-Recovery/
 ```
+
+Current bundle: `iran-config-20261016T203227Z.tar.gz.gpg`, 115 entries, ciphertext sha256
+`55a7fdb0e4dde533…` (identical on host stream, Mac and external drive). On 2026-10-16 a
+disposable local drill decrypted it and checked each of the following:
+
+- the plaintext matched the host's pre-encryption sha256;
+- the restored Caddyfile matched the live sha256 `65ee66ae8ceab13f…`;
+- the Enamad file was present;
+- the template plus the restored hash reproduced the live file byte for byte;
+- `caddy validate` (same `caddy:2-alpine@sha256:5f5c8640…` image, `--network none`) passed for the
+  restored file and for the template with a fresh dummy hash.
+
+Production was not touched.
+
+## Restoring Caddy
+
+1. **Preferred: the exact file from the bundle.** On the Mac, decrypt the newest bundle (passphrase
+   only in the pinentry dialog) and extract `srv/learnbox/landing/Caddyfile`, `srv/learnbox/landing/`
+   and the two Caddy volumes. Place them at the same paths on the new host: Caddyfile mode 640, the
+   volumes restored before Caddy starts. Then run `caddy validate` before `docker compose up`.
+2. **Fallback, when no bundle is usable: render the template with a new credential.**
+   - The owner picks a new password and runs
+     `docker run --rm caddy:2-alpine caddy hash-password` (it prompts; the password never goes
+     into shell history).
+   - Write the final file. Put the hash in a variable and substitute the token:
+     `awk -v h="$HASH" '{gsub(/\{\$LEARNBOX_OPS_SSH_BCRYPT_HASH\}/, h); print}' Caddyfile.template > Caddyfile`.
+     `envsubst` cannot do this, because it does not expand `{$…}`.
+   - Then update `~/.ssh/learnbox-ops-ws.b64` on the Mac to `base64("lbops:<new password>")`.
+   - Alternatively, keep the template as is and pass the variable to the Caddy container. The live
+     compose does not do this, so it would be a compose change.
+3. Certificates: if the `caddy_data` volume is lost, Caddy requests new certificates on first start.
+   This needs ArvanCloud to forward the ACME HTTP challenge.
 
 ## Disaster recovery
 
@@ -174,7 +217,8 @@ retired Germany host hold no data written after 2026-10-13 and are **not** recov
   6. Start App and Admin.
 - **B. Host lost** (RTO ≈ 2–4 h, RPO ≤ 24 h):
   1. Create a new AbrArvan VM (Ubuntu 24.04) and apply the host baseline.
-  2. Install Docker with `daemon.json` and decrypt the config bundle into place.
+  2. Install Docker with `daemon.json` and decrypt the config bundle into place
+     (Caddy: see [Restoring Caddy](#restoring-caddy)).
   3. Load or rebuild the images at the recorded digests.
   4. Start PostgreSQL and restore the newest Dropbox backup.
   5. Start App, Admin, Landing and Caddy.
