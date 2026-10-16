@@ -480,7 +480,7 @@ function PackPrice({
     );
   return (
     <form
-      className="head-actions"
+      className="head-actions pack-price-controls"
       onSubmit={async (event) => {
         event.preventDefault();
         const outcome = await sendMutation(
