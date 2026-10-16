@@ -20,9 +20,13 @@ import {
   buildCardImagePrompt,
   buildSpokenSentenceTarget,
   buildSpokenWordTarget,
+  deriveCardImageSubject,
+  effectiveImageSubjectSource,
+  evaluateMediaValidity,
   resolveEffectiveGermanVoice,
   type GermanVoiceMapping,
   type LearnBoxImageStandard,
+  type MediaValidity,
 } from '@learnbox/content-models';
 
 import { AiProviderError } from './ai-generation-provider';
@@ -61,6 +65,10 @@ export interface CardMediaCandidateView {
   language: string | null;
   locale: string | null;
   imageStandardVersion: string | null;
+  /** The exact image subject this candidate was generated for (null for legacy rows). */
+  imageSubject: string | null;
+  /** MP3 properties measured from the returned file; null for images and legacy rows. */
+  audioFormat: { sampleRateHz: number; bitrateKbps: number; channels: number } | null;
   failureCode: string | null;
   createdAt: string;
 }
@@ -71,11 +79,27 @@ export interface CardMediaKindState {
   accepted: (CardMediaCandidateView & { acceptedAt: string }) | null;
   /** The newest candidate, which may be ready for review, failed, or still generating. */
   latestCandidate: CardMediaCandidateView | null;
+  /** Whether the accepted asset still matches the card's current effective content. */
+  acceptedValidity: MediaValidity | null;
+  /** Whether a ready candidate awaiting acceptance matches the card's current content. */
+  latestValidity: MediaValidity | null;
+  /**
+   * Whether generating this kind is actually needed: nothing valid is accepted, no valid candidate
+   * awaits acceptance, nothing is generating, and accepted media is not merely unverifiable (which
+   * is an owner decision, never an automatic regeneration).
+   */
+  needsGeneration: boolean;
 }
 
 export type GenerateOutcome =
   | { status: 'generated'; candidate: CardMediaCandidateView }
   | { status: 'already_generating' }
+  /** Nothing generated: valid media already exists. Regeneration needs an explicit request. */
+  | {
+      status: 'not_needed';
+      reason: 'accepted_valid' | 'ready_valid' | 'accepted_unverifiable';
+      candidate: CardMediaCandidateView;
+    }
   | { status: 'card_not_found' }
   | { status: 'forbidden' }
   | { status: 'unprocessable'; reason: string; code?: string }
@@ -95,12 +119,20 @@ interface CanonicalCardData {
   article: string | null;
   firstGermanExample: string | null;
   visualConcept: string | null;
+  imagePrompt: string | null;
   brief: string | null;
+  /** The full persisted content of the version media is generated for. */
+  content: Record<string, unknown>;
 }
 
 const CANDIDATE_COLUMNS = `id, card_id, kind, status, media_type, byte_size, checksum, provider,
   model, spoken_target, voice, voice_role, uses_die_fallback_for_das, language, locale,
-  image_standard_version, failure_code, created_at`;
+  image_standard_version, image_subject, audio_sample_rate_hz, audio_bitrate_kbps, audio_channels,
+  failure_code, created_at`;
+
+function nullableText(value: unknown): string | null {
+  return value === null || value === undefined ? null : String(value);
+}
 
 function toCandidateView(row: Record<string, unknown>): CardMediaCandidateView {
   return {
@@ -120,6 +152,15 @@ function toCandidateView(row: Record<string, unknown>): CardMediaCandidateView {
     locale: row.locale === null ? null : String(row.locale),
     imageStandardVersion:
       row.image_standard_version === null ? null : String(row.image_standard_version),
+    imageSubject: nullableText(row.image_subject),
+    audioFormat:
+      row.audio_sample_rate_hz === null || row.audio_sample_rate_hz === undefined
+        ? null
+        : {
+            sampleRateHz: Number(row.audio_sample_rate_hz),
+            bitrateKbps: Number(row.audio_bitrate_kbps),
+            channels: Number(row.audio_channels),
+          },
     failureCode: row.failure_code === null ? null : String(row.failure_code),
     createdAt:
       row.created_at instanceof Date ? row.created_at.toISOString() : String(row.created_at),
@@ -151,8 +192,9 @@ export class CardMediaGenerationService {
   /**
    * Loads the canonical data a card's media must be generated from.
    *
-   * The published version wins when one exists, so regenerating a live card reproduces the content
-   * learners actually have; otherwise the highest draft version is used.
+   * The newest version wins: it is the version that will be reviewed and published next, so its
+   * media must match its text (owner rule 2026-10-16). For a card with no newer revision this is
+   * the published version itself.
    */
   private async loadCard(
     client: Queryable,
@@ -163,7 +205,7 @@ export class CardMediaGenerationService {
          FROM cards c
          JOIN card_versions cv ON cv.card_id = c.id
         WHERE c.id = $1
-        ORDER BY (cv.status = 'published') DESC, cv.version DESC
+        ORDER BY cv.version DESC
         LIMIT 1`,
       [cardId],
     );
@@ -186,9 +228,62 @@ export class CardMediaGenerationService {
       article: typeof content.article === 'string' ? content.article : null,
       firstGermanExample: firstGerman ?? null,
       visualConcept: typeof content.visualConcept === 'string' ? content.visualConcept : null,
+      imagePrompt: typeof content.imagePrompt === 'string' ? content.imagePrompt : null,
       // A curated brief from the canonical visual contract outranks anything derived at runtime.
       brief: readCanonicalCardBrief(contentId) ?? null,
+      content,
     };
+  }
+
+  /** Validity of recorded media against the card's current effective content. */
+  private validity(candidate: CardMediaCandidateView, card: CanonicalCardData): MediaValidity {
+    return evaluateMediaValidity(
+      {
+        kind: candidate.kind,
+        spokenTarget: candidate.spokenTarget,
+        voice: candidate.voice,
+        voiceRole: candidate.voiceRole,
+        imageSubject: candidate.imageSubject,
+        imageStandardVersion: candidate.imageStandardVersion,
+      },
+      card.content,
+      {
+        imageBrief: card.brief,
+        imageStandardVersion: this.imageStandard.version,
+        voiceMapping: this.voices,
+      },
+    );
+  }
+
+  /** Existing media that makes a new generation unnecessary, if any. */
+  private async existingSufficientMedia(
+    client: Queryable,
+    card: CanonicalCardData,
+    kind: CardMediaKind,
+  ): Promise<Extract<GenerateOutcome, { status: 'not_needed' }> | null> {
+    const result = await client.query(
+      `SELECT ${CANDIDATE_COLUMNS}, (status = 'accepted') AS is_accepted
+         FROM card_media_candidates
+        WHERE card_id = $1 AND kind = $2 AND status IN ('ready', 'accepted')
+        ORDER BY created_at DESC`,
+      [card.cardId, kind],
+    );
+    const rows = result.rows.map((row) => ({
+      view: toCandidateView(row),
+      accepted: row.is_accepted === true,
+    }));
+    const accepted = rows.find((row) => row.accepted);
+    if (accepted) {
+      const validity = this.validity(accepted.view, card);
+      if (validity === 'valid') {
+        return { status: 'not_needed', reason: 'accepted_valid', candidate: accepted.view };
+      }
+      if (validity === 'unverifiable') {
+        return { status: 'not_needed', reason: 'accepted_unverifiable', candidate: accepted.view };
+      }
+    }
+    const ready = rows.find((row) => !row.accepted && this.validity(row.view, card) === 'valid');
+    return ready ? { status: 'not_needed', reason: 'ready_valid', candidate: ready.view } : null;
   }
 
   /**
@@ -204,12 +299,18 @@ export class CardMediaGenerationService {
     kind: CardMediaKind;
     actorUserId: string;
     model?: string;
+    /**
+     * Explicit Admin request to produce a new candidate even though valid media exists. Never set
+     * by an automatic path (owner rule 2026-10-16).
+     */
+    regenerate?: boolean;
   }): Promise<GenerateOutcome> {
     const client = await this.pool.connect();
     let candidateId: string;
     let card: CanonicalCardData;
     let spokenTarget: string | null = null;
     let voice: string | null = null;
+    let imageSubject: string | null = null;
 
     try {
       if (!(await this.hasEditorialRole(client, input.actorUserId))) return { status: 'forbidden' };
@@ -218,6 +319,11 @@ export class CardMediaGenerationService {
       if (!loaded) return { status: 'card_not_found' };
       card = loaded;
 
+      if (!input.regenerate) {
+        const sufficient = await this.existingSufficientMedia(client, card, input.kind);
+        if (sufficient) return sufficient;
+      }
+
       const capability = input.kind === 'image' ? 'image' : 'audio';
       const model =
         input.model?.trim() ||
@@ -225,6 +331,10 @@ export class CardMediaGenerationService {
 
       let voiceRole: string | null = null;
       let usesDieFallback = false;
+      imageSubject =
+        capability === 'image'
+          ? deriveCardImageSubject(effectiveImageSubjectSource(card.content, card.brief))
+          : null;
 
       if (capability === 'audio') {
         // Any roster problem refuses all audio (single and bulk alike); no voice is substituted.
@@ -263,8 +373,8 @@ export class CardMediaGenerationService {
       const inserted = await client.query(
         `INSERT INTO card_media_candidates
            (card_id, kind, status, provider, model, capability, spoken_target, voice, voice_role,
-            uses_die_fallback_for_das, language, locale, image_standard_version)
-         VALUES ($1, $2, 'generating', $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+            uses_die_fallback_for_das, language, locale, image_standard_version, image_subject)
+         VALUES ($1, $2, 'generating', $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
          ON CONFLICT DO NOTHING
          RETURNING id`,
         [
@@ -280,6 +390,7 @@ export class CardMediaGenerationService {
           capability === 'audio' ? 'de' : null,
           capability === 'audio' ? 'de-DE' : null,
           capability === 'image' ? this.imageStandard.version : null,
+          imageSubject,
         ],
       );
       // The single-flight unique index rejects a second concurrent attempt for this card and kind.
@@ -294,10 +405,15 @@ export class CardMediaGenerationService {
       let bytes: Buffer;
       let mediaType: string;
       let costUnit: number | null = null;
+      let audioFormat: { sampleRateHz: number; bitrateKbps: number; channels: number } | null =
+        null;
 
       if (input.kind === 'image') {
         const image = await this.provider.generateImage({
-          prompt: buildCardImagePrompt(card, this.imageStandard),
+          prompt: buildCardImagePrompt(
+            effectiveImageSubjectSource(card.content, card.brief),
+            this.imageStandard,
+          ),
           model: input.model?.trim() || undefined,
           timeoutMs: this.limits.imageTimeoutMs,
         });
@@ -316,6 +432,14 @@ export class CardMediaGenerationService {
         });
         bytes = audio.bytes;
         mediaType = audio.contentType;
+        // The measured format is recorded as-is; it is never assumed from the request.
+        audioFormat = audio.format
+          ? {
+              sampleRateHz: audio.format.sampleRateHz,
+              bitrateKbps: audio.format.bitrateKbps,
+              channels: audio.format.channels,
+            }
+          : null;
         if (bytes.length > this.limits.maxAudioBytes) {
           throw new AiProviderError('provider_rejected', 'صدای تولیدشده از حد مجاز بزرگ‌تر است.');
         }
@@ -326,10 +450,21 @@ export class CardMediaGenerationService {
       const updated = await this.pool.query(
         `UPDATE card_media_candidates
             SET status = 'ready', object_key = $2, checksum = $3, byte_size = $4, media_type = $5,
-                estimated_cost_unit = $6, updated_at = now()
+                estimated_cost_unit = $6, audio_sample_rate_hz = $7, audio_bitrate_kbps = $8,
+                audio_channels = $9, updated_at = now()
           WHERE id = $1
           RETURNING ${CANDIDATE_COLUMNS}`,
-        [candidateId, stored.objectKey, stored.checksum, stored.byteSize, mediaType, costUnit],
+        [
+          candidateId,
+          stored.objectKey,
+          stored.checksum,
+          stored.byteSize,
+          mediaType,
+          costUnit,
+          audioFormat?.sampleRateHz ?? null,
+          audioFormat?.bitrateKbps ?? null,
+          audioFormat?.channels ?? null,
+        ],
       );
       return { status: 'generated', candidate: toCandidateView(updated.rows[0]!) };
     } catch (error) {
@@ -442,7 +577,8 @@ export class CardMediaGenerationService {
 
   /** The per-kind media state the Admin workspace renders. */
   async getCardMediaState(cardId: string): Promise<CardMediaKindState[]> {
-    const [acceptedRows, latestRows] = await Promise.all([
+    const [card, acceptedRows, latestRows] = await Promise.all([
+      this.loadCard(this.pool, cardId),
       this.pool.query(
         `SELECT a.kind, a.accepted_at, ${CANDIDATE_COLUMNS.split(',')
           .map((column) => `c.${column.trim()}`)
@@ -464,18 +600,32 @@ export class CardMediaGenerationService {
     return ALL_KINDS.map((kind) => {
       const acceptedRow = acceptedRows.rows.find((row) => row.kind === kind);
       const latestRow = latestRows.rows.find((row) => row.kind === kind);
+      const accepted = acceptedRow
+        ? {
+            ...toCandidateView(acceptedRow),
+            acceptedAt:
+              acceptedRow.accepted_at instanceof Date
+                ? acceptedRow.accepted_at.toISOString()
+                : String(acceptedRow.accepted_at),
+          }
+        : null;
+      const latestCandidate = latestRow ? toCandidateView(latestRow) : null;
+      const acceptedValidity = accepted && card ? this.validity(accepted, card) : null;
+      const latestValidity =
+        latestCandidate?.status === 'ready' && card ? this.validity(latestCandidate, card) : null;
+      const needsGeneration =
+        Boolean(card) &&
+        acceptedValidity !== 'valid' &&
+        acceptedValidity !== 'unverifiable' &&
+        latestValidity !== 'valid' &&
+        latestCandidate?.status !== 'generating';
       return {
         kind,
-        accepted: acceptedRow
-          ? {
-              ...toCandidateView(acceptedRow),
-              acceptedAt:
-                acceptedRow.accepted_at instanceof Date
-                  ? acceptedRow.accepted_at.toISOString()
-                  : String(acceptedRow.accepted_at),
-            }
-          : null,
-        latestCandidate: latestRow ? toCandidateView(latestRow) : null,
+        accepted,
+        latestCandidate,
+        acceptedValidity,
+        latestValidity,
+        needsGeneration,
       };
     });
   }

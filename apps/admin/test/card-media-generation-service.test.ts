@@ -30,6 +30,9 @@ interface CardFixture {
   lemma: string;
   article?: string | null;
   germanExample?: string;
+  imagePrompt?: string;
+  visualConcept?: string;
+  persianMeaning?: string;
 }
 
 /**
@@ -58,6 +61,10 @@ function createPool(card: CardFixture | undefined, options: { editorial?: boolea
     'language',
     'locale',
     'image_standard_version',
+    'image_subject',
+    'audio_sample_rate_hz',
+    'audio_bitrate_kbps',
+    'audio_channels',
     'failure_code',
     'created_at',
   ];
@@ -85,6 +92,9 @@ function createPool(card: CardFixture | undefined, options: { editorial?: boolea
                 examples: card.germanExample
                   ? [{ german: card.germanExample, persian: 'ترجمهٔ فارسی' }]
                   : [],
+                ...(card.imagePrompt ? { imagePrompt: card.imagePrompt } : {}),
+                ...(card.visualConcept ? { visualConcept: card.visualConcept } : {}),
+                ...(card.persianMeaning ? { persianMeanings: [card.persianMeaning] } : {}),
               },
             },
           ],
@@ -105,6 +115,7 @@ function createPool(card: CardFixture | undefined, options: { editorial?: boolea
           language,
           locale,
           standard,
+          imageSubject,
         ] = parameters as unknown[];
         // Single-flight unique index: one 'generating' row per (card_id, kind).
         const clash = [...candidates.values()].some(
@@ -128,6 +139,7 @@ function createPool(card: CardFixture | undefined, options: { editorial?: boolea
           language,
           locale,
           image_standard_version: standard,
+          image_subject: imageSubject,
           created_at: new Date(),
           media_type: null,
           byte_size: null,
@@ -149,6 +161,9 @@ function createPool(card: CardFixture | undefined, options: { editorial?: boolea
             checksum: parameters[2],
             byte_size: parameters[3],
             media_type: parameters[4],
+            audio_sample_rate_hz: parameters[6],
+            audio_bitrate_kbps: parameters[7],
+            audio_channels: parameters[8],
           });
         } else if (/status = 'failed'/.test(sql)) {
           Object.assign(row, { status: 'failed', failure_code: parameters[1] });
@@ -158,6 +173,21 @@ function createPool(card: CardFixture | undefined, options: { editorial?: boolea
           Object.assign(row, { status: 'accepted' });
         }
         return { rows: [project(row)] };
+      }
+
+      if (/AS is_accepted/.test(sql)) {
+        // Existing ready or accepted media for (card_id, kind), newest first.
+        return {
+          rows: [...candidates.values()]
+            .filter(
+              (row) =>
+                row.card_id === parameters[0] &&
+                row.kind === parameters[1] &&
+                (row.status === 'ready' || row.status === 'accepted'),
+            )
+            .reverse()
+            .map((row) => ({ ...project(row), is_accepted: row.status === 'accepted' })),
+        };
       }
 
       if (/FROM card_media_candidates/.test(sql) && /WHERE id = \$1 AND card_id/.test(sql)) {
@@ -473,6 +503,7 @@ describe('generation never disturbs accepted media', () => {
       cardId: CARD_ID,
       kind: 'word_audio',
       actorUserId: ACTOR,
+      regenerate: true,
     });
     expect(failed.status).toBe('provider_failed');
 
@@ -561,6 +592,7 @@ describe('acceptance is explicit and idempotent', () => {
       cardId: CARD_ID,
       kind: 'word_audio',
       actorUserId: ACTOR,
+      regenerate: true,
     });
     if (second.status !== 'generated') throw new Error('expected generation');
     // Until the new candidate is accepted, the card still points at the first.
@@ -652,5 +684,150 @@ describe('guards', () => {
     const wordAudio = state.find((entry) => entry.kind === 'word_audio')!;
     expect(wordAudio.accepted).toBeNull();
     expect(wordAudio.latestCandidate?.spokenTarget).toBe('der Tisch');
+  });
+});
+
+
+/** A minimal MPEG-1 Layer III frame header: 44.1 kHz, 128 kbps, mono. */
+function mp3Bytes(): Buffer {
+  const frame = Buffer.alloc(64);
+  frame.set([0xff, 0xfb, 0x90, 0xc4]);
+  return frame;
+}
+
+describe('media is generated only when actually needed (owner rule 2026-10-16)', () => {
+  const card = () => ({
+    lemma: 'Tisch',
+    article: 'der',
+    germanExample: 'Der Tisch ist groß.',
+    imagePrompt: 'A wooden table, centered.',
+    persianMeaning: 'میز',
+  });
+
+  async function generateAndAccept(
+    service: CardMediaGenerationService,
+    kind: 'image' | 'word_audio' | 'sentence_audio',
+  ) {
+    const generated = await service.generate({ cardId: CARD_ID, kind, actorUserId: ACTOR });
+    if (generated.status !== 'generated') throw new Error(`expected generation, got ${generated.status}`);
+    await service.accept({ cardId: CARD_ID, kind, candidateId: generated.candidate.id, actorUserId: ACTOR });
+    return generated.candidate;
+  }
+
+  it('makes no paid call when valid media is already accepted', async () => {
+    const { service, provider } = createService(card());
+    await generateAndAccept(service, 'word_audio');
+    const again = await service.generate({ cardId: CARD_ID, kind: 'word_audio', actorUserId: ACTOR });
+    expect(again).toMatchObject({ status: 'not_needed', reason: 'accepted_valid' });
+    expect(provider.synthesizeSpeech).toHaveBeenCalledTimes(1);
+  });
+
+  it('makes no paid call when a valid candidate is waiting for acceptance', async () => {
+    const { service, provider } = createService(card());
+    const first = await service.generate({ cardId: CARD_ID, kind: 'image', actorUserId: ACTOR });
+    expect(first.status).toBe('generated');
+    const again = await service.generate({ cardId: CARD_ID, kind: 'image', actorUserId: ACTOR });
+    expect(again).toMatchObject({ status: 'not_needed', reason: 'ready_valid' });
+    expect(provider.generateImage).toHaveBeenCalledTimes(1);
+  });
+
+  it('regenerates over valid media only on an explicit request', async () => {
+    const { service, provider } = createService(card());
+    await generateAndAccept(service, 'word_audio');
+    const forced = await service.generate({
+      cardId: CARD_ID,
+      kind: 'word_audio',
+      actorUserId: ACTOR,
+      regenerate: true,
+    });
+    expect(forced.status).toBe('generated');
+    expect(provider.synthesizeSpeech).toHaveBeenCalledTimes(2);
+  });
+
+  it('an edited example invalidates only the sentence audio', async () => {
+    const fixture = card();
+    const { service } = createService(fixture);
+    await generateAndAccept(service, 'image');
+    await generateAndAccept(service, 'word_audio');
+    await generateAndAccept(service, 'sentence_audio');
+
+    fixture.germanExample = 'Der Tisch ist klein.';
+    const state = await service.getCardMediaState(CARD_ID);
+    const byKind = Object.fromEntries(state.map((entry) => [entry.kind, entry]));
+    expect(byKind.image!.acceptedValidity).toBe('valid');
+    expect(byKind.word_audio!.acceptedValidity).toBe('valid');
+    expect(byKind.sentence_audio!.acceptedValidity).toBe('stale');
+    expect(state.filter((entry) => entry.needsGeneration).map((entry) => entry.kind)).toEqual([
+      'sentence_audio',
+    ]);
+  });
+
+  it('an unrelated edit (the Persian meaning) leaves every medium valid', async () => {
+    const fixture = card();
+    const { service } = createService(fixture);
+    await generateAndAccept(service, 'image');
+    await generateAndAccept(service, 'word_audio');
+    await generateAndAccept(service, 'sentence_audio');
+
+    fixture.persianMeaning = 'میز ناهارخوری';
+    const state = await service.getCardMediaState(CARD_ID);
+    expect(state.every((entry) => entry.acceptedValidity === 'valid')).toBe(true);
+    expect(state.some((entry) => entry.needsGeneration)).toBe(false);
+  });
+
+  it('a changed article invalidates both audios and keeps an explicit image prompt valid', async () => {
+    const fixture = { ...card(), lemma: 'Band', article: 'die', germanExample: 'Die Band spielt.' };
+    const { service } = createService(fixture);
+    await generateAndAccept(service, 'image');
+    await generateAndAccept(service, 'word_audio');
+    await generateAndAccept(service, 'sentence_audio');
+
+    fixture.article = 'das';
+    const state = Object.fromEntries(
+      (await service.getCardMediaState(CARD_ID)).map((entry) => [entry.kind, entry.acceptedValidity]),
+    );
+    expect(state).toEqual({ image: 'valid', word_audio: 'stale', sentence_audio: 'stale' });
+  });
+
+  it('an edited image prompt invalidates only the image', async () => {
+    const fixture = card();
+    const { service } = createService(fixture);
+    await generateAndAccept(service, 'image');
+    await generateAndAccept(service, 'word_audio');
+    fixture.imagePrompt = 'A round kitchen table, centered.';
+    const state = Object.fromEntries(
+      (await service.getCardMediaState(CARD_ID)).map((entry) => [entry.kind, entry.acceptedValidity]),
+    );
+    expect(state.image).toBe('stale');
+    expect(state.word_audio).toBe('valid');
+  });
+
+  it('records the exact image subject and prompts from the English image prompt without Bobo', async () => {
+    const { service, provider } = createService({
+      ...card(),
+      visualConcept: 'یک میز چوبی',
+    });
+    const generated = await service.generate({ cardId: CARD_ID, kind: 'image', actorUserId: ACTOR });
+    if (generated.status !== 'generated') throw new Error('expected generation');
+    expect(generated.candidate.imageSubject).toBe('A wooden table, centered.');
+    const prompt = provider.calls.find((call) => call.prompt)!.prompt!;
+    expect(prompt).toContain('A wooden table, centered.');
+    expect(prompt).not.toContain('یک میز چوبی');
+    expect(prompt).toMatch(/no Bobo or any mascot/);
+  });
+
+  it('records the measured MP3 format, not the requested one', async () => {
+    const { service, provider } = createService(card());
+    provider.synthesizeSpeech.mockImplementationOnce(async (request: { voice: string }) => ({
+      bytes: mp3Bytes(),
+      contentType: 'audio/mpeg' as const,
+      model: 'eleven_multilingual_v2',
+      provider: 'avalai.ir',
+      voice: request.voice,
+      format: { sampleRateHz: 44100, bitrateKbps: 128, channels: 1 as const, variableBitrate: false },
+    }));
+    const generated = await service.generate({ cardId: CARD_ID, kind: 'word_audio', actorUserId: ACTOR });
+    if (generated.status !== 'generated') throw new Error('expected generation');
+    expect(generated.candidate.audioFormat).toEqual({ sampleRateHz: 44100, bitrateKbps: 128, channels: 1 });
   });
 });

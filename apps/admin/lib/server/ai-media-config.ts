@@ -150,6 +150,8 @@ export function readAiMediaConfig(environment: Record<string, string | undefined
       environment.LEARNBOX_AI_IMAGE_MODEL?.trim() || DEFAULT_IMAGE_MODEL,
       environment.LEARNBOX_AI_AUDIO_MODEL?.trim() || DEFAULT_AUDIO_MODEL,
       environment.LEARNBOX_AI_BASE_URL?.trim() || undefined,
+      // Unset by default: the native format is only requested once AvalAI support is qualified.
+      environment.LEARNBOX_AI_AUDIO_OUTPUT_FORMAT?.trim() || undefined,
     ),
     voices: {
       der: voice(environment.LEARNBOX_AI_VOICE_DER, DEFAULT_GERMAN_VOICE_MAPPING.der),

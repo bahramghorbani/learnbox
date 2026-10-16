@@ -199,6 +199,8 @@ export function createMediaGenerateRoute(dependencies: RouteDependencies) {
         kind,
         actorUserId: authorized.actorUserId,
         model: typeof body.model === 'string' ? body.model : undefined,
+        // Only an explicit Admin action regenerates over valid media; absent means "only if needed".
+        regenerate: body.regenerate === true,
       });
 
       if (result.status === 'forbidden') {
@@ -209,6 +211,10 @@ export function createMediaGenerateRoute(dependencies: RouteDependencies) {
       }
       if (result.status === 'already_generating') {
         return json({ code: 'already_generating' }, { status: 409 });
+      }
+      if (result.status === 'not_needed') {
+        // No paid call was made. The existing media is returned so the Admin can see why.
+        return json({ status: 'not_needed', reason: result.reason, candidate: result.candidate });
       }
       if (result.status === 'unprocessable') {
         return json(
