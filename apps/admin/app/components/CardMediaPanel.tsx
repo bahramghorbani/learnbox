@@ -165,7 +165,13 @@ export function CardMediaPanel(props: CardMediaPanelProps) {
     try {
       next = await props.onLoadState();
     } catch (failure) {
-      if (failure instanceof StepUpRefusedError) setError(failure.message);
+      // A refused step-up is an authentication outcome, not a read failure: show only its message.
+      if (failure instanceof StepUpRefusedError) {
+        setLoadFailed(false);
+        setState(undefined); // never show a state the server just refused to confirm
+        setError(failure.message);
+        return;
+      }
       next = undefined;
     }
     if (!next) {
@@ -175,6 +181,11 @@ export function CardMediaPanel(props: CardMediaPanelProps) {
     setLoadFailed(false);
     setState(next);
   }, [props]);
+
+  async function retryRead() {
+    setError(undefined);
+    await refresh();
+  }
 
   useEffect(() => {
     void refresh();
@@ -231,13 +242,21 @@ export function CardMediaPanel(props: CardMediaPanelProps) {
           </p>
         ) : null}
 
+        {error && state === undefined && !loadFailed ? (
+          <button className="btn" type="button" onClick={() => void retryRead()}>
+            خواندن دوباره
+          </button>
+        ) : null}
+
         {loadFailed ? (
           <p className="notice error" role="alert">
             خواندن وضعیت رسانه ناموفق بود.
           </p>
         ) : null}
 
-        {state === undefined && !loadFailed ? <p className="notice">در حال خواندن…</p> : null}
+        {state === undefined && !loadFailed && !error ? (
+          <p className="notice">در حال خواندن…</p>
+        ) : null}
 
         {state?.map((kindState) => {
           const candidate = kindState.latestCandidate;

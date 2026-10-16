@@ -155,3 +155,22 @@ export function stepUpRefusal(stepUp: StepUpOutcome, httpStatus: number): string
   }
   return undefined;
 }
+
+/**
+ * `stepUpRefusal` for a READ. The mutation wording ("your typed data is kept — save again") is wrong
+ * here: nothing was typed and nothing is saved, so the operator is told the read did not happen.
+ */
+export function stepUpReadRefusal(stepUp: StepUpOutcome, httpStatus: number): string | undefined {
+  switch (stepUp) {
+    case 'cancelled':
+      return 'تأیید هویت لغو شد؛ برای دیدن وضعیت رسانه، دوباره تأیید هویت کنید.';
+    case 'session-expired':
+      return 'نشست شما منقضی شده است؛ در تب دیگری دوباره وارد شوید، سپس وضعیت رسانه را دوباره بخوانید.';
+    case 'failed':
+      return 'تأیید هویت ناموفق بود؛ وضعیت رسانه خوانده نشد — دوباره تلاش کنید.';
+    default:
+      return httpStatus === 428
+        ? 'تأیید هویت ثبت شد، اما سرور همچنان احراز هویت تازه می‌خواهد؛ وضعیت رسانه خوانده نشد — دوباره تلاش کنید.'
+        : undefined;
+  }
+}

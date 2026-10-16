@@ -10,7 +10,7 @@ import {
 import {
   fetchWithStepUp,
   stepUpMessage,
-  stepUpRefusal,
+  stepUpReadRefusal,
   StepUpRefusedError,
 } from './step-up-reauth';
 import {
@@ -49,7 +49,7 @@ export async function loadMediaState(cardId: string) {
     `/api/content/media/state?cardId=${encodeURIComponent(cardId)}`,
     { credentials: 'same-origin', headers: { accept: 'application/json' } },
   );
-  const refusal = stepUpRefusal(stepUp, response.status);
+  const refusal = stepUpReadRefusal(stepUp, response.status);
   if (refusal) throw new StepUpRefusedError(refusal);
   if (!response.ok) return undefined;
   return ((await response.json()) as { media?: MediaKindState[] }).media;
