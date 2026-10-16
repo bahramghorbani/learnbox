@@ -249,6 +249,72 @@ suite('restricted-role grant matrix (real Postgres, real roles)', () => {
       // No schema authority.
       await expectDenied(app, `CREATE TABLE learner_cannot_create (id int)`);
     });
+
+    it('reads only the media pinned in a published version, through the 0038 function', async () => {
+      const card = randomUUID();
+      const key = (name: string) => `admin/card-media/roles-media/word_audio/${name}.mp3`;
+      const pinned = key(randomUUID());
+      const unaccepted = key(randomUUID());
+      const sum = (c: string) => c.repeat(64);
+      await admin.query(
+        `INSERT INTO cards (id, lemma, content_id) VALUES ($1, 'Tür', 'roles-media')`,
+        [card],
+      );
+      for (const [objectKey, checksum, hex] of [
+        [pinned, sum('b'), 'fffb'],
+        [unaccepted, sum('c'), 'fff3'],
+      ]) {
+        await admin.query(
+          `INSERT INTO card_media_objects (object_key, media_type, byte_size, checksum, bytes)
+           VALUES ($1, 'audio/mpeg', 2, $2, decode($3, 'hex'))`,
+          [objectKey, checksum, hex],
+        );
+      }
+      const pin = (objectKey: string, checksum: string) =>
+        JSON.stringify({
+          lemma: 'Tür',
+          media: [{ kind: 'word_audio', objectKey, checksum, mediaType: 'audio/mpeg' }],
+        });
+      // v1 published with the pin; v2 is a newer DRAFT pinning the unaccepted object.
+      await admin.query(
+        `INSERT INTO card_versions (card_id, version, status, content_json, source_provider)
+         VALUES ($1, 1, 'published', $2::jsonb, 'editorial'),
+                ($1, 2, 'draft', $3::jsonb, 'editorial')`,
+        [card, pin(pinned, sum('b')), pin(unaccepted, sum('c'))],
+      );
+      const read = (contentId: string, kind: string) =>
+        app.query<{ media_type: string; bytes: Buffer }>(
+          `SELECT media_type, bytes FROM learner_published_card_media($1, $2)`,
+          [contentId, kind],
+        );
+
+      const served = await read('roles-media', 'word_audio');
+      expect(served.rows).toHaveLength(1);
+      expect(served.rows[0].media_type).toBe('audio/mpeg');
+      expect(served.rows[0].bytes.toString('hex')).toBe('fffb');
+      // Draft pin, other kinds, unknown cards and a non-kind argument return nothing.
+      expect((await read('roles-media', 'image')).rows).toHaveLength(0);
+      expect((await read('roles-media', 'objectKey')).rows).toHaveLength(0);
+      expect((await read('missing', 'word_audio')).rows).toHaveLength(0);
+      // A pin whose checksum no longer matches the stored object serves nothing.
+      await admin.query(
+        `UPDATE card_versions SET content_json = $2::jsonb WHERE card_id = $1 AND version = 1`,
+        [card, pin(pinned, sum('d'))],
+      );
+      expect((await read('roles-media', 'word_audio')).rows).toHaveLength(0);
+      // No table access for the learner, and no EXECUTE for PUBLIC or the Admin role.
+      await expectDenied(app, `SELECT bytes FROM card_media_objects WHERE object_key = $1`, [
+        unaccepted,
+      ]);
+      const { rows } = await admin.query<{ public_exec: boolean; admin_exec: boolean }>(
+        `SELECT
+           has_function_privilege('public', 'learner_published_card_media(text, text)', 'EXECUTE')
+             AS public_exec,
+           has_function_privilege('learnbox_admin', 'learner_published_card_media(text, text)', 'EXECUTE')
+             AS admin_exec`,
+      );
+      expect(rows[0]).toEqual({ public_exec: false, admin_exec: false });
+    });
   });
 
   describe('Admin workspace (learnbox_admin)', () => {

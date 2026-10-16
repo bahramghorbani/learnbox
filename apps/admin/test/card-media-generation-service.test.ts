@@ -687,7 +687,6 @@ describe('guards', () => {
   });
 });
 
-
 /** A minimal MPEG-1 Layer III frame header: 44.1 kHz, 128 kbps, mono. */
 function mp3Bytes() {
   const frame = Buffer.alloc(64);
@@ -709,15 +708,25 @@ describe('media is generated only when actually needed (owner rule 2026-10-16)',
     kind: 'image' | 'word_audio' | 'sentence_audio',
   ) {
     const generated = await service.generate({ cardId: CARD_ID, kind, actorUserId: ACTOR });
-    if (generated.status !== 'generated') throw new Error(`expected generation, got ${generated.status}`);
-    await service.accept({ cardId: CARD_ID, kind, candidateId: generated.candidate.id, actorUserId: ACTOR });
+    if (generated.status !== 'generated')
+      throw new Error(`expected generation, got ${generated.status}`);
+    await service.accept({
+      cardId: CARD_ID,
+      kind,
+      candidateId: generated.candidate.id,
+      actorUserId: ACTOR,
+    });
     return generated.candidate;
   }
 
   it('makes no paid call when valid media is already accepted', async () => {
     const { service, provider } = createService(card());
     await generateAndAccept(service, 'word_audio');
-    const again = await service.generate({ cardId: CARD_ID, kind: 'word_audio', actorUserId: ACTOR });
+    const again = await service.generate({
+      cardId: CARD_ID,
+      kind: 'word_audio',
+      actorUserId: ACTOR,
+    });
     expect(again).toMatchObject({ status: 'not_needed', reason: 'accepted_valid' });
     expect(provider.synthesizeSpeech).toHaveBeenCalledTimes(1);
   });
@@ -784,7 +793,10 @@ describe('media is generated only when actually needed (owner rule 2026-10-16)',
 
     fixture.article = 'das';
     const state = Object.fromEntries(
-      (await service.getCardMediaState(CARD_ID)).map((entry) => [entry.kind, entry.acceptedValidity]),
+      (await service.getCardMediaState(CARD_ID)).map((entry) => [
+        entry.kind,
+        entry.acceptedValidity,
+      ]),
     );
     expect(state).toEqual({ image: 'valid', word_audio: 'stale', sentence_audio: 'stale' });
   });
@@ -796,7 +808,10 @@ describe('media is generated only when actually needed (owner rule 2026-10-16)',
     await generateAndAccept(service, 'word_audio');
     fixture.imagePrompt = 'A round kitchen table, centered.';
     const state = Object.fromEntries(
-      (await service.getCardMediaState(CARD_ID)).map((entry) => [entry.kind, entry.acceptedValidity]),
+      (await service.getCardMediaState(CARD_ID)).map((entry) => [
+        entry.kind,
+        entry.acceptedValidity,
+      ]),
     );
     expect(state.image).toBe('stale');
     expect(state.word_audio).toBe('valid');
@@ -807,7 +822,11 @@ describe('media is generated only when actually needed (owner rule 2026-10-16)',
       ...card(),
       visualConcept: 'یک میز چوبی',
     });
-    const generated = await service.generate({ cardId: CARD_ID, kind: 'image', actorUserId: ACTOR });
+    const generated = await service.generate({
+      cardId: CARD_ID,
+      kind: 'image',
+      actorUserId: ACTOR,
+    });
     if (generated.status !== 'generated') throw new Error('expected generation');
     expect(generated.candidate.imageSubject).toBe('A wooden table, centered.');
     const prompt = provider.calls.find((call) => call.prompt)!.prompt!;
@@ -824,10 +843,23 @@ describe('media is generated only when actually needed (owner rule 2026-10-16)',
       model: 'eleven_multilingual_v2',
       provider: 'avalai.ir',
       voice: request.voice,
-      format: { sampleRateHz: 44100, bitrateKbps: 128, channels: 1 as const, variableBitrate: false },
+      format: {
+        sampleRateHz: 44100,
+        bitrateKbps: 128,
+        channels: 1 as const,
+        variableBitrate: false,
+      },
     })) as never);
-    const generated = await service.generate({ cardId: CARD_ID, kind: 'word_audio', actorUserId: ACTOR });
+    const generated = await service.generate({
+      cardId: CARD_ID,
+      kind: 'word_audio',
+      actorUserId: ACTOR,
+    });
     if (generated.status !== 'generated') throw new Error('expected generation');
-    expect(generated.candidate.audioFormat).toEqual({ sampleRateHz: 44100, bitrateKbps: 128, channels: 1 });
+    expect(generated.candidate.audioFormat).toEqual({
+      sampleRateHz: 44100,
+      bitrateKbps: 128,
+      channels: 1,
+    });
   });
 });

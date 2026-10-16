@@ -181,7 +181,9 @@ describe('card publish readiness', () => {
 
   it('blocks an approved card that misses IPA, as an incomplete card', () => {
     const blocker = evaluateCardPublishReadiness(
-      candidate({ content: card({ pronunciation: { locale: 'de-DE' } } as Partial<WordCardDraft>) }),
+      candidate({
+        content: card({ pronunciation: { locale: 'de-DE' } } as Partial<WordCardDraft>),
+      }),
     );
     expect(blocker?.code).toBe('incomplete_content');
     expect(blocker?.issues.map((issue) => issue.field)).toContain('pronunciation.ipa');

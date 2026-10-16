@@ -4,6 +4,7 @@ import { Pool } from 'pg';
 import { MobileSessionContract } from '../../api/dist/auth/mobile-session.js';
 import { PostgresReviewEventStore } from '../../api/dist/reviews/postgres-review-event.store.js';
 import { MobileReviewBatchService } from '../../api/dist/reviews/mobile-review-batch.service.js';
+import { packAccessSql } from './pack-access';
 import {
   createSchedulerV2Preflight,
   isSchedulerV2Enabled,
@@ -65,6 +66,7 @@ export function mobileReviewHttpDependenciesFromEnvironment(
     new PostgresReviewEventStore(
       pool,
       isBinaryReviewEnabled(environment) ? createBinaryReviewPreflight(pool) : undefined,
+      packAccessSql,
     ),
     undefined,
     schedulerV2 ? { schedulerV2, schedulerV2Preflight: createSchedulerV2Preflight(pool) } : {},

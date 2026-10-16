@@ -11,7 +11,12 @@ function frame(b1: number, b2: number, b3: number): Buffer {
 describe('MP3 format is measured from the bytes', () => {
   it('reads MPEG-1 Layer III 44.1 kHz 128 kbps mono', () => {
     const format = readMp3Format(frame(0xfb, 0x90, 0xc4));
-    expect(format).toEqual({ sampleRateHz: 44100, bitrateKbps: 128, channels: 1, variableBitrate: false });
+    expect(format).toEqual({
+      sampleRateHz: 44100,
+      bitrateKbps: 128,
+      channels: 1,
+      variableBitrate: false,
+    });
     expect(meetsPreferredMp3Format(format)).toBe(true);
   });
 

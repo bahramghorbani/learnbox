@@ -132,6 +132,24 @@ describe('PostgresLearnerStateRepository.findNewCardCandidates', () => {
     ]);
   });
 
+  it('with the pack-access rule, offers every published card of an accessible pack', async () => {
+    const calls: Array<{ sql: string; params?: unknown[] }> = [];
+    const pool = {
+      query: async (sql: string, params?: unknown[]) => {
+        calls.push({ sql, params });
+        return { rows: [] };
+      },
+    } as unknown as Pool;
+    const access = (pack: string, user: string) => `ACCESS(${pack}, ${user})`;
+    await new PostgresLearnerStateRepository(pool, access).findNewCardCandidates(userId, 5);
+    expect(calls[0]?.params).toEqual([userId, 5]);
+    expect(calls[0]?.sql).not.toMatch(/LIKE/);
+    expect(calls[0]?.sql).toMatch(/cv\.status = 'published'/);
+    expect(calls[0]?.sql).not.toMatch(/'approved'/);
+    expect(calls[0]?.sql).toMatch(/pc\.card_id = c\.id AND ACCESS\(p, \$1\)/);
+    expect(calls[0]?.sql).toMatch(/s\.card_id IS NULL/);
+  });
+
   it('rejects an unbounded or invalid candidate limit before querying', async () => {
     const pool = {
       query: async () => {

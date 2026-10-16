@@ -128,7 +128,9 @@ export async function resolveCardMediaReadiness(
     const media: CardMediaReadiness[] = [];
     const pins: PinnedCardMedia[] = [];
     for (const kind of CARD_MEDIA_KINDS) {
-      const acceptedRow = accepted.find((row) => row.cardId === version.cardId && row.kind === kind);
+      const acceptedRow = accepted.find(
+        (row) => row.cardId === version.cardId && row.kind === kind,
+      );
       if (acceptedRow) {
         const state = validityOf(acceptedRow);
         media.push({ kind, state, source: 'admin_candidate' });

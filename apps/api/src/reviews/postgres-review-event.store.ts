@@ -93,10 +93,39 @@ export class PostgresReviewEventStore implements ReviewEventStore {
    * write can occur (the caller only sets `response` when LEARNBOX_BINARY_REVIEW is on), so the
    * v1.2.1 behaviour is byte-identical.
    */
+  /**
+   * `packAccess` (the Website's single-sourced pack-access rule) makes a review count only for a
+   * published card of a pack the learner may open, so a paid card cannot be scheduled without
+   * the purchase. A lost entitlement only refuses new reviews: the schedule (Leitner progress) is
+   * never deleted and resumes when access returns. Without it the v1 rule is unchanged.
+   */
   constructor(
     private readonly pool: Pool,
     private readonly verifyBinaryReviewSchema?: () => Promise<void>,
+    private readonly packAccess?: (packAlias: string, userParam: string) => string,
   ) {}
+
+  private reviewableCardSql(userParam: string): string {
+    return this.packAccess
+      ? `EXISTS (
+            SELECT 1
+              FROM card_versions cv
+             WHERE cv.card_id = c.id
+               AND cv.status = 'published'
+          )
+          AND EXISTS (
+            SELECT 1
+              FROM pack_cards pc
+              JOIN packs p ON p.id = pc.pack_id
+             WHERE pc.card_id = c.id AND ${this.packAccess('p', userParam)}
+          )`
+      : `EXISTS (
+            SELECT 1
+              FROM card_versions cv
+             WHERE cv.card_id = c.id
+               AND cv.status IN ('approved', 'published')
+          )`;
+  }
 
   async findByClientEventId(clientEventId: string): Promise<ReviewEventWriteResult | null> {
     const result = await this.pool.query<ReviewEventRow & ScheduleRow & ReconciliationCursorRow>(
@@ -306,12 +335,7 @@ export class PostgresReviewEventStore implements ReviewEventStore {
        SELECT $1, c.id
          FROM cards c
         WHERE c.content_id = $2
-          AND EXISTS (
-            SELECT 1
-              FROM card_versions cv
-             WHERE cv.card_id = c.id
-               AND cv.status IN ('approved', 'published')
-          )
+          AND ${this.reviewableCardSql('$1')}
        ON CONFLICT (user_id, card_id) DO NOTHING
        RETURNING card_id, state, stability_days, difficulty, lapses, due_at`,
       [userId, contentId],
@@ -324,12 +348,7 @@ export class PostgresReviewEventStore implements ReviewEventStore {
          FROM cards c
          JOIN card_schedules s ON s.card_id = c.id AND s.user_id = $1
         WHERE c.content_id = $2
-          AND EXISTS (
-            SELECT 1
-              FROM card_versions cv
-             WHERE cv.card_id = c.id
-               AND cv.status IN ('approved', 'published')
-          )`,
+          AND ${this.reviewableCardSql('$1')}`,
       [userId, contentId],
     );
     const row = existing.rows[0];

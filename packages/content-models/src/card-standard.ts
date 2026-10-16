@@ -167,7 +167,11 @@ export function evaluateCardCompleteness(
   const pronunciation = content.pronunciation as { ipa?: unknown } | undefined;
   if (!text(pronunciation?.ipa)) {
     issues.push(
-      issue('pronunciation.ipa', 'ipa_missing', 'تلفظ IPA برای آماده‌شدن و انتشار کارت الزامی است.'),
+      issue(
+        'pronunciation.ipa',
+        'ipa_missing',
+        'تلفظ IPA برای آماده‌شدن و انتشار کارت الزامی است.',
+      ),
     );
   }
 
@@ -217,17 +221,13 @@ export function evaluateCardCompleteness(
   if (partOfSpeech === 'noun') {
     issues.push(...nounRules(content, lemma));
   } else if (normalizeGermanArticle(content.article)) {
-    issues.push(
-      issue('article', 'article_on_non_noun', 'فقط اسم آرتیکل دارد؛ این کارت اسم نیست.'),
-    );
+    issues.push(issue('article', 'article_on_non_noun', 'فقط اسم آرتیکل دارد؛ این کارت اسم نیست.'));
   }
   if (partOfSpeech === 'verb') issues.push(...verbRules(content));
   if (partOfSpeech === 'adjective') issues.push(...adjectiveRules(content));
 
   if (!text(content.imagePrompt) && !text(content.visualConcept) && !options.imageBrief) {
-    issues.push(
-      issue('visual', 'image_concept_missing', 'مفهوم تصویر یا راهنمای تصویر لازم است.'),
-    );
+    issues.push(issue('visual', 'image_concept_missing', 'مفهوم تصویر یا راهنمای تصویر لازم است.'));
   } else if (lemma) {
     const subject = deriveCardImageSubject(
       effectiveImageSubjectSource(content, options.imageBrief),
@@ -369,7 +369,9 @@ export function readCardMediaReferences(media: unknown): CardMediaReadResult {
   } else {
     return {
       references,
-      issues: [issue('media', 'media_container_invalid', 'فهرست رسانهٔ کارت ساختار نامعتبری دارد.')],
+      issues: [
+        issue('media', 'media_container_invalid', 'فهرست رسانهٔ کارت ساختار نامعتبری دارد.'),
+      ],
       container: 'absent',
     };
   }
@@ -470,9 +472,7 @@ export function evaluateMediaValidity(
     ) {
       return 'stale';
     }
-    return recorded.imageSubject === (expected as { subject: string }).subject
-      ? 'valid'
-      : 'stale';
+    return recorded.imageSubject === (expected as { subject: string }).subject ? 'valid' : 'stale';
   }
   const audio = expected as { spokenTarget: string; voiceRole: GermanVoiceRole };
   if (!recorded.spokenTarget || !recorded.voiceRole) return 'unverifiable';
@@ -520,7 +520,11 @@ export function mediaReadinessIssues(media: readonly CardMediaReadiness[]): Card
     const state = media.find((item) => item.kind === kind)?.state ?? 'missing';
     if (state === 'valid') continue;
     issues.push(
-      issue(`media.${kind}`, `media_${state}`, `${MEDIA_LABEL[kind]}: ${MEDIA_STATE_MESSAGE[state]}.`),
+      issue(
+        `media.${kind}`,
+        `media_${state}`,
+        `${MEDIA_LABEL[kind]}: ${MEDIA_STATE_MESSAGE[state]}.`,
+      ),
     );
   }
   return issues;
@@ -552,7 +556,11 @@ export function pinCardMedia(media: unknown, pins: readonly PinnedCardMedia[]): 
   const kept = Array.isArray(media)
     ? media.filter(
         (entry) =>
-          !(entry && typeof entry === 'object' && kinds.has((entry as { kind?: CardMediaKind }).kind!)),
+          !(
+            entry &&
+            typeof entry === 'object' &&
+            kinds.has((entry as { kind?: CardMediaKind }).kind!)
+          ),
       )
     : [];
   return [...kept, ...pins.map((pin) => ({ ...pin }))];

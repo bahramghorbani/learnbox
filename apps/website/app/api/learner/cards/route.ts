@@ -57,15 +57,20 @@ export async function GET(request: Request): Promise<Response> {
         ORDER BY content_id`,
       [session.subject],
     );
+    // Every published card of a pack the learner may open (free, or bought — archived packs stay
+    // open to buyers). A card in two accessible packs is returned once.
+    const seen = new Set<string>();
     const items = result.rows.flatMap(({ content_id, content_json: c }) => {
       if (
-        !/^start-a1-[a-z0-9-]+$/.test(content_id ?? '') ||
+        !/^[a-z0-9-]+$/.test(content_id ?? '') ||
+        seen.has(content_id) ||
         !c ||
         !c.lemma ||
         !c.persianMeanings?.[0] ||
         !c.examples?.[0]?.german
       )
         return [];
+      seen.add(content_id);
       return [
         {
           id: content_id,

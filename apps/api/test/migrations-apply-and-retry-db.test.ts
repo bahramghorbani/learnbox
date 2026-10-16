@@ -222,7 +222,7 @@ suite('migrations 0001-0038 in an isolated database', () => {
   });
 
   it('ends with the newest migration recorded as the head of the ledger', async () => {
-    expect(files.at(-1)).toBe('0037_one_published_card_version.sql');
+    expect(files.at(-1)).toBe('0038_card_media_completion.sql');
     const numbers = files.map((f) => Number(f.slice(0, 4)));
     expect(numbers).toEqual(numbers.map((_, i) => i + 1));
     // The checksum the release will record, derived from the exact bytes on disk.

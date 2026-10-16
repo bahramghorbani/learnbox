@@ -503,6 +503,32 @@ describe('PostgresReviewEventStore learner-scoped idempotency', () => {
     expect(queries[1]).toMatch(/cv\.status IN \('approved', 'published'\)/i);
   });
 
+  it('with the pack-access rule, schedules only a published card the learner may open', async () => {
+    const queries: string[] = [];
+    const pool = {
+      query: async (sql: string) => {
+        queries.push(sql);
+        return { rows: [] };
+      },
+    } as unknown as Pool;
+    const access = (pack: string, user: string) => `ACCESS(${pack}, ${user})`;
+    const result = await new PostgresReviewEventStore(
+      pool,
+      undefined,
+      access,
+    ).ensureApprovedSchedule(input.userId, 'studium-b1-hoersaal');
+    // No access: refused, and nothing is written or deleted — an existing schedule keeps its
+    // Leitner progress until access returns.
+    expect(result).toBeNull();
+    expect(queries).toHaveLength(2);
+    for (const sql of queries) {
+      expect(sql).toMatch(/cv\.status = 'published'/);
+      expect(sql).not.toMatch(/'approved'/);
+      expect(sql).toMatch(/pc\.card_id = c\.id AND ACCESS\(p, \$1\)/);
+      expect(sql).not.toMatch(/DELETE|UPDATE/i);
+    }
+  });
+
   it('reads only applied events after the learner cursor with bounded ordered paging', async () => {
     const queries: Array<{ sql: string; params?: unknown[] }> = [];
     const pool = {

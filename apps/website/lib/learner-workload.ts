@@ -64,7 +64,7 @@ export async function readTodayWorkload(
   } = {},
 ): Promise<TodayWorkload> {
   const environment = options.environment ?? process.env;
-  const repository = new PostgresLearnerStateRepository(pool);
+  const repository = new PostgresLearnerStateRepository(pool, packAccessSql);
   const now = options.now ?? new Date();
   const service = new LearnerStateService(
     repository,

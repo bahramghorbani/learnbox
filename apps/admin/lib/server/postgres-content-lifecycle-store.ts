@@ -508,7 +508,8 @@ export class PostgresContentLifecycleStore {
       }
       if (versionIds.length === 0) {
         await client.query('ROLLBACK');
-        if (incompleteCards.length > 0) return { status: 'incomplete', packStatus, incompleteCards };
+        if (incompleteCards.length > 0)
+          return { status: 'incomplete', packStatus, incompleteCards };
         if (packStatus === 'needs_review') return { status: 'idempotent', packStatus };
         return { status: 'nothing_to_submit', packStatus };
       }
@@ -625,7 +626,12 @@ export class PostgresContentLifecycleStore {
         const revisionMedia = await this.resolveMedia(
           client,
           approvedCards,
-          new Map(approvedCards.map((card) => [card.cardVersionId, lockedByVersion.get(card.cardVersionId)!.content_json])),
+          new Map(
+            approvedCards.map((card) => [
+              card.cardVersionId,
+              lockedByVersion.get(card.cardVersionId)!.content_json,
+            ]),
+          ),
         );
         const candidates = approvedCards.map((card) => {
           const row = lockedByVersion.get(card.cardVersionId)!;
@@ -726,7 +732,12 @@ export class PostgresContentLifecycleStore {
       const packMedia = await this.resolveMedia(
         client,
         cards,
-        new Map(cards.map((card) => [card.cardVersionId, lockedByVersion.get(card.cardVersionId)?.content_json])),
+        new Map(
+          cards.map((card) => [
+            card.cardVersionId,
+            lockedByVersion.get(card.cardVersionId)?.content_json,
+          ]),
+        ),
       );
       const candidates = cards.map((card) => {
         const row = lockedByVersion.get(card.cardVersionId);
@@ -734,7 +745,11 @@ export class PostgresContentLifecycleStore {
           ...card,
           status: row ? (String(row.status) as ContentStatus) : card.status,
         };
-        return toPublishCandidate(authoritative, row?.content_json, packMedia.get(card.cardVersionId));
+        return toPublishCandidate(
+          authoritative,
+          row?.content_json,
+          packMedia.get(card.cardVersionId),
+        );
       });
 
       const readiness = evaluatePackPublishReadiness({

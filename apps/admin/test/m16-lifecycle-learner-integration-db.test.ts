@@ -5,6 +5,14 @@ import { join } from 'node:path';
 import type { Pool as PgPool } from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
+import {
+  DEFAULT_AI_MEDIA_LIMITS,
+  DEFAULT_GERMAN_VOICE_MAPPING,
+} from '../lib/server/ai-media-config.js';
+import { readCanonicalImageStandard } from '../lib/server/canonical-image-standard.js';
+import { type AiMediaProvider } from '../lib/server/ai-media-provider.js';
+import { CardMediaGenerationService } from '../lib/server/card-media-generation-service.js';
+import { createDatabaseCardMediaStorage } from '../lib/server/card-media-storage.js';
 import { PostgresContentLifecycleStore } from '../lib/server/postgres-content-lifecycle-store.js';
 import { PostgresContentReviewStore } from '../lib/server/postgres-content-review-store.js';
 import {
@@ -78,6 +86,11 @@ function cardContent(contentId: string, lemma: string, article: string, provider
     partOfSpeech: 'noun',
     cefr: 'A1',
     persianMeanings: ['معنی'],
+    simpleGermanDefinition: 'Ein einfaches deutsches Wort.',
+    pronunciation: { ipa: 'haʊs' },
+    essentialInflection: `die ${lemma}e`,
+    grammarNote: 'اسم آلمانی با آرتیکل و صورت جمع یاد گرفته می‌شود.',
+    imagePrompt: 'a simple classroom object, no mascot',
     examples: [{ german: `${article} ${lemma} ist hier.`, persian: 'این‌جاست.' }],
     media: [],
     source: { provider, reference: 'Goethe A1 scope reference; linguistic review recorded.' },
@@ -102,7 +115,65 @@ async function seedCard(pack: string, contentId: string, lemma: string, provider
     cardId,
     cards.length + 1,
   ]);
+  // The lifecycle now publishes only real accepted media. These are isolated test bytes, not
+  // Starter assets; the same helper also makes a changed revision need fresh valid attribution.
+  await seedAcceptedMedia(pack, cardId);
   return { cardId, versionId: String(inserted.rows[0].id), contentId };
+}
+
+function testMediaProvider(): AiMediaProvider {
+  const mp3 = Buffer.alloc(64);
+  mp3.set([0xff, 0xfb, 0x90, 0xc4]);
+  return {
+    provider: 'test-provider',
+    imageModel: 'flux.2-pro',
+    audioModel: 'eleven_multilingual_v2',
+    generateImage: async () => ({
+      bytes: Buffer.from('89504e470d0a1a0a', 'hex'),
+      contentType: 'image/png',
+      provider: 'test-provider',
+      model: 'flux.2-pro',
+      estimatedCostUnit: null,
+    }),
+    synthesizeSpeech: async (request) => ({
+      bytes: mp3,
+      contentType: 'audio/mpeg',
+      provider: 'test-provider',
+      model: 'eleven_multilingual_v2',
+      voice: request.voice,
+      format: { sampleRateHz: 44100, bitrateKbps: 128, channels: 1, variableBitrate: false },
+    }),
+    listImageModels: async () => ['flux.2-pro'],
+    listAudioModels: async () => ['eleven_multilingual_v2'],
+  };
+}
+
+/** Uses the real generate → ready candidate → explicit accept sequence with a local fake provider. */
+async function seedAcceptedMedia(_pack: string, cardId: string) {
+  const service = new CardMediaGenerationService(
+    pool as never,
+    testMediaProvider(),
+    createDatabaseCardMediaStorage(pool as never),
+    DEFAULT_GERMAN_VOICE_MAPPING,
+    DEFAULT_AI_MEDIA_LIMITS,
+    readCanonicalImageStandard(),
+  );
+  for (const kind of ['image', 'word_audio', 'sentence_audio'] as const) {
+    const generated = await service.generate({ cardId, kind, actorUserId: operator });
+    // Existing valid media is intentionally not regenerated. Its already-accepted candidate stays
+    // pinned; the changed spoken targets become fresh candidates and need a real explicit accept.
+    if (generated.status === 'not_needed') continue;
+    if (generated.status !== 'generated')
+      throw new Error(`media generation failed: ${generated.status}`);
+    const accepted = await service.accept({
+      cardId,
+      kind,
+      candidateId: generated.candidate.id,
+      actorUserId: operator,
+    });
+    if (accepted.status !== 'accepted')
+      throw new Error(`media acceptance failed: ${accepted.status}`);
+  }
 }
 
 /** Drives the real review store through all six canonical dimensions, then approves. */
@@ -488,12 +559,16 @@ suite('M1.6 — published-pack revisions', () => {
        VALUES ($1, $2, $3, 'remembered', now(), $4)`,
       [randomUUID(), learner, card.cardId, randomUUID()],
     );
+    const revisionContent = cardContent(card.contentId, 'Tischchen', 'das', 'editorial');
     const revision = await pool.query(
       `INSERT INTO card_versions (card_id, version, status, content_json, source_provider)
        VALUES ($1, 2, 'draft', $2::jsonb, 'editorial') RETURNING id`,
-      [card.cardId, JSON.stringify(cardContent(card.contentId, 'Tischchen', 'das', 'editorial'))],
+      [card.cardId, JSON.stringify(revisionContent)],
     );
     const revisionId = String(revision.rows[0]!.id);
+    // Changed spoken targets need new accepted audio candidates; unchanged valid image media remains
+    // pinned and is deliberately not regenerated by the real media service.
+    await seedAcceptedMedia(packId, card.cardId);
 
     expect(await publishedLemma(card.cardId)).toBe('Tisch');
     expect(
@@ -507,14 +582,13 @@ suite('M1.6 — published-pack revisions', () => {
     await humanApprove(revisionId);
     expect(await publishedLemma(card.cardId)).toBe('Tisch');
 
-    expect(
-      await lifecycle.publishPack({
-        packId,
-        actorUserId: operator,
-        idempotencyKey: randomUUID(),
-        expectedStatus: 'published',
-      }),
-    ).toMatchObject({ status: 'applied', publishedCardCount: 1 });
+    const publishRevision = await lifecycle.publishPack({
+      packId,
+      actorUserId: operator,
+      idempotencyKey: randomUUID(),
+      expectedStatus: 'published',
+    });
+    expect(publishRevision).toMatchObject({ status: 'applied', publishedCardCount: 1 });
     expect(await publishedLemma(card.cardId)).toBe('Tischchen');
 
     const versions = await pool.query(

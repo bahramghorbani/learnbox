@@ -1,10 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createLearnerSession } from '../lib/server-session';
 
-const mocked = vi.hoisted(() => ({ published: vi.fn(), read: vi.fn() }));
+const mocked = vi.hoisted(() => ({ published: vi.fn(), read: vi.fn(), stored: vi.fn() }));
 vi.mock('../lib/published-start-card', () => ({
   canLearnerAccessStartContentId: mocked.published,
 }));
+vi.mock('../lib/published-card-media', () => ({ readPublishedCardMedia: mocked.stored }));
 vi.mock('node:fs/promises', () => ({ readFile: mocked.read }));
 import { GET } from '../app/api/content-media/[contentId]/[kind]/route';
 
@@ -43,6 +44,30 @@ describe('published content media authorization', () => {
     mocked.published.mockResolvedValue(false);
     expect((await GET(request(), context('image', 'start-a1-unpublished'))).status).toBe(404);
     expect(mocked.read).not.toHaveBeenCalled();
+  });
+
+  it('serves an Admin-pack card from its pinned database media after the same access check', async () => {
+    mocked.published.mockResolvedValue(true);
+    mocked.read.mockRejectedValue(new Error('ENOENT'));
+    mocked.stored.mockResolvedValue({ mediaType: 'audio/mpeg', bytes: Buffer.from('mp3') });
+    const response = await GET(request(), context('word-audio', 'studium-b1-hoersaal'));
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toBe('audio/mpeg');
+    expect(response.headers.get('cache-control')).toBe('private, no-store');
+    expect(mocked.stored).toHaveBeenCalledWith('studium-b1-hoersaal', 'word_audio');
+  });
+
+  it('never reads stored media for a learner without access to the pack', async () => {
+    mocked.published.mockResolvedValue(false);
+    expect((await GET(request(), context('image', 'studium-b1-hoersaal'))).status).toBe(404);
+    expect(mocked.stored).not.toHaveBeenCalled();
+  });
+
+  it('returns 404 when no file and no pinned media exist', async () => {
+    mocked.published.mockResolvedValue(true);
+    mocked.read.mockRejectedValue(new Error('ENOENT'));
+    mocked.stored.mockResolvedValue(null);
+    expect((await GET(request(), context('image', 'studium-b1-hoersaal'))).status).toBe(404);
   });
 
   it('fails closed if the publication database is unavailable', async () => {
