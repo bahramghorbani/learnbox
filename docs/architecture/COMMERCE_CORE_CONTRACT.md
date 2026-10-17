@@ -335,12 +335,14 @@ flag that defaults to off.
 Reaching the check cap leaves the attempt `pending` and shows «سقف دفعات» in Admin. Admin re-check
 still works on every open or failed attempt.
 
-### 10.3 Deletion evidence: fields kept and retention (decision open)
+### 10.3 Deletion evidence: fields kept and retention
 
 A pack-purchase claim keeps exactly: `id`, `provider`, `provider_purchase_id` (Authority),
 `provider_reference` (RefID), `pack_id`, `amount_tomans`, `status`, `purchased_at`, `recorded_at`,
 `entitlement_keys` (`pack:<id>`), `subject_hash`, `retain_until`, `preserved_by_deletion_id`.
-Not kept: user id, phone, name, e-mail, card PAN/hash, gateway bodies, order snapshot, timeline.
+Not kept: phone, name, e-mail, profile, sessions, learning data, card PAN/hash, gateway bodies, order
+snapshot, timeline. A user id is not kept as a column. The one exception is the `subject_hash`
+fallback described below.
 
 These are **pseudonymous, not anonymous**. Authority and RefID can be matched to the gateway's own
 records (which hold card and payer data); `subject_hash` is a keyed hash of the phone number and is
@@ -348,11 +350,27 @@ re-identifiable by whoever holds the key or the phone; when no phone was on file
 `unknown:<former user id>`, which links to other retained deletion records. Treat the table as
 personal data.
 
-Retention is **not decided**. The code writes `retain_until = purchase time + 5 years` as a
-placeholder so the column is never unbounded by accident (applied in
-`apps/website/lib/account-deletion-store.ts`). After `retain_until` nothing happens yet: rows stay
-until a purge change is approved. The owner (with legal advice) sets the period and approves the
-purge; neither is part of this phase, and no Production data is changed.
+**Retention (owner product decision, 2026-10-17; not a legal opinion).** Purchase evidence is kept
+for **5 years from the time the account is deleted**.
+
+- Where it is applied: `apps/website/lib/account-deletion-store.ts` writes
+  `retain_until = now() + interval '5 years'` in the deletion transaction. That is the same instant as
+  `recorded_at`, so the basis is the deletion time, not the purchase time. It is tested in
+  `commerce-core-db.test.ts`: a purchase made 2 years before deletion is kept until deletion + 5 years.
+- What is kept: only the fields listed above. Authority, RefID and `subject_hash` are protected
+  pseudonymous data, not anonymous data. Access is the same as for other personal data: database
+  roles only, no learner surface, and Admin shows no claims.
+- After `retain_until`: **nothing happens automatically.** There is no purge job and no real data is
+  deleted in this phase. Expired rows stay until the manual purge below is run with owner approval.
+- Manual secure purge, for when it is approved: run it as the migrator role in one transaction.
+  First count `SELECT count(*) FROM purchase_ownership_claims WHERE retain_until < now()` and record
+  the number. Then delete exactly those rows with the same predicate. Check that the deleted count
+  matches. Record only the count and the date in the operations log, never row contents. Copies in
+  backups age out on their own schedule: local backups after 30 days, while the encrypted Dropbox
+  offsite copies are copy-only and are never deleted remotely. The purge is therefore complete only
+  after a backup-retention rule covers the offsite copies. That rule is a separate decision.
+- Possible legal requirements (tax, e-commerce or Enamad record-keeping, and data-subject rights)
+  must be checked separately before launch. They may change the period.
 
 ### 10.4 Test evidence limits
 
