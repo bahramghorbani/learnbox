@@ -38,6 +38,34 @@ against any data — Phase B adds the reproducing tests first):
 5. **Snapshot is amount only.** Pack name and composition at purchase time are not kept.
 6. **Admin search** covers pack and status only; learner history covers one purchase by id.
 
+## Amendments v1.1 (owner approval of direction, 2026-10-17)
+
+These five rules override anything below that reads differently.
+
+1. **Concurrency, abandoned orders, extra payments.** Order and attempt creation are safe under
+   parallel and repeated requests (one open order per learner and pack, enforced by a partial
+   unique index; one live attempt per order). An abandoned open order never blocks the learner: it
+   expires after 24 hours, or at once when the price changed, and a new order opens. Every
+   additional valid payment is kept as its own attempt with its own id and RefID and is flagged
+   for Admin review (`review_reason = already_entitled`, order `needs_review`), even when the
+   entitlement already exists. **No automatic refund in this phase.**
+2. **Code 101.** Accepted only for the Authority of the attempt being checked, verified with that
+   attempt's stored rial amount and merchant, and only when any order reference echoed by the
+   provider equals that attempt's own order. A response code alone never proves a payment;
+   anything else is recorded as `provider_mismatch`, grants nothing and is flagged for review.
+3. **Amount unit.** Every request sends `currency: "IRR"` explicitly together with the rial amount;
+   no default is relied on and no second conversion exists (`tomansToRials` at the provider
+   boundary only; the database enforces `provider_amount = amount_tomans × 10`). Verify sends the
+   same stored rial amount. Live official text confirmed — see §7.
+4. **Purchase evidence on account deletion.** Only the minimum is kept in
+   `purchase_ownership_claims`: provider, Authority, RefID, pack id, amount, purchase time and a
+   one-way subject hash. No name, phone, e-mail, card PAN/hash or gateway body. Retention is
+   bounded: `retain_until = purchase time + 5 years` (**provisional**; the owner/legal review sets the
+   final period; a purge of expired claims is a later change). Tests run on test accounts only.
+5. **Legacy tables and routes.** Removal is not a sales prerequisite. `payment_logs` and
+   `payment_gateways` are marked deprecated, receive no new writes, and stay. No physical removal
+   is part of this phase's migration.
+
 ## 2. Data model
 
 No second payment history, entitlement table or offer table is introduced. One new order table and
@@ -84,8 +112,8 @@ the learner status route, Admin transactions and account deletion already refere
 - Add `provider_amount BIGINT` + `provider_currency TEXT CHECK ('IRR')`: the exact value sent to
   Zarinpal. `amount_tomans × 10 = provider_amount` is enforced by a `CHECK`; the conversion stays
   only in `tomansToRials` at the provider boundary.
-- Add `last_check_at`, `last_check_outcome` (`none / paid / not_paid / unknown`), `check_count`,
-  `last_provider_code`. No gateway body, card data or message text is stored.
+- Add `last_checked_at`, `check_count`, `last_provider_code`, `review_reason`
+  (`already_entitled / provider_mismatch`). No gateway body, card data or message text is stored.
 - `UNIQUE (provider, provider_purchase_id)` stays the replay barrier for Authority/token.
 - Bazaar (interface only): `provider_purchase_id` = SHA-256 of the purchase token (lookup and
   dedupe); the raw token goes to `provider_token_ciphertext`, encrypted with a runtime key, readable
@@ -109,12 +137,12 @@ is not affected by any commerce state.
 
 ### 2.5 Roles of the remaining tables
 
-| Table                       | Decision                                                                                                                                                                                                                   |
-| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `billing_products`          | Kept as the provider-store SKU catalogue. In the Bazaar phase it gains `pack_id`; it is **not** an offer table for the web, and no `PackOffer` table is created. The web offer is `packs.price_tomans` + `store_listings`. |
-| `payment_logs`              | **Deprecated, frozen.** No new writer. Removed by a later migration together with the gated legacy routes, after a read-only Production proof that it is empty. Until then account deletion keeps clearing it.             |
-| `payment_gateways`          | **Deprecated, frozen.** Provider activation stays in runtime configuration (default off), never in this table. Removed with `payment_logs`.                                                                                |
-| `purchase_ownership_claims` | Gains `pack_id` and `amount_tomans`; `product_id` becomes nullable with a `CHECK` that exactly one of `product_id / pack_id` is set. The deletion query preserves both shapes.                                             |
+| Table                       | Decision                                                                                                                                                                                                                           |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `billing_products`          | Kept as the provider-store SKU catalogue. In the Bazaar phase it gains `pack_id`; it is **not** an offer table for the web, and no `PackOffer` table is created. The web offer is `packs.price_tomans` + `store_listings`.         |
+| `payment_logs`              | **Deprecated, frozen.** No new writer. Removed by a later migration together with the gated legacy routes, after a read-only Production proof that it is empty. Until then account deletion keeps clearing it.                     |
+| `payment_gateways`          | **Deprecated, frozen.** Provider activation stays in runtime configuration (default off), never in this table. Removed with `payment_logs`.                                                                                        |
+| `purchase_ownership_claims` | Gains `pack_id`, `amount_tomans`, `provider_reference` and `retain_until`; `product_id` becomes nullable with a `CHECK` that exactly one of `product_id / pack_id` is set. The deletion query preserves both shapes (amendment 4). |
 
 ### 2.6 Existing rows
 
@@ -139,8 +167,9 @@ pending ──transport error / 5xx──▶ pending (last_check_outcome = unkno
   does. Late `NOK` or failures can never move a `verified` row (existing `WHERE status = 'pending'`
   guard is kept).
 - `refunded / revoked / rejected` stay reserved; v1 writes none of them.
-- Which Zarinpal codes count as definitive not-paid is fixed during sandbox testing (§7); until
-  then any non-100/101 response keeps the attempt `pending` for reconciliation.
+- Only `-51` ("session is not active paid try") fails an attempt, and only once the attempt is older
+  than 30 minutes; every other non-100/101 code (e.g. `-50` amount mismatch, `-54` invalid
+  Authority) keeps it open for reconciliation/review.
 
 ### Order (`purchase_orders.status`) — projection, updated in the attempt's transaction
 
@@ -166,15 +195,17 @@ transaction. If that transaction fails after Zarinpal accepted the payment, the 
 
 Reconciliation v1 (runtime flag, default off):
 
-- Every 10 minutes: attempts `pending` older than 15 minutes and younger than 7 days → verify with
-  the stored amount. Outcome per §3; each run writes one timeline event per changed attempt.
+- Every 10 minutes: attempts `pending` older than 30 minutes and younger than 7 days, and
+  `cancelled` attempts younger than 24 hours checked once → verify with the stored amount. The
+  learner's status page may re-check their own unsettled attempt at most once a minute.
 - Older than 7 days and still unknown → order `needs_review`; never auto-failed.
-- Admin "re-check with provider" runs the same function for one order (idempotent, audited).
+- Admin "re-check with provider" (super_admin, fresh re-authentication) appends one
+  `recheck_requested` event; the next reconciliation run executes it. Admin never calls the gateway.
 - Zarinpal `unVerified` is used as a cross-check for paid-but-unverified Authorities once its
   response is confirmed in sandbox.
-- `admin_repair` (super_admin, reason required, audited) inserts the missing `purchased`
-  entitlement only for a `verified` attempt whose order is not `fulfilled` and where the learner
-  holds no entitlement for the pack. It never edits payment fields.
+- `admin_repair` is **deferred**: because verification and entitlement commit in one transaction, a
+  `verified` attempt without an entitlement only arises when the learner already held the pack,
+  which is a review case, not a repair. Reintroduce only with evidence of a real gap.
 
 ## 5. Archive and stopping sales
 
@@ -198,24 +229,40 @@ fulfilled) for the learner's own orders only.
   pasted token (hashed server-side). Filters: status, pack, date, environment.
 - Order detail: snapshot, attempts, timeline, linked entitlement, and any support grant for the same
   learner and pack shown separately and labelled "اعطای دستی — پرداخت نیست".
-- Actions: re-check with provider; repair entitlement. View: roles that read payments today;
-  actions: `super_admin`. No refund, edit or delete action in v1.
+- Implemented search: Authority, RefID, public order code, attempt id, learner id; filter
+  «نیازمند بررسی» (extra valid payment, provider mismatch, pending > 30 min). Phone and Bazaar
+  search follow with the Bazaar phase.
+- Actions: re-check with provider (queued). View: roles that read payments today; actions:
+  `super_admin`. No refund, repair, edit or delete action in v1.
 
 ## 7. Provider requirements (official sources, reviewed 2026-10-17)
 
-Review method: official pages through search-indexed content; full-text extraction was unavailable
-in this session. Each line is re-read against the live page before the implementing PR.
+Review method: the live official pages rendered in a browser on 2026-10-17 (text quoted below),
+plus calls to the official sandbox host with a random UUID merchant and no money.
 
-| Requirement                                                                                            | Source                                                                                                                                                               |
-| ------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Request returns `authority`; payer is redirected; success codes `100`, verify `101` = already verified | [Zarinpal — connect to gateway](https://www.zarinpal.com/docs/paymentGateway/connectToGateway), [error list](https://www.zarinpal.com/docs/paymentGateway/errorList) |
-| Verify after the payer returns, server-side, with the same amount                                      | [Zarinpal — verify](https://www.zarinpal.com/docs/sdk/php/method/verify)                                                                                             |
-| `unVerified` lists successful payments not yet verified                                                | [Zarinpal — unVerified](https://www.zarinpal.com/docs/paymentGateway/otherMethods/unVerified)                                                                        |
-| Amount unit (IRR default) and sandbox host                                                             | To confirm on the live page before Phase C; current code sends rials.                                                                                                |
-| Verify purchases on a remote server; use a developer payload                                           | [Bazaar — Security Notes](https://developers.cafebazaar.ir/en/guidelines/in-app-billing/security)                                                                    |
-| Server access to purchase status through Developer API with OAuth 2.0                                  | [Bazaar — API](https://developers.cafebazaar.ir/en/guidelines/in-app-billing/api)                                                                                    |
-| SKUs cannot be deleted or renamed, only deactivated; test purchases need an uploaded app               | [Bazaar — FAQ](https://developers.cafebazaar.ir/en/guidelines/in-app-billing/faq)                                                                                    |
-| IAB v3 response keys                                                                                   | [Bazaar — Reference](https://developers.cafebazaar.ir/en/guidelines/in-app-billing/reference)                                                                        |
+- **Request** (`/pg/v4/payment/request.json`): `amount` Integer, required; `currency` optional,
+  "تعیین واحد پولی ریال (IRR) یا تومان(IRT)"; `metadata.order_id` = "شماره سفارش".
+- **Currency page:** use `currency` "to avoid problems recognising a rial or toman amount"; IRR = rial,
+  IRT = toman. → We always send `IRR` explicitly.
+- **Verify** (`/pg/v4/payment/verify.json`): `merchant_id`, `amount` — "مبلغ تراکنش به (ریال)",
+  `authority`. Verify only when the callback carries `Status=OK`; `NOK` = failed or cancelled.
+- **100 / 101:** "تنها یکبار کد100 رخ می‌دهد و در دفعات بعدی verify همان تراکنش، کد 101" — 101
+  means that same transaction succeeded and was verified before. Errors include `-50` amount
+  differs, `-51` not a paid try, `-53` not this merchant's session, `-54` invalid Authority.
+- **Sandbox:** replace `payment.zarinpal.com` with `sandbox.zarinpal.com`; Authorities start with
+  `S`; any UUID as merchant id. Observed: the payment page shows the IRR amount as rials and its
+  toman equivalent; first verify `100`, second `101` with the same RefID.
+
+| Requirement                                                                                            | Source                                                                                                                                                                 |
+| ------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Request returns `authority`; payer is redirected; success codes `100`, verify `101` = already verified | [Zarinpal — connect to gateway](https://www.zarinpal.com/docs/paymentGateway/connectToGateway), [error list](https://www.zarinpal.com/docs/paymentGateway/errorList)   |
+| Verify after the payer returns, server-side, with the same amount                                      | [Zarinpal — verify](https://www.zarinpal.com/docs/sdk/php/method/verify)                                                                                               |
+| `unVerified` lists successful payments not yet verified                                                | [Zarinpal — unVerified](https://www.zarinpal.com/docs/paymentGateway/otherMethods/unVerified)                                                                          |
+| Amount unit and sandbox host                                                                           | [currency](https://www.zarinpal.com/docs/paymentGateway/moreFeatures/currency), [sandbox](https://www.zarinpal.com/docs/paymentGateway/sandBox) — confirmed live above |
+| Verify purchases on a remote server; use a developer payload                                           | [Bazaar — Security Notes](https://developers.cafebazaar.ir/en/guidelines/in-app-billing/security)                                                                      |
+| Server access to purchase status through Developer API with OAuth 2.0                                  | [Bazaar — API](https://developers.cafebazaar.ir/en/guidelines/in-app-billing/api)                                                                                      |
+| SKUs cannot be deleted or renamed, only deactivated; test purchases need an uploaded app               | [Bazaar — FAQ](https://developers.cafebazaar.ir/en/guidelines/in-app-billing/faq)                                                                                      |
+| IAB v3 response keys                                                                                   | [Bazaar — Reference](https://developers.cafebazaar.ir/en/guidelines/in-app-billing/reference)                                                                          |
 
 **Channel rule (owner decision, 2026-10-17):** the Cafe Bazaar build offers only Bazaar in-app
 billing; it never shows the Zarinpal web checkout. SDK-specific details (Poolakey version,
@@ -236,7 +283,11 @@ payload size, consumption model) stay open until the Android release line is cho
 | Archive with an open attempt                     | New attempt refused; verification still grants                        |
 | Account deletion after a pack purchase           | `purchase_ownership_claims` row with `pack_id`                        |
 | Support grant                                    | Audit row, no order or attempt                                        |
-| Admin role without `super_admin`                 | Re-check/repair refused server-side                                   |
+| Admin role without `super_admin`                 | Re-check refused server-side                                          |
+| Parallel checkouts                               | One order, one gateway session                                        |
+| Extra valid payment after entitlement            | Own attempt id + RefID, flagged for review, no second entitlement     |
+| 101 with a foreign order reference               | `provider_mismatch`, nothing granted                                  |
+| Abandoned open order                             | Expires; a new order opens                                            |
 
 ## 9. Delivery phases and gates
 
