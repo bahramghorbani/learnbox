@@ -82,6 +82,18 @@ const transaction = {
   createdAt: '2026-10-10T09:00:00Z',
   updatedAt: '2026-10-10T09:02:00Z',
   verifiedAt: '2026-10-10T09:02:00Z',
+  // Fields the transactions API returns since the commerce core (a pre-order legacy attempt).
+  orderCode: null,
+  orderStatus: null,
+  providerAmount: null,
+  providerCurrency: null,
+  reviewReason: null,
+  lastProviderCode: null,
+  checkCount: 0,
+  lastCheckedAt: null,
+  recheckPending: false,
+  recheckRequestedAt: null,
+  autoCheck: 'settled',
 };
 
 const configuration = {

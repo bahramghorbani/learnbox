@@ -240,6 +240,11 @@ suite('CP4 migration 0023 (real Postgres)', () => {
   });
 
   it('account deletion removes plan and rejection rows together with the learner', async () => {
+    // `deleteAccount` is today's code, which (like every deploy) runs on the head schema: bring the
+    // database forward past 0023 first (e.g. 0039 adds the pack columns of deletion evidence).
+    for (const file of files.filter((f) => f > target)) {
+      await pool.query(readFileSync(join(dir, file), 'utf8'));
+    }
     const outcome = await deleteAccount(pool, {
       userId,
       subjectHash: 'a'.repeat(64),
