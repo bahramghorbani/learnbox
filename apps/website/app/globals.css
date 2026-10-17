@@ -4164,6 +4164,28 @@ p {
   color: var(--muted);
   flex-shrink: 0;
 }
+/* «خریدهای من» rows carry a status line, order code and an optional action: wrap on narrow phones
+   instead of pushing the line and the button out of the card. */
+.store-owned-item[data-purchase-status] {
+  flex-wrap: wrap;
+}
+.store-owned-item[data-purchase-status] .store-owned-meta {
+  flex: 1 1 100%;
+}
+.store-order-code {
+  white-space: nowrap;
+}
+.store-owned-note {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: var(--text);
+}
+.store-owned-note:empty {
+  margin: 0;
+}
+.store-owned-item[data-purchase-status] .store-retry {
+  margin-top: 0;
+}
 .store-continue {
   margin-top: 10px;
   width: 100%;

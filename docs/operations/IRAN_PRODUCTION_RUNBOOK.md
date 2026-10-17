@@ -34,6 +34,7 @@ afterwards.
 | `iran/ops-access/ws-ssh-bridge.py`                                       | `/opt/learnbox-ops-access/`                                                 |
 | `iran/ops-access/learnbox-ws-ssh.service`                                | `/etc/systemd/system/`                                                      |
 | `iran/monitor/learnbox-iran-monitor-enroll.sh`, `…-disk-test.sh`         | not installed; enrollment runs on the owner Mac, the disk test on demand    |
+| `iran/commerce/learnbox-commerce-reconcile.{sh,service,timer}`           | **not installed**; part of payment activation (see below)                   |
 
 App and Admin compose files reference images by local image ID (`sha256:…`). The image IDs are
 the deployed digests in `ADMIN_PRODUCTION_STATUS.md`. A release changes exactly that line.
@@ -151,6 +152,54 @@ Ping URLs exist only in `secrets/healthchecks.env`. To re-create them, the owner
 `iran/monitor/learnbox-iran-monitor-enroll.sh` on the Mac; it creates or reuses the checks by name.
 To check the disk thresholds without pinging, run
 `bash learnbox-iran-monitor-disk-test.sh /home/ubuntu/learnbox/ops/learnbox-iran-monitor.sh`.
+
+## Commerce reconciliation (not installed)
+
+Payment is off in Production. The files in `infrastructure/production/iran/commerce/` are prepared
+and were tested only on the Mac staging stack with a fake provider. Installing them is part of the
+payment activation, which needs separate owner authorization.
+
+**What runs.** `learnbox-commerce-reconcile.timer` starts `learnbox-commerce-reconcile.sh` every
+10 min. The script runs `node` inside the app container and calls
+`POST http://127.0.0.1:3000/api/internal/commerce/reconcile` with
+`Authorization: Bearer $LEARNBOX_COMMERCE_RECONCILE_TOKEN`, read from the container environment.
+The token lives only in `app/.env`. It is not on a command line, in a URL, in Caddy logs or in the
+output. The app re-checks unsettled Zarinpal attempts and queued Admin re-check requests through its
+payment service (contract §10.1). The script prints and stores counts only. A run that overlaps the
+callback cannot grant twice, because the app settles each attempt under a row lock.
+
+**Rollout order (the flag goes on only after scheduled execution is ready):**
+
+1. Copy the script to `/home/ubuntu/learnbox/ops/` and the units to `/etc/systemd/system/`, then
+   `systemctl daemon-reload`. Leave the timer disabled.
+2. Run the script once by hand. While the flag is off, expect
+   `commerce-reconcile: fail http=404 error=notFound`, which proves the path and the container name.
+3. Add `LEARNBOX_COMMERCE_RECONCILE_TOKEN` (`openssl rand -hex 32`, at least 32 characters) and
+   `LEARNBOX_COMMERCE_RECONCILE_ENABLED=true` to `app/.env`, then recreate the app.
+4. Run the script by hand again and expect `ok http=200 checked=… verified=…`. Then
+   `systemctl enable --now learnbox-commerce-reconcile.timer`.
+5. Add one line to the monitor next to the other `fresh` checks, and update the repository mirror
+   in the same change:
+   `fresh commerce-reconcile "$L/ops/state/commerce-reconcile.status" 1`
+6. Only then set `LEARNBOX_COMMERCE_RECONCILE_ENABLED=true` in `admin/.env` and recreate the Admin.
+   That shows the «درخواست بررسی دوباره از درگاه» button. Without it the Admin explains that
+   reconciliation is off and the API refuses with 409.
+
+Rollback is the reverse order: Admin flag off, `systemctl disable --now` the timer, remove the
+monitor line, then turn off the app flag.
+
+**Seeing the last run and detecting a stopped timer:**
+
+- Last result: `cat /home/ubuntu/learnbox/ops/state/commerce-reconcile.status`
+  (`status`, `at`, `detail`).
+- Schedule: `systemctl list-timers learnbox-commerce-reconcile.timer` (last and next trigger).
+- History: `journalctl -u learnbox-commerce-reconcile.service -n 20`.
+- Alerting reuses the existing monitor and the `learnbox-iran-backups` Healthchecks check (job
+  freshness). If the status is `fail` or older than the threshold (integer hours, so about 2 h with
+  `1`), the check fails and the owner is alerted. There is no separate monitor.
+- Per payment, the Admin transaction details show the check count, the last provider code and
+  «بررسی بعدی» (next check). After 20 inconclusive checks an attempt shows that the check limit was
+  reached and stays in «نیازمند بررسی» until someone handles it.
 
 ## Recovery material
 

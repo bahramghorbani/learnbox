@@ -98,9 +98,10 @@ describe('M2.4 Zarinpal payment request', () => {
     const { instance, recorder } = provider({ data: { code: 100, authority }, errors: [] });
 
     const outcome = await instance.requestPayment({
-      amountTomans: 150000,
+      amountRials: 1500000,
       callbackUrl: 'https://app.learnbox.example/api/store/purchase/callback',
       description: 'خرید بسته',
+      orderCode: 'LB-0123456789',
     });
 
     expect(outcome).toEqual({ status: 'created', authority });
@@ -108,7 +109,10 @@ describe('M2.4 Zarinpal payment request', () => {
     expect(recorder.calls[0].body).toMatchObject({
       merchant_id: fakeMerchantId,
       amount: 1500000,
+      // Explicit, never the gateway default (contract §7).
+      currency: 'IRR',
       callback_url: 'https://app.learnbox.example/api/store/purchase/callback',
+      metadata: { order_id: 'LB-0123456789' },
     });
   });
 
@@ -116,7 +120,7 @@ describe('M2.4 Zarinpal payment request', () => {
     const { instance } = provider({ data: [], errors: [{ code: -9, message: 'validation' }] });
     await expect(
       instance.requestPayment({
-        amountTomans: 1000,
+        amountRials: 10000,
         callbackUrl: 'https://x.test/cb',
         description: 'd',
       }),
@@ -128,7 +132,7 @@ describe('M2.4 Zarinpal payment request', () => {
     // "Unknown" must stay distinguishable from "declined".
     await expect(
       instance.requestPayment({
-        amountTomans: 1000,
+        amountRials: 10000,
         callbackUrl: 'https://x.test/cb',
         description: 'd',
       }),
@@ -139,7 +143,7 @@ describe('M2.4 Zarinpal payment request', () => {
     const { instance } = provider({ data: [], errors: [] }, { status: 503 });
     await expect(
       instance.requestPayment({
-        amountTomans: 1000,
+        amountRials: 10000,
         callbackUrl: 'https://x.test/cb',
         description: 'd',
       }),
@@ -150,7 +154,7 @@ describe('M2.4 Zarinpal payment request', () => {
     const { instance } = provider({ data: { code: 100, authority: 'bogus' }, errors: [] });
     await expect(
       instance.requestPayment({
-        amountTomans: 1000,
+        amountRials: 10000,
         callbackUrl: 'https://x.test/cb',
         description: 'd',
       }),
@@ -173,12 +177,13 @@ describe('M2.4 Zarinpal payment verification', () => {
       errors: [],
     });
 
-    const outcome = await instance.verifyPayment({ amountTomans: 150000, authority });
+    const outcome = await instance.verifyPayment({ amountRials: 1500000, authority });
 
     expect(outcome).toEqual({
       status: 'verified',
       referenceId: '123456789',
       alreadyVerified: false,
+      code: 100,
     });
     expect(recorder.calls[0].url).toBe('https://sandbox.zarinpal.com/pg/v4/payment/verify.json');
     expect(recorder.calls[0].body).toMatchObject({
@@ -192,16 +197,45 @@ describe('M2.4 Zarinpal payment verification', () => {
     const { instance } = provider({ data: { code: 101, ref_id: 55 }, errors: [] });
     // Zarinpal answers 101 when the payment was verified by an earlier call. A replayed callback
     // reaching this must still be a success, or a paid learner would be told they failed.
-    await expect(instance.verifyPayment({ amountTomans: 1000, authority })).resolves.toEqual({
+    await expect(instance.verifyPayment({ amountRials: 10000, authority })).resolves.toEqual({
       status: 'verified',
       referenceId: '55',
       alreadyVerified: true,
+      code: 101,
     });
+  });
+
+  it('surfaces an echoed order code so the caller can match it to the attempt', async () => {
+    const { instance } = provider({
+      data: { code: 101, ref_id: 55, metadata: { order_id: 'LB-OTHER00000' } },
+      errors: [],
+    });
+    await expect(instance.verifyPayment({ amountRials: 10000, authority })).resolves.toMatchObject({
+      status: 'verified',
+      orderCode: 'LB-OTHER00000',
+    });
+  });
+
+  it('never sends a non-integer or non-positive amount', async () => {
+    const { instance, recorder } = provider({ data: { code: 100, authority }, errors: [] });
+    for (const bad of [0, -10, 10.5, Number.NaN]) {
+      await expect(
+        instance.requestPayment({
+          amountRials: bad,
+          callbackUrl: 'https://x.test/cb',
+          description: 'd',
+        }),
+      ).resolves.toEqual({ status: 'rejected', code: 0 });
+      await expect(instance.verifyPayment({ amountRials: bad, authority })).resolves.toEqual({
+        status: 'error',
+      });
+    }
+    expect(recorder.calls).toHaveLength(0);
   });
 
   it('reports an unpaid payment as rejected', async () => {
     const { instance } = provider({ data: [], errors: [{ code: -51 }] });
-    await expect(instance.verifyPayment({ amountTomans: 1000, authority })).resolves.toEqual({
+    await expect(instance.verifyPayment({ amountRials: 10000, authority })).resolves.toEqual({
       status: 'rejected',
       code: -51,
     });
@@ -209,7 +243,7 @@ describe('M2.4 Zarinpal payment verification', () => {
 
   it('reports an unreachable gateway as error, never as unpaid', async () => {
     const { instance } = provider({}, { throws: true });
-    await expect(instance.verifyPayment({ amountTomans: 1000, authority })).resolves.toEqual({
+    await expect(instance.verifyPayment({ amountRials: 10000, authority })).resolves.toEqual({
       status: 'error',
     });
   });
@@ -217,7 +251,7 @@ describe('M2.4 Zarinpal payment verification', () => {
   it('treats a success without a reference id as unresolved', async () => {
     const { instance } = provider({ data: { code: 100 }, errors: [] });
     // Verified but unreconcilable would leave support nothing to trace; better to retry.
-    await expect(instance.verifyPayment({ amountTomans: 1000, authority })).resolves.toEqual({
+    await expect(instance.verifyPayment({ amountRials: 10000, authority })).resolves.toEqual({
       status: 'error',
     });
   });
@@ -225,7 +259,7 @@ describe('M2.4 Zarinpal payment verification', () => {
   it('refuses a malformed authority without calling the gateway', async () => {
     const { instance, recorder } = provider({ data: { code: 100, ref_id: 1 }, errors: [] });
     await expect(
-      instance.verifyPayment({ amountTomans: 1000, authority: "'; DELETE FROM x; --" }),
+      instance.verifyPayment({ amountRials: 10000, authority: "'; DELETE FROM x; --" }),
     ).resolves.toEqual({ status: 'rejected', code: 0 });
     expect(recorder.calls).toHaveLength(0);
   });
@@ -275,5 +309,27 @@ describe('M2.4 Zarinpal configuration gate', () => {
   it('builds no provider when payment is unconfigured', () => {
     expect(zarinpalProviderFromEnvironment({})).toBeNull();
     expect(zarinpalProviderFromEnvironment(complete)).not.toBeNull();
+  });
+
+  it('permits a fake provider only on the explicit internal staging hostname', () => {
+    const staging = {
+      ...complete,
+      LEARNBOX_DEPLOYMENT_TIER: 'staging',
+      LEARNBOX_STAGING_FAKE_PAYMENT_PROVIDER_ENABLED: 'true',
+      LEARNBOX_STAGING_FAKE_PAYMENT_PROVIDER_URL: 'http://zarinpal-mock:8080',
+    };
+    expect(readZarinpalConfig(staging)?.testEndpoints).toEqual({
+      requestUrl: 'http://zarinpal-mock:8080/pg/v4/payment/request.json',
+      verifyUrl: 'http://zarinpal-mock:8080/pg/v4/payment/verify.json',
+      startPayUrl: 'http://zarinpal-mock:8080/pg/StartPay/',
+    });
+    // A malformed or external URL makes the paid flow unavailable rather than escaping staging.
+    expect(
+      readZarinpalConfig({
+        ...staging,
+        LEARNBOX_STAGING_FAKE_PAYMENT_PROVIDER_URL: 'https://example.test',
+      }),
+    ).toBeNull();
+    expect(readZarinpalConfig({ ...staging, LEARNBOX_DEPLOYMENT_TIER: 'production' })).toBeNull();
   });
 });

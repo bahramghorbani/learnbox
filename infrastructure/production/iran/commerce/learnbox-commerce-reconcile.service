@@ -1,0 +1,10 @@
+[Unit]
+Description=LearnBox commerce reconciliation (re-check unsettled Zarinpal attempts via the app)
+After=docker.service network-online.target
+
+[Service]
+Type=oneshot
+User=ubuntu
+ExecStart=/home/ubuntu/learnbox/ops/learnbox-commerce-reconcile.sh
+TimeoutStartSec=6min
+NoNewPrivileges=true

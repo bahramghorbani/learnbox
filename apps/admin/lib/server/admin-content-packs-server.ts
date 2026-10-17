@@ -57,6 +57,8 @@ import { PostgresStoreListingsStore } from './postgres-store-listings-store';
 import { PostgresAdminPaymentsStore } from './postgres-admin-payments-store';
 import {
   createAdminPaymentConfigRoute,
+  createAdminRecheckRoute,
+  createAdminTransactionTimelineRoute,
   createAdminTransactionsRoute,
 } from './admin-payments-routes';
 import {
@@ -250,6 +252,8 @@ export function createAdminContentPacksServer(dependencies: {
       storeListings: createStoreListingsRoute(storeShared),
       upsertStoreListing: createStoreListingUpsertRoute(storeShared),
       transactions: createAdminTransactionsRoute(paymentsShared),
+      transactionTimeline: createAdminTransactionTimelineRoute(paymentsShared),
+      transactionRecheck: createAdminRecheckRoute(paymentsShared),
       paymentConfiguration: createAdminPaymentConfigRoute(paymentsShared),
     };
   } catch {

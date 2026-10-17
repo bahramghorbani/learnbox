@@ -1,4 +1,4 @@
-import { createZarinpalProvider, type ZarinpalProvider } from './zarinpal';
+import { createZarinpalProvider, type ZarinpalEndpoints, type ZarinpalProvider } from './zarinpal';
 
 /**
  * Zarinpal configuration (Phase 2 / M2.4).
@@ -20,6 +20,8 @@ export type ZarinpalConfig = {
   sandbox: boolean;
   /** Absolute https origin the gateway returns the learner to. */
   callbackOrigin: string;
+  /** Internal fake-provider URLs, available only to explicit staging configuration. */
+  testEndpoints?: ZarinpalEndpoints;
 };
 
 type Environment = Record<string, string | undefined>;
@@ -38,6 +40,39 @@ export function isZarinpalMerchantId(value: unknown): value is string {
 }
 
 /** The callback must be an absolute https origin: the gateway will not return to a relative path. */
+/**
+ * A host-local fake provider is useful for the isolated staging E2E only. It cannot be selected by
+ * an ordinary sandbox deployment: all three opt-ins are required, the endpoint must be plain HTTP
+ * on Docker's internal `zarinpal-mock` hostname, and production deployment tooling never supplies
+ * `LEARNBOX_DEPLOYMENT_TIER=staging`. The URL is not a credential and carries no token.
+ */
+function readStagingTestEndpoints(environment: Environment): ZarinpalEndpoints | null {
+  if (
+    environment.LEARNBOX_DEPLOYMENT_TIER !== 'staging' ||
+    environment.LEARNBOX_STAGING_FAKE_PAYMENT_PROVIDER_ENABLED !== 'true'
+  )
+    return null;
+  const raw = environment.LEARNBOX_STAGING_FAKE_PAYMENT_PROVIDER_URL ?? '';
+  try {
+    const origin = new URL(raw);
+    if (
+      origin.protocol !== 'http:' ||
+      origin.hostname !== 'zarinpal-mock' ||
+      origin.username ||
+      origin.password
+    )
+      return null;
+    const base = origin.origin;
+    return {
+      requestUrl: `${base}/pg/v4/payment/request.json`,
+      verifyUrl: `${base}/pg/v4/payment/verify.json`,
+      startPayUrl: `${base}/pg/StartPay/`,
+    };
+  } catch {
+    return null;
+  }
+}
+
 function readCallbackOrigin(environment: Environment): string | null {
   const raw = environment.LEARNBOX_PUBLIC_APP_ORIGIN ?? '';
   try {
@@ -55,12 +90,18 @@ export function readZarinpalConfig(environment: Environment = process.env): Zari
   if (!isZarinpalMerchantId(merchantId)) return null;
   const callbackOrigin = readCallbackOrigin(environment);
   if (!callbackOrigin) return null;
+  const testEndpoints = readStagingTestEndpoints(environment);
+  // A partly configured fake provider is a hard configuration failure, never a fallback to a real
+  // sandbox host. This prevents a typo in a staging test from making an outside payment request.
+  if (environment.LEARNBOX_STAGING_FAKE_PAYMENT_PROVIDER_ENABLED === 'true' && !testEndpoints)
+    return null;
   return {
     merchantId,
     // Opt OUT of sandbox explicitly. An unset or malformed flag means sandbox, so a configuration
     // mistake cannot silently take real money.
     sandbox: environment.ZARINPAL_SANDBOX !== 'false',
     callbackOrigin,
+    ...(testEndpoints ? { testEndpoints } : {}),
   };
 }
 
@@ -70,7 +111,11 @@ export function zarinpalProviderFromEnvironment(
   const config = readZarinpalConfig(environment);
   if (!config) return null;
   return {
-    provider: createZarinpalProvider({ merchantId: config.merchantId, sandbox: config.sandbox }),
+    provider: createZarinpalProvider({
+      merchantId: config.merchantId,
+      sandbox: config.sandbox,
+      endpoints: config.testEndpoints,
+    }),
     config,
   };
 }

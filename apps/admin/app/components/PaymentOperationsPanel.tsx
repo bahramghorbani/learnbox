@@ -6,6 +6,7 @@ import { CpModal } from './AdminModal';
 import { EmptyState, ErrorState, LoadingState } from './AdminStates';
 import { faDateTime } from './fa-dates';
 import { faNum } from './fa-digits';
+import { fetchWithStepUp, readCsrfToken, stepUpRefusal } from './step-up-reauth';
 
 /**
  * Phase 2 / Milestone 2.4 — payment operations, the right-hand stack of the Store screen.
@@ -24,6 +25,12 @@ import { faNum } from './fa-digits';
  * reference shows invoicing and refunds as switched-off gateway rows; neither exists in the
  * backend, so they are labelled «پیاده‌سازی نشده» rather than «غیرفعال», which would imply a
  * switch an operator could go and find.
+ *
+ * Commerce core v1 adds what support needs to chase one payment: search by Authority, RefID,
+ * order code, attempt or learner id; a «نیازمند بررسی» filter (extra valid payments, provider
+ * mismatches, pending attempts older than 30 minutes); the order timeline; and a request to
+ * re-check an unsettled attempt with the gateway. The request only queues the check — the
+ * reconciliation job runs it — and no control here edits a payment, grants access or refunds.
  *
  * Stage 6 moved this onto the approved card vocabulary. A transaction row opens a dialog carrying
  * every field the previous eight-column table printed, so support loses nothing to the narrower
@@ -55,6 +62,25 @@ type Transaction = {
   createdAt: string;
   updatedAt: string | null;
   verifiedAt: string | null;
+  orderCode: string | null;
+  orderStatus: string | null;
+  providerAmount: string | null;
+  providerCurrency: string | null;
+  reviewReason: string | null;
+  lastProviderCode: number | null;
+  checkCount: number;
+  lastCheckedAt: string | null;
+  recheckPending: boolean;
+  recheckRequestedAt: string | null;
+  autoCheck: string;
+};
+
+type TimelineEvent = {
+  kind: string;
+  source: string;
+  providerCode: number | null;
+  attemptId: string | null;
+  createdAt: string;
 };
 
 type Phase = 'loading' | 'ready' | 'disabled' | 'unauthorized' | 'error';
@@ -79,6 +105,75 @@ const statusBadgeTone: Record<string, string> = {
   refunded: 'badge',
   revoked: 'badge b-rose',
 };
+
+const reviewLabels: Record<string, string> = {
+  already_entitled:
+    'پرداخت معتبر اضافه — دسترسی از قبل وجود داشت؛ نیازمند رسیدگی (بازپرداخت خودکار ندارد)',
+  provider_mismatch: 'پاسخ درگاه با این تلاش پرداخت تطبیق نداشت؛ دسترسی داده نشد',
+  provider_rejected: 'درگاه این تلاش را رد کرد؛ بررسی خودکار متوقف شد و دسترسی داده نشد',
+};
+
+/** Definitive provider answers that stop automatic retries (store-purchase.ts). */
+const providerCodeLabels: Record<number, string> = {
+  [-50]: 'مغایرت مبلغ با مبلغ پرداخت‌شده',
+  [-53]: 'پرداخت متعلق به این پذیرنده نیست',
+  [-54]: 'Authority نامعتبر',
+  [-55]: 'تراکنش در درگاه یافت نشد',
+};
+
+const autoCheckLabels: Record<string, string> = {
+  scheduled: 'بررسی خودکار در اجرای بعدی تطبیق',
+  stopped_review: 'بررسی خودکار متوقف — نیازمند رسیدگی',
+  stopped_limit: 'بررسی خودکار پس از سقف دفعات متوقف شد — نیازمند رسیدگی',
+  stopped_window: 'خارج از بازهٔ بررسی خودکار',
+  settled: 'نهایی‌شده',
+  not_applicable: '—',
+};
+
+/** A queued re-check older than this has not been picked up by the job: say so. */
+const recheckOverdueMs = 20 * 60 * 1000;
+
+const orderStatusLabels: Record<string, string> = {
+  open: 'باز',
+  fulfilled: 'تکمیل‌شده',
+  needs_review: 'نیازمند بررسی',
+  expired: 'منقضی',
+  cancelled: 'لغوشده',
+};
+
+const timelineLabels: Record<string, string> = {
+  order_opened: 'سفارش باز شد',
+  order_expired: 'سفارش منقضی شد',
+  attempt_created: 'تلاش پرداخت ایجاد شد',
+  attempt_reused: 'تلاش پرداخت موجود دوباره استفاده شد',
+  verified: 'پرداخت تأیید و دسترسی داده شد',
+  already_entitled: 'پرداخت تأیید شد؛ دسترسی از قبل وجود داشت',
+  provider_mismatch: 'عدم تطبیق پاسخ درگاه',
+  cancelled: 'بازگشت ناموفق از درگاه',
+  failed: 'درگاه پرداخت را تأیید نکرد',
+  check_unresolved: 'بررسی بی‌نتیجه ماند؛ دوباره بررسی می‌شود',
+  provider_rejected: 'درگاه تلاش را رد کرد؛ نیازمند رسیدگی',
+  recheck_requested: 'درخواست بررسی دوباره',
+};
+
+const sourceLabels: Record<string, string> = {
+  learner_initiate: 'کاربر',
+  provider_callback: 'بازگشت درگاه',
+  learner_status: 'صفحهٔ رسید',
+  reconciliation: 'تطبیق خودکار',
+  admin_recheck: 'مدیر',
+};
+
+const recheckable = new Set(['pending', 'cancelled', 'failed']);
+
+function needsAttention(transaction: Transaction): boolean {
+  return (
+    transaction.reviewReason !== null ||
+    transaction.orderStatus === 'needs_review' ||
+    // Still unsettled after the last automatic check: nobody will look again unless a person does.
+    transaction.autoCheck === 'stopped_limit'
+  );
+}
 
 const configurationLabels: Record<Configuration['state'], string> = {
   disabled: 'تنظیم نشده',
@@ -108,13 +203,24 @@ export function PaymentOperationsPanel() {
   const [configuration, setConfiguration] = useState<Configuration | undefined>();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [selected, setSelected] = useState<Transaction | undefined>();
+  const [search, setSearch] = useState('');
+  /** The search actually applied: set on submit, so typing alone never refetches. */
+  const [query, setQuery] = useState('');
+  const [reviewOnly, setReviewOnly] = useState(false);
+  const [timeline, setTimeline] = useState<TimelineEvent[] | 'loading' | 'error'>('loading');
+  const [recheckMessage, setRecheckMessage] = useState<string | undefined>();
+  const [recheckBusy, setRecheckBusy] = useState(false);
+  const [reconciliationEnabled, setReconciliationEnabled] = useState(false);
 
   const load = useCallback(async (): Promise<void> => {
     setPhase('loading');
+    const params = new URLSearchParams({ limit: '50' });
+    if (query) params.set('q', query);
+    if (reviewOnly) params.set('review', '1');
     try {
       const [configResponse, transactionsResponse] = await Promise.all([
         fetch('/api/store/payment-config', { credentials: 'same-origin' }),
-        fetch('/api/store/transactions?limit=50', { credentials: 'same-origin' }),
+        fetch(`/api/store/transactions?${params.toString()}`, { credentials: 'same-origin' }),
       ]);
       if (configResponse.status === 404) {
         setPhase('disabled');
@@ -131,18 +237,82 @@ export function PaymentOperationsPanel() {
       const configBody = (await configResponse.json()) as { configuration?: Configuration };
       const transactionsBody = (await transactionsResponse.json()) as {
         transactions?: Transaction[];
+        reconciliationEnabled?: boolean;
       };
       setConfiguration(configBody.configuration);
       setTransactions(transactionsBody.transactions ?? []);
+      setReconciliationEnabled(transactionsBody.reconciliationEnabled === true);
       setPhase('ready');
     } catch {
       setPhase('error');
     }
-  }, []);
+  }, [query, reviewOnly]);
 
+  // Reloads on mount, on each submitted search and when the review toggle changes.
   useEffect(() => {
     void load();
   }, [load]);
+
+  const openDetails = useCallback(async (transaction: Transaction) => {
+    setSelected(transaction);
+    setRecheckMessage(undefined);
+    setTimeline('loading');
+    try {
+      const response = await fetch(
+        `/api/store/transactions/timeline?transactionId=${encodeURIComponent(transaction.transactionId)}`,
+        { credentials: 'same-origin' },
+      );
+      if (!response.ok) throw new Error('timeline');
+      setTimeline(((await response.json()) as { events?: TimelineEvent[] }).events ?? []);
+    } catch {
+      setTimeline('error');
+    }
+  }, []);
+
+  const requestRecheck = useCallback(async (transaction: Transaction) => {
+    const csrfToken = readCsrfToken();
+    if (!csrfToken) {
+      setRecheckMessage('نشان امنیتی CSRF در دسترس نیست؛ صفحه را تازه کنید.');
+      return;
+    }
+    setRecheckBusy(true);
+    try {
+      const { response, stepUp } = await fetchWithStepUp('/api/store/transactions/recheck', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'content-type': 'application/json', 'x-learnbox-csrf-token': csrfToken },
+        body: JSON.stringify({ transactionId: transaction.transactionId }),
+      });
+      const refused = stepUpRefusal(stepUp, response.status);
+      if (refused) setRecheckMessage(refused);
+      else if (response.ok) {
+        const body = (await response.json()) as { status?: string };
+        setRecheckMessage(
+          body.status === 'already_requested'
+            ? 'درخواست بررسی دوباره از قبل ثبت شده است و در اجرای بعدی تطبیق انجام می‌شود.'
+            : 'درخواست ثبت شد؛ در اجرای بعدی تطبیق خودکار، وضعیت از درگاه پرسیده می‌شود.',
+        );
+        setSelected({
+          ...transaction,
+          recheckPending: true,
+          recheckRequestedAt: transaction.recheckRequestedAt ?? new Date().toISOString(),
+        });
+      } else if (response.status === 409) {
+        const body = (await response.json().catch(() => ({}))) as { code?: string };
+        setRecheckMessage(
+          body.code === 'reconciliation_disabled'
+            ? 'تطبیق خودکار در این محیط خاموش است؛ درخواستی ثبت نشد.'
+            : 'این تلاش پرداخت قابل بررسی دوباره نیست.',
+        );
+      } else if (response.status === 404) {
+        setRecheckMessage('نقش شما اجازهٔ درخواست بررسی دوباره را ندارد.');
+      } else setRecheckMessage('ثبت درخواست با خطا روبه‌رو شد.');
+    } catch {
+      setRecheckMessage('ثبت درخواست با خطا روبه‌رو شد.');
+    } finally {
+      setRecheckBusy(false);
+    }
+  }, []);
 
   return (
     <section className="stack" data-admin-panel="payments">
@@ -154,6 +324,37 @@ export function PaymentOperationsPanel() {
           ) : null}
         </div>
         <div className="card-body">
+          <form
+            className="store-orders-filter"
+            role="search"
+            onSubmit={(event) => {
+              event.preventDefault();
+              // Re-submitting the same text still refreshes the list.
+              if (search.trim() === query) void load();
+              else setQuery(search.trim());
+            }}
+          >
+            <input
+              aria-label="جست‌وجوی پرداخت با Authority، کد رهگیری، شمارهٔ سفارش یا شناسه"
+              className="cp-input keep-latin"
+              dir="ltr"
+              value={search}
+              maxLength={64}
+              placeholder="Authority / RefID / LB-… / شناسه"
+              onChange={(event) => setSearch(event.target.value)}
+            />
+            <button className="btn sm" type="submit">
+              جست‌وجو
+            </button>
+            <label className="muted-note">
+              <input
+                type="checkbox"
+                checked={reviewOnly}
+                onChange={(event) => setReviewOnly(event.target.checked)}
+              />{' '}
+              فقط موارد نیازمند بررسی
+            </label>
+          </form>
           {phase === 'loading' ? (
             <LoadingState label="در حال خواندن تراکنش‌ها…" />
           ) : phase === 'disabled' ? (
@@ -201,8 +402,16 @@ export function PaymentOperationsPanel() {
                       {transaction.packDisplayName ?? transaction.packId ?? 'بستهٔ نامشخص'}
                     </div>
                     <div className="list-sub">
-                      <span className="keep-latin">{transaction.transactionId}</span>
+                      <span className="keep-latin">
+                        {transaction.orderCode ?? transaction.transactionId}
+                      </span>
                       {transaction.environment === 'sandbox' ? ' · آزمایشی' : ''}
+                      {needsAttention(transaction) ? (
+                        <span className="badge b-amber" data-transaction-review="true">
+                          {' '}
+                          نیازمند بررسی
+                        </span>
+                      ) : null}
                     </div>
                   </div>
                   <div className="store-order-amount">
@@ -215,7 +424,11 @@ export function PaymentOperationsPanel() {
                   >
                     {statusLabels[transaction.status] ?? transaction.status}
                   </span>
-                  <button type="button" className="btn sm" onClick={() => setSelected(transaction)}>
+                  <button
+                    type="button"
+                    className="btn sm"
+                    onClick={() => void openDetails(transaction)}
+                  >
                     جزئیات
                   </button>
                 </div>
@@ -324,18 +537,85 @@ export function PaymentOperationsPanel() {
           title="جزئیات تراکنش"
           onClose={() => setSelected(undefined)}
           footer={
-            <button type="button" className="btn ghost" onClick={() => setSelected(undefined)}>
-              بستن
-            </button>
+            <>
+              {reconciliationEnabled && recheckable.has(selected.status) && selected.orderCode ? (
+                <button
+                  type="button"
+                  className="btn"
+                  disabled={recheckBusy || selected.recheckPending}
+                  onClick={() => void requestRecheck(selected)}
+                >
+                  {selected.recheckPending
+                    ? 'بررسی دوباره در صف است'
+                    : 'درخواست بررسی دوباره از درگاه'}
+                </button>
+              ) : null}
+              <button type="button" className="btn ghost" onClick={() => setSelected(undefined)}>
+                بستن
+              </button>
+            </>
           }
         >
+          {selected.reviewReason ? (
+            <p
+              className="notice"
+              role="note"
+              data-transaction-review-reason={selected.reviewReason}
+            >
+              <span>
+                {reviewLabels[selected.reviewReason] ?? selected.reviewReason}
+                {selected.reviewReason === 'provider_rejected' &&
+                selected.lastProviderCode !== null ? (
+                  <>
+                    {' — '}
+                    {providerCodeLabels[selected.lastProviderCode] ?? 'کد خطای درگاه'}{' '}
+                    <bdi className="keep-latin">(code {selected.lastProviderCode})</bdi>
+                  </>
+                ) : null}
+              </span>
+            </p>
+          ) : null}
+          {selected.recheckPending &&
+          selected.recheckRequestedAt &&
+          Date.now() - Date.parse(selected.recheckRequestedAt) > recheckOverdueMs ? (
+            <p className="notice" role="note">
+              <span>
+                درخواست بررسی دوباره بیش از ۲۰ دقیقه است اجرا نشده؛ اجرای زمان‌بندی‌شدهٔ تطبیق را
+                بررسی کنید.
+              </span>
+            </p>
+          ) : null}
+          {!reconciliationEnabled && recheckable.has(selected.status) ? (
+            <p className="muted-note">
+              تطبیق خودکار در این محیط خاموش است؛ بررسی دوباره از درگاه در دسترس نیست.
+            </p>
+          ) : null}
+          {recheckMessage ? (
+            <p className="muted-note" role="status">
+              {recheckMessage}
+            </p>
+          ) : null}
           <dl className="dl">
-            <dt>شمارهٔ تراکنش</dt>
+            <dt>شمارهٔ سفارش</dt>
+            <dd className="keep-latin">{selected.orderCode ?? '—'}</dd>
+            <dt>وضعیت سفارش</dt>
+            <dd>
+              {selected.orderStatus
+                ? (orderStatusLabels[selected.orderStatus] ?? selected.orderStatus)
+                : '—'}
+            </dd>
+            <dt>شمارهٔ تلاش پرداخت</dt>
             <dd className="keep-latin">{selected.transactionId}</dd>
             <dt>بسته</dt>
             <dd>{selected.packDisplayName ?? selected.packId ?? '—'}</dd>
             <dt>مبلغ</dt>
             <dd>{formatAmount(selected.amountTomans)}</dd>
+            <dt>مبلغ ارسالی به درگاه</dt>
+            <dd>
+              {selected.providerAmount
+                ? `${faNum(Number(selected.providerAmount))} ${selected.providerCurrency === 'IRR' ? 'ریال' : (selected.providerCurrency ?? '')}`
+                : '—'}
+            </dd>
             <dt>وضعیت</dt>
             <dd>{statusLabels[selected.status] ?? selected.status}</dd>
             <dt>درگاه</dt>
@@ -355,7 +635,50 @@ export function PaymentOperationsPanel() {
             <dd>{formatDateTime(selected.updatedAt)}</dd>
             <dt>تأیید</dt>
             <dd>{formatDateTime(selected.verifiedAt)}</dd>
+            <dt>آخرین بررسی درگاه</dt>
+            <dd>
+              {formatDateTime(selected.lastCheckedAt)}
+              {selected.lastProviderCode !== null ? (
+                <bdi className="keep-latin"> (code {selected.lastProviderCode})</bdi>
+              ) : null}
+              {' · '}
+              {faNum(selected.checkCount)} بار
+            </dd>
+            <dt>بررسی بعدی</dt>
+            <dd data-transaction-auto-check={selected.autoCheck}>
+              {selected.recheckPending
+                ? 'درخواست بررسی دوباره در صف تطبیق'
+                : (autoCheckLabels[selected.autoCheck] ?? selected.autoCheck)}
+            </dd>
           </dl>
+          <h3 className="card-title">سابقهٔ سفارش</h3>
+          {timeline === 'loading' ? (
+            <LoadingState label="در حال خواندن سابقه…" />
+          ) : timeline === 'error' ? (
+            <p className="muted-note">سابقهٔ سفارش در دسترس نیست.</p>
+          ) : timeline.length === 0 ? (
+            <p className="muted-note">برای این تراکنش سابقهٔ سفارشی ثبت نشده است.</p>
+          ) : (
+            <ol className="list" data-transaction-timeline="true">
+              {timeline.map((event, index) => (
+                <li className="list-row" key={`${event.createdAt}-${index}`}>
+                  <div className="list-grow">
+                    <div className="list-title">{timelineLabels[event.kind] ?? event.kind}</div>
+                    <div className="list-sub">
+                      {sourceLabels[event.source] ?? event.source}
+                      {event.providerCode !== null ? (
+                        <bdi className="keep-latin"> · code {event.providerCode}</bdi>
+                      ) : null}
+                      {event.attemptId && event.attemptId !== selected.transactionId
+                        ? ' · تلاش دیگر'
+                        : ''}
+                    </div>
+                  </div>
+                  <div className="list-sub">{formatDateTime(event.createdAt)}</div>
+                </li>
+              ))}
+            </ol>
+          )}
         </CpModal>
       ) : null}
     </section>

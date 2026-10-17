@@ -61,6 +61,28 @@ function formatPrice(pack: CataloguePack): string {
   return 'به‌زودی';
 }
 
+/** «خریدهای من» — the learner's own payment attempts (GET /api/store/purchases). */
+type LearnerPurchase = {
+  purchaseId: string;
+  packId: string;
+  packName: string | null;
+  amountTomans: number;
+  status: string;
+  referenceId: string | null;
+  orderCode: string | null;
+  createdAt: string;
+  verifiedAt: string | null;
+};
+
+// `cancelled` is not final (a late gateway confirmation still settles it), so it is not called
+// a failure; only `failed` is, and only the gateway's own "not paid" answer produces it.
+const purchaseStatusLabels: Record<string, string> = {
+  verified: 'پرداخت موفق',
+  pending: 'در حال بررسی',
+  cancelled: 'بازگشت از درگاه بدون تأیید',
+  failed: 'ناموفق — مبلغی کسر نشده است',
+};
+
 export function StoreScreen({
   onNavigate,
   focusPackId = null,
@@ -82,6 +104,56 @@ export function StoreScreen({
   const [state, setState] = useState<LoadState>('loading');
   const [activation, setActivation] = useState<ActivationState>(ACTIVATION_IDLE);
   const focusedCardRef = useRef<HTMLLIElement | null>(null);
+  const [purchases, setPurchases] = useState<LearnerPurchase[] | 'error'>([]);
+  const [checking, setChecking] = useState<string | null>(null);
+  /** Outcome of the last re-check, announced next to that purchase. */
+  const [checkNote, setCheckNote] = useState<{ purchaseId: string; text: string } | null>(null);
+
+  const loadPurchases = useCallback(async (): Promise<void> => {
+    try {
+      const response = await fetch('/api/store/purchases', { credentials: 'same-origin' });
+      // 503 = learner state off in this environment: nothing to show, not an error.
+      if (response.status === 503) return setPurchases([]);
+      if (!response.ok) return setPurchases('error');
+      setPurchases(((await response.json()) as { purchases?: LearnerPurchase[] }).purchases ?? []);
+    } catch {
+      setPurchases('error');
+    }
+  }, []);
+
+  /** Asks the server to re-check one unsettled payment with the gateway (throttled server-side). */
+  const recheck = useCallback(
+    async (purchaseId: string): Promise<void> => {
+      if (checking) return;
+      setChecking(purchaseId);
+      setCheckNote(null);
+      let text = 'بررسی ممکن نشد؛ کمی بعد دوباره تلاش کنید.';
+      try {
+        const response = await fetch(
+          `/api/store/purchase/status?id=${encodeURIComponent(purchaseId)}`,
+          { credentials: 'same-origin' },
+        );
+        if (response.ok) {
+          const status = ((await response.json()) as { purchase?: { status?: string } }).purchase
+            ?.status;
+          text =
+            status === 'pending'
+              ? 'هنوز نتیجه‌ای از درگاه نرسیده؛ بررسی خودکار ادامه دارد.'
+              : `وضعیت: ${purchaseStatusLabels[status ?? ''] ?? status ?? '—'}`;
+        }
+      } catch {
+        /* keep the failure text; the reloaded list shows the truth either way */
+      }
+      await loadPurchases();
+      setChecking(null);
+      const name =
+        purchases === 'error'
+          ? undefined
+          : purchases.find((p) => p.purchaseId === purchaseId)?.packName;
+      setCheckNote({ purchaseId, text: name ? `${name}: ${text}` : text });
+    },
+    [checking, loadPurchases, purchases],
+  );
 
   const load = useCallback(async (): Promise<void> => {
     setState('loading');
@@ -100,10 +172,11 @@ export function StoreScreen({
       setCatalogue(catalogueBody.packs ?? []);
       setOwned(ownedBody.packs ?? []);
       setState('ready');
+      void loadPurchases();
     } catch {
       setState('error');
     }
-  }, []);
+  }, [loadPurchases]);
 
   useEffect(() => {
     void load();
@@ -357,6 +430,62 @@ export function StoreScreen({
                   </ul>
                 )}
               </section>
+
+              {(purchases === 'error' || purchases.length > 0) && (
+                <section className="store-section" aria-labelledby="store-my-purchases">
+                  <h2 id="store-my-purchases">خریدهای من</h2>
+                  {/* Always mounted so screen readers announce each new re-check outcome. */}
+                  <p className="store-owned-note" role="status">
+                    {checkNote?.text ?? ''}
+                  </p>
+                  {purchases === 'error' ? (
+                    <p className="store-empty-hint" role="alert">
+                      فهرست خریدها خوانده نشد؛ بعداً دوباره تلاش کنید.
+                    </p>
+                  ) : (
+                    <ul className="store-owned-list">
+                      {purchases.map((item) => (
+                        <li
+                          key={item.purchaseId}
+                          className="store-owned-item"
+                          data-purchase-status={item.status}
+                        >
+                          <span className="store-owned-name">
+                            {item.packName ?? item.packId} ·{' '}
+                            {formatPrice({
+                              isFree: false,
+                              priceTomans: item.amountTomans,
+                            } as CataloguePack)}
+                          </span>
+                          <span className="store-owned-meta">
+                            {purchaseStatusLabels[item.status] ?? item.status}
+                            {item.orderCode ? (
+                              <>
+                                {' · سفارش '}
+                                <bdi className="store-order-code">{item.orderCode}</bdi>
+                              </>
+                            ) : null}
+                            {item.referenceId
+                              ? ` · کد رهگیری ${toPersianDigits(item.referenceId)}`
+                              : ''}
+                          </span>
+                          {(item.status === 'pending' || item.status === 'cancelled') && (
+                            <button
+                              type="button"
+                              className="store-retry"
+                              // aria-disabled, not disabled: a disabled button drops keyboard focus.
+                              aria-disabled={checking === item.purchaseId}
+                              onClick={() => void recheck(item.purchaseId)}
+                            >
+                              {checking === item.purchaseId ? 'در حال بررسی…' : 'بررسی دوباره'}
+                            </button>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </section>
+              )}
             </>
           )}
         </div>

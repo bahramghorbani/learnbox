@@ -1,7 +1,11 @@
 import { Pool } from 'pg';
 
 import { authenticateLearner } from '../../../../../lib/learner-auth';
-import { readPurchaseForLearner } from '../../../../../lib/store-purchase';
+import {
+  readPurchaseForLearner,
+  refreshPurchaseForLearner,
+} from '../../../../../lib/store-purchase';
+import { zarinpalProviderFromEnvironment } from '../../../../../lib/zarinpal-config';
 import { requireVerifiedDatabaseTls } from '../../../../../../api/dist/database/migration-runner.js';
 
 export const runtime = 'nodejs';
@@ -21,6 +25,9 @@ const headers = {
  * Ownership is a WHERE clause, not a post-check: `readPurchaseForLearner` matches on both the
  * transaction id and the session's user id, so another learner's id returns 404 rather than someone
  * else's pack name and amount.
+ *
+ * An unsettled attempt of the learner's own is re-checked with Zarinpal at most once a minute
+ * (contract §4), so a learner whose gateway callback never arrived still reaches the truth.
  *
  * Returns commercial facts only — pack name, amount, status, gateway reference, timestamps. No card
  * or media content, and nothing about the merchant credential.
@@ -43,7 +50,10 @@ export async function GET(request: Request): Promise<Response> {
     connectionTimeoutMillis: 5000,
   });
   try {
-    const record = await readPurchaseForLearner(pool, session.subject, id);
+    const zarinpal = zarinpalProviderFromEnvironment(process.env);
+    const record = zarinpal
+      ? await refreshPurchaseForLearner({ pool, provider: zarinpal.provider }, session.subject, id)
+      : await readPurchaseForLearner(pool, session.subject, id);
     if (!record) return Response.json({ error: 'notFound' }, { status: 404, headers });
     return Response.json({ purchase: record }, { headers });
   } finally {

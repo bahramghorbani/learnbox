@@ -25,7 +25,8 @@ const ROOT = join(__dirname, '..');
 const APP = join(ROOT, 'app');
 const LIB = join(ROOT, 'lib');
 
-type Category = 'guarded' | 'pre-login' | 'bearer' | 'hard-disabled' | 'provider-callback';
+type Category =
+  'guarded' | 'pre-login' | 'bearer' | 'hard-disabled' | 'provider-callback' | 'provider-recheck';
 interface Entry {
   category: Category;
   /** File that must contain the `guardMutation` call (guarded / pre-login). Defaults to the route. */
@@ -85,6 +86,11 @@ const INVENTORY: Record<string, Entry> = {
 
   // M2.4 Zarinpal return URL. A GET that settles a payment, by the gateway's contract.
   'app/api/store/purchase/callback/route.ts': { category: 'provider-callback' },
+  // Commerce core §4: the learner's own receipt re-asks Zarinpal (throttled) and settles through
+  // the same verification path. Authenticated, safe method, provider from configuration only.
+  'app/api/store/purchase/status/route.ts': { category: 'provider-recheck' },
+  // Commerce core §4: limited reconciliation, machine-to-machine, flag + bearer token.
+  'app/api/internal/commerce/reconcile/route.ts': { category: 'bearer' },
 
   // Disabled for Web/PWA: answer 404 and touch nothing.
   'app/api/learner/reset-progress/route.ts': { category: 'hard-disabled' },
@@ -150,8 +156,9 @@ describe('mutation route inventory (LB-B29)', () => {
     const stale = Object.keys(INVENTORY).filter(
       (file) =>
         !mutating.includes(file) &&
-        // A provider callback mutates behind a GET, so it is absent from `mutating` by design.
-        INVENTORY[file].category !== 'provider-callback',
+        // A provider callback/re-check mutates behind a GET, so it is absent from `mutating` by design.
+        INVENTORY[file].category !== 'provider-callback' &&
+        INVENTORY[file].category !== 'provider-recheck',
     );
     expect(stale).toEqual([]);
   });
@@ -162,11 +169,16 @@ describe('mutation route inventory (LB-B29)', () => {
    * purchase settlement helper must be declared `provider-callback` and justified there.
    */
   it('classifies every route that changes state behind a safe method', () => {
-    const writes = /\b(INSERT\s+INTO|UPDATE\s+\w+\s+SET|DELETE\s+FROM)\b|verifyPurchase\(/i;
+    const writes =
+      /\b(INSERT\s+INTO|UPDATE\s+\w+\s+SET|DELETE\s+FROM)\b|verifyPurchase\(|refreshPurchaseForLearner\(/i;
     const undeclared = routeFiles
       .filter((file) => !mutating.includes(file))
       .filter((file) => writes.test(read(file)))
-      .filter((file) => INVENTORY[file]?.category !== 'provider-callback');
+      .filter(
+        (file) =>
+          INVENTORY[file]?.category !== 'provider-callback' &&
+          INVENTORY[file]?.category !== 'provider-recheck',
+      );
     expect(
       undeclared,
       `Route(s) changing state behind a safe method without a classification: ${undeclared.join(', ')}.\n` +
@@ -253,6 +265,16 @@ describe('mutation route inventory (LB-B29)', () => {
         it('does not read the caller session, so a replayer cannot claim the purchase', () => {
           const source = read(file);
           expect(source).not.toMatch(/authenticateLearner\(|readLearnerSession\(/);
+        });
+      }
+
+      if (entry.category === 'provider-recheck') {
+        it('is a safe-method, authenticated re-check that never trusts request input', () => {
+          const source = read(file);
+          expect(exportedMethods(source).every((method) => SAFE_METHODS.has(method))).toBe(true);
+          expect(source).toMatch(/authenticateLearner\(/);
+          expect(source).toMatch(/zarinpalProviderFromEnvironment\(/);
+          expect(source).not.toMatch(/INSERT\s+INTO|UPDATE\s+\w+\s+SET|DELETE\s+FROM/i);
         });
       }
 

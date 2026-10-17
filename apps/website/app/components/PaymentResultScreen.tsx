@@ -28,6 +28,8 @@ type Purchase = {
   amountTomans: number;
   status: string;
   referenceId: string | null;
+  /** Order code for support (commerce core v1); null for attempts that predate orders. */
+  orderCode?: string | null;
   createdAt: string;
   verifiedAt: string | null;
 };
@@ -155,6 +157,12 @@ export function PaymentResultScreen({
                   <dd className="payment-mono">{toPersianDigits(state.purchase.referenceId)}</dd>
                 </div>
               )}
+              {state.purchase.orderCode && (
+                <div>
+                  <dt>شمارهٔ سفارش</dt>
+                  <dd className="payment-mono">{state.purchase.orderCode}</dd>
+                </div>
+              )}
               <div>
                 <dt>شمارهٔ تراکنش لرن‌باکس</dt>
                 <dd className="payment-mono">{state.purchase.purchaseId}</dd>
@@ -182,6 +190,12 @@ export function PaymentResultScreen({
                 <dt>بسته</dt>
                 <dd>{state.purchase.packName ?? state.purchase.packId}</dd>
               </div>
+              {state.purchase.orderCode && (
+                <div>
+                  <dt>شمارهٔ سفارش</dt>
+                  <dd className="payment-mono">{state.purchase.orderCode}</dd>
+                </div>
+              )}
               <div>
                 <dt>شمارهٔ تراکنش لرن‌باکس</dt>
                 <dd className="payment-mono">{state.purchase.purchaseId}</dd>
@@ -222,6 +236,12 @@ export function PaymentResultScreen({
               نتیجهٔ پرداخت هنوز نهایی نشده است. لطفاً چند لحظه بعد دوباره بررسی کنید.
             </p>
             <dl className="payment-receipt">
+              {state.purchase.orderCode && (
+                <div>
+                  <dt>شمارهٔ سفارش</dt>
+                  <dd className="payment-mono">{state.purchase.orderCode}</dd>
+                </div>
+              )}
               <div>
                 <dt>شمارهٔ تراکنش لرن‌باکس</dt>
                 <dd className="payment-mono">{state.purchase.purchaseId}</dd>
