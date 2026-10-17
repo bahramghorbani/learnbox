@@ -310,4 +310,26 @@ describe('M2.4 Zarinpal configuration gate', () => {
     expect(zarinpalProviderFromEnvironment({})).toBeNull();
     expect(zarinpalProviderFromEnvironment(complete)).not.toBeNull();
   });
+
+  it('permits a fake provider only on the explicit internal staging hostname', () => {
+    const staging = {
+      ...complete,
+      LEARNBOX_DEPLOYMENT_TIER: 'staging',
+      LEARNBOX_STAGING_FAKE_PAYMENT_PROVIDER_ENABLED: 'true',
+      LEARNBOX_STAGING_FAKE_PAYMENT_PROVIDER_URL: 'http://zarinpal-mock:8080',
+    };
+    expect(readZarinpalConfig(staging)?.testEndpoints).toEqual({
+      requestUrl: 'http://zarinpal-mock:8080/pg/v4/payment/request.json',
+      verifyUrl: 'http://zarinpal-mock:8080/pg/v4/payment/verify.json',
+      startPayUrl: 'http://zarinpal-mock:8080/pg/StartPay/',
+    });
+    // A malformed or external URL makes the paid flow unavailable rather than escaping staging.
+    expect(
+      readZarinpalConfig({
+        ...staging,
+        LEARNBOX_STAGING_FAKE_PAYMENT_PROVIDER_URL: 'https://example.test',
+      }),
+    ).toBeNull();
+    expect(readZarinpalConfig({ ...staging, LEARNBOX_DEPLOYMENT_TIER: 'production' })).toBeNull();
+  });
 });

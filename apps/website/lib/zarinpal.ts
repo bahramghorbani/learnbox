@@ -141,6 +141,11 @@ export type ZarinpalHttpConfig = {
   merchantId: string;
   sandbox: boolean;
   timeoutMs?: number;
+  /**
+   * Test-only local endpoint, supplied only by the guarded staging config. It is intentionally not
+   * an environment variable here: production callers cannot silently redirect provider traffic.
+   */
+  endpoints?: ZarinpalEndpoints;
 };
 
 /**
@@ -153,7 +158,7 @@ export function createZarinpalProvider(
   config: ZarinpalHttpConfig,
   fetchImpl: typeof fetch = fetch,
 ): ZarinpalProvider {
-  const endpoints = zarinpalEndpoints(config.sandbox);
+  const endpoints = config.endpoints ?? zarinpalEndpoints(config.sandbox);
   const timeoutMs = config.timeoutMs ?? 10000;
 
   async function call(url: string, payload: Record<string, unknown>): Promise<ZarinpalBody | null> {
