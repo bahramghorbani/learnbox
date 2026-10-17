@@ -4,6 +4,7 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 BUILD="$REPO_ROOT/infrastructure/production/admin/build-admin-image.sh"
+CONTROL_SHA="$(git -C "$REPO_ROOT" rev-parse HEAD)"
 SOURCE_SHA=a7f582647e0297c04dcf2e967989e39ffd38df9c
 APP_CANDIDATE=sha256:d327590ca12e919dfff5f2d45394cb909b890a51422092c222ed569900517971
 APP_BASELINE=sha256:87490d60978e83cff664df31e5820ff47fb085d41754c8f666b0a6d7e82355d5
@@ -39,27 +40,34 @@ expect_failure() {
 output=$(LEARNBOX_IMAGE_TARGET=app LEARNBOX_VALIDATE_IMAGE="$APP_CANDIDATE" "$BUILD" "$SOURCE_SHA" 2>&1)
 printf '%s' "$output" | grep -F 'NOT RELEASE-APPROVED' >/dev/null
 
-# Approval cannot be requested without a live baseline binding, or with a caller-supplied baseline.
+# Approval needs an exact reviewed control revision and cannot accept a caller-supplied baseline.
 expect_failure env LEARNBOX_IMAGE_TARGET=app LEARNBOX_RELEASE_APPROVAL=true \
   LEARNBOX_VALIDATE_IMAGE="$APP_CANDIDATE" "$BUILD" "$SOURCE_SHA"
 expect_failure env LEARNBOX_IMAGE_TARGET=app LEARNBOX_RELEASE_APPROVAL=true \
-  LEARNBOX_VALIDATE_IMAGE="$APP_CANDIDATE" LEARNBOX_RUNNING_IMAGE="$APP_BASELINE" \
+  LEARNBOX_RELEASE_CONTROL_SHA="$SOURCE_SHA" LEARNBOX_VALIDATE_IMAGE="$APP_CANDIDATE" \
   "$BUILD" "$SOURCE_SHA"
+expect_failure env LEARNBOX_IMAGE_TARGET=app LEARNBOX_RELEASE_APPROVAL=true \
+  LEARNBOX_RELEASE_CONTROL_SHA="$CONTROL_SHA" LEARNBOX_VALIDATE_IMAGE="$APP_CANDIDATE" "$BUILD" "$SOURCE_SHA"
+expect_failure env LEARNBOX_IMAGE_TARGET=app LEARNBOX_RELEASE_APPROVAL=true \
+  LEARNBOX_RELEASE_CONTROL_SHA="$CONTROL_SHA" LEARNBOX_VALIDATE_IMAGE="$APP_CANDIDATE" \
+  LEARNBOX_RUNNING_IMAGE="$APP_BASELINE" "$BUILD" "$SOURCE_SHA"
 
 start_fixture "$app_fixture" "$APP_BASELINE" learnbox-app-production app
-LEARNBOX_IMAGE_TARGET=app LEARNBOX_RELEASE_APPROVAL=true \
-  LEARNBOX_VALIDATE_IMAGE="$APP_CANDIDATE" "$BUILD" "$SOURCE_SHA" \
-  | grep -F 'APP RELEASE APPROVAL: VERIFIED' >/dev/null
+output=$(LEARNBOX_IMAGE_TARGET=app LEARNBOX_RELEASE_APPROVAL=true \
+  LEARNBOX_RELEASE_CONTROL_SHA="$CONTROL_SHA" LEARNBOX_VALIDATE_IMAGE="$APP_CANDIDATE" "$BUILD" "$SOURCE_SHA" 2>&1)
+printf '%s' "$output" | grep -F 'APP RELEASE APPROVAL: VERIFIED' >/dev/null
+printf '%s' "$output" | grep -F "product source $SOURCE_SHA" >/dev/null
+printf '%s' "$output" | grep -F "control source $CONTROL_SHA" >/dev/null
 docker rm -f "$app_fixture" >/dev/null
 
 # A different, unlabeled legacy image cannot inherit the exact 87490d60 bridge.
 start_fixture "$wrong_fixture" "$APP_WRONG_BASELINE" learnbox-app-production app
 expect_failure env LEARNBOX_IMAGE_TARGET=app LEARNBOX_RELEASE_APPROVAL=true \
-  LEARNBOX_VALIDATE_IMAGE="$APP_CANDIDATE" "$BUILD" "$SOURCE_SHA"
+  LEARNBOX_RELEASE_CONTROL_SHA="$CONTROL_SHA" LEARNBOX_VALIDATE_IMAGE="$APP_CANDIDATE" "$BUILD" "$SOURCE_SHA"
 
 start_fixture "$admin_fixture" "$ADMIN_BASELINE" learnbox-admin-production admin
 NEXT_PUBLIC_LEARNBOX_ADMIN_PASSKEY_UI_ENABLED=true LEARNBOX_RELEASE_APPROVAL=true \
-  LEARNBOX_VALIDATE_IMAGE="$ADMIN_CANDIDATE" "$BUILD" "$SOURCE_SHA" \
+  LEARNBOX_RELEASE_CONTROL_SHA="$CONTROL_SHA" LEARNBOX_VALIDATE_IMAGE="$ADMIN_CANDIDATE" "$BUILD" "$SOURCE_SHA" \
   | grep -F 'ADMIN RELEASE APPROVAL: VERIFIED' >/dev/null
 
 printf 'release image validation integration test: PASS\n'

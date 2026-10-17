@@ -39,6 +39,7 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+CONTROL_SCRIPT_PATH="infrastructure/production/admin/build-admin-image.sh"
 cd "$REPO_ROOT"
 
 SOURCE_SHA="${1:-}"
@@ -81,10 +82,32 @@ esac
 
 VALIDATE_IMAGE="${LEARNBOX_VALIDATE_IMAGE:-}"
 RELEASE_APPROVAL="${LEARNBOX_RELEASE_APPROVAL:-false}"
+RELEASE_CONTROL_SHA="${LEARNBOX_RELEASE_CONTROL_SHA:-}"
 case "$RELEASE_APPROVAL" in
   true|false) ;;
   *) echo "build-admin-image: LEARNBOX_RELEASE_APPROVAL must be true or false" >&2; exit 2 ;;
 esac
+
+# SOURCE_SHA binds the product baked into the candidate. RELEASE_CONTROL_SHA independently binds
+# this validator. Approval refuses a later main checkout whose control script differs from the
+# explicitly recorded reviewed revision.
+if [ "$RELEASE_APPROVAL" = true ]; then
+  if ! [[ "$RELEASE_CONTROL_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+    echo "build-admin-image: release approval needs LEARNBOX_RELEASE_CONTROL_SHA as a full 40-character commit SHA" >&2
+    exit 2
+  fi
+  if ! git cat-file -e "${RELEASE_CONTROL_SHA}^{commit}" 2>/dev/null; then
+    echo "build-admin-image: release control commit $RELEASE_CONTROL_SHA is not available in this repository" >&2
+    exit 2
+  fi
+  declared_control_hash="$(git show "$RELEASE_CONTROL_SHA:$CONTROL_SCRIPT_PATH" | shasum -a 256 | cut -d' ' -f1)"
+  executing_control_hash="$(shasum -a 256 "${BASH_SOURCE[0]}" | cut -d' ' -f1)"
+  if [ "$declared_control_hash" != "$executing_control_hash" ]; then
+    echo "build-admin-image: executing validator does not match LEARNBOX_RELEASE_CONTROL_SHA=$RELEASE_CONTROL_SHA" >&2
+    exit 2
+  fi
+fi
+
 case "$TARGET" in
   app)
     PRODUCTION_PROJECT=learnbox-app-production
@@ -389,7 +412,10 @@ if [ "$failures" -eq 0 ]; then
     echo "$(echo "$TARGET" | tr a-z A-Z) IMAGE VALIDATION: VERIFIED — NOT RELEASE-APPROVED ($checks checks)"
     echo "  candidate $DIGEST"
   fi
-  echo "  commit $SOURCE_SHA"
+  echo "  product source $SOURCE_SHA"
+  if [ "$RELEASE_APPROVAL" = true ]; then
+    echo "  control source $RELEASE_CONTROL_SHA"
+  fi
   echo
   echo "Not deployed. Deployment requires separate owner authorisation."
 else

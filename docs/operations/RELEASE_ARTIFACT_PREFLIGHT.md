@@ -6,7 +6,8 @@ This is the artifact section of the Production runbook. It does not authorize a 
 
 - `infrastructure/production/app/release-build.env` is the approved, non-secret learner **build-time** matrix. It is read from the exact Git commit used to create the image. `NEXT_PUBLIC_*` values are compiled into the client and cannot be changed at runtime.
 - Runtime configuration remains the deployed service's protected environment. Never copy secrets into the matrix, image labels, Git, or evidence.
-- The artifact records source SHA, image digest, OS/architecture, and its public build matrix in OCI labels. Retain those values for the deployed image and the `.previous` rollback image in release evidence.
+- The artifact records the **product source SHA**, image digest, OS/architecture, and its public build matrix in OCI labels. Retain those values for the deployed image and the `.previous` rollback image in release evidence.
+- Release approval also records a separate **control source SHA** through `LEARNBOX_RELEASE_CONTROL_SHA`. The validator hashes its executing file against that commit and fails if they differ, so a later `main` checkout cannot silently substitute altered approval logic for the reviewed control.
 - `infrastructure/production/admin/build-admin-image.sh` is both the canonical builder and the existing-image validator. It never deploys, tags `production`, edits compose, or restarts a container.
 
 ## Historical bridge: `175da…` → `87490d…`
@@ -43,18 +44,20 @@ Run the validator **on the host that has the currently running Production servic
 ```bash
 LEARNBOX_IMAGE_TARGET=app \
 LEARNBOX_RELEASE_APPROVAL=true \
+LEARNBOX_RELEASE_CONTROL_SHA=<full-reviewed-control-commit-sha> \
 LEARNBOX_VALIDATE_IMAGE=sha256:<candidate-app> \
-infrastructure/production/admin/build-admin-image.sh <full-candidate-source-sha>
+infrastructure/production/admin/build-admin-image.sh <full-candidate-product-source-sha>
 
 NEXT_PUBLIC_LEARNBOX_ADMIN_PASSKEY_UI_ENABLED=true \
 LEARNBOX_RELEASE_APPROVAL=true \
+LEARNBOX_RELEASE_CONTROL_SHA=<full-reviewed-control-commit-sha> \
 LEARNBOX_VALIDATE_IMAGE=sha256:<candidate-admin> \
-infrastructure/production/admin/build-admin-image.sh <full-candidate-source-sha>
+infrastructure/production/admin/build-admin-image.sh <full-candidate-product-source-sha>
 ```
 
 Release approval is fail-closed: it requires an immutable candidate digest, exactly one currently running Production service container, matching candidate provenance/architecture, and either comparable labels or the exact `87490d60…` bridge. For Admin, the candidate and running bundle must both retain `server-passkey` and omit `local-prototype`.
 
-A successful result prints the exact candidate and baseline image IDs. If either image or the running baseline changed, re-run the command; previous approval cannot carry forward. Record the output together with migration and rollback identities before traffic changes.
+A successful result prints the exact candidate and baseline image IDs, product source SHA, and control source SHA. If either image, the running baseline, or the validator differs, re-run the command; previous approval cannot carry forward. Record all of those values together with migration and rollback identities before traffic changes.
 
 ## Before a Production release
 
