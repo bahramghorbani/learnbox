@@ -151,7 +151,8 @@ const timelineLabels: Record<string, string> = {
   provider_mismatch: 'عدم تطبیق پاسخ درگاه',
   cancelled: 'بازگشت ناموفق از درگاه',
   failed: 'درگاه پرداخت را تأیید نکرد',
-  check_unresolved: 'بررسی بی‌نتیجه ماند',
+  check_unresolved: 'بررسی بی‌نتیجه ماند؛ دوباره بررسی می‌شود',
+  provider_rejected: 'درگاه تلاش را رد کرد؛ نیازمند رسیدگی',
   recheck_requested: 'درخواست بررسی دوباره',
 };
 
@@ -198,6 +199,8 @@ export function PaymentOperationsPanel() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [selected, setSelected] = useState<Transaction | undefined>();
   const [search, setSearch] = useState('');
+  /** The search actually applied: set on submit, so typing alone never refetches. */
+  const [query, setQuery] = useState('');
   const [reviewOnly, setReviewOnly] = useState(false);
   const [timeline, setTimeline] = useState<TimelineEvent[] | 'loading' | 'error'>('loading');
   const [recheckMessage, setRecheckMessage] = useState<string | undefined>();
@@ -207,7 +210,7 @@ export function PaymentOperationsPanel() {
   const load = useCallback(async (): Promise<void> => {
     setPhase('loading');
     const params = new URLSearchParams({ limit: '50' });
-    if (search.trim()) params.set('q', search.trim());
+    if (query) params.set('q', query);
     if (reviewOnly) params.set('review', '1');
     try {
       const [configResponse, transactionsResponse] = await Promise.all([
@@ -238,12 +241,12 @@ export function PaymentOperationsPanel() {
     } catch {
       setPhase('error');
     }
-  }, []);
+  }, [query, reviewOnly]);
 
+  // Reloads on mount, on each submitted search and when the review toggle changes.
   useEffect(() => {
     void load();
-    // Search runs on submit, not per keystroke; the review toggle reloads at once.
-  }, [reviewOnly]);
+  }, [load]);
 
   const openDetails = useCallback(async (transaction: Transaction) => {
     setSelected(transaction);
@@ -321,7 +324,9 @@ export function PaymentOperationsPanel() {
             role="search"
             onSubmit={(event) => {
               event.preventDefault();
-              void load();
+              // Re-submitting the same text still refreshes the list.
+              if (search.trim() === query) void load();
+              else setQuery(search.trim());
             }}
           >
             <input
@@ -554,9 +559,14 @@ export function PaymentOperationsPanel() {
             >
               <span>
                 {reviewLabels[selected.reviewReason] ?? selected.reviewReason}
-                {selected.reviewReason === 'provider_rejected' && selected.lastProviderCode !== null
-                  ? ` — ${providerCodeLabels[selected.lastProviderCode] ?? 'کد خطای درگاه'} (code ${selected.lastProviderCode})`
-                  : ''}
+                {selected.reviewReason === 'provider_rejected' &&
+                selected.lastProviderCode !== null ? (
+                  <>
+                    {' — '}
+                    {providerCodeLabels[selected.lastProviderCode] ?? 'کد خطای درگاه'}{' '}
+                    <bdi className="keep-latin">(code {selected.lastProviderCode})</bdi>
+                  </>
+                ) : null}
               </span>
             </p>
           ) : null}
@@ -624,7 +634,7 @@ export function PaymentOperationsPanel() {
             <dd>
               {formatDateTime(selected.lastCheckedAt)}
               {selected.lastProviderCode !== null ? (
-                <span className="keep-latin"> (code {selected.lastProviderCode})</span>
+                <bdi className="keep-latin"> (code {selected.lastProviderCode})</bdi>
               ) : null}
               {' · '}
               {faNum(selected.checkCount)} بار
@@ -652,7 +662,7 @@ export function PaymentOperationsPanel() {
                     <div className="list-sub">
                       {sourceLabels[event.source] ?? event.source}
                       {event.providerCode !== null ? (
-                        <span className="keep-latin"> · code {event.providerCode}</span>
+                        <bdi className="keep-latin"> · code {event.providerCode}</bdi>
                       ) : null}
                       {event.attemptId && event.attemptId !== selected.transactionId
                         ? ' · تلاش دیگر'

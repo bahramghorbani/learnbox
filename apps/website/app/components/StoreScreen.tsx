@@ -106,6 +106,8 @@ export function StoreScreen({
   const focusedCardRef = useRef<HTMLLIElement | null>(null);
   const [purchases, setPurchases] = useState<LearnerPurchase[] | 'error'>([]);
   const [checking, setChecking] = useState<string | null>(null);
+  /** Outcome of the last re-check, announced next to that purchase. */
+  const [checkNote, setCheckNote] = useState<{ purchaseId: string; text: string } | null>(null);
 
   const loadPurchases = useCallback(async (): Promise<void> => {
     try {
@@ -122,18 +124,35 @@ export function StoreScreen({
   /** Asks the server to re-check one unsettled payment with the gateway (throttled server-side). */
   const recheck = useCallback(
     async (purchaseId: string): Promise<void> => {
+      if (checking) return;
       setChecking(purchaseId);
+      setCheckNote(null);
+      let text = 'بررسی ممکن نشد؛ کمی بعد دوباره تلاش کنید.';
       try {
-        await fetch(`/api/store/purchase/status?id=${encodeURIComponent(purchaseId)}`, {
-          credentials: 'same-origin',
-        });
+        const response = await fetch(
+          `/api/store/purchase/status?id=${encodeURIComponent(purchaseId)}`,
+          { credentials: 'same-origin' },
+        );
+        if (response.ok) {
+          const status = ((await response.json()) as { purchase?: { status?: string } }).purchase
+            ?.status;
+          text =
+            status === 'pending'
+              ? 'هنوز نتیجه‌ای از درگاه نرسیده؛ بررسی خودکار ادامه دارد.'
+              : `وضعیت: ${purchaseStatusLabels[status ?? ''] ?? status ?? '—'}`;
+        }
       } catch {
-        /* the reloaded list shows the truth either way */
+        /* keep the failure text; the reloaded list shows the truth either way */
       }
       await loadPurchases();
       setChecking(null);
+      const name =
+        purchases === 'error'
+          ? undefined
+          : purchases.find((p) => p.purchaseId === purchaseId)?.packName;
+      setCheckNote({ purchaseId, text: name ? `${name}: ${text}` : text });
     },
-    [loadPurchases],
+    [checking, loadPurchases, purchases],
   );
 
   const load = useCallback(async (): Promise<void> => {
@@ -415,6 +434,10 @@ export function StoreScreen({
               {(purchases === 'error' || purchases.length > 0) && (
                 <section className="store-section" aria-labelledby="store-my-purchases">
                   <h2 id="store-my-purchases">خریدهای من</h2>
+                  {/* Always mounted so screen readers announce each new re-check outcome. */}
+                  <p className="store-owned-note" role="status">
+                    {checkNote?.text ?? ''}
+                  </p>
                   {purchases === 'error' ? (
                     <p className="store-empty-hint" role="alert">
                       فهرست خریدها خوانده نشد؛ بعداً دوباره تلاش کنید.
@@ -436,7 +459,12 @@ export function StoreScreen({
                           </span>
                           <span className="store-owned-meta">
                             {purchaseStatusLabels[item.status] ?? item.status}
-                            {item.orderCode ? ` · سفارش ${item.orderCode}` : ''}
+                            {item.orderCode ? (
+                              <>
+                                {' · سفارش '}
+                                <bdi className="store-order-code">{item.orderCode}</bdi>
+                              </>
+                            ) : null}
                             {item.referenceId
                               ? ` · کد رهگیری ${toPersianDigits(item.referenceId)}`
                               : ''}
@@ -445,7 +473,8 @@ export function StoreScreen({
                             <button
                               type="button"
                               className="store-retry"
-                              disabled={checking === item.purchaseId}
+                              // aria-disabled, not disabled: a disabled button drops keyboard focus.
+                              aria-disabled={checking === item.purchaseId}
                               onClick={() => void recheck(item.purchaseId)}
                             >
                               {checking === item.purchaseId ? 'در حال بررسی…' : 'بررسی دوباره'}

@@ -1980,6 +1980,8 @@ button {
 .cp-workspace .dl dd {
   margin: 0;
   font-weight: 700;
+  /* Gateway Authorities are 36 unbroken Latin characters; never let them leave a narrow dialog. */
+  overflow-wrap: anywhere;
 }
 /* The drawer identity row from the reference: avatar, name over contact, status badge at the end. */
 .user-identity {
