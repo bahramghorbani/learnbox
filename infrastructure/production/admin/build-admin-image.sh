@@ -17,9 +17,18 @@
 # USAGE
 #   build-admin-image.sh <full-40-char-commit> [tag-suffix]
 #   LEARNBOX_IMAGE_TARGET=app build-admin-image.sh <full-40-char-commit> [tag-suffix]
+#   LEARNBOX_VALIDATE_IMAGE=sha256:... build-admin-image.sh <full-40-char-commit>
 #
 # The default target is the Admin image. LEARNBOX_IMAGE_TARGET=app builds the learner app image
-# through the same provenance and verification path, so neither image is built by hand.
+# through the same provenance and verification path, so neither image is built by hand. Supplying
+# LEARNBOX_VALIDATE_IMAGE skips the build and validates that exact existing image instead.
+#
+# A normal build/validation is useful for development and test evidence but is never release approval.
+# Release approval is an explicit, fail-closed operation:
+#   LEARNBOX_RELEASE_APPROVAL=true LEARNBOX_VALIDATE_IMAGE=sha256:... \
+#   build-admin-image.sh <full-40-char-commit>
+# It derives the baseline from the one currently running Iran Production compose service at validation
+# time; a result cannot be reused after an artifact or baseline change.
 #
 # The commit must exist in this checkout and must be given in full: a short SHA would be recorded in
 # the image as a short SHA, and provenance that cannot be compared byte for byte is not provenance.
@@ -70,6 +79,35 @@ case "$TARGET" in
   *) echo "build-admin-image: LEARNBOX_IMAGE_TARGET must be admin or app, got '$TARGET'" >&2; exit 2 ;;
 esac
 
+VALIDATE_IMAGE="${LEARNBOX_VALIDATE_IMAGE:-}"
+RELEASE_APPROVAL="${LEARNBOX_RELEASE_APPROVAL:-false}"
+case "$RELEASE_APPROVAL" in
+  true|false) ;;
+  *) echo "build-admin-image: LEARNBOX_RELEASE_APPROVAL must be true or false" >&2; exit 2 ;;
+esac
+case "$TARGET" in
+  app)
+    PRODUCTION_PROJECT=learnbox-app-production
+    PRODUCTION_SERVICE=app
+    ;;
+  admin)
+    PRODUCTION_PROJECT=learnbox-admin-production
+    PRODUCTION_SERVICE=admin
+    ;;
+esac
+if [ "$RELEASE_APPROVAL" = true ] && [ -z "$VALIDATE_IMAGE" ]; then
+  echo "build-admin-image: release approval validates an existing exact image; set LEARNBOX_VALIDATE_IMAGE" >&2
+  exit 2
+fi
+if [ "$RELEASE_APPROVAL" = true ] && [ -n "${LEARNBOX_RUNNING_IMAGE:-}" ]; then
+  echo "build-admin-image: release approval derives its baseline from the running Production service; do not set LEARNBOX_RUNNING_IMAGE" >&2
+  exit 2
+fi
+if [ "$RELEASE_APPROVAL" = true ] && ! [[ "$VALIDATE_IMAGE" =~ ^sha256:[0-9a-f]{64}$ ]]; then
+  echo "build-admin-image: release approval requires an immutable sha256 candidate reference" >&2
+  exit 2
+fi
+
 # The Production host is linux/amd64. Build for it explicitly: on an arm64 workstation the default
 # platform is arm64, and such an image starts and then dies on exec format in Production.
 PLATFORM=linux/amd64
@@ -107,27 +145,41 @@ else
 fi
 
 IMAGE_TAG="learnbox-$TARGET:${SOURCE_SHA:0:7}-${TAG_SUFFIX}"
+IMAGE_REF="$IMAGE_TAG"
 
 # Build from the commit, not the working tree. A dirty checkout is a normal state during release
-# preparation and must not be able to leak into a candidate.
-git archive --format=tar "$SOURCE_SHA" | tar -x -C "$BUILD_DIR"
+# preparation and must not be able to leak into a candidate. Existing images are never rebuilt just
+# to validate them: their digest remains the subject of the approval.
+if [ -n "$VALIDATE_IMAGE" ]; then
+  IMAGE_REF="$VALIDATE_IMAGE"
+  if ! docker image inspect "$IMAGE_REF" >/dev/null 2>&1; then
+    echo "build-admin-image: LEARNBOX_VALIDATE_IMAGE is not available locally: $IMAGE_REF" >&2
+    exit 2
+  fi
+  echo "build-admin-image: validating existing image $IMAGE_REF (no build)"
+else
+  git archive --format=tar "$SOURCE_SHA" | tar -x -C "$BUILD_DIR"
 
-echo "build-admin-image: commit        $SOURCE_SHA"
-echo "build-admin-image: tree          $(git rev-parse "$SOURCE_SHA^{tree}")"
-echo "build-admin-image: target        $TARGET ($PLATFORM)"
-echo "build-admin-image: build args    ${FLAG_ARGS[*]}"
-echo "build-admin-image: tag           $IMAGE_TAG"
-echo "build-admin-image: builder arch  $(docker info --format '{{.OSType}}/{{.Architecture}}')"
+  echo "build-admin-image: commit        $SOURCE_SHA"
+  echo "build-admin-image: tree          $(git rev-parse "$SOURCE_SHA^{tree}")"
+  echo "build-admin-image: target        $TARGET ($PLATFORM)"
+  echo "build-admin-image: build args    ${FLAG_ARGS[*]}"
+  echo "build-admin-image: tag           $IMAGE_TAG"
+  echo "build-admin-image: builder arch  $(docker info --format '{{.OSType}}/{{.Architecture}}')"
+  echo
+
+  docker build \
+    --platform "$PLATFORM" \
+    --file "$BUILD_DIR/infrastructure/production/$TARGET/Dockerfile" \
+    "${FLAG_ARGS[@]}" \
+    --tag "$IMAGE_TAG" \
+    "$BUILD_DIR"
+fi
+
 echo
-
-docker build \
-  --platform "$PLATFORM" \
-  --file "$BUILD_DIR/infrastructure/production/$TARGET/Dockerfile" \
-  "${FLAG_ARGS[@]}" \
-  --tag "$IMAGE_TAG" \
-  "$BUILD_DIR"
-
-echo
+printf 'build-admin-image: source commit %s\n' "$SOURCE_SHA"
+printf 'build-admin-image: target        %s (%s)\n' "$TARGET" "$PLATFORM"
+printf 'build-admin-image: image         %s\n' "$IMAGE_REF"
 echo "build-admin-image: verifying the artifact"
 
 checks=0; failures=0
@@ -137,7 +189,7 @@ check() {
   else failures=$((failures + 1)); printf 'FAIL %-62s expected=%s actual=%s\n' "$1" "$2" "$3"; fi
 }
 
-inspect() { docker image inspect "$IMAGE_TAG" --format "$1"; }
+inspect() { docker image inspect "$IMAGE_REF" --format "$1"; }
 image_env() { inspect '{{range .Config.Env}}{{println .}}{{end}}' | grep -E "^$1=" | cut -d= -f2- || true; }
 
 # Provenance, from both sides: the label is readable without starting the container, the env var is
@@ -146,41 +198,104 @@ check "OCI label records the requested commit" "$SOURCE_SHA" \
   "$(inspect '{{index .Config.Labels "org.opencontainers.image.revision"}}')"
 check "runtime APP_SOURCE_SHA records the requested commit" "$SOURCE_SHA" "$(image_env APP_SOURCE_SHA)"
 check "image title is set" "learnbox-$TARGET" "$(inspect '{{index .Config.Labels "org.opencontainers.image.title"}}')"
+release_label() {
+  case "$1" in
+    PROFILE_IDENTITY_ENABLED) printf '%s' io.learnbox.release.profile_identity ;;
+    QUEUE_QUARANTINE) printf '%s' io.learnbox.release.queue_quarantine ;;
+    SERVER_SESSION_PLAN) printf '%s' io.learnbox.release.server_session_plan ;;
+    GOAL_UX_REMOVED) printf '%s' io.learnbox.release.goal_ux_removed ;;
+    SESSION_EXPIRY_UX) printf '%s' io.learnbox.release.session_expiry_ux ;;
+    BINARY_REVIEW_UI) printf '%s' io.learnbox.release.binary_review_ui ;;
+  esac
+}
+legacy_baseline_value() {
+  case "$1" in
+    PROFILE_IDENTITY_ENABLED) printf '%s' "$LEARNBOX_LEGACY_PROFILE_IDENTITY" ;;
+    QUEUE_QUARANTINE) printf '%s' "$LEARNBOX_LEGACY_QUEUE_QUARANTINE" ;;
+    SERVER_SESSION_PLAN) printf '%s' "$LEARNBOX_LEGACY_SERVER_SESSION_PLAN" ;;
+    GOAL_UX_REMOVED) printf '%s' "$LEARNBOX_LEGACY_GOAL_UX_REMOVED" ;;
+    SESSION_EXPIRY_UX) printf '%s' "$LEARNBOX_LEGACY_SESSION_EXPIRY_UX" ;;
+    BINARY_REVIEW_UI) printf '%s' "$LEARNBOX_LEGACY_BINARY_REVIEW_UI" ;;
+  esac
+}
+
+if [ "$RELEASE_APPROVAL" = true ]; then
+  running_containers="$(docker ps --filter "label=com.docker.compose.project=$PRODUCTION_PROJECT" \
+    --filter "label=com.docker.compose.service=$PRODUCTION_SERVICE" --format '{{.ID}}' 2>/dev/null || true)"
+  running_count="$(printf '%s\n' "$running_containers" | awk 'NF { count++ } END { print count + 0 }')"
+  if [ "$running_count" -ne 1 ]; then
+    checks=$((checks + 1)); failures=$((failures + 1))
+    printf 'FAIL %-62s expected=one actual=%s\n' "one running Production $PRODUCTION_SERVICE container" "$running_count"
+    running_id=""
+    running_container=""
+  else
+    running_container="$(printf '%s\n' "$running_containers" | awk 'NF { print; exit }')"
+    running_id="$(docker container inspect "$running_container" --format '{{.Image}}' 2>/dev/null || true)"
+    candidate_id="$(inspect '{{.Id}}')"
+    container_running="$(docker container inspect "$running_container" --format '{{.State.Running}}' 2>/dev/null || true)"
+    check "candidate reference is its immutable image id" "$VALIDATE_IMAGE" "$candidate_id"
+    check "Production baseline container is running now" true "$container_running"
+    check "Production baseline image has an immutable id" sha256 "${running_id%%:*}"
+  fi
+fi
+
 if [ "$TARGET" = app ]; then
   # These labels are deliberately public and become the runnable image's comparable release record.
   # Verify every configured flag was baked into the artifact, rather than trusting the build command.
   for flag in $APP_FLAGS; do
-    key="$(printf '%s' "$flag" | tr '[:upper:]' '[:lower:]')"
-    key="$(printf '%s' "$key" | tr '_' '-')"
-    label="io.learnbox.release.$key"
-    # Labels use short keys for stable, readable release evidence.
-    case "$label" in
-      *profile-identity*) label=io.learnbox.release.profile_identity ;;
-      *queue-quarantine*) label=io.learnbox.release.queue_quarantine ;;
-      *server-session-plan*) label=io.learnbox.release.server_session_plan ;;
-      *goal-ux-removed*) label=io.learnbox.release.goal_ux_removed ;;
-      *session-expiry-ux*) label=io.learnbox.release.session_expiry_ux ;;
-      *binary-review-ui*) label=io.learnbox.release.binary_review_ui ;;
-    esac
+    label="$(release_label "$flag")"
     name="NEXT_PUBLIC_LEARNBOX_$flag"
     check "release label $label matches the approved matrix" "${!name}" "$(inspect "{{index .Config.Labels \"$label\"}}")"
   done
-  if [ "${LEARNBOX_RUNNING_IMAGE:-}" != "" ]; then
-    echo "build-admin-image: running-to-candidate public configuration diff"
-    for flag in $APP_FLAGS; do
-      key="$(printf '%s' "$flag" | tr '[:upper:]' '[:lower:]' | tr '_' '-')"
-      case "$key" in profile-identity-enabled) label=io.learnbox.release.profile_identity;; queue-quarantine) label=io.learnbox.release.queue_quarantine;; server-session-plan) label=io.learnbox.release.server_session_plan;; goal-ux-removed) label=io.learnbox.release.goal_ux_removed;; session-expiry-ux) label=io.learnbox.release.session_expiry_ux;; binary-review-ui) label=io.learnbox.release.binary_review_ui;; esac
-      running="$(docker image inspect "$LEARNBOX_RUNNING_IMAGE" --format "{{index .Config.Labels \"$label\"}}" 2>/dev/null || true)"
-      name="NEXT_PUBLIC_LEARNBOX_$flag"
-      if [ "$running" != true ] && [ "$running" != false ]; then
-        echo "FAIL running image lacks comparable $label; record an owner decision before release" >&2
-        failures=$((failures + 1)); checks=$((checks + 1))
-      else
-        check "running $label → candidate $label" "${!name}" "$running"
-      fi
-    done
+
+  if [ "$RELEASE_APPROVAL" = true ]; then
+    baseline_file="infrastructure/production/app/iran-production-87490d60-release-baseline.env"
+    # shellcheck disable=SC1090 -- tracked, non-secret exact bridge data
+    . "$baseline_file"
+    if [ "$running_id" = "$LEARNBOX_LEGACY_BASELINE_IMAGE" ]; then
+      check "legacy bridge baseline digest" "$LEARNBOX_LEGACY_BASELINE_IMAGE" "$running_id"
+      check "legacy bridge baseline source" "$LEARNBOX_LEGACY_BASELINE_SOURCE_SHA" \
+        "$(docker image inspect "$running_id" --format '{{index .Config.Labels "org.opencontainers.image.revision"}}')"
+      check "legacy bridge baseline architecture" "$LEARNBOX_LEGACY_BASELINE_ARCH" \
+        "$(docker image inspect "$running_id" --format '{{.Architecture}}')"
+      check "legacy bridge baseline OS" "$LEARNBOX_LEGACY_BASELINE_OS" \
+        "$(docker image inspect "$running_id" --format '{{.Os}}')"
+      for flag in $APP_FLAGS; do
+        name="NEXT_PUBLIC_LEARNBOX_$flag"
+        check "legacy bridge $flag → candidate matrix" "$(legacy_baseline_value "$flag")" "${!name}"
+      done
+      legacy_bundle="$(docker run --rm --network none --entrypoint sh "$running_id" -c \
+        'cat /app/apps/website/.next/static/chunks/app/page-*.js 2>/dev/null' || true)"
+      legacy_bundle_has() { printf '%s' "$legacy_bundle" | grep -qE "$1"; }
+      check_legacy_bundle() {
+        checks=$((checks + 1))
+        if legacy_bundle_has "$2"; then printf 'ok   %-62s true\n' "$1"
+        else failures=$((failures + 1)); printf 'FAIL %-62s expected=true actual=missing\n' "$1"; fi
+      }
+      check_legacy_bundle "legacy bundle PROFILE_IDENTITY_ENABLED marker" 'profileIdentityFlag:[A-Za-z_$]+="true"'
+      check_legacy_bundle "legacy bundle QUEUE_QUARANTINE marker" 'quarantineKey:[A-Za-z_$][A-Za-z0-9_$]*\('
+      check_legacy_bundle "legacy bundle SERVER_SESSION_PLAN marker" 'nextCardId:[A-Za-z_$][A-Za-z0-9_$]*\}'
+      check_legacy_bundle "legacy bundle GOAL_UX_REMOVED marker" 'goal:void 0'
+      check_legacy_bundle "legacy bundle SESSION_EXPIRY_UX marker" 'sessionEnded&&1'
+      check_legacy_bundle "legacy bundle BINARY_REVIEW_UI marker" 'binaryWire:!0'
+    else
+      echo "build-admin-image: running-to-candidate public configuration diff"
+      for flag in $APP_FLAGS; do
+        label="$(release_label "$flag")"
+        running="$(docker image inspect "$running_id" --format "{{index .Config.Labels \"$label\"}}" 2>/dev/null || true)"
+        name="NEXT_PUBLIC_LEARNBOX_$flag"
+        if [ "$running" != true ] && [ "$running" != false ]; then
+          echo "FAIL running image lacks comparable $label; unknown baseline is not releasable" >&2
+          failures=$((failures + 1)); checks=$((checks + 1))
+        else
+          check "running $label → candidate $label" "${!name}" "$running"
+        fi
+      done
+    fi
+  elif [ -n "${LEARNBOX_RUNNING_IMAGE:-}" ]; then
+    echo "build-admin-image: running image supplied without LEARNBOX_RELEASE_APPROVAL=true; non-release validation only" >&2
   else
-    echo "build-admin-image: no LEARNBOX_RUNNING_IMAGE; candidate cannot be release-approved until a running-image diff is recorded" >&2
+    echo "build-admin-image: no running baseline; DEVELOPMENT/TEST ONLY — NOT RELEASE-APPROVED" >&2
   fi
 fi
 check "provenance is not the forgotten-argument default" absent \
@@ -204,7 +319,7 @@ check "entrypoint is the $TARGET server" "[node $APP_DIR/server.js]" "$(inspect 
 # The commit really is in the image: compare a file from the built bundle against the commit's blob.
 # This catches a build that succeeded against a stale cache layer from a different commit.
 expected_pkg="$(git show "$SOURCE_SHA:$APP_DIR/package.json" | sha256sum | cut -d' ' -f1)"
-actual_pkg="$(docker run --rm --entrypoint sh "$IMAGE_TAG" -c \
+actual_pkg="$(docker run --rm --entrypoint sh "$IMAGE_REF" -c \
   "sha256sum /app/$APP_DIR/package.json 2>/dev/null | cut -d' ' -f1" || true)"
 check "$APP_DIR/package.json in the image matches the commit" "$expected_pkg" "$actual_pkg"
 
@@ -218,15 +333,28 @@ check "$APP_DIR/package.json in the image matches the commit" "$expected_pkg" "$
 # workspace instead, because AdminAuthGate short-circuits to signed-in for 'local-prototype'. So the
 # mode must be present and its bypass counterpart must be absent.
 if [ "$TARGET" = app ]; then
-  # The one learner flag whose inlined value is readable verbatim in the client bundle. It proves
-  # the requested flags reached the build (a stale cache or a dropped argument would show here).
-  shipped_profile="$(docker run --rm --network none --entrypoint sh "$IMAGE_TAG" -c \
-    'cat /app/apps/website/.next/static/chunks/app/page-*.js 2>/dev/null' \
-    | grep -oE 'profileIdentityFlag:[A-Za-z_$]+="(true|false)"' | head -1 | grep -oE 'true|false' || true)"
-  check "shipped PROFILE_IDENTITY_ENABLED matches the requested value" \
-    "$NEXT_PUBLIC_LEARNBOX_PROFILE_IDENTITY_ENABLED" "$shipped_profile"
+  # Each currently approved learner flag is true. Verify all six rendered semantics, not merely
+  # labels or build arguments; an intentional false value needs an explicit validator update.
+  shipped_bundle="$(docker run --rm --network none --entrypoint sh "$IMAGE_REF" -c \
+    'cat /app/apps/website/.next/static/chunks/app/page-*.js 2>/dev/null' || true)"
+  bundle_has() { printf '%s' "$shipped_bundle" | grep -qE "$1"; }
+  check_bundle_true() {
+    checks=$((checks + 1))
+    if bundle_has "$2"; then printf 'ok   %-62s true\n' "$1"
+    else failures=$((failures + 1)); printf 'FAIL %-62s expected=true actual=missing\n' "$1"; fi
+  }
+  check_bundle_true "shipped PROFILE_IDENTITY_ENABLED semantic marker" 'profileIdentityFlag:[A-Za-z_$]+="true"'
+  check_bundle_true "shipped QUEUE_QUARANTINE semantic marker" 'quarantineKey:[A-Za-z_$][A-Za-z0-9_$]*\('
+  check_bundle_true "shipped SERVER_SESSION_PLAN semantic marker" 'nextCardId:[A-Za-z_$][A-Za-z0-9_$]*\}'
+  check_bundle_true "shipped GOAL_UX_REMOVED semantic marker" 'goal:void 0'
+  check_bundle_true "shipped SESSION_EXPIRY_UX semantic marker" 'sessionEnded&&1'
+  check_bundle_true "shipped BINARY_REVIEW_UI semantic marker" 'binaryWire:!0'
+  for flag in $APP_FLAGS; do
+    name="NEXT_PUBLIC_LEARNBOX_$flag"
+    check "approved matrix supports shipped semantic proof for $flag" true "${!name}"
+  done
 else
-rendered="$(docker run --rm --network none --entrypoint sh "$IMAGE_TAG" -c \
+rendered="$(docker run --rm --network none --entrypoint sh "$IMAGE_REF" -c \
   'cat /app/apps/admin/.next/server/app/index.html 2>/dev/null' || true)"
 rendered_has() { printf '%s' "$rendered" | grep -cF -- "$1" || true; }
 
@@ -236,6 +364,14 @@ check "shipped authentication mode is server-passkey" present \
   "$([ "$(rendered_has 'server-passkey')" != 0 ] && echo present || echo absent)"
 check "shipped authentication mode cannot bypass the gate as local-prototype" absent \
   "$([ "$(rendered_has 'local-prototype')" = 0 ] && echo absent || echo present)"
+if [ "$RELEASE_APPROVAL" = true ]; then
+  running_rendered="$(docker run --rm --network none --entrypoint sh "$running_id" -c \
+    'cat /app/apps/admin/.next/server/app/index.html 2>/dev/null' || true)"
+  check "running Admin has server-passkey mode" present \
+    "$([ "$(printf '%s' "$running_rendered" | grep -cF 'server-passkey' || true)" != 0 ] && echo present || echo absent)"
+  check "running Admin cannot bypass as local-prototype" absent \
+    "$([ "$(printf '%s' "$running_rendered" | grep -cF 'local-prototype' || true)" = 0 ] && echo absent || echo present)"
+fi
 fi
 
 DIGEST="$(inspect '{{.Id}}')"
@@ -245,14 +381,19 @@ echo "build-admin-image: size          $(inspect '{{.Size}}') bytes"
 echo
 
 if [ "$failures" -eq 0 ]; then
-  echo "$(echo "$TARGET" | tr a-z A-Z) IMAGE CANDIDATE: VERIFIED ($checks checks)"
-  echo "  tag    $IMAGE_TAG"
-  echo "  id     $DIGEST"
+  if [ "$RELEASE_APPROVAL" = true ]; then
+    echo "$(echo "$TARGET" | tr a-z A-Z) RELEASE APPROVAL: VERIFIED ($checks checks)"
+    echo "  candidate $DIGEST"
+    echo "  baseline  $running_id (container $running_container)"
+  else
+    echo "$(echo "$TARGET" | tr a-z A-Z) IMAGE VALIDATION: VERIFIED — NOT RELEASE-APPROVED ($checks checks)"
+    echo "  candidate $DIGEST"
+  fi
   echo "  commit $SOURCE_SHA"
   echo
   echo "Not deployed. Deployment requires separate owner authorisation."
 else
-  echo "$(echo "$TARGET" | tr a-z A-Z) IMAGE CANDIDATE: REJECTED ($failures of $checks checks)" >&2
-  docker image rm -f "$IMAGE_TAG" >/dev/null 2>&1 || true
+  echo "$(echo "$TARGET" | tr a-z A-Z) IMAGE VALIDATION: REJECTED ($failures of $checks checks)" >&2
+  if [ -z "$VALIDATE_IMAGE" ]; then docker image rm -f "$IMAGE_TAG" >/dev/null 2>&1 || true; fi
   exit 1
 fi
