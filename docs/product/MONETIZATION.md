@@ -32,6 +32,8 @@ Entitlement
 └── user + pack access, source purchase, active/revoked state
 ```
 
+These are logical boundaries, not tables. The proposed v1 mapping onto the existing schema (no separate `PackOffer` table; order, attempt, timeline and entitlement roles; legacy `payment_logs` deprecation) is in [`docs/architecture/COMMERCE_CORE_CONTRACT.md`](../architecture/COMMERCE_CORE_CONTRACT.md).
+
 The client never grants access based only on a local purchase result. Refunds, chargebacks and revocations update entitlement through a verified server process.
 
 ## Admin requirements
