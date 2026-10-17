@@ -137,6 +137,17 @@ and a restore are confirmed.
 Before a migration, the release procedure takes a fresh backup, verifies its checksum, makes an
 offsite copy and runs a disposable restore drill.
 
+### Migration execution roles
+
+`learnbox_migrator` is the restricted backup and ledger-reading role; it is not a migration owner.
+It cannot `ALTER` relations owned by `neondb_owner`, and ordinary `GRANT`s do not confer that authority.
+For a separately owner-authorized migration that changes existing relations, inject the existing
+`LEARNBOX_OWNER_DATABASE_URL` only into the one repository migration-runner process. Do not write it
+to a command line, host file, evidence, or App/Admin environment; do not add role membership,
+ownership, or standing privileges. Keep `learnbox_app` and `learnbox_admin` on their restricted
+runtime roles, then verify the migration ledger/checksum, object ownership, and required verb-level
+runtime grants before the application cutover.
+
 ## Monitoring
 
 `learnbox-iran-monitor.timer` runs every 5 min on the host and pings Healthchecks.io, which alerts
