@@ -32,13 +32,14 @@ Render the configuration without starting anything:
 docker compose --env-file app.env --file compose.yaml config --quiet
 ```
 
-Build and run database migrations before the first app start:
+Prepare and approve the immutable release image before the first app start. Do **not** use `docker compose build` here: it can bypass source provenance, the approved client build matrix, and running-baseline approval. Follow [`RELEASE_ARTIFACT_PREFLIGHT.md`](../../../docs/operations/RELEASE_ARTIFACT_PREFLIGHT.md) to build through `build-admin-image.sh`, validate the exact retained digest, and record its approval.
+
+After the separate migration authorization and artifact approval, the Iran compose file must reference that approved immutable digest. Run the migration and start without a build:
 
 ```bash
-docker compose --env-file app.env --file compose.yaml build learner-app
-docker compose --env-file app.env --file compose.yaml run --rm learner-app \
+docker compose --env-file app.env --file compose.yaml run --rm --no-deps learner-app \
   node apps/api/dist/database/run-migrations.js
-docker compose --env-file app.env --file compose.yaml up -d learner-app
+docker compose --env-file app.env --file compose.yaml up -d --no-build learner-app
 ```
 
 Do not create a host port for the app. Caddy reaches it through the shared
