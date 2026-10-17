@@ -1576,6 +1576,17 @@ button {
   }
 }
 
+.cp-workspace .pack-price-controls {
+  align-items: center;
+  flex-wrap: wrap;
+  width: 100%;
+}
+.cp-workspace .pack-price-controls .cp-input {
+  flex: 0 1 10rem;
+  min-width: 7rem;
+  width: auto;
+}
+
 /* Media availability marks for the Content & Packs card table. `—` is shown when the canonical
    content_json.media[] payload records nothing, so an absent value is never styled as a real "no". */
 .cp-workspace .cp-media-yes {
