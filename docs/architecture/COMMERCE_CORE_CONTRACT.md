@@ -57,11 +57,9 @@ These five rules override anything below that reads differently.
    no default is relied on and no second conversion exists (`tomansToRials` at the provider
    boundary only; the database enforces `provider_amount = amount_tomans × 10`). Verify sends the
    same stored rial amount. Live official text confirmed — see §7.
-4. **Purchase evidence on account deletion.** Only the minimum is kept in
-   `purchase_ownership_claims`: provider, Authority, RefID, pack id, amount, purchase time and a
-   one-way subject hash. No name, phone, e-mail, card PAN/hash or gateway body. Retention is
-   bounded: `retain_until = purchase time + 5 years` (**provisional**; the owner/legal review sets the
-   final period; a purge of expired claims is a later change). Tests run on test accounts only.
+4. **Purchase evidence on account deletion.** Only the minimum is copied into
+   `purchase_ownership_claims`; the field list, its sensitivity and the open retention decision are
+   in §10.3. Tests run on test accounts only.
 5. **Legacy tables and routes.** Removal is not a sales prerequisite. `payment_logs` and
    `payment_gateways` are marked deprecated, receive no new writes, and stay. No physical removal
    is part of this phase's migration.
@@ -303,3 +301,62 @@ payload size, consumption model) stay open until the Android release line is cho
 
 Credentials never enter source, logs, screenshots or evidence; provider activation stays a runtime
 flag that defaults to off.
+
+## 10. Operations and data notes (v1.2, implementation review)
+
+### 10.1 Who executes an Admin re-check, when, and where the result appears
+
+- **Producer:** Admin «درخواست بررسی دوباره از درگاه» (`super_admin`, Origin + CSRF + fresh
+  re-authentication) appends one `recheck_requested` event. Admin never calls the gateway.
+- **Consumer:** the learner runtime's `reconcilePurchases` — the only code that reads those events —
+  exposed as `POST /api/internal/commerce/reconcile` (Bearer token, off unless
+  `LEARNBOX_COMMERCE_RECONCILE_ENABLED=true`). It verifies through the same `verifyPurchase` path
+  as the callback, so provider calls stay in the payment service.
+- **When:** on the next run of a host timer calling that route every 10 minutes. The timer is not
+  installed anywhere yet; installing it is part of the activation gate, not this phase.
+- **Disabled reconciliation:** Admin reads the same flag. When it is not `true` the button is
+  hidden with an explanation and the API refuses (`409 reconciliation_disabled`); no dead request
+  is queued.
+- **Result:** the order timeline gains the outcome event with source «مدیر»; the attempt shows the
+  new status, `last_checked_at`, `check_count`, last provider code and «بررسی بعدی». A request not
+  executed within 20 minutes is shown as overdue.
+
+### 10.2 Provider answer classification
+
+| Answer                                                     | Attempt                                | Automatic retry                        |
+| ---------------------------------------------------------- | -------------------------------------- | -------------------------------------- |
+| 100 / 101 with the attempt's own data                      | `verified` (+ grant once)              | —                                      |
+| 100 / 101 with a foreign order reference                   | open, `provider_mismatch`              | stopped; Admin review                  |
+| network error, unreadable body, `-12` rate limit           | open, `check_unresolved`               | yes, every 10 min, max 20 checks / 7 d |
+| `-51` on an attempt younger than 30 min                    | open                                   | yes (learner may still be paying)      |
+| `-51` on an older attempt                                  | `failed` (only definitive fail)        | —                                      |
+| `-50` amount, `-53` merchant, `-54` Authority, other codes | open, `provider_rejected` + exact code | stopped; Admin review                  |
+
+Reaching the check cap leaves the attempt `pending` and shows «سقف دفعات» in Admin. Admin re-check
+still works on every open or failed attempt.
+
+### 10.3 Deletion evidence: fields kept and retention (decision open)
+
+A pack-purchase claim keeps exactly: `id`, `provider`, `provider_purchase_id` (Authority),
+`provider_reference` (RefID), `pack_id`, `amount_tomans`, `status`, `purchased_at`, `recorded_at`,
+`entitlement_keys` (`pack:<id>`), `subject_hash`, `retain_until`, `preserved_by_deletion_id`.
+Not kept: user id, phone, name, e-mail, card PAN/hash, gateway bodies, order snapshot, timeline.
+
+These are **pseudonymous, not anonymous**. Authority and RefID can be matched to the gateway's own
+records (which hold card and payer data); `subject_hash` is a keyed hash of the phone number and is
+re-identifiable by whoever holds the key or the phone; when no phone was on file it is
+`unknown:<former user id>`, which links to other retained deletion records. Treat the table as
+personal data.
+
+Retention is **not decided**. The code writes `retain_until = purchase time + 5 years` as a
+placeholder so the column is never unbounded by accident (applied in
+`apps/website/lib/account-deletion-store.ts`). After `retain_until` nothing happens yet: rows stay
+until a purge change is approved. The owner (with legal advice) sets the period and approves the
+purge; neither is part of this phase, and no Production data is changed.
+
+### 10.4 Test evidence limits
+
+- Official sandbox end-to-end (create → pay on the sandbox page → verify 100 → single grant) ran
+  once locally; its scenario is kept as a mock test. The live harness is not committed.
+- Code 101 was observed live with direct sandbox calls only; LearnBox's 101 handling and the
+  recovery after a failed entitlement commit are proven with mocks.
