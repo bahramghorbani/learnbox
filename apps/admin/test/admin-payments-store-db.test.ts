@@ -224,6 +224,17 @@ suite('Store transactions — authorization against the canonical schema', () =>
     const stopped = await store.listTransactions({ actorUserId: superAdmin, query: authority });
     expect(stopped.status === 'ok' && stopped.rows[0].autoCheck).toBe('stopped_review');
 
+    // Inconclusive until the check limit: still unsettled, no flagged answer, yet surfaced for review.
+    await pool.query(
+      `UPDATE purchase_events SET review_reason=NULL, last_provider_code=NULL, check_count=20,
+              created_at=now() - interval '5 minutes' WHERE id=$1`,
+      [attemptId],
+    );
+    const limited = await store.listTransactions({ actorUserId: superAdmin, needsReview: true });
+    expect(
+      limited.status === 'ok' && limited.rows.map((r) => [r.transactionId, r.autoCheck]),
+    ).toEqual([[attemptId, 'stopped_limit']]);
+
     const timeline = await store.readOrderTimeline({
       actorUserId: superAdmin,
       transactionId: attemptId,

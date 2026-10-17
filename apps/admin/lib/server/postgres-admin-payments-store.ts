@@ -201,7 +201,10 @@ export class PostgresAdminPaymentsStore {
                  OR po.public_code = upper($4)
                  OR ($5::boolean AND (pe.id = $4::uuid OR pe.user_id = $4::uuid)))
             AND (NOT $6::boolean OR pe.review_reason IS NOT NULL OR po.status = 'needs_review'
-                 OR (pe.status = 'pending' AND pe.created_at < now() - interval '30 minutes'))
+                 OR (pe.status = 'pending' AND pe.created_at < now() - interval '30 minutes')
+                 -- check limit reached while still unsettled ('stopped_limit' above)
+                 OR (pe.status IN ('pending', 'cancelled') AND pe.order_id IS NOT NULL
+                     AND pe.check_count >= ${maxAutomaticChecks}))
           ORDER BY pe.created_at DESC
           LIMIT $1`,
         [

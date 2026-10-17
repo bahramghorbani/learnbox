@@ -570,6 +570,11 @@ suite('commerce core v1 (real Postgres, fixture gateway)', () => {
       const authority = await authorityOfAttempt(created.purchaseId);
       await verifyPurchase({ pool, provider: g.provider }, { authority, callbackStatus: 'OK' });
       expect(await readLearnerPurchases(pool, carol)).toHaveLength(1);
+      // Bought two years before the account is deleted: retention runs from deletion, not purchase.
+      await pool.query(
+        `UPDATE purchase_events SET verified_at = now() - interval '2 years' WHERE user_id = $1`,
+        [carol],
+      );
 
       const out = await deleteAccount(pool, {
         userId: carol,
@@ -592,10 +597,16 @@ suite('commerce core v1 (real Postgres, fixture gateway)', () => {
         subject_hash: 'test-subject-hash',
         status: 'verified',
       });
-      const years =
+      // retain_until = deletion time (recorded_at, same transaction) + exactly 5 years.
+      const expected = new Date(claim!.recorded_at as Date);
+      expected.setUTCFullYear(expected.getUTCFullYear() + 5);
+      expect(Math.abs((claim!.retain_until as Date).getTime() - expected.getTime())).toBeLessThan(
+        2 * 864e5,
+      );
+      const sincePurchase =
         ((claim!.retain_until as Date).getTime() - (claim!.purchased_at as Date).getTime()) /
         (365.25 * 864e5);
-      expect(Math.round(years)).toBe(5);
+      expect(Math.round(sincePurchase)).toBe(7);
       // Nothing personal: no user id, phone, name or order snapshot in the evidence.
       const serialised = JSON.stringify(claim);
       for (const leak of [carol, '+491', 'carol', 'snapshot', created.orderCode])

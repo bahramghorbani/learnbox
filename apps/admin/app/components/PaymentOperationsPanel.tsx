@@ -167,7 +167,12 @@ const sourceLabels: Record<string, string> = {
 const recheckable = new Set(['pending', 'cancelled', 'failed']);
 
 function needsAttention(transaction: Transaction): boolean {
-  return transaction.reviewReason !== null || transaction.orderStatus === 'needs_review';
+  return (
+    transaction.reviewReason !== null ||
+    transaction.orderStatus === 'needs_review' ||
+    // Still unsettled after the last automatic check: nobody will look again unless a person does.
+    transaction.autoCheck === 'stopped_limit'
+  );
 }
 
 const configurationLabels: Record<Configuration['state'], string> = {

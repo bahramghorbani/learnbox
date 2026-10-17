@@ -134,8 +134,10 @@ export async function deleteAccount(
     // product_id is NULL, which the old inner JOIN silently dropped). A pack claim is minimal by
     // design — provider, Authority, RefID, pack, amount, purchase time and the keyed phone hash;
     // no user id, phone, name, card data or order snapshot. These are still pseudonymous personal
-    // data (contract §10.3). `retain_until` = purchase + 5 years is a PLACEHOLDER, not an approved
-    // policy: nothing acts on it yet; the owner decides the period and any purge separately.
+    // data (contract §10.3). Owner product decision 2026-10-17 (not a legal opinion):
+    // `retain_until` = time of account deletion + 5 years, i.e. this transaction's `now()`, the
+    // same instant as `recorded_at`. Nothing purges automatically; the manual, approved purge
+    // procedure is in the contract and docs/compliance/PRIVACY_DATA_MAP.md.
     const preserved = await client.query(
       `INSERT INTO purchase_ownership_claims
          (provider, provider_purchase_id, product_id, pack_id, amount_tomans, provider_reference,
@@ -149,7 +151,7 @@ export async function deleteAccount(
        UNION ALL
        SELECT pe.provider, pe.provider_purchase_id, NULL, pe.pack_id, pe.amount_tomans,
               pe.provider_reference,
-              COALESCE(pe.verified_at, pe.created_at) + interval '5 years', $2,
+              now() + interval '5 years', $2,
               ARRAY['pack:' || pe.pack_id], pe.status, COALESCE(pe.verified_at, pe.created_at)
          FROM purchase_events pe
         WHERE pe.user_id = $1 AND pe.product_id IS NULL AND pe.pack_id IS NOT NULL
