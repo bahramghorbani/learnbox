@@ -27,8 +27,9 @@ The currently running App image is deliberately pinned in `infrastructure/produc
 - six public learner flags: all `true`
 - candidate digest: `sha256:d327590ca12e919dfff5f2d45394cb909b890a51422092c222ed569900517971`
 - candidate source: `a7f582647e0297c04dcf2e967989e39ffd38df9c`
+- candidate `apps/website/package.json` SHA-256: `2cd5a3d8fff8d2ac39eefdb8e7ea48faa58570a315385505092f02eef8ff1ba7`
 
-The bridge is exact evidence, not a general fallback. It accepts only that running baseline and that candidate. The preflight verifies the baseline source/architecture, candidate source/architecture/labels, the six matrix values, and the compiled bundle markers for both images. Another unlabeled baseline, another candidate digest, a stopped container, or a changed matrix fails closed.
+The bridge is self-contained so the validation works from a shallow release checkout: it does **not** loosen the generic source-matrix path. It still accepts only that running baseline and that candidate. The preflight verifies the baseline source/architecture, candidate source/architecture/labels/package blob, the six matrix values, and the compiled bundle markers for both images. Another unlabeled baseline, another candidate digest, a stopped container, or a changed matrix fails closed.
 
 The historical `175daeb8… → 87490d60…` comparison remains release evidence; it is not a baseline accepted by the current tool.
 

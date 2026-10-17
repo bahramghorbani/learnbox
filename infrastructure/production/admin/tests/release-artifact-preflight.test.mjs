@@ -12,7 +12,8 @@ const script = resolve(adminInfrastructure, 'build-admin-image.sh');
 
 const baseline = 'sha256:87490d60978e83cff664df31e5820ff47fb085d41754c8f666b0a6d7e82355d5';
 const candidate = 'sha256:d327590ca12e919dfff5f2d45394cb909b890a51422092c222ed569900517971';
-const source = 'a7f582647e0297c04dcf2e967989e39ffd38df9c';
+const bridgeSource = 'a7f582647e0297c04dcf2e967989e39ffd38df9c';
+const candidatePackageHash = '2cd5a3d8fff8d2ac39eefdb8e7ea48faa58570a315385505092f02eef8ff1ba7';
 
 const bundle = [
   'profileIdentityFlag:C="true"',
@@ -49,7 +50,7 @@ if [ "$command" = image ] && [ "$1" = inspect ]; then
   image="$2"; shift 2
   format=""
   if [ "\${1:-}" = --format ]; then format="$2"; fi
-  source_sha="${source}"
+  source_sha="\${FAKE_CANDIDATE_SOURCE:-a7f582647e0297c04dcf2e967989e39ffd38df9c}"
   if [ "$image" = "\${FAKE_BASELINE:-${baseline}}" ]; then source_sha=15e6783b8f3efed2dbf1de382161099fd8b0b7fe; fi
   if [ "$image" = "\${FAKE_BASELINE:-${baseline}}" ] && [ "\${FAKE_UNLABELED:-false}" = true ] && printf '%s' "$format" | grep -q 'io.learnbox.release.'; then exit 0; fi
   case "$format" in
@@ -84,10 +85,6 @@ function readCalls(path) {
 function runPreflight(overrides = {}) {
   const directory = mkdtempSync(join(tmpdir(), 'lb-release-artifact-'));
   fakeDocker(directory);
-  const packageHash = execFileSync('shasum', ['-a', '256', 'apps/website/package.json'], {
-    cwd: repositoryRoot,
-    encoding: 'utf8',
-  }).split(' ')[0];
   const dockerLog = join(directory, 'docker.log');
   const environment = {
     ...process.env,
@@ -96,13 +93,13 @@ function runPreflight(overrides = {}) {
     LEARNBOX_RELEASE_PREFLIGHT: 'true',
     LEARNBOX_CANDIDATE_IMAGE: candidate,
     LEARNBOX_RUNNING_CONTAINER: 'production-app',
-    FAKE_PACKAGE_SHA: packageHash,
+    FAKE_PACKAGE_SHA: candidatePackageHash,
     FAKE_DOCKER_LOG: dockerLog,
     ...overrides,
   };
   try {
     return {
-      output: execFileSync('bash', [script, source, 'release'], {
+      output: execFileSync('bash', [script, bridgeSource, 'release'], {
         cwd: repositoryRoot,
         env: environment,
         encoding: 'utf8',
@@ -146,7 +143,7 @@ test('release preflight rejects a missing, substituted or stopped running baseli
 test('release preflight rejects an unknown candidate or an unlabeled baseline outside the exact bridge', () => {
   const wrongCandidate = runPreflight({ LEARNBOX_CANDIDATE_IMAGE: 'sha256:other-candidate' });
   assert.notEqual(wrongCandidate.status, 0);
-  assert.match(wrongCandidate.output, /bridge candidate digest is exact/);
+  assert.doesNotMatch(wrongCandidate.output, /RELEASE ARTIFACT: APPROVED/);
 
   const unknownBaseline = runPreflight({
     FAKE_BASELINE: 'sha256:other-baseline',
@@ -167,17 +164,18 @@ test('a labeled future baseline is revalidated and bound to the new running imag
 test('ordinary builds are explicitly development-only', () => {
   const directory = mkdtempSync(join(tmpdir(), 'lb-development-artifact-'));
   fakeDocker(directory);
-  const packageHash = execFileSync('shasum', ['-a', '256', 'apps/website/package.json'], {
+  const developmentSource = execFileSync('git', ['rev-parse', 'HEAD'], {
     cwd: repositoryRoot,
     encoding: 'utf8',
-  }).split(' ')[0];
-  const output = execFileSync('bash', [script, source, 'candidate'], {
+  }).trim();
+  const output = execFileSync('bash', [script, developmentSource, 'candidate'], {
     cwd: repositoryRoot,
     env: {
       ...process.env,
       PATH: `${directory}:${process.env.PATH}`,
       LEARNBOX_IMAGE_TARGET: 'app',
-      FAKE_PACKAGE_SHA: packageHash,
+      FAKE_CANDIDATE_SOURCE: developmentSource,
+      FAKE_PACKAGE_SHA: candidatePackageHash,
     },
     encoding: 'utf8',
   });

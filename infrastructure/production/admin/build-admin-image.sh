@@ -21,8 +21,9 @@
 # The default target is the Admin image. LEARNBOX_IMAGE_TARGET=app builds the learner app image
 # through the same provenance and verification path, so neither image is built by hand.
 #
-# The commit must exist in this checkout and must be given in full: a short SHA would be recorded in
-# the image as a short SHA, and provenance that cannot be compared byte for byte is not provenance.
+# The commit normally must exist in this checkout and must be given in full. The single, pinned
+# Iran bridge is the exception: it validates one preserved digest from self-contained non-secret
+# evidence, so it remains runnable from a shallow release checkout.
 #
 # This script BUILDS AND VERIFIES ONLY. It never tags an image as `production`, never writes a
 # compose file, never touches a registry and never restarts a container. Deploying the result is a
@@ -45,7 +46,28 @@ if ! [[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]; then
   echo "build-admin-image: need a full 40-character commit SHA, got '${SOURCE_SHA:-<none>}'" >&2
   exit 2
 fi
-if ! git cat-file -e "${SOURCE_SHA}^{commit}" 2>/dev/null; then
+TARGET="${LEARNBOX_IMAGE_TARGET:-admin}"
+case "$TARGET" in
+  admin) APP_DIR=apps/admin ;;
+  app) APP_DIR=apps/website ;;
+  *) echo "build-admin-image: LEARNBOX_IMAGE_TARGET must be admin or app, got '$TARGET'" >&2; exit 2 ;;
+esac
+
+# This bridge is intentionally the only source-free preflight path. It is pinned to one baseline,
+# one candidate digest and its six non-secret values, so it remains usable from a shallow release
+# checkout without turning an unknown artifact into an approved release.
+BRIDGE_FILE="$REPO_ROOT/infrastructure/production/app/release-baselines/iran-app-87490d60.env"
+BRIDGE_MATRIX=false
+if [ "$RELEASE_PREFLIGHT" = true ] && [ "$TARGET" = app ] && [ -r "$BRIDGE_FILE" ]; then
+  # shellcheck disable=SC1090
+  . "$BRIDGE_FILE"
+  if [ "$SOURCE_SHA" = "$CANDIDATE_SOURCE_SHA" ] \
+    && [ "${LEARNBOX_CANDIDATE_IMAGE:-}" = "$CANDIDATE_IMAGE" ]; then
+    BRIDGE_MATRIX=true
+  fi
+fi
+
+if [ "$BRIDGE_MATRIX" != true ] && ! git cat-file -e "${SOURCE_SHA}^{commit}" 2>/dev/null; then
   echo "build-admin-image: $SOURCE_SHA is not a commit in this repository" >&2
   exit 2
 fi
@@ -69,13 +91,6 @@ if [ "$PASSKEY_UI" != "true" ]; then
 fi
 fi
 
-TARGET="${LEARNBOX_IMAGE_TARGET:-admin}"
-case "$TARGET" in
-  admin) APP_DIR=apps/admin ;;
-  app) APP_DIR=apps/website ;;
-  *) echo "build-admin-image: LEARNBOX_IMAGE_TARGET must be admin or app, got '$TARGET'" >&2; exit 2 ;;
-esac
-
 # The Production host is linux/amd64. Build for it explicitly: on an arm64 workstation the default
 # platform is arm64, and such an image starts and then dies on exec format in Production.
 PLATFORM=linux/amd64
@@ -92,22 +107,38 @@ trap cleanup EXIT
 APP_FLAGS="PROFILE_IDENTITY_ENABLED QUEUE_QUARANTINE SERVER_SESSION_PLAN GOAL_UX_REMOVED SESSION_EXPIRY_UX BINARY_REVIEW_UI"
 FLAG_ARGS=(--build-arg "APP_SOURCE_SHA=$SOURCE_SHA")
 if [ "$TARGET" = app ]; then
-  # One tracked non-secret matrix, read from the SAME commit being built. Direct environment
-  # overrides are rejected: relying on Dockerfile/compose defaults hid the profile in a release.
-  APP_RELEASE_CONFIG="infrastructure/production/app/release-build.env"
-  if ! git cat-file -e "$SOURCE_SHA:$APP_RELEASE_CONFIG" 2>/dev/null; then
-    echo "build-admin-image: $APP_RELEASE_CONFIG is missing from $SOURCE_SHA" >&2; exit 2
-  fi
-  config_file="$BUILD_DIR/release-build.env"
-  git show "$SOURCE_SHA:$APP_RELEASE_CONFIG" > "$config_file"
-  set -a; . "$config_file"; set +a
-  for flag in $APP_FLAGS; do
-    name="NEXT_PUBLIC_LEARNBOX_$flag"; value="${!name:-}"
-    if [ "$value" != true ] && [ "$value" != false ]; then
-      echo "build-admin-image: $name in $APP_RELEASE_CONFIG must be true or false" >&2; exit 2
+  # Ordinary builds use the exact source matrix. The one-time bridge carries the same six values
+  # alongside exact digest/source evidence so preflight can validate an existing image from a
+  # shallow release checkout without accepting any other unknown source.
+  if [ "$BRIDGE_MATRIX" = true ]; then
+    for flag in $APP_FLAGS; do
+      name="NEXT_PUBLIC_LEARNBOX_$flag"
+      bridge_name="BASELINE_$flag"
+      value="${!bridge_name:-}"
+      if [ "$value" != true ] && [ "$value" != false ]; then
+        echo "build-admin-image: $bridge_name in $BRIDGE_FILE must be true or false" >&2; exit 2
+      fi
+      printf -v "$name" '%s' "$value"
+      FLAG_ARGS+=(--build-arg "$name=$value")
+    done
+  else
+    # One tracked non-secret matrix, read from the SAME commit being built. Direct environment
+    # overrides are rejected: relying on Dockerfile/compose defaults hid the profile in a release.
+    APP_RELEASE_CONFIG="infrastructure/production/app/release-build.env"
+    if ! git cat-file -e "$SOURCE_SHA:$APP_RELEASE_CONFIG" 2>/dev/null; then
+      echo "build-admin-image: $APP_RELEASE_CONFIG is missing from $SOURCE_SHA" >&2; exit 2
     fi
-    FLAG_ARGS+=(--build-arg "$name=$value")
-  done
+    config_file="$BUILD_DIR/release-build.env"
+    git show "$SOURCE_SHA:$APP_RELEASE_CONFIG" > "$config_file"
+    set -a; . "$config_file"; set +a
+    for flag in $APP_FLAGS; do
+      name="NEXT_PUBLIC_LEARNBOX_$flag"; value="${!name:-}"
+      if [ "$value" != true ] && [ "$value" != false ]; then
+        echo "build-admin-image: $name in $APP_RELEASE_CONFIG must be true or false" >&2; exit 2
+      fi
+      FLAG_ARGS+=(--build-arg "$name=$value")
+    done
+  fi
 else
   FLAG_ARGS+=(--build-arg "NEXT_PUBLIC_LEARNBOX_ADMIN_PASSKEY_UI_ENABLED=$PASSKEY_UI")
 fi
@@ -315,7 +346,16 @@ check "entrypoint is the $TARGET server" "[node $APP_DIR/server.js]" "$(inspect 
 
 # The commit really is in the image: compare a file from the built bundle against the commit's blob.
 # This catches a build that succeeded against a stale cache layer from a different commit.
-expected_pkg="$(git show "$SOURCE_SHA:$APP_DIR/package.json" | sha256sum | cut -d' ' -f1)"
+# The one-time bridge pins this non-secret package blob hash because it validates a preserved image
+# without requiring its historical source tree to exist in a shallow checkout.
+if [ "$BRIDGE_MATRIX" = true ]; then
+  expected_pkg="${CANDIDATE_WEBSITE_PACKAGE_SHA:-}"
+  if ! [[ "$expected_pkg" =~ ^[0-9a-f]{64}$ ]]; then
+    echo "build-admin-image: $BRIDGE_FILE has no valid CANDIDATE_WEBSITE_PACKAGE_SHA" >&2; exit 2
+  fi
+else
+  expected_pkg="$(git show "$SOURCE_SHA:$APP_DIR/package.json" | sha256sum | cut -d' ' -f1)"
+fi
 actual_pkg="$(docker run --rm --platform "$PLATFORM" --entrypoint sh "$IMAGE_REF" -c \
   "sha256sum /app/$APP_DIR/package.json 2>/dev/null | cut -d' ' -f1" || true)"
 check "$APP_DIR/package.json in the image matches the commit" "$expected_pkg" "$actual_pkg"
