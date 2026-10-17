@@ -2,9 +2,11 @@ import { describe, expect, it, vi } from 'vitest';
 
 import {
   createAdminPaymentConfigRoute,
+  createAdminRecheckRoute,
   createAdminTransactionsRoute,
 } from '../lib/server/admin-payments-routes';
 import type {
+  RequestRecheckResult,
   ListTransactionsResult,
   PaymentConfigurationResult,
 } from '../lib/server/postgres-admin-payments-store';
@@ -21,7 +23,8 @@ import { hashAdminSecret } from '../lib/server/admin-session.js';
  * 2. The merchant credential never leaves the server. No Admin response may contain it, and the
  *    configuration view must not even read it — credential validity is reported from observed
  *    evidence instead.
- * 3. This surface is read-only. There is no payment write path to abuse.
+ * 3. No payment write path. The one POST only queues a provider re-check, behind the full
+ *    mutation guard chain.
  */
 
 const config = {
@@ -38,7 +41,7 @@ const actorUserId = '22222222-2222-4222-8222-222222222222';
 /** An obviously fake credential. It must never appear in any response. */
 const fakeMerchantId = '00000000-0000-4000-8000-000000000000';
 
-function sessionStore(overrides: { userId?: string | null } = {}) {
+function sessionStore(overrides: { userId?: string | null; recent?: boolean } = {}) {
   return {
     findActiveSession: async () =>
       overrides.userId === null
@@ -49,7 +52,7 @@ function sessionStore(overrides: { userId?: string | null } = {}) {
             lastSeenAt: now,
             absoluteExpiresAt: new Date(now.getTime() + 60_000),
             revokedAt: null,
-            recentAuthenticatedAt: now,
+            recentAuthenticatedAt: overrides.recent === false ? new Date(0) : now,
           },
     touchSession: async () => true,
   };
@@ -69,6 +72,17 @@ const transactionRow = {
   createdAt: now.toISOString(),
   updatedAt: now.toISOString(),
   verifiedAt: now.toISOString(),
+  orderCode: 'LB-0123456789',
+  orderStatus: 'fulfilled',
+  providerAmount: '1500000',
+  providerCurrency: 'IRR',
+  reviewReason: null,
+  lastProviderCode: 100,
+  checkCount: 1,
+  lastCheckedAt: now.toISOString(),
+  recheckPending: false,
+  recheckRequestedAt: null,
+  autoCheck: 'settled',
 };
 
 const configurationStatus = {
@@ -201,8 +215,29 @@ describe('M2.4 Admin transactions route', () => {
       actorUserId,
       packId: undefined,
       status: undefined,
+      query: undefined,
+      needsReview: false,
       limit: undefined,
     });
+  });
+
+  it('forwards an identifier-shaped search and the review filter, and drops anything else', async () => {
+    const store = transactionsStore();
+    const route = createAdminTransactionsRoute({
+      enabled: true,
+      config,
+      sessionStore: sessionStore(),
+      store,
+      now: () => now,
+    });
+    await route(get('/api/store/transactions?q=LB-0123456789&review=1'));
+    expect(store.listTransactions).toHaveBeenLastCalledWith(
+      expect.objectContaining({ query: 'LB-0123456789', needsReview: true }),
+    );
+    await route(get(`/api/store/transactions?q=${encodeURIComponent("x' OR 1=1 --")}`));
+    expect(store.listTransactions).toHaveBeenLastCalledWith(
+      expect.objectContaining({ query: undefined, needsReview: false }),
+    );
   });
 
   it('reports a store failure as unavailable rather than leaking the error', async () => {
@@ -290,5 +325,76 @@ describe('M2.4 Admin payment configuration route', () => {
       'createAdminPaymentConfigRoute',
       'createAdminTransactionsRoute',
     ]);
+  });
+});
+
+describe('commerce core — Admin re-check request route', () => {
+  const transactionId = '33333333-3333-4333-8333-333333333333';
+  const recheckStore = (status: RequestRecheckResult['status'] = 'requested') => ({
+    requestRecheck: vi.fn(
+      async (): Promise<RequestRecheckResult> => ({ status }) as RequestRecheckResult,
+    ),
+  });
+  const post = (body: unknown, headers: Record<string, string> = {}, omit: string[] = []) => {
+    const base: Record<string, string> = {
+      Origin: config.origin,
+      'Content-Type': 'application/json',
+      Cookie: `__Host-learnbox_admin_session=${sessionToken}; __Host-learnbox_admin_csrf=${csrfToken}`,
+      'x-learnbox-csrf-token': csrfToken,
+      ...headers,
+    };
+    for (const key of omit) delete base[key];
+    return new Request(`${config.origin}/api/store/transactions/recheck`, {
+      method: 'POST',
+      headers: base,
+      body: JSON.stringify(body),
+    });
+  };
+  const make = (
+    store = recheckStore(),
+    recent = true,
+    environment: Record<string, string> = { LEARNBOX_COMMERCE_RECONCILE_ENABLED: 'true' },
+  ) =>
+    createAdminRecheckRoute({
+      enabled: true,
+      config,
+      sessionStore: sessionStore({ recent }),
+      store,
+      now: () => now,
+      environment,
+    });
+
+  it('queues a re-check for an authorised, recently authenticated operator', async () => {
+    const store = recheckStore();
+    const response = await make(store)(post({ transactionId }));
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ status: 'requested' });
+    expect(store.requestRecheck).toHaveBeenCalledWith({ actorUserId, transactionId });
+  });
+
+  it('refuses a cross-site request, a missing CSRF token and a stale session before the store', async () => {
+    const store = recheckStore();
+    expect(
+      (await make(store)(post({ transactionId }, { Origin: 'https://evil.example' }))).status,
+    ).toBe(400);
+    expect((await make(store)(post({ transactionId }, {}, ['x-learnbox-csrf-token']))).status).toBe(
+      400,
+    );
+    expect((await make(store, false)(post({ transactionId }))).status).toBe(428);
+    expect((await make(store)(post({ transactionId: 'not-a-uuid' }))).status).toBe(400);
+    expect(store.requestRecheck).not.toHaveBeenCalled();
+  });
+
+  it('refuses to queue a request nothing would execute when reconciliation is off', async () => {
+    const store = recheckStore();
+    const response = await make(store, true, {})(post({ transactionId }));
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual({ code: 'reconciliation_disabled' });
+    expect(store.requestRecheck).not.toHaveBeenCalled();
+  });
+
+  it('maps forbidden to 404 and a settled attempt to 409', async () => {
+    expect((await make(recheckStore('forbidden'))(post({ transactionId }))).status).toBe(404);
+    expect((await make(recheckStore('not_recheckable'))(post({ transactionId }))).status).toBe(409);
   });
 });

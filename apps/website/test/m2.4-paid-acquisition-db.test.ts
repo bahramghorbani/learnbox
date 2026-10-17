@@ -70,11 +70,11 @@ const authorityOf = (suffix: string) => `A${suffix.padStart(35, '0')}`;
 function fixtureProvider(
   overrides: Partial<ZarinpalProvider> & { authority?: string } = {},
 ): ZarinpalProvider & {
-  requests: Array<{ amountTomans: number; callbackUrl: string; description: string }>;
-  verifications: Array<{ amountTomans: number; authority: string }>;
+  requests: Parameters<ZarinpalProvider['requestPayment']>[0][];
+  verifications: Array<{ amountRials: number; authority: string }>;
 } {
-  const requests: Array<{ amountTomans: number; callbackUrl: string; description: string }> = [];
-  const verifications: Array<{ amountTomans: number; authority: string }> = [];
+  const requests: Parameters<ZarinpalProvider['requestPayment']>[0][] = [];
+  const verifications: Array<{ amountRials: number; authority: string }> = [];
   const authority = overrides.authority ?? authorityOf('1');
   return {
     requests,
@@ -184,7 +184,9 @@ suite('M2.4 paid pack acquisition through Zarinpal (real Postgres)', () => {
     // Each test starts from no transactions and no purchased entitlements, so idempotency results
     // are genuinely about the statement under test and not about leftovers.
     await pool.query(`DELETE FROM user_packs WHERE acquisition_type = 'purchased'`);
+    await pool.query(`DELETE FROM purchase_order_events`);
     await pool.query(`DELETE FROM purchase_events`);
+    await pool.query(`DELETE FROM purchase_orders`);
   });
 
   describe('who may start a purchase', () => {
@@ -291,7 +293,8 @@ suite('M2.4 paid pack acquisition through Zarinpal (real Postgres)', () => {
     it('sends the CANONICAL pack price to the gateway, never a client value', async () => {
       const provider = fixtureProvider();
       await createPurchase(dependencies(provider), { userId: alice, packId: packs.paidListed });
-      expect(provider.requests[0].amountTomans).toBe(paidPrice);
+      // Rial, converted once, with the currency stated explicitly by the adapter.
+      expect(provider.requests[0].amountRials).toBe(paidPrice * 10);
       expect(provider.requests[0].callbackUrl).toBe(
         'https://app.learnbox.example/api/store/purchase/callback',
       );
@@ -317,7 +320,7 @@ suite('M2.4 paid pack acquisition through Zarinpal (real Postgres)', () => {
       );
       expect(outcome.status).toBe('verified');
       // Verification used the amount the learner was actually asked for.
-      expect(provider.verifications[0].amountTomans).toBe(paidPrice);
+      expect(provider.verifications[0].amountRials).toBe(paidPrice * 10);
 
       const stored = await pool.query<{ amount_tomans: number }>(
         `SELECT amount_tomans FROM purchase_events WHERE pack_id = $1`,
@@ -331,17 +334,24 @@ suite('M2.4 paid pack acquisition through Zarinpal (real Postgres)', () => {
       ]);
     });
 
-    it('cannot have its stored amount changed by a second purchase attempt', async () => {
+    it('hands a repeated checkout the same pending attempt instead of a second payable one', async () => {
       const first = fixtureProvider({ authority: authorityOf('1') });
       await createPurchase(dependencies(first), { userId: alice, packId: packs.paidListed });
       const second = fixtureProvider({ authority: authorityOf('2') });
-      await createPurchase(dependencies(second), { userId: alice, packId: packs.paidListed });
+      const again = await createPurchase(dependencies(second), {
+        userId: alice,
+        packId: packs.paidListed,
+      });
 
-      const amounts = await pool.query<{ amount_tomans: number }>(
-        `SELECT amount_tomans FROM purchase_events WHERE pack_id = $1`,
+      expect(again).toMatchObject({ status: 'created', reused: true });
+      expect(second.requests).toHaveLength(0);
+      const amounts = await pool.query<{ amount_tomans: number; provider_amount: string }>(
+        `SELECT amount_tomans, provider_amount::text FROM purchase_events WHERE pack_id = $1`,
         [packs.paidListed],
       );
-      expect(amounts.rows.map((r) => r.amount_tomans)).toEqual([paidPrice, paidPrice]);
+      expect(amounts.rows).toEqual([
+        { amount_tomans: paidPrice, provider_amount: String(paidPrice * 10) },
+      ]);
     });
   });
 
@@ -534,7 +544,7 @@ suite('M2.4 paid pack acquisition through Zarinpal (real Postgres)', () => {
 
       const verified: VerifyPurchaseOutcome[] = [];
       let hooked = false;
-      const poolWithRaceAfterRead: Pick<typeof pool, 'query'> = {
+      const poolWithRaceAfterRead = {
         query: (async (...args: Parameters<typeof pool.query>) => {
           const result = await pool.query(...args);
           if (!hooked && typeof args[0] === 'string' && args[0].includes('FROM purchase_events')) {
@@ -549,7 +559,7 @@ suite('M2.4 paid pack acquisition through Zarinpal (real Postgres)', () => {
           }
           return result;
         }) as typeof pool.query,
-      };
+      } as unknown as Pool;
 
       const late = await verifyPurchase(
         { pool: poolWithRaceAfterRead, provider },
@@ -573,6 +583,7 @@ suite('M2.4 paid pack acquisition through Zarinpal (real Postgres)', () => {
     });
 
     it('refuses a duplicate transaction for the same gateway authority', async () => {
+      // Two DIFFERENT learners, so the order lock does not apply and the UNIQUE key must.
       const provider = fixtureProvider({ authority: authorityOf('1') });
       await createPurchase(dependencies(provider), { userId: alice, packId: packs.paidListed });
       // A provider replaying the same Authority must hit the UNIQUE constraint, not create a

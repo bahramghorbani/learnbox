@@ -151,6 +151,13 @@ const INVENTORY: Record<string, Entry> = {
     category: 'delegated',
     guardIn: 'lib/server/admin-store-listing-routes.ts',
   },
+  // Commerce core v1 — queue a provider re-check. Full guard chain (Origin, session, CSRF, recent
+  // re-auth) in the shared module, behind the Store gate. Appends one event; never calls the
+  // gateway, never edits a payment or entitlement.
+  'app/api/store/transactions/recheck/route.ts': {
+    category: 'delegated',
+    guardIn: 'lib/server/admin-payments-routes.ts',
+  },
   // M3.1 — account suspension. POST delegates the full guard chain (Origin, session, CSRF, recent
   // re-auth, idempotency key, required reason) to the shared module, behind its own default-off
   // LEARNBOX_ADMIN_SUPPORT_ENABLED gate. It writes `users.status`, the canonical session cutoff and
@@ -238,6 +245,7 @@ const READ_ONLY: Record<string, 'hard-disabled' | 'session-layer'> = {
   // `payment-config` returns flags, counts and timestamps only — never the merchant credential,
   // which the underlying store does not read at all. There is deliberately no write companion.
   'app/api/store/transactions/route.ts': 'session-layer',
+  'app/api/store/transactions/timeline/route.ts': 'session-layer',
   'app/api/store/payment-config/route.ts': 'session-layer',
   'app/api/content/lifecycle/route.ts': 'session-layer',
   'app/api/splash/current/route.ts': 'session-layer',

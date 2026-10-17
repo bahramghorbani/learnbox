@@ -49,6 +49,7 @@ function stubStore(options: {
   owned?: unknown[];
   ok?: boolean;
   activate?: { status: number; body?: unknown };
+  purchases?: unknown[];
 }) {
   const calls: Array<{ url: string; body?: string }> = [];
   const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -61,6 +62,13 @@ function stubStore(options: {
         ok: activate.status >= 200 && activate.status < 300,
         status: activate.status,
         json: async () => activate.body ?? {},
+      } as Response;
+    }
+    if (url.includes('/api/store/purchases') || url.includes('/api/store/purchase/status')) {
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({ purchases: options.purchases ?? [] }),
       } as Response;
     }
     const packs = url.includes('my-packs') ? (options.owned ?? []) : (options.catalogue ?? []);
@@ -256,5 +264,54 @@ describe('M2.3 Store screen states', () => {
     await flush();
     expect(container.querySelector('.store-owned-list')).not.toBeNull();
     expect(container.querySelector('.store-owned-item')?.textContent).toContain('بستهٔ رایگان');
+  });
+
+  it('lists «خریدهای من» and lets the learner re-check an unsettled payment', async () => {
+    const calls = stubStore({
+      catalogue: [FREE_PACK],
+      purchases: [
+        {
+          purchaseId: '99999999-9999-4999-8999-999999999999',
+          packId: 'paid-pack',
+          packName: 'بستهٔ پولی',
+          amountTomans: 150000,
+          status: 'pending',
+          referenceId: null,
+          orderCode: 'LB-00AA11BB22',
+          createdAt: '2026-10-17T10:00:00.000Z',
+          verifiedAt: null,
+        },
+        {
+          purchaseId: '88888888-8888-4888-8888-888888888888',
+          packId: 'paid-pack',
+          packName: 'بستهٔ پولی',
+          amountTomans: 150000,
+          status: 'verified',
+          referenceId: '201',
+          orderCode: 'LB-00AA11BB22',
+          createdAt: '2026-10-17T09:00:00.000Z',
+          verifiedAt: '2026-10-17T09:01:00.000Z',
+        },
+      ],
+    });
+    await act(async () => {
+      root.render(createElement(StoreScreen, { onNavigate: () => {} }));
+    });
+    await flush();
+    await flush();
+    const section = container.querySelector('[aria-labelledby="store-my-purchases"]');
+    expect(section?.textContent).toContain('خریدهای من');
+    const items = section?.querySelectorAll('.store-owned-item') ?? [];
+    expect(items).toHaveLength(2);
+    expect(items[0].textContent).toContain('در حال بررسی');
+    expect(items[0].textContent).toContain('LB-00AA11BB22');
+    expect(items[1].textContent).toContain('پرداخت موفق');
+    expect(items[1].querySelector('button')).toBeNull();
+
+    await act(async () => {
+      items[0].querySelector('button')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    await flush();
+    expect(calls.some((c) => c.url.includes('/api/store/purchase/status?id=99999999-'))).toBe(true);
   });
 });

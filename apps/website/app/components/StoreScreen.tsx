@@ -61,6 +61,28 @@ function formatPrice(pack: CataloguePack): string {
   return 'به‌زودی';
 }
 
+/** «خریدهای من» — the learner's own payment attempts (GET /api/store/purchases). */
+type LearnerPurchase = {
+  purchaseId: string;
+  packId: string;
+  packName: string | null;
+  amountTomans: number;
+  status: string;
+  referenceId: string | null;
+  orderCode: string | null;
+  createdAt: string;
+  verifiedAt: string | null;
+};
+
+// `cancelled` is not final (a late gateway confirmation still settles it), so it is not called
+// a failure; only `failed` is, and only the gateway's own "not paid" answer produces it.
+const purchaseStatusLabels: Record<string, string> = {
+  verified: 'پرداخت موفق',
+  pending: 'در حال بررسی',
+  cancelled: 'بازگشت از درگاه بدون تأیید',
+  failed: 'ناموفق — مبلغی کسر نشده است',
+};
+
 export function StoreScreen({
   onNavigate,
   focusPackId = null,
@@ -82,6 +104,37 @@ export function StoreScreen({
   const [state, setState] = useState<LoadState>('loading');
   const [activation, setActivation] = useState<ActivationState>(ACTIVATION_IDLE);
   const focusedCardRef = useRef<HTMLLIElement | null>(null);
+  const [purchases, setPurchases] = useState<LearnerPurchase[] | 'error'>([]);
+  const [checking, setChecking] = useState<string | null>(null);
+
+  const loadPurchases = useCallback(async (): Promise<void> => {
+    try {
+      const response = await fetch('/api/store/purchases', { credentials: 'same-origin' });
+      // 503 = learner state off in this environment: nothing to show, not an error.
+      if (response.status === 503) return setPurchases([]);
+      if (!response.ok) return setPurchases('error');
+      setPurchases(((await response.json()) as { purchases?: LearnerPurchase[] }).purchases ?? []);
+    } catch {
+      setPurchases('error');
+    }
+  }, []);
+
+  /** Asks the server to re-check one unsettled payment with the gateway (throttled server-side). */
+  const recheck = useCallback(
+    async (purchaseId: string): Promise<void> => {
+      setChecking(purchaseId);
+      try {
+        await fetch(`/api/store/purchase/status?id=${encodeURIComponent(purchaseId)}`, {
+          credentials: 'same-origin',
+        });
+      } catch {
+        /* the reloaded list shows the truth either way */
+      }
+      await loadPurchases();
+      setChecking(null);
+    },
+    [loadPurchases],
+  );
 
   const load = useCallback(async (): Promise<void> => {
     setState('loading');
@@ -100,10 +153,11 @@ export function StoreScreen({
       setCatalogue(catalogueBody.packs ?? []);
       setOwned(ownedBody.packs ?? []);
       setState('ready');
+      void loadPurchases();
     } catch {
       setState('error');
     }
-  }, []);
+  }, [loadPurchases]);
 
   useEffect(() => {
     void load();
@@ -357,6 +411,52 @@ export function StoreScreen({
                   </ul>
                 )}
               </section>
+
+              {(purchases === 'error' || purchases.length > 0) && (
+                <section className="store-section" aria-labelledby="store-my-purchases">
+                  <h2 id="store-my-purchases">خریدهای من</h2>
+                  {purchases === 'error' ? (
+                    <p className="store-empty-hint" role="alert">
+                      فهرست خریدها خوانده نشد؛ بعداً دوباره تلاش کنید.
+                    </p>
+                  ) : (
+                    <ul className="store-owned-list">
+                      {purchases.map((item) => (
+                        <li
+                          key={item.purchaseId}
+                          className="store-owned-item"
+                          data-purchase-status={item.status}
+                        >
+                          <span className="store-owned-name">
+                            {item.packName ?? item.packId} ·{' '}
+                            {formatPrice({
+                              isFree: false,
+                              priceTomans: item.amountTomans,
+                            } as CataloguePack)}
+                          </span>
+                          <span className="store-owned-meta">
+                            {purchaseStatusLabels[item.status] ?? item.status}
+                            {item.orderCode ? ` · سفارش ${item.orderCode}` : ''}
+                            {item.referenceId
+                              ? ` · کد رهگیری ${toPersianDigits(item.referenceId)}`
+                              : ''}
+                          </span>
+                          {(item.status === 'pending' || item.status === 'cancelled') && (
+                            <button
+                              type="button"
+                              className="store-retry"
+                              disabled={checking === item.purchaseId}
+                              onClick={() => void recheck(item.purchaseId)}
+                            >
+                              {checking === item.purchaseId ? 'در حال بررسی…' : 'بررسی دوباره'}
+                            </button>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </section>
+              )}
             </>
           )}
         </div>

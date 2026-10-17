@@ -18,8 +18,8 @@ import { PostgresAdminPaymentsStore } from '../lib/server/postgres-admin-payment
  * suite that runs the real SQL against the real schema can catch that class of bug, so the asserts
  * below are deliberately about authorization *outcomes* rather than SQL text.
  *
- * Read-only by construction: the store has no write path, and the suite asserts the purchase ledger
- * is byte-identical before and after. Requires TEST_DATABASE_URL (it creates and drops its own
+ * The only write is a re-check REQUEST (append-only order event); the suite asserts the purchase
+ * ledger itself stays byte-identical. Requires TEST_DATABASE_URL (it creates and drops its own
  * database).
  */
 
@@ -164,5 +164,81 @@ suite('Store transactions — authorization against the canonical schema', () =>
     expect(byStatus.status).toBe('ok');
     if (byStatus.status === 'ok') expect(byStatus.rows).toHaveLength(0);
     expect(await ledgerFingerprint()).toEqual(before);
+  });
+
+  it('finds an attempt by Authority, RefID, order code, attempt id and learner id', async () => {
+    const order = await pool.query<{ id: string; public_code: string }>(
+      `INSERT INTO purchase_orders (user_id, pack_id, environment, amount_tomans, pack_display_name, status)
+       VALUES ($1, $2, 'sandbox', 50000, 'بستهٔ آزمون', 'open') RETURNING id, public_code`,
+      [learner, packId],
+    );
+    const authority = `S${'0'.repeat(28)}${randomBytes(3).toString('hex')}x`;
+    const attempt = await pool.query<{ id: string }>(
+      `INSERT INTO purchase_events
+         (user_id, provider, environment, provider_purchase_id, status, pack_id, amount_tomans,
+          order_id, provider_amount, provider_currency, provider_reference, review_reason)
+       VALUES ($1, 'zarinpal', 'sandbox', $2, 'pending', $3, 50000, $4, 500000, 'IRR', 'ref-9911', NULL)
+       RETURNING id`,
+      [learner, authority, packId, order.rows[0].id],
+    );
+    const attemptId = attempt.rows[0].id;
+    for (const q of [authority, 'ref-9911', order.rows[0].public_code.toLowerCase(), attemptId]) {
+      const found = await store.listTransactions({ actorUserId: superAdmin, query: q });
+      expect(found.status === 'ok' && found.rows.map((r) => r.transactionId)).toEqual([attemptId]);
+    }
+    const byLearner = await store.listTransactions({ actorUserId: superAdmin, query: learner });
+    expect(byLearner.status === 'ok' && byLearner.rows.length).toBe(2);
+    const row = await store.listTransactions({ actorUserId: superAdmin, query: authority });
+    expect(row.status === 'ok' && row.rows[0]).toMatchObject({
+      orderCode: order.rows[0].public_code,
+      orderStatus: 'open',
+      providerAmount: '500000',
+      providerCurrency: 'IRR',
+      recheckPending: false,
+      recheckRequestedAt: null,
+      autoCheck: 'scheduled',
+    });
+
+    // Re-check request: super_admin only, idempotent while outstanding, ledger untouched.
+    const before = await ledgerFingerprint();
+    expect(await store.requestRecheck({ actorUserId: outsider, transactionId: attemptId })).toEqual(
+      { status: 'forbidden' },
+    );
+    expect(
+      await store.requestRecheck({ actorUserId: superAdmin, transactionId: attemptId }),
+    ).toEqual({ status: 'requested' });
+    expect(
+      await store.requestRecheck({ actorUserId: superAdmin, transactionId: attemptId }),
+    ).toEqual({ status: 'already_requested' });
+    expect(
+      await store.requestRecheck({ actorUserId: superAdmin, transactionId: purchaseId }),
+    ).toEqual({ status: 'not_recheckable' });
+    expect(await ledgerFingerprint()).toEqual(before);
+    const pending = await store.listTransactions({ actorUserId: superAdmin, query: authority });
+    expect(pending.status === 'ok' && pending.rows[0].recheckPending).toBe(true);
+    expect(pending.status === 'ok' && typeof pending.rows[0].recheckRequestedAt).toBe('string');
+    await pool.query(
+      `UPDATE purchase_events SET review_reason='provider_rejected', last_provider_code=-50 WHERE id=$1`,
+      [attemptId],
+    );
+    const stopped = await store.listTransactions({ actorUserId: superAdmin, query: authority });
+    expect(stopped.status === 'ok' && stopped.rows[0].autoCheck).toBe('stopped_review');
+
+    const timeline = await store.readOrderTimeline({
+      actorUserId: superAdmin,
+      transactionId: attemptId,
+    });
+    expect(timeline).toMatchObject({
+      status: 'ok',
+      events: [{ kind: 'recheck_requested', source: 'admin_recheck' }],
+    });
+
+    // Review filter: an extra valid payment is surfaced.
+    await pool.query(
+      `UPDATE purchase_events SET status='verified', review_reason='already_entitled' WHERE id=$1`,
+      [attemptId],
+    );
+    const review = await store.listTransactions({ actorUserId: superAdmin, needsReview: true });
+    expect(review.status === 'ok' && review.rows.map((r) => r.transactionId)).toEqual([attemptId]);
   });
 });

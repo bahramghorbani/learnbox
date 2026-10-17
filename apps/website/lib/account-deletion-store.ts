@@ -129,15 +129,30 @@ export async function deleteAccount(
     // account. Their ownership evidence is promoted into purchase_ownership_claims, which
     // deliberately has no users foreign key and therefore survives deletion. ON CONFLICT keeps the
     // promotion idempotent and prevents replay duplicates.
+    //
+    // Two shapes: provider-store SKUs (billing_products) and web pack purchases (pack_id; their
+    // product_id is NULL, which the old inner JOIN silently dropped). A pack claim is minimal by
+    // design — provider, Authority, RefID, pack, amount, purchase time and the keyed phone hash;
+    // no user id, phone, name, card data or order snapshot. These are still pseudonymous personal
+    // data (contract §10.3). `retain_until` = purchase + 5 years is a PLACEHOLDER, not an approved
+    // policy: nothing acts on it yet; the owner decides the period and any purge separately.
     const preserved = await client.query(
       `INSERT INTO purchase_ownership_claims
-         (provider, provider_purchase_id, product_id, subject_hash, entitlement_keys,
-          status, purchased_at)
-       SELECT pe.provider, pe.provider_purchase_id, pe.product_id, $2, bp.entitlement_keys,
-              pe.status, COALESCE(pe.verified_at, pe.created_at)
+         (provider, provider_purchase_id, product_id, pack_id, amount_tomans, provider_reference,
+          retain_until, subject_hash, entitlement_keys, status, purchased_at)
+       SELECT pe.provider, pe.provider_purchase_id, pe.product_id, NULL, NULL, NULL, NULL, $2,
+              bp.entitlement_keys, pe.status, COALESCE(pe.verified_at, pe.created_at)
          FROM purchase_events pe
          JOIN billing_products bp ON bp.id = pe.product_id
         WHERE pe.user_id = $1
+          AND pe.status IN ('verified', 'refunded', 'revoked')
+       UNION ALL
+       SELECT pe.provider, pe.provider_purchase_id, NULL, pe.pack_id, pe.amount_tomans,
+              pe.provider_reference,
+              COALESCE(pe.verified_at, pe.created_at) + interval '5 years', $2,
+              ARRAY['pack:' || pe.pack_id], pe.status, COALESCE(pe.verified_at, pe.created_at)
+         FROM purchase_events pe
+        WHERE pe.user_id = $1 AND pe.product_id IS NULL AND pe.pack_id IS NOT NULL
           AND pe.status IN ('verified', 'refunded', 'revoked')
        ON CONFLICT (provider, provider_purchase_id) DO NOTHING`,
       [input.userId, input.subjectHash],
@@ -151,7 +166,14 @@ export async function deleteAccount(
 
     // The original purchase rows are learner-linked records; their durable evidence now lives in
     // purchase_ownership_claims, so the linked rows go with the account.
+    // Children first: the order timeline, then attempts, then the orders themselves.
+    await client.query(
+      `DELETE FROM purchase_order_events
+        WHERE order_id IN (SELECT id FROM purchase_orders WHERE user_id = $1)`,
+      [input.userId],
+    );
     await client.query('DELETE FROM purchase_events WHERE user_id = $1', [input.userId]);
+    await client.query('DELETE FROM purchase_orders WHERE user_id = $1', [input.userId]);
 
     // 4. Anonymise rather than delete the operational audit trail: the record that an action
     //    happened is retained, the link to the person is not.

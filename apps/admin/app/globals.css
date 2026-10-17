@@ -1120,6 +1120,17 @@ button {
   flex: none;
 }
 /* 50 transactions in a 320px column would run far past the pack table beside it. */
+.cp-workspace .store-orders-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.cp-workspace .store-orders-filter .cp-input {
+  flex: 1 1 220px;
+  min-width: 0;
+}
 .cp-workspace .store-orders .list {
   max-height: 420px;
   overflow-y: auto;

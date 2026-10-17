@@ -11,11 +11,14 @@
  */
 
 /**
- * Zarinpal settles in Iranian RIAL; LearnBox prices packs in TOMANS. Ten Rials to the Toman.
+ * LearnBox prices packs in TOMANS; every amount sent to Zarinpal is RIAL with `currency: 'IRR'`
+ * stated explicitly (live docs + sandbox, 2026-10-17: omitting `currency` also means rial, `IRT`
+ * means toman — we never rely on the default).
  *
- * Getting this wrong does not fail loudly — it silently charges the learner a tenth or ten times
- * the price — so the conversion lives in one named function that both the request and the verify
- * path use, and is asserted in tests.
+ * The conversion happens ONCE, when the attempt is created; the rial amount is stored on the
+ * attempt and verification sends that stored value back unchanged. Getting this wrong does not
+ * fail loudly — it silently charges a tenth or ten times the price — so it is asserted in tests
+ * and by a database CHECK (provider_amount = amount_tomans × 10).
  */
 export const RIALS_PER_TOMAN = 10;
 
@@ -28,8 +31,14 @@ export function tomansToRials(tomans: number): number {
 
 /** Zarinpal's `code` on a successful payment request and a successful verification. */
 const codeSuccess = 100;
-/** Verification of a payment Zarinpal has ALREADY verified. Idempotent success, not a failure. */
+/**
+ * Verification of a payment Zarinpal has ALREADY verified. Idempotent success, not a failure —
+ * but only meaningful because LearnBox sends it solely for an Authority it created and stored,
+ * with that attempt's stored amount (sandbox answers 101 to any merchant id for a paid Authority).
+ */
 const codeAlreadyVerified = 101;
+/** The one currency LearnBox ever sends. */
+export const PROVIDER_CURRENCY = 'IRR';
 
 export type ZarinpalRequestOutcome =
   | { status: 'created'; authority: string }
@@ -39,7 +48,14 @@ export type ZarinpalRequestOutcome =
   | { status: 'error' };
 
 export type ZarinpalVerifyOutcome =
-  | { status: 'verified'; referenceId: string; alreadyVerified: boolean }
+  | {
+      status: 'verified';
+      referenceId: string;
+      alreadyVerified: boolean;
+      code?: number;
+      /** `metadata.order_id` when the gateway echoes it (observed in sandbox, undocumented). */
+      orderCode?: string;
+    }
   /** Zarinpal says this payment is not paid. Authoritative: no entitlement. */
   | { status: 'rejected'; code: number }
   /**
@@ -51,12 +67,15 @@ export type ZarinpalVerifyOutcome =
 export type ZarinpalProvider = {
   /** Opens a payment session and returns the Authority that identifies it. */
   requestPayment(input: {
-    amountTomans: number;
+    /** Already converted, in rial. Sent as-is with `currency: 'IRR'`. */
+    amountRials: number;
     callbackUrl: string;
     description: string;
+    /** LearnBox order public code, shown in the merchant panel for support. */
+    orderCode?: string;
   }): Promise<ZarinpalRequestOutcome>;
-  /** Asks Zarinpal whether this Authority was actually paid, for exactly this amount. */
-  verifyPayment(input: { amountTomans: number; authority: string }): Promise<ZarinpalVerifyOutcome>;
+  /** Asks Zarinpal whether this Authority was actually paid, for exactly this stored rial amount. */
+  verifyPayment(input: { amountRials: number; authority: string }): Promise<ZarinpalVerifyOutcome>;
   /** Where to send the learner's browser to pay. */
   paymentUrl(authority: string): string;
 };
@@ -95,12 +114,17 @@ export function zarinpalEndpoints(sandbox: boolean): ZarinpalEndpoints {
 }
 
 type ZarinpalBody = {
-  data?: { code?: unknown; authority?: unknown; ref_id?: unknown } | unknown[];
+  data?: { code?: unknown; authority?: unknown; ref_id?: unknown; metadata?: unknown } | unknown[];
   errors?: { code?: unknown } | unknown[];
 };
 
 /** Zarinpal returns `data: []` (not an object) when the call failed, hence the shape check. */
-function readData(body: ZarinpalBody): { code?: unknown; authority?: unknown; ref_id?: unknown } {
+function readData(body: ZarinpalBody): {
+  code?: unknown;
+  authority?: unknown;
+  ref_id?: unknown;
+  metadata?: unknown;
+} {
   const data = body?.data;
   return data && typeof data === 'object' && !Array.isArray(data) ? data : {};
 }
@@ -156,11 +180,15 @@ export function createZarinpalProvider(
       return `${endpoints.startPayUrl}${authority}`;
     },
 
-    async requestPayment({ amountTomans, callbackUrl, description }) {
+    async requestPayment({ amountRials, callbackUrl, description, orderCode }) {
+      if (!Number.isSafeInteger(amountRials) || amountRials <= 0)
+        return { status: 'rejected', code: 0 };
       const body = await call(endpoints.requestUrl, {
-        amount: tomansToRials(amountTomans),
+        amount: amountRials,
+        currency: PROVIDER_CURRENCY,
         callback_url: callbackUrl,
         description,
+        ...(orderCode ? { metadata: { order_id: orderCode } } : {}),
       });
       if (!body) return { status: 'error' };
       const data = readData(body);
@@ -173,12 +201,12 @@ export function createZarinpalProvider(
       };
     },
 
-    async verifyPayment({ amountTomans, authority }) {
+    async verifyPayment({ amountRials, authority }) {
       if (!isZarinpalAuthority(authority)) return { status: 'rejected', code: 0 };
+      if (!Number.isSafeInteger(amountRials) || amountRials <= 0) return { status: 'error' };
       const body = await call(endpoints.verifyUrl, {
-        // The amount comes from the stored snapshot, so a price change mid-payment cannot
-        // invalidate a payment the learner already made at the old price.
-        amount: tomansToRials(amountTomans),
+        // The stored rial amount of the attempt, never re-derived from the current price.
+        amount: amountRials,
         authority,
       });
       if (!body) return { status: 'error' };
@@ -186,6 +214,7 @@ export function createZarinpalProvider(
       const code = typeof data.code === 'number' ? data.code : readErrorCode(body);
       if (code === codeSuccess || code === codeAlreadyVerified) {
         const referenceId = data.ref_id;
+        const echoed = (data.metadata as { order_id?: unknown } | undefined)?.order_id;
         // Verified without a usable RefID would leave support nothing to reconcile against.
         if (referenceId === undefined || referenceId === null || referenceId === '') {
           return { status: 'error' };
@@ -194,6 +223,8 @@ export function createZarinpalProvider(
           status: 'verified',
           referenceId: String(referenceId),
           alreadyVerified: code === codeAlreadyVerified,
+          code,
+          ...(typeof echoed === 'string' && echoed ? { orderCode: echoed } : {}),
         };
       }
       return { status: 'rejected', code };
