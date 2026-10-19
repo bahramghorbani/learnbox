@@ -206,7 +206,7 @@ export function createSessionRoute(dependencies: {
       });
     }
     return Response.json(
-      { authenticated: true, recent: session.recent },
+      { authenticated: true, operational: session.operational, recent: session.recent },
       { headers: { 'Cache-Control': 'no-store' } },
     );
   };

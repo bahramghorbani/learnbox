@@ -22,7 +22,7 @@ import { StepUpRefusedError } from '../app/components/step-up-reauth';
 let authenticate: () => Promise<{ id: string }>;
 vi.mock('@simplewebauthn/browser', () => ({ startAuthentication: async () => authenticate() }));
 
-const media = [{ kind: 'image', needsGeneration: true }];
+const media = [{ kind: 'image' as const, accepted: null, latestCandidate: null }];
 
 function stubFetch(stateResponses: Array<() => Response>) {
   const calls: string[] = [];
@@ -104,6 +104,40 @@ describe('media state step-up', () => {
     expect(calls.filter((url) => url === '/api/auth/reauth/options')).toHaveLength(1);
     expect(container.querySelector('[role="alert"]')?.textContent).toContain('لغو شد');
     expect(container.textContent).not.toContain('تأیید و ساخت');
+    await act(async () => root.unmount());
+  });
+
+  it('does not offer a paid estimate or false all-clear for partially unreadable media state', async () => {
+    const container = document.createElement('div');
+    document.body.append(container);
+    const root = createRoot(container);
+    vi.stubGlobal('React', { createElement, Fragment });
+
+    await act(async () => {
+      root.render(
+        createElement(PackMediaCompletion, {
+          cards: [
+            { cardId: 'readable', label: 'خوانا' },
+            { cardId: 'unreadable', label: 'ناخوانا' },
+          ],
+          loadState: async (cardId) => (cardId === 'readable' ? media : undefined),
+          generate: async () => ({ ok: true }),
+          onOpenCard: () => undefined,
+          onFinished: () => undefined,
+        }),
+      );
+    });
+    await act(async () => {
+      container.querySelector('button')!.click();
+    });
+
+    expect(container.querySelector('[role="alert"]')?.textContent).toContain('برآورد و ساخت');
+    expect(container.textContent).not.toContain('هیچ رسانه‌ای برای ساخت لازم نیست');
+    expect(
+      [...container.querySelectorAll('button')].some((button) =>
+        button.textContent?.startsWith('تأیید و ساخت'),
+      ),
+    ).toBe(false);
     await act(async () => root.unmount());
   });
 

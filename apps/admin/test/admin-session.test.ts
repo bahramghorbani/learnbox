@@ -32,14 +32,30 @@ describe('evaluateAdminSession', () => {
     recentAuthenticatedAt: new Date(now.getTime() - 4 * 60_000),
   };
 
-  it('accepts active sessions and reports recent passkey authentication', () => {
-    expect(evaluateAdminSession(activeSession, now)).toEqual({ active: true, recent: true });
+  it('accepts a one-hour operational window while retaining the five-minute sensitive window', () => {
+    expect(evaluateAdminSession(activeSession, now)).toEqual({
+      active: true,
+      operational: true,
+      recent: true,
+    });
+    expect(
+      evaluateAdminSession(
+        { ...activeSession, recentAuthenticatedAt: new Date(now.getTime() - 5 * 60_000 - 1) },
+        now,
+      ),
+    ).toEqual({ active: true, operational: true, recent: false });
+    expect(
+      evaluateAdminSession(
+        { ...activeSession, recentAuthenticatedAt: new Date(now.getTime() - 60 * 60_000 - 1) },
+        now,
+      ),
+    ).toEqual({ active: true, operational: false, recent: false });
   });
 
   it('rejects idle, absolutely expired, and revoked sessions', () => {
     expect(
       evaluateAdminSession(
-        { ...activeSession, lastSeenAt: new Date(now.getTime() - 15 * 60_000 - 1) },
+        { ...activeSession, lastSeenAt: new Date(now.getTime() - 60 * 60_000 - 1) },
         now,
       ),
     ).toEqual({ active: false, reason: 'idle_expired' });
@@ -50,15 +66,6 @@ describe('evaluateAdminSession', () => {
       active: false,
       reason: 'revoked',
     });
-  });
-
-  it('requires authentication within five minutes for sensitive actions', () => {
-    expect(
-      evaluateAdminSession(
-        { ...activeSession, recentAuthenticatedAt: new Date(now.getTime() - 5 * 60_000 - 1) },
-        now,
-      ),
-    ).toEqual({ active: true, recent: false });
   });
 });
 

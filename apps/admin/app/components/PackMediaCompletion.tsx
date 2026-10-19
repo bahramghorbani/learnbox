@@ -23,6 +23,7 @@ const KIND_LABEL: Record<CardMediaKind, string> = {
 const RESULT_LABEL: Record<PackMediaResult['status'], string> = {
   generated: 'ساخته شد',
   not_needed: 'لازم نبود',
+  in_progress: 'در حال ساخت',
   failed: 'ناموفق',
   stopped: 'اجرا نشد',
 };
@@ -134,7 +135,12 @@ export function PackMediaCompletion({
             شبکه قطع شود، «تأیید و ساخت» را دوباره نزنید: با بازگشت، «بررسی دوباره» وضعیت پایدارِ
             مورد درحال‌ساخت یا پیشنهاد آماده را می‌خواند و آن را دوباره تولید نمی‌کند.
           </p>
-          {scan.needed.length > 0 ? (
+          {scan.unreadable.length > 0 ? (
+            <p className="notice error" role="alert">
+              وضعیت رسانهٔ {faNum(scan.unreadable.length)} کارت خوانده نشد؛ برآورد و ساخت تا بررسی
+              دوباره در دسترس نیست.
+            </p>
+          ) : scan.needed.length > 0 ? (
             <>
               <p>
                 برآورد پیش از تأیید: {faNum(scan.needed.length)} فراخوانی پولی (
@@ -156,9 +162,6 @@ export function PackMediaCompletion({
               {faNum(scan.unverifiable.length)} رسانهٔ پذیرفته‌شده منشأ قابل‌اثبات ندارد؛ بازسازی آن
               تصمیم مدیر است و خودکار انجام نمی‌شود.
             </p>
-          ) : null}
-          {scan.unreadable.length > 0 ? (
-            <p>وضعیت رسانهٔ {faNum(scan.unreadable.length)} کارت خوانده نشد.</p>
           ) : null}
         </div>
       ) : null}

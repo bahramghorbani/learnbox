@@ -1,7 +1,8 @@
 import { createHmac, randomBytes } from 'node:crypto';
 
-const idleLifetimeMs = 15 * 60_000;
+const idleLifetimeMs = 60 * 60_000;
 const absoluteLifetimeSeconds = 8 * 60 * 60;
+const operationalAuthenticationMs = 60 * 60_000;
 const recentAuthenticationMs = 5 * 60_000;
 
 type RandomBytes = (size: number) => Uint8Array;
@@ -14,7 +15,7 @@ export type AdminSessionRecord = {
 };
 
 export type AdminSessionEvaluation =
-  | { active: true; recent: boolean }
+  | { active: true; operational: boolean; recent: boolean }
   | { active: false; reason: 'revoked' | 'idle_expired' | 'absolute_expired' };
 
 export function hashAdminSecret(secret: string, hashKey: string) {
@@ -46,9 +47,12 @@ export function evaluateAdminSession(
   if (now.getTime() - session.lastSeenAt.getTime() > idleLifetimeMs) {
     return { active: false, reason: 'idle_expired' };
   }
+  const authenticationAgeMs = now.getTime() - session.recentAuthenticatedAt.getTime();
   return {
     active: true,
-    recent: now.getTime() - session.recentAuthenticatedAt.getTime() <= recentAuthenticationMs,
+    // A poll can refresh lastSeenAt, never this Passkey-authentication window.
+    operational: authenticationAgeMs <= operationalAuthenticationMs,
+    recent: authenticationAgeMs <= recentAuthenticationMs,
   };
 }
 

@@ -36,7 +36,7 @@ export interface PackMediaScan {
 }
 
 export type PackMediaResult = PackMediaItem & {
-  status: 'generated' | 'not_needed' | 'failed' | 'stopped';
+  status: 'generated' | 'not_needed' | 'in_progress' | 'failed' | 'stopped';
   message: string;
 };
 
@@ -110,7 +110,14 @@ export async function runPackMedia(
       });
       continue;
     }
-    onResult({ ...item, status: 'failed', message: result.message ?? 'تولید ناموفق بود.' });
+    const inProgress = result.code === 'already_generating';
+    onResult({
+      ...item,
+      status: inProgress ? 'in_progress' : 'failed',
+      message: inProgress
+        ? 'یک درخواست هم‌زمان هنوز در حال ساخت است؛ دوباره ساخته نشد.'
+        : (result.message ?? 'تولید ناموفق بود.'),
+    });
     for (const rest of items.slice(index + 1)) {
       onResult({ ...rest, status: 'stopped', message: 'اجرا پیش از این مورد متوقف شد.' });
     }

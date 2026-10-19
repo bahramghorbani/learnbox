@@ -1,7 +1,7 @@
 /**
  * Phase 1 / Milestone 1.5 — card media generation routes.
  *
- * Same guard chain as M1.2/M1.3/M1.4: Origin → session → CSRF → recent re-auth, on every route
+ * Same guard chain as M1.2/M1.3/M1.4: Origin → session → CSRF → operational re-auth, on every route
  * including the read ones. These endpoints spend real money and return protected learning content,
  * so an unauthenticated caller must never reach the provider or the bytes.
  *
@@ -96,7 +96,7 @@ async function authorize(
       return { response: genericInvalid() };
     }
   }
-  if (!session.recent) {
+  if (!session.operational) {
     return { response: json({ code: 'reauthentication_required' }, { status: 428 }) };
   }
   if (!dependencies.enabled || !dependencies.service) {
