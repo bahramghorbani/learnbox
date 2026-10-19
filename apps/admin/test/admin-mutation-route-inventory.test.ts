@@ -19,6 +19,7 @@ const MUTATING = /export\s+(?:async\s+)?function\s+(POST|PUT|PATCH|DELETE)\b/g;
 type Entry =
   | { category: 'guarded'; authMarker: string }
   | { category: 'delegated'; guardIn: string }
+  | { category: 'machine'; guardIn: string; tokenMarker: string }
   | { category: 'hard-disabled' };
 
 const INVENTORY: Record<string, Entry> = {
@@ -124,6 +125,21 @@ const INVENTORY: Record<string, Entry> = {
   'app/api/content/media/voice-preview/route.ts': {
     category: 'delegated',
     guardIn: 'lib/server/admin-card-media-routes.ts',
+  },
+  // Durable pack-media jobs are owner-scoped Admin mutations. The worker endpoint is deliberately
+  // machine-only and uses a bearer token rather than browser CSRF/session authentication.
+  'app/api/content/media/jobs/route.ts': {
+    category: 'delegated',
+    guardIn: 'lib/server/admin-pack-media-job-routes.ts',
+  },
+  'app/api/content/media/jobs/stop/route.ts': {
+    category: 'delegated',
+    guardIn: 'lib/server/admin-pack-media-job-routes.ts',
+  },
+  'app/api/internal/content/media/runner/route.ts': {
+    category: 'machine',
+    guardIn: 'lib/server/admin-pack-media-job-routes.ts',
+    tokenMarker: 'tokenMatches(',
   },
   'app/api/content/review/check/route.ts': {
     category: 'delegated',
@@ -282,11 +298,23 @@ describe('Admin mutation route inventory (LB-B30)', () => {
     }
   });
 
-  it('delegated routes point at a module that asserts Origin + Content-Type and the CSRF token', () => {
+  it('delegated browser routes point at a module that asserts Origin + Content-Type and the CSRF token', () => {
     for (const [file, entry] of Object.entries(INVENTORY)) {
       if (entry.category !== 'delegated') continue;
       const source = read(entry.guardIn);
       expect(source, `${entry.guardIn} for ${file}`).toContain('assertTrustedAdminMutation(');
+    }
+  });
+
+  it('machine routes delegate only to a default-off constant-time token gate', () => {
+    for (const [file, entry] of Object.entries(INVENTORY)) {
+      if (entry.category !== 'machine') continue;
+      const source = read(entry.guardIn);
+      expect(source, `${entry.guardIn} for ${file}`).toContain(entry.tokenMarker);
+      expect(source, `${entry.guardIn} for ${file}`).toContain(
+        "LEARNBOX_PACK_MEDIA_RUNNER_ENABLED !== 'true'",
+      );
+      expect(source, `${entry.guardIn} for ${file}`).toContain('timingSafeEqual(');
     }
   });
 

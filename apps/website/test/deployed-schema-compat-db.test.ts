@@ -277,7 +277,8 @@ suite('deployed application version against the expanded schema', () => {
       `SELECT count(*)::int AS n FROM information_schema.tables
         WHERE table_schema = 'public' AND table_type = 'BASE TABLE'`,
     );
-    // +2: 0039 adds purchase_orders and purchase_order_events (additive, nothing dropped).
-    expect(expandedTables.rows[0].n - deployedTables.rows[0].n).toBe(7);
+    // +2: 0039 adds purchase_orders and purchase_order_events; 0040 adds pack-media jobs/items.
+    // Both are additive, with nothing dropped.
+    expect(expandedTables.rows[0].n - deployedTables.rows[0].n).toBe(9);
   });
 });

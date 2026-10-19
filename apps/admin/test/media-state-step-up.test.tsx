@@ -89,9 +89,12 @@ describe('media state step-up', () => {
     await act(async () => {
       root.render(
         createElement(PackMediaCompletion, {
+          packId: 'pack-fixture',
           cards: ['a', 'b', 'c'].map((cardId) => ({ cardId, label: cardId })),
           loadState: loadMediaState,
-          generate: async () => ({ ok: true }),
+          loadJob: async () => undefined,
+          createJob: async () => ({ ok: true as const, status: 'nothing_needed' as const }),
+          stopJob: async () => ({ ok: false as const, message: 'unused' }),
           onOpenCard: () => undefined,
           onFinished: () => undefined,
         }),
@@ -116,12 +119,15 @@ describe('media state step-up', () => {
     await act(async () => {
       root.render(
         createElement(PackMediaCompletion, {
+          packId: 'pack-fixture',
           cards: [
             { cardId: 'readable', label: 'خوانا' },
             { cardId: 'unreadable', label: 'ناخوانا' },
           ],
           loadState: async (cardId) => (cardId === 'readable' ? media : undefined),
-          generate: async () => ({ ok: true }),
+          loadJob: async () => undefined,
+          createJob: async () => ({ ok: true as const, status: 'nothing_needed' as const }),
+          stopJob: async () => ({ ok: false as const, message: 'unused' }),
           onOpenCard: () => undefined,
           onFinished: () => undefined,
         }),

@@ -6,16 +6,12 @@ import type { CardMediaKind, MediaKindState } from './CardMediaPanel';
  * 1. `scanPackMedia` reads every card's media state (no provider call) and lists only media that is
  *    actually needed: the server's `needsGeneration` already excludes valid accepted media, a valid
  *    candidate awaiting acceptance and anything still generating.
- * 2. The Admin sees the counts — the paid-call estimate — and confirms before anything runs.
- * 3. `runPackMedia` generates the confirmed items one at a time through the existing guarded
- *    per-card route and records each outcome. The first failure stops the run (a provider outage
- *    must not turn into a string of paid attempts); the failed and not-yet-run items are then
- *    resumed on their own. Nothing is ever accepted automatically.
+ * 2. The Admin sees the counts — the paid-call estimate — and confirms a server-owned snapshot.
+ *    A durable worker, not the browser, performs each later item. Nothing is ever accepted
+ *    automatically.
  *
- * ponytail: runs in the open Admin tab, one request in flight. Leaving the panel permits an
- * already-sent request to finish at the server, but stops this runner before a further paid call.
- * Progress is durable because every candidate is a database row; a new scan picks up exactly what
- * is still needed. Move to a server-side job if packs outgrow one sitting.
+ * ponytail: this module scans only. The server-side job owns paid dispatch and recovery, so
+ * closing a browser cannot decide whether another provider request starts.
  */
 
 export const MEDIA_KIND_ORDER: readonly CardMediaKind[] = ['image', 'word_audio', 'sentence_audio'];
@@ -34,11 +30,6 @@ export interface PackMediaScan {
   /** Cards whose state could not be read; reported, never guessed. */
   unreadable: { cardId: string; label: string }[];
 }
-
-export type PackMediaResult = PackMediaItem & {
-  status: 'generated' | 'not_needed' | 'in_progress' | 'failed' | 'stopped';
-  message: string;
-};
 
 type MediaState = MediaKindState & {
   needsGeneration?: boolean;
@@ -74,60 +65,4 @@ export async function scanPackMedia(
     }
   }
   return scan;
-}
-
-export async function runPackMedia(
-  items: PackMediaItem[],
-  {
-    generate,
-    onResult,
-    shouldContinue = () => true,
-  }: {
-    generate: (
-      cardId: string,
-      kind: CardMediaKind,
-    ) => Promise<{ ok: boolean; status?: string; message?: string; code?: string }>;
-    onResult: (result: PackMediaResult) => void;
-    /** Panel lifetime guard: never begin a second paid request after the panel was left. */
-    shouldContinue?: () => boolean;
-  },
-): Promise<void> {
-  for (let index = 0; index < items.length; index += 1) {
-    if (!shouldContinue()) return;
-    const item = items[index]!;
-    const result = await generate(item.cardId, item.kind);
-    // An already-sent HTTP request may finish after unmount. Its durable server-side candidate is
-    // recovered by the next scan, but this tab must not continue to another paid request.
-    if (!shouldContinue()) return;
-    if (result.ok) {
-      const notNeeded = result.status === 'not_needed';
-      onResult({
-        ...item,
-        status: notNeeded ? 'not_needed' : 'generated',
-        message: notNeeded
-          ? 'رسانهٔ معتبر از قبل وجود دارد؛ دوباره ساخته نشد.'
-          : 'پیشنهاد ساخته شد و باید دستی پذیرفته شود.',
-      });
-      continue;
-    }
-    const inProgress = result.code === 'already_generating';
-    onResult({
-      ...item,
-      status: inProgress ? 'in_progress' : 'failed',
-      message: inProgress
-        ? 'یک درخواست هم‌زمان هنوز در حال ساخت است؛ دوباره ساخته نشد.'
-        : (result.message ?? 'تولید ناموفق بود.'),
-    });
-    for (const rest of items.slice(index + 1)) {
-      onResult({ ...rest, status: 'stopped', message: 'اجرا پیش از این مورد متوقف شد.' });
-    }
-    return;
-  }
-}
-
-/** Items a resumed run picks up: the failure and everything the stop left untouched. */
-export function resumableItems(results: readonly PackMediaResult[]): PackMediaItem[] {
-  return results
-    .filter((result) => result.status === 'failed' || result.status === 'stopped')
-    .map(({ cardId, label, kind }) => ({ cardId, label, kind }));
 }

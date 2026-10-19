@@ -40,7 +40,7 @@ import {
 } from './ContentPackForms';
 
 import { AdminSidebar } from './AdminSidebar';
-import { PackMediaCompletion } from './PackMediaCompletion';
+import { PackMediaCompletion, type PackMediaJob } from './PackMediaCompletion';
 
 // Media state sits behind the same recent-auth guard as every media route: a 428 re-authenticates
 // in place. A refused step-up throws, so a pack scan stops instead of prompting once per card.
@@ -676,14 +676,46 @@ export function ContentPacksWorkspace() {
     return outcome;
   }
 
-  async function generatePackMedia(cardId: string, kind: CardMediaKind) {
-    const result = await postAiJson<{ status?: string }>('/api/content/media/generate', {
-      cardId,
-      kind,
+  async function loadPackMediaJob(packId: string): Promise<PackMediaJob | undefined> {
+    const { response, stepUp } = await fetchWithStepUp(
+      `/api/content/media/jobs?packId=${encodeURIComponent(packId)}`,
+      { credentials: 'same-origin', headers: { accept: 'application/json' }, cache: 'no-store' },
+    );
+    const refusal = stepUpReadRefusal(stepUp, response.status);
+    if (refusal) throw new StepUpRefusedError(refusal);
+    if (!response.ok) throw new Error('pack media job state unavailable');
+    return ((await response.json()) as { job?: PackMediaJob | null }).job ?? undefined;
+  }
+
+  async function createPackMediaJob(packId: string) {
+    const result = await postAiJson<{
+      status?: 'created' | 'existing' | 'nothing_needed';
+      job?: PackMediaJob;
+    }>('/api/content/media/jobs', { packId });
+    if (!result.ok) return { ok: false as const, message: result.message };
+    if (result.payload.status === 'nothing_needed') {
+      return { ok: true as const, status: 'nothing_needed' as const };
+    }
+    if (
+      !result.payload.job ||
+      (result.payload.status !== 'created' && result.payload.status !== 'existing')
+    ) {
+      return { ok: false as const, message: 'ثبت اجرای پایدار پاسخ معتبر نداد.' };
+    }
+    return { ok: true as const, status: result.payload.status, job: result.payload.job };
+  }
+
+  async function stopPackMediaJob(jobId: string) {
+    const result = await postAiJson<{ job?: PackMediaJob }>('/api/content/media/jobs/stop', {
+      jobId,
     });
-    return result.ok
-      ? { ok: true, status: result.payload.status }
-      : { ok: false, message: result.message, code: result.code };
+    if (!result.ok || !result.payload.job) {
+      return {
+        ok: false as const,
+        message: result.ok ? 'ثبت توقف پاسخ معتبر نداد.' : result.message,
+      };
+    }
+    return { ok: true as const, job: result.payload.job };
   }
 
   const visible = packs.filter((pack) => (filter === 'all' ? true : pack.status === filter));
@@ -1043,13 +1075,15 @@ export function ContentPacksWorkspace() {
                   ) : null}
                   {mediaEnabled && cardsPhase === 'ready' && cards.length > 0 ? (
                     <PackMediaCompletion
-                      key={openPackId}
+                      packId={openPackId}
                       cards={cards.map((card) => ({
                         cardId: card.cardId,
                         label: `${card.article ? `${card.article} ` : ''}${card.lemma}`,
                       }))}
                       loadState={loadMediaState}
-                      generate={generatePackMedia}
+                      loadJob={loadPackMediaJob}
+                      createJob={createPackMediaJob}
+                      stopJob={stopPackMediaJob}
                       onOpenCard={setMediaCard}
                       onFinished={() => {
                         if (openPackId) void loadCards(openPackId);

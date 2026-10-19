@@ -115,6 +115,8 @@ export type AcceptOutcome =
 
 interface CanonicalCardData {
   cardId: string;
+  /** Latest canonical version used to bind an approved durable job to exact content. */
+  versionId: string;
   contentId: string;
   lemma: string;
   article: string | null;
@@ -202,7 +204,7 @@ export class CardMediaGenerationService {
     cardId: string,
   ): Promise<CanonicalCardData | undefined> {
     const result = await client.query(
-      `SELECT c.id, c.content_id, c.lemma, cv.content_json
+      `SELECT c.id, c.content_id, c.lemma, cv.id AS version_id, cv.content_json
          FROM cards c
          JOIN card_versions cv ON cv.card_id = c.id
         WHERE c.id = $1
@@ -224,6 +226,7 @@ export class CardMediaGenerationService {
     const contentId = String(row.content_id);
     return {
       cardId: String(row.id),
+      versionId: String(row.version_id),
       contentId,
       lemma: String(content.lemma ?? row.lemma),
       article: typeof content.article === 'string' ? content.article : null,
@@ -299,6 +302,8 @@ export class CardMediaGenerationService {
     cardId: string;
     kind: CardMediaKind;
     actorUserId: string;
+    /** Durable pack jobs bind approval to this exact canonical card version. */
+    expectedCardVersionId?: string;
     model?: string;
     /**
      * Explicit Admin request to produce a new candidate even though valid media exists. Never set
@@ -318,6 +323,13 @@ export class CardMediaGenerationService {
 
       const loaded = await this.loadCard(client, input.cardId);
       if (!loaded) return { status: 'card_not_found' };
+      if (input.expectedCardVersionId && loaded.versionId !== input.expectedCardVersionId) {
+        return {
+          status: 'unprocessable',
+          code: 'content_changed',
+          reason: 'محتوای کارت پس از تأیید تغییر کرده است؛ ساخت خودکار متوقف شد.',
+        };
+      }
       card = loaded;
 
       if (!input.regenerate) {
