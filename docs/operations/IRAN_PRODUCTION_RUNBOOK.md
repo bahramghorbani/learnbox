@@ -164,11 +164,12 @@ Ping URLs exist only in `secrets/healthchecks.env`. To re-create them, the owner
 To check the disk thresholds without pinging, run
 `bash learnbox-iran-monitor-disk-test.sh /home/ubuntu/learnbox/ops/learnbox-iran-monitor.sh`.
 
-## Commerce reconciliation (not installed)
+## Commerce reconciliation (installed, disabled)
 
-Payment is off in Production. The files in `infrastructure/production/iran/commerce/` are prepared
-and were tested only on the Mac staging stack with a fake provider. Installing them is part of the
-payment activation, which needs separate owner authorization.
+Payment and reconciliation are off in Production. The script and systemd units were installed on
+2026-10-19 as Stage B preparation, but the timer is disabled and no reconciliation token is present
+in the running app. The files were tested only on the Mac staging stack with a fake provider. A
+future payment activation still needs separate owner authorization.
 
 **What runs.** `learnbox-commerce-reconcile.timer` starts `learnbox-commerce-reconcile.sh` every
 10 min. The script runs `node` inside the app container and calls
@@ -179,25 +180,35 @@ output. The app re-checks unsettled Zarinpal attempts and queued Admin re-check 
 payment service (contract §10.1). The script prints and stores counts only. A run that overlaps the
 callback cannot grant twice, because the app settles each attempt under a row lock.
 
-**Rollout order (the flag goes on only after scheduled execution is ready):**
+**Rollout order (the app accepts reconciliation only after the executor is active):**
 
 1. Copy the script to `/home/ubuntu/learnbox/ops/` and the units to `/etc/systemd/system/`, then
    `systemctl daemon-reload`. Leave the timer disabled.
-2. Run the script once by hand. While the flag is off, expect
-   `commerce-reconcile: fail http=404 error=notFound`, which proves the path and the container name.
-3. Add `LEARNBOX_COMMERCE_RECONCILE_TOKEN` (`openssl rand -hex 32`, at least 32 characters) and
-   `LEARNBOX_COMMERCE_RECONCILE_ENABLED=true` to `app/.env`, then recreate the app.
-4. Run the script by hand again and expect `ok http=200 checked=… verified=…`. Then
-   `systemctl enable --now learnbox-commerce-reconcile.timer`.
-5. Add one line to the monitor next to the other `fresh` checks, and update the repository mirror
+2. Start the service once through systemd. While the app flag is off, expect
+   `commerce-reconcile: fail http=404 error=notFound`. This proves only the disabled rejection,
+   service path and container name; it is **not** proof that reconciliation is active.
+3. Generate and store `LEARNBOX_COMMERCE_RECONCILE_TOKEN` (at least 32 random characters) in
+   `app/.env` without printing it. Keep `LEARNBOX_COMMERCE_RECONCILE_ENABLED` absent or `false`,
+   recreate the app, and confirm the running process has the token by name/length only.
+4. Enable and start `learnbox-commerce-reconcile.timer` while the app flag is still off. Require
+   `systemctl is-enabled`, `systemctl is-active`, and `systemctl list-timers` to show an enabled,
+   active timer with a next trigger. A scheduled `404` remains a disabled-state result, not a
+   readiness result.
+5. Only after the separately authorized payment configuration is ready, set
+   `LEARNBOX_COMMERCE_RECONCILE_ENABLED=true` in `app/.env` and recreate the app. The timer is
+   already active at this point, so there is no interval in which the app accepts reconciliation
+   while no executor exists. Immediately start the service through systemd and require
+   `http=200 checked=… verified=…`; otherwise turn the app flag back off and stop.
+6. Add one line to the monitor next to the other `fresh` checks, and update the repository mirror
    in the same change:
    `fresh commerce-reconcile "$L/ops/state/commerce-reconcile.status" 1`
-6. Only then set `LEARNBOX_COMMERCE_RECONCILE_ENABLED=true` in `admin/.env` and recreate the Admin.
+7. Only then set `LEARNBOX_COMMERCE_RECONCILE_ENABLED=true` in `admin/.env` and recreate the Admin.
    That shows the «درخواست بررسی دوباره از درگاه» button. Without it the Admin explains that
    reconciliation is off and the API refuses with 409.
 
-Rollback is the reverse order: Admin flag off, `systemctl disable --now` the timer, remove the
-monitor line, then turn off the app flag.
+For rollback, first turn the Admin flag off, then turn the app flag off and recreate the app before
+disabling the timer and removing the monitor line. This never leaves an accepting reconciliation
+endpoint without its executor.
 
 **Seeing the last run and detecting a stopped timer:**
 
