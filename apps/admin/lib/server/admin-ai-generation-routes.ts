@@ -10,7 +10,7 @@ import type { AiPackGenerationService } from './ai-pack-generation-service';
 /**
  * Phase 1 / Milestone 1.4 — AI pack generation routes.
  *
- * Same guard chain as M1.2/M1.3: Origin → session → CSRF → recent re-auth, on every route
+ * Same guard chain as M1.2/M1.3: Origin → session → CSRF → operational re-auth, on every route
  * including the read ones. These are generation endpoints, so an unauthenticated caller must never
  * reach the provider — that would make LearnBox's credential a public text-generation service.
  *
@@ -65,7 +65,7 @@ async function authorize(
   }
   const config = dependencies.config as EnabledAdminAuthConfig;
   // Opted out only by the read-only GET catalog route: a GET carries no body and changes nothing,
-  // so a CSRF token is not applicable. Session, origin and recent-re-auth still gate it.
+  // so a CSRF token is not applicable. Session, origin and the operational Passkey window still gate it.
   const requireCsrf = options.requireCsrf !== false;
   if (requireCsrf) {
     try {
@@ -84,7 +84,7 @@ async function authorize(
       return { response: genericInvalid() };
     }
   }
-  if (!session.recent) {
+  if (!session.operational) {
     return { response: json({ code: 'reauthentication_required' }, { status: 428 }) };
   }
   if (!dependencies.enabled || !dependencies.service) {

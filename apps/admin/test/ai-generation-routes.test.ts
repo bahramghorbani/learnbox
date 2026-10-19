@@ -33,8 +33,8 @@ const jobId = '33333333-3333-4333-8333-333333333333';
 const acceptKey = '11111111-1111-4111-8111-111111111111';
 const fingerprint = 'a'.repeat(64);
 
-function sessionStore(overrides: { userId?: string | null; recent?: boolean } = {}) {
-  const recent = overrides.recent !== false;
+function sessionStore(overrides: { userId?: string | null; ageMinutes?: number } = {}) {
+  const ageMs = (overrides.ageMinutes ?? 0) * 60_000;
   return {
     findActiveSession: async () =>
       overrides.userId === null
@@ -45,7 +45,7 @@ function sessionStore(overrides: { userId?: string | null; recent?: boolean } = 
             lastSeenAt: now,
             absoluteExpiresAt: new Date(now.getTime() + 60_000),
             revokedAt: null,
-            recentAuthenticatedAt: recent ? now : new Date(now.getTime() - 86_400_000),
+            recentAuthenticatedAt: new Date(now.getTime() - ageMs),
           },
     touchSession: async () => true,
   };
@@ -194,10 +194,10 @@ describe('M1.4 AI route guard chain', () => {
         for (const spy of Object.values(svc)) expect(spy).not.toHaveBeenCalled();
       });
 
-      it('demands recent re-authentication', async () => {
+      it('demands re-authentication after the operational window', async () => {
         const svc = service();
         const route = factory(
-          deps({ sessionStore: sessionStore({ recent: false }), service: svc }),
+          deps({ sessionStore: sessionStore({ ageMinutes: 61 }), service: svc }),
         );
         const response = await route(post(body));
         expect(response.status).toBe(428);
@@ -226,6 +226,15 @@ describe('M1.4 AI route guard chain', () => {
       });
     });
   }
+  it('accepts ordinary generation six minutes after Passkey verification', async () => {
+    const svc = service();
+    const response = await createAiPlanRoute(
+      deps({ sessionStore: sessionStore({ ageMinutes: 6 }), service: svc }),
+    )(post({ prompt: 'بساز' }));
+
+    expect(response.status).toBe(200);
+    expect(svc.plan).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe('M1.4 provider-credential boundary', () => {

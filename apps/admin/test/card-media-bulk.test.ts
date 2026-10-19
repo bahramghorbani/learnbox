@@ -89,6 +89,22 @@ describe('whole-pack media completion', () => {
     expect(results).toEqual([]);
   });
 
+  it('stops without retrying an in-flight item after an already-generating conflict', async () => {
+    const items = [
+      { cardId: 'a', label: 'A', kind: 'image' as const },
+      { cardId: 'b', label: 'B', kind: 'image' as const },
+      { cardId: 'c', label: 'C', kind: 'image' as const },
+    ];
+    const generate = vi.fn().mockResolvedValue({ ok: false, code: 'already_generating' });
+    const results: PackMediaResult[] = [];
+
+    await runPackMedia(items, { generate, onResult: (result) => results.push(result) });
+
+    expect(generate).toHaveBeenCalledTimes(1);
+    expect(results.map((result) => result.status)).toEqual(['in_progress', 'stopped', 'stopped']);
+    expect(resumableItems(results).map((item) => item.cardId)).toEqual(['b', 'c']);
+  });
+
   it('stops at the first failure, then resumes only the failed and untouched items', async () => {
     const items = [
       { cardId: 'a', label: 'A', kind: 'image' as const },
