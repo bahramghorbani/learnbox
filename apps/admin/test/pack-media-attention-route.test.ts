@@ -38,7 +38,15 @@ function route(recent = true) {
     },
     service: service as never,
   });
-  function request(options: { requestOrigin?: string; csrf?: string; confirm?: boolean } = {}) {
+  function request(
+    options: {
+      requestOrigin?: string;
+      csrf?: string;
+      confirm?: boolean;
+      action?: 'defer' | 'retry';
+      confirmedContinuePending?: boolean;
+    } = {},
+  ) {
     return new Request(`${origin}/api/content/media/jobs/resolve`, {
       method: 'POST',
       headers: {
@@ -50,9 +58,10 @@ function route(recent = true) {
       body: JSON.stringify({
         jobId,
         itemId,
-        action: 'retry',
+        action: options.action ?? 'retry',
         reason: 'reviewed previous charge',
         confirmedPotentialDuplicateCharge: options.confirm ?? false,
+        confirmedContinuePending: options.confirmedContinuePending ?? false,
       }),
     });
   }
@@ -60,6 +69,23 @@ function route(recent = true) {
 }
 
 describe('pack-media resolution route guards', () => {
+  it('passes the explicit same-job continuation acknowledgement to the service', async () => {
+    const active = route();
+    expect(
+      (await active.handler(active.request({ action: 'defer', confirmedContinuePending: true })))
+        .status,
+    ).toBe(200);
+    expect(active.service.resolve).toHaveBeenLastCalledWith(
+      jobId,
+      itemId,
+      actor,
+      'defer',
+      'reviewed previous charge',
+      false,
+      true,
+    );
+  });
+
   it('refuses cross-origin, invalid CSRF and stale reauthentication before the service', async () => {
     const active = route();
     expect(

@@ -52,6 +52,7 @@ function CompletionHarness({ onFinished }: { onFinished: () => void }) {
         loadJob={async () => needsAttention}
         createJob={async () => ({ ok: true as const, status: 'nothing_needed' as const })}
         stopJob={async () => ({ ok: false as const, message: 'unused' })}
+        resolveJob={async () => ({ ok: true as const, job: needsAttention })}
         onOpenCard={() => undefined}
         onFinished={() => {
           setTableVisible(false);
@@ -96,6 +97,13 @@ describe('pack-media polling progress', () => {
       '۲۲۸',
     );
     expect(container.querySelector('[data-pack-media="job-progress"]')?.textContent).toContain('۱');
+    expect(container.textContent).toContain('مهلت پاسخ provider تمام شد');
+    expect(container.textContent).toContain('فقط ۲۲۸ مورد pending همین job');
+    expect(
+      Array.from(container.querySelectorAll('button')).find((button) =>
+        button.textContent?.includes('موکول‌کردن این مورد'),
+      )?.disabled,
+    ).toBe(true);
     expect(container.textContent).not.toContain('هیچ رسانه‌ای برای ساخت لازم نیست');
 
     await act(async () => root.unmount());

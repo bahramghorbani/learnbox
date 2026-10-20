@@ -17,7 +17,15 @@ function fixture(initial: 'needs_attention' | 'deferred' = 'needs_attention') {
       return { rows: [{ role: 'content_reviewer' }] };
     if (sql.includes('FROM pack_media_jobs j') && sql.includes('FOR UPDATE OF j, i')) {
       return {
-        rows: [{ id: JOB, job_status: jobStatus, stop_requested: false, item_status: status }],
+        rows: [
+          {
+            id: JOB,
+            job_status: jobStatus,
+            stop_requested: false,
+            item_status: status,
+            pending_count: pending,
+          },
+        ],
       };
     }
     if (sql.includes('UPDATE pack_media_job_items SET status = $3')) {
@@ -82,7 +90,7 @@ describe('operator resolution of an uncertain media item', () => {
   it('defers with audit and resumes only pending snapshot items without provider calls', async () => {
     const { service, media, audited, state, query } = fixture();
     await expect(
-      service.resolve(JOB, ITEM, ACTOR, 'defer', 'provider outcome unknown', false),
+      service.resolve(JOB, ITEM, ACTOR, 'defer', 'provider outcome unknown', false, true),
     ).resolves.toMatchObject({ status: 'applied' });
     expect(state()).toMatchObject({ status: 'deferred', jobStatus: 'running', pending: 228 });
     expect(audited).toEqual([
@@ -100,11 +108,13 @@ describe('operator resolution of an uncertain media item', () => {
 
   it('makes a repeated operator action idempotent without a second audit or status write', async () => {
     const { service, query, audited } = fixture();
-    await service.resolve(JOB, ITEM, ACTOR, 'defer', 'first decision', false);
+    await service.resolve(JOB, ITEM, ACTOR, 'defer', 'first decision', false, true);
     const writesBefore = query.mock.calls.filter(([sql]) =>
       sql.includes('UPDATE pack_media_job_items SET status = $3'),
     ).length;
-    await expect(service.resolve(JOB, ITEM, ACTOR, 'defer', 'repeat', false)).resolves.toEqual({
+    await expect(
+      service.resolve(JOB, ITEM, ACTOR, 'defer', 'repeat', false, true),
+    ).resolves.toEqual({
       status: 'idempotent',
     });
     expect(
@@ -113,6 +123,16 @@ describe('operator resolution of an uncertain media item', () => {
       ),
     ).toHaveLength(writesBefore);
     expect(audited).toHaveLength(1);
+  });
+
+  it('requires explicit acknowledgement before deferring pending items', async () => {
+    const { service, media, audited, state } = fixture();
+    await expect(
+      service.resolve(JOB, ITEM, ACTOR, 'defer', 'provider outcome unknown', false),
+    ).resolves.toEqual({ status: 'continuation_confirmation_required' });
+    expect(state()).toMatchObject({ status: 'needs_attention', jobStatus: 'needs_attention' });
+    expect(media.generate).not.toHaveBeenCalled();
+    expect(audited).toHaveLength(0);
   });
 
   it('requires explicit duplicate-charge confirmation before retry while preserving the previous candidate', async () => {

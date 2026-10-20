@@ -48,6 +48,24 @@ async function reset(
      VALUES ($1, $2, 'sentence_audio', 'failed', 'provider_timeout')`,
     [CANDIDATE, CARD],
   );
+  await scalar(
+    `INSERT INTO pack_media_job_items (id, job_id, card_id, kind, card_version_id, status, candidate_id)
+     SELECT ('10000000-0000-4000-8000-' || lpad(i::text, 12, '0'))::uuid,
+            $1,
+            ('20000000-0000-4000-8000-' || lpad(i::text, 12, '0'))::uuid,
+            'sentence_audio',
+            ('30000000-0000-4000-8000-' || lpad(i::text, 12, '0'))::uuid,
+            'generated',
+            ('40000000-0000-4000-8000-' || lpad(i::text, 12, '0'))::uuid
+       FROM generate_series(1, 129) AS i`,
+    [JOB],
+  );
+  await scalar(`
+    INSERT INTO card_media_candidates (id, card_id, kind, status)
+    SELECT ('40000000-0000-4000-8000-' || lpad(i::text, 12, '0'))::uuid,
+           ('20000000-0000-4000-8000-' || lpad(i::text, 12, '0'))::uuid,
+           'sentence_audio', 'ready'
+      FROM generate_series(1, 129) AS i`);
   if (withPending) {
     await scalar(`INSERT INTO card_versions (id, card_id, version) VALUES ($1, $2, 1)`, [
       PENDING_VERSION,
@@ -109,7 +127,7 @@ suite('pack-media attention resolution against real Postgres', () => {
     });
 
     await expect(
-      service.resolve(JOB, ITEM, ACTOR, 'defer', 'outcome cannot be reconciled', false),
+      service.resolve(JOB, ITEM, ACTOR, 'defer', 'outcome cannot be reconciled', false, true),
     ).resolves.toMatchObject({ status: 'applied' });
     const item = await scalar(
       `SELECT status, candidate_id, detail FROM pack_media_job_items WHERE id = $1`,
@@ -127,13 +145,18 @@ suite('pack-media attention resolution against real Postgres', () => {
       scalar(`SELECT status FROM pack_media_jobs WHERE id = $1`, [JOB]),
     ).resolves.toMatchObject({ rows: [{ status: 'running' }] });
     await expect(
-      scalar(`SELECT action, actor_user_id, metadata->>'reason' AS reason FROM audit_logs`),
+      scalar(
+        `SELECT action, actor_user_id, metadata->>'reason' AS reason,
+                metadata->>'pending_continuation_confirmed' AS pending_continuation_confirmed
+           FROM audit_logs`,
+      ),
     ).resolves.toMatchObject({
       rows: [
         {
           action: 'pack_media_job.defer_unknown_item',
           actor_user_id: ACTOR,
           reason: 'outcome cannot be reconciled',
+          pending_continuation_confirmed: 'true',
         },
       ],
     });
@@ -147,6 +170,15 @@ suite('pack-media attention resolution against real Postgres', () => {
     await expect(
       scalar(`SELECT status FROM pack_media_job_items WHERE id = $1`, [ITEM]),
     ).resolves.toMatchObject({ rows: [{ status: 'deferred' }] });
+    await expect(
+      scalar(
+        `SELECT count(*)::int AS count FROM pack_media_job_items WHERE job_id = $1 AND status = 'generated'`,
+        [JOB],
+      ),
+    ).resolves.toMatchObject({ rows: [{ count: 130 }] });
+    await expect(
+      scalar(`SELECT count(*)::int AS count FROM card_media_candidates WHERE status = 'ready'`),
+    ).resolves.toMatchObject({ rows: [{ count: 129 }] });
     await expect(
       scalar(`SELECT status FROM pack_media_jobs WHERE id = $1`, [JOB]),
     ).resolves.toMatchObject({ rows: [{ status: 'completed_with_deferred' }] });

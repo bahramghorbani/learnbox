@@ -727,6 +727,7 @@ export function ContentPacksWorkspace() {
     action: 'defer' | 'retry',
     reason: string,
     confirmedPotentialDuplicateCharge: boolean,
+    confirmedContinuePending: boolean,
   ) {
     const result = await postAiJson<{
       status?: 'applied' | 'idempotent';
@@ -737,6 +738,7 @@ export function ContentPacksWorkspace() {
       action,
       reason,
       confirmedPotentialDuplicateCharge,
+      confirmedContinuePending,
     });
     if (!result.ok) return { ok: false as const, message: result.message };
     if (result.payload.status !== 'applied' && result.payload.status !== 'idempotent')
