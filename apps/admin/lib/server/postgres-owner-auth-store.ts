@@ -1,3 +1,5 @@
+import { adminSessionIdleLifetimeSeconds } from './admin-session';
+
 export type AdminCeremony =
   'bootstrap_registration' | 'add_credential' | 'authentication' | 'reauthentication';
 
@@ -262,9 +264,9 @@ export class PostgresOwnerAuthStore {
         WHERE token_hash = $1
           AND revoked_at IS NULL
           AND absolute_expires_at > $2
-          AND last_seen_at >= $2 - INTERVAL '15 minutes'
+          AND last_seen_at >= $2 - ($3 * INTERVAL '1 second')
         RETURNING token_hash`,
-      [tokenHash, now],
+      [tokenHash, now, adminSessionIdleLifetimeSeconds],
     );
     return result.rows.length === 1;
   }
@@ -276,9 +278,9 @@ export class PostgresOwnerAuthStore {
         WHERE token_hash = $1
           AND revoked_at IS NULL
           AND absolute_expires_at > $2
-          AND last_seen_at >= $2 - INTERVAL '15 minutes'
+          AND last_seen_at >= $2 - ($3 * INTERVAL '1 second')
         RETURNING token_hash`,
-      [tokenHash, now],
+      [tokenHash, now, adminSessionIdleLifetimeSeconds],
     );
     return result.rows.length === 1;
   }
@@ -305,9 +307,9 @@ export class PostgresOwnerAuthStore {
         WHERE s.token_hash = $1
           AND s.revoked_at IS NULL
           AND s.absolute_expires_at > $2
-          AND s.last_seen_at >= $2 - INTERVAL '15 minutes'
+          AND s.last_seen_at >= $2 - ($3 * INTERVAL '1 second')
         LIMIT 1`,
-      [tokenHash, now],
+      [tokenHash, now, adminSessionIdleLifetimeSeconds],
     );
     const row = result.rows[0];
     if (!row) return undefined;
