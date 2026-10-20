@@ -25,10 +25,12 @@ const needsAttention: PackMediaJob = {
     not_needed: 0,
     in_progress: 0,
     needs_attention: 1,
+    deferred: 0,
     stopped: 0,
   },
   items: [
     {
+      id: '11111111-1111-4111-8111-111111111111',
       cardId: 'card-fixture',
       kind: 'sentence_audio',
       status: 'needs_attention',
