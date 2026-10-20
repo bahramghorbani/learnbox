@@ -721,6 +721,31 @@ export function ContentPacksWorkspace() {
     return { ok: true as const, job: result.payload.job };
   }
 
+  async function resolvePackMediaJob(
+    jobId: string,
+    itemId: string,
+    action: 'defer' | 'retry',
+    reason: string,
+    confirmedPotentialDuplicateCharge: boolean,
+  ) {
+    const result = await postAiJson<{
+      status?: 'applied' | 'idempotent';
+      job?: PackMediaJob | null;
+    }>('/api/content/media/jobs/resolve', {
+      jobId,
+      itemId,
+      action,
+      reason,
+      confirmedPotentialDuplicateCharge,
+    });
+    if (!result.ok) return { ok: false as const, message: result.message };
+    if (result.payload.status !== 'applied' && result.payload.status !== 'idempotent')
+      return { ok: false as const, message: 'نتیجهٔ رسیدگی نامشخص است؛ وضعیت را دوباره بخوانید.' };
+    const job = result.payload.job ?? (openPackId ? await loadPackMediaJob(openPackId) : undefined);
+    if (!job) return { ok: false as const, message: 'وضعیت job پس از رسیدگی خوانده نشد.' };
+    return { ok: true as const, job };
+  }
+
   const visible = packs.filter((pack) => (filter === 'all' ? true : pack.status === filter));
   const tabCount = (key: string) =>
     key === 'all' ? packs.length : packs.filter((pack) => pack.status === key).length;
@@ -1087,6 +1112,7 @@ export function ContentPacksWorkspace() {
                       loadJob={loadPackMediaJob}
                       createJob={createPackMediaJob}
                       stopJob={stopPackMediaJob}
+                      resolveJob={resolvePackMediaJob}
                       onOpenCard={setMediaCard}
                       onFinished={() => {
                         if (openPackId) void loadCards(openPackId, { background: true });

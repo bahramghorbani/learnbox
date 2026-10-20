@@ -153,6 +153,11 @@ export function readAiMediaConfig(environment: Record<string, string | undefined
       DEFAULT_AI_MEDIA_LIMITS.maxSpeechChars,
       2000,
     ),
+    audioTimeoutMs: positiveInt(
+      environment.LEARNBOX_AI_AUDIO_TIMEOUT_MS,
+      DEFAULT_AI_MEDIA_LIMITS.audioTimeoutMs,
+      300_000,
+    ),
   };
 
   const apiKey = environment.LEARNBOX_AI_API_KEY?.trim();

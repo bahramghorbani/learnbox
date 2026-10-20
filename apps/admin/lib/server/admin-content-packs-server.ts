@@ -40,6 +40,7 @@ import {
 } from './admin-card-media-routes';
 import {
   createPackMediaJobStopRoute,
+  createPackMediaJobResolveRoute,
   createPackMediaJobsRoute,
   createPackMediaRunnerRoute,
 } from './admin-pack-media-job-routes';
@@ -262,6 +263,7 @@ export function createAdminContentPacksServer(dependencies: {
       mediaVoicePreview: createVoicePreviewRoute(mediaShared),
       packMediaJobs: createPackMediaJobsRoute(packMediaShared),
       packMediaJobStop: createPackMediaJobStopRoute(packMediaShared),
+      packMediaJobResolve: createPackMediaJobResolveRoute(packMediaShared),
       packMediaRunner: createPackMediaRunnerRoute(packMediaShared),
       lifecycleEnabled: manageConfig.enabled,
       packLifecycle: createPackLifecycleRoute(lifecycleShared),

@@ -136,6 +136,10 @@ const INVENTORY: Record<string, Entry> = {
     category: 'delegated',
     guardIn: 'lib/server/admin-pack-media-job-routes.ts',
   },
+  'app/api/content/media/jobs/resolve/route.ts': {
+    category: 'delegated',
+    guardIn: 'lib/server/admin-pack-media-job-routes.ts',
+  },
   'app/api/internal/content/media/runner/route.ts': {
     category: 'machine',
     guardIn: 'lib/server/admin-pack-media-job-routes.ts',

@@ -8,7 +8,8 @@ type Queryable = { query(sql: string, parameters?: readonly unknown[]): Promise<
 type DatabaseClient = Queryable & { release(): void };
 type DatabasePool = Queryable & { connect(): Promise<DatabaseClient> };
 
-type JobStatus = 'queued' | 'running' | 'stopped' | 'completed' | 'needs_attention';
+type JobStatus =
+  'queued' | 'running' | 'stopped' | 'completed' | 'completed_with_deferred' | 'needs_attention';
 type ItemStatus =
   | 'pending'
   | 'leased'
@@ -17,12 +18,14 @@ type ItemStatus =
   | 'not_needed'
   | 'in_progress'
   | 'needs_attention'
+  | 'deferred'
   | 'stopped';
 
 const kinds: readonly CardMediaKind[] = ['image', 'word_audio', 'sentence_audio'];
 const runnerGapSeconds = 5;
 
 export type PackMediaJobItemView = {
+  id: string;
   cardId: string;
   kind: CardMediaKind;
   status: ItemStatus;
@@ -52,6 +55,7 @@ function itemStatus(value: unknown): ItemStatus {
     'not_needed',
     'in_progress',
     'needs_attention',
+    'deferred',
     'stopped',
   ];
   return known.includes(value as ItemStatus) ? (value as ItemStatus) : 'needs_attention';
@@ -63,6 +67,7 @@ function jobStatus(value: unknown): JobStatus {
     'running',
     'stopped',
     'completed',
+    'completed_with_deferred',
     'needs_attention',
   ];
   return known.includes(value as JobStatus) ? (value as JobStatus) : 'needs_attention';
@@ -152,7 +157,7 @@ export class PackMediaJobService {
       await client.query('BEGIN');
       const active = await client.query(
         `SELECT id FROM pack_media_jobs
-          WHERE pack_id = $1 AND actor_user_id = $2 AND status IN ('queued', 'running', 'needs_attention')
+          WHERE pack_id = $1 AND actor_user_id = $2 AND status IN ('queued', 'running', 'needs_attention', 'completed_with_deferred')
           ORDER BY created_at DESC LIMIT 1 FOR UPDATE`,
         [packId, actorUserId],
       );
@@ -172,7 +177,7 @@ export class PackMediaJobService {
           // second chargeable job if a concurrent approval beat this request.
           const existing = await client.query(
             `SELECT id FROM pack_media_jobs
-              WHERE pack_id = $1 AND actor_user_id = $2 AND status IN ('queued', 'running', 'needs_attention')
+              WHERE pack_id = $1 AND actor_user_id = $2 AND status IN ('queued', 'running', 'needs_attention', 'completed_with_deferred')
               ORDER BY created_at DESC LIMIT 1`,
             [packId, actorUserId],
           );
@@ -210,7 +215,7 @@ export class PackMediaJobService {
     const row = job.rows[0];
     if (!row) return undefined;
     const itemRows = await this.pool.query(
-      `SELECT card_id, kind, status, candidate_id, detail, updated_at
+      `SELECT id, card_id, kind, status, candidate_id, detail, updated_at
          FROM pack_media_job_items WHERE job_id = $1 ORDER BY created_at, card_id, kind`,
       [jobId],
     );
@@ -223,6 +228,7 @@ export class PackMediaJobService {
         'not_needed',
         'in_progress',
         'needs_attention',
+        'deferred',
         'stopped',
       ].map((status) => [status, 0]),
     ) as Record<ItemStatus, number>;
@@ -230,6 +236,7 @@ export class PackMediaJobService {
       const status = itemStatus(entry.status);
       counts[status] += 1;
       return {
+        id: String(entry.id),
         cardId: String(entry.card_id),
         kind: entry.kind as CardMediaKind,
         status,
@@ -307,6 +314,111 @@ export class PackMediaJobService {
     }
   }
 
+  /** Resolves only the locked snapshot item; no provider call occurs in this request. */
+  async resolve(
+    jobId: string,
+    itemId: string,
+    actorUserId: string,
+    action: 'defer' | 'retry',
+    reason: string,
+    confirmedPotentialDuplicateCharge: boolean,
+  ) {
+    const normalizedReason = reason.trim();
+    if (!normalizedReason || normalizedReason.length > 1200) return { status: 'invalid' as const };
+    if (action === 'retry' && !confirmedPotentialDuplicateCharge)
+      return { status: 'confirmation_required' as const };
+    if (!(await this.editorial(actorUserId))) return { status: 'forbidden' as const };
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      const locked = await client.query(
+        `SELECT j.id, j.status AS job_status, j.stop_requested, i.status AS item_status
+           FROM pack_media_jobs j
+           JOIN pack_media_job_items i ON i.job_id = j.id
+          WHERE j.id = $1 AND j.actor_user_id = $2 AND i.id = $3
+          FOR UPDATE OF j, i`,
+        [jobId, actorUserId, itemId],
+      );
+      const current = locked.rows[0];
+      if (!current) {
+        await client.query('ROLLBACK');
+        return { status: 'not_found' as const };
+      }
+      const expected = action === 'defer' ? 'needs_attention' : 'deferred';
+      const nextStatus = action === 'defer' ? 'deferred' : 'pending';
+      if (String(current.item_status) !== expected) {
+        await client.query('ROLLBACK');
+        return {
+          status:
+            String(current.item_status) === nextStatus
+              ? ('idempotent' as const)
+              : ('conflict' as const),
+        };
+      }
+      if (
+        current.stop_requested === true ||
+        !['needs_attention', 'running', 'completed_with_deferred'].includes(
+          String(current.job_status),
+        ) ||
+        (action === 'retry' && String(current.job_status) !== 'completed_with_deferred')
+      ) {
+        await client.query('ROLLBACK');
+        return { status: 'conflict' as const };
+      }
+      if (action === 'retry') {
+        const candidate = await client.query(
+          `SELECT 1 FROM card_media_candidates
+           WHERE card_id = (SELECT card_id FROM pack_media_job_items WHERE id = $1)
+             AND kind = (SELECT kind FROM pack_media_job_items WHERE id = $1)
+             AND status = 'generating' LIMIT 1`,
+          [itemId],
+        );
+        if (candidate.rows.length > 0) {
+          await client.query('ROLLBACK');
+          return { status: 'conflict' as const };
+        }
+      }
+      await client.query(
+        `UPDATE pack_media_job_items SET status = $3, detail = $4, lease_token = NULL,
+                lease_until = NULL, updated_at = now() WHERE id = $1 AND job_id = $2`,
+        [
+          itemId,
+          jobId,
+          nextStatus,
+          action === 'defer' ? 'operator_deferred_unknown_outcome' : 'operator_retry_authorized',
+        ],
+      );
+      await client.query(
+        `UPDATE pack_media_jobs SET status = CASE
+           WHEN EXISTS (SELECT 1 FROM pack_media_job_items WHERE job_id = $1 AND status IN ('needs_attention', 'in_progress', 'dispatching', 'leased')) THEN 'needs_attention'
+           WHEN EXISTS (SELECT 1 FROM pack_media_job_items WHERE job_id = $1 AND status = 'pending') THEN 'running'
+           WHEN EXISTS (SELECT 1 FROM pack_media_job_items WHERE job_id = $1 AND status = 'deferred') THEN 'completed_with_deferred'
+           ELSE 'completed' END,
+           updated_at = now() WHERE id = $1`,
+        [jobId],
+      );
+      await client.query(
+        `INSERT INTO audit_logs (actor_user_id, action, entity_type, entity_id, metadata)
+         VALUES ($1, $2, 'pack_media_job', $3::uuid, $4)`,
+        [
+          actorUserId,
+          action === 'defer'
+            ? 'pack_media_job.defer_unknown_item'
+            : 'pack_media_job.retry_unknown_item',
+          jobId,
+          { item_id: itemId, reason: normalizedReason, prior_outcome_may_have_been_billed: true },
+        ],
+      );
+      await client.query('COMMIT');
+      return { status: 'applied' as const, job: await this.get(jobId, actorUserId) };
+    } catch (error) {
+      await client.query('ROLLBACK').catch(() => undefined);
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
   /**
    * Called only by the token-authenticated internal endpoint. One invocation handles one item.
    * Expired leased work is safe to resume; expired dispatching work is deliberately never re-sent.
@@ -336,6 +448,15 @@ export class PackMediaJobService {
            FROM pack_media_job_items i
            JOIN pack_media_jobs j ON j.id = i.job_id
           WHERE i.status = 'pending' AND j.status IN ('queued', 'running') AND NOT j.stop_requested
+            AND NOT EXISTS (
+              SELECT 1 FROM pack_media_job_items blocker
+               WHERE blocker.job_id = j.id AND blocker.status IN ('needs_attention', 'in_progress', 'dispatching', 'leased')
+            )
+            AND NOT EXISTS (
+              SELECT 1 FROM pack_media_job_items earlier
+               WHERE earlier.job_id = i.job_id AND earlier.status = 'pending'
+                 AND (earlier.created_at, earlier.id) < (i.created_at, i.id)
+            )
           ORDER BY j.created_at, i.created_at, i.id
           FOR UPDATE OF i SKIP LOCKED
           LIMIT 1
@@ -358,6 +479,10 @@ export class PackMediaJobService {
         FROM pack_media_jobs j
        WHERE i.id = $1 AND i.job_id = j.id AND i.status = 'leased' AND i.lease_token = $2::uuid
          AND i.lease_until > now() AND NOT j.stop_requested AND j.status IN ('queued', 'running')
+         AND NOT EXISTS (
+           SELECT 1 FROM pack_media_job_items blocker
+            WHERE blocker.job_id = j.id AND blocker.status IN ('needs_attention', 'in_progress')
+         )
        RETURNING i.card_id, i.kind, i.card_version_id, j.actor_user_id`,
       [itemId, token],
     );
@@ -385,6 +510,8 @@ export class PackMediaJobService {
     }
 
     try {
+      // The provider service checks accepted/ready media again immediately before any dispatch.
+      // In particular, a manager-authorized retry must not regenerate an item since made ready.
       const outcome = await this.media.generate({
         cardId,
         kind: work.kind as CardMediaKind,
@@ -452,11 +579,14 @@ export class PackMediaJobService {
 
   private async completeIfDone(jobId: string) {
     await this.pool.query(
-      `UPDATE pack_media_jobs SET status = CASE WHEN stop_requested THEN 'stopped' ELSE 'completed' END,
+      `UPDATE pack_media_jobs SET status = CASE
+              WHEN stop_requested THEN 'stopped'
+              WHEN EXISTS (SELECT 1 FROM pack_media_job_items WHERE job_id = $1 AND status = 'deferred') THEN 'completed_with_deferred'
+              ELSE 'completed' END,
               updated_at = now()
         WHERE id = $1 AND NOT EXISTS (
           SELECT 1 FROM pack_media_job_items
-           WHERE job_id = $1 AND status NOT IN ('generated', 'not_needed', 'stopped')
+           WHERE job_id = $1 AND status NOT IN ('generated', 'not_needed', 'stopped', 'deferred')
         )`,
       [jobId],
     );

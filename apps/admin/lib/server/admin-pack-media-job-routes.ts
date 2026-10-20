@@ -76,7 +76,7 @@ async function authorize(
       return { response: invalid() };
     }
   }
-  if (!session.operational)
+  if (!session.operational || (requireCsrf && !session.recent))
     return { response: json({ code: 'reauthentication_required' }, { status: 428 }) };
   if (!dependencies.enabled || !dependencies.service) {
     return { response: json({ code: 'disabled' }, { status: 503 }) };
@@ -128,6 +128,44 @@ export function createPackMediaJobStopRoute(dependencies: RouteDependencies) {
     if (!jobId || !uuidPattern.test(jobId)) return invalid();
     const job = await dependencies.service!.stop(jobId, authorized.actorUserId);
     return job ? json({ job }) : notFound();
+  };
+}
+
+export function createPackMediaJobResolveRoute(dependencies: RouteDependencies) {
+  return async function POST(request: Request): Promise<Response> {
+    const authorized = await authorize(request, dependencies, true);
+    if ('response' in authorized) return authorized.response;
+    const body = await readJson(request);
+    const jobId = typeof body?.jobId === 'string' ? body.jobId : undefined;
+    const itemId = typeof body?.itemId === 'string' ? body.itemId : undefined;
+    const action = body?.action;
+    const reason = typeof body?.reason === 'string' ? body.reason : undefined;
+    if (
+      !jobId ||
+      !uuidPattern.test(jobId) ||
+      !itemId ||
+      !uuidPattern.test(itemId) ||
+      (action !== 'defer' && action !== 'retry') ||
+      !reason ||
+      !reason.trim() ||
+      reason.length > 1200
+    )
+      return invalid();
+    const result = await dependencies.service!.resolve(
+      jobId,
+      itemId,
+      authorized.actorUserId,
+      action,
+      reason,
+      body?.confirmedPotentialDuplicateCharge === true,
+    );
+    if (result.status === 'forbidden') return json({ code: 'forbidden' }, { status: 403 });
+    if (result.status === 'not_found') return notFound();
+    if (result.status === 'invalid') return invalid();
+    if (result.status === 'confirmation_required')
+      return json({ code: 'confirmation_required' }, { status: 400 });
+    if (result.status === 'conflict') return json({ code: 'state_conflict' }, { status: 409 });
+    return json({ status: result.status, job: 'job' in result ? result.job : null });
   };
 }
 
