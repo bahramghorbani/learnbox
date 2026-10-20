@@ -1,14 +1,42 @@
 # Admin Production status
 
-**Current section reviewed 2026-10-16** against the Iran Production host, the release evidence of
-the 2026-10-16 release and the deployed product source `15e6783`. It is the canonical operational
-truth for the Production Admin panel at `https://admin.learnboxapp.com`. Host operations are in
-[`IRAN_PRODUCTION_RUNBOOK.md`](./IRAN_PRODUCTION_RUNBOOK.md). Release identity also
-appears in [`PROJECT_STATE.md`](../../PROJECT_STATE.md); product decisions live in
-[`PDR-010`](../product-decisions/PDR-010-ARTICLE-AWARE-AUDIO-AND-MEDIA-STANDARDS.md). The numbered
-sections after "Historical record" describe the 2026-10-09 state and are kept as history only.
+**Current section reviewed 2026-10-20** against the Iran Production host and the release evidence.
+It is the canonical operational truth for the Production Admin panel at
+`https://admin.learnboxapp.com`. Host operations are in
+[`IRAN_PRODUCTION_RUNBOOK.md`](./IRAN_PRODUCTION_RUNBOOK.md). Release identity also appears in
+[`PROJECT_STATE.md`](../../PROJECT_STATE.md); product decisions live in
+[`PDR-010`](../product-decisions/PDR-010-ARTICLE-AWARE-AUDIO-AND-MEDIA-STANDARDS.md).
 
-## Current state (2026-10-16)
+## Current state (2026-10-20)
+
+### Running release
+
+| Item                   | Value                                                                                                                                                                                |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Host                   | Iran Production behind ArvanCloud CDN, `linux/amd64`                                                                                                                                 |
+| Admin                  | `sha256:a43d23d59a560075406102932899224f142de66acb8c0a499357aa2d4dd39547`, healthy; product source `35cae1ea69888ec2b5d14efcd9cbae8cf435b744`                                        |
+| Learner App            | `sha256:d327590ca12e919dfff5f2d45394cb909b890a51422092c222ed569900517971`, healthy; product source `a7f582647e0297c04dcf2e967989e39ffd38df9c`                                        |
+| Release-control source | `f16b24230dbe2cb81d974a615a8aaebfbd4d1a26`; it is intentionally recorded separately from each product artifact                                                                       |
+| Schema head            | `0040_pack_media_jobs`, checksum `f85d70f261d4c2d30850d17fa1486083bb4e230c42e62c284304629f83f12897`                                                                                  |
+| Recovery proof         | Fresh backup `learnbox-20261020T095005Z.sql.gz`, checksum `0a9f7c8ccf470b6cca47051f483850f74b0b25175c9eec5bb09ca4cbec02996f`, fresh offsite copy and disposable restore drill passed |
+| Durable media runner   | Timer enabled and active; authenticated idle tick returned `http=200 status=idle`; no job, pending item or dispatching item existed at activation                                    |
+
+Payment and reconciliation remain disabled; the reconciliation timer is not enabled. The private
+Starter-media attachment remains off. Text AI, Media AI, voice selection and all existing Admin
+content controls remain as configured. The runner has no authority to accept, publish, regenerate or
+create a job. A job snapshot is created only by an authenticated Admin action; each timer invocation
+claims at most one item. A provider outcome that becomes unknown stays `needs_attention` and is not
+retried automatically.
+
+Normal Admin sessions have a 60-minute idle/operational lifetime. Sensitive operations retain the
+five-minute recent-authentication requirement. Manual logout and security revocation still end a
+session.
+
+Older tabs must reload after this release before further Admin work. Start a paid media run only by
+explicitly confirming the exact pack in the Admin panel; candidates remain private until manually
+accepted, and publication remains a separate human action.
+
+## Historical snapshot (2026-10-16; superseded by the state above)
 
 ### Running release
 
