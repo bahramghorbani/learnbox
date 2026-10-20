@@ -28,6 +28,7 @@ export type PackMediaJobItemView = {
   status: ItemStatus;
   candidateId: string | null;
   detail: string | null;
+  updatedAt: string | null;
 };
 
 export type PackMediaJobView = {
@@ -36,6 +37,8 @@ export type PackMediaJobView = {
   status: JobStatus;
   stopRequested: boolean;
   estimatedMaxSeconds: number;
+  /** Last durable completion, never an optimistic client-side estimate. */
+  lastProgressAt: string | null;
   counts: Record<ItemStatus, number>;
   items: PackMediaJobItemView[];
 };
@@ -207,7 +210,7 @@ export class PackMediaJobService {
     const row = job.rows[0];
     if (!row) return undefined;
     const itemRows = await this.pool.query(
-      `SELECT card_id, kind, status, candidate_id, detail
+      `SELECT card_id, kind, status, candidate_id, detail, updated_at
          FROM pack_media_job_items WHERE job_id = $1 ORDER BY created_at, card_id, kind`,
       [jobId],
     );
@@ -232,14 +235,25 @@ export class PackMediaJobService {
         status,
         candidateId: iso(entry.candidate_id),
         detail: iso(entry.detail),
+        updatedAt: iso(entry.updated_at),
       };
     });
+    const lastProgressAt = items
+      .filter((item) => item.status === 'generated' || item.status === 'not_needed')
+      .map((item) => item.updatedAt)
+      .filter((updatedAt): updatedAt is string => updatedAt !== null)
+      .reduce<string | null>(
+        (latest, updatedAt) =>
+          latest === null || Date.parse(updatedAt) > Date.parse(latest) ? updatedAt : latest,
+        null,
+      );
     return {
       id: String(row.id),
       packId: String(row.pack_id),
       status: jobStatus(row.status),
       stopRequested: row.stop_requested === true,
       estimatedMaxSeconds: Number(row.estimated_max_seconds),
+      lastProgressAt,
       counts,
       items,
     };
