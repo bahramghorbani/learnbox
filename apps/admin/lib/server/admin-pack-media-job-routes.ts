@@ -158,12 +158,15 @@ export function createPackMediaJobResolveRoute(dependencies: RouteDependencies) 
       action,
       reason,
       body?.confirmedPotentialDuplicateCharge === true,
+      body?.confirmedContinuePending === true,
     );
     if (result.status === 'forbidden') return json({ code: 'forbidden' }, { status: 403 });
     if (result.status === 'not_found') return notFound();
     if (result.status === 'invalid') return invalid();
     if (result.status === 'confirmation_required')
       return json({ code: 'confirmation_required' }, { status: 400 });
+    if (result.status === 'continuation_confirmation_required')
+      return json({ code: 'continuation_confirmation_required' }, { status: 400 });
     if (result.status === 'conflict') return json({ code: 'state_conflict' }, { status: 409 });
     return json({ status: result.status, job: 'job' in result ? result.job : null });
   };

@@ -322,6 +322,7 @@ export class PackMediaJobService {
     action: 'defer' | 'retry',
     reason: string,
     confirmedPotentialDuplicateCharge: boolean,
+    confirmedContinuePending = false,
   ) {
     const normalizedReason = reason.trim();
     if (!normalizedReason || normalizedReason.length > 1200) return { status: 'invalid' as const };
@@ -332,7 +333,8 @@ export class PackMediaJobService {
     try {
       await client.query('BEGIN');
       const locked = await client.query(
-        `SELECT j.id, j.status AS job_status, j.stop_requested, i.status AS item_status
+        `SELECT j.id, j.status AS job_status, j.stop_requested, i.status AS item_status,
+                (SELECT count(*)::int FROM pack_media_job_items WHERE job_id = j.id AND status = 'pending') AS pending_count
            FROM pack_media_jobs j
            JOIN pack_media_job_items i ON i.job_id = j.id
           WHERE j.id = $1 AND j.actor_user_id = $2 AND i.id = $3
@@ -364,6 +366,10 @@ export class PackMediaJobService {
       ) {
         await client.query('ROLLBACK');
         return { status: 'conflict' as const };
+      }
+      if (action === 'defer' && Number(current.pending_count) > 0 && !confirmedContinuePending) {
+        await client.query('ROLLBACK');
+        return { status: 'continuation_confirmation_required' as const };
       }
       if (action === 'retry') {
         const candidate = await client.query(
@@ -406,7 +412,12 @@ export class PackMediaJobService {
             ? 'pack_media_job.defer_unknown_item'
             : 'pack_media_job.retry_unknown_item',
           jobId,
-          { item_id: itemId, reason: normalizedReason, prior_outcome_may_have_been_billed: true },
+          {
+            item_id: itemId,
+            reason: normalizedReason,
+            prior_outcome_may_have_been_billed: true,
+            pending_continuation_confirmed: action === 'defer' && Number(current.pending_count) > 0,
+          },
         ],
       );
       await client.query('COMMIT');

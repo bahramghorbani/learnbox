@@ -96,6 +96,15 @@ function formatTimestamp(value: string | null) {
     : '—';
 }
 
+function attentionDetail(detail: string | null) {
+  if (detail === 'provider_timeout' || detail === 'provider_provider_timeout')
+    return 'مهلت پاسخ provider تمام شد؛ نتیجهٔ درخواست قبلی نامعلوم است.';
+  if (detail === 'dispatch_outcome_unknown')
+    return 'پس از ارسال درخواست، نتیجه به‌طور قطعی ثبت نشد.';
+  if (detail === 'already_generating') return 'عملیات قبلی هنوز نتیجهٔ قطعی ندارد.';
+  return 'نتیجهٔ درخواست قبلی نامعلوم است.';
+}
+
 function jobNotice(job: PackMediaJob) {
   if (job.status === 'needs_attention')
     return 'یک مورد در وضعیت نامعلوم یا در حال اجرای قبلی است؛ هیچ درخواست دیگری خودکار ارسال نمی‌شود.';
@@ -133,6 +142,7 @@ export function PackMediaCompletion({
     action: 'defer' | 'retry',
     reason: string,
     confirmedPotentialDuplicateCharge: boolean,
+    confirmedContinuePending: boolean,
   ) => Promise<ResolveJobResult>;
   onOpenCard: (card: { cardId: string; label: string }) => void;
   onFinished: () => void;
@@ -140,6 +150,7 @@ export function PackMediaCompletion({
   const [busy, setBusy] = useState<'scanning' | 'creating' | 'stopping' | 'resolving'>();
   const [resolutionReason, setResolutionReason] = useState('');
   const [confirmedPotentialDuplicateCharge, setConfirmedPotentialDuplicateCharge] = useState(false);
+  const [confirmedContinuePending, setConfirmedContinuePending] = useState(false);
   const [scanError, setScanError] = useState<string>();
   const [scan, setScan] = useState<PackMediaScan>();
   const [job, setJob] = useState<PackMediaJob>();
@@ -235,6 +246,7 @@ export function PackMediaCompletion({
         action,
         resolutionReason,
         action === 'retry' && confirmedPotentialDuplicateCharge,
+        action === 'defer' && confirmedContinuePending,
       );
       if (!result.ok) {
         setJobError(result.message);
@@ -245,6 +257,7 @@ export function PackMediaCompletion({
       priorJobStatus.current = result.job.status;
       setResolutionReason('');
       setConfirmedPotentialDuplicateCharge(false);
+      setConfirmedContinuePending(false);
       if (action === 'defer' && result.job.counts.pending > 0) onFinishedRef.current();
     } catch {
       setJobError('نتیجهٔ رسیدگی خوانده نشد؛ پیش از اقدام دوباره وضعیت را تازه کنید.');
@@ -333,14 +346,37 @@ export function PackMediaCompletion({
                       {item.status === 'deferred' ? 'موکول‌شده' : 'نیازمند رسیدگی'}
                     </p>
                     {item.status === 'needs_attention' ? (
-                      <button
-                        type="button"
-                        className="btn"
-                        disabled={Boolean(busy) || !resolutionReason.trim()}
-                        onClick={() => void resolveItem(item.id, 'defer')}
-                      >
-                        موکول‌کردن این مورد و ادامهٔ بقیه
-                      </button>
+                      <p>{attentionDetail(item.detail)}</p>
+                    ) : null}
+                    {item.status === 'needs_attention' ? (
+                      <>
+                        {job.counts.pending > 0 ? (
+                          <label>
+                            <input
+                              type="checkbox"
+                              checked={confirmedContinuePending}
+                              onChange={(event) =>
+                                setConfirmedContinuePending(event.target.checked)
+                              }
+                            />
+                            می‌دانم با موکول‌کردن، فقط {faNum(job.counts.pending)} مورد pending همین
+                            job و snapshot ثبت‌شدهٔ آن، پس از فعال‌بودن runner، ادامه می‌یابد؛ این
+                            دکمه هیچ درخواست provider ارسال نمی‌کند.
+                          </label>
+                        ) : null}
+                        <button
+                          type="button"
+                          className="btn"
+                          disabled={
+                            Boolean(busy) ||
+                            !resolutionReason.trim() ||
+                            (job.counts.pending > 0 && !confirmedContinuePending)
+                          }
+                          onClick={() => void resolveItem(item.id, 'defer')}
+                        >
+                          موکول‌کردن این مورد و ادامهٔ بقیه
+                        </button>
+                      </>
                     ) : (
                       <>
                         <p className="notice error">
