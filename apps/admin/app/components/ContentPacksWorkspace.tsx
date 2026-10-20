@@ -596,9 +596,12 @@ export function ContentPacksWorkspace() {
     void loadPacks();
   }, [loadPacks]);
 
-  const loadCards = useCallback(async (packId: string) => {
-    setCardsPhase('loading');
-    setCards([]);
+  const loadCards = useCallback(async (packId: string, options?: { background?: boolean }) => {
+    const background = options?.background === true;
+    if (!background) {
+      setCardsPhase('loading');
+      setCards([]);
+    }
     try {
       const response = await fetch(`/api/content/packs/${encodeURIComponent(packId)}`, {
         credentials: 'same-origin',
@@ -607,9 +610,9 @@ export function ContentPacksWorkspace() {
       if (!response.ok) throw new Error('cards unavailable');
       const payload = (await response.json()) as { cards?: ServerCard[] };
       setCards(Array.isArray(payload.cards) ? payload.cards : []);
-      setCardsPhase('ready');
+      if (!background) setCardsPhase('ready');
     } catch {
-      setCardsPhase('error');
+      if (!background) setCardsPhase('error');
     }
   }, []);
 
@@ -1086,7 +1089,7 @@ export function ContentPacksWorkspace() {
                       stopJob={stopPackMediaJob}
                       onOpenCard={setMediaCard}
                       onFinished={() => {
-                        if (openPackId) void loadCards(openPackId);
+                        if (openPackId) void loadCards(openPackId, { background: true });
                       }}
                     />
                   ) : null}

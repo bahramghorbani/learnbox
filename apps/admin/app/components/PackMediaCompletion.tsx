@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { scanPackMedia, type PackMediaItem, type PackMediaScan } from './card-media-bulk';
 import type { CardMediaKind, MediaKindState } from './CardMediaPanel';
@@ -30,6 +30,7 @@ export type PackMediaJob = {
   status: JobStatus;
   stopRequested: boolean;
   estimatedMaxSeconds: number;
+  lastProgressAt: string | null;
   counts: Record<JobItemStatus, number>;
   items: {
     cardId: string;
@@ -58,8 +59,32 @@ function jobItemCount(job: PackMediaJob) {
   return Object.values(job.counts).reduce((total, count) => total + count, 0);
 }
 
-function jobProgress(job: PackMediaJob) {
-  return job.counts.generated + job.counts.not_needed + job.counts.stopped;
+function jobResolvedCount(job: PackMediaJob) {
+  return job.counts.generated + job.counts.not_needed;
+}
+
+function jobPercent(job: PackMediaJob) {
+  const total = jobItemCount(job);
+  return total === 0 ? 0 : Math.round((jobResolvedCount(job) / total) * 100);
+}
+
+function isTerminalJobStatus(status: JobStatus | undefined) {
+  return status === 'completed' || status === 'stopped' || status === 'needs_attention';
+}
+
+function activeOperation(job: PackMediaJob) {
+  const active = job.items.find((item) =>
+    ['leased', 'dispatching', 'in_progress'].includes(item.status),
+  );
+  return active ? `${KIND_LABEL[active.kind]} — ${active.status}` : null;
+}
+
+function formatTimestamp(value: string | null) {
+  return value
+    ? new Intl.DateTimeFormat('fa-IR', { dateStyle: 'short', timeStyle: 'medium' }).format(
+        new Date(value),
+      )
+    : '—';
 }
 
 function jobNotice(job: PackMediaJob) {
@@ -98,23 +123,30 @@ export function PackMediaCompletion({
   const [scan, setScan] = useState<PackMediaScan>();
   const [job, setJob] = useState<PackMediaJob>();
   const [jobError, setJobError] = useState<string>();
+  const priorJobStatus = useRef<JobStatus | undefined>(undefined);
+  const onFinishedRef = useRef(onFinished);
+
+  useEffect(() => {
+    onFinishedRef.current = onFinished;
+  }, [onFinished]);
 
   const refreshJob = useCallback(async () => {
     try {
       const next = await loadJob(packId);
       setJob(next);
       setJobError(undefined);
-      if (
-        next?.status === 'completed' ||
-        next?.status === 'stopped' ||
-        next?.status === 'needs_attention'
-      ) {
-        onFinished();
+      const previous = priorJobStatus.current;
+      priorJobStatus.current = next?.status;
+      // An already-terminal first observation is not a state transition. Treating it as one cleared
+      // the existing card table every poll through the parent refresh callback.
+      if (previous && !isTerminalJobStatus(previous) && isTerminalJobStatus(next?.status)) {
+        onFinishedRef.current();
       }
     } catch {
+      setJob(undefined);
       setJobError('خواندن وضعیت اجرای پایدار ناموفق بود.');
     }
-  }, [loadJob, onFinished, packId]);
+  }, [loadJob, packId]);
 
   useEffect(() => {
     void refreshJob();
@@ -150,7 +182,7 @@ export function PackMediaCompletion({
     }
     setJob(result.job);
     setScan(undefined);
-    onFinished();
+    priorJobStatus.current = result.job?.status;
   }
 
   async function stop() {
@@ -164,6 +196,11 @@ export function PackMediaCompletion({
       return;
     }
     setJob(result.job);
+    const previous = priorJobStatus.current;
+    priorJobStatus.current = result.job.status;
+    if (previous && !isTerminalJobStatus(previous) && isTerminalJobStatus(result.job.status)) {
+      onFinishedRef.current();
+    }
   }
 
   const activeJob = job?.status === 'queued' || job?.status === 'running';
@@ -199,12 +236,19 @@ export function PackMediaCompletion({
       {job ? (
         <div data-pack-media="job-progress">
           <p>
-            {jobNotice(job)} {faNum(jobProgress(job))} از {faNum(jobItemCount(job))} مورد تعیین
-            تکلیف شده‌اند.
+            {jobNotice(job)} {faNum(jobResolvedCount(job))} از {faNum(jobItemCount(job))} مورد
+            تعیین‌تکلیف شده‌اند ({faNum(jobPercent(job))}٪ واقعی).
           </p>
           <p>
-            سقف زمانی برآوردشده: {faNum(job.estimatedMaxSeconds)} ثانیه؛ بر پایهٔ timeoutهای
-            تنظیم‌شده و فاصلهٔ {faNum(5)} ثانیه‌ای پس از هر مورد.
+            آماده: {faNum(job.counts.generated)}، نیازی نبود: {faNum(job.counts.not_needed)}، منتظر:
+            {faNum(job.counts.pending)}، در حال اجرا:
+            {faNum(job.counts.leased + job.counts.dispatching + job.counts.in_progress)}، نیازمند
+            رسیدگی:
+            {faNum(job.counts.needs_attention)}.
+          </p>
+          <p>
+            عملیات جاری: {activeOperation(job) ?? '—'}؛ آخرین پیشرفت واقعی:{' '}
+            {formatTimestamp(job.lastProgressAt)}.
           </p>
           {job.status === 'needs_attention' || job.counts.in_progress > 0 ? (
             <p className="notice error">
