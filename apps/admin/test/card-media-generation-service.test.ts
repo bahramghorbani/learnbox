@@ -85,6 +85,7 @@ function createPool(card: CardFixture | undefined, options: { editorial?: boolea
             {
               id: CARD_ID,
               content_id: 'start-a1-fixture',
+              version_id: '44444444-4444-4444-8444-444444444444',
               lemma: card.lemma,
               content_json: {
                 lemma: card.lemma,
@@ -664,6 +665,19 @@ describe('guards', () => {
       actorUserId: ACTOR,
     });
     expect(result.status).toBe('card_not_found');
+  });
+
+  it('does not dispatch a provider call when the job snapshot version changed', async () => {
+    const { service, provider } = createService({ lemma: 'Tisch', article: 'der' });
+    const result = await service.generate({
+      cardId: CARD_ID,
+      kind: 'word_audio',
+      actorUserId: ACTOR,
+      expectedCardVersionId: '55555555-5555-4555-8555-555555555555',
+    });
+
+    expect(result).toMatchObject({ status: 'unprocessable', code: 'content_changed' });
+    expect(provider.synthesizeSpeech).not.toHaveBeenCalled();
   });
 
   it('refuses a second concurrent generation for the same card and kind', async () => {

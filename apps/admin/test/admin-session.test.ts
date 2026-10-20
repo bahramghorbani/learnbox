@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   adminSessionCookie,
+  adminSessionIdleLifetimeMs,
   createAdminSessionSecrets,
   evaluateAdminSession,
   hashAdminSecret,
@@ -52,10 +53,25 @@ describe('evaluateAdminSession', () => {
     ).toEqual({ active: true, operational: false, recent: false });
   });
 
+  it('keeps ordinary work active at 16 and 59 minutes without extending sensitive reauthentication', () => {
+    for (const idleMinutes of [16, 59]) {
+      expect(
+        evaluateAdminSession(
+          {
+            ...activeSession,
+            lastSeenAt: new Date(now.getTime() - idleMinutes * 60_000),
+            recentAuthenticatedAt: new Date(now.getTime() - idleMinutes * 60_000),
+          },
+          now,
+        ),
+      ).toEqual({ active: true, operational: true, recent: false });
+    }
+  });
+
   it('rejects idle, absolutely expired, and revoked sessions', () => {
     expect(
       evaluateAdminSession(
-        { ...activeSession, lastSeenAt: new Date(now.getTime() - 60 * 60_000 - 1) },
+        { ...activeSession, lastSeenAt: new Date(now.getTime() - adminSessionIdleLifetimeMs - 1) },
         now,
       ),
     ).toEqual({ active: false, reason: 'idle_expired' });

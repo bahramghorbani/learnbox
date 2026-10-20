@@ -35,6 +35,7 @@ afterwards.
 | `iran/ops-access/learnbox-ws-ssh.service`                                | `/etc/systemd/system/`                                                      |
 | `iran/monitor/learnbox-iran-monitor-enroll.sh`, `…-disk-test.sh`         | not installed; enrollment runs on the owner Mac, the disk test on demand    |
 | `iran/commerce/learnbox-commerce-reconcile.{sh,service,timer}`           | **not installed**; part of payment activation (see below)                   |
+| `iran/admin/learnbox-pack-media-runner.{sh,service,timer}`               | **not installed**; requires a separately authorized media-worker rollout    |
 
 App and Admin compose files reference images by local image ID (`sha256:…`). The image IDs are
 the deployed digests in `ADMIN_PRODUCTION_STATUS.md`. A release changes exactly that line.
@@ -222,6 +223,51 @@ endpoint without its executor.
 - Per payment, the Admin transaction details show the check count, the last provider code and
   «بررسی بعدی» (next check). After 20 inconclusive checks an attempt shows that the check limit was
   reached and stays in «نیازمند بررسی» until someone handles it.
+
+## Durable pack-media worker (not installed)
+
+This is a separately authorized Admin feature, unrelated to payment activation. Repository artifacts
+`iran/admin/learnbox-pack-media-runner.{sh,service,timer}` are source-only until an authorized
+release copies them to the paths in the table above. The runner and its routes default to disabled;
+no timer, credential, Admin runtime or candidate changes occur merely by merging these files.
+
+The Admin approval stores one immutable job snapshot: pack membership, item kind and card-version for
+each missing slot. Each invocation claims **one** item, records `dispatching` before the provider
+call, and uses the existing card-media generator to make a private candidate. It does not accept,
+publish or attach media. A stopped job prevents the next claim but does not discard a candidate that
+an already-dispatched provider request happens to return.
+
+**Activation order — requires separate owner authorization:**
+
+1. Deploy the approved Admin image and migration with both `LEARNBOX_PACK_MEDIA_RUNNER_ENABLED=false`
+   and the token absent. Copy the script and units, run `systemctl daemon-reload`, but do not create
+   a job.
+2. Put a new 32+ character `LEARNBOX_PACK_MEDIA_RUNNER_TOKEN` only in the protected Admin runtime
+   environment. Do not print it. Recreate Admin while the runner flag remains false, then verify by
+   variable name and length only.
+3. Enable and start `learnbox-pack-media-runner.timer`; require `systemctl is-enabled`,
+   `systemctl is-active`, and `systemctl list-timers` to show its next trigger. A 404 while disabled
+   proves only that the route rejects work; it is not proof that execution is ready.
+4. Only after the timer is active, set `LEARNBOX_PACK_MEDIA_RUNNER_ENABLED=true` and recreate Admin.
+   The public job-creation route now accepts an approved snapshot only because the executor is
+   already scheduled; there is no acceptance-without-executor interval. An empty runner response
+   `http=200 status=idle` is the non-provider readiness check.
+
+The timer waits five seconds **after** the preceding invocation completes, rather than adding a long
+polling gap. The UI displays a transparent upper bound from the stored snapshot: every image uses the
+configured image timeout, every audio item uses the configured audio timeout, plus five seconds
+between items. For example, 358 items finish within the displayed sum; at an assumed 180-second
+image timeout and 60-second audio timeout, a mix must be computed from the snapshot rather than
+pretending all 358 have the same duration.
+
+**Recovery and control:** a crash before `dispatching` leaves an expired lease safely claimable. A
+crash, timeout or `already_generating` after dispatch becomes `needs_attention`/`in_progress`; it
+blocks a new job for that pack and actor and is never automatically retried, because a paid provider
+request may already exist. The initiator can observe or stop only their own job; a reopened browser
+reads the persisted state, but polling neither dispatches work nor extends a session. Last run:
+`cat /home/ubuntu/learnbox/ops/state/pack-media-runner.status`; schedule:
+`systemctl list-timers learnbox-pack-media-runner.timer`; history:
+`journalctl -u learnbox-pack-media-runner.service -n 20`.
 
 ## Recovery material
 
