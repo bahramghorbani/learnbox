@@ -76,6 +76,14 @@ export interface CardEditInput {
   idempotencyKey: string;
 }
 
+/** Removes only this pack's membership edge; canonical content and media history are retained. */
+export interface CardRemoveFromPackInput {
+  packId: string;
+  cardId: string;
+  reason: string;
+  idempotencyKey: string;
+}
+
 /** The editable educational surface. Mirrors `LearningVocabularyItem` minus derived/gated fields. */
 export interface CardContentInput {
   lemma: string;
@@ -110,6 +118,13 @@ export type CardWriteResult =
   | { status: 'invalid'; issues: Array<{ field: string; message: string }> }
   | { status: 'idempotent'; cardId: string; cardVersionId: string }
   | { status: 'applied'; cardId: string; cardVersionId: string; version: number };
+
+export type CardRemoveFromPackResult =
+  | { status: 'forbidden' }
+  | { status: 'conflict'; reason: string }
+  | { status: 'not_found' }
+  | { status: 'idempotent'; cardId: string }
+  | { status: 'applied'; cardId: string; remainingCardCount: number; targetItemCount: number };
 
 type QueryResult = { rows: Record<string, unknown>[] };
 type Queryable = {
@@ -651,6 +666,78 @@ export class PostgresContentPacksWriteStore {
       if (isUniqueConstraintViolation(error)) {
         return { status: 'conflict', reason: 'content_id_exists' };
       }
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
+  /**
+   * Detaches a draft card from one pack in a single transaction. The card, versions, assets,
+   * candidates, attempts, jobs and snapshots are deliberately retained as shared audit evidence.
+   */
+  async removeCardFromPack(
+    input: CardRemoveFromPackInput & { actorUserId: string },
+  ): Promise<CardRemoveFromPackResult> {
+    const { actorUserId } = input;
+    if (!canonicalUuidPattern.test(actorUserId)) throw new Error('Actor user id is invalid.');
+    if (!canonicalUuidPattern.test(input.idempotencyKey)) throw new Error('Idempotency key is invalid.');
+    const packId = trimmed(input.packId).toLowerCase();
+    const reason = trimmed(input.reason);
+    if (!packIdPattern.test(packId) || !canonicalUuidPattern.test(input.cardId)) return { status: 'not_found' };
+    if (!reason || reason.length > 1_000) return { status: 'conflict', reason: 'reason_required' };
+
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      if (!(await this.assertRole(client, actorUserId))) {
+        await client.query('ROLLBACK');
+        return { status: 'forbidden' };
+      }
+      const replayed = await this.replay(client, 'content_card.remove_from_pack', input.idempotencyKey);
+      if (replayed) {
+        await client.query('ROLLBACK');
+        return { status: 'idempotent', cardId: replayed };
+      }
+      const pack = await client.query(
+        'SELECT status, target_item_count FROM packs WHERE id = $1 FOR UPDATE',
+        [packId],
+      );
+      if (pack.rows.length === 0) {
+        await client.query('ROLLBACK');
+        return { status: 'not_found' };
+      }
+      if (!['draft', 'ai_generated'].includes(String(pack.rows[0]!.status))) {
+        await client.query('ROLLBACK');
+        return { status: 'conflict', reason: 'pack_not_draft' };
+      }
+      const membership = await client.query(
+        'SELECT 1 FROM pack_cards WHERE pack_id = $1 AND card_id = $2 FOR UPDATE',
+        [packId, input.cardId],
+      );
+      if (membership.rows.length === 0) {
+        await client.query('ROLLBACK');
+        return { status: 'not_found' };
+      }
+      await client.query('DELETE FROM pack_cards WHERE pack_id = $1 AND card_id = $2', [packId, input.cardId]);
+      const remaining = await client.query(
+        'SELECT count(*)::int AS count FROM pack_cards WHERE pack_id = $1',
+        [packId],
+      );
+      const remainingCardCount = Number(remaining.rows[0]?.count ?? 0);
+      const targetItemCount = Number(pack.rows[0]!.target_item_count ?? 0);
+      await this.audit(client, actorUserId, 'content_card.remove_from_pack', 'card', input.cardId, {
+        idempotency_key: input.idempotencyKey,
+        pack_id: packId,
+        reason,
+        remaining_card_count: remainingCardCount,
+        target_item_count: targetItemCount,
+        preserved: ['card', 'card_versions', 'card_media_assets', 'card_media_candidates', 'pack_media_jobs'],
+      });
+      await client.query('COMMIT');
+      return { status: 'applied', cardId: input.cardId, remainingCardCount, targetItemCount };
+    } catch (error) {
+      await client.query('ROLLBACK');
       throw error;
     } finally {
       client.release();

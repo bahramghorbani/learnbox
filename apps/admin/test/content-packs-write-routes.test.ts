@@ -4,6 +4,7 @@ import { readAdminContentPacksManageConfig } from '../lib/server/admin-content-p
 import {
   createContentCardCreateRoute,
   createContentCardEditRoute,
+  createContentCardRemoveFromPackRoute,
   createContentPackCreateRoute,
   createContentPackEditRoute,
 } from '../lib/server/admin-content-packs-write-routes';
@@ -329,6 +330,39 @@ describe('pack/card mutation authorization', () => {
 
     expect(response.status).toBe(200);
     expect(seen.actorUserId).toBe(actorUserId);
+  });
+
+  it('requires an explicit confirmation and reason before removing a card from a pack', async () => {
+    const route = createContentCardRemoveFromPackRoute({
+      enabled: true,
+      config,
+      sessionStore: sessionStore(),
+      store: unreachableStore('removeCardFromPack'),
+      now: () => now,
+    });
+    const context = { params: Promise.resolve({ packId: 'learnbox-m12', cardId }) };
+    expect((await route(mutationRequest('/api/content/packs/learnbox-m12/cards/x', { reason: 'x' }, { method: 'DELETE' }), context)).status).toBe(400);
+    expect((await route(mutationRequest('/api/content/packs/learnbox-m12/cards/x', { confirm: true, reason: '   ' }, { method: 'DELETE' }), context)).status).toBe(400);
+  });
+
+  it('passes a confirmed removal with the session actor to the store', async () => {
+    let seen: { actorUserId?: string; packId?: string; cardId?: string; reason?: string } = {};
+    const route = createContentCardRemoveFromPackRoute({
+      enabled: true,
+      config,
+      sessionStore: sessionStore(),
+      store: { removeCardFromPack: async (input) => {
+        seen = input;
+        return { status: 'applied' as const, cardId: input.cardId, remainingCardCount: 119, targetItemCount: 120 };
+      } },
+      now: () => now,
+    });
+    const response = await route(
+      mutationRequest('/api/content/packs/learnbox-m12/cards/x', { confirm: true, reason: 'رسانه ناقص' }, { method: 'DELETE' }),
+      { params: Promise.resolve({ packId: 'learnbox-m12', cardId }) },
+    );
+    expect(response.status).toBe(200);
+    expect(seen).toMatchObject({ actorUserId, packId: 'learnbox-m12', cardId, reason: 'رسانه ناقص' });
   });
 
   it('reports canonical validation issues as a structured 422', async () => {

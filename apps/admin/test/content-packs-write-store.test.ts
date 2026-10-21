@@ -276,6 +276,41 @@ describe('pack create/edit stay inside the canonical model', () => {
     expect(update.sql).not.toContain('published_at');
   });
 
+  it('removes only a draft pack membership edge and audits the preserved evidence', async () => {
+    const { pool, recorded } = fakePool([
+      editorialRole,
+      ['FROM packs WHERE id = $1 FOR UPDATE', [{ status: 'draft', target_item_count: 120 }]],
+      ['FROM pack_cards WHERE pack_id = $1 AND card_id = $2 FOR UPDATE', [{ '?column?': 1 }]],
+      ['count(*)::int AS count', [{ count: 119 }]],
+    ]);
+    const store = new PostgresContentPacksWriteStore(pool);
+
+    const result = await store.removeCardFromPack({
+      packId: 'learnbox-m12', cardId, reason: 'رسانهٔ ناقص', idempotencyKey, actorUserId,
+    });
+
+    expect(result).toEqual({ status: 'applied', cardId, remainingCardCount: 119, targetItemCount: 120 });
+    const sql = recorded.map((entry) => entry.sql).join('\n');
+    expect(sql).toContain('DELETE FROM pack_cards');
+    expect(sql).not.toContain('DELETE FROM cards');
+    expect(sql).not.toContain('DELETE FROM card_versions');
+    const audit = recorded.find((entry) => entry.sql.includes('INSERT INTO audit_logs'))!;
+    expect(audit.parameters).toContain('content_card.remove_from_pack');
+    expect(recorded.map((entry) => entry.sql)).toContain('COMMIT');
+  });
+
+  it('never removes a membership after the pack has left draft', async () => {
+    const { pool, recorded } = fakePool([
+      editorialRole,
+      ['FROM packs WHERE id = $1 FOR UPDATE', [{ status: 'needs_review', target_item_count: 120 }]],
+    ]);
+    const result = await new PostgresContentPacksWriteStore(pool).removeCardFromPack({
+      packId: 'learnbox-m12', cardId, reason: 'رسانهٔ ناقص', idempotencyKey, actorUserId,
+    });
+    expect(result).toEqual({ status: 'conflict', reason: 'pack_not_draft' });
+    expect(recorded.map((entry) => entry.sql).join('\n')).not.toContain('DELETE FROM pack_cards');
+  });
+
   it('creates a card, its draft version and the pack membership edge in one transaction', async () => {
     const { pool, recorded } = fakePool([
       editorialRole,
