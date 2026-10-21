@@ -769,6 +769,19 @@ export function ContentPacksWorkspace() {
     return { ok: true as const, job };
   }
 
+  async function reconcilePackMediaJob(jobId: string) {
+    const result = await postAiJson<{ status?: string; count?: number; job?: PackMediaJob | null }>(
+      '/api/content/media/jobs/reconcile',
+      { jobId },
+    );
+    if (!result.ok) return { ok: false as const, message: result.message };
+    if (result.payload.status !== 'reconciled')
+      return { ok: false as const, message: 'تطابق‌سازی انجام نشد؛ وضعیت را دوباره بخوانید.' };
+    const job = result.payload.job ?? (openPackId ? await loadPackMediaJob(openPackId) : undefined);
+    if (!job) return { ok: false as const, message: 'وضعیت job پس از تطابق‌سازی خوانده نشد.' };
+    return { ok: true as const, job, count: result.payload.count ?? 0 };
+  }
+
   const visible = packs.filter((pack) => (filter === 'all' ? true : pack.status === filter));
   const tabCount = (key: string) =>
     key === 'all' ? packs.length : packs.filter((pack) => pack.status === key).length;
@@ -1136,6 +1149,7 @@ export function ContentPacksWorkspace() {
                       createJob={createPackMediaJob}
                       stopJob={stopPackMediaJob}
                       resolveJob={resolvePackMediaJob}
+                      reconcileJob={reconcilePackMediaJob}
                       onOpenCard={setMediaCard}
                       onFinished={() => {
                         if (openPackId) void loadCards(openPackId, { background: true });

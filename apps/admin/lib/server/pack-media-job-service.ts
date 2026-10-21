@@ -602,6 +602,99 @@ export class PackMediaJobService {
       [jobId],
     );
   }
+
+  /**
+   * Reconciles deferred job items whose card+kind already has an accepted candidate in the
+   * current card version snapshot.
+   *
+   * Safe to call on an existing accepted record (i.e. `already_accepted` path) — this is the
+   * intended production recovery for "candidate 007a466b accepted, job item remains deferred".
+   *
+   * Each matched item is updated in one transaction:
+   *   - status → 'generated', candidate_id attached, detail = 'reconciled_by_manual_accept'
+   *   - no candidate is created, no provider is called, no accept is issued
+   *   - only items matching (deferred + accepted asset exists + card_version_id = current) are touched
+   *
+   * Job status is recomputed using the same terminal-state logic as completeIfDone().
+   */
+  async reconcileAccepted(
+    actorUserId: string,
+    jobId: string,
+  ): Promise<
+    | { status: 'reconciled'; count: number; job: PackMediaJobView }
+    | { status: 'forbidden' }
+    | { status: 'not_found' }
+  > {
+    if (!(await this.editorial(actorUserId))) return { status: 'forbidden' };
+
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      // Verify the job exists and belongs to this actor.
+      const jobRow = await client.query(
+        `SELECT id FROM pack_media_jobs WHERE id = $1 AND actor_user_id = $2 FOR UPDATE`,
+        [jobId, actorUserId],
+      );
+      if (!jobRow.rows[0]) {
+        await client.query('ROLLBACK');
+        return { status: 'not_found' };
+      }
+
+      // Atomically update every deferred item that has an accepted candidate for the
+      // exact card version the job was approved for. No other items are touched.
+      // The subquery confirms the accepted candidate's status so a 'ready' candidate
+      // that was never accepted does NOT satisfy the condition.
+      const result = await client.query(
+        `UPDATE pack_media_job_items
+            SET status        = 'generated',
+                candidate_id  = a.candidate_id,
+                detail        = 'reconciled_by_manual_accept',
+                lease_token   = NULL,
+                lease_until   = NULL,
+                updated_at    = now()
+           FROM card_media_assets a
+           JOIN card_media_candidates mc ON mc.id = a.candidate_id AND mc.status = 'accepted'
+          WHERE pack_media_job_items.job_id   = $1
+            AND pack_media_job_items.status   = 'deferred'
+            AND a.card_id = pack_media_job_items.card_id
+            AND a.kind    = pack_media_job_items.kind
+            AND pack_media_job_items.card_version_id = (
+                  SELECT id FROM card_versions
+                   WHERE card_id = pack_media_job_items.card_id
+                   ORDER BY version DESC
+                   LIMIT 1
+                )
+          RETURNING pack_media_job_items.id`,
+        [jobId],
+      );
+      const count = result.rows.length;
+
+      // Recompute job status (same logic as completeIfDone but inside this transaction).
+      await client.query(
+        `UPDATE pack_media_jobs SET status = CASE
+                WHEN stop_requested THEN 'stopped'
+                WHEN EXISTS (SELECT 1 FROM pack_media_job_items WHERE job_id = $1 AND status = 'deferred') THEN 'completed_with_deferred'
+                ELSE 'completed' END,
+                updated_at = now()
+          WHERE id = $1 AND NOT EXISTS (
+            SELECT 1 FROM pack_media_job_items
+             WHERE job_id = $1 AND status NOT IN ('generated', 'not_needed', 'stopped', 'deferred')
+          )`,
+        [jobId],
+      );
+
+      await client.query('COMMIT');
+
+      const job = await this.get(jobId, actorUserId);
+      return { status: 'reconciled', count, job: job! };
+    } catch (error) {
+      await client.query('ROLLBACK').catch(() => undefined);
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
 }
 
 export const PACK_MEDIA_RUNNER_GAP_SECONDS = runnerGapSeconds;
