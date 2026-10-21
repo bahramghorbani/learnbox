@@ -160,7 +160,13 @@ export function CardMediaPanel(props: CardMediaPanelProps) {
   const [error, setError] = useState<string | undefined>(undefined);
   const [loadFailed, setLoadFailed] = useState(false);
 
-  const refresh = useCallback(async () => {
+  // Tracks when we first observed a generating-but-not-busy state (post-disconnect case).
+  // Bounds polling so we never poll indefinitely; resets when generating state clears.
+  // ponytail: 120s bound matches the server-side provider timeout window; increase only if
+  //           production timeouts are raised (see leaseSeconds in pack-media-job-service.ts).
+  const pollStartRef = React.useRef<number | null>(null);
+
+  const refresh = useCallback(async (): Promise<MediaKindState[] | undefined> => {
     let next: MediaKindState[] | undefined;
     try {
       next = await props.onLoadState();
@@ -170,16 +176,17 @@ export function CardMediaPanel(props: CardMediaPanelProps) {
         setLoadFailed(false);
         setState(undefined); // never show a state the server just refused to confirm
         setError(failure.message);
-        return;
+        return undefined;
       }
       next = undefined;
     }
     if (!next) {
       setLoadFailed(true);
-      return;
+      return undefined;
     }
     setLoadFailed(false);
     setState(next);
+    return next;
   }, [props]);
 
   async function retryRead() {
@@ -190,6 +197,24 @@ export function CardMediaPanel(props: CardMediaPanelProps) {
   useEffect(() => {
     void refresh();
   }, [refresh]);
+
+  // Poll state when a generating candidate is visible but no request is in flight.
+  // Covers the case where a proxy disconnect (Caddy status=0) severed the HTTP connection
+  // before the server completed generation — the server keeps running; we observe durable state.
+  // Never retries generation; never fires while busyKind is set (request still in flight).
+  useEffect(() => {
+    if (busyKind !== undefined || !state) return;
+    const hasGenerating = state.some((s) => s.latestCandidate?.status === 'generating');
+    if (!hasGenerating) {
+      pollStartRef.current = null;
+      return;
+    }
+    const now = Date.now();
+    if (pollStartRef.current === null) pollStartRef.current = now;
+    if (now - pollStartRef.current > 120_000) return; // bound: stop after 120 s
+    const timer = setTimeout(() => void refresh(), 10_000);
+    return () => clearTimeout(timer);
+  }, [state, busyKind, refresh]);
 
   async function generate(kind: CardMediaKind, regenerate: boolean) {
     // Replacing existing media is a deliberate, paid act; it is never implied by a plain click.
@@ -204,9 +229,17 @@ export function CardMediaPanel(props: CardMediaPanelProps) {
     setBusyKind(kind);
     setError(undefined);
     const result = await props.onGenerate(kind, regenerate);
-    if (!result.ok) setError(result.message);
-    // Always re-read: the authoritative state is the job row, not this component's memory.
-    await refresh();
+    // Refresh first: the server's durable state may differ from what the HTTP response reported
+    // (a proxy disconnect at ~100 s severs the response but the server keeps running).
+    const fresh = await refresh();
+    if (!result.ok) {
+      // If a generating candidate is already visible after the failure, suppress the error
+      // and let the polling loop report the durable outcome — never prompt the user to resend.
+      const hasGenerating = fresh?.some(
+        (s) => s.kind === kind && s.latestCandidate?.status === 'generating',
+      );
+      if (!hasGenerating) setError(result.message);
+    }
     setBusyKind(undefined);
   }
 
