@@ -4,6 +4,8 @@
 
 ## Active work
 
+**Draft-only fix/media-image-url-deadline (2026-10-21):** Bounded fallback image URL download through body read; targeted mock regression. Independent of historical AvalAI timeouts; no provider call or Production change. PR link and CI are recorded in the PR itself.
+
 **Production release 2026-10-16 — DEPLOYED; next is the first real pack (owner-operated).**
 Product source `15e6783` runs on the Iran host (App `87490d60…`, Admin `ba7cfcf5…`, schema `0038`);
 `main` adds release tooling and documentation only (no deploy needed). Text AI and Media AI are on in the Admin. Payments
