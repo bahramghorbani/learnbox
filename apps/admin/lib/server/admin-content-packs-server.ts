@@ -12,6 +12,7 @@ import {
 import {
   createContentCardCreateRoute,
   createContentCardEditRoute,
+  createContentCardRemoveFromPackRoute,
   createContentPackCreateRoute,
   createContentPackEditRoute,
 } from './admin-content-packs-write-routes';
@@ -242,6 +243,7 @@ export function createAdminContentPacksServer(dependencies: {
       setPackPrice: createPackPriceRoute({ ...writeShared, store: priceStore }),
       createCard: createContentCardCreateRoute(writeShared),
       editCard: createContentCardEditRoute(writeShared),
+      removeCardFromPack: createContentCardRemoveFromPackRoute(writeShared),
       importPreview: createContentImportPreviewRoute(importShared),
       importConfirm: createContentImportConfirmRoute(importShared),
       importTemplate: createContentImportTemplateRoute(importShared),

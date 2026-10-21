@@ -554,7 +554,13 @@ suite('restricted-role grant matrix (real Postgres, real roles)', () => {
       await expectDenied(adminRole, `DELETE FROM packs WHERE id = $1`, [PACK]);
       await expectDenied(adminRole, `DELETE FROM cards WHERE id = $1`, [ids.card]);
       await expectDenied(adminRole, `DELETE FROM card_versions`);
-      await expectDenied(adminRole, `DELETE FROM pack_cards WHERE pack_id = $1`, [PACK]);
+      // Draft membership removal is the single audited content DELETE: it must not grant deletion
+      // of a card, version, or another content table.
+      await expect(
+        adminRole.query(`DELETE FROM pack_cards WHERE pack_id = $1`, [PACK]),
+      ).resolves.toMatchObject({
+        command: 'DELETE',
+      });
       await expectDenied(adminRole, `DELETE FROM users WHERE id = $1`, [ids.learner]);
       // The learner's own learning state is not an Admin-writable surface.
       await expectDenied(adminRole, `DELETE FROM review_events`);
