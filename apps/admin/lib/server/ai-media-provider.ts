@@ -209,9 +209,24 @@ export class AvalAiMediaProvider implements AiMediaProvider {
     if (typeof item?.b64_json === 'string' && item.b64_json.length > 0) {
       bytes = Buffer.from(item.b64_json, 'base64');
     } else if (typeof item?.url === 'string') {
-      const fetched = await fetch(item.url);
-      if (!fetched.ok) throw providerFailure(fetched.status, 'دریافت تصویر تولیدشده');
-      bytes = Buffer.from(await fetched.arrayBuffer());
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), request.timeoutMs);
+      try {
+        const fetched = await fetch(item.url, { signal: controller.signal });
+        if (!fetched.ok) throw providerFailure(fetched.status, 'دریافت تصویر تولیدشده');
+        bytes = Buffer.from(await fetched.arrayBuffer());
+      } catch (error) {
+        if (error instanceof AiProviderError) throw error;
+        if (error instanceof Error && error.name === 'AbortError') {
+          throw new AiProviderError(
+            'provider_timeout',
+            'زمان دریافت تصویر تولیدشده به پایان رسید.',
+          );
+        }
+        throw new AiProviderError('provider_unavailable', 'دریافت تصویر تولیدشده در دسترس نیست.');
+      } finally {
+        clearTimeout(timer);
+      }
     }
     if (!bytes?.length) {
       throw new AiProviderError('provider_empty_response', 'سرویس تصویری تولید نکرد.');
