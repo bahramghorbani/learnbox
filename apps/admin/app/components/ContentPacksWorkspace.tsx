@@ -1303,21 +1303,35 @@ export function ContentPacksWorkspace() {
           }
         >
           <p>
-            کارت «{removeCardTarget.article ? `${removeCardTarget.article} ` : ''}{removeCardTarget.lemma}» فقط از
-            عضویت نسخهٔ جاری این بسته خارج می‌شود؛ خود کارت حذف نمی‌شود.
+            کارت «{removeCardTarget.article ? `${removeCardTarget.article} ` : ''}
+            {removeCardTarget.lemma}» فقط از عضویت نسخهٔ جاری این بسته خارج می‌شود؛ خود کارت حذف
+            نمی‌شود.
           </p>
           <p className="muted-note">
-            رسانهٔ ثبت‌شده: تصویر {faNum(removeCardTarget.media.imageCount)}، صدای واژه {faNum(removeCardTarget.media.wordAudioCount)}، صدای جمله {faNum(removeCardTarget.media.sentenceAudioCount)}. candidateها، attemptها، job و snapshotهای قبلی حفظ می‌شوند.
+            رسانهٔ ثبت‌شده: تصویر {faNum(removeCardTarget.media.imageCount)}، صدای واژه{' '}
+            {faNum(removeCardTarget.media.wordAudioCount)}، صدای جمله{' '}
+            {faNum(removeCardTarget.media.sentenceAudioCount)}. candidateها، attemptها، job و
+            snapshotهای قبلی حفظ می‌شوند.
           </p>
           <p className="cp-form-status is-error" role="alert">
-            تعداد کارت‌ها از {faNum(cards.length)} به {faNum(Math.max(0, cards.length - 1))} می‌رسد، در حالی که هدف فعلی {faNum(openPackRecord?.targetItemCount ?? 0)} است. تا افزودن یا جایگزینی کارت، دروازهٔ انتشار «ناقص» می‌ماند.
+            تعداد کارت‌ها از {faNum(cards.length)} به {faNum(Math.max(0, cards.length - 1))} می‌رسد،
+            در حالی که هدف فعلی {faNum(openPackRecord?.targetItemCount ?? 0)} است. تا افزودن یا
+            جایگزینی کارت، دروازهٔ انتشار «ناقص» می‌ماند.
           </p>
           <label className="cp-form-row is-full">
             دلیل خروج
-            <textarea className="cp-textarea" value={removeReason} onChange={(event) => setRemoveReason(event.target.value)} />
+            <textarea
+              className="cp-textarea"
+              value={removeReason}
+              onChange={(event) => setRemoveReason(event.target.value)}
+            />
           </label>
           <label>
-            <input type="checkbox" checked={removeConfirmed} onChange={(event) => setRemoveConfirmed(event.target.checked)} />{' '}
+            <input
+              type="checkbox"
+              checked={removeConfirmed}
+              onChange={(event) => setRemoveConfirmed(event.target.checked)}
+            />{' '}
             اثر شمارش و حفظ سابقهٔ رسانه را بررسی کردم و خروج این کارت از همین بسته را تأیید می‌کنم.
           </label>
         </CpModal>

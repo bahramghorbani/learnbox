@@ -286,10 +286,19 @@ describe('pack create/edit stay inside the canonical model', () => {
     const store = new PostgresContentPacksWriteStore(pool);
 
     const result = await store.removeCardFromPack({
-      packId: 'learnbox-m12', cardId, reason: 'رسانهٔ ناقص', idempotencyKey, actorUserId,
+      packId: 'learnbox-m12',
+      cardId,
+      reason: 'رسانهٔ ناقص',
+      idempotencyKey,
+      actorUserId,
     });
 
-    expect(result).toEqual({ status: 'applied', cardId, remainingCardCount: 119, targetItemCount: 120 });
+    expect(result).toEqual({
+      status: 'applied',
+      cardId,
+      remainingCardCount: 119,
+      targetItemCount: 120,
+    });
     const sql = recorded.map((entry) => entry.sql).join('\n');
     expect(sql).toContain('DELETE FROM pack_cards');
     expect(sql).not.toContain('DELETE FROM cards');
@@ -305,7 +314,11 @@ describe('pack create/edit stay inside the canonical model', () => {
       ['FROM packs WHERE id = $1 FOR UPDATE', [{ status: 'needs_review', target_item_count: 120 }]],
     ]);
     const result = await new PostgresContentPacksWriteStore(pool).removeCardFromPack({
-      packId: 'learnbox-m12', cardId, reason: 'رسانهٔ ناقص', idempotencyKey, actorUserId,
+      packId: 'learnbox-m12',
+      cardId,
+      reason: 'رسانهٔ ناقص',
+      idempotencyKey,
+      actorUserId,
     });
     expect(result).toEqual({ status: 'conflict', reason: 'pack_not_draft' });
     expect(recorded.map((entry) => entry.sql).join('\n')).not.toContain('DELETE FROM pack_cards');

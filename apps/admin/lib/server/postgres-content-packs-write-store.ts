@@ -681,10 +681,12 @@ export class PostgresContentPacksWriteStore {
   ): Promise<CardRemoveFromPackResult> {
     const { actorUserId } = input;
     if (!canonicalUuidPattern.test(actorUserId)) throw new Error('Actor user id is invalid.');
-    if (!canonicalUuidPattern.test(input.idempotencyKey)) throw new Error('Idempotency key is invalid.');
+    if (!canonicalUuidPattern.test(input.idempotencyKey))
+      throw new Error('Idempotency key is invalid.');
     const packId = trimmed(input.packId).toLowerCase();
     const reason = trimmed(input.reason);
-    if (!packIdPattern.test(packId) || !canonicalUuidPattern.test(input.cardId)) return { status: 'not_found' };
+    if (!packIdPattern.test(packId) || !canonicalUuidPattern.test(input.cardId))
+      return { status: 'not_found' };
     if (!reason || reason.length > 1_000) return { status: 'conflict', reason: 'reason_required' };
 
     const client = await this.pool.connect();
@@ -694,7 +696,11 @@ export class PostgresContentPacksWriteStore {
         await client.query('ROLLBACK');
         return { status: 'forbidden' };
       }
-      const replayed = await this.replay(client, 'content_card.remove_from_pack', input.idempotencyKey);
+      const replayed = await this.replay(
+        client,
+        'content_card.remove_from_pack',
+        input.idempotencyKey,
+      );
       if (replayed) {
         await client.query('ROLLBACK');
         return { status: 'idempotent', cardId: replayed };
@@ -719,7 +725,10 @@ export class PostgresContentPacksWriteStore {
         await client.query('ROLLBACK');
         return { status: 'not_found' };
       }
-      await client.query('DELETE FROM pack_cards WHERE pack_id = $1 AND card_id = $2', [packId, input.cardId]);
+      await client.query('DELETE FROM pack_cards WHERE pack_id = $1 AND card_id = $2', [
+        packId,
+        input.cardId,
+      ]);
       const remaining = await client.query(
         'SELECT count(*)::int AS count FROM pack_cards WHERE pack_id = $1',
         [packId],
@@ -732,7 +741,13 @@ export class PostgresContentPacksWriteStore {
         reason,
         remaining_card_count: remainingCardCount,
         target_item_count: targetItemCount,
-        preserved: ['card', 'card_versions', 'card_media_assets', 'card_media_candidates', 'pack_media_jobs'],
+        preserved: [
+          'card',
+          'card_versions',
+          'card_media_assets',
+          'card_media_candidates',
+          'pack_media_jobs',
+        ],
       });
       await client.query('COMMIT');
       return { status: 'applied', cardId: input.cardId, remainingCardCount, targetItemCount };

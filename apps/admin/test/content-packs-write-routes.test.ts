@@ -341,8 +341,30 @@ describe('pack/card mutation authorization', () => {
       now: () => now,
     });
     const context = { params: Promise.resolve({ packId: 'learnbox-m12', cardId }) };
-    expect((await route(mutationRequest('/api/content/packs/learnbox-m12/cards/x', { reason: 'x' }, { method: 'DELETE' }), context)).status).toBe(400);
-    expect((await route(mutationRequest('/api/content/packs/learnbox-m12/cards/x', { confirm: true, reason: '   ' }, { method: 'DELETE' }), context)).status).toBe(400);
+    expect(
+      (
+        await route(
+          mutationRequest(
+            '/api/content/packs/learnbox-m12/cards/x',
+            { reason: 'x' },
+            { method: 'DELETE' },
+          ),
+          context,
+        )
+      ).status,
+    ).toBe(400);
+    expect(
+      (
+        await route(
+          mutationRequest(
+            '/api/content/packs/learnbox-m12/cards/x',
+            { confirm: true, reason: '   ' },
+            { method: 'DELETE' },
+          ),
+          context,
+        )
+      ).status,
+    ).toBe(400);
   });
 
   it('passes a confirmed removal with the session actor to the store', async () => {
@@ -351,18 +373,34 @@ describe('pack/card mutation authorization', () => {
       enabled: true,
       config,
       sessionStore: sessionStore(),
-      store: { removeCardFromPack: async (input) => {
-        seen = input;
-        return { status: 'applied' as const, cardId: input.cardId, remainingCardCount: 119, targetItemCount: 120 };
-      } },
+      store: {
+        removeCardFromPack: async (input) => {
+          seen = input;
+          return {
+            status: 'applied' as const,
+            cardId: input.cardId,
+            remainingCardCount: 119,
+            targetItemCount: 120,
+          };
+        },
+      },
       now: () => now,
     });
     const response = await route(
-      mutationRequest('/api/content/packs/learnbox-m12/cards/x', { confirm: true, reason: 'رسانه ناقص' }, { method: 'DELETE' }),
+      mutationRequest(
+        '/api/content/packs/learnbox-m12/cards/x',
+        { confirm: true, reason: 'رسانه ناقص' },
+        { method: 'DELETE' },
+      ),
       { params: Promise.resolve({ packId: 'learnbox-m12', cardId }) },
     );
     expect(response.status).toBe(200);
-    expect(seen).toMatchObject({ actorUserId, packId: 'learnbox-m12', cardId, reason: 'رسانه ناقص' });
+    expect(seen).toMatchObject({
+      actorUserId,
+      packId: 'learnbox-m12',
+      cardId,
+      reason: 'رسانه ناقص',
+    });
   });
 
   it('reports canonical validation issues as a structured 422', async () => {

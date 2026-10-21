@@ -198,12 +198,21 @@ function cardWriteResponse(result: CardWriteResult) {
 
 function cardRemoveResponse(result: CardRemoveFromPackResult) {
   switch (result.status) {
-    case 'forbidden': return forbidden();
-    case 'not_found': return notFound();
-    case 'conflict': return json({ code: 'conflict', reason: result.reason }, { status: 409 });
-    case 'idempotent': return json({ status: 'idempotent', cardId: result.cardId });
+    case 'forbidden':
+      return forbidden();
+    case 'not_found':
+      return notFound();
+    case 'conflict':
+      return json({ code: 'conflict', reason: result.reason }, { status: 409 });
+    case 'idempotent':
+      return json({ status: 'idempotent', cardId: result.cardId });
     default:
-      return json({ status: 'applied', cardId: result.cardId, remainingCardCount: result.remainingCardCount, targetItemCount: result.targetItemCount });
+      return json({
+        status: 'applied',
+        cardId: result.cardId,
+        remainingCardCount: result.remainingCardCount,
+        targetItemCount: result.targetItemCount,
+      });
   }
 }
 
@@ -393,20 +402,33 @@ export function createContentCardRemoveFromPackRoute(
     request: Request,
     context: { params: Promise<{ packId: string; cardId: string }> },
   ) {
-    if (!dependencies.enabled || !dependencies.config.enabled || !dependencies.sessionStore || !dependencies.store) return notFound();
-    const authorized = await authorizeMutation(request, dependencies, (dependencies.now ?? (() => new Date()))());
+    if (
+      !dependencies.enabled ||
+      !dependencies.config.enabled ||
+      !dependencies.sessionStore ||
+      !dependencies.store
+    )
+      return notFound();
+    const authorized = await authorizeMutation(
+      request,
+      dependencies,
+      (dependencies.now ?? (() => new Date()))(),
+    );
     if ('response' in authorized) return authorized.response;
     const body = await parseJsonBody(request);
-    if (!body || body.confirm !== true || typeof body.reason !== 'string' || !body.reason.trim()) return genericInvalid();
+    if (!body || body.confirm !== true || typeof body.reason !== 'string' || !body.reason.trim())
+      return genericInvalid();
     const { packId, cardId } = await context.params;
     try {
-      return cardRemoveResponse(await dependencies.store.removeCardFromPack({
-        packId,
-        cardId,
-        reason: body.reason,
-        idempotencyKey: authorized.idempotencyKey,
-        actorUserId: authorized.actorUserId,
-      }));
+      return cardRemoveResponse(
+        await dependencies.store.removeCardFromPack({
+          packId,
+          cardId,
+          reason: body.reason,
+          idempotencyKey: authorized.idempotencyKey,
+          actorUserId: authorized.actorUserId,
+        }),
+      );
     } catch (error) {
       logWriteFailure('content_card.remove_from_pack', error);
       return unavailable();
