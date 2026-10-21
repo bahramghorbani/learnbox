@@ -377,16 +377,21 @@ export function CardMediaPanel(props: CardMediaPanelProps) {
                     <p className="cm-empty">نامزدی در انتظار بررسی نیست.</p>
                   ) : null}
 
-                  <button
-                    className="btn"
-                    type="button"
-                    disabled={isGenerating}
-                    onClick={() =>
-                      void generate(kindState.kind, Boolean(kindState.accepted || candidate))
-                    }
-                  >
-                    {kindState.accepted || candidate ? 'تولید دوباره' : 'تولید'}
-                  </button>
+                  {isGenerating ? (
+                    <button className="btn" type="button" onClick={() => void retryRead()}>
+                      به‌روزرسانی وضعیت
+                    </button>
+                  ) : (
+                    <button
+                      className="btn"
+                      type="button"
+                      onClick={() =>
+                        void generate(kindState.kind, Boolean(kindState.accepted || candidate))
+                      }
+                    >
+                      {kindState.accepted || candidate ? 'تولید دوباره' : 'تولید'}
+                    </button>
+                  )}
                 </div>
               </div>
             </section>
