@@ -132,13 +132,14 @@ function providerFailure(status: number, what: string): AiProviderError {
   return new AiProviderError('provider_unavailable', `سرویس ${what} در دسترس نیست (کد ${status}).`);
 }
 
-async function postJson(
+async function postJson<T>(
   url: string,
   apiKey: string,
   body: unknown,
   timeoutMs: number,
   what: string,
-): Promise<Response> {
+  consume: (response: Response) => Promise<T>,
+): Promise<T> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -149,7 +150,8 @@ async function postJson(
       signal: controller.signal,
     });
     if (!response.ok) throw providerFailure(response.status, what);
-    return response;
+    // Keep the deadline through body consumption: a headers-only response is not usable media.
+    return await consume(response);
   } catch (error) {
     if (error instanceof AiProviderError) throw error;
     if (error instanceof Error && error.name === 'AbortError') {
@@ -184,7 +186,7 @@ export class AvalAiMediaProvider implements AiMediaProvider {
 
   async generateImage(request: ImageGenerationRequest): Promise<GeneratedImage> {
     const model = request.model?.trim() || this.imageModel;
-    const response = await postJson(
+    const payload = await postJson(
       `${this.baseUrl}/v1/images/generations`,
       this.apiKey,
       {
@@ -196,12 +198,12 @@ export class AvalAiMediaProvider implements AiMediaProvider {
       },
       request.timeoutMs,
       'تولید تصویر',
+      async (response) =>
+        (await response.json()) as {
+          data?: { b64_json?: string; url?: string }[];
+          estimated_cost?: { unit?: number };
+        },
     );
-
-    const payload = (await response.json()) as {
-      data?: { b64_json?: string; url?: string }[];
-      estimated_cost?: { unit?: number };
-    };
     const item = payload.data?.[0];
     let bytes: Buffer | undefined;
     if (typeof item?.b64_json === 'string' && item.b64_json.length > 0) {
@@ -236,7 +238,7 @@ export class AvalAiMediaProvider implements AiMediaProvider {
     }
     const model = request.model?.trim() || this.audioModel;
 
-    const response = await postJson(
+    const bytes = await postJson(
       `${this.baseUrl}/v1/audio/speech`,
       this.apiKey,
       {
@@ -248,9 +250,8 @@ export class AvalAiMediaProvider implements AiMediaProvider {
       },
       request.timeoutMs,
       'تولید صدا',
+      async (response) => Buffer.from(await response.arrayBuffer()),
     );
-
-    const bytes = Buffer.from(await response.arrayBuffer());
     if (!bytes.length)
       throw new AiProviderError('provider_empty_response', 'سرویس صدایی تولید نکرد.');
     assertMp3(bytes);
