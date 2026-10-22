@@ -60,7 +60,7 @@ async function freshDatabase(): Promise<{ pool: Pool; client: MigrationClient; n
   return { pool, client, name };
 }
 
-suite('migrations 0001-0040 in an isolated database', () => {
+suite('migrations 0001-0043 in an isolated database', () => {
   beforeAll(() => {
     root = new Pool({ connectionString: url, max: 2 });
   });
@@ -82,7 +82,7 @@ suite('migrations 0001-0040 in an isolated database', () => {
         'SELECT version FROM schema_migrations ORDER BY version',
       );
       expect(ledger.rows).toHaveLength(allMigrations.length);
-      expect(ledger.rows.at(-1)?.version).toBe('0042_pack_card_membership_removal_grant');
+      expect(ledger.rows.at(-1)?.version).toBe('0043_card_media_candidate_transport_evidence');
       expect(ledger.rows.map((r) => r.version)).toEqual(allMigrations.map((m) => m.version));
 
       const second = await runDatabaseMigrations(client, allMigrations);
@@ -144,7 +144,7 @@ suite('migrations 0001-0040 in an isolated database', () => {
       const ledger = await pool.query<{ version: string }>(
         'SELECT version FROM schema_migrations ORDER BY version',
       );
-      expect(ledger.rows.at(-1)?.version).toBe('0042_pack_card_membership_removal_grant');
+      expect(ledger.rows.at(-1)?.version).toBe('0043_card_media_candidate_transport_evidence');
       const listings = await pool.query(
         `SELECT count(*)::int AS n FROM pg_class WHERE relname = 'store_listings'`,
       );
@@ -202,7 +202,7 @@ suite('migrations 0001-0040 in an isolated database', () => {
       const head = await pool.query<{ version: string }>(
         'SELECT version FROM schema_migrations ORDER BY version DESC LIMIT 1',
       );
-      expect(head.rows[0].version).toBe('0042_pack_card_membership_removal_grant');
+      expect(head.rows[0].version).toBe('0043_card_media_candidate_transport_evidence');
     } finally {
       await pool.end();
     }
@@ -222,7 +222,7 @@ suite('migrations 0001-0040 in an isolated database', () => {
   });
 
   it('ends with the newest migration recorded as the head of the ledger', async () => {
-    expect(files.at(-1)).toBe('0042_pack_card_membership_removal_grant.sql');
+    expect(files.at(-1)).toBe('0043_card_media_candidate_transport_evidence.sql');
     const numbers = files.map((f) => Number(f.slice(0, 4)));
     expect(numbers).toEqual(numbers.map((_, i) => i + 1));
     // The checksum the release will record, derived from the exact bytes on disk.
