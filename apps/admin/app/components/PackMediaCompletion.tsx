@@ -347,7 +347,7 @@ export function PackMediaCompletion({
               است؛ نتیجهٔ provider نامعلوم یا عملیات موجود دوباره ارسال نمی‌شود.
             </p>
           ) : null}
-          {reconcileJob && job.counts.deferred > 0 ? (
+          {reconcileJob && job.counts.deferred + job.counts.needs_attention > 0 ? (
             <div data-pack-media="reconcile" className="notice">
               <p>
                 موارد موکول‌شده‌ای که قبلاً به‌صورت دستی تأیید شده‌اند (candidate پذیرفته‌شده در
