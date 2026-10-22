@@ -216,21 +216,42 @@ suite('pack-media attention resolution against real Postgres', () => {
     await reset('needs_attention');
     const version = '66666666-6666-4666-8666-666666666666';
     const accepted = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
-    await scalar(`INSERT INTO card_versions (id, card_id, version) VALUES ($1, $2, 1)`, [version, CARD]);
-    await scalar(`INSERT INTO card_media_candidates (id, card_id, kind, status) VALUES ($1, $2, 'sentence_audio', 'ready')`, [accepted, CARD]);
+    await scalar(`INSERT INTO card_versions (id, card_id, version) VALUES ($1, $2, 1)`, [
+      version,
+      CARD,
+    ]);
+    await scalar(
+      `INSERT INTO card_media_candidates (id, card_id, kind, status) VALUES ($1, $2, 'sentence_audio', 'ready')`,
+      [accepted, CARD],
+    );
     const service = new PackMediaJobService(pool as never, { generate: vi.fn() } as never, {
       imageTimeoutMs: 180_000,
       audioTimeoutMs: 60_000,
     });
 
     // A ready candidate, even one with an asset row, cannot clear attention before explicit acceptance.
-    await scalar(`INSERT INTO card_media_assets (card_id, kind, candidate_id) VALUES ($1, 'sentence_audio', $2)`, [CARD, accepted]);
-    await expect(service.reconcileAccepted(ACTOR, JOB)).resolves.toMatchObject({ status: 'reconciled', count: 0 });
-    await expect(scalar(`SELECT status FROM pack_media_job_items WHERE id = $1`, [ITEM])).resolves.toMatchObject({ rows: [{ status: 'needs_attention' }] });
+    await scalar(
+      `INSERT INTO card_media_assets (card_id, kind, candidate_id) VALUES ($1, 'sentence_audio', $2)`,
+      [CARD, accepted],
+    );
+    await expect(service.reconcileAccepted(ACTOR, JOB)).resolves.toMatchObject({
+      status: 'reconciled',
+      count: 0,
+    });
+    await expect(
+      scalar(`SELECT status FROM pack_media_job_items WHERE id = $1`, [ITEM]),
+    ).resolves.toMatchObject({ rows: [{ status: 'needs_attention' }] });
 
     await scalar(`UPDATE card_media_candidates SET status = 'accepted' WHERE id = $1`, [accepted]);
-    await expect(service.reconcileAccepted(ACTOR, JOB)).resolves.toMatchObject({ status: 'reconciled', count: 1 });
-    await expect(scalar(`SELECT status, candidate_id FROM pack_media_job_items WHERE id = $1`, [ITEM])).resolves.toMatchObject({ rows: [{ status: 'generated', candidate_id: accepted }] });
-    await expect(scalar(`SELECT status, failure_code FROM card_media_candidates WHERE id = $1`, [CANDIDATE])).resolves.toMatchObject({ rows: [{ status: 'failed', failure_code: 'provider_timeout' }] });
+    await expect(service.reconcileAccepted(ACTOR, JOB)).resolves.toMatchObject({
+      status: 'reconciled',
+      count: 1,
+    });
+    await expect(
+      scalar(`SELECT status, candidate_id FROM pack_media_job_items WHERE id = $1`, [ITEM]),
+    ).resolves.toMatchObject({ rows: [{ status: 'generated', candidate_id: accepted }] });
+    await expect(
+      scalar(`SELECT status, failure_code FROM card_media_candidates WHERE id = $1`, [CANDIDATE]),
+    ).resolves.toMatchObject({ rows: [{ status: 'failed', failure_code: 'provider_timeout' }] });
   });
 });
