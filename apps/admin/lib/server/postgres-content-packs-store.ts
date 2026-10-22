@@ -2,16 +2,16 @@ export type ContentPackStatus =
   'draft' | 'ai_generated' | 'needs_review' | 'approved' | 'published';
 
 /**
- * Per-card media availability derived from the canonical `content_json.media[]` payload. The
- * canonical schema carries no denormalized image/audio columns, so this is computed server-side
- * from the same array the content-review store reads. `unknown` is reported honestly when a
- * version carries no media entries at all: it means "not recorded yet", never "absent".
+ * Per-card media availability derived from `card_media_assets` — the same canonical source the
+ * real publish gate (`resolveCardMediaReadiness`) checks. `unrecorded` only ever means "this pack
+ * cannot be read" (handled by the caller), not "no media exists yet" — a count of zero here is a
+ * real, confirmed absence.
  */
 export interface ContentPackCardMediaState {
   imageCount: number;
   wordAudioCount: number;
   sentenceAudioCount: number;
-  /** True only when `media[]` is empty, i.e. the canonical model holds no media facts yet. */
+  /** Kept for the UI's existing «—» treatment; always false now that the source is authoritative. */
   unrecorded: boolean;
 }
 
@@ -107,28 +107,15 @@ function toCount(value: unknown): number {
 }
 
 /**
- * Derives image/word-audio/sentence-audio availability from the canonical media array. Entries are
- * classified by their `kind` discriminator; anything unrecognized is ignored rather than guessed.
+ * Reads the per-kind accepted-asset counts the query already joined in. `row` carries
+ * `image_count` / `word_audio_count` / `sentence_audio_count` from `card_media_assets`.
  */
-export function deriveCardMediaState(media: unknown): ContentPackCardMediaState {
-  const entries = Array.isArray(media) ? media : [];
-  let imageCount = 0;
-  let wordAudioCount = 0;
-  let sentenceAudioCount = 0;
-
-  for (const entry of entries) {
-    if (entry === null || typeof entry !== 'object') continue;
-    const kind = String((entry as Record<string, unknown>).kind ?? '').toLowerCase();
-    if (kind === 'image' || kind === 'illustration') imageCount += 1;
-    else if (kind === 'word_audio' || kind === 'audio_word') wordAudioCount += 1;
-    else if (kind === 'sentence_audio' || kind === 'audio_sentence') sentenceAudioCount += 1;
-  }
-
+export function deriveCardMediaState(row: Record<string, unknown>): ContentPackCardMediaState {
   return {
-    imageCount,
-    wordAudioCount,
-    sentenceAudioCount,
-    unrecorded: entries.length === 0,
+    imageCount: toCount(row.image_count),
+    wordAudioCount: toCount(row.word_audio_count),
+    sentenceAudioCount: toCount(row.sentence_audio_count),
+    unrecorded: false,
   };
 }
 
@@ -237,6 +224,9 @@ export class PostgresContentPacksStore {
       const pack = mapPackRow(packResult.rows[0]);
 
       // Latest version per card, so a card is represented once even when revisions exist.
+      // Media availability is read from `card_media_assets` (the same canonical source
+      // `resolveCardMediaReadiness` uses for the real publish gate) — never from `content_json`,
+      // which nothing in the accept-candidate flow ever writes.
       const cardResult = await client.query(
         `SELECT pc.card_id,
                 pc.sort_order,
@@ -245,7 +235,10 @@ export class PostgresContentPacksStore {
                 cv.id AS card_version_id,
                 cv.status,
                 cv.source_reference,
-                cv.content_json
+                cv.content_json,
+                media.image_count,
+                media.word_audio_count,
+                media.sentence_audio_count
            FROM pack_cards pc
            JOIN cards c ON c.id = pc.card_id
            JOIN LATERAL (
@@ -256,6 +249,14 @@ export class PostgresContentPacksStore {
                    ORDER BY inner_cv.version DESC
                    LIMIT 1
                 ) cv ON true
+           LEFT JOIN LATERAL (
+                  SELECT count(*) FILTER (WHERE cand.kind = 'image') AS image_count,
+                         count(*) FILTER (WHERE cand.kind = 'word_audio') AS word_audio_count,
+                         count(*) FILTER (WHERE cand.kind = 'sentence_audio') AS sentence_audio_count
+                    FROM card_media_assets a
+                    JOIN card_media_candidates cand ON cand.id = a.candidate_id
+                   WHERE a.card_id = pc.card_id
+                ) media ON true
           WHERE pc.pack_id = $1
           ORDER BY pc.sort_order, c.content_id`,
         [packId],
@@ -306,7 +307,7 @@ export class PostgresContentPacksStore {
           visualConcept: String(content.visualConcept ?? ''),
           imagePrompt: String(content.imagePrompt ?? ''),
           sourceReference: String(row.source_reference ?? ''),
-          media: deriveCardMediaState(content.media),
+          media: deriveCardMediaState(row),
         } satisfies ContentPackCardEntry;
       });
 
