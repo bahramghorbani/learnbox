@@ -1430,6 +1430,7 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 8px;
   margin-top: auto;
   padding-top: 9px;
