@@ -21,7 +21,7 @@
  * Client-side disconnect resilience: mock proof included.
  */
 
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PackMediaJobService } from '../lib/server/pack-media-job-service.js';
 import { createPackMediaJobReconcileRoute } from '../lib/server/admin-pack-media-job-routes.js';
@@ -356,6 +356,15 @@ describe('reconcile route — security boundary', () => {
   const now = new Date('2026-10-22T10:00:00.000Z');
   const csrfToken = 'c'.repeat(43);
   const sessionToken = 't'.repeat(43);
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(now);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
 
   function sessionStore(recent = true) {
     return {
