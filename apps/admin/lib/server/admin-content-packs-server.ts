@@ -68,6 +68,7 @@ import { PostgresAdminPaymentsStore } from './postgres-admin-payments-store';
 import {
   createAdminPaymentConfigRoute,
   createAdminRecheckRoute,
+  createAdminSalesReportRoute,
   createAdminTransactionTimelineRoute,
   createAdminTransactionsRoute,
 } from './admin-payments-routes';
@@ -283,6 +284,7 @@ export function createAdminContentPacksServer(dependencies: {
       transactionTimeline: createAdminTransactionTimelineRoute(paymentsShared),
       transactionRecheck: createAdminRecheckRoute(paymentsShared),
       paymentConfiguration: createAdminPaymentConfigRoute(paymentsShared),
+      salesReport: createAdminSalesReportRoute(paymentsShared),
     };
   } catch {
     return { enabled: false as const };
