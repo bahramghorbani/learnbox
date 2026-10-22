@@ -197,7 +197,13 @@ export class PostgresContentPacksStore {
     const client = await this.pool.connect();
     try {
       if (!(await this.roleQuery(client, actorUserId))) return { status: 'forbidden' };
-      const result = await client.query(`${packSelect} ORDER BY p.created_at DESC, p.id`);
+      // Archived packs (one-off test/verification packs retired via the lifecycle status, never
+      // deleted) have no `ContentPackStatus` value and fall back to «پیش‌نویس», which makes them
+      // look like live drafts in this table. They are retired, not in progress: exclude them here
+      // so the pack list only ever shows packs someone could still act on.
+      const result = await client.query(
+        `${packSelect} WHERE p.status <> 'archived' ORDER BY p.created_at DESC, p.id`,
+      );
       const role = await client.query(
         `SELECT 1 FROM admin_role_assignments WHERE user_id = $1 AND role = 'super_admin'`,
         [actorUserId],
