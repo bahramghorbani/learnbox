@@ -30,7 +30,7 @@ import {
   type MediaValidity,
 } from '@learnbox/content-models';
 
-import { AiProviderError } from './ai-generation-provider';
+import { AiProviderError, type AiProviderAttemptEvidence } from './ai-generation-provider';
 import {
   germanVoiceIssue,
   GERMAN_VOICE_ISSUE_MESSAGES,
@@ -460,6 +460,19 @@ export class CardMediaGenerationService {
               channels: audio.format.channels,
             }
           : null;
+        await this.pool.query(
+          `UPDATE card_media_candidates
+              SET provider_stage = $2, provider_elapsed_ms = $3, provider_http_status = $4,
+                  provider_request_id = $5
+            WHERE id = $1`,
+          [
+            candidateId,
+            audio.attempt?.stage ?? null,
+            audio.attempt?.elapsedMs ?? null,
+            audio.attempt?.httpStatus ?? null,
+            audio.attempt?.requestId ?? null,
+          ],
+        );
         if (bytes.length > this.limits.maxAudioBytes) {
           throw new AiProviderError('provider_rejected', 'صدای تولیدشده از حد مجاز بزرگ‌تر است.');
         }
@@ -489,12 +502,22 @@ export class CardMediaGenerationService {
       return { status: 'generated', candidate: toCandidateView(updated.rows[0]!) };
     } catch (error) {
       const code = error instanceof AiProviderError ? error.code : 'generation_failed';
+      const attempt: AiProviderAttemptEvidence | undefined =
+        error instanceof AiProviderError ? error.attempt : undefined;
       // The candidate is marked failed; accepted media is not touched by any path here.
       await this.pool.query(
         `UPDATE card_media_candidates
-            SET status = 'failed', failure_code = $2, updated_at = now()
+            SET status = 'failed', failure_code = $2, provider_stage = $3, provider_elapsed_ms = $4,
+                provider_http_status = $5, provider_request_id = $6, updated_at = now()
           WHERE id = $1`,
-        [candidateId, code],
+        [
+          candidateId,
+          code,
+          attempt?.stage ?? null,
+          attempt?.elapsedMs ?? null,
+          attempt?.httpStatus ?? null,
+          attempt?.requestId ?? null,
+        ],
       );
       return {
         status: 'provider_failed',
