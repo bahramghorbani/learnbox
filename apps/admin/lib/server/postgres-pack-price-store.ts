@@ -1,3 +1,5 @@
+import { normalizeIntegerInput } from '../digits';
+
 type QueryResult = { rows: Record<string, unknown>[] };
 type Queryable = {
   query(sql: string, parameters?: readonly unknown[]): Promise<QueryResult>;
@@ -25,7 +27,11 @@ export class PostgresPackPriceStore {
   }): Promise<PackPriceResult> {
     if (!uuidPattern.test(input.actorUserId)) throw new Error('Actor user id is invalid.');
     const packId = input.packId.trim().toLowerCase();
-    const priceTomans = Number(input.priceTomans);
+    const priceTomans = Number(
+      typeof input.priceTomans === 'string'
+        ? normalizeIntegerInput(input.priceTomans)
+        : input.priceTomans,
+    );
     if (
       !packIdPattern.test(packId) ||
       !Number.isInteger(priceTomans) ||
