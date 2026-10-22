@@ -110,6 +110,10 @@ const INVENTORY: Record<string, Entry> = {
     category: 'delegated',
     guardIn: 'lib/server/admin-card-media-routes.ts',
   },
+  'app/api/content/media/import/route.ts': {
+    category: 'delegated',
+    guardIn: 'lib/server/admin-card-media-routes.ts',
+  },
   'app/api/content/media/accept/route.ts': {
     category: 'delegated',
     guardIn: 'lib/server/admin-card-media-routes.ts',
