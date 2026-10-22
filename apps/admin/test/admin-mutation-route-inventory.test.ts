@@ -279,6 +279,7 @@ const READ_ONLY: Record<string, 'hard-disabled' | 'session-layer'> = {
   'app/api/store/transactions/route.ts': 'session-layer',
   'app/api/store/transactions/timeline/route.ts': 'session-layer',
   'app/api/store/payment-config/route.ts': 'session-layer',
+  'app/api/store/sales-report/route.ts': 'session-layer',
   'app/api/content/lifecycle/route.ts': 'session-layer',
   'app/api/splash/current/route.ts': 'session-layer',
   'app/api/splash/preview/route.ts': 'session-layer',
