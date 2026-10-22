@@ -1380,6 +1380,15 @@ export function ContentPacksWorkspace() {
               ? { ok: true as const }
               : { ok: false as const, message: result.message };
           }}
+          onImport={async (file) => {
+            const result = await sendImport('/api/content/media/import', file, mediaCard.cardId, {
+              cardId: mediaCard.cardId,
+              kind: 'word_audio',
+            });
+            return result.ok
+              ? { ok: true as const }
+              : { ok: false as const, message: result.message };
+          }}
           assetUrl={(candidateId) =>
             `/api/content/media/asset?candidateId=${encodeURIComponent(candidateId)}`
           }

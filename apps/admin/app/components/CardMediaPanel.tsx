@@ -57,6 +57,7 @@ export interface CardMediaPanelProps {
     kind: CardMediaKind,
     candidateId: string,
   ) => Promise<{ ok: true } | { ok: false; message: string }>;
+  onImport?: (file: File) => Promise<{ ok: true } | { ok: false; message: string }>;
   /** Builds the authenticated URL the browser uses to preview or play a candidate. */
   assetUrl: (candidateId: string) => string;
 }
@@ -252,6 +253,16 @@ export function CardMediaPanel(props: CardMediaPanelProps) {
     setBusyKind(undefined);
   }
 
+  async function importAudio(file: File) {
+    if (!props.onImport) return;
+    setBusyKind('word_audio');
+    setError(undefined);
+    const result = await props.onImport(file);
+    if (!result.ok) setError(result.message);
+    await refresh();
+    setBusyKind(undefined);
+  }
+
   return (
     <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="رسانهٔ کارت">
       <div className="modal cm-modal">
@@ -392,6 +403,22 @@ export function CardMediaPanel(props: CardMediaPanelProps) {
                       {kindState.accepted || candidate ? 'تولید دوباره' : 'تولید'}
                     </button>
                   )}
+                  {kindState.kind === 'word_audio' && props.onImport ? (
+                    <label className="btn">
+                      بارگذاری MP3
+                      <input
+                        type="file"
+                        accept="audio/mpeg"
+                        disabled={isBusy || isGenerating}
+                        hidden
+                        onChange={(event) => {
+                          const file = event.target.files?.[0];
+                          if (file) void importAudio(file);
+                          event.target.value = '';
+                        }}
+                      />
+                    </label>
+                  ) : null}
                 </div>
               </div>
             </section>

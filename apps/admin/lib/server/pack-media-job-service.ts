@@ -641,7 +641,7 @@ export class PackMediaJobService {
         return { status: 'not_found' };
       }
 
-      // Atomically update every deferred item that has an accepted candidate for the
+      // Atomically update only a deferred/needs-attention item that has an accepted candidate for the
       // exact card version the job was approved for. No other items are touched.
       // The subquery confirms the accepted candidate's status so a 'ready' candidate
       // that was never accepted does NOT satisfy the condition.
@@ -656,7 +656,8 @@ export class PackMediaJobService {
            FROM card_media_assets a
            JOIN card_media_candidates mc ON mc.id = a.candidate_id AND mc.status = 'accepted'
           WHERE pack_media_job_items.job_id   = $1
-            AND pack_media_job_items.status   = 'deferred'
+            AND (mc.provenance <> 'manual_import' OR mc.card_version_id = pack_media_job_items.card_version_id)
+            AND pack_media_job_items.status IN ('deferred', 'needs_attention')
             AND a.card_id = pack_media_job_items.card_id
             AND a.kind    = pack_media_job_items.kind
             AND pack_media_job_items.card_version_id = (
