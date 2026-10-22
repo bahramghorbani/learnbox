@@ -33,16 +33,20 @@ suite('content packs media state against real Postgres', () => {
     pool.on('error', () => undefined);
 
     const dir = join(__dirname, '../../../database/migrations');
-    for (const f of readdirSync(dir).filter((x) => /^\d{4}_.+\.sql$/.test(x)).sort()) {
+    for (const f of readdirSync(dir)
+      .filter((x) => /^\d{4}_.+\.sql$/.test(x))
+      .sort()) {
       await pool.query(readFileSync(join(dir, f), 'utf8'));
     }
 
-    await pool.query(`INSERT INTO users (id, phone_e164, first_name) VALUES ($1,'+491****0088','reviewer')`, [
-      ACTOR,
-    ]);
-    await pool.query(`INSERT INTO admin_role_assignments (user_id, role) VALUES ($1, 'content_reviewer')`, [
-      ACTOR,
-    ]);
+    await pool.query(
+      `INSERT INTO users (id, phone_e164, first_name) VALUES ($1,'+491****0088','reviewer')`,
+      [ACTOR],
+    );
+    await pool.query(
+      `INSERT INTO admin_role_assignments (user_id, role) VALUES ($1, 'content_reviewer')`,
+      [ACTOR],
+    );
     await pool.query(
       `INSERT INTO packs (id, display_name, target_item_count, category, is_free, status)
        VALUES ('media-fixture', 'Fixture', 2, 'essentials', true, 'needs_review')`,
@@ -56,10 +60,10 @@ suite('content packs media state against real Postgres', () => {
         `fixture-${lemma}`,
         lemma,
       ]);
-      await pool.query(`INSERT INTO pack_cards (pack_id, card_id, sort_order) VALUES ('media-fixture', $1, $2)`, [
-        cardId,
-        sort,
-      ]);
+      await pool.query(
+        `INSERT INTO pack_cards (pack_id, card_id, sort_order) VALUES ('media-fixture', $1, $2)`,
+        [cardId, sort],
+      );
     }
     await pool.query(
       `INSERT INTO card_versions (id, card_id, version, status, source_provider, content_json)
@@ -109,11 +113,10 @@ suite('content packs media state against real Postgres', () => {
          RETURNING id`,
         [CARD_WITH_MEDIA, f.kind, f.capability, f.objectKey, f.mediaType],
       );
-      await pool.query(`INSERT INTO card_media_assets (card_id, kind, candidate_id) VALUES ($1, $2, $3)`, [
-        CARD_WITH_MEDIA,
-        f.kind,
-        candidateResult.rows[0].id,
-      ]);
+      await pool.query(
+        `INSERT INTO card_media_assets (card_id, kind, candidate_id) VALUES ($1, $2, $3)`,
+        [CARD_WITH_MEDIA, f.kind, candidateResult.rows[0].id],
+      );
     }
   });
 
