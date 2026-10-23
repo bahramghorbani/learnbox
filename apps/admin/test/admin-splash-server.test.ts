@@ -40,20 +40,25 @@ describe('admin splash server', () => {
     expect(initialized).toBe(false);
   });
 
-  it('fails closed when a required private storage setting is absent', () => {
+  it('falls back to database-backed storage when no blob token is configured', () => {
     const environment: Record<string, string | undefined> = { ...enabledEnvironment };
     delete environment.BLOB_READ_WRITE_TOKEN;
+    const client = {
+      query: async () => ({ rows: [] as Record<string, unknown>[] }),
+      release: () => undefined,
+    };
+    let storageCreated = false;
     const server = createAdminSplashServer({
       environment,
-      createPool: () => {
-        throw new Error('must not run');
-      },
+      createPool: () => ({ query: client.query, connect: async () => client }),
       createStorage: () => {
-        throw new Error('must not run');
+        storageCreated = true;
+        throw new Error('must not use the blob-backed storage path');
       },
     });
 
-    expect(server).toEqual({ enabled: false });
+    expect(server.enabled).toBe(true);
+    expect(storageCreated).toBe(false);
   });
 
   it('wires protected routes to the verified database and private store', () => {
