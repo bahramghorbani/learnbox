@@ -1090,40 +1090,11 @@ button {
 .progress-cta {
   margin-bottom: 26px;
 }
-.learner-nav {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(8ch, calc(50% - 1px)), 1fr));
-  margin: auto -22px -42px;
-  padding: 20px 18px 17px;
-  border-radius: 28px 28px 0 0;
-  background: #fff;
-  box-shadow: 0 -9px 25px #34426f0a;
-}
-.learner-nav button {
-  position: relative;
-  min-width: 0;
-  min-height: 44px;
-  border: 0;
-  background: transparent;
-  color: #3d4656;
-  cursor: pointer;
-  font-size: 16px;
-  font-weight: 700;
-  overflow-wrap: anywhere;
-}
-.learner-nav-active {
-  color: var(--primary) !important;
-}
-.learner-nav-active::after {
-  position: absolute;
-  right: 28%;
-  bottom: -6px;
-  left: 28%;
-  height: 4px;
-  border-radius: 99px;
-  background: var(--primary);
-  content: '';
-}
+/* ponytail: real .learner-nav/.learner-nav-active rules live in the
+   "Navigation CSS" section below — this used to be a duplicate pre-redesign
+   copy whose leftover `margin: auto -22px -42px` pushed the now-fixed-position
+   nav 42px below the viewport, clipping it off-screen. Deleted, not patched:
+   the later block is the only one the component needs. */
 .words-empty {
   display: flex;
   flex: 1;
@@ -2230,14 +2201,6 @@ p {
 @media (max-width: 420px) {
   .app-shell {
     padding: 22px 16px 36px;
-  }
-  .app-shell ~ .learner-nav {
-    position: relative;
-    left: 0;
-    width: 100%;
-    max-width: 100%;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    margin: auto 0 -36px;
   }
   .today-intro h1 {
     font-size: 36px;
@@ -3393,7 +3356,7 @@ p {
 }
 
 .progress-content {
-  padding: 16px;
+  padding: 16px 16px calc(var(--nav-h) + env(safe-area-inset-bottom, 0px) + 16px);
 }
 
 .mastery-card {
