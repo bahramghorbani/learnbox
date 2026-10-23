@@ -96,6 +96,10 @@ TABLE learnbox_admin private_media_cleanup_jobs SELECT
 TABLE learnbox_admin private_media_cleanup_jobs UPDATE
 TABLE learnbox_admin purchase_events SELECT
 TABLE learnbox_admin review_events SELECT
+TABLE learnbox_admin splash_media_objects DELETE
+TABLE learnbox_admin splash_media_objects INSERT
+TABLE learnbox_admin splash_media_objects SELECT
+TABLE learnbox_admin splash_media_objects UPDATE
 TABLE learnbox_admin splash_replacement_actions DELETE
 TABLE learnbox_admin splash_replacement_actions INSERT
 TABLE learnbox_admin splash_replacement_actions SELECT
