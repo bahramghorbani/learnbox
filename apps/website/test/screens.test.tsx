@@ -54,6 +54,31 @@ describe('ProgressScreen', () => {
     await rendered.clickButton('ادامهٔ مرور');
     expect(started).toBe(true);
   });
+
+  it('shows the real average-accuracy figure once the progress fetch resolves', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              leitnerBoxes: { box1: 0, box2: 0, box3: 0, box4: 0, box5: 0 },
+              cardStates: { total: 10, new: 5, learning: 3, learned: 2, mastered: 1 },
+              weeklyActivity: [],
+              totals: { reviews: 20 },
+              streak: { current: 1 },
+              cefr: [],
+              accuracy: { allTime: 87 },
+            }),
+          ),
+      ),
+    );
+    rendered = await renderProgress({ reviewedToday: 1, streakDays: 1, pendingReviewCount: 0 });
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(rendered.text()).toContain('۸۷٪');
+  });
 });
 
 describe('LaunchScreen', () => {
