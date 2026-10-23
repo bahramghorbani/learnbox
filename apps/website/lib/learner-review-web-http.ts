@@ -27,6 +27,7 @@ export type WebReviewDependencies = {
       response?: 'known' | 'unknown';
       occurredAt: Date;
       clientEventId: string;
+      durationMs?: number;
     }>;
   }): Promise<MobileReviewBatchItemOutcome[]>;
   readReconciliation(input: {

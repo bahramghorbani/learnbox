@@ -178,6 +178,7 @@ describe('CP5-B — binary review buttons', () => {
       contentId: 'start-a1-apfel',
       response: 'known',
       occurredAt: expect.any(String),
+      durationMs: expect.any(Number),
     });
   });
 
@@ -220,6 +221,7 @@ describe('CP5-B — binary review buttons', () => {
       contentId: 'start-a1-apfel',
       grade: 'remembered',
       occurredAt: expect.any(String),
+      durationMs: expect.any(Number),
     });
     expect(rendered!.posted[0].items[0]).not.toHaveProperty('response');
   });

@@ -82,6 +82,7 @@ type QueuedReview = {
   /** CP5-B: the binary answer; `grade` then holds its lossless shadow grade. */
   response?: BinaryResponse;
   reviewedAt: string;
+  durationMs?: number;
 };
 
 type QueuedPersonalVocabulary = PersonalVocabularyEntry & {
@@ -248,6 +249,10 @@ export function LearnerHome({
   const reviewFlushInFlightRef = useRef(false);
   const reviewFlushQueuedRef = useRef(false);
   const requestServerReviewFlushRef = useRef<() => void>(() => undefined);
+  // ponytail: wall-clock elapsed time since the card was shown. A backgrounded/idle tab inflates
+  // this, so it is clamped (see MAX_CARD_DURATION_MS below) rather than measured with visibility
+  // events; upgrade to visibility-aware active time if idle inflation turns out to matter.
+  const cardShownAtRef = useRef(Date.now());
   const flipHintRef = useRef<HTMLButtonElement>(null);
   const flipAgainRef = useRef<HTMLButtonElement>(null);
   const completionHeadingRef = useRef<HTMLHeadingElement>(null);
@@ -582,6 +587,7 @@ export function LearnerHome({
   useEffect(() => {
     gradeSubmissionRef.current = false;
     setIsRecordingGrade(false);
+    cardShownAtRef.current = Date.now();
   }, [screen, sessionIndex]);
 
   const applyServerStateResult = useCallback(
@@ -1003,6 +1009,10 @@ export function LearnerHome({
       const clientEventId =
         window.crypto?.randomUUID?.() ??
         `review-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      // ponytail: clamp to a plausible single-card ceiling (10 min) so a backgrounded/idle tab
+      // can't inflate the learner's reported study time; a real session time budget belongs with
+      // Page Visibility tracking if idle inflation ever shows up as a complaint.
+      const durationMs = Math.min(10 * 60_000, Math.max(0, Date.now() - cardShownAtRef.current));
       const nextQueue: PendingSyncEvent<QueuedReview>[] = [
         ...queue,
         {
@@ -1013,6 +1023,7 @@ export function LearnerHome({
             grade: nextGrade,
             ...(answer.response ? { response: answer.response } : {}),
             reviewedAt: new Date().toISOString(),
+            durationMs,
           },
           attempts: 0,
           nextAttemptAt: new Date(),

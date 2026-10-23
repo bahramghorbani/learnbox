@@ -26,6 +26,8 @@ export type QueuedWebReview = {
   response?: BinaryResponse;
   reviewedAt: string;
   requiresAttention?: boolean;
+  /** Elapsed time on this card in ms, measured client-side; unset for a client that predates tracking. */
+  durationMs?: number;
 };
 
 export type WebReviewSyncResult = {
@@ -168,6 +170,7 @@ function toWireItem(event: PendingSyncEvent<QueuedWebReview>, binaryWire: boolea
     clientEventId: event.clientEventId,
     contentId: event.payload.cardId,
     occurredAt: event.payload.reviewedAt,
+    ...(event.payload.durationMs !== undefined ? { durationMs: event.payload.durationMs } : {}),
   };
   return binaryWire && event.payload.response
     ? { ...base, response: event.payload.response }

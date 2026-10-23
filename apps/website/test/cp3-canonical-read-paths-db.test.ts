@@ -408,15 +408,21 @@ suite('CP3 — streak (fixes the reproduced future-day defect)', () => {
 });
 
 suite('CP3 — no fabricated numbers', () => {
-  it('study time stays unavailable: Today reports null and no route invents a duration', async () => {
+  it('study time reflects only a recorded duration_ms sum, never a guess', async () => {
     const user = await newLearner();
     await review(user, cards[0], 'remembered', new Date());
     const today = await call<Record<string, unknown>>(todayRoute, user, '?tz=UTC');
     expect(today.studyMinutesToday).toBeNull();
-    for (const route of [progressRoute, statsRoute]) {
-      const body = JSON.stringify(await call(route, user, '?tz=UTC'));
-      expect(body).not.toMatch(/minutes|studyTime|duration/i);
-    }
+    // The stats route still carries no duration figure -- out of scope for this feature. (Today's
+    // existing `studyMinutesToday` field predates this work and stays null; see below.)
+    const statsBody = JSON.stringify(await call(statsRoute, user, '?tz=UTC'));
+    expect(statsBody).not.toMatch(/minutes|studyTime|duration/i);
+    // The review above carried no duration_ms, so the real sum is zero -- not a fabricated figure.
+    const empty = await call<{ studyTimeMs?: number }>(progressRoute, user, '?tz=UTC');
+    expect(empty.studyTimeMs).toBe(0);
+    await pool.query(`UPDATE review_events SET duration_ms = 4200 WHERE user_id = $1`, [user]);
+    const withDuration = await call<{ studyTimeMs?: number }>(progressRoute, user, '?tz=UTC');
+    expect(withDuration.studyTimeMs).toBe(4200);
   });
 
   it('every read leaves review_events untouched', async () => {

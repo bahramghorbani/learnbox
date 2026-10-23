@@ -16,6 +16,13 @@ interface ProgressScreenProps {
 
 const WEEK_DAYS = ['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج'];
 
+/** `کل زمان یادگیری`: hours rounded to the nearest tenth once past 60 minutes, else whole minutes. */
+function formatStudyTime(ms: number): string {
+  const minutes = ms / 60_000;
+  if (minutes < 60) return `${toPersianDigits(Math.round(minutes))} دقیقه`;
+  return `${toPersianDigits(Math.round((minutes / 60) * 10) / 10)} ساعت`;
+}
+
 type ProgressData = {
   leitnerBoxes: Record<'box1' | 'box2' | 'box3' | 'box4' | 'box5', number>;
   cardStates: {
@@ -30,6 +37,7 @@ type ProgressData = {
   streak: { current: number };
   cefr: Array<{ level: string; count: number }>;
   accuracy: { allTime: number | null };
+  studyTimeMs: number;
 };
 
 /**
@@ -81,7 +89,8 @@ export function ProgressScreen({
           !Array.isArray(result.weeklyActivity) ||
           !result.totals ||
           !result.streak ||
-          !result.accuracy
+          !result.accuracy ||
+          typeof result.studyTimeMs !== 'number'
         )
           throw new Error('invalid progress');
         setData(result);
@@ -377,7 +386,7 @@ export function ProgressScreen({
                   <path d="M128,24A104,104,0,1,0,232,128,104.12,104.12,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm64-88a8,8,0,0,1-8,8H128a8,8,0,0,1-8-8V72a8,8,0,0,1,16,0v48h48A8,8,0,0,1,192,128Z" />
                 </svg>
               </div>
-              <div className="pstat-val">—</div>
+              <div className="pstat-val">{data ? formatStudyTime(data.studyTimeMs) : '—'}</div>
               <div className="pstat-lbl">کل زمان یادگیری</div>
             </div>
           </div>
