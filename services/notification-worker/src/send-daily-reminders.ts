@@ -97,7 +97,10 @@ export async function sendDailyReminders(
         today,
       ]);
       summary.sent += 1;
-    } catch {
+    } catch (error) {
+      // Was a bare catch {} that swallowed the real error -- a network/DNS failure
+      // affecting every row showed up only as failed++ with no way to diagnose it.
+      console.error('[send-daily-reminders] send failed for', row.user_id, error);
       summary.failed += 1;
     }
   }
