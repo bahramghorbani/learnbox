@@ -1386,7 +1386,7 @@ export function LearnerHome({
     const completedCount = sessionIndex;
     const remainingCount = studyItems.length - completedCount;
     return (
-      <main className="app-shell" data-testid="learnbox-app">
+      <main className="app-shell card-screen" data-testid="learnbox-app">
         <header className="session-header">
           <button className="text-button" onClick={() => setScreen('today')}>
             خروج از جلسه
