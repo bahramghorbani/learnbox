@@ -47,6 +47,7 @@ import { resolveLearnerAuthMode } from './learner-auth-mode';
 import { PronunciationButton } from './components/PronunciationButton';
 import { Bobo } from './components/Bobo';
 import { OnboardingGoal } from './components/OnboardingGoal';
+import { OnboardingTour } from './components/OnboardingTour';
 import { ProgressScreen } from './components/ProgressScreen';
 import { StoreScreen } from './components/StoreScreen';
 import { PaymentResultScreen } from './components/PaymentResultScreen';
@@ -184,6 +185,8 @@ export function LearnerHome({
       : { items: [], unavailableContentIds: [] };
   const [authChecked, setAuthChecked] = useState(false);
   const [onboarded, setOnboarded] = useState(false);
+  // First-login product tour (5 slides). null = not loaded yet (don't flash the app before we know).
+  const [tourState, setTourState] = useState<{ seen: boolean; slide: number } | null>(null);
   const [sessionEnded, setSessionEnded] = useState<{ unsentCount: number } | null>(null);
   const [onboardedKey, setOnboardedKey] = useState<string | null>(null);
   const [learningGoal, setLearningGoal] = useState<LearningGoal>('life');
@@ -807,6 +810,31 @@ export function LearnerHome({
     };
   }, [authenticated, isServerOtp, profileIdentityEnabled, sessionUserId]);
 
+  // First-login product tour: fetched once per authenticated server-otp session so a closed
+  // mid-way tour resumes at the saved slide instead of restarting.
+  useEffect(() => {
+    if (!authenticated || !isServerOtp || !sessionUserId) {
+      setTourState(null);
+      return;
+    }
+    const expectedUserId = sessionUserId;
+    let cancelled = false;
+    void fetch('/api/learner/onboarding-tour', { cache: 'no-store', credentials: 'same-origin' })
+      .then(async (response) => {
+        if (!response.ok) return;
+        const body = (await response.json()) as { seen?: unknown; slide?: unknown };
+        if (cancelled || activeSessionSubjectRef.current !== expectedUserId) return;
+        setTourState({
+          seen: body.seen === true,
+          slide: Number.isInteger(body.slide) ? (body.slide as number) : 0,
+        });
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [authenticated, isServerOtp, sessionUserId]);
+
   /** Records where to resume. With the flag on it also stores the card's identity. */
   const persistResumePoint = (nextIndex: number) => {
     const nextCardId = studyItems[nextIndex]?.id;
@@ -1092,6 +1120,17 @@ export function LearnerHome({
   }
   if (isServerOtp && (!sessionUserId || onboardedKey !== onboardingGoalStorageKey)) {
     return null;
+  }
+
+  // First-login product tour: once per account, resumes at the saved slide if closed mid-way.
+  // It precedes the existing goal setup so it appears immediately after successful OTP sign-in.
+  if (isServerOtp && tourState && !tourState.seen) {
+    return (
+      <OnboardingTour
+        initialSlide={tourState.slide}
+        onDone={() => setTourState({ seen: true, slide: 4 })}
+      />
+    );
   }
 
   if (!onboarded) {

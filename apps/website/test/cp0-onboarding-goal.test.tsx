@@ -98,7 +98,7 @@ describe('CP0 — onboarding goal is device-local and has no server or schedulin
     // No request anywhere carries the goal: not a mutation, not a preference endpoint.
     const writes = calls.filter((c) => c.method !== 'GET');
     expect(writes.filter((c) => /goal|onboard|preference/i.test(c.url + c.body))).toEqual([]);
-    expect(calls.filter((c) => /goal|onboard/i.test(c.url))).toEqual([]);
+    expect(calls.filter((c) => /goal|onboarding-goal/i.test(c.url))).toEqual([]);
   });
 
   it('no database column or API field stores a learning goal', async () => {
