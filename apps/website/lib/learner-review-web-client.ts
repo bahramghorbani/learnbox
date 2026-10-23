@@ -11,8 +11,20 @@ import type { MobileReviewBatchItemOutcome } from '../../api/dist/reviews/mobile
  * instead — exactly one of the two, never both: the server rejects mixed items.
  */
 export type WebReviewItem =
-  | { contentId: string; grade: ReviewGrade; occurredAt: string; clientEventId: string }
-  | { contentId: string; response: BinaryResponse; occurredAt: string; clientEventId: string };
+  | {
+      contentId: string;
+      grade: ReviewGrade;
+      occurredAt: string;
+      clientEventId: string;
+      durationMs?: number;
+    }
+  | {
+      contentId: string;
+      response: BinaryResponse;
+      occurredAt: string;
+      clientEventId: string;
+      durationMs?: number;
+    };
 
 export type WebReviewSubmitResult =
   | { status: 'ok'; outcomes: MobileReviewBatchItemOutcome[] }

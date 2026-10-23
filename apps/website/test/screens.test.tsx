@@ -69,6 +69,7 @@ describe('ProgressScreen', () => {
               streak: { current: 1 },
               cefr: [],
               accuracy: { allTime: 87 },
+              studyTimeMs: 0,
             }),
           ),
       ),
@@ -78,6 +79,32 @@ describe('ProgressScreen', () => {
     await Promise.resolve();
 
     expect(rendered.text()).toContain('۸۷٪');
+  });
+
+  it('shows the real total-study-time figure once the progress fetch resolves', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              leitnerBoxes: { box1: 0, box2: 0, box3: 0, box4: 0, box5: 0 },
+              cardStates: { total: 10, new: 5, learning: 3, learned: 2, mastered: 1 },
+              weeklyActivity: [],
+              totals: { reviews: 20 },
+              streak: { current: 1 },
+              cefr: [],
+              accuracy: { allTime: 87 },
+              studyTimeMs: 90 * 60_000,
+            }),
+          ),
+      ),
+    );
+    rendered = await renderProgress({ reviewedToday: 1, streakDays: 1, pendingReviewCount: 0 });
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(rendered.text()).toContain('۱.۵ ساعت');
   });
 });
 
