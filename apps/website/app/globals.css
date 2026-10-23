@@ -1861,6 +1861,23 @@ p {
   margin: 23px 0 12px;
   font-weight: 700;
 }
+/* ponytail: card-back content length varies; pin the answer buttons to the
+   viewport bottom instead of letting long cards push them below the fold. */
+.card-screen {
+  padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
+}
+.card-screen .grade-grid {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: min(100%, 520px);
+  margin: 0 auto;
+  padding: 12px 22px calc(12px + env(safe-area-inset-bottom, 0px));
+  background: var(--bg);
+  box-shadow: 0 -9px 25px #34426f1a;
+  z-index: 10;
+}
 .grade-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -2322,7 +2339,9 @@ p {
 
 /* ── Navigation CSS ── */
 .learner-nav {
-  height: var(--nav-h);
+  /* ponytail: height grows by the safe-area inset so icons stay centered above
+     the home-indicator gesture bar instead of being squeezed/clipped by it. */
+  height: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));
   background: var(--surface);
   border-top: 1px solid rgba(109, 40, 217, 0.07);
   box-shadow: 0 -4px 20px rgba(109, 40, 217, 0.07);
@@ -4058,7 +4077,7 @@ p {
   display: none;
 }
 .store-content {
-  padding: 16px 16px calc(var(--nav-h) + 16px);
+  padding: 16px 16px calc(var(--nav-h) + env(safe-area-inset-bottom, 0px) + 16px);
 }
 
 /* Acquisition feedback: success and failure are announced, not only coloured. */
@@ -4344,7 +4363,7 @@ p {
   flex: 1;
   align-items: center;
   justify-content: center;
-  padding: 24px 16px calc(var(--nav-h, 64px) + 24px);
+  padding: 24px 16px calc(var(--nav-h, 64px) + env(safe-area-inset-bottom, 0px) + 24px);
   overflow-y: auto;
 }
 
