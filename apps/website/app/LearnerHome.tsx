@@ -1328,6 +1328,8 @@ export function LearnerHome({
         onBack={closeSettings}
         onChooseGoal={goalUxRemoved ? undefined : editLearningGoal}
         onToggleSound={handleToggleSound}
+        remindersAvailable={authenticated && isServerOtp}
+        vapidPublicKey={process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY}
         onDeleteAccount={requestAccountDeletion}
         onAccountDeleted={clearDeviceLearnerState}
         onLogout={handleLogout}
