@@ -3251,6 +3251,20 @@ button {
 .learning-workspace .learning-unavailable-card .empty-state {
   min-height: 130px;
 }
+.learning-workspace .learning-pipeline-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.learning-workspace .learning-pipeline-list li {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: var(--ink);
+}
 @media (max-width: 760px) {
   .learning-workspace .learning-real-grid,
   .learning-workspace .learning-unavailable-grid {
