@@ -51,6 +51,10 @@ const INVENTORY: Record<string, Entry> = {
     category: 'guarded',
     authMarker: 'authenticateLearner(request)',
   },
+  'app/api/learner/onboarding-tour/route.ts': {
+    category: 'guarded',
+    authMarker: 'getLearnerSession(request)',
+  },
   'app/api/learner/notifications/subscribe/route.ts': {
     category: 'guarded',
     authMarker: 'authenticateLearner(request)',
@@ -226,9 +230,13 @@ describe('mutation route inventory (LB-B29)', () => {
           // session (or short-circuits on a header) before delegating to that handler.
           it('runs the guard in the route file before any session read there', () => {
             const source = read(file);
-            const authAt = source.search(/authenticateLearner\(|readLearnerSession\(/);
-            if (authAt === -1) return;
-            const guardAt = source.indexOf('guardMutation(request');
+            const mutationAt = source.indexOf('export async function POST');
+            const authOffset = source
+              .slice(mutationAt)
+              .search(/authenticateLearner\(|readLearnerSession\(/);
+            if (authOffset === -1) return;
+            const authAt = mutationAt + authOffset;
+            const guardAt = source.indexOf('guardMutation(request', mutationAt);
             expect(guardAt).toBeGreaterThan(-1);
             expect(guardAt).toBeLessThan(authAt);
           });
@@ -237,8 +245,9 @@ describe('mutation route inventory (LB-B29)', () => {
         if (entry.authMarker) {
           it('runs the guard before authentication or body reading', () => {
             const source = read(guardFile);
-            const guardAt = source.indexOf('guardMutation(request');
-            const authAt = source.indexOf(entry.authMarker!);
+            const mutationAt = source.indexOf('export async function POST');
+            const guardAt = source.indexOf('guardMutation(request', mutationAt);
+            const authAt = source.indexOf(entry.authMarker!, mutationAt);
             expect(guardAt).toBeGreaterThan(-1);
             expect(authAt).toBeGreaterThan(-1);
             expect(guardAt).toBeLessThan(authAt);
