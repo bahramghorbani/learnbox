@@ -6,7 +6,6 @@ node_modules
 **/node_modules
 **/.env*
 apps/api
-apps/mobile
 apps/website
 packages
 services

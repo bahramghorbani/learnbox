@@ -4,6 +4,20 @@
 
 ## Active work
 
+**Flutter mobile prototype removed — 2026-10-24 (owner decision), CLOSED.** The `apps/mobile`
+Flutter app (and its exclusive CI/scripts: `test:mobile-start-content`, `verify:mobile-start-content`,
+`verify:mobile-visual-assets`, `test:mobile-android-storage`, `sync:review-sync-wire-contract`/
+`verify:review-sync-wire-contract`) were deleted. It had never shipped — no build, signing key,
+store listing or placeholder artifact — and auth/sync were dormant. Removed because the approved
+Android direction is a thin Kotlin native shell (WebView) around the existing Learner PWA, not a
+Flutter rewrite; see `docs/release/VERSIONING.md` ("Android releases") and
+`docs/operations/AGENT_ACTIVE_BRIEF.md`. The `mobile` required CI check (`.github/workflows/quality.yml`)
+is now a permanent no-op placeholder so branch protection's required-check list is unaffected.
+`packages/learning-engine/src/review-sync-wire-contract.ts` was kept (still used by
+`apps/website/lib/learner-review-web-http.ts` / `mobile-review-http.ts`); only its Dart-fixture sync
+step was removed. Android implementation itself is **not started** and requires a separate owner
+start-approval before any code, account, build or store action.
+
 **Production release 2026-10-16 — DEPLOYED; next is the first real pack (owner-operated).**
 Product source `15e6783` runs on the Iran host (App `87490d60…`, Admin `ba7cfcf5…`, schema `0038`);
 `main` adds release tooling and documentation only (no deploy needed). Text AI and Media AI are on in the Admin. Payments

@@ -12,11 +12,11 @@ actions. Each one requires separate owner authorization. Merging a PR authorizes
 LearnBox ships three products that version **independently**. A change to one never renumbers
 another.
 
-| Product                         | Authoritative version source                                   | Tag namespace    | Published releases so far                                  |
-| ------------------------------- | -------------------------------------------------------------- | ---------------- | ---------------------------------------------------------- |
-| Learner PWA (`apps/website`)    | `apps/website/package.json` → `version`                        | `learner/vX.Y.Z` | `v1.0.0`, `v1.2.0`, `v1.2.1` (legacy repository-wide tags) |
-| Admin Web (`apps/admin`)        | `apps/admin/package.json` → `version`                          | `admin/vX.Y.Z`   | none                                                       |
-| Android (`apps/mobile`, future) | `apps/mobile/pubspec.yaml` → `version: <semver>+<versionCode>` | `android/vX.Y.Z` | none                                                       |
+| Product                      | Authoritative version source                                                                    | Tag namespace    | Published releases so far                                  |
+| ---------------------------- | ----------------------------------------------------------------------------------------------- | ---------------- | ---------------------------------------------------------- |
+| Learner PWA (`apps/website`) | `apps/website/package.json` → `version`                                                         | `learner/vX.Y.Z` | `v1.0.0`, `v1.2.0`, `v1.2.1` (legacy repository-wide tags) |
+| Admin Web (`apps/admin`)     | `apps/admin/package.json` → `version`                                                           | `admin/vX.Y.Z`   | none                                                       |
+| Android (not started)        | none yet — Flutter prototype removed 2026-10-24; new source declared when implementation begins | `android/vX.Y.Z` | none                                                       |
 
 `scripts/validate-version-sources.mjs` (`pnpm verify:version-sources`) enforces that each product
 reads only its own source, that no product can display another's version, and that no accessor
@@ -30,9 +30,10 @@ moved or deleted. The Learner PWA continues that numbering under its new namespa
 release is `learner/v1.3.0` (or `learner/v1.2.2` for a patch) — the number does not restart.
 
 Admin Web and Android have never published a release. Their package versions therefore still read
-`0.1.0` and `0.1.0+1`: a deployed artifact is not a published release, and declaring `1.0.0`
-before the first `admin/v1.0.0` release would invent a version that does not exist. Admin's first
-published release is an owner-gated decision, not an automatic consequence of its deployment.
+`0.1.0`: a deployed artifact is not a published release, and declaring `1.0.0` before the first
+`admin/v1.0.0` release would invent a version that does not exist. Admin's first published release
+is an owner-gated decision, not an automatic consequence of its deployment. Android has no version
+source at all right now (see "Android releases" below).
 
 ## Semantic Versioning
 
@@ -78,15 +79,19 @@ Nothing in a release body may contain a secret, credential, phone number or pers
 
 ## Android releases (not started)
 
-Android development has not begun. These rules apply to the first Android release when it is
-authorized; nothing below is implemented today, and no build, signing key or placeholder
-artifact exists.
+Android development has not begun. A Flutter prototype previously lived in `apps/mobile`; it was
+never released (no build, signing key, store listing or placeholder artifact ever existed) and
+was removed on 2026-10-24 by owner decision, since the approved implementation direction for
+Android is a thin Kotlin native shell around the existing Learner PWA (not a Flutter rewrite).
+These rules apply to the first Android release when native implementation work is separately
+authorized; nothing below is implemented today.
 
 - **versionName** is the semver string (`1.0.0`) and matches the `android/vX.Y.Z` tag.
 - **versionCode** is a separate integer that **increases monotonically on every build submitted
   to any store**, and never decreases or repeats — not even across a rollback, a re-signed
   artifact or a store rejection. A rolled-back release burns its versionCode permanently. Both
-  live in `apps/mobile/pubspec.yaml` as `version: <versionName>+<versionCode>`.
+  will live in whatever file the new Android project declares as its authoritative version
+  source (to be named in this document when that project is created).
 - **Signed artifact handling** — the upload/signing key and keystore are owner-held secrets.
   They are never committed, never placed in CI without an owner decision, and never stored in
   this repository. The GitHub Release records the artifact's SHA-256 so a store binary can be

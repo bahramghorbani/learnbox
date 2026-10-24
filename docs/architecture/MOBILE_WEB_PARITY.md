@@ -1,5 +1,12 @@
 # Mobile offline learner shell
 
+> **SUPERSEDED — 2026-10-24.** This document describes the internal architecture of the Flutter
+> app that lived in `apps/mobile`, removed by owner decision because the approved Android
+> direction is a Kotlin native shell (WebView) around the existing Learner PWA, not a Flutter
+> rewrite. Nothing below describes any code that currently exists in this repository. Kept only
+> as a historical record of the earlier approach; do not use it as a spec for the new Android
+> work.
+
 The Flutter app uses one `LearnerHomeShell` to own the selected Today, Words or Progress destination.
 The shell passes the same `StartPackRepository`, `ReviewQueue` and `PronunciationPlayer` instances;
 navigation changes local presentation only and never invokes sync, identity, HTTP or a provider.
