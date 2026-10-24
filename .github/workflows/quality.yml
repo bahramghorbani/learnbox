@@ -108,20 +108,15 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  # Placeholder for the required "mobile" status check. The earlier Flutter prototype in
+  # apps/mobile (never released) was removed 2026-10-24 per owner decision; no Android
+  # implementation exists yet. This job stays in the workflow, always passing, so branch
+  # protection's required check list does not need to change. Replace this no-op with the
+  # real Android build/test steps once Android work is explicitly authorized.
   mobile:
-    needs: changes
     runs-on: ubuntu-latest
     steps:
-      - if: needs.changes.outputs.mobile != 'true'
-        run: echo 'No apps/mobile or workflow change. Flutter analyze/test/build not required.'
-      - if: needs.changes.outputs.mobile == 'true'
-        uses: actions/checkout@v5
-      - if: needs.changes.outputs.mobile == 'true'
-        uses: subosito/flutter-action@v2
-        with: { channel: stable, flutter-version: 3.44.9 }
-      - if: needs.changes.outputs.mobile == 'true'
-        working-directory: apps/mobile
-        run: flutter pub get && dart format --output=none --set-exit-if-changed lib test && flutter analyze && flutter test && flutter build apk --debug
+      - run: echo 'No Android implementation in this repository yet. Placeholder for the required mobile check.'
 
   production-stack:
     needs: changes
