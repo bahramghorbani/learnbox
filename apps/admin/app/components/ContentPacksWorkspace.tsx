@@ -1311,7 +1311,9 @@ export function ContentPacksWorkspace() {
                 انصراف
               </button>
               <button
+                aria-describedby="cp-remove-prereq-hint"
                 className="btn"
+                id="cp-remove-confirm-btn"
                 type="button"
                 disabled={!removeConfirmed || !removeReason.trim()}
                 onClick={() => void removeCardFromPack()}
@@ -1338,21 +1340,37 @@ export function ContentPacksWorkspace() {
             جایگزینی کارت، دروازهٔ انتشار «ناقص» می‌ماند.
           </p>
           <label className="cp-form-row is-full">
-            دلیل خروج
+            {/* Prerequisite 1 of 2: a non-blank reason is required before the server accepts the
+                DELETE; this label makes that expectation visible without a separate caption. */}
+            دلیل خروج (الزامی)
             <textarea
               className="cp-textarea"
+              id="cp-remove-reason"
               value={removeReason}
               onChange={(event) => setRemoveReason(event.target.value)}
             />
           </label>
           <label>
             <input
+              id="cp-remove-confirm-checkbox"
               type="checkbox"
               checked={removeConfirmed}
               onChange={(event) => setRemoveConfirmed(event.target.checked)}
             />{' '}
+            {/* Prerequisite 2 of 2: operator must explicitly acknowledge the side-effects. */}
             اثر شمارش و حفظ سابقهٔ رسانه را بررسی کردم و خروج این کارت از همین بسته را تأیید می‌کنم.
           </label>
+          {/* Accessible hint wired to the confirm button via aria-describedby so screen readers
+              announce exactly what is still missing when the button is focused while disabled. */}
+          <p aria-live="polite" className="muted-note" id="cp-remove-prereq-hint" role="status">
+            {!removeReason.trim() && !removeConfirmed
+              ? 'برای فعال‌شدن دکمهٔ تأیید، دلیل خروج را وارد کنید و تأییدیه را علامت بزنید.'
+              : !removeReason.trim()
+                ? 'برای فعال‌شدن دکمهٔ تأیید، دلیل خروج را وارد کنید.'
+                : !removeConfirmed
+                  ? 'برای فعال‌شدن دکمهٔ تأیید، تأییدیه را علامت بزنید.'
+                  : null}
+          </p>
         </CpModal>
       ) : null}
 
