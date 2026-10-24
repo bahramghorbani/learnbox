@@ -45,7 +45,9 @@ describe('InstallAppBanner', () => {
   }
 
   function stubMatchMedia(standalone: boolean) {
-    window.matchMedia = vi.fn().mockReturnValue({ matches: standalone }) as unknown as typeof window.matchMedia;
+    window.matchMedia = vi
+      .fn()
+      .mockReturnValue({ matches: standalone }) as unknown as typeof window.matchMedia;
   }
 
   async function render() {
@@ -62,7 +64,9 @@ describe('InstallAppBanner', () => {
     stubReactGlobal();
     stubLocalStorage();
     stubMatchMedia(true);
-    stubUserAgent('Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit Safari/604.1');
+    stubUserAgent(
+      'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit Safari/604.1',
+    );
     await render();
     expect(container!.querySelector('.install-app-banner')).toBeNull();
   });
@@ -71,7 +75,9 @@ describe('InstallAppBanner', () => {
     stubReactGlobal();
     stubLocalStorage();
     stubMatchMedia(false);
-    stubUserAgent('Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit Safari/604.1');
+    stubUserAgent(
+      'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit Safari/604.1',
+    );
     await render();
     expect(container!.querySelector('.install-app-banner-ios-steps')).not.toBeNull();
     expect(container!.querySelector('.install-app-banner-cta')).toBeNull();
@@ -81,7 +87,9 @@ describe('InstallAppBanner', () => {
     stubReactGlobal();
     stubLocalStorage();
     stubMatchMedia(false);
-    stubUserAgent('Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit Safari/604.1');
+    stubUserAgent(
+      'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit Safari/604.1',
+    );
     await render();
     await act(async () => {
       container!.querySelector<HTMLButtonElement>('.install-app-banner-close')!.click();

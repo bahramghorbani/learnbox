@@ -79,10 +79,20 @@ export function InstallAppBanner() {
 
   return (
     <aside className="install-app-banner" dir="rtl" role="complementary" aria-label="نصب لرن‌باکس">
-      <button className="install-app-banner-close" type="button" onClick={dismiss} aria-label="بستن">
+      <button
+        className="install-app-banner-close"
+        type="button"
+        onClick={dismiss}
+        aria-label="بستن"
+      >
         ×
       </button>
-      <Bobo expression="encourage" animation="wiggle" size={64} className="install-app-banner-bobo" />
+      <Bobo
+        expression="encourage"
+        animation="wiggle"
+        size={64}
+        className="install-app-banner-bobo"
+      />
       <div className="install-app-banner-copy">
         <strong>لرن‌باکس رو به گوشیت اضافه کن!</strong>
         {platform === 'android' ? (
@@ -94,8 +104,11 @@ export function InstallAppBanner() {
           </>
         ) : (
           <p className="install-app-banner-ios-steps">
-            دکمهٔ <span className="install-app-banner-icon" aria-hidden="true">⬆️</span> اشتراک‌گذاری رو بزن، بعد
-            «Add to Home Screen» رو انتخاب کن.
+            دکمهٔ{' '}
+            <span className="install-app-banner-icon" aria-hidden="true">
+              ⬆️
+            </span>{' '}
+            اشتراک‌گذاری رو بزن، بعد «Add to Home Screen» رو انتخاب کن.
           </p>
         )}
       </div>
