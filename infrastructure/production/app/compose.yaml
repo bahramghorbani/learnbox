@@ -14,6 +14,9 @@ services:
         NEXT_PUBLIC_LEARNBOX_SESSION_EXPIRY_UX: ${NEXT_PUBLIC_LEARNBOX_SESSION_EXPIRY_UX:-true}
         # Live in Production since CP13; the deploy build must pass it explicitly (see Dockerfile).
         NEXT_PUBLIC_LEARNBOX_BINARY_REVIEW_UI: ${NEXT_PUBLIC_LEARNBOX_BINARY_REVIEW_UI:-false}
+        # LB-B19: public half of the Push VAPID keypair. Not a secret; the matching private key
+        # lives only with the notification-worker service.
+        NEXT_PUBLIC_VAPID_PUBLIC_KEY: ${NEXT_PUBLIC_VAPID_PUBLIC_KEY:-}
     image: learnbox-learner-app:${APP_VERSION:-local}
     restart: unless-stopped
     init: true

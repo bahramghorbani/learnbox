@@ -42,10 +42,18 @@ export type AiProviderErrorCode =
   | 'provider_empty_response'
   | 'provider_incomplete_response';
 
+export interface AiProviderAttemptEvidence {
+  stage: 'fetch_started' | 'response_headers' | 'response_body';
+  elapsedMs: number;
+  httpStatus: number | null;
+  requestId: string | null;
+}
+
 export class AiProviderError extends Error {
   constructor(
     readonly code: AiProviderErrorCode,
     message: string,
+    readonly attempt?: AiProviderAttemptEvidence,
   ) {
     super(message);
     this.name = 'AiProviderError';

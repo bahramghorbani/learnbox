@@ -194,6 +194,47 @@ export function createAdminTransactionTimelineRoute(
  * Full mutation guard chain: Origin + Content-Type, session, per-session CSRF, recent re-auth.
  * No idempotency key is needed: the store refuses a second request while one is outstanding.
  */
+/**
+ * GET ?from=YYYY-MM-DD&to=YYYY-MM-DD — real sales/revenue aggregate from `purchase_events`.
+ * Both bounds optional; an unparseable date is dropped rather than rejected (same tolerance as
+ * `createAdminTransactionsRoute`'s filters) so a bad query string shows the unfiltered total.
+ */
+const isoDatePattern = /^\d{4}-\d{2}-\d{2}$/;
+
+export function createAdminSalesReportRoute(dependencies: PaymentsDependencies<'getSalesReport'>) {
+  return async function GET(request: Request) {
+    if (
+      !dependencies.enabled ||
+      !dependencies.config.enabled ||
+      !dependencies.sessionStore ||
+      !dependencies.store
+    ) {
+      return notFound();
+    }
+    const session = await loadAdminSession(
+      request,
+      dependencies.config,
+      dependencies.sessionStore,
+      (dependencies.now ?? (() => new Date()))(),
+    );
+    if (!session) return unauthorized();
+    const url = new URL(request.url);
+    const fromRaw = url.searchParams.get('from');
+    const toRaw = url.searchParams.get('to');
+    try {
+      const result = await dependencies.store.getSalesReport({
+        actorUserId: session.userId,
+        from: fromRaw && isoDatePattern.test(fromRaw) ? fromRaw : undefined,
+        to: toRaw && isoDatePattern.test(toRaw) ? toRaw : undefined,
+      });
+      if (result.status === 'forbidden') return notFound();
+      return json({ report: result.report });
+    } catch {
+      return unavailable();
+    }
+  };
+}
+
 export function createAdminRecheckRoute(dependencies: PaymentsDependencies<'requestRecheck'>) {
   return async function POST(request: Request) {
     if (

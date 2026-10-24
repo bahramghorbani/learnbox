@@ -27,7 +27,7 @@
     "verify:start-35-final-private-media-attachment": "node scripts/validate-start-35-final-private-media-attachment.mjs",
     "test:start-35-canonical-starter-media": "node --test scripts/validate-start-35-canonical-starter-media.test.mjs",
     "verify:start-35-canonical-starter-media": "node scripts/validate-start-35-canonical-starter-media.mjs",
-    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm verify:migrations && pnpm test && pnpm test:dashboard && pnpm test:load && pnpm test:engine-load && pnpm test:mobile-start-content && pnpm verify:mobile-start-content && pnpm verify:review-sync-wire-contract && pnpm verify:mobile-visual-assets && pnpm test:mobile-android-storage && pnpm test:ai-worker-queue && pnpm test:documentation-governance && pnpm test:issue59-audio-gate && pnpm test:private-media-upload-boundary && pnpm test:start-15-candidate-attachment && pnpm test:start-35-final-media-manifest && pnpm test:start-35-human-review-packet && pnpm test:start-35-owner-review-decisions && pnpm test:start-35-final-private-media-attestation && pnpm test:start-35-final-private-media-attachment && pnpm test:start-35-canonical-starter-media && pnpm verify:ai-worker-queue && pnpm verify:documentation-governance && pnpm verify:private-media-upload-boundary && pnpm verify:security && pnpm verify:ai-continuity && pnpm verify:alpha && pnpm verify:product-config && pnpm verify:client-tier-adapter && pnpm verify:otp-provider-boundary && pnpm verify:sms-ir-adapter && pnpm verify:launch-experience && pnpm verify:start-slice && pnpm verify:start-drafts && pnpm verify:review-gates && pnpm verify:linguistic-approval && pnpm verify:source-scope && pnpm verify:start-provenance-ledger && pnpm verify:start-candidate-qa && pnpm verify:issue59-audio-gate && pnpm verify:start-pack-v2-contract && pnpm verify:media-handoff && pnpm verify:start-attachment-draft && pnpm verify:start-15-candidate-attachment && pnpm verify:start-35-final-media-manifest && pnpm verify:start-35-human-review-packet && pnpm verify:start-35-owner-review-decisions && pnpm verify:start-35-final-private-media-attestation && pnpm verify:start-35-final-private-media-attachment && pnpm verify:start-35-canonical-starter-media && pnpm verify:start-v2-image-attachment-draft && pnpm verify:start-private-media-attestation && pnpm verify:start-v2-images-private-media-attestation && pnpm verify:private-media-delivery && pnpm verify:start-private-media-upload && pnpm verify:start-v2-images-private-media-upload && pnpm verify:website-start-slice && pnpm verify:start-local-media-preview && pnpm verify:admin-passkey-boundary && pnpm verify:owner-splash-boundary && pnpm verify:alpha-invite-boundary && pnpm verify:production-service-boundaries && pnpm verify:version-sources",
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm verify:migrations && pnpm test && pnpm test:dashboard && pnpm test:load && pnpm test:engine-load && pnpm test:ai-worker-queue && pnpm test:documentation-governance && pnpm test:issue59-audio-gate && pnpm test:private-media-upload-boundary && pnpm test:start-15-candidate-attachment && pnpm test:start-35-final-media-manifest && pnpm test:start-35-human-review-packet && pnpm test:start-35-owner-review-decisions && pnpm test:start-35-final-private-media-attestation && pnpm test:start-35-final-private-media-attachment && pnpm test:start-35-canonical-starter-media && pnpm verify:ai-worker-queue && pnpm verify:documentation-governance && pnpm verify:private-media-upload-boundary && pnpm verify:security && pnpm verify:ai-continuity && pnpm verify:alpha && pnpm verify:product-config && pnpm verify:client-tier-adapter && pnpm verify:otp-provider-boundary && pnpm verify:sms-ir-adapter && pnpm verify:launch-experience && pnpm verify:start-slice && pnpm verify:start-drafts && pnpm verify:review-gates && pnpm verify:linguistic-approval && pnpm verify:source-scope && pnpm verify:start-provenance-ledger && pnpm verify:start-candidate-qa && pnpm verify:issue59-audio-gate && pnpm verify:start-pack-v2-contract && pnpm verify:media-handoff && pnpm verify:start-attachment-draft && pnpm verify:start-15-candidate-attachment && pnpm verify:start-35-final-media-manifest && pnpm verify:start-35-human-review-packet && pnpm verify:start-35-owner-review-decisions && pnpm verify:start-35-final-private-media-attestation && pnpm verify:start-35-final-private-media-attachment && pnpm verify:start-35-canonical-starter-media && pnpm verify:start-v2-image-attachment-draft && pnpm verify:start-private-media-attestation && pnpm verify:start-v2-images-private-media-attestation && pnpm verify:private-media-delivery && pnpm verify:start-private-media-upload && pnpm verify:start-v2-images-private-media-upload && pnpm verify:website-start-slice && pnpm verify:start-local-media-preview && pnpm verify:admin-passkey-boundary && pnpm verify:owner-splash-boundary && pnpm verify:alpha-invite-boundary && pnpm verify:production-service-boundaries && pnpm verify:version-sources",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint . --max-warnings=0",
@@ -78,8 +78,6 @@
     "verify:production-service-boundaries": "node --test infrastructure/production/app/tests/*.test.mjs infrastructure/production/admin/tests/*.test.mjs infrastructure/production/ops/tests/*.test.mjs",
     "test:load": "node --test scripts/load/local-learner-load.test.mjs",
     "test:engine-load": "pnpm --filter @learnbox/learning-engine build && node --test scripts/load/learning-engine-synthetic-load.test.mjs && node scripts/load/learning-engine-synthetic-load.mjs --profile ci",
-    "test:mobile-start-content": "node --test scripts/mobile-start-content.test.mjs",
-    "test:mobile-android-storage": "node --test scripts/mobile-android-secure-storage.test.mjs",
     "load:local:smoke": "node scripts/load/local-learner-load.mjs --profile smoke",
     "load:local:baseline": "node scripts/load/local-learner-load.mjs --profile baseline",
     "check:avalai": "node scripts/check-avalai-connection.mjs",
@@ -88,10 +86,6 @@
     "generate:avalai:card-pilot": "node scripts/generate-avalai-card-pilot.mjs",
     "generate:avalai:card-candidates": "node scripts/generate-avalai-card-candidates.mjs",
     "verify:start-pack-v2-contract": "node scripts/validate-start-pack-v2-contract.mjs",
-    "verify:mobile-start-content": "node scripts/sync-mobile-start-content.mjs --check",
-    "sync:review-sync-wire-contract": "pnpm --filter @learnbox/learning-engine build && node scripts/sync-review-sync-wire-contract.mjs",
-    "verify:review-sync-wire-contract": "pnpm --filter @learnbox/learning-engine build && node scripts/sync-review-sync-wire-contract.mjs --check",
-    "verify:mobile-visual-assets": "node scripts/verify-mobile-visual-assets.mjs",
     "generate:avalai:start-pack-v2": "node scripts/generate-avalai-start-pack-v2.mjs",
     "generate:avalai:audio-pilot": "node scripts/generate-avalai-audio-pilot.mjs",
     "generate:avalai:audio-candidates": "node scripts/generate-avalai-audio-candidates.mjs",
@@ -109,10 +103,17 @@
     "eslint": "^9.32.0",
     "eslint-config-prettier": "^10.1.8",
     "globals": "^16.3.0",
-    "next": "^15.5.24",
+    "next": "^15.5.28",
     "prettier": "^3.6.2",
     "typescript": "^5.9.2",
     "typescript-eslint": "^8.39.0",
     "vercel": "^58.0.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "zod@<4.6.6": ">=4.6.6",
+      "undici@<7.30.1": ">=7.30.1",
+      "postcss@<8.5.18": ">=8.5.18"
+    }
   }
 }

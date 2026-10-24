@@ -191,4 +191,51 @@ describe('media state step-up', () => {
     expect(calls.filter((url) => url === '/api/auth/reauth/verify')).toHaveLength(1);
     await act(async () => root.unmount());
   });
+
+  it('card panel: after bounded polling, refresh observes a durable outcome without a second generation', async () => {
+    const generating = [
+      {
+        kind: 'word_audio' as const,
+        accepted: null,
+        latestCandidate: { id: 'candidate-1', kind: 'word_audio', status: 'generating' },
+      },
+    ];
+    const ready = [
+      {
+        kind: 'word_audio' as const,
+        accepted: null,
+        latestCandidate: { id: 'candidate-1', kind: 'word_audio', status: 'ready' },
+      },
+    ];
+    const onLoadState = vi.fn().mockResolvedValueOnce(generating).mockResolvedValueOnce(ready);
+    const onGenerate = vi.fn(async () => ({ ok: false as const, message: 'network unavailable' }));
+    const container = document.createElement('div');
+    document.body.append(container);
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(
+        createElement(CardMediaPanel, {
+          cardId: 'card-1',
+          cardLabel: 'die U-Bahn',
+          onClose: () => undefined,
+          onLoadState,
+          onGenerate,
+          onAccept: async () => ({ ok: true as const }),
+          assetUrl: (id: string) => `/asset/${id}`,
+        }),
+      );
+    });
+
+    const refresh = [...container.querySelectorAll('button')].find(
+      (button) => button.textContent === 'به‌روزرسانی وضعیت',
+    );
+    expect(refresh).toBeTruthy();
+    await act(async () => refresh!.click());
+
+    expect(onLoadState).toHaveBeenCalledTimes(2);
+    expect(onGenerate).not.toHaveBeenCalled();
+    expect(container.textContent).toContain('نامزد آمادهٔ بررسی');
+    await act(async () => root.unmount());
+  });
 });

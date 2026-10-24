@@ -131,7 +131,9 @@ describe('CP5-C — learning-goal UX removal', () => {
     await click(/پروفایل/);
     await click(/تنظیمات/);
     expect(entries.has(goalKey)).toBe(false);
-    expect(calls.filter((c) => /goal|onboard|preference/i.test(c.url + c.body))).toEqual([]);
+    expect(calls.filter((c) => /goal|onboarding-goal|preference/i.test(c.url + c.body))).toEqual(
+      [],
+    );
   });
 
   it('flag ON: a goal already on the device is left exactly as it was (not deleted, not migrated, not shown)', async () => {

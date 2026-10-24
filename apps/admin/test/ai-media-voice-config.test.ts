@@ -74,4 +74,96 @@ describe('the speech request', () => {
       response_format: 'mp3',
     });
   });
+
+  it('sends the same safe shape for the failed and a successful nova word target', async () => {
+    const mp3 = new Uint8Array([0xff, 0xfb, 0x90, 0x64, ...new Array(64).fill(0)]);
+    const fetchMock = vi.fn<typeof fetch>(async () => new Response(mp3, { status: 200 }));
+    vi.stubGlobal('fetch', fetchMock);
+    const provider = new AvalAiMediaProvider('test-key');
+
+    await provider.synthesizeSpeech({ text: 'die U-Bahn', voice: 'nova', timeoutMs: 1_000 });
+    await provider.synthesizeSpeech({ text: 'die SIM-Karte', voice: 'nova', timeoutMs: 1_000 });
+
+    expect(
+      fetchMock.mock.calls.map(([, init]) => JSON.parse(String((init as RequestInit).body))),
+    ).toEqual([
+      {
+        model: 'eleven_multilingual_v2',
+        voice: 'nova',
+        input: 'die U-Bahn',
+        response_format: 'mp3',
+      },
+      {
+        model: 'eleven_multilingual_v2',
+        voice: 'nova',
+        input: 'die SIM-Karte',
+        response_format: 'mp3',
+      },
+    ]);
+  });
+
+  it('keeps the deadline armed while reading an audio body', async () => {
+    const mp3 = new Uint8Array([0xff, 0xfb, 0x90, 0x64, ...new Array(64).fill(0)]);
+    const fetchMock = vi.fn(async (_url: string, init: RequestInit) => ({
+      ok: true,
+      status: 200,
+      headers: new Headers({ 'x-request-id': 'late-body-request' }),
+      arrayBuffer: async () => {
+        await new Promise((resolve) => setTimeout(resolve, 10));
+        if ((init.signal as AbortSignal).aborted) {
+          throw Object.assign(new Error('aborted'), { name: 'AbortError' });
+        }
+        return mp3.buffer;
+      },
+    }));
+    vi.stubGlobal('fetch', fetchMock);
+    const provider = new AvalAiMediaProvider('test-key');
+
+    await expect(
+      provider.synthesizeSpeech({ text: 'die U-Bahn', voice: 'nova', timeoutMs: 1 }),
+    ).rejects.toMatchObject({
+      code: 'provider_timeout',
+      attempt: {
+        stage: 'response_headers',
+        httpStatus: 200,
+        requestId: 'late-body-request',
+      },
+    });
+  });
+
+  it('records a fetch-started attempt when fetch aborts before headers', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => {
+        throw Object.assign(new Error('aborted'), { name: 'AbortError' });
+      }),
+    );
+    const provider = new AvalAiMediaProvider('test-key');
+
+    await expect(
+      provider.synthesizeSpeech({ text: 'die U-Bahn', voice: 'nova', timeoutMs: 1_000 }),
+    ).rejects.toMatchObject({
+      code: 'provider_timeout',
+      attempt: { stage: 'fetch_started', httpStatus: null, requestId: null },
+    });
+  });
+
+  it.each([
+    ['upstream_408', () => new Response('', { status: 408 })],
+    ['upstream_504', () => new Response('', { status: 504 })],
+    ['local_abort', () => Object.assign(new Error('aborted'), { name: 'AbortError' })],
+  ])('maps %s to timeout with one application request', async (_name, failure) => {
+    const fetchMock = vi.fn(async () => {
+      const outcome = failure();
+      if (outcome instanceof Error) throw outcome;
+      return outcome;
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const provider = new AvalAiMediaProvider('test-key');
+
+    await expect(
+      provider.synthesizeSpeech({ text: 'die U-Bahn', voice: 'nova', timeoutMs: 1_000 }),
+    ).rejects.toMatchObject({ code: 'provider_timeout' });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
 });
