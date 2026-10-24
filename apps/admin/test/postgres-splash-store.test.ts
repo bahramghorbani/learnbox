@@ -142,6 +142,13 @@ describe('PostgresSplashStore', () => {
     expect(sql.some((statement) => statement.includes('INSERT INTO audit_logs'))).toBe(true);
     expect(sql.at(-1)).toBe('COMMIT');
     expect(released).toBe(true);
+
+    // Regression guard: the learner-facing route reads splash_versions.image_data first and
+    // only falls back to Blob (object_key) when it is NULL. Dropping the bytes here makes every
+    // promoted splash invisible on a deployment without a Blob token, even though promotion
+    // reports success.
+    const insertVersions = calls.find(({ sql: s }) => s.includes('INSERT INTO splash_versions'));
+    expect(insertVersions?.parameters).toContain(candidate.bytes);
   });
 
   it('rolls back the pointer transaction when any persistence step fails', async () => {

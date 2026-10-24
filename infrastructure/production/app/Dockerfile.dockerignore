@@ -7,7 +7,6 @@ node_modules
 **/.env*
 apps/admin
 apps/learnbox-website
-apps/mobile
 packages/analytics-core
 packages/bobo-design-system
 packages/content-models

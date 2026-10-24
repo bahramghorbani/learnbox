@@ -4,6 +4,7 @@ import './globals.css';
 import { ServiceWorkerRegistration } from './components/ServiceWorkerRegistration';
 import { LaunchScreen } from './components/LaunchScreen';
 import { NetworkStatus } from './components/NetworkStatus';
+import { InstallAppBanner } from './components/InstallAppBanner';
 
 export const metadata: Metadata = {
   title: 'LearnBox',
@@ -27,6 +28,7 @@ export default function Layout({ children }: Readonly<{ children: React.ReactNod
         <ServiceWorkerRegistration />
         <NetworkStatus />
         {children}
+        <InstallAppBanner />
       </body>
     </html>
   );

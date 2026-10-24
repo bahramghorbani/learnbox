@@ -11,7 +11,7 @@
  * is reported.
  */
 
-import { AiProviderError } from './ai-generation-provider';
+import { AiProviderError, type AiProviderAttemptEvidence } from './ai-generation-provider';
 import { type Mp3Format, readMp3Format } from './mp3-format';
 
 /** AvalAI fronts both the image and the speech protocols used here. */
@@ -52,8 +52,10 @@ export interface GeneratedAudio {
   provider: string;
   /** The voice actually requested, for attribution and for proving the voice mapping. */
   voice: string;
-  /** Measured from the returned bytes — never inferred from a request parameter. */
+  /** Measured from the returned bytes — never inferred from the request parameter. */
   format: Mp3Format | null;
+  /** Safe transport evidence for a successful request. */
+  attempt?: AiProviderAttemptEvidence;
 }
 
 export interface ImageGenerationRequest {
@@ -118,19 +120,30 @@ function assertMp3(bytes: Buffer): void {
  * echo a masked fragment of the submitted credential, so propagating or logging them would leak
  * key material. Only the status code shapes the outcome.
  */
-function providerFailure(status: number, what: string): AiProviderError {
+function providerFailure(
+  status: number,
+  what: string,
+  attempt: AiProviderAttemptEvidence,
+): AiProviderError {
   if (status === 408 || status === 504) {
-    return new AiProviderError('provider_timeout', `زمان ${what} به پایان رسید.`);
+    return new AiProviderError('provider_timeout', `زمان ${what} به پایان رسید.`, attempt);
   }
   if (status === 400 || status === 404 || status === 422) {
     // A rejected model or voice must surface as a real failure, never a silent substitution.
     return new AiProviderError(
       'provider_rejected',
       `سرویس ${what} را نپذیرفت (کد ${status}). مدل یا صدای انتخاب‌شده را بررسی کنید.`,
+      attempt,
     );
   }
-  return new AiProviderError('provider_unavailable', `سرویس ${what} در دسترس نیست (کد ${status}).`);
+  return new AiProviderError(
+    'provider_unavailable',
+    `سرویس ${what} در دسترس نیست (کد ${status}).`,
+    attempt,
+  );
 }
+
+type ProviderResponse<T> = { value: T; attempt: AiProviderAttemptEvidence };
 
 async function postJson<T>(
   url: string,
@@ -139,8 +152,18 @@ async function postJson<T>(
   timeoutMs: number,
   what: string,
   consume: (response: Response) => Promise<T>,
-): Promise<T> {
+): Promise<ProviderResponse<T>> {
   const controller = new AbortController();
+  const startedAt = Date.now();
+  let stage: AiProviderAttemptEvidence['stage'] = 'fetch_started';
+  let httpStatus: number | null = null;
+  let requestId: string | null = null;
+  const attempt = (): AiProviderAttemptEvidence => ({
+    stage,
+    elapsedMs: Date.now() - startedAt,
+    httpStatus,
+    requestId,
+  });
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const response = await fetch(url, {
@@ -149,15 +172,24 @@ async function postJson<T>(
       body: JSON.stringify(body),
       signal: controller.signal,
     });
-    if (!response.ok) throw providerFailure(response.status, what);
+    stage = 'response_headers';
+    httpStatus = response.status;
+    requestId =
+      (response.headers.get('x-request-id') ?? response.headers.get('request-id') ?? '').slice(
+        0,
+        256,
+      ) || null;
+    if (!response.ok) throw providerFailure(response.status, what, attempt());
     // Keep the deadline through body consumption: a headers-only response is not usable media.
-    return await consume(response);
+    const value = await consume(response);
+    stage = 'response_body';
+    return { value, attempt: attempt() };
   } catch (error) {
     if (error instanceof AiProviderError) throw error;
     if (error instanceof Error && error.name === 'AbortError') {
-      throw new AiProviderError('provider_timeout', `زمان ${what} به پایان رسید.`);
+      throw new AiProviderError('provider_timeout', `زمان ${what} به پایان رسید.`, attempt());
     }
-    throw new AiProviderError('provider_unavailable', `سرویس ${what} در دسترس نیست.`);
+    throw new AiProviderError('provider_unavailable', `سرویس ${what} در دسترس نیست.`, attempt());
   } finally {
     clearTimeout(timer);
   }
@@ -186,7 +218,7 @@ export class AvalAiMediaProvider implements AiMediaProvider {
 
   async generateImage(request: ImageGenerationRequest): Promise<GeneratedImage> {
     const model = request.model?.trim() || this.imageModel;
-    const payload = await postJson(
+    const result = await postJson(
       `${this.baseUrl}/v1/images/generations`,
       this.apiKey,
       {
@@ -204,6 +236,7 @@ export class AvalAiMediaProvider implements AiMediaProvider {
           estimated_cost?: { unit?: number };
         },
     );
+    const payload = result.value;
     const item = payload.data?.[0];
     let bytes: Buffer | undefined;
     if (typeof item?.b64_json === 'string' && item.b64_json.length > 0) {
@@ -213,7 +246,8 @@ export class AvalAiMediaProvider implements AiMediaProvider {
       const timer = setTimeout(() => controller.abort(), request.timeoutMs);
       try {
         const fetched = await fetch(item.url, { signal: controller.signal });
-        if (!fetched.ok) throw providerFailure(fetched.status, 'دریافت تصویر تولیدشده');
+        if (!fetched.ok)
+          throw providerFailure(fetched.status, 'دریافت تصویر تولیدشده', result.attempt);
         bytes = Buffer.from(await fetched.arrayBuffer());
       } catch (error) {
         if (error instanceof AiProviderError) throw error;
@@ -253,7 +287,7 @@ export class AvalAiMediaProvider implements AiMediaProvider {
     }
     const model = request.model?.trim() || this.audioModel;
 
-    const bytes = await postJson(
+    const result = await postJson(
       `${this.baseUrl}/v1/audio/speech`,
       this.apiKey,
       {
@@ -267,6 +301,7 @@ export class AvalAiMediaProvider implements AiMediaProvider {
       'تولید صدا',
       async (response) => Buffer.from(await response.arrayBuffer()),
     );
+    const bytes = result.value;
     if (!bytes.length)
       throw new AiProviderError('provider_empty_response', 'سرویس صدایی تولید نکرد.');
     assertMp3(bytes);
@@ -278,6 +313,7 @@ export class AvalAiMediaProvider implements AiMediaProvider {
       provider: this.provider,
       voice,
       format: readMp3Format(bytes),
+      attempt: result.attempt,
     };
   }
 

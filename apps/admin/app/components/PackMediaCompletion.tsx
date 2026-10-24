@@ -50,6 +50,8 @@ type CreateJobResult =
 
 type StopJobResult = { ok: true; job: PackMediaJob } | { ok: false; message: string };
 type ResolveJobResult = { ok: true; job: PackMediaJob } | { ok: false; message: string };
+type ReconcileJobResult =
+  { ok: true; job: PackMediaJob; count: number } | { ok: false; message: string };
 
 function countByKind(items: readonly PackMediaItem[]): string {
   return (['image', 'word_audio', 'sentence_audio'] as const)
@@ -127,6 +129,7 @@ export function PackMediaCompletion({
   createJob,
   stopJob,
   resolveJob,
+  reconcileJob,
   onOpenCard,
   onFinished,
 }: {
@@ -144,10 +147,14 @@ export function PackMediaCompletion({
     confirmedPotentialDuplicateCharge: boolean,
     confirmedContinuePending: boolean,
   ) => Promise<ResolveJobResult>;
+  /** Reconcile deferred items that already have an accepted candidate at the current card version. */
+  reconcileJob?: (jobId: string) => Promise<ReconcileJobResult>;
   onOpenCard: (card: { cardId: string; label: string }) => void;
   onFinished: () => void;
 }) {
-  const [busy, setBusy] = useState<'scanning' | 'creating' | 'stopping' | 'resolving'>();
+  const [busy, setBusy] = useState<
+    'scanning' | 'creating' | 'stopping' | 'resolving' | 'reconciling'
+  >();
   const [resolutionReason, setResolutionReason] = useState('');
   const [confirmedPotentialDuplicateCharge, setConfirmedPotentialDuplicateCharge] = useState(false);
   const [confirmedContinuePending, setConfirmedContinuePending] = useState(false);
@@ -267,6 +274,25 @@ export function PackMediaCompletion({
     }
   }
 
+  async function reconcileDeferred() {
+    if (!job || !reconcileJob) return;
+    setBusy('reconciling');
+    setJobError(undefined);
+    try {
+      const result = await reconcileJob(job.id);
+      if (!result.ok) {
+        setJobError(result.message);
+        return;
+      }
+      setJob(result.job);
+      priorJobStatus.current = result.job.status;
+    } catch {
+      setJobError('تطابق‌سازی ناموفق بود؛ وضعیت را تازه کنید.');
+    } finally {
+      setBusy(undefined);
+    }
+  }
+
   const activeJob = job?.status === 'queued' || job?.status === 'running';
   const blockingJob =
     activeJob || job?.status === 'needs_attention' || job?.status === 'completed_with_deferred';
@@ -320,6 +346,23 @@ export function PackMediaCompletion({
               {faNum(job.counts.in_progress + job.counts.needs_attention)} مورد نیازمند بررسی مدیر
               است؛ نتیجهٔ provider نامعلوم یا عملیات موجود دوباره ارسال نمی‌شود.
             </p>
+          ) : null}
+          {reconcileJob && job.counts.deferred + job.counts.needs_attention > 0 ? (
+            <div data-pack-media="reconcile" className="notice">
+              <p>
+                موارد موکول‌شده‌ای که قبلاً به‌صورت دستی تأیید شده‌اند (candidate پذیرفته‌شده در
+                همان نسخهٔ کارت) می‌توانند به‌عنوان تولیدشده ثبت شوند — بدون ارسال به provider یا
+                ساخت مجدد.
+              </p>
+              <button
+                type="button"
+                className="btn"
+                disabled={Boolean(busy)}
+                onClick={() => void reconcileDeferred()}
+              >
+                {busy === 'reconciling' ? 'در حال تطابق‌سازی…' : 'تطابق‌سازی موارد پذیرفته‌شده'}
+              </button>
+            </div>
           ) : null}
           {resolveJob &&
           job.items.some(

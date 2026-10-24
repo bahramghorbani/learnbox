@@ -101,7 +101,8 @@ suite('pack-media attention resolution against real Postgres', () => {
         created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now()
       );
       CREATE TABLE card_versions (id uuid PRIMARY KEY, card_id uuid NOT NULL, version integer NOT NULL);
-      CREATE TABLE card_media_candidates (id uuid PRIMARY KEY, card_id uuid NOT NULL, kind text NOT NULL, status text NOT NULL, failure_code text);
+      CREATE TABLE card_media_candidates (id uuid PRIMARY KEY, card_id uuid NOT NULL, kind text NOT NULL, status text NOT NULL, failure_code text, provenance text NOT NULL DEFAULT 'generated', card_version_id uuid);
+      CREATE TABLE card_media_assets (card_id uuid NOT NULL, kind text NOT NULL, candidate_id uuid NOT NULL, PRIMARY KEY (card_id, kind));
       CREATE TABLE audit_logs (actor_user_id uuid, action text NOT NULL, entity_type text NOT NULL, entity_id uuid NOT NULL, metadata jsonb NOT NULL DEFAULT '{}'::jsonb, created_at timestamptz NOT NULL DEFAULT now());
     `);
     await scalar(`INSERT INTO admin_role_assignments VALUES ($1, 'content_reviewer')`, [ACTOR]);
@@ -209,5 +210,48 @@ suite('pack-media attention resolution against real Postgres', () => {
       ),
     ).resolves.toMatchObject({ rows: [{ count: 1 }] });
     expect(media.generate).not.toHaveBeenCalled();
+  });
+
+  it('reconciles only an accepted, file-backed current-version attention item and preserves failed history', async () => {
+    await reset('needs_attention');
+    const version = '66666666-6666-4666-8666-666666666666';
+    const accepted = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+    await scalar(`INSERT INTO card_versions (id, card_id, version) VALUES ($1, $2, 1)`, [
+      version,
+      CARD,
+    ]);
+    await scalar(
+      `INSERT INTO card_media_candidates (id, card_id, kind, status) VALUES ($1, $2, 'sentence_audio', 'ready')`,
+      [accepted, CARD],
+    );
+    const service = new PackMediaJobService(pool as never, { generate: vi.fn() } as never, {
+      imageTimeoutMs: 180_000,
+      audioTimeoutMs: 60_000,
+    });
+
+    // A ready candidate, even one with an asset row, cannot clear attention before explicit acceptance.
+    await scalar(
+      `INSERT INTO card_media_assets (card_id, kind, candidate_id) VALUES ($1, 'sentence_audio', $2)`,
+      [CARD, accepted],
+    );
+    await expect(service.reconcileAccepted(ACTOR, JOB)).resolves.toMatchObject({
+      status: 'reconciled',
+      count: 0,
+    });
+    await expect(
+      scalar(`SELECT status FROM pack_media_job_items WHERE id = $1`, [ITEM]),
+    ).resolves.toMatchObject({ rows: [{ status: 'needs_attention' }] });
+
+    await scalar(`UPDATE card_media_candidates SET status = 'accepted' WHERE id = $1`, [accepted]);
+    await expect(service.reconcileAccepted(ACTOR, JOB)).resolves.toMatchObject({
+      status: 'reconciled',
+      count: 1,
+    });
+    await expect(
+      scalar(`SELECT status, candidate_id FROM pack_media_job_items WHERE id = $1`, [ITEM]),
+    ).resolves.toMatchObject({ rows: [{ status: 'generated', candidate_id: accepted }] });
+    await expect(
+      scalar(`SELECT status, failure_code FROM card_media_candidates WHERE id = $1`, [CANDIDATE]),
+    ).resolves.toMatchObject({ rows: [{ status: 'failed', failure_code: 'provider_timeout' }] });
   });
 });

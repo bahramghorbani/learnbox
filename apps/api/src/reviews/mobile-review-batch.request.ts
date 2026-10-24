@@ -4,6 +4,14 @@ import type { MobileReviewBatchItem } from './mobile-review-batch.service.js';
 
 const MAX_BATCH_SIZE = 20;
 const CURSOR_PATTERN = /^[0-9]+$/;
+/** Server-side trust-boundary bound on one card's elapsed time: generous, but rejects a corrupt/abusive value. */
+const MAX_DURATION_MS = 24 * 60 * 60 * 1000;
+
+function isValidDurationMs(value: unknown): value is number {
+  return (
+    typeof value === 'number' && Number.isInteger(value) && value >= 0 && value <= MAX_DURATION_MS
+  );
+}
 
 export interface ParsedMobileReviewBatchRequest {
   userId: string;
@@ -86,8 +94,9 @@ export interface ParseOptions {
 function parseItem(value: unknown, options: ParseOptions): MobileReviewBatchItem {
   if (options.binaryResponses && isRecord(value) && 'response' in value) {
     if (
-      !exactKeys(value, ['clientEventId', 'contentId', 'response', 'occurredAt']) ||
-      !isBinaryResponse(value.response)
+      !exactKeys(value, ['clientEventId', 'contentId', 'response', 'occurredAt'], ['durationMs']) ||
+      !isBinaryResponse(value.response) ||
+      ('durationMs' in value && !isValidDurationMs(value.durationMs))
     ) {
       throw new MobileReviewBatchRequestError('Each review item has an invalid shape.');
     }
@@ -98,13 +107,14 @@ function parseItem(value: unknown, options: ParseOptions): MobileReviewBatchItem
         contentId: value.contentId,
         grade: shadowGradeFor(response),
         occurredAt: value.occurredAt,
+        ...('durationMs' in value ? { durationMs: value.durationMs } : {}),
       },
       {},
     );
   }
   if (
     !isRecord(value) ||
-    !exactKeys(value, ['clientEventId', 'contentId', 'grade', 'occurredAt'])
+    !exactKeys(value, ['clientEventId', 'contentId', 'grade', 'occurredAt'], ['durationMs'])
   ) {
     // CP17 F5: a well-formed binary item arriving at a server whose binary acceptance is off is
     // a capability gap, not learner-event corruption. Classify it separately so it stays
@@ -138,11 +148,17 @@ function parseItem(value: unknown, options: ParseOptions): MobileReviewBatchItem
   if (Number.isNaN(occurredAt.getTime())) {
     throw new MobileReviewBatchRequestError('occurredAt must be a valid date.');
   }
+  if ('durationMs' in value && !isValidDurationMs(value.durationMs)) {
+    throw new MobileReviewBatchRequestError(
+      'durationMs must be an integer between 0 and 86400000.',
+    );
+  }
   return {
     contentId: value.contentId,
     grade: value.grade as MobileReviewBatchItem['grade'],
     occurredAt,
     clientEventId: value.clientEventId,
+    ...('durationMs' in value ? { durationMs: value.durationMs as number } : {}),
   };
 }
 

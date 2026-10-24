@@ -3,12 +3,14 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   createAdminPaymentConfigRoute,
   createAdminRecheckRoute,
+  createAdminSalesReportRoute,
   createAdminTransactionsRoute,
 } from '../lib/server/admin-payments-routes';
 import type {
   RequestRecheckResult,
   ListTransactionsResult,
   PaymentConfigurationResult,
+  SalesReportResult,
 } from '../lib/server/postgres-admin-payments-store';
 import { hashAdminSecret } from '../lib/server/admin-session.js';
 
@@ -108,6 +110,31 @@ function configStore(forbidden = false) {
   return {
     readConfigurationStatus: vi.fn(async (): Promise<PaymentConfigurationResult> =>
       forbidden ? { status: 'forbidden' } : { status: 'ok', configuration: configurationStatus },
+    ),
+  };
+}
+
+const salesReport = {
+  from: null,
+  to: null,
+  verifiedCount: 2,
+  revenueTomans: 20000,
+  pendingCount: 0,
+  failedCount: 0,
+  packs: [
+    {
+      packId: 'a1-animal-names-basic-5',
+      packDisplayName: 'نام حیوانات: پنج واژه‌ی پایه',
+      verifiedCount: 2,
+      revenueTomans: 20000,
+    },
+  ],
+};
+
+function salesReportStore(forbidden = false) {
+  return {
+    getSalesReport: vi.fn(async (): Promise<SalesReportResult> =>
+      forbidden ? { status: 'forbidden' } : { status: 'ok', report: salesReport },
     ),
   };
 }
@@ -325,6 +352,69 @@ describe('M2.4 Admin payment configuration route', () => {
       'createAdminPaymentConfigRoute',
       'createAdminTransactionsRoute',
     ]);
+  });
+});
+
+describe('Admin sales report route (purchase_events aggregate)', () => {
+  const route = (overrides: Record<string, unknown> = {}) =>
+    createAdminSalesReportRoute({
+      enabled: true,
+      config,
+      sessionStore: sessionStore(),
+      store: salesReportStore(),
+      now: () => now,
+      ...overrides,
+    } as never);
+
+  it('reports real verified-sale counts and revenue from purchase_events', async () => {
+    const response = await route()(get('/api/store/sales-report'));
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as { report: typeof salesReport };
+    expect(body.report).toEqual(salesReport);
+  });
+
+  it('passes a well-formed from/to date range through to the store', async () => {
+    const store = salesReportStore();
+    await route({ store })(get('/api/store/sales-report?from=2026-10-01&to=2026-10-31'));
+    expect(store.getSalesReport).toHaveBeenCalledWith(
+      expect.objectContaining({ actorUserId, from: '2026-10-01', to: '2026-10-31' }),
+    );
+  });
+
+  it('drops an unparseable date instead of rejecting the request', async () => {
+    const store = salesReportStore();
+    await route({ store })(get('/api/store/sales-report?from=not-a-date'));
+    expect(store.getSalesReport).toHaveBeenCalledWith(
+      expect.objectContaining({ actorUserId, from: undefined, to: undefined }),
+    );
+  });
+
+  it('is 404 while the Store workspace flag is off', async () => {
+    expect((await route({ enabled: false })(get('/api/store/sales-report'))).status).toBe(404);
+  });
+
+  it('refuses an unauthenticated caller', async () => {
+    const unauthenticated = createAdminSalesReportRoute({
+      enabled: true,
+      config,
+      sessionStore: sessionStore({ userId: null }),
+      store: salesReportStore(),
+      now: () => now,
+    });
+    expect((await unauthenticated(get('/api/store/sales-report', {}, ['Cookie']))).status).toBe(
+      401,
+    );
+  });
+
+  it('returns 404 for an operator without an operational role', async () => {
+    const forbidden = createAdminSalesReportRoute({
+      enabled: true,
+      config,
+      sessionStore: sessionStore(),
+      store: salesReportStore(true),
+      now: () => now,
+    });
+    expect((await forbidden(get('/api/store/sales-report'))).status).toBe(404);
   });
 });
 

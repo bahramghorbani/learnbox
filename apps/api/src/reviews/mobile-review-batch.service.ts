@@ -61,6 +61,8 @@ export interface MobileReviewBatchItem {
   response?: BinaryResponse;
   occurredAt: Date;
   clientEventId: string;
+  /** Client-measured elapsed time on this card in ms; unset = no client support yet. */
+  durationMs?: number;
 }
 
 export interface MobileReviewBatchRequest {
@@ -271,6 +273,7 @@ export class MobileReviewBatchService {
           grade: item.grade,
           ...(item.response ? { response: item.response } : {}),
           ...(useV2 ? { engineVersion: SCHEDULER_V2_ENGINE_VERSION } : {}),
+          ...(item.durationMs !== undefined ? { durationMs: item.durationMs } : {}),
           occurredAt: item.occurredAt,
           clientEventId: item.clientEventId,
         },
