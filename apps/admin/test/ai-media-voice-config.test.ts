@@ -51,6 +51,40 @@ describe('owner-chosen German article voices', () => {
   });
 });
 
+describe('image URL fallback deadline', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('times out a stalled image download body without contacting a provider', async () => {
+    const fetchMock = vi.fn<typeof fetch>(async (_url, init) => {
+      if (!init?.signal) {
+        throw new Error('image URL fetch must have a deadline signal');
+      }
+      return {
+        ok: true,
+        arrayBuffer: () =>
+          new Promise<ArrayBuffer>((_resolve, reject) => {
+            if (init.signal!.aborted) {
+              reject(Object.assign(new Error('aborted'), { name: 'AbortError' }));
+              return;
+            }
+            init.signal!.addEventListener('abort', () =>
+              reject(Object.assign(new Error('aborted'), { name: 'AbortError' })),
+            );
+          }),
+      } as Response;
+    });
+    fetchMock.mockImplementationOnce(async () =>
+      Response.json({ data: [{ url: 'https://example.invalid/private-image' }] }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    const provider = new AvalAiMediaProvider('test-key');
+    await expect(provider.generateImage({ prompt: 'clock', timeoutMs: 50 })).rejects.toMatchObject({
+      code: 'provider_timeout',
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+});
+
 describe('the speech request', () => {
   afterEach(() => vi.unstubAllGlobals());
 
