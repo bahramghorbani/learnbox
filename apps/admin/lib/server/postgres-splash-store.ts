@@ -306,8 +306,8 @@ export class PostgresSplashStore {
 
       await client.query(
         `INSERT INTO splash_versions
-          (id, object_key, checksum, width, height, byte_size, media_type, created_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+          (id, object_key, checksum, width, height, byte_size, media_type, image_data, created_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
         [
           input.versionId,
           input.objectKey,
@@ -316,6 +316,12 @@ export class PostgresSplashStore {
           input.candidate.height,
           input.candidate.byteSize,
           input.candidate.mediaType,
+          // The learner-facing route (apps/website/lib/launch-splash.ts) reads this column
+          // first and only falls back to Blob storage (object_key) when it is NULL. Without
+          // writing the bytes here, every promoted splash is unreachable on a deployment with
+          // no Vercel Blob token configured — the route 404s and the bundled default keeps
+          // showing, even though the admin panel reports success.
+          input.candidate.bytes,
           input.now,
         ],
       );

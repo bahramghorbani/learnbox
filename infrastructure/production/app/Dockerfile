@@ -55,11 +55,16 @@ ARG NEXT_PUBLIC_LEARNBOX_SESSION_EXPIRY_UX=true
 # since CP13/D-FV-1: the deploy build passes =true explicitly, so this default must NOT be relied
 # on — a build that omits the arg would ship four grades again. Left unchanged by v1.2.2.
 ARG NEXT_PUBLIC_LEARNBOX_BINARY_REVIEW_UI=false
+# LB-B19: the public VAPID key the browser needs to create a Push subscription. Not a secret —
+# only the matching private key (held by the notification-worker service, never shipped here)
+# can actually send a push with it.
+ARG NEXT_PUBLIC_VAPID_PUBLIC_KEY=""
 ENV NEXT_PUBLIC_LEARNBOX_QUEUE_QUARANTINE=$NEXT_PUBLIC_LEARNBOX_QUEUE_QUARANTINE
 ENV NEXT_PUBLIC_LEARNBOX_GOAL_UX_REMOVED=$NEXT_PUBLIC_LEARNBOX_GOAL_UX_REMOVED
 ENV NEXT_PUBLIC_LEARNBOX_SESSION_EXPIRY_UX=$NEXT_PUBLIC_LEARNBOX_SESSION_EXPIRY_UX
 ENV NEXT_PUBLIC_LEARNBOX_SERVER_SESSION_PLAN=$NEXT_PUBLIC_LEARNBOX_SERVER_SESSION_PLAN
 ENV NEXT_PUBLIC_LEARNBOX_BINARY_REVIEW_UI=$NEXT_PUBLIC_LEARNBOX_BINARY_REVIEW_UI
+ENV NEXT_PUBLIC_VAPID_PUBLIC_KEY=$NEXT_PUBLIC_VAPID_PUBLIC_KEY
 
 RUN pnpm --filter @learnbox/website build
 

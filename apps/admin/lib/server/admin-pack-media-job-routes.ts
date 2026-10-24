@@ -172,6 +172,20 @@ export function createPackMediaJobResolveRoute(dependencies: RouteDependencies) 
   };
 }
 
+export function createPackMediaJobReconcileRoute(dependencies: RouteDependencies) {
+  return async function POST(request: Request): Promise<Response> {
+    const authorized = await authorize(request, dependencies, true);
+    if ('response' in authorized) return authorized.response;
+    const body = await readJson(request);
+    const jobId = typeof body?.jobId === 'string' ? body.jobId : undefined;
+    if (!jobId || !uuidPattern.test(jobId)) return invalid();
+    const result = await dependencies.service!.reconcileAccepted(authorized.actorUserId, jobId);
+    if (result.status === 'forbidden') return json({ code: 'forbidden' }, { status: 403 });
+    if (result.status === 'not_found') return notFound();
+    return json({ status: result.status, count: result.count, job: result.job });
+  };
+}
+
 function tokenMatches(presented: string, expected: string): boolean {
   if (!presented || !expected) return false;
   const digest = (value: string) => createHash('sha256').update(value).digest();

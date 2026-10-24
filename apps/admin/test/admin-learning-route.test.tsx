@@ -49,7 +49,15 @@ describe('Admin #learning destination (Stage 9)', () => {
           return Response.json({ authenticated: true, recent: false });
         }
         if (String(input).endsWith('/api/dashboard/overview')) {
-          return Response.json({ overview: { windowDays: 30, learners: { activeInWindow: 12 } } });
+          return Response.json({
+            overview: {
+              windowDays: 30,
+              learners: { activeInWindow: 12, joinedInWindow: 5 },
+              reviewQueueCards: 7,
+              packs: { total: 10, published: 6 },
+              contentPipeline: { byStatus: [{ status: 'published', count: 6 }] },
+            },
+          });
         }
         return new Response(null, { status: 404 });
       }),
@@ -66,8 +74,10 @@ describe('Admin #learning destination (Stage 9)', () => {
 
     expect(container?.textContent).toContain('۱۲');
     expect(container?.textContent).toContain('دارای دست‌کم یک رویداد مرور در ۳۰ روز اخیر');
-    expect(container?.textContent).toContain('بدون دادهٔ قابل‌نمایش');
-    expect(container?.querySelectorAll('.learning-unavailable-card')).toHaveLength(4);
+    expect(container?.textContent).toContain('۵');
+    expect(container?.textContent).toContain('۷');
+    expect(container?.textContent).toContain('۶۰٪');
+    expect(container?.querySelectorAll('.learning-unavailable-card')).toHaveLength(0);
   });
 
   it('makes learning a real current sidebar link', async () => {

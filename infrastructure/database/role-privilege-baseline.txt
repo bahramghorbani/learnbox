@@ -96,6 +96,10 @@ TABLE learnbox_admin private_media_cleanup_jobs SELECT
 TABLE learnbox_admin private_media_cleanup_jobs UPDATE
 TABLE learnbox_admin purchase_events SELECT
 TABLE learnbox_admin review_events SELECT
+TABLE learnbox_admin splash_media_objects DELETE
+TABLE learnbox_admin splash_media_objects INSERT
+TABLE learnbox_admin splash_media_objects SELECT
+TABLE learnbox_admin splash_media_objects UPDATE
 TABLE learnbox_admin splash_replacement_actions DELETE
 TABLE learnbox_admin splash_replacement_actions INSERT
 TABLE learnbox_admin splash_replacement_actions SELECT
@@ -162,6 +166,10 @@ TABLE learnbox_app purchase_events SELECT
 TABLE learnbox_app purchase_events UPDATE
 TABLE learnbox_app purchase_ownership_claims INSERT
 TABLE learnbox_app purchase_ownership_claims SELECT
+TABLE learnbox_app push_subscriptions DELETE
+TABLE learnbox_app push_subscriptions INSERT
+TABLE learnbox_app push_subscriptions SELECT
+TABLE learnbox_app push_subscriptions UPDATE
 TABLE learnbox_app review_event_rejections INSERT
 TABLE learnbox_app review_event_rejections SELECT
 TABLE learnbox_app review_events DELETE
@@ -398,6 +406,13 @@ TABLE learnbox_migrator purchase_ownership_claims SELECT
 TABLE learnbox_migrator purchase_ownership_claims TRIGGER
 TABLE learnbox_migrator purchase_ownership_claims TRUNCATE
 TABLE learnbox_migrator purchase_ownership_claims UPDATE
+TABLE learnbox_migrator push_subscriptions DELETE
+TABLE learnbox_migrator push_subscriptions INSERT
+TABLE learnbox_migrator push_subscriptions REFERENCES
+TABLE learnbox_migrator push_subscriptions SELECT
+TABLE learnbox_migrator push_subscriptions TRIGGER
+TABLE learnbox_migrator push_subscriptions TRUNCATE
+TABLE learnbox_migrator push_subscriptions UPDATE
 TABLE learnbox_migrator review_event_rejections SELECT
 TABLE learnbox_migrator review_events DELETE
 TABLE learnbox_migrator review_events INSERT

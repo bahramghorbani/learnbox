@@ -47,6 +47,7 @@ import { resolveLearnerAuthMode } from './learner-auth-mode';
 import { PronunciationButton } from './components/PronunciationButton';
 import { Bobo } from './components/Bobo';
 import { OnboardingGoal } from './components/OnboardingGoal';
+import { OnboardingTour } from './components/OnboardingTour';
 import { ProgressScreen } from './components/ProgressScreen';
 import { StoreScreen } from './components/StoreScreen';
 import { PaymentResultScreen } from './components/PaymentResultScreen';
@@ -81,6 +82,7 @@ type QueuedReview = {
   /** CP5-B: the binary answer; `grade` then holds its lossless shadow grade. */
   response?: BinaryResponse;
   reviewedAt: string;
+  durationMs?: number;
 };
 
 type QueuedPersonalVocabulary = PersonalVocabularyEntry & {
@@ -184,6 +186,8 @@ export function LearnerHome({
       : { items: [], unavailableContentIds: [] };
   const [authChecked, setAuthChecked] = useState(false);
   const [onboarded, setOnboarded] = useState(false);
+  // First-login product tour (5 slides). null = not loaded yet (don't flash the app before we know).
+  const [tourState, setTourState] = useState<{ seen: boolean; slide: number } | null>(null);
   const [sessionEnded, setSessionEnded] = useState<{ unsentCount: number } | null>(null);
   const [onboardedKey, setOnboardedKey] = useState<string | null>(null);
   const [learningGoal, setLearningGoal] = useState<LearningGoal>('life');
@@ -245,6 +249,10 @@ export function LearnerHome({
   const reviewFlushInFlightRef = useRef(false);
   const reviewFlushQueuedRef = useRef(false);
   const requestServerReviewFlushRef = useRef<() => void>(() => undefined);
+  // ponytail: wall-clock elapsed time since the card was shown. A backgrounded/idle tab inflates
+  // this, so it is clamped (see MAX_CARD_DURATION_MS below) rather than measured with visibility
+  // events; upgrade to visibility-aware active time if idle inflation turns out to matter.
+  const cardShownAtRef = useRef(Date.now());
   const flipHintRef = useRef<HTMLButtonElement>(null);
   const flipAgainRef = useRef<HTMLButtonElement>(null);
   const completionHeadingRef = useRef<HTMLHeadingElement>(null);
@@ -579,6 +587,7 @@ export function LearnerHome({
   useEffect(() => {
     gradeSubmissionRef.current = false;
     setIsRecordingGrade(false);
+    cardShownAtRef.current = Date.now();
   }, [screen, sessionIndex]);
 
   const applyServerStateResult = useCallback(
@@ -807,6 +816,31 @@ export function LearnerHome({
     };
   }, [authenticated, isServerOtp, profileIdentityEnabled, sessionUserId]);
 
+  // First-login product tour: fetched once per authenticated server-otp session so a closed
+  // mid-way tour resumes at the saved slide instead of restarting.
+  useEffect(() => {
+    if (!authenticated || !isServerOtp || !sessionUserId) {
+      setTourState(null);
+      return;
+    }
+    const expectedUserId = sessionUserId;
+    let cancelled = false;
+    void fetch('/api/learner/onboarding-tour', { cache: 'no-store', credentials: 'same-origin' })
+      .then(async (response) => {
+        if (!response.ok) return;
+        const body = (await response.json()) as { seen?: unknown; slide?: unknown };
+        if (cancelled || activeSessionSubjectRef.current !== expectedUserId) return;
+        setTourState({
+          seen: body.seen === true,
+          slide: Number.isInteger(body.slide) ? (body.slide as number) : 0,
+        });
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [authenticated, isServerOtp, sessionUserId]);
+
   /** Records where to resume. With the flag on it also stores the card's identity. */
   const persistResumePoint = (nextIndex: number) => {
     const nextCardId = studyItems[nextIndex]?.id;
@@ -975,6 +1009,10 @@ export function LearnerHome({
       const clientEventId =
         window.crypto?.randomUUID?.() ??
         `review-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      // ponytail: clamp to a plausible single-card ceiling (10 min) so a backgrounded/idle tab
+      // can't inflate the learner's reported study time; a real session time budget belongs with
+      // Page Visibility tracking if idle inflation ever shows up as a complaint.
+      const durationMs = Math.min(10 * 60_000, Math.max(0, Date.now() - cardShownAtRef.current));
       const nextQueue: PendingSyncEvent<QueuedReview>[] = [
         ...queue,
         {
@@ -985,6 +1023,7 @@ export function LearnerHome({
             grade: nextGrade,
             ...(answer.response ? { response: answer.response } : {}),
             reviewedAt: new Date().toISOString(),
+            durationMs,
           },
           attempts: 0,
           nextAttemptAt: new Date(),
@@ -1092,6 +1131,17 @@ export function LearnerHome({
   }
   if (isServerOtp && (!sessionUserId || onboardedKey !== onboardingGoalStorageKey)) {
     return null;
+  }
+
+  // First-login product tour: once per account, resumes at the saved slide if closed mid-way.
+  // It precedes the existing goal setup so it appears immediately after successful OTP sign-in.
+  if (isServerOtp && tourState && !tourState.seen) {
+    return (
+      <OnboardingTour
+        initialSlide={tourState.slide}
+        onDone={() => setTourState({ seen: true, slide: 4 })}
+      />
+    );
   }
 
   if (!onboarded) {
@@ -1328,6 +1378,8 @@ export function LearnerHome({
         onBack={closeSettings}
         onChooseGoal={goalUxRemoved ? undefined : editLearningGoal}
         onToggleSound={handleToggleSound}
+        remindersAvailable={authenticated && isServerOtp}
+        vapidPublicKey={process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY}
         onDeleteAccount={requestAccountDeletion}
         onAccountDeleted={clearDeviceLearnerState}
         onLogout={handleLogout}
@@ -1384,7 +1436,7 @@ export function LearnerHome({
     const completedCount = sessionIndex;
     const remainingCount = studyItems.length - completedCount;
     return (
-      <main className="app-shell" data-testid="learnbox-app">
+      <main className="app-shell card-screen" data-testid="learnbox-app">
         <header className="session-header">
           <button className="text-button" onClick={() => setScreen('today')}>
             خروج از جلسه

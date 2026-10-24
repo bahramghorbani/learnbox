@@ -4,6 +4,7 @@ import type { SoundPreferenceDurability } from '../sound-preference';
 import { learnerGoalTitle, type LearnerLearningGoal } from './ProfileScreen';
 import { DeleteAccountPanel, type AccountDeletionResult } from './DeleteAccountPanel';
 import { LogoutPanel } from './LogoutPanel';
+import { ReminderPanel } from './ReminderPanel';
 import { supportLinkFor } from '../../lib/support-contact';
 
 interface SettingsScreenProps {
@@ -15,6 +16,12 @@ interface SettingsScreenProps {
   onBack: () => void;
   onChooseGoal?: () => void;
   onToggleSound: (enabled: boolean) => Promise<SoundPreferenceDurability>;
+  /**
+   * Omitted for local-prototype/device-only sessions: a reminder needs a real server account to
+   * deliver a push to, so the row is hidden rather than shown non-functional.
+   */
+  remindersAvailable?: boolean;
+  vapidPublicKey?: string;
   /** Omitted in the local prototype, where there is no server account to delete. */
   onDeleteAccount?: (input: {
     confirmPhone: string;
@@ -42,6 +49,8 @@ export function SettingsScreen({
   onBack,
   onChooseGoal,
   onToggleSound,
+  remindersAvailable,
+  vapidPublicKey,
   onDeleteAccount,
   onAccountDeleted,
   onLogout,
@@ -92,6 +101,7 @@ export function SettingsScreen({
             <span className="settings-switch-track" aria-hidden="true" />
           </label>
         </div>
+        {remindersAvailable ? <ReminderPanel vapidPublicKey={vapidPublicKey} /> : null}
         {onChooseGoal ? (
           <button
             className="settings-row settings-row-action"

@@ -552,6 +552,82 @@ button {
 .supportive-plus-offer p {
   margin: 0 0 8px;
 }
+
+/* ── Install-to-home-screen banner ── */
+.install-app-banner {
+  position: fixed;
+  z-index: 95;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  padding: 14px 18px calc(14px + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light, #7c3aed) 100%);
+  color: #fff;
+  box-shadow: 0 -12px 32px rgba(29, 13, 84, 0.28);
+  border-radius: 22px 22px 0 0;
+  animation: installBannerSlideUp 520ms var(--spring) both;
+}
+.install-app-banner-bobo {
+  flex-shrink: 0;
+  transform: translateY(-14px);
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.2));
+}
+.install-app-banner-copy {
+  flex: 1;
+  min-width: 0;
+}
+.install-app-banner-copy strong {
+  display: block;
+  font-size: 15.5px;
+  margin-bottom: 4px;
+}
+.install-app-banner-copy p {
+  margin: 0 0 10px;
+  font-size: 13.5px;
+  line-height: 1.8;
+  opacity: 0.92;
+}
+.install-app-banner-ios-steps {
+  margin-bottom: 0 !important;
+}
+.install-app-banner-icon {
+  display: inline-block;
+}
+.install-app-banner-cta {
+  border: none;
+  border-radius: 999px;
+  padding: 9px 20px;
+  background: #fff;
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 14px;
+}
+.install-app-banner-close {
+  position: absolute;
+  top: 10px;
+  left: 14px;
+  border: none;
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  font-size: 16px;
+  line-height: 1;
+}
+@keyframes installBannerSlideUp {
+  from {
+    transform: translateY(110%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
 .brand-row,
 .session-header {
   display: flex;
@@ -1090,40 +1166,11 @@ button {
 .progress-cta {
   margin-bottom: 26px;
 }
-.learner-nav {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(8ch, calc(50% - 1px)), 1fr));
-  margin: auto -22px -42px;
-  padding: 20px 18px 17px;
-  border-radius: 28px 28px 0 0;
-  background: #fff;
-  box-shadow: 0 -9px 25px #34426f0a;
-}
-.learner-nav button {
-  position: relative;
-  min-width: 0;
-  min-height: 44px;
-  border: 0;
-  background: transparent;
-  color: #3d4656;
-  cursor: pointer;
-  font-size: 16px;
-  font-weight: 700;
-  overflow-wrap: anywhere;
-}
-.learner-nav-active {
-  color: var(--primary) !important;
-}
-.learner-nav-active::after {
-  position: absolute;
-  right: 28%;
-  bottom: -6px;
-  left: 28%;
-  height: 4px;
-  border-radius: 99px;
-  background: var(--primary);
-  content: '';
-}
+/* ponytail: real .learner-nav/.learner-nav-active rules live in the
+   "Navigation CSS" section below — this used to be a duplicate pre-redesign
+   copy whose leftover `margin: auto -22px -42px` pushed the now-fixed-position
+   nav 42px below the viewport, clipping it off-screen. Deleted, not patched:
+   the later block is the only one the component needs. */
 .words-empty {
   display: flex;
   flex: 1;
@@ -1861,6 +1908,23 @@ p {
   margin: 23px 0 12px;
   font-weight: 700;
 }
+/* ponytail: card-back content length varies; pin the answer buttons to the
+   viewport bottom instead of letting long cards push them below the fold. */
+.card-screen {
+  padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
+}
+.card-screen .grade-grid {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: min(100%, 520px);
+  margin: 0 auto;
+  padding: 12px 22px calc(12px + env(safe-area-inset-bottom, 0px));
+  background: var(--bg);
+  box-shadow: 0 -9px 25px #34426f1a;
+  z-index: 10;
+}
 .grade-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -2214,14 +2278,6 @@ p {
   .app-shell {
     padding: 22px 16px 36px;
   }
-  .app-shell ~ .learner-nav {
-    position: relative;
-    left: 0;
-    width: 100%;
-    max-width: 100%;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    margin: auto 0 -36px;
-  }
   .today-intro h1 {
     font-size: 36px;
   }
@@ -2280,8 +2336,12 @@ p {
   }
   .learner-nav {
     margin-right: -16px;
-    margin-bottom: -36px;
     margin-left: -16px;
+    /* ponytail: margin-bottom was -36px here — on a position:fixed element
+       that shifts the whole bar 36px BELOW the viewport (same failure mode
+       already called out above at the old duplicate block), clipping the
+       label row off-screen on every phone under this breakpoint. Removed,
+       not patched: nothing below here needs it. */
   }
   .onboarding-intro {
     padding-top: 47px;
@@ -2322,7 +2382,9 @@ p {
 
 /* ── Navigation CSS ── */
 .learner-nav {
-  height: var(--nav-h);
+  /* ponytail: height grows by the safe-area inset so icons stay centered above
+     the home-indicator gesture bar instead of being squeezed/clipped by it. */
+  height: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));
   background: var(--surface);
   border-top: 1px solid rgba(109, 40, 217, 0.07);
   box-shadow: 0 -4px 20px rgba(109, 40, 217, 0.07);
@@ -2755,7 +2817,15 @@ p {
 /* Banner Slider */
 .banner-wrap {
   position: relative;
-  height: 168px;
+  /* ponytail: was a fixed height: 168px. Admin banner images are ~2.5:1
+     (measured 1983x793), wider than a 168px-tall box on any phone under
+     ~420px CSS width (168 * 2.5 = 420). object-fit: cover then crops that
+     excess off both edges — more of it on a narrower screen, which is why
+     slide text positioned near the edge of the source image was readable
+     on a ~390px iPhone and clipped on a 360px Android phone. aspect-ratio
+     makes the box match the image's own ratio so cover has nothing to
+     crop, on any width. */
+  aspect-ratio: 2.5;
   overflow: hidden;
   flex-shrink: 0;
 }
@@ -3374,7 +3444,7 @@ p {
 }
 
 .progress-content {
-  padding: 16px;
+  padding: 16px 16px calc(var(--nav-h) + env(safe-area-inset-bottom, 0px) + 16px);
 }
 
 .mastery-card {
@@ -4058,7 +4128,7 @@ p {
   display: none;
 }
 .store-content {
-  padding: 16px 16px calc(var(--nav-h) + 16px);
+  padding: 16px 16px calc(var(--nav-h) + env(safe-area-inset-bottom, 0px) + 16px);
 }
 
 /* Acquisition feedback: success and failure are announced, not only coloured. */
@@ -4344,7 +4414,7 @@ p {
   flex: 1;
   align-items: center;
   justify-content: center;
-  padding: 24px 16px calc(var(--nav-h, 64px) + 24px);
+  padding: 24px 16px calc(var(--nav-h, 64px) + env(safe-area-inset-bottom, 0px) + 24px);
   overflow-y: auto;
 }
 
@@ -4454,4 +4524,35 @@ p {
 .payment-action:disabled {
   opacity: 0.6;
   cursor: default;
+}
+
+/* First-login onboarding tour: full-screen, free swipe both ways via native scroll-snap,
+   image slides carry their own text/CTA. Native snap gives the momentum/settle feel for free. */
+.onboarding-tour {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: #fff;
+  direction: rtl;
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+.onboarding-tour-slide {
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100%;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+.onboarding-tour-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  user-select: none;
 }

@@ -110,6 +110,10 @@ const INVENTORY: Record<string, Entry> = {
     category: 'delegated',
     guardIn: 'lib/server/admin-card-media-routes.ts',
   },
+  'app/api/content/media/import/route.ts': {
+    category: 'delegated',
+    guardIn: 'lib/server/admin-card-media-routes.ts',
+  },
   'app/api/content/media/accept/route.ts': {
     category: 'delegated',
     guardIn: 'lib/server/admin-card-media-routes.ts',
@@ -141,6 +145,10 @@ const INVENTORY: Record<string, Entry> = {
     guardIn: 'lib/server/admin-pack-media-job-routes.ts',
   },
   'app/api/content/media/jobs/resolve/route.ts': {
+    category: 'delegated',
+    guardIn: 'lib/server/admin-pack-media-job-routes.ts',
+  },
+  'app/api/content/media/jobs/reconcile/route.ts': {
     category: 'delegated',
     guardIn: 'lib/server/admin-pack-media-job-routes.ts',
   },
@@ -271,6 +279,7 @@ const READ_ONLY: Record<string, 'hard-disabled' | 'session-layer'> = {
   'app/api/store/transactions/route.ts': 'session-layer',
   'app/api/store/transactions/timeline/route.ts': 'session-layer',
   'app/api/store/payment-config/route.ts': 'session-layer',
+  'app/api/store/sales-report/route.ts': 'session-layer',
   'app/api/content/lifecycle/route.ts': 'session-layer',
   'app/api/splash/current/route.ts': 'session-layer',
   'app/api/splash/preview/route.ts': 'session-layer',

@@ -27,6 +27,7 @@ import {
 import { PackLifecyclePanel } from './PackLifecyclePanel';
 import { EmptyState, ErrorState, LoadingState } from './AdminStates';
 import { faNum } from './fa-digits';
+import { normalizeIntegerInput } from '../../lib/digits';
 import { CARD_BADGE, PACK_BADGE, badgeFor } from './status-badges';
 import {
   CardFormModal,
@@ -321,11 +322,12 @@ async function sendMutation(
     }
     if (response.status === 422) {
       const payload = (await response.json().catch(() => undefined)) as
-        { issues?: FieldIssue[] } | undefined;
+        { issues?: FieldIssue[]; message?: string } | undefined;
       return {
         ok: false,
         issues: payload?.issues ?? [],
-        message: 'محتوا با قواعد کانونی سازگار نیست؛ موارد مشخص‌شده را اصلاح کنید.',
+        message:
+          payload?.message ?? 'محتوا با قواعد کانونی سازگار نیست؛ موارد مشخص‌شده را اصلاح کنید.',
       };
     }
     if (response.status === 409) {
@@ -487,7 +489,7 @@ function PackPrice({
         const outcome = await sendMutation(
           `/api/content/packs/${encodeURIComponent(pack.id)}/price`,
           'POST',
-          { priceTomans: value },
+          { priceTomans: normalizeIntegerInput(value) },
         );
         if (!outcome.ok) {
           setMessage(outcome.message);
@@ -510,7 +512,10 @@ function PackPrice({
       />
       <span className="muted-note">
         <bdi dir="ltr">
-          {Number.isInteger(Number(value)) && Number(value) > 0 ? faNum(Number(value)) : '—'}
+          {Number.isInteger(Number(normalizeIntegerInput(value))) &&
+          Number(normalizeIntegerInput(value)) > 0
+            ? faNum(Number(normalizeIntegerInput(value)))
+            : '—'}
         </bdi>{' '}
         تومان
       </span>
@@ -767,6 +772,19 @@ export function ContentPacksWorkspace() {
     const job = result.payload.job ?? (openPackId ? await loadPackMediaJob(openPackId) : undefined);
     if (!job) return { ok: false as const, message: 'وضعیت job پس از رسیدگی خوانده نشد.' };
     return { ok: true as const, job };
+  }
+
+  async function reconcilePackMediaJob(jobId: string) {
+    const result = await postAiJson<{ status?: string; count?: number; job?: PackMediaJob | null }>(
+      '/api/content/media/jobs/reconcile',
+      { jobId },
+    );
+    if (!result.ok) return { ok: false as const, message: result.message };
+    if (result.payload.status !== 'reconciled')
+      return { ok: false as const, message: 'تطابق‌سازی انجام نشد؛ وضعیت را دوباره بخوانید.' };
+    const job = result.payload.job ?? (openPackId ? await loadPackMediaJob(openPackId) : undefined);
+    if (!job) return { ok: false as const, message: 'وضعیت job پس از تطابق‌سازی خوانده نشد.' };
+    return { ok: true as const, job, count: result.payload.count ?? 0 };
   }
 
   const visible = packs.filter((pack) => (filter === 'all' ? true : pack.status === filter));
@@ -1136,6 +1154,7 @@ export function ContentPacksWorkspace() {
                       createJob={createPackMediaJob}
                       stopJob={stopPackMediaJob}
                       resolveJob={resolvePackMediaJob}
+                      reconcileJob={reconcilePackMediaJob}
                       onOpenCard={setMediaCard}
                       onFinished={() => {
                         if (openPackId) void loadCards(openPackId, { background: true });
@@ -1379,6 +1398,15 @@ export function ContentPacksWorkspace() {
               cardId: mediaCard.cardId,
               kind,
               candidateId,
+            });
+            return result.ok
+              ? { ok: true as const }
+              : { ok: false as const, message: result.message };
+          }}
+          onImport={async (file) => {
+            const result = await sendImport('/api/content/media/import', file, mediaCard.cardId, {
+              cardId: mediaCard.cardId,
+              kind: 'word_audio',
             });
             return result.ok
               ? { ok: true as const }

@@ -1,12 +1,10 @@
 /**
- * Database-backed splash storage — v2.
- * Stores splash images directly in the `splash_versions.image_data` column (bytea)
- * instead of Vercel Blob, so no BLOB_READ_WRITE_TOKEN is needed.
+ * Database-backed splash storage.
  *
- * Flow: upload() stores bytes in a temporary holding table.
- * After promoteReplacement creates the real row, a trigger-like
- * post-commit step copies image_data. We simplify by storing
- * bytes keyed by object_key, then read() fetches them.
+ * Mirrors `card-media-storage.ts`'s `createDatabaseCardMediaStorage`: bytes live in their own
+ * table keyed by object_key, with no dependency on an external blob provider or credential. Used
+ * by `admin-splash-server.ts` as the fallback when BLOB_READ_WRITE_TOKEN is not configured, so
+ * splash replacement works on a self-hosted deployment with no Vercel Blob account.
  */
 
 type QueryResult = { rows: Record<string, unknown>[] };
@@ -14,19 +12,16 @@ type DatabasePool = {
   query(sql: string, parameters?: readonly unknown[]): Promise<QueryResult>;
 };
 
-// In-memory buffer: upload() stores bytes here, they get written
-// to splash_versions.image_data after promoteReplacement creates the row.
-const pendingUploads = new Map<string, Buffer>();
-
 export function createDatabaseSplashStorage(pool: DatabasePool) {
   return {
     async read(objectKey: string): Promise<ReadableStream<Uint8Array> | undefined> {
       const result = await pool.query(
-        'SELECT image_data FROM splash_versions WHERE object_key = $1 AND image_data IS NOT NULL',
+        'SELECT bytes FROM splash_media_objects WHERE object_key = $1',
         [objectKey],
       );
-      if (result.rows.length === 0) return undefined;
-      const buffer = result.rows[0].image_data as Buffer;
+      const row = result.rows[0];
+      if (!row) return undefined;
+      const buffer = Buffer.from(row.bytes as Buffer);
       return new ReadableStream<Uint8Array>({
         start(controller) {
           controller.enqueue(new Uint8Array(buffer));
@@ -34,33 +29,19 @@ export function createDatabaseSplashStorage(pool: DatabasePool) {
         },
       });
     },
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async upload(objectKey: string, bytes: Buffer, _contentType: 'image/webp'): Promise<void> {
-      // Hold bytes in memory; they'll be flushed after promoteReplacement creates the row
-      pendingUploads.set(objectKey, bytes);
+
+    async upload(objectKey: string, bytes: Buffer, contentType: 'image/webp'): Promise<void> {
+      if (!bytes.length) throw new Error('رسانهٔ خالی ذخیره نمی‌شود.');
+      await pool.query(
+        `INSERT INTO splash_media_objects (object_key, media_type, byte_size, bytes)
+         VALUES ($1, $2, $3, $4)
+         ON CONFLICT (object_key) DO UPDATE SET bytes = EXCLUDED.bytes, byte_size = EXCLUDED.byte_size`,
+        [objectKey, contentType, bytes.length, bytes],
+      );
     },
+
     async delete(objectKey: string): Promise<void> {
-      pendingUploads.delete(objectKey);
-      await pool.query('UPDATE splash_versions SET image_data = NULL WHERE object_key = $1', [
-        objectKey,
-      ]);
+      await pool.query('DELETE FROM splash_media_objects WHERE object_key = $1', [objectKey]);
     },
   };
-}
-
-/**
- * Call after replaceSplash() succeeds to flush the pending image_data
- * into the newly-created splash_versions row.
- */
-export async function flushPendingSplashImage(
-  pool: { query(sql: string, parameters?: readonly unknown[]): Promise<QueryResult> },
-  objectKey: string,
-): Promise<void> {
-  const bytes = pendingUploads.get(objectKey);
-  if (!bytes) return;
-  await pool.query('UPDATE splash_versions SET image_data = $1 WHERE object_key = $2', [
-    bytes,
-    objectKey,
-  ]);
-  pendingUploads.delete(objectKey);
 }

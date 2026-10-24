@@ -35,6 +35,7 @@ import {
   createMediaAcceptRoute,
   createMediaAssetRoute,
   createMediaGenerateRoute,
+  createMediaImportRoute,
   createMediaModelsRoute,
   createMediaStateRoute,
   createVoicePreviewRoute,
@@ -42,6 +43,7 @@ import {
 import {
   createPackMediaJobStopRoute,
   createPackMediaJobResolveRoute,
+  createPackMediaJobReconcileRoute,
   createPackMediaJobsRoute,
   createPackMediaRunnerRoute,
 } from './admin-pack-media-job-routes';
@@ -66,6 +68,7 @@ import { PostgresAdminPaymentsStore } from './postgres-admin-payments-store';
 import {
   createAdminPaymentConfigRoute,
   createAdminRecheckRoute,
+  createAdminSalesReportRoute,
   createAdminTransactionTimelineRoute,
   createAdminTransactionsRoute,
 } from './admin-payments-routes';
@@ -260,12 +263,14 @@ export function createAdminContentPacksServer(dependencies: {
       mediaModels: createMediaModelsRoute(mediaShared),
       mediaState: createMediaStateRoute(mediaShared),
       mediaGenerate: createMediaGenerateRoute(mediaShared),
+      mediaImport: createMediaImportRoute(mediaShared),
       mediaAccept: createMediaAcceptRoute(mediaShared),
       mediaAsset: createMediaAssetRoute(mediaShared),
       mediaVoicePreview: createVoicePreviewRoute(mediaShared),
       packMediaJobs: createPackMediaJobsRoute(packMediaShared),
       packMediaJobStop: createPackMediaJobStopRoute(packMediaShared),
       packMediaJobResolve: createPackMediaJobResolveRoute(packMediaShared),
+      packMediaJobReconcile: createPackMediaJobReconcileRoute(packMediaShared),
       packMediaRunner: createPackMediaRunnerRoute(packMediaShared),
       lifecycleEnabled: manageConfig.enabled,
       packLifecycle: createPackLifecycleRoute(lifecycleShared),
@@ -279,6 +284,7 @@ export function createAdminContentPacksServer(dependencies: {
       transactionTimeline: createAdminTransactionTimelineRoute(paymentsShared),
       transactionRecheck: createAdminRecheckRoute(paymentsShared),
       paymentConfiguration: createAdminPaymentConfigRoute(paymentsShared),
+      salesReport: createAdminSalesReportRoute(paymentsShared),
     };
   } catch {
     return { enabled: false as const };

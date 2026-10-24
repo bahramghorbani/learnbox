@@ -111,14 +111,12 @@ for (const product of products) {
   }
 }
 
-// --- Android (future product): declaration exists, implementation does not ----------------
-
-const pubspec = read('apps/mobile/pubspec.yaml');
-const androidVersion = /^version:\s*(\d+\.\d+\.\d+)\+(\d+)\s*$/m.exec(pubspec);
-check(
-  androidVersion !== null,
-  'Android: apps/mobile/pubspec.yaml must declare `version: <semver>+<versionCode>`.',
-);
+// --- Android (future product): no implementation exists yet -------------------------------
+//
+// The earlier Flutter prototype in apps/mobile (never released, no build/signing material) was
+// removed 2026-10-24 per owner decision. No Android version source exists until a new Android
+// implementation begins; this validator only checks that the tag/versionCode rules remain
+// documented below for whenever that happens.
 
 // --- Documented release-tag architecture --------------------------------------------------
 
@@ -154,6 +152,4 @@ for (const product of products) {
     `  - ${product.name}: ${declaredVersions.get(product.name)} (${product.versionFile}) -> tags ${product.tagPrefix}X.Y.Z`,
   );
 }
-console.log(
-  `  - Android (not started): ${androidVersion ? `${androidVersion[1]}+${androidVersion[2]}` : 'unknown'} (apps/mobile/pubspec.yaml) -> tags android/vX.Y.Z`,
-);
+console.log('  - Android (not started): no version source yet -> tags android/vX.Y.Z');

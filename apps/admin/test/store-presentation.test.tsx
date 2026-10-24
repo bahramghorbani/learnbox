@@ -129,6 +129,17 @@ type Options = {
   transactions?: unknown[];
   configuration?: unknown;
   listingsStatus?: number;
+  report?: unknown;
+};
+
+const defaultReport = {
+  from: null,
+  to: null,
+  verifiedCount: 0,
+  revenueTomans: 0,
+  pendingCount: 0,
+  failedCount: 0,
+  packs: [],
 };
 
 async function render(options: Options = {}) {
@@ -147,6 +158,7 @@ async function render(options: Options = {}) {
       () => Response.json({ configuration: options.configuration ?? configuration }),
     ],
     ['/api/store/transactions', () => Response.json({ transactions: options.transactions ?? [] })],
+    ['/api/store/sales-report', () => Response.json({ report: options.report ?? defaultReport })],
   ]);
   container = document.createElement('div');
   document.body.append(container);
@@ -203,9 +215,9 @@ describe('StoreListingsWorkspace presentation', () => {
     expect(query('[data-store-kpi="listed-packs"]')?.textContent).toBe('۱');
     expect(query('[data-store-kpi="featured-packs"]')?.textContent).toBe('۱');
     expect(query('[data-store-kpi="priceless-paid-packs"]')?.textContent).toBe('۱');
-    // The reference's four financial KPIs have no backend aggregate; the gap is stated, not filled.
+    // Revenue/sales now have a real aggregate, surfaced via the «گزارش فروش» dialog.
     expect(query('[data-store-state="metrics-gap"]')).not.toBeNull();
-    expect(text()).toContain('ارقام درآمد و فروش در این صفحه نمایش داده نمی‌شود');
+    expect(text()).toContain('درآمد و شمار فروش واقعی را دکمهٔ «گزارش فروش» نشان می‌دهد');
     // The notice is allowed to NAME the missing metrics; no KPI may present one as a figure.
     expect(
       [...(container?.querySelectorAll('.kpi-label') ?? [])].map((n) => n.textContent),
@@ -213,7 +225,7 @@ describe('StoreListingsWorkspace presentation', () => {
     for (const value of [...(container?.querySelectorAll('.kpi-value') ?? [])]) {
       expect(value.textContent).not.toContain('تومان');
     }
-    // No per-pack sales column, and the footer says why rather than leaving an empty cell.
+    // No per-pack sales column on the main table; the real count lives in the report dialog.
     expect([...(container?.querySelectorAll('th') ?? [])].map((th) => th.textContent)).toEqual([
       'بسته',
       'وضعیت محتوا',
@@ -221,7 +233,7 @@ describe('StoreListingsWorkspace presentation', () => {
       'وضعیت فروشگاه',
       '',
     ]);
-    expect(query('.tbl-foot .unavailable')?.textContent).toContain('شمار فروش هر بسته');
+    expect(query('.tbl-foot .muted')?.textContent).toContain('شمار فروش هر بسته');
   });
 
   it('presents canonical pack state read-only, with price never editable', async () => {
@@ -346,15 +358,42 @@ describe('StoreListingsWorkspace presentation', () => {
     expect(text()).toContain('غیرفعال است');
   });
 
-  it('keeps the reference sales-report affordance visible but inert', async () => {
-    await render();
+  it('opens a real sales report with live figures when the button is clicked', async () => {
+    await render({
+      report: {
+        from: null,
+        to: null,
+        verifiedCount: 2,
+        revenueTomans: 20000,
+        pendingCount: 0,
+        failedCount: 0,
+        packs: [
+          {
+            packId: 'a1-animal-names-basic-5',
+            packDisplayName: 'نام حیوانات: پنج واژه‌ی پایه',
+            verifiedCount: 2,
+            revenueTomans: 20000,
+          },
+        ],
+      },
+    });
 
-    const report = [...(container?.querySelectorAll('button') ?? [])].find((button) =>
+    const reportButton = [...(container?.querySelectorAll('button') ?? [])].find((button) =>
       button.textContent?.includes('گزارش فروش'),
     ) as HTMLButtonElement;
-    // The reference has the button; there is no reporting endpoint, so it must not look clickable.
-    expect(report).toBeDefined();
-    expect(report.disabled).toBe(true);
-    expect(report.title).toContain('backend');
+    expect(reportButton).toBeDefined();
+    expect(reportButton.disabled).toBe(false);
+
+    await act(async () => {
+      reportButton.click();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    const dialog = query('.cp-modal');
+    expect(dialog).not.toBeNull();
+    expect(dialog?.querySelector('[data-report-kpi="verified-count"]')?.textContent).toBe('۲');
+    expect(dialog?.querySelector('[data-report-kpi="revenue"]')?.textContent).toBe('۲۰,۰۰۰');
+    expect(dialog?.textContent).toContain('نام حیوانات: پنج واژه‌ی پایه');
   });
 });

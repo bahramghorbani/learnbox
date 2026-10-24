@@ -163,6 +163,11 @@ if [ "$TARGET" = app ]; then
     fi
     FLAG_ARGS+=(--build-arg "$name=$value")
   done
+  # LB-B19: the public half of the daily review-reminder push VAPID keypair. Unlike the six
+  # feature flags above this is not a release-governed true/false marker — it is an opaque public
+  # key (or empty, which ships the reminder toggle inert) — so it is read straight from the
+  # operator's environment rather than from release-build.env, and never enforced to one value.
+  FLAG_ARGS+=(--build-arg "NEXT_PUBLIC_VAPID_PUBLIC_KEY=${NEXT_PUBLIC_VAPID_PUBLIC_KEY:-}")
 else
   FLAG_ARGS+=(--build-arg "NEXT_PUBLIC_LEARNBOX_ADMIN_PASSKEY_UI_ENABLED=$PASSKEY_UI")
 fi

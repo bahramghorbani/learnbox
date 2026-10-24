@@ -20,7 +20,7 @@ Host operations (access, backups, offsite, monitoring, Caddy and disaster recove
 **Not done, and not to be assumed**
 
 - **Payments are inactive.** Zarinpal credentials have never been supplied and payment activation is pending an owner decision. `LEARNBOX_ZARINPAL_ENABLED` is absent in Production. Revenue and sales metrics are therefore `unavailable`, not zero-valued facts.
-- **Android development has not started.** `apps/mobile` holds no shipped product. No build, signing key, store listing or placeholder artifact exists, and none may be created without a separate owner decision.
+- **Android development has not started.** No `apps/mobile` or other Android directory exists. An earlier Flutter prototype held no shipped product (no build, signing key, store listing or placeholder artifact) and was removed 2026-10-24 by owner decision; the approved direction is a Kotlin native shell wrapping the existing Learner PWA, not a Flutter rewrite. None of it may be created without a separate owner start-approval.
 - **No component has a published release under the new tag scheme.** Admin and Android have never published any release at all.
 
 **Four distinct actions — never collapse them**
