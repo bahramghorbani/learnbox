@@ -6,9 +6,16 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "send-daily-reminders": "node dist/send-daily-reminders.js"
+  },
+  "dependencies": {
+    "pg": "^8.12.0",
+    "web-push": "^3.6.7"
   },
   "devDependencies": {
+    "@types/pg": "^8.11.6",
+    "@types/web-push": "^3.6.3",
     "vitest": "^3.2.4"
   }
 }

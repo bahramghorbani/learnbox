@@ -13,6 +13,8 @@ export interface ReviewEventInput {
   response?: BinaryResponse;
   /** Scheduler that produced the schedule written with this event; unset = legacy scheduler v1 (NULL). */
   engineVersion?: number;
+  /** Client-measured elapsed time on this card in ms; unset = no client support yet (NULL). */
+  durationMs?: number;
   occurredAt: Date;
   clientEventId: string;
 }

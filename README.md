@@ -44,13 +44,13 @@ pnpm check
 pnpm dev
 ```
 
-For Flutter:
+For Admin Web:
 
 ```bash
-cd apps/mobile
-flutter pub get
-flutter analyze
-flutter test
+cd apps/admin
+pnpm dev
 ```
+
+Android has no implementation in this repository; see `docs/release/VERSIONING.md` for status.
 
 Use the canonical status and roadmap before treating a component, test fixture or dormant flag as a released feature. Never commit secrets, real phone numbers, OTPs, receipts or provider credentials.

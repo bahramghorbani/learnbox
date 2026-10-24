@@ -10,6 +10,7 @@ import {
   createSplashRevertRoute,
 } from './admin-splash-routes';
 import { normalizeSplashImage } from './splash-image';
+import { createDatabaseSplashStorage } from './database-splash-storage';
 import { PostgresOwnerAuthStore } from './postgres-owner-auth-store';
 import { PostgresSplashStore } from './postgres-splash-store';
 import { createPrivateSplashStorage } from './private-splash-storage';
@@ -48,7 +49,6 @@ export function createAdminSplashServer(dependencies: {
     return { enabled: false as const };
   }
   const token = dependencies.environment.BLOB_READ_WRITE_TOKEN;
-  if (!token || token.length < 20) return { enabled: false as const };
 
   try {
     const config = readAdminAuthConfig(dependencies.environment);
@@ -56,7 +56,12 @@ export function createAdminSplashServer(dependencies: {
     const pool = dependencies.createPool(readAdminDatabaseConfig(dependencies.environment));
     const sessionStore = new PostgresOwnerAuthStore(pool);
     const splashStore = new PostgresSplashStore(pool);
-    const storage = dependencies.createStorage(token);
+    // A Blob token is optional: without one, bytes are stored in Postgres instead (same approach
+    // card media already uses), so this works on a deployment with no Vercel Blob account.
+    const storage =
+      token && token.length >= 20
+        ? dependencies.createStorage(token)
+        : createDatabaseSplashStorage(pool);
     const shared = {
       enabled: true,
       config,

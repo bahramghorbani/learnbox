@@ -36,6 +36,23 @@ import {
  * and idempotency key, with the dialog and every typed value left intact.
  */
 
+type SalesReportPackRow = {
+  packId: string;
+  packDisplayName: string;
+  verifiedCount: number;
+  revenueTomans: number;
+};
+
+type SalesReport = {
+  from: string | null;
+  to: string | null;
+  verifiedCount: number;
+  revenueTomans: number;
+  pendingCount: number;
+  failedCount: number;
+  packs: SalesReportPackRow[];
+};
+
 type ServerListing = {
   packId: string;
   packDisplayName: string;
@@ -161,6 +178,11 @@ export function StoreListingsWorkspace() {
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | undefined>(undefined);
   const [notice, setNotice] = useState<string | undefined>(undefined);
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportPhase, setReportPhase] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [report, setReport] = useState<SalesReport | undefined>(undefined);
+  const [reportFrom, setReportFrom] = useState('');
+  const [reportTo, setReportTo] = useState('');
 
   const load = useCallback(async () => {
     setPhase('loading');
@@ -192,6 +214,33 @@ export function StoreListingsWorkspace() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  const loadReport = useCallback(async (from: string, to: string) => {
+    setReportPhase('loading');
+    try {
+      const params = new URLSearchParams();
+      if (from) params.set('from', from);
+      if (to) params.set('to', to);
+      const response = await fetch(`/api/store/sales-report?${params.toString()}`, {
+        credentials: 'same-origin',
+        headers: { accept: 'application/json' },
+      });
+      if (!response.ok) {
+        setReportPhase('error');
+        return;
+      }
+      const payload = (await response.json()) as { report: SalesReport };
+      setReport(payload.report);
+      setReportPhase('ready');
+    } catch {
+      setReportPhase('error');
+    }
+  }, []);
+
+  function openReport() {
+    setReportOpen(true);
+    void loadReport(reportFrom, reportTo);
+  }
 
   function openEditor(row: ServerListing) {
     setEditing(row);
@@ -251,14 +300,7 @@ export function StoreListingsWorkspace() {
             </p>
           </div>
           <div className="head-actions">
-            {/* The reference has a sales-report button. There is no reporting endpoint, so it is
-                shown disabled rather than wired to nothing or quietly dropped. */}
-            <button
-              type="button"
-              className="btn"
-              disabled
-              title="گزارش فروش هنوز در backend وجود ندارد."
-            >
+            <button type="button" className="btn" onClick={openReport}>
               گزارش فروش
             </button>
           </div>
@@ -273,13 +315,14 @@ export function StoreListingsWorkspace() {
           </div>
         ) : null}
 
-        {/* The reference banner warns that its figures are mock. Ours states which figures do not
-            exist at all, so nobody reads the KPI row as a sales dashboard. */}
+        {/* Revenue/sales now come from the real aggregate in the «گزارش فروش» dialog — see
+            `getSalesReport` on `purchase_events`. This banner only disclaims what that dialog still
+            cannot show (discounts, refunds), so nobody reads a verified-only total as net revenue. */}
         <div className="notice mb" role="note" data-store-state="metrics-gap">
           <span>
-            <b>ارقام درآمد و فروش در این صفحه نمایش داده نمی‌شود.</b> backend مرکزی هیچ تجمیع فروشی
-            ندارد — نه درآمد ماه، نه میانگین سبد، نه شمار فروش هر بسته. شمارنده‌های زیر فقط وضعیت
-            تجاری بسته‌ها را می‌شمارند. وضعیت واقعی درگاه در کارت «درگاه پرداخت» آمده است.
+            درآمد و شمار فروش واقعی را دکمهٔ «گزارش فروش» نشان می‌دهد (فقط تراکنش‌های verified‌شده).
+            شمارنده‌های زیر فقط وضعیت تجاری بسته‌ها را می‌شمارند، نه فروش. تخفیف و بازگشت پول هنوز
+            در backend ندارند. وضعیت واقعی درگاه در کارت «درگاه پرداخت» آمده است.
           </span>
         </div>
 
@@ -421,7 +464,9 @@ export function StoreListingsWorkspace() {
                         {faNum(rows.length)} بستهٔ کانونی — {faNum(listedCount)} بسته در فروشگاه
                         فهرست شده است
                       </span>
-                      <span className="unavailable">شمار فروش هر بسته: در backend موجود نیست</span>
+                      <span className="muted">
+                        شمار فروش هر بسته را دکمهٔ «گزارش فروش» نشان می‌دهد
+                      </span>
                     </div>
                   </>
                 )}
@@ -527,6 +572,128 @@ export function StoreListingsWorkspace() {
               نیست؛ این دو قاعدهٔ تجاری هستند و فقط در «محتوا و بسته‌ها» و مطابق سیاست‌های LearnBox
               تعیین می‌شوند. تخفیف و کد تخفیف در سامانه پیاده‌سازی نشده است.
             </p>
+          </CpModal>
+        ) : null}
+
+        {reportOpen ? (
+          <CpModal
+            title="گزارش فروش"
+            onClose={() => setReportOpen(false)}
+            footer={
+              <button type="button" className="btn" onClick={() => setReportOpen(false)}>
+                بستن
+              </button>
+            }
+            wide
+          >
+            <div className="cp-form-grid">
+              <div className="cp-form-row">
+                <label htmlFor="report-from">از تاریخ</label>
+                <input
+                  id="report-from"
+                  className="cp-input cp-ltr"
+                  type="date"
+                  value={reportFrom}
+                  onChange={(event) => setReportFrom(event.target.value)}
+                />
+              </div>
+              <div className="cp-form-row">
+                <label htmlFor="report-to">تا تاریخ</label>
+                <input
+                  id="report-to"
+                  className="cp-input cp-ltr"
+                  type="date"
+                  value={reportTo}
+                  onChange={(event) => setReportTo(event.target.value)}
+                />
+              </div>
+              <div className="cp-form-row">
+                <button
+                  type="button"
+                  className="btn primary"
+                  onClick={() => void loadReport(reportFrom, reportTo)}
+                >
+                  اعمال بازه
+                </button>
+              </div>
+            </div>
+
+            {reportPhase === 'loading' ? (
+              <LoadingState label="در حال خواندن گزارش فروش…" />
+            ) : reportPhase === 'error' ? (
+              <ErrorState
+                title="گزارش فروش خوانده نشد"
+                description="ارتباط با backend مرکزی برقرار نشد یا پاسخ معتبر نبود."
+                action={
+                  <button
+                    type="button"
+                    className="btn"
+                    onClick={() => void loadReport(reportFrom, reportTo)}
+                  >
+                    تلاش دوباره
+                  </button>
+                }
+              />
+            ) : report ? (
+              <>
+                <div className="grid-4 mb" aria-label="شمارنده‌های گزارش فروش">
+                  <div className="kpi">
+                    <div className="kpi-top">
+                      <span className="kpi-label">فروش verified‌شده</span>
+                    </div>
+                    <div className="kpi-value sm" data-report-kpi="verified-count">
+                      {faNum(report.verifiedCount)}
+                    </div>
+                  </div>
+                  <div className="kpi">
+                    <div className="kpi-top">
+                      <span className="kpi-label">درآمد (تومان)</span>
+                    </div>
+                    <div className="kpi-value sm" data-report-kpi="revenue">
+                      {faNum(report.revenueTomans)}
+                    </div>
+                  </div>
+                  <div className="kpi">
+                    <div className="kpi-top">
+                      <span className="kpi-label">در انتظار</span>
+                    </div>
+                    <div className="kpi-value sm" data-report-kpi="pending-count">
+                      {faNum(report.pendingCount)}
+                    </div>
+                  </div>
+                  <div className="kpi">
+                    <div className="kpi-top">
+                      <span className="kpi-label">ناموفق</span>
+                    </div>
+                    <div className="kpi-value sm" data-report-kpi="failed-count">
+                      {faNum(report.failedCount)}
+                    </div>
+                  </div>
+                </div>
+                {report.packs.length === 0 ? (
+                  <EmptyState title="هیچ فروش verified‌شده‌ای در این بازه ثبت نشده است" />
+                ) : (
+                  <table className="admin-table">
+                    <thead>
+                      <tr>
+                        <th>بسته</th>
+                        <th>فروش</th>
+                        <th>درآمد (تومان)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {report.packs.map((row) => (
+                        <tr key={row.packId}>
+                          <td>{row.packDisplayName}</td>
+                          <td>{faNum(row.verifiedCount)}</td>
+                          <td>{faNum(row.revenueTomans)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </>
+            ) : null}
           </CpModal>
         ) : null}
       </section>

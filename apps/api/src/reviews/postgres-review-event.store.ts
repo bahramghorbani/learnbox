@@ -15,6 +15,7 @@ interface ReviewEventRow {
   occurred_at: Date;
   client_event_id: string;
   reconciliation_cursor: string | null;
+  duration_ms?: number | null;
 }
 
 interface ReconciliationCursorRow {
@@ -77,6 +78,7 @@ const toEvent = (row: ReviewEventRow): PersistedReviewEvent => ({
   grade: row.grade,
   occurredAt: row.occurred_at,
   clientEventId: row.client_event_id,
+  ...(row.duration_ms != null ? { durationMs: row.duration_ms } : {}),
 });
 
 // The event's own stored cursor (ADR 0014 per-event binding), never the current
@@ -129,7 +131,7 @@ export class PostgresReviewEventStore implements ReviewEventStore {
 
   async findByClientEventId(clientEventId: string): Promise<ReviewEventWriteResult | null> {
     const result = await this.pool.query<ReviewEventRow & ScheduleRow & ReconciliationCursorRow>(
-      `SELECT e.id, e.user_id, e.card_id, e.grade, e.occurred_at, e.client_event_id,
+      `SELECT e.id, e.user_id, e.card_id, e.grade, e.occurred_at, e.client_event_id, e.duration_ms,
               s.state, s.stability_days, s.difficulty, s.lapses, s.due_at,
               ${CURSOR_COLUMN}
          FROM review_events e
@@ -162,20 +164,22 @@ export class PostgresReviewEventStore implements ReviewEventStore {
     const client = await this.pool.connect();
     try {
       await client.query('BEGIN');
-      // The `response` column exists only after migration 0023. It is named in the statement ONLY for a
-      // binary answer (flag LEARNBOX_BINARY_REVIEW), so with every flag off this is exactly the v1.2.1
-      // statement and runs on a database that has not been migrated yet.
-      const withResponse = input.response !== undefined;
-      // LB-B35 CP7: `engine_version` is named ONLY when scheduler V2 stamped the event (flag
-      // LEARNBOX_SCHEDULER_V2, which fails closed without 0023). Unset keeps the exact v1.2.1 statement.
-      const withEngine = input.engineVersion !== undefined;
+      // The `response` column exists only after migration 0023; `duration_ms` only after 0048. Each is
+      // named in the statement ONLY when the caller actually set it, so with every optional field unset
+      // this is exactly the v1.2.1 statement and runs unchanged on a database that predates them.
+      const optional: Array<[string, unknown]> = [];
+      if (input.response !== undefined) optional.push(['response', input.response]);
+      if (input.engineVersion !== undefined) optional.push(['engine_version', input.engineVersion]);
+      if (input.durationMs !== undefined) optional.push(['duration_ms', input.durationMs]);
+      const optionalColumnsSql = optional.map(([name]) => `, ${name}`).join('');
+      const optionalValuesSql = optional.map((_, i) => `, $${6 + i}`).join('');
       const claimed = await client.query<ReviewEventRow>(
-        `INSERT INTO review_events (id, user_id, card_id, grade, occurred_at, client_event_id, applied_at${withResponse ? ', response' : ''}${withEngine ? ', engine_version' : ''})
+        `INSERT INTO review_events (id, user_id, card_id, grade, occurred_at, client_event_id, applied_at${optionalColumnsSql})
          VALUES (gen_random_uuid(), $1, $2, $3, $4, $5,
                  GREATEST(
                    COALESCE((SELECT MAX(applied_at) FROM review_events prior
                               WHERE prior.user_id = $1 AND prior.card_id = $2), now()),
-                   LEAST($4, now()))${withResponse ? ', $6' : ''}${withEngine ? `, $${withResponse ? 7 : 6}` : ''})
+                   LEAST($4, now()))${optionalValuesSql})
          ON CONFLICT (user_id, client_event_id) DO NOTHING
          RETURNING id, user_id, card_id, grade, occurred_at, client_event_id`,
         [
@@ -184,8 +188,7 @@ export class PostgresReviewEventStore implements ReviewEventStore {
           input.grade,
           input.occurredAt,
           input.clientEventId,
-          ...(withResponse ? [input.response] : []),
-          ...(withEngine ? [input.engineVersion] : []),
+          ...optional.map(([, value]) => value),
         ],
       );
 
@@ -261,7 +264,7 @@ export class PostgresReviewEventStore implements ReviewEventStore {
     clientEventId: string,
   ): Promise<ReviewEventWriteResult | null> {
     const result = await this.pool.query<ReviewEventRow & ScheduleRow & ReconciliationCursorRow>(
-      `SELECT e.id, e.user_id, e.card_id, e.grade, e.occurred_at, e.client_event_id,
+      `SELECT e.id, e.user_id, e.card_id, e.grade, e.occurred_at, e.client_event_id, e.duration_ms,
               s.state, s.stability_days, s.difficulty, s.lapses, s.due_at,
               ${CURSOR_COLUMN}
          FROM review_events e

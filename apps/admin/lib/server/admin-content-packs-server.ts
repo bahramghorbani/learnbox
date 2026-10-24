@@ -12,6 +12,7 @@ import {
 import {
   createContentCardCreateRoute,
   createContentCardEditRoute,
+  createContentCardRemoveFromPackRoute,
   createContentPackCreateRoute,
   createContentPackEditRoute,
 } from './admin-content-packs-write-routes';
@@ -34,12 +35,15 @@ import {
   createMediaAcceptRoute,
   createMediaAssetRoute,
   createMediaGenerateRoute,
+  createMediaImportRoute,
   createMediaModelsRoute,
   createMediaStateRoute,
   createVoicePreviewRoute,
 } from './admin-card-media-routes';
 import {
   createPackMediaJobStopRoute,
+  createPackMediaJobResolveRoute,
+  createPackMediaJobReconcileRoute,
   createPackMediaJobsRoute,
   createPackMediaRunnerRoute,
 } from './admin-pack-media-job-routes';
@@ -64,6 +68,7 @@ import { PostgresAdminPaymentsStore } from './postgres-admin-payments-store';
 import {
   createAdminPaymentConfigRoute,
   createAdminRecheckRoute,
+  createAdminSalesReportRoute,
   createAdminTransactionTimelineRoute,
   createAdminTransactionsRoute,
 } from './admin-payments-routes';
@@ -241,6 +246,7 @@ export function createAdminContentPacksServer(dependencies: {
       setPackPrice: createPackPriceRoute({ ...writeShared, store: priceStore }),
       createCard: createContentCardCreateRoute(writeShared),
       editCard: createContentCardEditRoute(writeShared),
+      removeCardFromPack: createContentCardRemoveFromPackRoute(writeShared),
       importPreview: createContentImportPreviewRoute(importShared),
       importConfirm: createContentImportConfirmRoute(importShared),
       importTemplate: createContentImportTemplateRoute(importShared),
@@ -257,11 +263,14 @@ export function createAdminContentPacksServer(dependencies: {
       mediaModels: createMediaModelsRoute(mediaShared),
       mediaState: createMediaStateRoute(mediaShared),
       mediaGenerate: createMediaGenerateRoute(mediaShared),
+      mediaImport: createMediaImportRoute(mediaShared),
       mediaAccept: createMediaAcceptRoute(mediaShared),
       mediaAsset: createMediaAssetRoute(mediaShared),
       mediaVoicePreview: createVoicePreviewRoute(mediaShared),
       packMediaJobs: createPackMediaJobsRoute(packMediaShared),
       packMediaJobStop: createPackMediaJobStopRoute(packMediaShared),
+      packMediaJobResolve: createPackMediaJobResolveRoute(packMediaShared),
+      packMediaJobReconcile: createPackMediaJobReconcileRoute(packMediaShared),
       packMediaRunner: createPackMediaRunnerRoute(packMediaShared),
       lifecycleEnabled: manageConfig.enabled,
       packLifecycle: createPackLifecycleRoute(lifecycleShared),
@@ -275,6 +284,7 @@ export function createAdminContentPacksServer(dependencies: {
       transactionTimeline: createAdminTransactionTimelineRoute(paymentsShared),
       transactionRecheck: createAdminRecheckRoute(paymentsShared),
       paymentConfiguration: createAdminPaymentConfigRoute(paymentsShared),
+      salesReport: createAdminSalesReportRoute(paymentsShared),
     };
   } catch {
     return { enabled: false as const };

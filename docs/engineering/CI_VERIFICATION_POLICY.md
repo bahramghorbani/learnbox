@@ -27,11 +27,10 @@ node --test scripts/*.test.mjs          # workflow classifier tests
 node scripts/validate-migrations.mjs    # when database/ changed
 ```
 
-For `apps/mobile` changes, additionally:
-
-```bash
-cd apps/mobile && flutter analyze && flutter test
-```
+For `apps/mobile` changes, additionally: this directory does not currently exist (the earlier
+Flutter prototype was removed 2026-10-24 by owner decision). The `mobile` required check is a
+permanent no-op until a new Android implementation is authorized and these commands are
+restored for whatever toolchain that implementation uses.
 
 Do not open a PR, or push a fix-up commit, to find out whether something
 passes that you can run locally in under two minutes.
@@ -49,7 +48,6 @@ other jobs gate their expensive steps on it.
 | -------------------------------------------- | ----------------- | -------- | ----------------- | ----------------- |
 | Docs, plans, `prototypes/`                   | resolves, no work | **full** | resolves, no work | resolves, no work |
 | `apps/admin` only                            | **full**          | **full** | resolves, no work | resolves, no work |
-| `apps/mobile` only                           | **full**          | **full** | **full**          | resolves, no work |
 | Website/API/packages/config/content/database | **full**          | **full** | resolves, no work | **full**          |
 | `infrastructure/`, lockfile, workflows       | **full**          | **full** | **full**          | **full**          |
 

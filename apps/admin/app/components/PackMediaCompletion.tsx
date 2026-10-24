@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { scanPackMedia, type PackMediaItem, type PackMediaScan } from './card-media-bulk';
 import type { CardMediaKind, MediaKindState } from './CardMediaPanel';
@@ -21,8 +21,10 @@ type JobItemStatus =
   | 'not_needed'
   | 'in_progress'
   | 'needs_attention'
+  | 'deferred'
   | 'stopped';
-type JobStatus = 'queued' | 'running' | 'stopped' | 'completed' | 'needs_attention';
+type JobStatus =
+  'queued' | 'running' | 'stopped' | 'completed' | 'completed_with_deferred' | 'needs_attention';
 
 export type PackMediaJob = {
   id: string;
@@ -30,8 +32,10 @@ export type PackMediaJob = {
   status: JobStatus;
   stopRequested: boolean;
   estimatedMaxSeconds: number;
+  lastProgressAt: string | null;
   counts: Record<JobItemStatus, number>;
   items: {
+    id: string;
     cardId: string;
     kind: CardMediaKind;
     status: JobItemStatus;
@@ -45,6 +49,9 @@ type CreateJobResult =
   | { ok: false; message: string };
 
 type StopJobResult = { ok: true; job: PackMediaJob } | { ok: false; message: string };
+type ResolveJobResult = { ok: true; job: PackMediaJob } | { ok: false; message: string };
+type ReconcileJobResult =
+  { ok: true; job: PackMediaJob; count: number } | { ok: false; message: string };
 
 function countByKind(items: readonly PackMediaItem[]): string {
   return (['image', 'word_audio', 'sentence_audio'] as const)
@@ -58,14 +65,54 @@ function jobItemCount(job: PackMediaJob) {
   return Object.values(job.counts).reduce((total, count) => total + count, 0);
 }
 
-function jobProgress(job: PackMediaJob) {
-  return job.counts.generated + job.counts.not_needed + job.counts.stopped;
+function jobResolvedCount(job: PackMediaJob) {
+  return job.counts.generated + job.counts.not_needed;
+}
+
+function jobPercent(job: PackMediaJob) {
+  const total = jobItemCount(job);
+  return total === 0 ? 0 : Math.round((jobResolvedCount(job) / total) * 100);
+}
+
+function isTerminalJobStatus(status: JobStatus | undefined) {
+  return (
+    status === 'completed' ||
+    status === 'completed_with_deferred' ||
+    status === 'stopped' ||
+    status === 'needs_attention'
+  );
+}
+
+function activeOperation(job: PackMediaJob) {
+  const active = job.items.find((item) =>
+    ['leased', 'dispatching', 'in_progress'].includes(item.status),
+  );
+  return active ? `${KIND_LABEL[active.kind]} — ${active.status}` : null;
+}
+
+function formatTimestamp(value: string | null) {
+  return value
+    ? new Intl.DateTimeFormat('fa-IR', { dateStyle: 'short', timeStyle: 'medium' }).format(
+        new Date(value),
+      )
+    : '—';
+}
+
+function attentionDetail(detail: string | null) {
+  if (detail === 'provider_timeout' || detail === 'provider_provider_timeout')
+    return 'مهلت پاسخ provider تمام شد؛ نتیجهٔ درخواست قبلی نامعلوم است.';
+  if (detail === 'dispatch_outcome_unknown')
+    return 'پس از ارسال درخواست، نتیجه به‌طور قطعی ثبت نشد.';
+  if (detail === 'already_generating') return 'عملیات قبلی هنوز نتیجهٔ قطعی ندارد.';
+  return 'نتیجهٔ درخواست قبلی نامعلوم است.';
 }
 
 function jobNotice(job: PackMediaJob) {
   if (job.status === 'needs_attention')
     return 'یک مورد در وضعیت نامعلوم یا در حال اجرای قبلی است؛ هیچ درخواست دیگری خودکار ارسال نمی‌شود.';
   if (job.status === 'stopped') return 'توقف ثبت شد؛ مورد تازه‌ای شروع نمی‌شود.';
+  if (job.status === 'completed_with_deferred')
+    return 'تولید موارد باقی‌مانده پایان یافت، اما مورد موکول‌شده ناقص است و انتشار را مسدود می‌کند.';
   if (job.status === 'completed') return 'اجرا تمام شد؛ پیشنهادها همچنان باید دستی پذیرفته شوند.';
   return 'اجرای تأییدشده روی سرور ادامه دارد؛ بستن صفحه آن را متوقف نمی‌کند.';
 }
@@ -81,6 +128,8 @@ export function PackMediaCompletion({
   loadJob,
   createJob,
   stopJob,
+  resolveJob,
+  reconcileJob,
   onOpenCard,
   onFinished,
 }: {
@@ -90,31 +139,53 @@ export function PackMediaCompletion({
   loadJob: (packId: string) => Promise<PackMediaJob | undefined>;
   createJob: (packId: string) => Promise<CreateJobResult>;
   stopJob: (jobId: string) => Promise<StopJobResult>;
+  resolveJob?: (
+    jobId: string,
+    itemId: string,
+    action: 'defer' | 'retry',
+    reason: string,
+    confirmedPotentialDuplicateCharge: boolean,
+    confirmedContinuePending: boolean,
+  ) => Promise<ResolveJobResult>;
+  /** Reconcile deferred items that already have an accepted candidate at the current card version. */
+  reconcileJob?: (jobId: string) => Promise<ReconcileJobResult>;
   onOpenCard: (card: { cardId: string; label: string }) => void;
   onFinished: () => void;
 }) {
-  const [busy, setBusy] = useState<'scanning' | 'creating' | 'stopping'>();
+  const [busy, setBusy] = useState<
+    'scanning' | 'creating' | 'stopping' | 'resolving' | 'reconciling'
+  >();
+  const [resolutionReason, setResolutionReason] = useState('');
+  const [confirmedPotentialDuplicateCharge, setConfirmedPotentialDuplicateCharge] = useState(false);
+  const [confirmedContinuePending, setConfirmedContinuePending] = useState(false);
   const [scanError, setScanError] = useState<string>();
   const [scan, setScan] = useState<PackMediaScan>();
   const [job, setJob] = useState<PackMediaJob>();
   const [jobError, setJobError] = useState<string>();
+  const priorJobStatus = useRef<JobStatus | undefined>(undefined);
+  const onFinishedRef = useRef(onFinished);
+
+  useEffect(() => {
+    onFinishedRef.current = onFinished;
+  }, [onFinished]);
 
   const refreshJob = useCallback(async () => {
     try {
       const next = await loadJob(packId);
       setJob(next);
       setJobError(undefined);
-      if (
-        next?.status === 'completed' ||
-        next?.status === 'stopped' ||
-        next?.status === 'needs_attention'
-      ) {
-        onFinished();
+      const previous = priorJobStatus.current;
+      priorJobStatus.current = next?.status;
+      // An already-terminal first observation is not a state transition. Treating it as one cleared
+      // the existing card table every poll through the parent refresh callback.
+      if (previous && !isTerminalJobStatus(previous) && isTerminalJobStatus(next?.status)) {
+        onFinishedRef.current();
       }
     } catch {
+      setJob(undefined);
       setJobError('خواندن وضعیت اجرای پایدار ناموفق بود.');
     }
-  }, [loadJob, onFinished, packId]);
+  }, [loadJob, packId]);
 
   useEffect(() => {
     void refreshJob();
@@ -150,7 +221,7 @@ export function PackMediaCompletion({
     }
     setJob(result.job);
     setScan(undefined);
-    onFinished();
+    priorJobStatus.current = result.job?.status;
   }
 
   async function stop() {
@@ -164,10 +235,67 @@ export function PackMediaCompletion({
       return;
     }
     setJob(result.job);
+    const previous = priorJobStatus.current;
+    priorJobStatus.current = result.job.status;
+    if (previous && !isTerminalJobStatus(previous) && isTerminalJobStatus(result.job.status)) {
+      onFinishedRef.current();
+    }
+  }
+
+  async function resolveItem(itemId: string, action: 'defer' | 'retry') {
+    if (!job || !resolveJob) return;
+    setBusy('resolving');
+    setJobError(undefined);
+    try {
+      const result = await resolveJob(
+        job.id,
+        itemId,
+        action,
+        resolutionReason,
+        action === 'retry' && confirmedPotentialDuplicateCharge,
+        action === 'defer' && confirmedContinuePending,
+      );
+      if (!result.ok) {
+        setJobError(result.message);
+        setJob(undefined);
+        return;
+      }
+      setJob(result.job);
+      priorJobStatus.current = result.job.status;
+      setResolutionReason('');
+      setConfirmedPotentialDuplicateCharge(false);
+      setConfirmedContinuePending(false);
+      if (action === 'defer' && result.job.counts.pending > 0) onFinishedRef.current();
+    } catch {
+      setJobError('نتیجهٔ رسیدگی خوانده نشد؛ پیش از اقدام دوباره وضعیت را تازه کنید.');
+      setJob(undefined);
+    } finally {
+      setBusy(undefined);
+    }
+  }
+
+  async function reconcileDeferred() {
+    if (!job || !reconcileJob) return;
+    setBusy('reconciling');
+    setJobError(undefined);
+    try {
+      const result = await reconcileJob(job.id);
+      if (!result.ok) {
+        setJobError(result.message);
+        return;
+      }
+      setJob(result.job);
+      priorJobStatus.current = result.job.status;
+    } catch {
+      setJobError('تطابق‌سازی ناموفق بود؛ وضعیت را تازه کنید.');
+    } finally {
+      setBusy(undefined);
+    }
   }
 
   const activeJob = job?.status === 'queued' || job?.status === 'running';
-  const blockingJob = activeJob || job?.status === 'needs_attention';
+  const blockingJob =
+    activeJob || job?.status === 'needs_attention' || job?.status === 'completed_with_deferred';
   const canStart =
     !blockingJob && !busy && scan && scan.unreadable.length === 0 && scan.needed.length > 0;
 
@@ -199,18 +327,132 @@ export function PackMediaCompletion({
       {job ? (
         <div data-pack-media="job-progress">
           <p>
-            {jobNotice(job)} {faNum(jobProgress(job))} از {faNum(jobItemCount(job))} مورد تعیین
-            تکلیف شده‌اند.
+            {jobNotice(job)} {faNum(jobResolvedCount(job))} از {faNum(jobItemCount(job))} مورد
+            تعیین‌تکلیف شده‌اند ({faNum(jobPercent(job))}٪ واقعی).
           </p>
           <p>
-            سقف زمانی برآوردشده: {faNum(job.estimatedMaxSeconds)} ثانیه؛ بر پایهٔ timeoutهای
-            تنظیم‌شده و فاصلهٔ {faNum(5)} ثانیه‌ای پس از هر مورد.
+            آماده: {faNum(job.counts.generated)}، نیازی نبود: {faNum(job.counts.not_needed)}، منتظر:
+            {faNum(job.counts.pending)}، در حال اجرا:
+            {faNum(job.counts.leased + job.counts.dispatching + job.counts.in_progress)}، نیازمند
+            رسیدگی:
+            {faNum(job.counts.needs_attention)}، موکول‌شده: {faNum(job.counts.deferred)}.
+          </p>
+          <p>
+            عملیات جاری: {activeOperation(job) ?? '—'}؛ آخرین پیشرفت واقعی:{' '}
+            {formatTimestamp(job.lastProgressAt)}.
           </p>
           {job.status === 'needs_attention' || job.counts.in_progress > 0 ? (
             <p className="notice error">
               {faNum(job.counts.in_progress + job.counts.needs_attention)} مورد نیازمند بررسی مدیر
               است؛ نتیجهٔ provider نامعلوم یا عملیات موجود دوباره ارسال نمی‌شود.
             </p>
+          ) : null}
+          {reconcileJob && job.counts.deferred + job.counts.needs_attention > 0 ? (
+            <div data-pack-media="reconcile" className="notice">
+              <p>
+                موارد موکول‌شده‌ای که قبلاً به‌صورت دستی تأیید شده‌اند (candidate پذیرفته‌شده در
+                همان نسخهٔ کارت) می‌توانند به‌عنوان تولیدشده ثبت شوند — بدون ارسال به provider یا
+                ساخت مجدد.
+              </p>
+              <button
+                type="button"
+                className="btn"
+                disabled={Boolean(busy)}
+                onClick={() => void reconcileDeferred()}
+              >
+                {busy === 'reconciling' ? 'در حال تطابق‌سازی…' : 'تطابق‌سازی موارد پذیرفته‌شده'}
+              </button>
+            </div>
+          ) : null}
+          {resolveJob &&
+          job.items.some(
+            (item) => item.status === 'needs_attention' || item.status === 'deferred',
+          ) ? (
+            <div data-pack-media="resolution" className="notice">
+              <p>
+                رسیدگی مدیریتی به نتیجهٔ نامعلوم؛ مورد موکول‌شده موفق محسوب نمی‌شود و candidate قبلی
+                حفظ می‌شود.
+              </p>
+              <label htmlFor={`pack-media-reason-${job.id}`}>دلیل ثبت‌شده در حسابرسی</label>
+              <textarea
+                id={`pack-media-reason-${job.id}`}
+                value={resolutionReason}
+                maxLength={1200}
+                onChange={(event) => setResolutionReason(event.target.value)}
+              />
+              {job.items
+                .filter((item) => item.status === 'needs_attention' || item.status === 'deferred')
+                .map((item) => (
+                  <div key={item.id}>
+                    <p>
+                      {KIND_LABEL[item.kind]} — کارت <bdi dir="ltr">{item.cardId}</bdi> —{' '}
+                      {item.status === 'deferred' ? 'موکول‌شده' : 'نیازمند رسیدگی'}
+                    </p>
+                    {item.status === 'needs_attention' ? (
+                      <p>{attentionDetail(item.detail)}</p>
+                    ) : null}
+                    {item.status === 'needs_attention' ? (
+                      <>
+                        {job.counts.pending > 0 ? (
+                          <label>
+                            <input
+                              type="checkbox"
+                              checked={confirmedContinuePending}
+                              onChange={(event) =>
+                                setConfirmedContinuePending(event.target.checked)
+                              }
+                            />
+                            می‌دانم با موکول‌کردن، فقط {faNum(job.counts.pending)} مورد pending همین
+                            job و snapshot ثبت‌شدهٔ آن، پس از فعال‌بودن runner، ادامه می‌یابد؛ این
+                            دکمه هیچ درخواست provider ارسال نمی‌کند.
+                          </label>
+                        ) : null}
+                        <button
+                          type="button"
+                          className="btn"
+                          disabled={
+                            Boolean(busy) ||
+                            !resolutionReason.trim() ||
+                            (job.counts.pending > 0 && !confirmedContinuePending)
+                          }
+                          onClick={() => void resolveItem(item.id, 'defer')}
+                        >
+                          موکول‌کردن این مورد و ادامهٔ بقیه
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <p className="notice error">
+                          هشدار: نتیجهٔ فراخوانی قبلی معلوم نیست؛ retry ممکن است هزینهٔ دوباره داشته
+                          باشد.
+                        </p>
+                        <label>
+                          <input
+                            type="checkbox"
+                            checked={confirmedPotentialDuplicateCharge}
+                            onChange={(event) =>
+                              setConfirmedPotentialDuplicateCharge(event.target.checked)
+                            }
+                          />
+                          احتمال هزینهٔ دوباره را فهمیدم و retry این مورد را صریحاً تأیید می‌کنم.
+                        </label>
+                        <button
+                          type="button"
+                          className="btn"
+                          disabled={
+                            Boolean(busy) ||
+                            !resolutionReason.trim() ||
+                            !confirmedPotentialDuplicateCharge
+                          }
+                          onClick={() => void resolveItem(item.id, 'retry')}
+                        >
+                          تأیید retry جداگانهٔ همین مورد
+                        </button>
+                      </>
+                    )}
+                  </div>
+                ))}
+            </div>
           ) : null}
           {activeJob ? (
             <button
