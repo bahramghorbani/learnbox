@@ -2336,8 +2336,12 @@ p {
   }
   .learner-nav {
     margin-right: -16px;
-    margin-bottom: -36px;
     margin-left: -16px;
+    /* ponytail: margin-bottom was -36px here — on a position:fixed element
+       that shifts the whole bar 36px BELOW the viewport (same failure mode
+       already called out above at the old duplicate block), clipping the
+       label row off-screen on every phone under this breakpoint. Removed,
+       not patched: nothing below here needs it. */
   }
   .onboarding-intro {
     padding-top: 47px;
