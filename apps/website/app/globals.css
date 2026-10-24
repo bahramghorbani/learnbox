@@ -552,6 +552,82 @@ button {
 .supportive-plus-offer p {
   margin: 0 0 8px;
 }
+
+/* ── Install-to-home-screen banner ── */
+.install-app-banner {
+  position: fixed;
+  z-index: 95;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  padding: 14px 18px calc(14px + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light, #7c3aed) 100%);
+  color: #fff;
+  box-shadow: 0 -12px 32px rgba(29, 13, 84, 0.28);
+  border-radius: 22px 22px 0 0;
+  animation: installBannerSlideUp 520ms var(--spring) both;
+}
+.install-app-banner-bobo {
+  flex-shrink: 0;
+  transform: translateY(-14px);
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.2));
+}
+.install-app-banner-copy {
+  flex: 1;
+  min-width: 0;
+}
+.install-app-banner-copy strong {
+  display: block;
+  font-size: 15.5px;
+  margin-bottom: 4px;
+}
+.install-app-banner-copy p {
+  margin: 0 0 10px;
+  font-size: 13.5px;
+  line-height: 1.8;
+  opacity: 0.92;
+}
+.install-app-banner-ios-steps {
+  margin-bottom: 0 !important;
+}
+.install-app-banner-icon {
+  display: inline-block;
+}
+.install-app-banner-cta {
+  border: none;
+  border-radius: 999px;
+  padding: 9px 20px;
+  background: #fff;
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 14px;
+}
+.install-app-banner-close {
+  position: absolute;
+  top: 10px;
+  left: 14px;
+  border: none;
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  font-size: 16px;
+  line-height: 1;
+}
+@keyframes installBannerSlideUp {
+  from {
+    transform: translateY(110%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
 .brand-row,
 .session-header {
   display: flex;
