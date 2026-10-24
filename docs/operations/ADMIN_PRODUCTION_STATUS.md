@@ -1,13 +1,35 @@
 # Admin Production status
 
-**Current section reviewed 2026-10-20** against the Iran Production host and the release evidence.
-It is the canonical operational truth for the Production Admin panel at
-`https://admin.learnboxapp.com`. Host operations are in
-[`IRAN_PRODUCTION_RUNBOOK.md`](./IRAN_PRODUCTION_RUNBOOK.md). Release identity also appears in
+**Current section reviewed 2026-10-21** against the Iran Production host. It is the canonical
+operational truth for the Production Admin panel at `https://admin.learnboxapp.com`. Host operations
+are in [`IRAN_PRODUCTION_RUNBOOK.md`](./IRAN_PRODUCTION_RUNBOOK.md). Release identity also appears in
 [`PROJECT_STATE.md`](../../PROJECT_STATE.md); product decisions live in
 [`PDR-010`](../product-decisions/PDR-010-ARTICLE-AWARE-AUDIO-AND-MEDIA-STANDARDS.md).
 
-## Current state (2026-10-20)
+## Current state (2026-10-21)
+
+| Item                   | Value                                                                                                                           |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Admin image            | `sha256:3a2b0dcb0229fe1bb35bf80cb2b29f6c1053f4087ee5e582151c83787157df42`, healthy, restarts `0`                                |
+| Admin product source   | `008499cbe5077c96c04c0b34e78dad9726af345a`                                                                                      |
+| Release-control source | `2fd3cf14d2ac0527bf2dbb933b691064d4f2c4a2`                                                                                      |
+| App image              | `sha256:d327590ca12e919dfff5f2d45394cb909b890a51422092c222ed569900517971`, healthy, restarts `0`                                |
+| Schema                 | `0041_pack_media_attention_resolution`, checksum `6deb9c7c59d37fa5ccfff759bbb76f21c1a1800e2e7dae295b85d704441a9491`             |
+| Pack-media runner      | enabled and idle; it must not be used to resume paid work without an explicit owner panel action                                |
+| Audio timeout          | `LEARNBOX_AI_AUDIO_TIMEOUT_MS=120000`; image timeout remains its default `180000` ms                                            |
+| Rollback Admin         | retained `learnbox-admin:rollback-39ea40b-18fd7872` → `sha256:18fd7872e54e911c69b98f62d00675c4f3718f254c0c40ab3884c6416894721f` |
+
+The only current job is `b0817b7a-fd59-4ce0-950b-bb348b6d94c3`: `196` generated, `159` pending,
+`1` needs attention and `2` deferred, with no active lease, dispatch or generation. Its continuation
+remains an owner panel decision. The configuration bundle was refreshed after the timeout change;
+its ciphertext stays only in the owner recovery locations described by the Iran runbook.
+
+No migration, App, payment, provider, candidate, acceptance or publication action was performed in
+the 2026-10-21 Admin configuration window.
+
+## Historical snapshot (2026-10-20; superseded by the state above)
+
+Reviewed 2026-10-20 against the Iran Production host and the release evidence.
 
 ### Running release
 
