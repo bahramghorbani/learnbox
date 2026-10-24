@@ -32,6 +32,21 @@ class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Footer nav icons were cut off on some phones, not others: Android 15 (API 35) made
+        // edge-to-edge the OS default for some OEM skins even below that targetSdk, so the
+        // WebView's content area was drawn UNDER the system gesture/navigation bar on those
+        // devices. The web app's CSS already reserves space for the bottom nav via
+        // `env(safe-area-inset-bottom)` (apps/website/app/globals.css), but that only works if
+        // the WebView actually receives real, non-zero inset values for every OEM — it does not,
+        // reliably, in a raw android.webkit.WebView. Fix at the source instead: force Android to
+        // always reserve the system bar space itself (`decorFitsSystemWindows = true`, the
+        // pre-edge-to-edge default), so the WebView's content area never extends under the
+        // system bar on ANY device/OS version, and the website's own safe-area CSS never needs
+        // to do anything (insets correctly report as already-excluded, i.e. 0).
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            window.setDecorFitsSystemWindows(true)
+        }
+
         webView = WebView(this)
         setContentView(webView)
 
