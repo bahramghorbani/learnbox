@@ -54,10 +54,14 @@ class MainActivity : Activity() {
         settings.javaScriptEnabled = true
         settings.domStorageEnabled = true
         settings.databaseEnabled = true
-        // The site is responsive and already serves its own mobile layout; this only tells the
-        // WebView not to render it as a scaled-down desktop page.
-        settings.useWideViewPort = true
-        settings.loadWithOverviewMode = true
+        // Deliberately NOT setting useWideViewPort/loadWithOverviewMode: those are for legacy
+        // desktop-oriented sites with no real viewport meta tag, asking WebView to zoom-to-fit.
+        // The site already declares `width=device-width, initial-scale=1`
+        // (apps/website/app/layout.tsx) — a real responsive viewport. Forcing the legacy
+        // zoom-to-fit flags on top of a real viewport meta is what was causing the bottom nav's
+        // label row to render below the fold on some phones: WebView's overview-mode scaling is
+        // DPI-dependent, so it clipped only on some densities, not others. Without these two
+        // flags WebView just honors the page's own viewport, like a normal mobile browser does.
 
         val cookieManager = CookieManager.getInstance()
         cookieManager.setAcceptCookie(true)
