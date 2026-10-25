@@ -1700,6 +1700,135 @@ button {
   font-size: 15px;
   line-height: 1;
 }
+
+/* Generic ltr run (ids, locales, numbers) outside a `.tbl` cell — `.cp-attribution` below needs
+   it and so does any future non-table use; `.tbl .ltr` above stays untouched for existing rows. */
+.cp-workspace .ltr {
+  direction: ltr;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Phase 1 / Milestone 1.5 — per-card media review panel (CardMediaPanel.tsx).
+   It used to carry its own `.modal-backdrop`/`.modal`/`.cm-modal` wrapper with no rules anywhere
+   in this file, so the panel rendered with no positioning, no backdrop and no layout at all —
+   its content just dropped into the normal document flow on top of the table. The panel now
+   renders through the shared `CpModal` (`.cp-scrim`/`.cp-modal`, defined above), so only the
+   content *inside* it needs rules here. */
+.cp-workspace .cm-kind {
+  display: grid;
+  gap: 10px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+}
+.cp-workspace .cm-kind:first-of-type {
+  padding-top: 0;
+  border-top: none;
+}
+.cp-workspace .cm-kind-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.cp-workspace .cm-kind-head h3 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+}
+.cp-workspace .cm-state {
+  flex-shrink: 0;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 700;
+  background: var(--surface-2);
+  color: var(--muted);
+}
+.cp-workspace .cm-state[data-cm-state='accepted'] {
+  background: #eafaf1;
+  color: #0f7b4f;
+}
+.cp-workspace .cm-state[data-cm-state='candidate-ready'] {
+  background: var(--lavender-soft);
+  color: var(--blue-ink);
+}
+.cp-workspace .cm-state[data-cm-state='generating'] {
+  background: #fff8e6;
+  color: var(--amber-ink);
+}
+.cp-workspace .cm-state[data-cm-state='failed'] {
+  background: var(--rose-soft);
+  color: var(--rose-ink);
+}
+.cp-workspace .cm-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.cp-workspace .cm-column {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  min-width: 0;
+}
+.cp-workspace .cm-column h4 {
+  margin: 0;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.cp-workspace .cm-column .btn {
+  justify-self: start;
+}
+.cp-workspace .cm-empty {
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.cp-workspace .cm-image-preview {
+  width: 100%;
+  max-width: 220px;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+}
+.cp-workspace .cm-audio-preview {
+  width: 100%;
+  max-width: 280px;
+}
+.cp-workspace .cm-attribution {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  font-size: 11px;
+}
+.cp-workspace .cm-attribution > div {
+  display: flex;
+  gap: 6px;
+  justify-content: space-between;
+}
+.cp-workspace .cm-attribution dt {
+  flex-shrink: 0;
+  color: var(--muted);
+}
+.cp-workspace .cm-attribution dd {
+  margin: 0;
+  text-align: left;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+/* Prev/Next in the modal footer (sequential-review UX pass): the position label sits between the
+   two buttons without pushing them apart from the rest of the footer on narrow viewports. */
+.cp-workspace .cm-nav-position {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--muted);
+  align-self: center;
+}
+
 .cp-workspace .cp-form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
+import { CpModal } from './AdminModal';
 import { StepUpRefusedError } from './step-up-reauth';
 
 /**
@@ -60,6 +61,18 @@ export interface CardMediaPanelProps {
   onImport?: (file: File) => Promise<{ ok: true } | { ok: false; message: string }>;
   /** Builds the authenticated URL the browser uses to preview or play a candidate. */
   assetUrl: (candidateId: string) => string;
+  /**
+   * Phase 1 / M1.5 UX pass — reviewing a pack one card at a time otherwise forces the Admin to
+   * close this panel, find the next row in a long table, and reopen it. When the caller supplies
+   * this, Prev/Next move across the currently loaded card list without leaving the panel. Omitted
+   * entirely (not just disabled) when the caller has nothing to navigate, e.g. a future single-card
+   * entry point.
+   */
+  onNavigate?: (direction: 'prev' | 'next') => void;
+  hasPrev?: boolean;
+  hasNext?: boolean;
+  /** e.g. "کارت ۳ از ۴۰". Only rendered when the caller supplies it. */
+  positionLabel?: string;
 }
 
 const KIND_LABEL: Record<CardMediaKind, string> = {
@@ -263,168 +276,205 @@ export function CardMediaPanel(props: CardMediaPanelProps) {
     setBusyKind(undefined);
   }
 
+  // Arrow-key review: ArrowRight moves to the previous card, ArrowLeft to the next one, mirroring
+  // the RTL reading order (start of the list sits toward the right). Only attached when the caller
+  // actually wired navigation — otherwise the panel behaves exactly as before. There is no text
+  // field in this panel for the arrow keys to collide with.
+  useEffect(() => {
+    if (!props.onNavigate) return;
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === 'ArrowRight' && props.hasPrev) {
+        event.preventDefault();
+        props.onNavigate?.('prev');
+      } else if (event.key === 'ArrowLeft' && props.hasNext) {
+        event.preventDefault();
+        props.onNavigate?.('next');
+      }
+    }
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [props]);
+
   return (
-    <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="رسانهٔ کارت">
-      <div className="modal cm-modal">
-        <header className="modal-head">
-          <h2>
-            رسانهٔ کارت <span className="ltr">{props.cardLabel}</span>
-          </h2>
-          <button className="btn" type="button" onClick={props.onClose}>
-            بستن
-          </button>
-        </header>
+    <CpModal
+      title={`رسانهٔ کارت ${props.cardLabel}`}
+      onClose={props.onClose}
+      wide
+      footer={
+        props.onNavigate ? (
+          <>
+            <button
+              className="btn"
+              type="button"
+              disabled={!props.hasPrev}
+              onClick={() => props.onNavigate?.('prev')}
+            >
+              کارت قبلی
+            </button>
+            {props.positionLabel ? (
+              <span className="cm-nav-position">{props.positionLabel}</span>
+            ) : null}
+            <button
+              className="btn"
+              type="button"
+              disabled={!props.hasNext}
+              onClick={() => props.onNavigate?.('next')}
+            >
+              کارت بعدی
+            </button>
+          </>
+        ) : null
+      }
+    >
+      <p className="notice" role="note">
+        تولید به‌معنی پذیرش نیست. رسانهٔ پذیرفته‌شدهٔ فعلی تا زمانی که نسخهٔ جدید را صریحاً بپذیرید
+        تغییر نمی‌کند.
+      </p>
 
-        <p className="notice" role="note">
-          تولید به‌معنی پذیرش نیست. رسانهٔ پذیرفته‌شدهٔ فعلی تا زمانی که نسخهٔ جدید را صریحاً
-          بپذیرید تغییر نمی‌کند.
+      {error ? (
+        <p className="notice error" role="alert">
+          {error}
         </p>
+      ) : null}
 
-        {error ? (
-          <p className="notice error" role="alert">
-            {error}
-          </p>
-        ) : null}
+      {error && state === undefined && !loadFailed ? (
+        <button className="btn" type="button" onClick={() => void retryRead()}>
+          خواندن دوباره
+        </button>
+      ) : null}
 
-        {error && state === undefined && !loadFailed ? (
-          <button className="btn" type="button" onClick={() => void retryRead()}>
-            خواندن دوباره
-          </button>
-        ) : null}
+      {loadFailed ? (
+        <p className="notice error" role="alert">
+          خواندن وضعیت رسانه ناموفق بود.
+        </p>
+      ) : null}
 
-        {loadFailed ? (
-          <p className="notice error" role="alert">
-            خواندن وضعیت رسانه ناموفق بود.
-          </p>
-        ) : null}
+      {state === undefined && !loadFailed && !error ? (
+        <p className="notice">در حال خواندن…</p>
+      ) : null}
 
-        {state === undefined && !loadFailed && !error ? (
-          <p className="notice">در حال خواندن…</p>
-        ) : null}
+      {state?.map((kindState) => {
+        const candidate = kindState.latestCandidate;
+        const isBusy = busyKind === kindState.kind;
+        const isGenerating = isBusy || candidate?.status === 'generating';
+        // A candidate awaiting review is one that is ready and not already the accepted asset.
+        const reviewable =
+          candidate && candidate.status === 'ready' && candidate.id !== kindState.accepted?.id;
 
-        {state?.map((kindState) => {
-          const candidate = kindState.latestCandidate;
-          const isBusy = busyKind === kindState.kind;
-          const isGenerating = isBusy || candidate?.status === 'generating';
-          // A candidate awaiting review is one that is ready and not already the accepted asset.
-          const reviewable =
-            candidate && candidate.status === 'ready' && candidate.id !== kindState.accepted?.id;
-
-          return (
-            <section className="cm-kind" key={kindState.kind} data-cm-kind={kindState.kind}>
-              <header className="cm-kind-head">
-                <h3>{KIND_LABEL[kindState.kind]}</h3>
-                <span
-                  className="cm-state"
-                  data-cm-state={
-                    isGenerating
-                      ? 'generating'
-                      : reviewable
-                        ? 'candidate-ready'
-                        : candidate?.status === 'failed'
-                          ? 'failed'
-                          : kindState.accepted
-                            ? 'accepted'
-                            : 'idle'
-                  }
-                >
-                  {isGenerating
-                    ? 'در حال تولید…'
+        return (
+          <section className="cm-kind" key={kindState.kind} data-cm-kind={kindState.kind}>
+            <header className="cm-kind-head">
+              <h3>{KIND_LABEL[kindState.kind]}</h3>
+              <span
+                className="cm-state"
+                data-cm-state={
+                  isGenerating
+                    ? 'generating'
                     : reviewable
-                      ? 'نامزد آمادهٔ بررسی'
+                      ? 'candidate-ready'
                       : candidate?.status === 'failed'
-                        ? 'ناموفق'
+                        ? 'failed'
                         : kindState.accepted
-                          ? 'پذیرفته‌شده'
-                          : 'بدون رسانه'}
-                </span>
-              </header>
+                          ? 'accepted'
+                          : 'idle'
+                }
+              >
+                {isGenerating
+                  ? 'در حال تولید…'
+                  : reviewable
+                    ? 'نامزد آمادهٔ بررسی'
+                    : candidate?.status === 'failed'
+                      ? 'ناموفق'
+                      : kindState.accepted
+                        ? 'پذیرفته‌شده'
+                        : 'بدون رسانه'}
+              </span>
+            </header>
 
-              <div className="cm-columns">
-                <div className="cm-column">
-                  <h4>رسانهٔ پذیرفته‌شدهٔ فعلی</h4>
-                  {kindState.accepted ? (
-                    <>
-                      <MediaPreview
-                        candidate={kindState.accepted}
-                        url={props.assetUrl(kindState.accepted.id)}
-                        title={`${KIND_LABEL[kindState.kind]} پذیرفته‌شده`}
-                      />
-                      <Attribution candidate={kindState.accepted} />
-                    </>
-                  ) : (
-                    <p className="cm-empty">هنوز رسانه‌ای پذیرفته نشده است.</p>
-                  )}
-                </div>
-
-                <div className="cm-column">
-                  <h4>نامزد تولیدشده</h4>
-                  {candidate?.status === 'failed' ? (
-                    <p className="notice error" role="status">
-                      تولید ناموفق بود
-                      {candidate.failureCode ? ` (${candidate.failureCode})` : ''}. رسانهٔ
-                      پذیرفته‌شدهٔ فعلی دست‌نخورده است.
-                    </p>
-                  ) : null}
-
-                  {reviewable && candidate ? (
-                    <>
-                      <MediaPreview
-                        candidate={candidate}
-                        url={props.assetUrl(candidate.id)}
-                        title={`${KIND_LABEL[kindState.kind]} نامزد`}
-                      />
-                      <Attribution candidate={candidate} />
-                      <button
-                        className="btn primary"
-                        type="button"
-                        disabled={isBusy}
-                        onClick={() => void accept(kindState.kind, candidate.id)}
-                      >
-                        پذیرش این نامزد
-                      </button>
-                    </>
-                  ) : !isGenerating && candidate?.status !== 'failed' ? (
-                    <p className="cm-empty">نامزدی در انتظار بررسی نیست.</p>
-                  ) : null}
-
-                  {isGenerating ? (
-                    <button className="btn" type="button" onClick={() => void retryRead()}>
-                      به‌روزرسانی وضعیت
-                    </button>
-                  ) : (
-                    <button
-                      className="btn"
-                      type="button"
-                      onClick={() =>
-                        void generate(kindState.kind, Boolean(kindState.accepted || candidate))
-                      }
-                    >
-                      {kindState.accepted || candidate ? 'تولید دوباره' : 'تولید'}
-                    </button>
-                  )}
-                  {kindState.kind === 'word_audio' && props.onImport ? (
-                    <label className="btn">
-                      بارگذاری MP3
-                      <input
-                        type="file"
-                        accept="audio/mpeg"
-                        disabled={isBusy || isGenerating}
-                        hidden
-                        onChange={(event) => {
-                          const file = event.target.files?.[0];
-                          if (file) void importAudio(file);
-                          event.target.value = '';
-                        }}
-                      />
-                    </label>
-                  ) : null}
-                </div>
+            <div className="cm-columns">
+              <div className="cm-column">
+                <h4>رسانهٔ پذیرفته‌شدهٔ فعلی</h4>
+                {kindState.accepted ? (
+                  <>
+                    <MediaPreview
+                      candidate={kindState.accepted}
+                      url={props.assetUrl(kindState.accepted.id)}
+                      title={`${KIND_LABEL[kindState.kind]} پذیرفته‌شده`}
+                    />
+                    <Attribution candidate={kindState.accepted} />
+                  </>
+                ) : (
+                  <p className="cm-empty">هنوز رسانه‌ای پذیرفته نشده است.</p>
+                )}
               </div>
-            </section>
-          );
-        })}
-      </div>
-    </div>
+
+              <div className="cm-column">
+                <h4>نامزد تولیدشده</h4>
+                {candidate?.status === 'failed' ? (
+                  <p className="notice error" role="status">
+                    تولید ناموفق بود
+                    {candidate.failureCode ? ` (${candidate.failureCode})` : ''}. رسانهٔ
+                    پذیرفته‌شدهٔ فعلی دست‌نخورده است.
+                  </p>
+                ) : null}
+
+                {reviewable && candidate ? (
+                  <>
+                    <MediaPreview
+                      candidate={candidate}
+                      url={props.assetUrl(candidate.id)}
+                      title={`${KIND_LABEL[kindState.kind]} نامزد`}
+                    />
+                    <Attribution candidate={candidate} />
+                    <button
+                      className="btn primary"
+                      type="button"
+                      disabled={isBusy}
+                      onClick={() => void accept(kindState.kind, candidate.id)}
+                    >
+                      پذیرش این نامزد
+                    </button>
+                  </>
+                ) : !isGenerating && candidate?.status !== 'failed' ? (
+                  <p className="cm-empty">نامزدی در انتظار بررسی نیست.</p>
+                ) : null}
+
+                {isGenerating ? (
+                  <button className="btn" type="button" onClick={() => void retryRead()}>
+                    به‌روزرسانی وضعیت
+                  </button>
+                ) : (
+                  <button
+                    className="btn"
+                    type="button"
+                    onClick={() =>
+                      void generate(kindState.kind, Boolean(kindState.accepted || candidate))
+                    }
+                  >
+                    {kindState.accepted || candidate ? 'تولید دوباره' : 'تولید'}
+                  </button>
+                )}
+                {kindState.kind === 'word_audio' && props.onImport ? (
+                  <label className="btn">
+                    بارگذاری MP3
+                    <input
+                      type="file"
+                      accept="audio/mpeg"
+                      disabled={isBusy || isGenerating}
+                      hidden
+                      onChange={(event) => {
+                        const file = event.target.files?.[0];
+                        if (file) void importAudio(file);
+                        event.target.value = '';
+                      }}
+                    />
+                  </label>
+                ) : null}
+              </div>
+            </div>
+          </section>
+        );
+      })}
+    </CpModal>
   );
 }
