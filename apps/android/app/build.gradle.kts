@@ -40,4 +40,6 @@ android {
 // Google's Maven (blocked on this network) and avoids a dependency we don't need yet.
 // ponytail: add androidx.core/appcompat only when a real native screen (e.g. the IAB purchase
 // bridge UI) needs it.
-dependencies {}
+dependencies {
+    testImplementation("junit:junit:4.13.2")
+}

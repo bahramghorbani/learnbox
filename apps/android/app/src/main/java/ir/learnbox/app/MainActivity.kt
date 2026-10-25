@@ -50,6 +50,10 @@ class MainActivity : Activity() {
         webView = WebView(this)
         setContentView(webView)
 
+        // M1: expose window.LearnBoxNative to the page. See NativeBridge.kt for why every
+        // purchase request currently answers "unavailable" instead of faking a result.
+        webView.addJavascriptInterface(LearnBoxNativeBridge(), "LearnBoxNative")
+
         val settings = webView.settings
         settings.javaScriptEnabled = true
         settings.domStorageEnabled = true
