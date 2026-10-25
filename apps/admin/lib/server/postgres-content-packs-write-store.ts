@@ -6,6 +6,7 @@ import {
   type LearningVocabularyItem,
   type PartOfSpeech,
   type VersionedMediaAsset,
+  PACK_ID_PATTERN,
   validateLearningVocabularyItem,
 } from '@learnbox/content-models';
 
@@ -135,7 +136,7 @@ type DatabasePool = Queryable & { connect(): Promise<Client> };
 
 const canonicalUuidPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
-const packIdPattern = /^[a-z0-9][a-z0-9-]{1,119}$/;
+const packIdPattern = PACK_ID_PATTERN;
 const contentIdPattern = /^[a-z0-9][a-z0-9-]{0,127}$/;
 const cefrPattern = /^(A1|A2|B1|B2|C1|C2)$/;
 /**

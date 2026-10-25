@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from 'node:crypto';
 
-import { evaluateCardCompleteness } from '@learnbox/content-models';
+import { evaluateCardCompleteness, PACK_ID_PATTERN } from '@learnbox/content-models';
 
 import {
   AiProviderError,
@@ -160,7 +160,6 @@ type DatabasePool = { query(sql: string, parameters?: readonly unknown[]): Promi
 const GENERATED_COLUMNS: ImportColumnKey[] = IMPORT_COLUMNS.map((column) => column.key);
 
 const CEFR_PATTERN = /^(A1|A2|B1|B2|C1|C2)$/;
-const PACK_ID_PATTERN = /^[a-z0-9][a-z0-9-]{1,119}$/;
 
 const PLAN_SYSTEM_PROMPT = [
   'You plan German-for-Persian-speakers vocabulary packs for the LearnBox learning app.',
