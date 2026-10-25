@@ -168,6 +168,14 @@ test('ordinary builds are explicitly development-only', () => {
     cwd: repositoryRoot,
     encoding: 'utf8',
   }).trim();
+  // Must reflect apps/website/package.json AT developmentSource, not the fixed historical bridge
+  // hash: the two diverge the moment package.json changes on main, which is routine and must not
+  // make this development-only check depend on bridge history.
+  const developmentPackageHash = execFileSync(
+    'sh',
+    ['-c', `git show ${developmentSource}:apps/website/package.json | sha256sum | cut -d' ' -f1`],
+    { cwd: repositoryRoot, encoding: 'utf8' },
+  ).trim();
   const output = execFileSync('bash', [script, developmentSource, 'candidate'], {
     cwd: repositoryRoot,
     env: {
@@ -175,7 +183,7 @@ test('ordinary builds are explicitly development-only', () => {
       PATH: `${directory}:${process.env.PATH}`,
       LEARNBOX_IMAGE_TARGET: 'app',
       FAKE_CANDIDATE_SOURCE: developmentSource,
-      FAKE_PACKAGE_SHA: candidatePackageHash,
+      FAKE_PACKAGE_SHA: developmentPackageHash,
     },
     encoding: 'utf8',
   });
