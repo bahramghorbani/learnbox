@@ -1,70 +1,59 @@
 # Release artifact preflight
 
-This is the artifact section of the Production runbook. It does not authorize a deploy, migration, configuration change, bypass, or restart.
+This is the artifact section of the Production runbook. It does not authorize a deploy, image transfer, migration, configuration change, bypass, restart, payment activation, or traffic change.
 
 ## Source of truth
 
 - `infrastructure/production/app/release-build.env` is the approved, non-secret learner **build-time** matrix. It is read from the exact Git commit used to create the image. `NEXT_PUBLIC_*` values are compiled into the client and cannot be changed at runtime.
 - Runtime configuration remains the deployed service's protected environment. Never copy secrets into the matrix, image labels, Git, or evidence.
-- The artifact records the **product source SHA**, image digest, OS/architecture, and its public build matrix in OCI labels. Retain those values for the deployed image and the `.previous` rollback image in release evidence.
-- Release approval also records a separate **control source SHA** through `LEARNBOX_RELEASE_CONTROL_SHA`. The validator hashes its executing file against that commit and fails if they differ, so a later `main` checkout cannot silently substitute altered approval logic for the reviewed control.
-- `infrastructure/production/admin/build-admin-image.sh` is both the canonical builder and the existing-image validator. It never deploys, tags `production`, edits compose, or restarts a container.
+- The artifact records source SHA, image digest, OS/architecture, and its public learner build matrix in OCI labels. Retain those values for the deployed image and the `.previous` rollback image in release evidence.
 
-## Historical bridge: `175da…` → `87490d…`
+## Development image versus release approval
 
-The earlier unlabeled image `sha256:175daeb8a23542d6a1201483a2de928ed54b98c4b6d8840f8c9e1b0688783cc2` was compared to `87490d…`: 63 of 64 normalized learner chunks matched, and the sole page hunk was `profileIdentityFlag: "false" → "true"`. This is historical evidence only; it is **not** a general allowance for unlabeled artifacts.
+`infrastructure/production/admin/build-admin-image.sh` has two intentionally different paths:
 
-## Iran `87490d60…` legacy bridge
+- The ordinary build path is permitted for development, Staging and tests without a running baseline. Its success line is **`DEVELOPMENT IMAGE CANDIDATE: VERIFIED (…; not release-approved)`**. It is never deployment approval.
+- `LEARNBOX_RELEASE_PREFLIGHT=true` validates an **existing** learner App image and does not build it. It requires both `LEARNBOX_CANDIDATE_IMAGE` and `LEARNBOX_RUNNING_CONTAINER`. The container must exist and be running; its immutable `.Image` digest, not a supplied tag, is the baseline.
 
-The active Production learner image is the exact legacy baseline recorded in `infrastructure/production/app/iran-production-87490d60-release-baseline.env`:
+A release preflight without either value exits non-zero. `LEARNBOX_RUNNING_IMAGE` is rejected in release-preflight mode so a stale or manually substituted image reference cannot stand in for Production.
 
-- digest `sha256:87490d60978e83cff664df31e5820ff47fb085d41754c8f666b0a6d7e82355d5`
-- source `15e6783b8f3efed2dbf1de382161099fd8b0b7fe`
-- `linux/amd64`
-- Profile Identity, Queue Quarantine, Server Session Plan, Goal UX Removed, Session Expiry UX and Binary Review UI: all `true`
+## Iran App `87490d60…` one-time bridge
 
-The six values were recovered from the real compiled Production bundle and corroborate the #429 bridge/matrix evidence. The validator accepts this bridge only when every identifier above matches; another unlabeled digest is rejected.
+The currently running App image is deliberately pinned in `infrastructure/production/app/release-baselines/iran-app-87490d60.env`:
 
-## Development or test validation
+- baseline digest: `sha256:87490d60978e83cff664df31e5820ff47fb085d41754c8f666b0a6d7e82355d5`
+- baseline source: `15e6783b8f3efed2dbf1de382161099fd8b0b7fe`
+- architecture: `linux/amd64`
+- six public learner flags: all `true`
+- candidate digest: `sha256:d327590ca12e919dfff5f2d45394cb909b890a51422092c222ed569900517971`
+- candidate source: `a7f582647e0297c04dcf2e967989e39ffd38df9c`
+- candidate `apps/website/package.json` SHA-256: `2cd5a3d8fff8d2ac39eefdb8e7ea48faa58570a315385505092f02eef8ff1ba7`
 
-A build or validation without release-approval inputs is useful evidence only. It always prints `NOT RELEASE-APPROVED` and cannot be used as a deployment gate.
+The bridge is self-contained so the validation works from a shallow release checkout: it does **not** loosen the generic source-matrix path. It still accepts only that running baseline and that candidate. The preflight verifies the baseline source/architecture, candidate source/architecture/labels/package blob, the six matrix values, and the compiled bundle markers for both images. Another unlabeled baseline, another candidate digest, a stopped container, or a changed matrix fails closed.
 
-```bash
-LEARNBOX_IMAGE_TARGET=app \
-LEARNBOX_VALIDATE_IMAGE=sha256:<candidate> \
-infrastructure/production/admin/build-admin-image.sh <full-source-sha>
-```
+The historical `175daeb8… → 87490d60…` comparison remains release evidence; it is not a baseline accepted by the current tool.
 
-`LEARNBOX_VALIDATE_IMAGE` verifies an existing image and never rebuilds it. The validator checks source provenance, architecture, package content, public labels and rendered client semantic markers. Current approved learner markers are all `true`; a future approved `false` value needs a matching deliberate validator change and owner decision rather than a silent fallback.
+## Validate the preserved commerce App artifact
 
-## Release approval immediately before a Production image switch
-
-Run the validator **on the host that has the currently running Production service and the exact candidate image**, immediately before the image-switch command. Do not reuse old output or substitute a tag for a digest. The validator resolves exactly one running container from the immutable Iran Compose project/service labels; the operator cannot supply a stale baseline digest or arbitrary container name.
+Only after the candidate image has been made available on the Iran host through separately authorised release preparation, run this read-only validation from the checked-out release commit:
 
 ```bash
 LEARNBOX_IMAGE_TARGET=app \
-LEARNBOX_RELEASE_APPROVAL=true \
-LEARNBOX_RELEASE_CONTROL_SHA=<full-reviewed-control-commit-sha> \
-LEARNBOX_VALIDATE_IMAGE=sha256:<candidate-app> \
-infrastructure/production/admin/build-admin-image.sh <full-candidate-product-source-sha>
-
-NEXT_PUBLIC_LEARNBOX_ADMIN_PASSKEY_UI_ENABLED=true \
-LEARNBOX_RELEASE_APPROVAL=true \
-LEARNBOX_RELEASE_CONTROL_SHA=<full-reviewed-control-commit-sha> \
-LEARNBOX_VALIDATE_IMAGE=sha256:<candidate-admin> \
-infrastructure/production/admin/build-admin-image.sh <full-candidate-product-source-sha>
+LEARNBOX_RELEASE_PREFLIGHT=true \
+LEARNBOX_CANDIDATE_IMAGE=sha256:d327590ca12e919dfff5f2d45394cb909b890a51422092c222ed569900517971 \
+LEARNBOX_RUNNING_CONTAINER=learnbox-app-production-app-1 \
+infrastructure/production/admin/build-admin-image.sh \
+  a7f582647e0297c04dcf2e967989e39ffd38df9c release
 ```
 
-Release approval is fail-closed: it requires an immutable candidate digest, exactly one currently running Production service container, matching candidate provenance/architecture, and either comparable labels or the exact `87490d60…` bridge. For Admin, the candidate and running bundle must both retain `server-passkey` and omit `local-prototype`.
-
-A successful result prints the exact candidate and baseline image IDs, product source SHA, and control source SHA. If either image, the running baseline, or the validator differs, re-run the command; previous approval cannot carry forward. Record all of those values together with migration and rollback identities before traffic changes.
+A successful result prints `RELEASE ARTIFACT: APPROVED`, records the exact candidate and baseline digests, and does not rebuild, deploy, start, stop or restart a container. This approval applies only while the named container still resolves to the same baseline digest. Re-run it after any baseline or candidate change.
 
 ## Before a Production release
 
-1. Read the active image's source SHA, digest, OS/architecture, public labels and container identity. `linux/amd64` is required for the Iran host.
-2. Build through `infrastructure/production/admin/build-admin-image.sh`, with `LEARNBOX_IMAGE_TARGET=app` for learner. It reads the matrix from the requested commit and rejects an incomplete one.
-3. Validate the exact retained candidate images with the release-approval commands above. A missing baseline, inactive container, unknown digest, missing comparable setting, changed enabled feature, or bundle mismatch stops release approval.
-4. Record source SHA, digest, OS/architecture, public labels, bridge evidence if applicable, migration and rollback identities before traffic changes.
+1. Confirm the active container, source SHA, digest, OS/architecture and non-secret configuration names read-only. `linux/amd64` is required for the Iran host.
+2. Build a new learner image only through `infrastructure/production/admin/build-admin-image.sh`; ordinary build output remains non-releasable until the release preflight succeeds. Every app rebuild must also re-set `NEXT_PUBLIC_VAPID_PUBLIC_KEY` from `notification-worker/.env` on the host — this flag has no automated gate and an omission ships successfully but silently disables the review-reminder push subscribe flow (see `infrastructure/production/app/app.env.example`).
+3. Run release preflight against the actual running Production container. A missing comparable label, a digest outside the exact bridge, a bundle/label mismatch or any changed enabled feature stops the release.
+4. Record the exact candidate and baseline source SHA, digest, OS/architecture, public labels, migration set and separate App/Admin rollback identities before traffic changes.
 5. Post-deploy, run the feature smoke for each changed flag as well as health/authentication checks. `health=200` alone does not prove a client flag.
 
 Temporary local/dev test sessions or bypasses must stay outside images, tracked configuration and Production. Remove test identities/tokens after the proof.
