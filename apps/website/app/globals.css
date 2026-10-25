@@ -2336,8 +2336,12 @@ p {
   }
   .learner-nav {
     margin-right: -16px;
-    margin-bottom: -36px;
     margin-left: -16px;
+    /* ponytail: margin-bottom was -36px here — on a position:fixed element
+       that shifts the whole bar 36px BELOW the viewport (same failure mode
+       already called out above at the old duplicate block), clipping the
+       label row off-screen on every phone under this breakpoint. Removed,
+       not patched: nothing below here needs it. */
   }
   .onboarding-intro {
     padding-top: 47px;
@@ -2813,7 +2817,15 @@ p {
 /* Banner Slider */
 .banner-wrap {
   position: relative;
-  height: 168px;
+  /* ponytail: was a fixed height: 168px. Admin banner images are ~2.5:1
+     (measured 1983x793), wider than a 168px-tall box on any phone under
+     ~420px CSS width (168 * 2.5 = 420). object-fit: cover then crops that
+     excess off both edges — more of it on a narrower screen, which is why
+     slide text positioned near the edge of the source image was readable
+     on a ~390px iPhone and clipped on a 360px Android phone. aspect-ratio
+     makes the box match the image's own ratio so cover has nothing to
+     crop, on any width. */
+  aspect-ratio: 2.5;
   overflow: hidden;
   flex-shrink: 0;
 }

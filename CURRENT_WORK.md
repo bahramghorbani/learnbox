@@ -4,6 +4,8 @@
 
 ## Active work
 
+**Draft-only fix/media-image-url-deadline (2026-10-21):** Bounded fallback image URL download through body read; targeted mock regression. Independent of historical AvalAI timeouts; no provider call or Production change. PR link and CI are recorded in the PR itself.
+
 **Flutter mobile prototype removed — 2026-10-24 (owner decision), CLOSED.** The `apps/mobile`
 Flutter app (and its exclusive CI/scripts: `test:mobile-start-content`, `verify:mobile-start-content`,
 `verify:mobile-visual-assets`, `test:mobile-android-storage`, `sync:review-sync-wire-contract`/
