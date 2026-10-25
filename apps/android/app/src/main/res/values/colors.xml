@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Brand token from docs (the "primary" design token), shown for the brief native splash
+         before the WebView paints the real, admin-managed launch splash from /api/launch/splash. -->
+    <color name="brand_primary">#6D28D9</color>
+
+    <style name="AppTheme" parent="@android:style/Theme.NoTitleBar">
+        <item name="android:windowBackground">@color/brand_primary</item>
+    </style>
+</resources>
