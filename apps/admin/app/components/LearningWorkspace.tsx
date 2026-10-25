@@ -4,11 +4,20 @@ import React, { useEffect, useState } from 'react';
 
 import { useAdminWorkspaceAccess } from './AdminAuthGate';
 import { AdminSidebar } from './AdminSidebar';
-import { EmptyState, ErrorState, LoadingState } from './AdminStates';
+import { ErrorState, LoadingState } from './AdminStates';
 
 type LearningState =
   | { kind: 'loading' }
-  | { kind: 'ready'; activeInWindow: number; windowDays: number }
+  | {
+      kind: 'ready';
+      activeInWindow: number;
+      windowDays: number;
+      joinedInWindow: number;
+      reviewQueueCards: number;
+      packsTotal: number;
+      packsPublished: number;
+      contentPipeline: { status: string; count: number }[];
+    }
   | { kind: 'unavailable' }
   | { kind: 'error' };
 
@@ -16,10 +25,19 @@ function fa(value: number) {
   return new Intl.NumberFormat('fa-IR').format(value);
 }
 
+const contentStatusLabels: Record<string, string> = {
+  draft: 'پیش‌نویس',
+  auto_validated: 'اعتبارسنجی خودکار',
+  needs_review: 'نیازمند بازبینی',
+  published: 'منتشرشده',
+  rejected: 'ردشده',
+};
+
 /**
  * PDR-009's learning screen may display only a read model Admin already owns. The Dashboard
- * aggregate exposes distinct learners with review events in a reporting window; it does not expose
- * progress, accuracy, retention, scheduler state, difficulty, or a learning-day calculation.
+ * aggregate exposes distinct learners with review events in a reporting window, pack/content
+ * pipeline counters and the review queue depth; it does not expose progress, accuracy, retention,
+ * scheduler state, difficulty, or a learning-day calculation — those stay out by owner decision.
  */
 export function LearningWorkspace() {
   const access = useAdminWorkspaceAccess();
@@ -40,19 +58,56 @@ export function LearningWorkspace() {
         if (response.status === 404) return { kind: 'unavailable' } as const;
         if (!response.ok) return { kind: 'error' } as const;
         const body = (await response.json()) as {
-          overview?: { windowDays?: unknown; learners?: { activeInWindow?: unknown } };
+          overview?: {
+            windowDays?: unknown;
+            learners?: { activeInWindow?: unknown; joinedInWindow?: unknown };
+            reviewQueueCards?: unknown;
+            packs?: { total?: unknown; published?: unknown };
+            contentPipeline?: { byStatus?: unknown };
+          };
         };
-        const windowDays = body.overview?.windowDays;
-        const activeInWindow = body.overview?.learners?.activeInWindow;
+        const overview = body.overview;
+        const windowDays = overview?.windowDays;
+        const activeInWindow = overview?.learners?.activeInWindow;
+        const joinedInWindow = overview?.learners?.joinedInWindow;
+        const reviewQueueCards = overview?.reviewQueueCards;
+        const packsTotal = overview?.packs?.total;
+        const packsPublished = overview?.packs?.published;
+        const byStatus = overview?.contentPipeline?.byStatus;
         if (
           typeof windowDays !== 'number' ||
           !Number.isInteger(windowDays) ||
           typeof activeInWindow !== 'number' ||
-          !Number.isFinite(activeInWindow)
+          !Number.isFinite(activeInWindow) ||
+          typeof joinedInWindow !== 'number' ||
+          !Number.isFinite(joinedInWindow) ||
+          typeof reviewQueueCards !== 'number' ||
+          !Number.isFinite(reviewQueueCards) ||
+          typeof packsTotal !== 'number' ||
+          !Number.isFinite(packsTotal) ||
+          typeof packsPublished !== 'number' ||
+          !Number.isFinite(packsPublished) ||
+          !Array.isArray(byStatus) ||
+          !byStatus.every(
+            (row): row is { status: string; count: number } =>
+              typeof row === 'object' &&
+              row !== null &&
+              typeof (row as { status?: unknown }).status === 'string' &&
+              typeof (row as { count?: unknown }).count === 'number',
+          )
         ) {
           return { kind: 'error' } as const;
         }
-        return { kind: 'ready', windowDays, activeInWindow } as const;
+        return {
+          kind: 'ready',
+          windowDays,
+          activeInWindow,
+          joinedInWindow,
+          reviewQueueCards,
+          packsTotal,
+          packsPublished,
+          contentPipeline: byStatus,
+        } as const;
       })
       .then((next) => {
         if (active) setState(next);
@@ -112,54 +167,78 @@ export function LearningWorkspace() {
                   </p>
                 </div>
               </article>
+              <article className="card">
+                <div className="card-head">
+                  <span className="card-title">زبان‌آموزان تازه‌وارد</span>
+                  <span className="badge b-green">دادهٔ واقعی</span>
+                </div>
+                <div className="card-body">
+                  <strong className="learning-metric">{fa(state.joinedInWindow)}</strong>
+                  <p className="muted-note">عضویت جدید در {fa(state.windowDays)} روز اخیر</p>
+                </div>
+              </article>
+              <article className="card">
+                <div className="card-head">
+                  <span className="card-title">صف بازبینی محتوا</span>
+                  <span className="badge b-green">دادهٔ واقعی</span>
+                </div>
+                <div className="card-body">
+                  <strong className="learning-metric">{fa(state.reviewQueueCards)}</strong>
+                  <p className="muted-note">کارت‌های منتظر بازبینی یا اعتبارسنجی خودکار</p>
+                </div>
+              </article>
+              <article className="card">
+                <div className="card-head">
+                  <span className="card-title">نرخ فعال‌سازی محتوا</span>
+                  <span className="badge b-green">دادهٔ واقعی</span>
+                </div>
+                <div className="card-body">
+                  <strong className="learning-metric">
+                    {state.packsTotal > 0
+                      ? `${fa(Math.round((state.packsPublished / state.packsTotal) * 100))}٪`
+                      : '—'}
+                  </strong>
+                  <p className="muted-note">
+                    {fa(state.packsPublished)} بستهٔ منتشرشده از {fa(state.packsTotal)} بسته
+                  </p>
+                </div>
+              </article>
+              <article className="card learning-source-card">
+                <div className="card-head">
+                  <span className="card-title">توزیع وضعیت محتوا</span>
+                  <span className="badge b-green">دادهٔ واقعی</span>
+                </div>
+                <div className="card-body">
+                  {state.contentPipeline.length === 0 ? (
+                    <p className="muted-note">هیچ کارتی ثبت نشده است.</p>
+                  ) : (
+                    <ul className="learning-pipeline-list">
+                      {state.contentPipeline.map((row) => (
+                        <li key={row.status}>
+                          <span>{contentStatusLabels[row.status] ?? row.status}</span>
+                          <strong>{fa(row.count)}</strong>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </article>
               <article className="card learning-source-card">
                 <div className="card-head">
                   <span className="card-title">منبع داده</span>
                 </div>
                 <div className="card-body">
                   <p className="muted-note">
-                    این عدد از aggregate مجاز Dashboard می‌آید؛ زمان‌بندی، پیشرفت یا کیفیت یادگیری
-                    را تعریف نمی‌کند.
+                    این اعداد از aggregate مجاز Dashboard و قلمروی محتوای خودِ Admin می‌آیند؛
+                    زمان‌بندی، پیشرفت یا کیفیت یادگیری را تعریف نمی‌کنند — آن داده‌ها طبق مرز معماری
+                    (PDR-009) در اختیار Admin نیست.
                   </p>
                 </div>
               </article>
-            </div>
-
-            <div className="learning-unavailable-grid" aria-label="شاخص‌های بدون مدل خواندنی مجاز">
-              <UnavailableMetric
-                title="دقت و نگه‌داشت"
-                description="مدل خواندنیِ مجاز برای این شاخص وجود ندارد."
-              />
-              <UnavailableMetric
-                title="کارت‌های دشوار"
-                description="شمارش دشواری یا خطا از قرارداد Admin در دسترس نیست."
-              />
-              <UnavailableMetric
-                title="زمان‌بندی مرور"
-                description="وضعیت یا الگوریتم زمان‌بندی خارج از مرز Admin است."
-              />
-              <UnavailableMetric
-                title="توزیع سطح"
-                description="پیشرفت یا سطح زبان‌آموزان به Admin ارسال نمی‌شود."
-              />
             </div>
           </>
         ) : null}
       </section>
     </main>
-  );
-}
-
-function UnavailableMetric({ title, description }: { title: string; description: string }) {
-  return (
-    <article className="card learning-unavailable-card">
-      <div className="card-head">
-        <span className="card-title">{title}</span>
-        <span className="badge b-grey">در دسترس نیست</span>
-      </div>
-      <div className="card-body">
-        <EmptyState icon="inbox" title="بدون دادهٔ قابل‌نمایش" description={description} />
-      </div>
-    </article>
   );
 }

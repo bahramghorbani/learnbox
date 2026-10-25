@@ -16,6 +16,13 @@ interface ProgressScreenProps {
 
 const WEEK_DAYS = ['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج'];
 
+/** `کل زمان یادگیری`: hours rounded to the nearest tenth once past 60 minutes, else whole minutes. */
+function formatStudyTime(ms: number): string {
+  const minutes = ms / 60_000;
+  if (minutes < 60) return `${toPersianDigits(Math.round(minutes))} دقیقه`;
+  return `${toPersianDigits(Math.round((minutes / 60) * 10) / 10)} ساعت`;
+}
+
 type ProgressData = {
   leitnerBoxes: Record<'box1' | 'box2' | 'box3' | 'box4' | 'box5', number>;
   cardStates: {
@@ -29,6 +36,8 @@ type ProgressData = {
   totals: { reviews: number };
   streak: { current: number };
   cefr: Array<{ level: string; count: number }>;
+  accuracy: { allTime: number | null };
+  studyTimeMs: number;
 };
 
 /**
@@ -79,7 +88,9 @@ export function ProgressScreen({
           !result?.cardStates ||
           !Array.isArray(result.weeklyActivity) ||
           !result.totals ||
-          !result.streak
+          !result.streak ||
+          !result.accuracy ||
+          typeof result.studyTimeMs !== 'number'
         )
           throw new Error('invalid progress');
         setData(result);
@@ -355,7 +366,11 @@ export function ProgressScreen({
                   <path d="M243.2,91.4l-68.6,63.1,18.2,90.1a8,8,0,0,1-11.6,8.7L128,208l-53.2,45.3a8,8,0,0,1-11.6-8.7l18.2-90.1L12.8,91.4A8,8,0,0,1,17,77.1l90.6-6.5L140.7,3.1a8,8,0,0,1,14.5,0l33.1,67.5,90.6,6.5A8,8,0,0,1,243.2,91.4ZM128,196.9l42.8,36.4-14.7-72.7,54.2-49.9-73-5.2L128,36.6Z" />
                 </svg>
               </div>
-              <div className="pstat-val">—</div>
+              <div className="pstat-val">
+                {data?.accuracy.allTime != null
+                  ? `${toPersianDigits(data.accuracy.allTime)}٪`
+                  : '—'}
+              </div>
               <div className="pstat-lbl">میانگین دقت</div>
             </div>
             <div className="pstat-card">
@@ -371,7 +386,7 @@ export function ProgressScreen({
                   <path d="M128,24A104,104,0,1,0,232,128,104.12,104.12,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm64-88a8,8,0,0,1-8,8H128a8,8,0,0,1-8-8V72a8,8,0,0,1,16,0v48h48A8,8,0,0,1,192,128Z" />
                 </svg>
               </div>
-              <div className="pstat-val">—</div>
+              <div className="pstat-val">{data ? formatStudyTime(data.studyTimeMs) : '—'}</div>
               <div className="pstat-lbl">کل زمان یادگیری</div>
             </div>
           </div>

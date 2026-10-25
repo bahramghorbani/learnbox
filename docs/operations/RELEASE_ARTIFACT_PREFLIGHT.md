@@ -51,7 +51,7 @@ A successful result prints `RELEASE ARTIFACT: APPROVED`, records the exact candi
 ## Before a Production release
 
 1. Confirm the active container, source SHA, digest, OS/architecture and non-secret configuration names read-only. `linux/amd64` is required for the Iran host.
-2. Build a new learner image only through `infrastructure/production/admin/build-admin-image.sh`; ordinary build output remains non-releasable until the release preflight succeeds.
+2. Build a new learner image only through `infrastructure/production/admin/build-admin-image.sh`; ordinary build output remains non-releasable until the release preflight succeeds. Every app rebuild must also re-set `NEXT_PUBLIC_VAPID_PUBLIC_KEY` from `notification-worker/.env` on the host — this flag has no automated gate and an omission ships successfully but silently disables the review-reminder push subscribe flow (see `infrastructure/production/app/app.env.example`).
 3. Run release preflight against the actual running Production container. A missing comparable label, a digest outside the exact bridge, a bundle/label mismatch or any changed enabled feature stops the release.
 4. Record the exact candidate and baseline source SHA, digest, OS/architecture, public labels, migration set and separate App/Admin rollback identities before traffic changes.
 5. Post-deploy, run the feature smoke for each changed flag as well as health/authentication checks. `health=200` alone does not prove a client flag.

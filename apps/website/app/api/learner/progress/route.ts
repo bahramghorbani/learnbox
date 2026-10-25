@@ -8,6 +8,7 @@ import {
   readLearnerActivity,
   readPackProgress,
   readReviewHours,
+  readStudyTimeMs,
   recentDays,
 } from '../../../../lib/learner-read-model';
 import { requireVerifiedDatabaseTls } from '../../../../../api/dist/database/migration-runner.js';
@@ -44,6 +45,7 @@ export async function GET(request: Request): Promise<Response> {
       readLearnedByCefr(pool, userId),
     ]);
     const hours = await readReviewHours(pool, userId, activity.timeZone);
+    const studyTimeMs = await readStudyTimeMs(pool, userId);
 
     // Study pattern. Weekday of each active local day, counted in the learner's zone.
     const reviewsByWeekday = new Array<number>(7).fill(0);
@@ -94,6 +96,7 @@ export async function GET(request: Request): Promise<Response> {
           knownAnswers: activity.accuracyAllTime.known,
           totalAnswers: activity.accuracyAllTime.total,
         },
+        studyTimeMs,
         totals: {
           reviews: activity.totalReviews,
           todayReviews: activity.reviewedToday,

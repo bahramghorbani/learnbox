@@ -107,6 +107,25 @@ export type PaymentConfigurationStatus = {
 export type PaymentConfigurationResult =
   { status: 'ok'; configuration: PaymentConfigurationStatus } | { status: 'forbidden' };
 
+export type SalesReportPackRow = {
+  packId: string;
+  packDisplayName: string;
+  verifiedCount: number;
+  revenueTomans: number;
+};
+
+export type SalesReport = {
+  from: string | null;
+  to: string | null;
+  verifiedCount: number;
+  revenueTomans: number;
+  pendingCount: number;
+  failedCount: number;
+  packs: SalesReportPackRow[];
+};
+
+export type SalesReportResult = { status: 'ok'; report: SalesReport } | { status: 'forbidden' };
+
 function text(value: unknown): string | null {
   return typeof value === 'string' ? value : null;
 }
@@ -387,6 +406,72 @@ export class PostgresAdminPaymentsStore {
           pendingCount: Number(row.pending ?? 0),
           failedCount: Number(row.failed ?? 0),
           lastVerifiedAt: timestamp(row.last_verified_at),
+        },
+      };
+    } finally {
+      client.release();
+    }
+  }
+
+  /**
+   * Real sales/revenue aggregate over `purchase_events` (fills the gap the Store workspace used to
+   * disclose as "no backend aggregate exists" — M2.4 follow-up, after the first live Zarinpal sale
+   * was verified). `from`/`to` are inclusive ISO dates; omitted means unbounded on that side.
+   *
+   * Revenue is the sum of `amount_tomans` for `verified` rows only — a pending or failed attempt
+   * never became money and must not inflate the total.
+   */
+  async getSalesReport(input: {
+    actorUserId: string;
+    from?: string;
+    to?: string;
+  }): Promise<SalesReportResult> {
+    const client = await this.pool.connect();
+    try {
+      if (!(await this.hasRole(client, input.actorUserId, readerRoles))) {
+        return { status: 'forbidden' };
+      }
+      const from = input.from ?? null;
+      const to = input.to ?? null;
+      const totals = await client.query(
+        `SELECT
+           count(*) FILTER (WHERE status = 'verified') AS verified,
+           coalesce(sum(amount_tomans) FILTER (WHERE status = 'verified'), 0) AS revenue,
+           count(*) FILTER (WHERE status = 'pending') AS pending,
+           count(*) FILTER (WHERE status = 'failed') AS failed
+         FROM purchase_events
+        WHERE ($1::date IS NULL OR created_at >= $1::date)
+          AND ($2::date IS NULL OR created_at < $2::date + interval '1 day')`,
+        [from, to],
+      );
+      const perPack = await client.query(
+        `SELECT pe.pack_id, coalesce(p.display_name, pe.pack_id) AS display_name,
+                count(*) AS verified, sum(pe.amount_tomans) AS revenue
+           FROM purchase_events pe
+           LEFT JOIN packs p ON p.id = pe.pack_id
+          WHERE pe.status = 'verified' AND pe.pack_id IS NOT NULL
+            AND ($1::date IS NULL OR pe.created_at >= $1::date)
+            AND ($2::date IS NULL OR pe.created_at < $2::date + interval '1 day')
+          GROUP BY pe.pack_id, p.display_name
+          ORDER BY revenue DESC`,
+        [from, to],
+      );
+      const row = totals.rows[0] ?? {};
+      return {
+        status: 'ok',
+        report: {
+          from,
+          to,
+          verifiedCount: Number(row.verified ?? 0),
+          revenueTomans: Number(row.revenue ?? 0),
+          pendingCount: Number(row.pending ?? 0),
+          failedCount: Number(row.failed ?? 0),
+          packs: perPack.rows.map((r) => ({
+            packId: String(r.pack_id),
+            packDisplayName: String(r.display_name),
+            verifiedCount: Number(r.verified ?? 0),
+            revenueTomans: Number(r.revenue ?? 0),
+          })),
         },
       };
     } finally {

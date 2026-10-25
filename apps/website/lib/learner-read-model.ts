@@ -341,6 +341,19 @@ export async function readReviewHours(
   return result.rows.map((row) => ({ hour: Number(row.hour), reviews: Number(row.reviews) }));
 }
 
+/**
+ * Total learner-tracked study time in ms (migration 0048, `review_events.duration_ms`). NULL for
+ * every event predating the column and for any client that has not shipped duration tracking yet,
+ * so the sum only ever reflects reviews that actually carried a measured elapsed time.
+ */
+export async function readStudyTimeMs(pool: Pick<Pool, 'query'>, userId: string): Promise<number> {
+  const result = await pool.query<{ total: string | null }>(
+    `SELECT SUM(duration_ms)::bigint AS total FROM review_events WHERE user_id = $1`,
+    [userId],
+  );
+  return Number(result.rows[0]?.total ?? 0);
+}
+
 /** SQL fragment: number of historical answers that project to Unknown (used for per-card counts). */
 export const unknownGradesSql = answersProjectingTo('unknown')
   .map((grade) => `'${grade.replace(/'/g, "''")}'`)

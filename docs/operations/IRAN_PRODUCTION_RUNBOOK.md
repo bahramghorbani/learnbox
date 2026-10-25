@@ -35,6 +35,7 @@ afterwards.
 | `iran/ops-access/learnbox-ws-ssh.service`                                | `/etc/systemd/system/`                                                      |
 | `iran/monitor/learnbox-iran-monitor-enroll.sh`, `…-disk-test.sh`         | not installed; enrollment runs on the owner Mac, the disk test on demand    |
 | `iran/commerce/learnbox-commerce-reconcile.{sh,service,timer}`           | **not installed**; part of payment activation (see below)                   |
+| `iran/admin/learnbox-pack-media-runner.{sh,service,timer}`               | **not installed**; requires a separately authorized media-worker rollout    |
 
 App and Admin compose files reference images by local image ID (`sha256:…`). The image IDs are
 the deployed digests in `ADMIN_PRODUCTION_STATUS.md`. A release changes exactly that line.
@@ -137,6 +138,17 @@ and a restore are confirmed.
 Before a migration, the release procedure takes a fresh backup, verifies its checksum, makes an
 offsite copy and runs a disposable restore drill.
 
+### Migration execution roles
+
+`learnbox_migrator` is the restricted backup and ledger-reading role; it is not a migration owner.
+It cannot `ALTER` relations owned by `neondb_owner`, and ordinary `GRANT`s do not confer that authority.
+For a separately owner-authorized migration that changes existing relations, inject the existing
+`LEARNBOX_OWNER_DATABASE_URL` only into the one repository migration-runner process. Do not write it
+to a command line, host file, evidence, or App/Admin environment; do not add role membership,
+ownership, or standing privileges. Keep `learnbox_app` and `learnbox_admin` on their restricted
+runtime roles, then verify the migration ledger/checksum, object ownership, and required verb-level
+runtime grants before the application cutover.
+
 ## Monitoring
 
 `learnbox-iran-monitor.timer` runs every 5 min on the host and pings Healthchecks.io, which alerts
@@ -153,11 +165,12 @@ Ping URLs exist only in `secrets/healthchecks.env`. To re-create them, the owner
 To check the disk thresholds without pinging, run
 `bash learnbox-iran-monitor-disk-test.sh /home/ubuntu/learnbox/ops/learnbox-iran-monitor.sh`.
 
-## Commerce reconciliation (not installed)
+## Commerce reconciliation (installed, disabled)
 
-Payment is off in Production. The files in `infrastructure/production/iran/commerce/` are prepared
-and were tested only on the Mac staging stack with a fake provider. Installing them is part of the
-payment activation, which needs separate owner authorization.
+Payment and reconciliation are off in Production. The script and systemd units were installed on
+2026-10-19 as Stage B preparation, but the timer is disabled and no reconciliation token is present
+in the running app. The files were tested only on the Mac staging stack with a fake provider. A
+future payment activation still needs separate owner authorization.
 
 **What runs.** `learnbox-commerce-reconcile.timer` starts `learnbox-commerce-reconcile.sh` every
 10 min. The script runs `node` inside the app container and calls
@@ -168,25 +181,35 @@ output. The app re-checks unsettled Zarinpal attempts and queued Admin re-check 
 payment service (contract §10.1). The script prints and stores counts only. A run that overlaps the
 callback cannot grant twice, because the app settles each attempt under a row lock.
 
-**Rollout order (the flag goes on only after scheduled execution is ready):**
+**Rollout order (the app accepts reconciliation only after the executor is active):**
 
 1. Copy the script to `/home/ubuntu/learnbox/ops/` and the units to `/etc/systemd/system/`, then
    `systemctl daemon-reload`. Leave the timer disabled.
-2. Run the script once by hand. While the flag is off, expect
-   `commerce-reconcile: fail http=404 error=notFound`, which proves the path and the container name.
-3. Add `LEARNBOX_COMMERCE_RECONCILE_TOKEN` (`openssl rand -hex 32`, at least 32 characters) and
-   `LEARNBOX_COMMERCE_RECONCILE_ENABLED=true` to `app/.env`, then recreate the app.
-4. Run the script by hand again and expect `ok http=200 checked=… verified=…`. Then
-   `systemctl enable --now learnbox-commerce-reconcile.timer`.
-5. Add one line to the monitor next to the other `fresh` checks, and update the repository mirror
+2. Start the service once through systemd. While the app flag is off, expect
+   `commerce-reconcile: fail http=404 error=notFound`. This proves only the disabled rejection,
+   service path and container name; it is **not** proof that reconciliation is active.
+3. Generate and store `LEARNBOX_COMMERCE_RECONCILE_TOKEN` (at least 32 random characters) in
+   `app/.env` without printing it. Keep `LEARNBOX_COMMERCE_RECONCILE_ENABLED` absent or `false`,
+   recreate the app, and confirm the running process has the token by name/length only.
+4. Enable and start `learnbox-commerce-reconcile.timer` while the app flag is still off. Require
+   `systemctl is-enabled`, `systemctl is-active`, and `systemctl list-timers` to show an enabled,
+   active timer with a next trigger. A scheduled `404` remains a disabled-state result, not a
+   readiness result.
+5. Only after the separately authorized payment configuration is ready, set
+   `LEARNBOX_COMMERCE_RECONCILE_ENABLED=true` in `app/.env` and recreate the app. The timer is
+   already active at this point, so there is no interval in which the app accepts reconciliation
+   while no executor exists. Immediately start the service through systemd and require
+   `http=200 checked=… verified=…`; otherwise turn the app flag back off and stop.
+6. Add one line to the monitor next to the other `fresh` checks, and update the repository mirror
    in the same change:
    `fresh commerce-reconcile "$L/ops/state/commerce-reconcile.status" 1`
-6. Only then set `LEARNBOX_COMMERCE_RECONCILE_ENABLED=true` in `admin/.env` and recreate the Admin.
+7. Only then set `LEARNBOX_COMMERCE_RECONCILE_ENABLED=true` in `admin/.env` and recreate the Admin.
    That shows the «درخواست بررسی دوباره از درگاه» button. Without it the Admin explains that
    reconciliation is off and the API refuses with 409.
 
-Rollback is the reverse order: Admin flag off, `systemctl disable --now` the timer, remove the
-monitor line, then turn off the app flag.
+For rollback, first turn the Admin flag off, then turn the app flag off and recreate the app before
+disabling the timer and removing the monitor line. This never leaves an accepting reconciliation
+endpoint without its executor.
 
 **Seeing the last run and detecting a stopped timer:**
 
@@ -200,6 +223,51 @@ monitor line, then turn off the app flag.
 - Per payment, the Admin transaction details show the check count, the last provider code and
   «بررسی بعدی» (next check). After 20 inconclusive checks an attempt shows that the check limit was
   reached and stays in «نیازمند بررسی» until someone handles it.
+
+## Durable pack-media worker (not installed)
+
+This is a separately authorized Admin feature, unrelated to payment activation. Repository artifacts
+`iran/admin/learnbox-pack-media-runner.{sh,service,timer}` are source-only until an authorized
+release copies them to the paths in the table above. The runner and its routes default to disabled;
+no timer, credential, Admin runtime or candidate changes occur merely by merging these files.
+
+The Admin approval stores one immutable job snapshot: pack membership, item kind and card-version for
+each missing slot. Each invocation claims **one** item, records `dispatching` before the provider
+call, and uses the existing card-media generator to make a private candidate. It does not accept,
+publish or attach media. A stopped job prevents the next claim but does not discard a candidate that
+an already-dispatched provider request happens to return.
+
+**Activation order — requires separate owner authorization:**
+
+1. Deploy the approved Admin image and migration with both `LEARNBOX_PACK_MEDIA_RUNNER_ENABLED=false`
+   and the token absent. Copy the script and units, run `systemctl daemon-reload`, but do not create
+   a job.
+2. Put a new 32+ character `LEARNBOX_PACK_MEDIA_RUNNER_TOKEN` only in the protected Admin runtime
+   environment. Do not print it. Recreate Admin while the runner flag remains false, then verify by
+   variable name and length only.
+3. Enable and start `learnbox-pack-media-runner.timer`; require `systemctl is-enabled`,
+   `systemctl is-active`, and `systemctl list-timers` to show its next trigger. A 404 while disabled
+   proves only that the route rejects work; it is not proof that execution is ready.
+4. Only after the timer is active, set `LEARNBOX_PACK_MEDIA_RUNNER_ENABLED=true` and recreate Admin.
+   The public job-creation route now accepts an approved snapshot only because the executor is
+   already scheduled; there is no acceptance-without-executor interval. An empty runner response
+   `http=200 status=idle` is the non-provider readiness check.
+
+The timer waits five seconds **after** the preceding invocation completes, rather than adding a long
+polling gap. The UI displays a transparent upper bound from the stored snapshot: every image uses the
+configured image timeout, every audio item uses the configured audio timeout, plus five seconds
+between items. For example, 358 items finish within the displayed sum; at an assumed 180-second
+image timeout and 60-second audio timeout, a mix must be computed from the snapshot rather than
+pretending all 358 have the same duration.
+
+**Recovery and control:** a crash before `dispatching` leaves an expired lease safely claimable. A
+crash, timeout or `already_generating` after dispatch becomes `needs_attention`/`in_progress`; it
+blocks a new job for that pack and actor and is never automatically retried, because a paid provider
+request may already exist. The initiator can observe or stop only their own job; a reopened browser
+reads the persisted state, but polling neither dispatches work nor extends a session. Last run:
+`cat /home/ubuntu/learnbox/ops/state/pack-media-runner.status`; schedule:
+`systemctl list-timers learnbox-pack-media-runner.timer`; history:
+`journalctl -u learnbox-pack-media-runner.service -n 20`.
 
 ## Recovery material
 

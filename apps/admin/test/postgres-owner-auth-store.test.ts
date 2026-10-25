@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { adminSessionIdleLifetimeSeconds } from '../lib/server/admin-session';
 import { PostgresOwnerAuthStore } from '../lib/server/postgres-owner-auth-store';
 
 const now = new Date('2026-08-08T12:00:00.000Z');
@@ -134,7 +135,8 @@ describe('PostgresOwnerAuthStore', () => {
 
     const update = database.calls.find(({ sql }) => sql.includes('UPDATE admin_sessions'));
     expect(update?.sql).toContain('last_seen_at = $2');
-    expect(update?.sql).toContain('absolute_expires_at > $2');
+    expect(update?.sql).toContain("last_seen_at >= $2 - ($3 * INTERVAL '1 second')");
+    expect(update?.parameters).toEqual(['token-hash', now, adminSessionIdleLifetimeSeconds]);
     expect(update?.sql).not.toContain('SET absolute_expires_at');
   });
 
@@ -149,7 +151,8 @@ describe('PostgresOwnerAuthStore', () => {
     const update = database.calls.find(({ sql }) => sql.includes('UPDATE admin_sessions'));
     expect(update?.sql).toContain('recent_authenticated_at = $2');
     expect(update?.sql).toContain('absolute_expires_at > $2');
-    expect(update?.sql).toContain("last_seen_at >= $2 - INTERVAL '15 minutes'");
+    expect(update?.sql).toContain("last_seen_at >= $2 - ($3 * INTERVAL '1 second')");
+    expect(update?.parameters).toEqual(['token-hash', now, adminSessionIdleLifetimeSeconds]);
     expect(update?.sql).not.toContain('SET absolute_expires_at');
   });
 
@@ -247,7 +250,8 @@ describe('PostgresOwnerAuthStore', () => {
     const select = database.calls.find(({ sql }) => sql.includes('FROM admin_sessions'));
     expect(select?.sql).toContain('revoked_at IS NULL');
     expect(select?.sql).toContain('absolute_expires_at > $2');
-    expect(select?.sql).toContain("last_seen_at >= $2 - INTERVAL '15 minutes'");
+    expect(select?.sql).toContain("s.last_seen_at >= $2 - ($3 * INTERVAL '1 second')");
+    expect(select?.parameters).toEqual(['token-hash', now, adminSessionIdleLifetimeSeconds]);
     expect(select?.sql).toContain('JOIN admin_owner');
   });
 

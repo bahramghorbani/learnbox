@@ -21,6 +21,13 @@
 # The default target is the Admin image. LEARNBOX_IMAGE_TARGET=app builds the learner app image
 # through the same provenance and verification path, so neither image is built by hand.
 #
+# A normal build is useful development/test evidence but is never release approval. Release
+# preflight validates an existing image against the actual running Production container instead of
+# rebuilding it:
+#   LEARNBOX_IMAGE_TARGET=app LEARNBOX_RELEASE_PREFLIGHT=true \
+#   LEARNBOX_CANDIDATE_IMAGE=sha256:... LEARNBOX_RUNNING_CONTAINER=<container-name-or-id> \
+#   build-admin-image.sh <full-40-char-commit>
+#
 # The commit normally must exist in this checkout and must be given in full. The single, pinned
 # Iran bridge is the exception: it validates one preserved digest from self-contained non-secret
 # evidence, so it remains runnable from a shallow release checkout.
@@ -91,6 +98,7 @@ if [ "$PASSKEY_UI" != "true" ]; then
 fi
 fi
 
+
 # The Production host is linux/amd64. Build for it explicitly: on an arm64 workstation the default
 # platform is arm64, and such an image starts and then dies on exec format in Production.
 PLATFORM=linux/amd64
@@ -139,6 +147,11 @@ if [ "$TARGET" = app ]; then
       FLAG_ARGS+=(--build-arg "$name=$value")
     done
   fi
+  # LB-B19: the public half of the daily review-reminder push VAPID keypair. Unlike the six
+  # feature flags above this is not a release-governed true/false marker — it is an opaque public
+  # key (or empty, which ships the reminder toggle inert) — so it is read straight from the
+  # operator's environment rather than from release-build.env, and never enforced to one value.
+  FLAG_ARGS+=(--build-arg "NEXT_PUBLIC_VAPID_PUBLIC_KEY=${NEXT_PUBLIC_VAPID_PUBLIC_KEY:-}")
 else
   FLAG_ARGS+=(--build-arg "NEXT_PUBLIC_LEARNBOX_ADMIN_PASSKEY_UI_ENABLED=$PASSKEY_UI")
 fi
@@ -303,22 +316,12 @@ check "OCI label records the requested commit" "$SOURCE_SHA" \
   "$(inspect '{{index .Config.Labels "org.opencontainers.image.revision"}}')"
 check "runtime APP_SOURCE_SHA records the requested commit" "$SOURCE_SHA" "$(image_env APP_SOURCE_SHA)"
 check "image title is set" "learnbox-$TARGET" "$(inspect '{{index .Config.Labels "org.opencontainers.image.title"}}')"
+
 if [ "$TARGET" = app ]; then
   # These labels are deliberately public and become the runnable image's comparable release record.
   # Verify every configured flag was baked into the artifact, rather than trusting the build command.
   for flag in $APP_FLAGS; do
-    key="$(printf '%s' "$flag" | tr '[:upper:]' '[:lower:]')"
-    key="$(printf '%s' "$key" | tr '_' '-')"
-    label="io.learnbox.release.$key"
-    # Labels use short keys for stable, readable release evidence.
-    case "$label" in
-      *profile-identity*) label=io.learnbox.release.profile_identity ;;
-      *queue-quarantine*) label=io.learnbox.release.queue_quarantine ;;
-      *server-session-plan*) label=io.learnbox.release.server_session_plan ;;
-      *goal-ux-removed*) label=io.learnbox.release.goal_ux_removed ;;
-      *session-expiry-ux*) label=io.learnbox.release.session_expiry_ux ;;
-      *binary-review-ui*) label=io.learnbox.release.binary_review_ui ;;
-    esac
+    label="$(release_label "$flag")"
     name="NEXT_PUBLIC_LEARNBOX_$flag"
     check "release label $label matches the approved matrix" "${!name}" "$(inspect "{{index .Config.Labels \"$label\"}}")"
   done

@@ -1,0 +1,9 @@
+[Unit]
+Description=Run one LearnBox pack-media item shortly after the prior item finishes
+
+[Timer]
+OnBootSec=30s
+OnUnitInactiveSec=5s
+
+[Install]
+WantedBy=timers.target

@@ -6,6 +6,7 @@ import {
 import { loadAdminSession, verifyAdminCsrf } from './admin-route-security';
 import {
   type CardContentInput,
+  type CardRemoveFromPackResult,
   type CardWriteResult,
   type PackWriteResult,
   type PostgresContentPacksWriteStore,
@@ -20,7 +21,7 @@ import {
  *   2. `assertTrustedAdminMutation`   → Origin + Content-Type (blocks cross-site form posts)
  *   3. `loadAdminSession`             → 401 when unauthenticated
  *   4. `verifyAdminCsrf`              → per-session CSRF token
- *   5. `session.recent`               → 428 reauthentication_required for content writes
+ *   5. `session.operational`          → 428 after the one-hour ordinary-work window
  *   6. `Idempotency-Key`              → required uuid, enforced by the store
  *
  * Roles are never read from the request: the store resolves them from `admin_role_assignments`
@@ -195,6 +196,26 @@ function cardWriteResponse(result: CardWriteResult) {
   }
 }
 
+function cardRemoveResponse(result: CardRemoveFromPackResult) {
+  switch (result.status) {
+    case 'forbidden':
+      return forbidden();
+    case 'not_found':
+      return notFound();
+    case 'conflict':
+      return json({ code: 'conflict', reason: result.reason }, { status: 409 });
+    case 'idempotent':
+      return json({ status: 'idempotent', cardId: result.cardId });
+    default:
+      return json({
+        status: 'applied',
+        cardId: result.cardId,
+        remainingCardCount: result.remainingCardCount,
+        targetItemCount: result.targetItemCount,
+      });
+  }
+}
+
 /** Runs the shared mutation guard chain. Returns either a rejection Response or the actor. */
 async function authorizeMutation(
   request: Request,
@@ -214,7 +235,7 @@ async function authorizeMutation(
   } catch {
     return { response: genericInvalid() };
   }
-  if (!session.recent) {
+  if (!session.operational) {
     return { response: json({ code: 'reauthentication_required' }, { status: 428 }) };
   }
   const idempotencyKey = readIdempotencyKey(request);
@@ -369,6 +390,47 @@ export function createContentCardEditRoute(dependencies: RouteDependencies<'edit
       return cardWriteResponse(result);
     } catch (error) {
       logWriteFailure('content_card.edit', error);
+      return unavailable();
+    }
+  };
+}
+
+export function createContentCardRemoveFromPackRoute(
+  dependencies: RouteDependencies<'removeCardFromPack'>,
+) {
+  return async function DELETE(
+    request: Request,
+    context: { params: Promise<{ packId: string; cardId: string }> },
+  ) {
+    if (
+      !dependencies.enabled ||
+      !dependencies.config.enabled ||
+      !dependencies.sessionStore ||
+      !dependencies.store
+    )
+      return notFound();
+    const authorized = await authorizeMutation(
+      request,
+      dependencies,
+      (dependencies.now ?? (() => new Date()))(),
+    );
+    if ('response' in authorized) return authorized.response;
+    const body = await parseJsonBody(request);
+    if (!body || body.confirm !== true || typeof body.reason !== 'string' || !body.reason.trim())
+      return genericInvalid();
+    const { packId, cardId } = await context.params;
+    try {
+      return cardRemoveResponse(
+        await dependencies.store.removeCardFromPack({
+          packId,
+          cardId,
+          reason: body.reason,
+          idempotencyKey: authorized.idempotencyKey,
+          actorUserId: authorized.actorUserId,
+        }),
+      );
+    } catch (error) {
+      logWriteFailure('content_card.remove_from_pack', error);
       return unavailable();
     }
   };

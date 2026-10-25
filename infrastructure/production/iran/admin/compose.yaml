@@ -10,6 +10,9 @@ services:
     env_file: .env
     environment:
       NODE_EXTRA_CA_CERTS: /run/db-tls/ca.crt
+      # Durable media jobs remain unavailable until a separately authorized timer/token rollout.
+      LEARNBOX_PACK_MEDIA_RUNNER_ENABLED: ${LEARNBOX_PACK_MEDIA_RUNNER_ENABLED:-false}
+      LEARNBOX_PACK_MEDIA_RUNNER_TOKEN: ${LEARNBOX_PACK_MEDIA_RUNNER_TOKEN:-}
     volumes:
       - /home/ubuntu/learnbox/db-tls/ca.crt:/run/db-tls/ca.crt:ro
     mem_limit: 1g

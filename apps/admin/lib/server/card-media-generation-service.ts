@@ -16,6 +16,8 @@
  * `@learnbox/content-models`, never by the provider and never by a prompt.
  */
 
+import { createHash } from 'node:crypto';
+
 import {
   buildCardImagePrompt,
   buildSpokenSentenceTarget,
@@ -30,7 +32,7 @@ import {
   type MediaValidity,
 } from '@learnbox/content-models';
 
-import { AiProviderError } from './ai-generation-provider';
+import { AiProviderError, type AiProviderAttemptEvidence } from './ai-generation-provider';
 import {
   germanVoiceIssue,
   GERMAN_VOICE_ISSUE_MESSAGES,
@@ -38,7 +40,12 @@ import {
 } from './ai-media-config';
 import type { AiMediaProvider } from './ai-media-provider';
 import { readCanonicalCardBrief } from './canonical-image-standard';
-import type { CardMediaKind, CardMediaStorage } from './card-media-storage';
+import {
+  buildCardMediaObjectKey,
+  type CardMediaKind,
+  type CardMediaStorage,
+} from './card-media-storage';
+import { readMp3Format } from './mp3-format';
 
 type QueryResult = { rows: Record<string, unknown>[] };
 type Queryable = { query(sql: string, parameters?: readonly unknown[]): Promise<QueryResult> };
@@ -115,6 +122,8 @@ export type AcceptOutcome =
 
 interface CanonicalCardData {
   cardId: string;
+  /** Latest canonical version used to bind an approved durable job to exact content. */
+  versionId: string;
   contentId: string;
   lemma: string;
   article: string | null;
@@ -200,14 +209,15 @@ export class CardMediaGenerationService {
   private async loadCard(
     client: Queryable,
     cardId: string,
+    lock = false,
   ): Promise<CanonicalCardData | undefined> {
     const result = await client.query(
-      `SELECT c.id, c.content_id, c.lemma, cv.content_json
+      `SELECT c.id, c.content_id, c.lemma, cv.id AS version_id, cv.content_json
          FROM cards c
          JOIN card_versions cv ON cv.card_id = c.id
         WHERE c.id = $1
         ORDER BY cv.version DESC
-        LIMIT 1`,
+        LIMIT 1${lock ? ' FOR UPDATE OF c, cv' : ''}`,
       [cardId],
     );
     const row = result.rows[0];
@@ -224,6 +234,7 @@ export class CardMediaGenerationService {
     const contentId = String(row.content_id);
     return {
       cardId: String(row.id),
+      versionId: String(row.version_id),
       contentId,
       lemma: String(content.lemma ?? row.lemma),
       article: typeof content.article === 'string' ? content.article : null,
@@ -299,6 +310,8 @@ export class CardMediaGenerationService {
     cardId: string;
     kind: CardMediaKind;
     actorUserId: string;
+    /** Durable pack jobs bind approval to this exact canonical card version. */
+    expectedCardVersionId?: string;
     model?: string;
     /**
      * Explicit Admin request to produce a new candidate even though valid media exists. Never set
@@ -318,6 +331,13 @@ export class CardMediaGenerationService {
 
       const loaded = await this.loadCard(client, input.cardId);
       if (!loaded) return { status: 'card_not_found' };
+      if (input.expectedCardVersionId && loaded.versionId !== input.expectedCardVersionId) {
+        return {
+          status: 'unprocessable',
+          code: 'content_changed',
+          reason: 'محتوای کارت پس از تأیید تغییر کرده است؛ ساخت خودکار متوقف شد.',
+        };
+      }
       card = loaded;
 
       if (!input.regenerate) {
@@ -448,6 +468,19 @@ export class CardMediaGenerationService {
               channels: audio.format.channels,
             }
           : null;
+        await this.pool.query(
+          `UPDATE card_media_candidates
+              SET provider_stage = $2, provider_elapsed_ms = $3, provider_http_status = $4,
+                  provider_request_id = $5
+            WHERE id = $1`,
+          [
+            candidateId,
+            audio.attempt?.stage ?? null,
+            audio.attempt?.elapsedMs ?? null,
+            audio.attempt?.httpStatus ?? null,
+            audio.attempt?.requestId ?? null,
+          ],
+        );
         if (bytes.length > this.limits.maxAudioBytes) {
           throw new AiProviderError('provider_rejected', 'صدای تولیدشده از حد مجاز بزرگ‌تر است.');
         }
@@ -477,12 +510,22 @@ export class CardMediaGenerationService {
       return { status: 'generated', candidate: toCandidateView(updated.rows[0]!) };
     } catch (error) {
       const code = error instanceof AiProviderError ? error.code : 'generation_failed';
+      const attempt: AiProviderAttemptEvidence | undefined =
+        error instanceof AiProviderError ? error.attempt : undefined;
       // The candidate is marked failed; accepted media is not touched by any path here.
       await this.pool.query(
         `UPDATE card_media_candidates
-            SET status = 'failed', failure_code = $2, updated_at = now()
+            SET status = 'failed', failure_code = $2, provider_stage = $3, provider_elapsed_ms = $4,
+                provider_http_status = $5, provider_request_id = $6, updated_at = now()
           WHERE id = $1`,
-        [candidateId, code],
+        [
+          candidateId,
+          code,
+          attempt?.stage ?? null,
+          attempt?.elapsedMs ?? null,
+          attempt?.httpStatus ?? null,
+          attempt?.requestId ?? null,
+        ],
       );
       return {
         status: 'provider_failed',
@@ -500,6 +543,97 @@ export class CardMediaGenerationService {
    * is marked superseded and keeps its row and its stored object, so acceptance history stays
    * auditable and nothing is destroyed.
    */
+  /** Imports a reviewed MP3 without contacting an AI provider. */
+  async importWordAudio(input: {
+    cardId: string;
+    actorUserId: string;
+    bytes: Buffer;
+  }): Promise<
+    | { status: 'imported'; candidate: CardMediaCandidateView }
+    | { status: 'forbidden' | 'card_not_found' }
+    | { status: 'unprocessable'; reason: string }
+  > {
+    if (!input.bytes.length || input.bytes.length > this.limits.maxAudioBytes) {
+      return { status: 'unprocessable', reason: 'فایل صوتی اندازهٔ مجاز ندارد.' };
+    }
+    const audioFormat = readMp3Format(input.bytes);
+    if (!audioFormat) return { status: 'unprocessable', reason: 'فایل باید MP3 معتبر باشد.' };
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      if (!(await this.hasEditorialRole(client, input.actorUserId))) {
+        await client.query('ROLLBACK');
+        return { status: 'forbidden' };
+      }
+      const card = await this.loadCard(client, input.cardId, true);
+      if (!card) {
+        await client.query('ROLLBACK');
+        return { status: 'card_not_found' };
+      }
+      let spokenTarget: string;
+      try {
+        spokenTarget = buildSpokenWordTarget(card);
+      } catch {
+        await client.query('ROLLBACK');
+        return { status: 'unprocessable', reason: 'این کارت واژهٔ آلمانی قانونی ندارد.' };
+      }
+      const effectiveVoice = resolveEffectiveGermanVoice(card, this.voices);
+      const voiceRole = effectiveVoice.role;
+      const checksum = createHash('sha256').update(input.bytes).digest('hex');
+      const prior = await client.query(
+        `SELECT ${CANDIDATE_COLUMNS} FROM card_media_candidates
+          WHERE card_id=$1 AND kind='word_audio' AND card_version_id=$2 AND checksum=$3
+            AND provenance='manual_import' AND status IN ('ready', 'accepted', 'superseded')
+          ORDER BY created_at DESC LIMIT 1`,
+        [input.cardId, card.versionId, checksum],
+      );
+      if (prior.rows[0]) {
+        await client.query('COMMIT');
+        return { status: 'imported', candidate: toCandidateView(prior.rows[0]) };
+      }
+      const objectKey = buildCardMediaObjectKey(card.contentId, 'word_audio', 'audio/mpeg');
+      await client.query(
+        `INSERT INTO card_media_objects (object_key, media_type, byte_size, checksum, bytes) VALUES ($1, 'audio/mpeg', $2, $3, $4)`,
+        [objectKey, input.bytes.length, checksum, input.bytes],
+      );
+      const result = await client.query(
+        `INSERT INTO card_media_candidates (card_id, kind, status, provider, model, capability, spoken_target, voice, voice_role, uses_die_fallback_for_das, language, locale, object_key, checksum, byte_size, media_type, audio_sample_rate_hz, audio_bitrate_kbps, audio_channels, provenance, card_version_id)
+         VALUES ($1, 'word_audio', 'ready', 'manual', 'manual', 'audio', $2, $3, $4, false, 'de', 'de-DE', $5, $6, $7, 'audio/mpeg', $8, $9, $10, 'manual_import', $11)
+         ON CONFLICT DO NOTHING RETURNING ${CANDIDATE_COLUMNS}`,
+        [
+          input.cardId,
+          spokenTarget,
+          effectiveVoice.voice,
+          voiceRole,
+          objectKey,
+          checksum,
+          input.bytes.length,
+          audioFormat.sampleRateHz,
+          audioFormat.bitrateKbps,
+          audioFormat.channels,
+          card.versionId,
+        ],
+      );
+      if (!result.rows[0]) {
+        await client.query('ROLLBACK');
+        const existing = await this.pool.query(
+          `SELECT ${CANDIDATE_COLUMNS} FROM card_media_candidates WHERE card_id=$1 AND kind='word_audio' AND card_version_id=$2 AND checksum=$3 AND provenance='manual_import' ORDER BY created_at DESC LIMIT 1`,
+          [input.cardId, card.versionId, checksum],
+        );
+        if (!existing.rows[0])
+          return { status: 'unprocessable', reason: 'بارگذاری هم‌زمان ناموفق بود.' };
+        return { status: 'imported', candidate: toCandidateView(existing.rows[0]) };
+      }
+      await client.query('COMMIT');
+      return { status: 'imported', candidate: toCandidateView(result.rows[0]) };
+    } catch (error) {
+      await client.query('ROLLBACK').catch(() => undefined);
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
   async accept(input: {
     cardId: string;
     kind: CardMediaKind;
@@ -517,6 +651,9 @@ export class CardMediaGenerationService {
       const found = await client.query(
         `SELECT ${CANDIDATE_COLUMNS} FROM card_media_candidates
           WHERE id = $1 AND card_id = $2 AND kind = $3
+            AND (provenance <> 'manual_import' OR card_version_id = (
+              SELECT id FROM card_versions WHERE card_id = $2 ORDER BY version DESC LIMIT 1
+            ))
           FOR UPDATE`,
         [input.candidateId, input.cardId, input.kind],
       );

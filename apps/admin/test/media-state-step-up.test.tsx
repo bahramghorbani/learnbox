@@ -22,7 +22,7 @@ import { StepUpRefusedError } from '../app/components/step-up-reauth';
 let authenticate: () => Promise<{ id: string }>;
 vi.mock('@simplewebauthn/browser', () => ({ startAuthentication: async () => authenticate() }));
 
-const media = [{ kind: 'image', needsGeneration: true }];
+const media = [{ kind: 'image' as const, accepted: null, latestCandidate: null }];
 
 function stubFetch(stateResponses: Array<() => Response>) {
   const calls: string[] = [];
@@ -89,9 +89,12 @@ describe('media state step-up', () => {
     await act(async () => {
       root.render(
         createElement(PackMediaCompletion, {
+          packId: 'pack-fixture',
           cards: ['a', 'b', 'c'].map((cardId) => ({ cardId, label: cardId })),
           loadState: loadMediaState,
-          generate: async () => ({ ok: true }),
+          loadJob: async () => undefined,
+          createJob: async () => ({ ok: true as const, status: 'nothing_needed' as const }),
+          stopJob: async () => ({ ok: false as const, message: 'unused' }),
           onOpenCard: () => undefined,
           onFinished: () => undefined,
         }),
@@ -104,6 +107,43 @@ describe('media state step-up', () => {
     expect(calls.filter((url) => url === '/api/auth/reauth/options')).toHaveLength(1);
     expect(container.querySelector('[role="alert"]')?.textContent).toContain('لغو شد');
     expect(container.textContent).not.toContain('تأیید و ساخت');
+    await act(async () => root.unmount());
+  });
+
+  it('does not offer a paid estimate or false all-clear for partially unreadable media state', async () => {
+    const container = document.createElement('div');
+    document.body.append(container);
+    const root = createRoot(container);
+    vi.stubGlobal('React', { createElement, Fragment });
+
+    await act(async () => {
+      root.render(
+        createElement(PackMediaCompletion, {
+          packId: 'pack-fixture',
+          cards: [
+            { cardId: 'readable', label: 'خوانا' },
+            { cardId: 'unreadable', label: 'ناخوانا' },
+          ],
+          loadState: async (cardId) => (cardId === 'readable' ? media : undefined),
+          loadJob: async () => undefined,
+          createJob: async () => ({ ok: true as const, status: 'nothing_needed' as const }),
+          stopJob: async () => ({ ok: false as const, message: 'unused' }),
+          onOpenCard: () => undefined,
+          onFinished: () => undefined,
+        }),
+      );
+    });
+    await act(async () => {
+      container.querySelector('button')!.click();
+    });
+
+    expect(container.querySelector('[role="alert"]')?.textContent).toContain('برآورد و ساخت');
+    expect(container.textContent).not.toContain('هیچ رسانه‌ای برای ساخت لازم نیست');
+    expect(
+      [...container.querySelectorAll('button')].some((button) =>
+        button.textContent?.startsWith('تأیید و ساخت'),
+      ),
+    ).toBe(false);
     await act(async () => root.unmount());
   });
 
@@ -149,6 +189,53 @@ describe('media state step-up', () => {
     expect(container.querySelectorAll('[role="alert"]')).toHaveLength(0);
     expect(container.querySelector('[data-cm-kind="image"]')).not.toBeNull();
     expect(calls.filter((url) => url === '/api/auth/reauth/verify')).toHaveLength(1);
+    await act(async () => root.unmount());
+  });
+
+  it('card panel: after bounded polling, refresh observes a durable outcome without a second generation', async () => {
+    const generating = [
+      {
+        kind: 'word_audio' as const,
+        accepted: null,
+        latestCandidate: { id: 'candidate-1', kind: 'word_audio', status: 'generating' },
+      },
+    ];
+    const ready = [
+      {
+        kind: 'word_audio' as const,
+        accepted: null,
+        latestCandidate: { id: 'candidate-1', kind: 'word_audio', status: 'ready' },
+      },
+    ];
+    const onLoadState = vi.fn().mockResolvedValueOnce(generating).mockResolvedValueOnce(ready);
+    const onGenerate = vi.fn(async () => ({ ok: false as const, message: 'network unavailable' }));
+    const container = document.createElement('div');
+    document.body.append(container);
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(
+        createElement(CardMediaPanel, {
+          cardId: 'card-1',
+          cardLabel: 'die U-Bahn',
+          onClose: () => undefined,
+          onLoadState,
+          onGenerate,
+          onAccept: async () => ({ ok: true as const }),
+          assetUrl: (id: string) => `/asset/${id}`,
+        }),
+      );
+    });
+
+    const refresh = [...container.querySelectorAll('button')].find(
+      (button) => button.textContent === 'به‌روزرسانی وضعیت',
+    );
+    expect(refresh).toBeTruthy();
+    await act(async () => refresh!.click());
+
+    expect(onLoadState).toHaveBeenCalledTimes(2);
+    expect(onGenerate).not.toHaveBeenCalled();
+    expect(container.textContent).toContain('نامزد آمادهٔ بررسی');
     await act(async () => root.unmount());
   });
 });

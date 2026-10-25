@@ -1,7 +1,7 @@
 /**
  * Phase 1 / Milestone 1.5 — card media generation routes.
  *
- * Same guard chain as M1.2/M1.3/M1.4: Origin → session → CSRF → recent re-auth, on every route
+ * Same guard chain as M1.2/M1.3/M1.4: Origin → session → CSRF → operational re-auth, on every route
  * including the read ones. These endpoints spend real money and return protected learning content,
  * so an unauthenticated caller must never reach the provider or the bytes.
  *
@@ -72,7 +72,7 @@ function providerNotConfigured() {
 async function authorize(
   request: Request,
   dependencies: RouteDependencies,
-  options: { requireCsrf?: boolean } = {},
+  options: { requireCsrf?: boolean; allowedContentTypes?: readonly string[] } = {},
 ): Promise<{ response: Response } | { actorUserId: string }> {
   if (!dependencies.config.enabled || !dependencies.sessionStore) {
     return { response: notFound() };
@@ -81,7 +81,11 @@ async function authorize(
   const requireCsrf = options.requireCsrf !== false;
   if (requireCsrf) {
     try {
-      assertTrustedAdminMutation(request, config, ['application/json']);
+      assertTrustedAdminMutation(
+        request,
+        config,
+        options.allowedContentTypes ?? ['application/json'],
+      );
     } catch {
       return { response: genericInvalid() };
     }
@@ -96,7 +100,7 @@ async function authorize(
       return { response: genericInvalid() };
     }
   }
-  if (!session.recent) {
+  if (!session.operational) {
     return { response: json({ code: 'reauthentication_required' }, { status: 428 }) };
   }
   if (!dependencies.enabled || !dependencies.service) {
@@ -275,6 +279,49 @@ export function createMediaAcceptRoute(dependencies: RouteDependencies) {
       return json({ status: 'already_accepted', candidate: result.candidate });
     }
     return json({ status: 'accepted', candidate: result.candidate, replaced: result.replaced });
+  };
+}
+
+/** POST — upload a reviewed MP3 as a ready word-audio candidate; never calls a provider. */
+export function createMediaImportRoute(dependencies: RouteDependencies) {
+  return async function POST(request: Request) {
+    const authorized = await authorize(request, dependencies, {
+      allowedContentTypes: ['multipart/form-data'],
+    });
+    if ('response' in authorized) return authorized.response;
+    let form: FormData;
+    try {
+      form = await request.formData();
+    } catch {
+      return genericInvalid();
+    }
+    const cardId = form.get('cardId');
+    const kind = form.get('kind');
+    const file = form.get('file');
+    if (
+      typeof cardId !== 'string' ||
+      !uuidPattern.test(cardId) ||
+      kind !== 'word_audio' ||
+      !(file instanceof File) ||
+      file.type !== 'audio/mpeg'
+    ) {
+      return genericInvalid();
+    }
+    const bytes = Buffer.from(await file.arrayBuffer());
+    const result = await dependencies.service!.importWordAudio({
+      cardId,
+      actorUserId: authorized.actorUserId,
+      bytes,
+    });
+    if (result.status !== 'imported') {
+      if (result.status === 'forbidden') return json({ code: 'forbidden' }, { status: 403 });
+      if (result.status === 'card_not_found')
+        return json({ code: 'card_not_found' }, { status: 404 });
+      if (result.status === 'unprocessable')
+        return json({ code: 'unprocessable', message: result.reason }, { status: 422 });
+      return json({ code: 'import_failed' }, { status: 500 });
+    }
+    return json({ status: 'imported', candidate: result.candidate });
   };
 }
 

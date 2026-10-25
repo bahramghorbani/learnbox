@@ -27,9 +27,11 @@ import {
 import { PackLifecyclePanel } from './PackLifecyclePanel';
 import { EmptyState, ErrorState, LoadingState } from './AdminStates';
 import { faNum } from './fa-digits';
+import { normalizeIntegerInput } from '../../lib/digits';
 import { CARD_BADGE, PACK_BADGE, badgeFor } from './status-badges';
 import {
   CardFormModal,
+  CpModal,
   PackFormModal,
   emptyCardForm,
   emptyPackForm,
@@ -40,7 +42,7 @@ import {
 } from './ContentPackForms';
 
 import { AdminSidebar } from './AdminSidebar';
-import { PackMediaCompletion } from './PackMediaCompletion';
+import { PackMediaCompletion, type PackMediaJob } from './PackMediaCompletion';
 
 // Media state sits behind the same recent-auth guard as every media route: a 428 re-authenticates
 // in place. A refused step-up throws, so a pack scan stops instead of prompting once per card.
@@ -281,7 +283,7 @@ function incompleteCardsMessage(cards: IncompleteCardPayload[], partlySubmitted:
 
 async function sendMutation(
   path: string,
-  method: 'POST' | 'PATCH',
+  method: 'POST' | 'PATCH' | 'DELETE',
   body: unknown,
 ): Promise<SubmitOutcome> {
   const csrfToken = readBrowserCookie('__Host-learnbox_admin_csrf');
@@ -320,11 +322,12 @@ async function sendMutation(
     }
     if (response.status === 422) {
       const payload = (await response.json().catch(() => undefined)) as
-        { issues?: FieldIssue[] } | undefined;
+        { issues?: FieldIssue[]; message?: string } | undefined;
       return {
         ok: false,
         issues: payload?.issues ?? [],
-        message: 'محتوا با قواعد کانونی سازگار نیست؛ موارد مشخص‌شده را اصلاح کنید.',
+        message:
+          payload?.message ?? 'محتوا با قواعد کانونی سازگار نیست؛ موارد مشخص‌شده را اصلاح کنید.',
       };
     }
     if (response.status === 409) {
@@ -486,7 +489,7 @@ function PackPrice({
         const outcome = await sendMutation(
           `/api/content/packs/${encodeURIComponent(pack.id)}/price`,
           'POST',
-          { priceTomans: value },
+          { priceTomans: normalizeIntegerInput(value) },
         );
         if (!outcome.ok) {
           setMessage(outcome.message);
@@ -509,7 +512,10 @@ function PackPrice({
       />
       <span className="muted-note">
         <bdi dir="ltr">
-          {Number.isInteger(Number(value)) && Number(value) > 0 ? faNum(Number(value)) : '—'}
+          {Number.isInteger(Number(normalizeIntegerInput(value))) &&
+          Number(normalizeIntegerInput(value)) > 0
+            ? faNum(Number(normalizeIntegerInput(value)))
+            : '—'}
         </bdi>{' '}
         تومان
       </span>
@@ -543,6 +549,9 @@ export function ContentPacksWorkspace() {
     cardId?: string;
     values: CardFormValues;
   }>();
+  const [removeCardTarget, setRemoveCardTarget] = useState<ServerCard>();
+  const [removeReason, setRemoveReason] = useState('');
+  const [removeConfirmed, setRemoveConfirmed] = useState(false);
   const [savedNotice, setSavedNotice] = useState<string>();
   // Bulk import (Phase 1 / M1.3) rides the same manage gate as create/edit. The import key is
   // minted ONCE per opened import, so re-clicking confirm (or retrying after a network error)
@@ -596,9 +605,12 @@ export function ContentPacksWorkspace() {
     void loadPacks();
   }, [loadPacks]);
 
-  const loadCards = useCallback(async (packId: string) => {
-    setCardsPhase('loading');
-    setCards([]);
+  const loadCards = useCallback(async (packId: string, options?: { background?: boolean }) => {
+    const background = options?.background === true;
+    if (!background) {
+      setCardsPhase('loading');
+      setCards([]);
+    }
     try {
       const response = await fetch(`/api/content/packs/${encodeURIComponent(packId)}`, {
         credentials: 'same-origin',
@@ -607,9 +619,9 @@ export function ContentPacksWorkspace() {
       if (!response.ok) throw new Error('cards unavailable');
       const payload = (await response.json()) as { cards?: ServerCard[] };
       setCards(Array.isArray(payload.cards) ? payload.cards : []);
-      setCardsPhase('ready');
+      if (!background) setCardsPhase('ready');
     } catch {
-      setCardsPhase('error');
+      if (!background) setCardsPhase('error');
     }
   }, []);
 
@@ -676,14 +688,103 @@ export function ContentPacksWorkspace() {
     return outcome;
   }
 
-  async function generatePackMedia(cardId: string, kind: CardMediaKind) {
-    const result = await postAiJson<{ status?: string }>('/api/content/media/generate', {
-      cardId,
-      kind,
+  async function removeCardFromPack(): Promise<void> {
+    if (!removeCardTarget || !openPackId || !removeConfirmed || !removeReason.trim()) return;
+    const outcome = await sendMutation(
+      `/api/content/packs/${encodeURIComponent(openPackId)}/cards/${encodeURIComponent(removeCardTarget.cardId)}`,
+      'DELETE',
+      { confirm: true, reason: removeReason.trim() },
+    );
+    if (!outcome.ok) {
+      setSavedNotice(outcome.message ?? 'حذف کارت انجام نشد.');
+      return;
+    }
+    setRemoveCardTarget(undefined);
+    setRemoveReason('');
+    setRemoveConfirmed(false);
+    await refreshAfterWrite('کارت فقط از عضویت این بسته خارج شد؛ رسانه‌ها و سابقه حفظ شدند.');
+  }
+
+  async function loadPackMediaJob(packId: string): Promise<PackMediaJob | undefined> {
+    const { response, stepUp } = await fetchWithStepUp(
+      `/api/content/media/jobs?packId=${encodeURIComponent(packId)}`,
+      { credentials: 'same-origin', headers: { accept: 'application/json' }, cache: 'no-store' },
+    );
+    const refusal = stepUpReadRefusal(stepUp, response.status);
+    if (refusal) throw new StepUpRefusedError(refusal);
+    if (!response.ok) throw new Error('pack media job state unavailable');
+    return ((await response.json()) as { job?: PackMediaJob | null }).job ?? undefined;
+  }
+
+  async function createPackMediaJob(packId: string) {
+    const result = await postAiJson<{
+      status?: 'created' | 'existing' | 'nothing_needed';
+      job?: PackMediaJob;
+    }>('/api/content/media/jobs', { packId });
+    if (!result.ok) return { ok: false as const, message: result.message };
+    if (result.payload.status === 'nothing_needed') {
+      return { ok: true as const, status: 'nothing_needed' as const };
+    }
+    if (
+      !result.payload.job ||
+      (result.payload.status !== 'created' && result.payload.status !== 'existing')
+    ) {
+      return { ok: false as const, message: 'ثبت اجرای پایدار پاسخ معتبر نداد.' };
+    }
+    return { ok: true as const, status: result.payload.status, job: result.payload.job };
+  }
+
+  async function stopPackMediaJob(jobId: string) {
+    const result = await postAiJson<{ job?: PackMediaJob }>('/api/content/media/jobs/stop', {
+      jobId,
     });
-    return result.ok
-      ? { ok: true, status: result.payload.status }
-      : { ok: false, message: result.message, code: result.code };
+    if (!result.ok || !result.payload.job) {
+      return {
+        ok: false as const,
+        message: result.ok ? 'ثبت توقف پاسخ معتبر نداد.' : result.message,
+      };
+    }
+    return { ok: true as const, job: result.payload.job };
+  }
+
+  async function resolvePackMediaJob(
+    jobId: string,
+    itemId: string,
+    action: 'defer' | 'retry',
+    reason: string,
+    confirmedPotentialDuplicateCharge: boolean,
+    confirmedContinuePending: boolean,
+  ) {
+    const result = await postAiJson<{
+      status?: 'applied' | 'idempotent';
+      job?: PackMediaJob | null;
+    }>('/api/content/media/jobs/resolve', {
+      jobId,
+      itemId,
+      action,
+      reason,
+      confirmedPotentialDuplicateCharge,
+      confirmedContinuePending,
+    });
+    if (!result.ok) return { ok: false as const, message: result.message };
+    if (result.payload.status !== 'applied' && result.payload.status !== 'idempotent')
+      return { ok: false as const, message: 'نتیجهٔ رسیدگی نامشخص است؛ وضعیت را دوباره بخوانید.' };
+    const job = result.payload.job ?? (openPackId ? await loadPackMediaJob(openPackId) : undefined);
+    if (!job) return { ok: false as const, message: 'وضعیت job پس از رسیدگی خوانده نشد.' };
+    return { ok: true as const, job };
+  }
+
+  async function reconcilePackMediaJob(jobId: string) {
+    const result = await postAiJson<{ status?: string; count?: number; job?: PackMediaJob | null }>(
+      '/api/content/media/jobs/reconcile',
+      { jobId },
+    );
+    if (!result.ok) return { ok: false as const, message: result.message };
+    if (result.payload.status !== 'reconciled')
+      return { ok: false as const, message: 'تطابق‌سازی انجام نشد؛ وضعیت را دوباره بخوانید.' };
+    const job = result.payload.job ?? (openPackId ? await loadPackMediaJob(openPackId) : undefined);
+    if (!job) return { ok: false as const, message: 'وضعیت job پس از تطابق‌سازی خوانده نشد.' };
+    return { ok: true as const, job, count: result.payload.count ?? 0 };
   }
 
   const visible = packs.filter((pack) => (filter === 'all' ? true : pack.status === filter));
@@ -1043,16 +1144,20 @@ export function ContentPacksWorkspace() {
                   ) : null}
                   {mediaEnabled && cardsPhase === 'ready' && cards.length > 0 ? (
                     <PackMediaCompletion
-                      key={openPackId}
+                      packId={openPackId}
                       cards={cards.map((card) => ({
                         cardId: card.cardId,
                         label: `${card.article ? `${card.article} ` : ''}${card.lemma}`,
                       }))}
                       loadState={loadMediaState}
-                      generate={generatePackMedia}
+                      loadJob={loadPackMediaJob}
+                      createJob={createPackMediaJob}
+                      stopJob={stopPackMediaJob}
+                      resolveJob={resolvePackMediaJob}
+                      reconcileJob={reconcilePackMediaJob}
                       onOpenCard={setMediaCard}
                       onFinished={() => {
-                        if (openPackId) void loadCards(openPackId);
+                        if (openPackId) void loadCards(openPackId, { background: true });
                       }}
                     />
                   ) : null}
@@ -1154,6 +1259,19 @@ export function ContentPacksWorkspace() {
                                   >
                                     ویرایش
                                   </button>
+                                  {['draft', 'ai_generated'].includes(card.versionStatus) ? (
+                                    <button
+                                      className="btn"
+                                      type="button"
+                                      onClick={() => {
+                                        setRemoveReason('');
+                                        setRemoveConfirmed(false);
+                                        setRemoveCardTarget(card);
+                                      }}
+                                    >
+                                      خروج از بسته
+                                    </button>
+                                  ) : null}
                                   {mediaEnabled ? (
                                     <button
                                       className="btn"
@@ -1183,6 +1301,79 @@ export function ContentPacksWorkspace() {
         ) : null}
       </section>
 
+      {removeCardTarget ? (
+        <CpModal
+          title="خروج کارت از پیش‌نویس بسته"
+          onClose={() => setRemoveCardTarget(undefined)}
+          footer={
+            <>
+              <button className="btn" type="button" onClick={() => setRemoveCardTarget(undefined)}>
+                انصراف
+              </button>
+              <button
+                aria-describedby="cp-remove-prereq-hint"
+                className="btn"
+                id="cp-remove-confirm-btn"
+                type="button"
+                disabled={!removeConfirmed || !removeReason.trim()}
+                onClick={() => void removeCardFromPack()}
+              >
+                تأیید خروج از بسته
+              </button>
+            </>
+          }
+        >
+          <p>
+            کارت «{removeCardTarget.article ? `${removeCardTarget.article} ` : ''}
+            {removeCardTarget.lemma}» فقط از عضویت نسخهٔ جاری این بسته خارج می‌شود؛ خود کارت حذف
+            نمی‌شود.
+          </p>
+          <p className="muted-note">
+            رسانهٔ ثبت‌شده: تصویر {faNum(removeCardTarget.media.imageCount)}، صدای واژه{' '}
+            {faNum(removeCardTarget.media.wordAudioCount)}، صدای جمله{' '}
+            {faNum(removeCardTarget.media.sentenceAudioCount)}. candidateها، attemptها، job و
+            snapshotهای قبلی حفظ می‌شوند.
+          </p>
+          <p className="cp-form-status is-error" role="alert">
+            تعداد کارت‌ها از {faNum(cards.length)} به {faNum(Math.max(0, cards.length - 1))} می‌رسد،
+            در حالی که هدف فعلی {faNum(openPackRecord?.targetItemCount ?? 0)} است. تا افزودن یا
+            جایگزینی کارت، دروازهٔ انتشار «ناقص» می‌ماند.
+          </p>
+          <label className="cp-form-row is-full">
+            {/* Prerequisite 1 of 2: a non-blank reason is required before the server accepts the
+                DELETE; this label makes that expectation visible without a separate caption. */}
+            دلیل خروج (الزامی)
+            <textarea
+              className="cp-textarea"
+              id="cp-remove-reason"
+              value={removeReason}
+              onChange={(event) => setRemoveReason(event.target.value)}
+            />
+          </label>
+          <label>
+            <input
+              id="cp-remove-confirm-checkbox"
+              type="checkbox"
+              checked={removeConfirmed}
+              onChange={(event) => setRemoveConfirmed(event.target.checked)}
+            />{' '}
+            {/* Prerequisite 2 of 2: operator must explicitly acknowledge the side-effects. */}
+            اثر شمارش و حفظ سابقهٔ رسانه را بررسی کردم و خروج این کارت از همین بسته را تأیید می‌کنم.
+          </label>
+          {/* Accessible hint wired to the confirm button via aria-describedby so screen readers
+              announce exactly what is still missing when the button is focused while disabled. */}
+          <p aria-live="polite" className="muted-note" id="cp-remove-prereq-hint" role="status">
+            {!removeReason.trim() && !removeConfirmed
+              ? 'برای فعال‌شدن دکمهٔ تأیید، دلیل خروج را وارد کنید و تأییدیه را علامت بزنید.'
+              : !removeReason.trim()
+                ? 'برای فعال‌شدن دکمهٔ تأیید، دلیل خروج را وارد کنید.'
+                : !removeConfirmed
+                  ? 'برای فعال‌شدن دکمهٔ تأیید، تأییدیه را علامت بزنید.'
+                  : null}
+          </p>
+        </CpModal>
+      ) : null}
+
       {mediaCard ? (
         <CardMediaPanel
           cardId={mediaCard.cardId}
@@ -1207,6 +1398,15 @@ export function ContentPacksWorkspace() {
               cardId: mediaCard.cardId,
               kind,
               candidateId,
+            });
+            return result.ok
+              ? { ok: true as const }
+              : { ok: false as const, message: result.message };
+          }}
+          onImport={async (file) => {
+            const result = await sendImport('/api/content/media/import', file, mediaCard.cardId, {
+              cardId: mediaCard.cardId,
+              kind: 'word_audio',
             });
             return result.ok
               ? { ok: true as const }

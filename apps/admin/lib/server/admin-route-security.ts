@@ -50,6 +50,7 @@ export async function loadAdminSession(
     tokenHash,
     userId: session.userId,
     csrfHash: session.csrfHash,
+    operational: evaluation.operational,
     recent: evaluation.recent,
   };
 }

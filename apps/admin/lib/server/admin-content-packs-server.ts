@@ -12,6 +12,7 @@ import {
 import {
   createContentCardCreateRoute,
   createContentCardEditRoute,
+  createContentCardRemoveFromPackRoute,
   createContentPackCreateRoute,
   createContentPackEditRoute,
 } from './admin-content-packs-write-routes';
@@ -34,13 +35,22 @@ import {
   createMediaAcceptRoute,
   createMediaAssetRoute,
   createMediaGenerateRoute,
+  createMediaImportRoute,
   createMediaModelsRoute,
   createMediaStateRoute,
   createVoicePreviewRoute,
 } from './admin-card-media-routes';
+import {
+  createPackMediaJobStopRoute,
+  createPackMediaJobResolveRoute,
+  createPackMediaJobReconcileRoute,
+  createPackMediaJobsRoute,
+  createPackMediaRunnerRoute,
+} from './admin-pack-media-job-routes';
 import { readAiGenerationConfig } from './ai-generation-provider';
 import { readAiMediaConfig } from './ai-media-config';
 import { CardMediaGenerationService } from './card-media-generation-service';
+import { PackMediaJobService } from './pack-media-job-service';
 import { createDatabaseCardMediaStorage } from './card-media-storage';
 import { readCanonicalImageStandard } from './canonical-image-standard';
 import { AiPackGenerationService } from './ai-pack-generation-service';
@@ -58,6 +68,7 @@ import { PostgresAdminPaymentsStore } from './postgres-admin-payments-store';
 import {
   createAdminPaymentConfigRoute,
   createAdminRecheckRoute,
+  createAdminSalesReportRoute,
   createAdminTransactionTimelineRoute,
   createAdminTransactionsRoute,
 } from './admin-payments-routes';
@@ -171,6 +182,17 @@ export function createAdminContentPacksServer(dependencies: {
       audioTimeoutMs: 'limits' in mediaConfig ? mediaConfig.limits.audioTimeoutMs : undefined,
       now: dependencies.now,
     };
+    const packMediaShared = {
+      enabled: mediaShared.enabled && mediaShared.service !== undefined,
+      config: manageConfig,
+      sessionStore,
+      service:
+        mediaShared.service && 'limits' in mediaConfig
+          ? new PackMediaJobService(pool, mediaShared.service, mediaConfig.limits)
+          : undefined,
+      environment: dependencies.environment,
+      now: dependencies.now,
+    };
     // Lifecycle (M1.6) rides the same manage gate and writes only canonical `packs` /
     // `card_versions` rows, so Admin publish and learner visibility cannot diverge.
     const lifecycleStore = new PostgresContentLifecycleStore(pool);
@@ -224,6 +246,7 @@ export function createAdminContentPacksServer(dependencies: {
       setPackPrice: createPackPriceRoute({ ...writeShared, store: priceStore }),
       createCard: createContentCardCreateRoute(writeShared),
       editCard: createContentCardEditRoute(writeShared),
+      removeCardFromPack: createContentCardRemoveFromPackRoute(writeShared),
       importPreview: createContentImportPreviewRoute(importShared),
       importConfirm: createContentImportConfirmRoute(importShared),
       importTemplate: createContentImportTemplateRoute(importShared),
@@ -240,9 +263,15 @@ export function createAdminContentPacksServer(dependencies: {
       mediaModels: createMediaModelsRoute(mediaShared),
       mediaState: createMediaStateRoute(mediaShared),
       mediaGenerate: createMediaGenerateRoute(mediaShared),
+      mediaImport: createMediaImportRoute(mediaShared),
       mediaAccept: createMediaAcceptRoute(mediaShared),
       mediaAsset: createMediaAssetRoute(mediaShared),
       mediaVoicePreview: createVoicePreviewRoute(mediaShared),
+      packMediaJobs: createPackMediaJobsRoute(packMediaShared),
+      packMediaJobStop: createPackMediaJobStopRoute(packMediaShared),
+      packMediaJobResolve: createPackMediaJobResolveRoute(packMediaShared),
+      packMediaJobReconcile: createPackMediaJobReconcileRoute(packMediaShared),
+      packMediaRunner: createPackMediaRunnerRoute(packMediaShared),
       lifecycleEnabled: manageConfig.enabled,
       packLifecycle: createPackLifecycleRoute(lifecycleShared),
       submitPackForReview: createPackSubmitForReviewRoute(lifecycleShared),
@@ -255,6 +284,7 @@ export function createAdminContentPacksServer(dependencies: {
       transactionTimeline: createAdminTransactionTimelineRoute(paymentsShared),
       transactionRecheck: createAdminRecheckRoute(paymentsShared),
       paymentConfiguration: createAdminPaymentConfigRoute(paymentsShared),
+      salesReport: createAdminSalesReportRoute(paymentsShared),
     };
   } catch {
     return { enabled: false as const };

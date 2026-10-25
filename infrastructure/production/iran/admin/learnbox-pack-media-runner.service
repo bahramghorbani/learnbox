@@ -1,0 +1,10 @@
+[Unit]
+Description=LearnBox durable pack-media runner (one item through the authenticated Admin endpoint)
+After=docker.service network-online.target
+
+[Service]
+Type=oneshot
+User=ubuntu
+ExecStart=/home/ubuntu/learnbox/ops/learnbox-pack-media-runner.sh
+TimeoutStartSec=6min
+NoNewPrivileges=true

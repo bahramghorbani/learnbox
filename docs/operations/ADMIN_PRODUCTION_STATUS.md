@@ -1,14 +1,64 @@
 # Admin Production status
 
-**Current section reviewed 2026-10-16** against the Iran Production host, the release evidence of
-the 2026-10-16 release and the deployed product source `15e6783`. It is the canonical operational
-truth for the Production Admin panel at `https://admin.learnboxapp.com`. Host operations are in
-[`IRAN_PRODUCTION_RUNBOOK.md`](./IRAN_PRODUCTION_RUNBOOK.md). Release identity also
-appears in [`PROJECT_STATE.md`](../../PROJECT_STATE.md); product decisions live in
-[`PDR-010`](../product-decisions/PDR-010-ARTICLE-AWARE-AUDIO-AND-MEDIA-STANDARDS.md). The numbered
-sections after "Historical record" describe the 2026-10-09 state and are kept as history only.
+**Current section reviewed 2026-10-21** against the Iran Production host. It is the canonical
+operational truth for the Production Admin panel at `https://admin.learnboxapp.com`. Host operations
+are in [`IRAN_PRODUCTION_RUNBOOK.md`](./IRAN_PRODUCTION_RUNBOOK.md). Release identity also appears in
+[`PROJECT_STATE.md`](../../PROJECT_STATE.md); product decisions live in
+[`PDR-010`](../product-decisions/PDR-010-ARTICLE-AWARE-AUDIO-AND-MEDIA-STANDARDS.md).
 
-## Current state (2026-10-16)
+## Current state (2026-10-21)
+
+| Item                   | Value                                                                                                                           |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Admin image            | `sha256:3a2b0dcb0229fe1bb35bf80cb2b29f6c1053f4087ee5e582151c83787157df42`, healthy, restarts `0`                                |
+| Admin product source   | `008499cbe5077c96c04c0b34e78dad9726af345a`                                                                                      |
+| Release-control source | `2fd3cf14d2ac0527bf2dbb933b691064d4f2c4a2`                                                                                      |
+| App image              | `sha256:d327590ca12e919dfff5f2d45394cb909b890a51422092c222ed569900517971`, healthy, restarts `0`                                |
+| Schema                 | `0041_pack_media_attention_resolution`, checksum `6deb9c7c59d37fa5ccfff759bbb76f21c1a1800e2e7dae295b85d704441a9491`             |
+| Pack-media runner      | enabled and idle; it must not be used to resume paid work without an explicit owner panel action                                |
+| Audio timeout          | `LEARNBOX_AI_AUDIO_TIMEOUT_MS=120000`; image timeout remains its default `180000` ms                                            |
+| Rollback Admin         | retained `learnbox-admin:rollback-39ea40b-18fd7872` → `sha256:18fd7872e54e911c69b98f62d00675c4f3718f254c0c40ab3884c6416894721f` |
+
+The only current job is `b0817b7a-fd59-4ce0-950b-bb348b6d94c3`: `196` generated, `159` pending,
+`1` needs attention and `2` deferred, with no active lease, dispatch or generation. Its continuation
+remains an owner panel decision. The configuration bundle was refreshed after the timeout change;
+its ciphertext stays only in the owner recovery locations described by the Iran runbook.
+
+No migration, App, payment, provider, candidate, acceptance or publication action was performed in
+the 2026-10-21 Admin configuration window.
+
+## Historical snapshot (2026-10-20; superseded by the state above)
+
+Reviewed 2026-10-20 against the Iran Production host and the release evidence.
+
+### Running release
+
+| Item                   | Value                                                                                                                                                                                |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Host                   | Iran Production behind ArvanCloud CDN, `linux/amd64`                                                                                                                                 |
+| Admin                  | `sha256:a43d23d59a560075406102932899224f142de66acb8c0a499357aa2d4dd39547`, healthy; product source `35cae1ea69888ec2b5d14efcd9cbae8cf435b744`                                        |
+| Learner App            | `sha256:d327590ca12e919dfff5f2d45394cb909b890a51422092c222ed569900517971`, healthy; product source `a7f582647e0297c04dcf2e967989e39ffd38df9c`                                        |
+| Release-control source | `f16b24230dbe2cb81d974a615a8aaebfbd4d1a26`; it is intentionally recorded separately from each product artifact                                                                       |
+| Schema head            | `0040_pack_media_jobs`, checksum `f85d70f261d4c2d30850d17fa1486083bb4e230c42e62c284304629f83f12897`                                                                                  |
+| Recovery proof         | Fresh backup `learnbox-20261020T095005Z.sql.gz`, checksum `0a9f7c8ccf470b6cca47051f483850f74b0b25175c9eec5bb09ca4cbec02996f`, fresh offsite copy and disposable restore drill passed |
+| Durable media runner   | Timer enabled and active; authenticated idle tick returned `http=200 status=idle`; no job, pending item or dispatching item existed at activation                                    |
+
+Payment and reconciliation remain disabled; the reconciliation timer is not enabled. The private
+Starter-media attachment remains off. Text AI, Media AI, voice selection and all existing Admin
+content controls remain as configured. The runner has no authority to accept, publish, regenerate or
+create a job. A job snapshot is created only by an authenticated Admin action; each timer invocation
+claims at most one item. A provider outcome that becomes unknown stays `needs_attention` and is not
+retried automatically.
+
+Normal Admin sessions have a 60-minute idle/operational lifetime. Sensitive operations retain the
+five-minute recent-authentication requirement. Manual logout and security revocation still end a
+session.
+
+Older tabs must reload after this release before further Admin work. Start a paid media run only by
+explicitly confirming the exact pack in the Admin panel; candidates remain private until manually
+accepted, and publication remains a separate human action.
+
+## Historical snapshot (2026-10-16; superseded by the state above)
 
 ### Running release
 

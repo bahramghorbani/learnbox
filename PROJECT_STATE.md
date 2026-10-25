@@ -99,11 +99,11 @@ Future work begins at v1.1; the normalized backlog lives in `BACKLOG.md`.
 
 Products version independently; `docs/release/VERSIONING.md` is the authoritative rule.
 
-| Product     | Version on `main`                      | Tag namespace    | Published releases                                                                 |
-| ----------- | -------------------------------------- | ---------------- | ---------------------------------------------------------------------------------- |
-| Learner PWA | `1.2.1` (`apps/website/package.json`)  | `learner/vX.Y.Z` | `v1.0.0`, `v1.2.0`, `v1.2.1` (legacy repository-wide tags, preserved)              |
-| Admin Web   | `0.1.0` (`apps/admin/package.json`)    | `admin/vX.Y.Z`   | **none** — deployed is not released; the first `admin/v1.0.0` is an owner decision |
-| Android     | `0.1.0+1` (`apps/mobile/pubspec.yaml`) | `android/vX.Y.Z` | **none** — development has not started                                             |
+| Product     | Version on `main`                                                                                   | Tag namespace    | Published releases                                                                 |
+| ----------- | --------------------------------------------------------------------------------------------------- | ---------------- | ---------------------------------------------------------------------------------- |
+| Learner PWA | `1.2.1` (`apps/website/package.json`)                                                               | `learner/vX.Y.Z` | `v1.0.0`, `v1.2.0`, `v1.2.1` (legacy repository-wide tags, preserved)              |
+| Admin Web   | `0.1.0` (`apps/admin/package.json`)                                                                 | `admin/vX.Y.Z`   | **none** — deployed is not released; the first `admin/v1.0.0` is an owner decision |
+| Android     | not declared — Flutter prototype removed 2026-10-24; new source declared when implementation begins | `android/vX.Y.Z` | **none** — development has not started                                             |
 
 Merging a PR, creating a tag, publishing a GitHub Release and deploying to Production are four
 distinct actions. The last three each require separate owner authorization.
