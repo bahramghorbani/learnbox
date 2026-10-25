@@ -1,4 +1,5 @@
 import { normalizeIntegerInput } from '../digits';
+import { PACK_ID_PATTERN } from '@learnbox/content-models';
 
 type QueryResult = { rows: Record<string, unknown>[] };
 type Queryable = {
@@ -8,7 +9,7 @@ type DatabasePool = {
   connect(): Promise<Queryable & { release(): void }>;
 };
 
-const packIdPattern = /^[a-z0-9][a-z0-9-]{0,63}$/;
+const packIdPattern = PACK_ID_PATTERN;
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 const MAX_PRICE_TOMANS = 100_000_000;
 

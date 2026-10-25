@@ -7,9 +7,10 @@ import {
 } from './admin-auth-policy';
 import { loadAdminSession, verifyAdminCsrf } from './admin-route-security';
 import type { PackMediaJobService } from './pack-media-job-service';
+import { PACK_ID_PATTERN } from '@learnbox/content-models';
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
-const packIdPattern = /^[a-z0-9][a-z0-9-]{1,119}$/;
+const packIdPattern = PACK_ID_PATTERN;
 const headers = { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' };
 
 type RouteDependencies = {

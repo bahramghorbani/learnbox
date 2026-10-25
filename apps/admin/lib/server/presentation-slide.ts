@@ -1,4 +1,5 @@
 import { normalizeImage, type ImageNormalization } from './image-normalization';
+import { PACK_ID_PATTERN } from '@learnbox/content-models';
 
 /**
  * Canonical slide rules, shared by the routes, the store and the tests.
@@ -34,7 +35,7 @@ export type SlideDestination =
   | { kind: 'url'; url: string };
 
 /** `packs.id` is a canonical text slug, not a uuid. Mirrors the Store and content-packs routes. */
-const packIdPattern = /^[a-z0-9][a-z0-9-]{1,119}$/;
+const packIdPattern = PACK_ID_PATTERN;
 
 const blockedHostSuffixes = ['.local', '.internal', '.localhost', '.home', '.lan'];
 const ipv4Pattern = /^\d{1,3}(\.\d{1,3}){3}$/;

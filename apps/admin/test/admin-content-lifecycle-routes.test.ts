@@ -340,4 +340,17 @@ describe('lifecycle read route', () => {
     expect(response.status).toBe(400);
     expect(deps.store.getPackLifecycle).not.toHaveBeenCalled();
   });
+
+  it('accepts the canonical Starter pack id, which contains underscores (#428)', async () => {
+    const deps = dependencies();
+    const response = await createPackLifecycleRoute(deps as never)(
+      get(
+        'https://admin.learnbox.app/api/content/lifecycle?packId=learnbox_start_a1_essentials',
+      ),
+    );
+    expect(response.status).toBe(200);
+    expect(deps.store.getPackLifecycle).toHaveBeenCalledWith(
+      expect.objectContaining({ packId: 'learnbox_start_a1_essentials' }),
+    );
+  });
 });
