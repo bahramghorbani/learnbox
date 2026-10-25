@@ -1374,49 +1374,79 @@ export function ContentPacksWorkspace() {
         </CpModal>
       ) : null}
 
-      {mediaCard ? (
-        <CardMediaPanel
-          cardId={mediaCard.cardId}
-          cardLabel={mediaCard.label}
-          onClose={() => {
-            setMediaCard(undefined);
-            // Accepted media changes the canonical read model, so refresh the card table.
-            void loadPacks();
-          }}
-          onLoadState={() => loadMediaState(mediaCard.cardId)}
-          onGenerate={async (kind: CardMediaKind, regenerate: boolean) => {
-            const result = await postAiJson<{ candidate: MediaCandidateView }>(
-              '/api/content/media/generate',
-              { cardId: mediaCard.cardId, kind, regenerate },
+      {mediaCard
+        ? (() => {
+            const mediaCardIndex = cards.findIndex((card) => card.cardId === mediaCard.cardId);
+            return (
+              <CardMediaPanel
+                // Remounts the panel on every card switch so its internal state (candidate list,
+                // error, polling) never leaks from the previous card into the next one.
+                key={mediaCard.cardId}
+                cardId={mediaCard.cardId}
+                cardLabel={mediaCard.label}
+                onClose={() => {
+                  setMediaCard(undefined);
+                  // Accepted media changes the canonical read model, so refresh the card table.
+                  void loadPacks();
+                }}
+                onNavigate={(direction) => {
+                  if (mediaCardIndex === -1) return;
+                  const nextCard =
+                    cards[direction === 'prev' ? mediaCardIndex - 1 : mediaCardIndex + 1];
+                  if (!nextCard) return;
+                  setMediaCard({
+                    cardId: nextCard.cardId,
+                    label: `${nextCard.article ? `${nextCard.article} ` : ''}${nextCard.lemma}`,
+                  });
+                }}
+                hasPrev={mediaCardIndex > 0}
+                hasNext={mediaCardIndex !== -1 && mediaCardIndex < cards.length - 1}
+                positionLabel={
+                  mediaCardIndex === -1
+                    ? undefined
+                    : `کارت ${mediaCardIndex + 1} از ${cards.length}`
+                }
+                onLoadState={() => loadMediaState(mediaCard.cardId)}
+                onGenerate={async (kind: CardMediaKind, regenerate: boolean) => {
+                  const result = await postAiJson<{ candidate: MediaCandidateView }>(
+                    '/api/content/media/generate',
+                    { cardId: mediaCard.cardId, kind, regenerate },
+                  );
+                  return result.ok
+                    ? { ok: true as const, candidate: result.payload.candidate }
+                    : { ok: false as const, message: result.message };
+                }}
+                onAccept={async (kind: CardMediaKind, candidateId: string) => {
+                  const result = await postAiJson<unknown>('/api/content/media/accept', {
+                    cardId: mediaCard.cardId,
+                    kind,
+                    candidateId,
+                  });
+                  return result.ok
+                    ? { ok: true as const }
+                    : { ok: false as const, message: result.message };
+                }}
+                onImport={async (file) => {
+                  const result = await sendImport(
+                    '/api/content/media/import',
+                    file,
+                    mediaCard.cardId,
+                    {
+                      cardId: mediaCard.cardId,
+                      kind: 'word_audio',
+                    },
+                  );
+                  return result.ok
+                    ? { ok: true as const }
+                    : { ok: false as const, message: result.message };
+                }}
+                assetUrl={(candidateId) =>
+                  `/api/content/media/asset?candidateId=${encodeURIComponent(candidateId)}`
+                }
+              />
             );
-            return result.ok
-              ? { ok: true as const, candidate: result.payload.candidate }
-              : { ok: false as const, message: result.message };
-          }}
-          onAccept={async (kind: CardMediaKind, candidateId: string) => {
-            const result = await postAiJson<unknown>('/api/content/media/accept', {
-              cardId: mediaCard.cardId,
-              kind,
-              candidateId,
-            });
-            return result.ok
-              ? { ok: true as const }
-              : { ok: false as const, message: result.message };
-          }}
-          onImport={async (file) => {
-            const result = await sendImport('/api/content/media/import', file, mediaCard.cardId, {
-              cardId: mediaCard.cardId,
-              kind: 'word_audio',
-            });
-            return result.ok
-              ? { ok: true as const }
-              : { ok: false as const, message: result.message };
-          }}
-          assetUrl={(candidateId) =>
-            `/api/content/media/asset?candidateId=${encodeURIComponent(candidateId)}`
-          }
-        />
-      ) : null}
+          })()
+        : null}
 
       {packForm ? (
         <PackFormModal
