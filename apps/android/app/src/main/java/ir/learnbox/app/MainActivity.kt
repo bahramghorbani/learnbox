@@ -2,6 +2,7 @@ package ir.learnbox.app
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -27,6 +28,7 @@ class MainActivity : Activity() {
     private val productionUrl = "https://app.learnboxapp.com"
 
     private lateinit var webView: WebView
+    private lateinit var nativeBridge: LearnBoxNativeBridge
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -52,7 +54,8 @@ class MainActivity : Activity() {
 
         // M1: expose window.LearnBoxNative to the page. See NativeBridge.kt for why every
         // purchase request currently answers "unavailable" instead of faking a result.
-        webView.addJavascriptInterface(LearnBoxNativeBridge(), "LearnBoxNative")
+        nativeBridge = LearnBoxNativeBridge(this)
+        webView.addJavascriptInterface(nativeBridge, "LearnBoxNative")
 
         val settings = webView.settings
         settings.javaScriptEnabled = true
@@ -100,7 +103,27 @@ class MainActivity : Activity() {
         }
     }
 
+    /** Store purchase flows (Myket) return here, not as a direct method result — see
+     * NativeBridge.kt's requestPurchase doc. */
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        nativeBridge.onActivityResult(requestCode, resultCode, data)
+    }
+
+    /** Posts a purchase's final outcome to the page. Must run on the UI thread (WebView
+     * requirement); callers may be on any thread. */
+    fun deliverPurchaseResult(resultJson: String) {
+        runOnUiThread {
+            val escaped = resultJson.replace("\\", "\\\\").replace("'", "\\'")
+            webView.evaluateJavascript(
+                "window.LearnBoxNativeCallbacks && window.LearnBoxNativeCallbacks.onPurchaseResult('$escaped')",
+                null,
+            )
+        }
+    }
+
     override fun onDestroy() {
+        nativeBridge.dispose()
         (webView.parent as? ViewGroup)?.removeView(webView)
         webView.destroy()
         super.onDestroy()
