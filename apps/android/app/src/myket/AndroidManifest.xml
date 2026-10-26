@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- M2-Myket: merged into src/main/AndroidManifest.xml only for the "myket" flavor build.
+     Required by Myket's in-app billing docs (myket.ir/kb/pages/myket-iab-intro/) so this build
+     can bind IInAppBillingService from the Myket app. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="ir.mservices.market.BILLING" />
+
+    <queries>
+        <package android:name="ir.mservices.market" />
+    </queries>
+</manifest>
