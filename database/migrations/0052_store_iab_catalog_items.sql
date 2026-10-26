@@ -4,7 +4,7 @@
 -- price; it records only the provider-owned SKU that represents a canonical pack and the last
 -- canonical price successfully sent to that provider. A provider SKU must never be inferred from
 -- client input during receipt verification.
-CREATE TABLE store_iab_catalog_items (
+CREATE TABLE IF NOT EXISTS store_iab_catalog_items (
   provider billing_provider NOT NULL CHECK (provider IN ('myket', 'cafe_bazaar')),
   pack_id TEXT NOT NULL REFERENCES packs(id) ON DELETE RESTRICT,
   sku_id TEXT NOT NULL CHECK (sku_id ~ '^[A-Z0-9_]{3,100}$'),
@@ -15,5 +15,5 @@ CREATE TABLE store_iab_catalog_items (
   UNIQUE (provider, sku_id)
 );
 
-CREATE INDEX store_iab_catalog_items_provider_sku_idx
+CREATE INDEX IF NOT EXISTS store_iab_catalog_items_provider_sku_idx
   ON store_iab_catalog_items (provider, sku_id);
