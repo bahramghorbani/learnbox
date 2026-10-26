@@ -17,12 +17,30 @@ android {
         versionName = "0.1.0"
     }
 
+    // M2: release signing reads from env vars, never committed. The keystore itself lives
+    // outside the repo (/Volumes/LearnBox-Dev/secrets/learnbox-android-release/) — this file is
+    // permanent app identity for whichever store it's uploaded to, so it's generated once and
+    // backed up, not regenerated per build. A dev without the env vars simply can't build
+    // release — same pattern as every other secret in this project.
+    signingConfigs {
+        create("release") {
+            val keystorePath = System.getenv("LEARNBOX_RELEASE_KEYSTORE")
+            if (keystorePath != null) {
+                storeFile = file(keystorePath)
+                storePassword = System.getenv("LEARNBOX_RELEASE_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("LEARNBOX_RELEASE_KEY_ALIAS")
+                keyPassword = System.getenv("LEARNBOX_RELEASE_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         debug {
             isDebuggable = true
         }
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 
