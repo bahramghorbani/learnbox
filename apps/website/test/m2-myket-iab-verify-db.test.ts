@@ -34,8 +34,6 @@ const packId = 'myket-test-pack';
 const sku = 'TEST_SKU_1';
 const packPrice = 25000;
 
-const fixtureMap = { myket: { [sku]: packId } };
-
 function fixtureVerifier(outcome: Awaited<ReturnType<StoreIabVerifier>> = { status: 'paid' }): {
   verify: StoreIabVerifier;
   calls: Array<{ sku: string; purchaseToken: string }>;
@@ -77,6 +75,11 @@ suite('Myket IAB purchase verify-and-grant (real Postgres)', () => {
       `INSERT INTO store_listings (pack_id, store_status, listed_at) VALUES ($1, 'listed', now())`,
       [packId],
     );
+    await pool.query(
+      `INSERT INTO store_iab_catalog_items (provider, pack_id, sku_id, synced_price_tomans)
+       VALUES ('myket', $1, $2, $3)`,
+      [packId, sku, packPrice],
+    );
   });
 
   afterAll(async () => {
@@ -88,7 +91,7 @@ suite('Myket IAB purchase verify-and-grant (real Postgres)', () => {
   it('verifies a paid receipt once and grants the entitlement', async () => {
     const { verify, calls } = fixtureVerifier({ status: 'paid' });
     const outcome = await verifyStoreIabPurchase(
-      { pool, verifier: verify, skuToPackId: fixtureMap },
+      { pool, verifier: verify },
       { userId: alice, provider: 'myket', sku, purchaseToken: 'token-abc-1' },
     );
     expect(outcome).toEqual({ status: 'verified', purchaseId: expect.any(String), packId, alreadyEntitled: false });
@@ -110,7 +113,7 @@ suite('Myket IAB purchase verify-and-grant (real Postgres)', () => {
   it('replaying the same purchaseToken does not grant twice', async () => {
     const { verify } = fixtureVerifier({ status: 'paid' });
     const outcome = await verifyStoreIabPurchase(
-      { pool, verifier: verify, skuToPackId: fixtureMap },
+      { pool, verifier: verify },
       { userId: alice, provider: 'myket', sku, purchaseToken: 'token-abc-1' },
     );
     expect(outcome.status).toBe('already_processed');
@@ -125,7 +128,7 @@ suite('Myket IAB purchase verify-and-grant (real Postgres)', () => {
   it('rejects a receipt the store says is not paid, grants nothing', async () => {
     const { verify } = fixtureVerifier({ status: 'not_paid' });
     const outcome = await verifyStoreIabPurchase(
-      { pool, verifier: verify, skuToPackId: fixtureMap },
+      { pool, verifier: verify },
       { userId: bob, provider: 'myket', sku, purchaseToken: 'token-unpaid' },
     );
     expect(outcome.status).toBe('not_paid');
@@ -139,7 +142,7 @@ suite('Myket IAB purchase verify-and-grant (real Postgres)', () => {
   it('an unmapped sku is denied without calling the store', async () => {
     const { verify, calls } = fixtureVerifier({ status: 'paid' });
     const outcome = await verifyStoreIabPurchase(
-      { pool, verifier: verify, skuToPackId: fixtureMap },
+      { pool, verifier: verify },
       { userId: alice, provider: 'myket', sku: 'UNMAPPED_SKU', purchaseToken: 'token-x' },
     );
     expect(outcome.status).toBe('unknown_sku');

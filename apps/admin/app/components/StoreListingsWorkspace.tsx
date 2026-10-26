@@ -170,12 +170,42 @@ async function saveListing(
   }
 }
 
+async function syncMyket(row: ServerListing): Promise<{ ok: true; skuId: string; created: boolean } | { ok: false; message: string }> {
+  const csrfToken = readCsrfToken();
+  if (!csrfToken) return { ok: false, message: 'نشان امنیتی CSRF در دسترس نیست؛ صفحه را تازه کنید.' };
+  const init: RequestInit = {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'content-type': 'application/json',
+      'x-learnbox-csrf-token': csrfToken,
+      'idempotency-key': createIdempotencyKey(),
+    },
+    body: JSON.stringify({ packId: row.packId }),
+  };
+  try {
+    const { response, stepUp } = await fetchWithStepUp('/api/store/myket/sync', init);
+    if (response.ok) {
+      const body = (await response.json()) as { status: 'created' | 'updated'; skuId: string };
+      return { ok: true, skuId: body.skuId, created: body.status === 'created' };
+    }
+    const refused = stepUpRefusal(stepUp, response.status);
+    if (refused) return { ok: false, message: refused };
+    if (response.status === 404) return { ok: false, message: 'همگام‌سازی مایکت در این محیط فعال یا مجاز نیست.' };
+    if (response.status === 409) return { ok: false, message: 'فقط بستهٔ پولی، منتشرشده و فهرست‌شده قابل همگام‌سازی است.' };
+    return { ok: false, message: 'همگام‌سازی مایکت انجام نشد؛ بدون تغییر در وضعیت فروشگاه دوباره تلاش کنید.' };
+  } catch {
+    return { ok: false, message: 'ارتباط با سرور برقرار نشد.' };
+  }
+}
+
 export function StoreListingsWorkspace() {
   const [phase, setPhase] = useState<Phase>('loading');
   const [rows, setRows] = useState<ServerListing[]>([]);
   const [editing, setEditing] = useState<ServerListing | undefined>(undefined);
   const [draft, setDraft] = useState<Draft | undefined>(undefined);
   const [saving, setSaving] = useState(false);
+  const [syncingPackId, setSyncingPackId] = useState<string | undefined>(undefined);
   const [formError, setFormError] = useState<string | undefined>(undefined);
   const [notice, setNotice] = useState<string | undefined>(undefined);
   const [reportOpen, setReportOpen] = useState(false);
@@ -280,6 +310,17 @@ export function StoreListingsWorkspace() {
         : `«${result.listing.packDisplayName}» از فروشگاه برداشته شد.`,
     );
     closeEditor();
+  }
+
+  async function syncRowToMyket(row: ServerListing) {
+    setSyncingPackId(row.packId);
+    const result = await syncMyket(row);
+    setSyncingPackId(undefined);
+    setNotice(
+      result.ok
+        ? `SKU مایکت برای «${row.packDisplayName}» ${result.created ? 'ساخته' : 'همگام'} شد (${result.skuId})؛ وضعیت فعال‌بودن خرید تغییر نکرد.`
+        : result.message,
+    );
   }
 
   const paidCount = rows.filter((row) => !row.isFree).length;
@@ -447,13 +488,27 @@ export function StoreListingsWorkspace() {
                               ) : null}
                             </td>
                             <td style={{ textAlign: 'left' }}>
-                              <button
-                                type="button"
-                                className="btn sm"
-                                onClick={() => openEditor(row)}
-                              >
-                                ویرایش تجاری
-                              </button>
+                              <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                                <button
+                                  type="button"
+                                  className="btn sm"
+                                  onClick={() => void syncRowToMyket(row)}
+                                  disabled={
+                                    syncingPackId === row.packId || row.isFree || row.priceTomans === null ||
+                                    row.packStatus !== 'published' || row.listing?.storeStatus !== 'listed'
+                                  }
+                                  title="SKU و قیمت این بسته را در مایکت ثبت یا به‌روزرسانی می‌کند؛ فعال‌سازی خرید انجام نمی‌دهد."
+                                >
+                                  {syncingPackId === row.packId ? 'در حال همگام‌سازی…' : 'همگام‌سازی مایکت'}
+                                </button>
+                                <button
+                                  type="button"
+                                  className="btn sm"
+                                  onClick={() => openEditor(row)}
+                                >
+                                  ویرایش تجاری
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         ))}

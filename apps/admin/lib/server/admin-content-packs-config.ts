@@ -44,6 +44,22 @@ export function readAdminStoreConfig(environment: Environment): AdminAuthConfig 
 }
 
 /**
+ * Myket catalogue synchronization is a separately gated, server-to-server Admin operation.
+ * It requires the Store surface but deliberately does NOT share the learner payment flag:
+ * synchronizing a SKU creates new Myket products inactive and preserves an existing product's
+ * activation state; it cannot make an activation decision or enable checkout.
+ */
+export function readAdminMyketCatalogConfig(environment: Environment):
+  | { enabled: true; accessToken: string; packageName: string }
+  | { enabled: false } {
+  if (environment.LEARNBOX_ADMIN_MYKET_CATALOG_ENABLED !== 'true') return { enabled: false };
+  if (!readAdminStoreConfig(environment).enabled) return { enabled: false };
+  const accessToken = environment.MYKET_ACCESS_TOKEN ?? '';
+  if (!accessToken) return { enabled: false };
+  return { enabled: true, accessToken, packageName: environment.MYKET_PACKAGE_NAME ?? 'ir.learnbox.app' };
+}
+
+/**
  * Separate default-off gate for the user support surface (Phase 3, Milestone 3.1).
  *
  * Unlike the Store gate this does NOT require the Content & Packs workspace: account support is

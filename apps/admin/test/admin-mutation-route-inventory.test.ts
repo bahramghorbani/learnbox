@@ -183,6 +183,12 @@ const INVENTORY: Record<string, Entry> = {
     category: 'delegated',
     guardIn: 'lib/server/admin-store-listing-routes.ts',
   },
+  // Myket catalogue sync is explicitly operator-triggered; the delegated route validates origin,
+  // session, CSRF, recent auth and idempotency, and the provider client always sends isActive=false.
+  'app/api/store/myket/sync/route.ts': {
+    category: 'delegated',
+    guardIn: 'lib/server/admin-myket-catalog-routes.ts',
+  },
   // Commerce core v1 — queue a provider re-check. Full guard chain (Origin, session, CSRF, recent
   // re-auth) in the shared module, behind the Store gate. Appends one event; never calls the
   // gateway, never edits a payment or entitlement.

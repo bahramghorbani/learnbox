@@ -75,6 +75,8 @@ export async function POST(request: Request): Promise<Response> {
           { error: outcome.reason },
           { status: outcome.reason === 'unavailable' ? 404 : 409, headers },
         );
+      case 'catalog_out_of_sync':
+        return Response.json({ error: 'catalogOutOfSync' }, { status: 409, headers });
       case 'not_paid':
         return Response.json({ error: 'notPaid' }, { status: 402, headers });
       case 'provider_error':
