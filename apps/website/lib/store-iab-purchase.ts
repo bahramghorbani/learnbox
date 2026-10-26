@@ -68,7 +68,9 @@ async function resolvePackMapping(
     [provider, sku],
   );
   const row = result.rows[0];
-  return row ? { packId: row.pack_id, syncedPriceTomans: Number(row.synced_price_tomans) } : undefined;
+  return row
+    ? { packId: row.pack_id, syncedPriceTomans: Number(row.synced_price_tomans) }
+    : undefined;
 }
 
 export async function verifyStoreIabPurchase(

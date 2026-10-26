@@ -94,7 +94,12 @@ suite('Myket IAB purchase verify-and-grant (real Postgres)', () => {
       { pool, verifier: verify },
       { userId: alice, provider: 'myket', sku, purchaseToken: 'token-abc-1' },
     );
-    expect(outcome).toEqual({ status: 'verified', purchaseId: expect.any(String), packId, alreadyEntitled: false });
+    expect(outcome).toEqual({
+      status: 'verified',
+      purchaseId: expect.any(String),
+      packId,
+      alreadyEntitled: false,
+    });
     expect(calls).toEqual([{ sku, purchaseToken: 'token-abc-1' }]);
 
     const entitlement = await pool.query(

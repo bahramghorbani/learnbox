@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { createMyketCatalogSyncRoute, myketSkuForPack } from '../lib/server/admin-myket-catalog-routes';
+import {
+  createMyketCatalogSyncRoute,
+  myketSkuForPack,
+} from '../lib/server/admin-myket-catalog-routes';
 import { hashAdminSecret } from '../lib/server/admin-session';
 
 const now = new Date('2026-10-26T00:00:00.000Z');
@@ -9,7 +12,12 @@ const csrfToken = 'c'.repeat(43);
 const actorUserId = '22222222-2222-4222-8222-222222222222';
 const packId = 'paid-pack-a';
 const idempotencyKey = '33333333-3333-4333-8333-333333333333';
-const config = { enabled: true as const, origin: 'https://admin.learnbox.app', rpId: 'admin.learnbox.app', tokenHashKey: 'k'.repeat(32) };
+const config = {
+  enabled: true as const,
+  origin: 'https://admin.learnbox.app',
+  rpId: 'admin.learnbox.app',
+  tokenHashKey: 'k'.repeat(32),
+};
 
 function dependencies(enabled = true) {
   return {
@@ -27,7 +35,13 @@ function dependencies(enabled = true) {
       }),
       touchSession: async () => true,
     },
-    store: { sync: async () => ({ status: 'created' as const, skuId: myketSkuForPack(packId), syncedPriceTomans: 25000 }) },
+    store: {
+      sync: async () => ({
+        status: 'created' as const,
+        skuId: myketSkuForPack(packId),
+        syncedPriceTomans: 25000,
+      }),
+    },
   };
 }
 
@@ -54,14 +68,19 @@ describe('Myket catalog sync Admin route', () => {
 
   it('requires CSRF before the catalog store is reached', async () => {
     const deps = dependencies();
-    const response = await createMyketCatalogSyncRoute(deps)(request({ 'x-learnbox-csrf-token': 'wrong' }));
+    const response = await createMyketCatalogSyncRoute(deps)(
+      request({ 'x-learnbox-csrf-token': 'wrong' }),
+    );
     expect(response.status).toBe(400);
   });
 
   it('syncs a pack only after the full Admin mutation gate', async () => {
     const response = await createMyketCatalogSyncRoute(dependencies())(request());
     expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toMatchObject({ status: 'created', skuId: myketSkuForPack(packId) });
+    await expect(response.json()).resolves.toMatchObject({
+      status: 'created',
+      skuId: myketSkuForPack(packId),
+    });
   });
 
   it('generates provider-safe stable SKU ids', () => {

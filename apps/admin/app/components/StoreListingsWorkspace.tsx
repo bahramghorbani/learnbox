@@ -170,9 +170,12 @@ async function saveListing(
   }
 }
 
-async function syncMyket(row: ServerListing): Promise<{ ok: true; skuId: string; created: boolean } | { ok: false; message: string }> {
+async function syncMyket(
+  row: ServerListing,
+): Promise<{ ok: true; skuId: string; created: boolean } | { ok: false; message: string }> {
   const csrfToken = readCsrfToken();
-  if (!csrfToken) return { ok: false, message: 'نشان امنیتی CSRF در دسترس نیست؛ صفحه را تازه کنید.' };
+  if (!csrfToken)
+    return { ok: false, message: 'نشان امنیتی CSRF در دسترس نیست؛ صفحه را تازه کنید.' };
   const init: RequestInit = {
     method: 'POST',
     credentials: 'same-origin',
@@ -191,9 +194,14 @@ async function syncMyket(row: ServerListing): Promise<{ ok: true; skuId: string;
     }
     const refused = stepUpRefusal(stepUp, response.status);
     if (refused) return { ok: false, message: refused };
-    if (response.status === 404) return { ok: false, message: 'همگام‌سازی مایکت در این محیط فعال یا مجاز نیست.' };
-    if (response.status === 409) return { ok: false, message: 'فقط بستهٔ پولی، منتشرشده و فهرست‌شده قابل همگام‌سازی است.' };
-    return { ok: false, message: 'همگام‌سازی مایکت انجام نشد؛ بدون تغییر در وضعیت فروشگاه دوباره تلاش کنید.' };
+    if (response.status === 404)
+      return { ok: false, message: 'همگام‌سازی مایکت در این محیط فعال یا مجاز نیست.' };
+    if (response.status === 409)
+      return { ok: false, message: 'فقط بستهٔ پولی، منتشرشده و فهرست‌شده قابل همگام‌سازی است.' };
+    return {
+      ok: false,
+      message: 'همگام‌سازی مایکت انجام نشد؛ بدون تغییر در وضعیت فروشگاه دوباره تلاش کنید.',
+    };
   } catch {
     return { ok: false, message: 'ارتباط با سرور برقرار نشد.' };
   }
@@ -488,18 +496,30 @@ export function StoreListingsWorkspace() {
                               ) : null}
                             </td>
                             <td style={{ textAlign: 'left' }}>
-                              <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  gap: 8,
+                                  justifyContent: 'flex-end',
+                                  flexWrap: 'wrap',
+                                }}
+                              >
                                 <button
                                   type="button"
                                   className="btn sm"
                                   onClick={() => void syncRowToMyket(row)}
                                   disabled={
-                                    syncingPackId === row.packId || row.isFree || row.priceTomans === null ||
-                                    row.packStatus !== 'published' || row.listing?.storeStatus !== 'listed'
+                                    syncingPackId === row.packId ||
+                                    row.isFree ||
+                                    row.priceTomans === null ||
+                                    row.packStatus !== 'published' ||
+                                    row.listing?.storeStatus !== 'listed'
                                   }
                                   title="SKU و قیمت این بسته را در مایکت ثبت یا به‌روزرسانی می‌کند؛ فعال‌سازی خرید انجام نمی‌دهد."
                                 >
-                                  {syncingPackId === row.packId ? 'در حال همگام‌سازی…' : 'همگام‌سازی مایکت'}
+                                  {syncingPackId === row.packId
+                                    ? 'در حال همگام‌سازی…'
+                                    : 'همگام‌سازی مایکت'}
                                 </button>
                                 <button
                                   type="button"

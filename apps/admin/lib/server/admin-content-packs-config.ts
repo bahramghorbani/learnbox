@@ -49,14 +49,18 @@ export function readAdminStoreConfig(environment: Environment): AdminAuthConfig 
  * synchronizing a SKU creates new Myket products inactive and preserves an existing product's
  * activation state; it cannot make an activation decision or enable checkout.
  */
-export function readAdminMyketCatalogConfig(environment: Environment):
-  | { enabled: true; accessToken: string; packageName: string }
-  | { enabled: false } {
+export function readAdminMyketCatalogConfig(
+  environment: Environment,
+): { enabled: true; accessToken: string; packageName: string } | { enabled: false } {
   if (environment.LEARNBOX_ADMIN_MYKET_CATALOG_ENABLED !== 'true') return { enabled: false };
   if (!readAdminStoreConfig(environment).enabled) return { enabled: false };
   const accessToken = environment.MYKET_ACCESS_TOKEN ?? '';
   if (!accessToken) return { enabled: false };
-  return { enabled: true, accessToken, packageName: environment.MYKET_PACKAGE_NAME ?? 'ir.learnbox.app' };
+  return {
+    enabled: true,
+    accessToken,
+    packageName: environment.MYKET_PACKAGE_NAME ?? 'ir.learnbox.app',
+  };
 }
 
 /**

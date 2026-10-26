@@ -45,7 +45,12 @@ export async function POST(request: Request): Promise<Response> {
   } catch {
     return Response.json({ error: 'invalidRequest' }, { status: 400, headers });
   }
-  if (typeof body.sku !== 'string' || !body.sku || typeof body.purchaseToken !== 'string' || !body.purchaseToken) {
+  if (
+    typeof body.sku !== 'string' ||
+    !body.sku ||
+    typeof body.purchaseToken !== 'string' ||
+    !body.purchaseToken
+  ) {
     return Response.json({ error: 'invalidRequest' }, { status: 400, headers });
   }
 
@@ -57,7 +62,12 @@ export async function POST(request: Request): Promise<Response> {
   try {
     const outcome = await verifyStoreIabPurchase(
       { pool, verifier: myket.verifier },
-      { userId: session.subject, provider: 'myket', sku: body.sku, purchaseToken: body.purchaseToken },
+      {
+        userId: session.subject,
+        provider: 'myket',
+        sku: body.sku,
+        purchaseToken: body.purchaseToken,
+      },
     );
 
     switch (outcome.status) {

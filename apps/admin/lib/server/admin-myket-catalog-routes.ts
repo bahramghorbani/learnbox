@@ -33,8 +33,11 @@ export function myketSkuForPack(packId: string): string {
 function surrogateUuid(value: string): string {
   const digest = createHash('sha256').update(`learnbox.pack:${value}`).digest('hex');
   return [
-    digest.slice(0, 8), digest.slice(8, 12), `5${digest.slice(13, 16)}`,
-    ((parseInt(digest.slice(16, 18), 16) & 0x3f) | 0x80).toString(16).padStart(2, '0') + digest.slice(18, 20),
+    digest.slice(0, 8),
+    digest.slice(8, 12),
+    `5${digest.slice(13, 16)}`,
+    ((parseInt(digest.slice(16, 18), 16) & 0x3f) | 0x80).toString(16).padStart(2, '0') +
+      digest.slice(18, 20),
     digest.slice(20, 32),
   ].join('-');
 }
@@ -56,10 +59,18 @@ async function hasPublisherRole(client: Queryable, actorUserId: string): Promise
  * preserved. Sync never makes an activation decision.
  */
 export class MyketCatalogSyncStore {
-  constructor(private readonly pool: DatabasePool, private readonly client: MyketCatalogClient) {}
+  constructor(
+    private readonly pool: DatabasePool,
+    private readonly client: MyketCatalogClient,
+  ) {}
 
-  async sync(input: { actorUserId: string; packId: string; idempotencyKey: string }): Promise<MyketCatalogSyncResult> {
-    if (!packIdPattern.test(input.packId) || !uuidPattern.test(input.idempotencyKey)) return { status: 'forbidden' };
+  async sync(input: {
+    actorUserId: string;
+    packId: string;
+    idempotencyKey: string;
+  }): Promise<MyketCatalogSyncResult> {
+    if (!packIdPattern.test(input.packId) || !uuidPattern.test(input.idempotencyKey))
+      return { status: 'forbidden' };
 
     const reader = await this.pool.connect();
     let pack: Record<string, unknown> | undefined;
@@ -77,7 +88,12 @@ export class MyketCatalogSyncStore {
           [input.packId],
         );
         const current = mapped.rows[0];
-        if (current) return { status: 'updated', skuId: String(current.sku_id), syncedPriceTomans: Number(current.synced_price_tomans) };
+        if (current)
+          return {
+            status: 'updated',
+            skuId: String(current.sku_id),
+            syncedPriceTomans: Number(current.synced_price_tomans),
+          };
       }
       const result = await reader.query(
         `SELECT p.id, p.display_name, p.price_tomans, p.is_free, p.status, s.store_status
@@ -88,9 +104,13 @@ export class MyketCatalogSyncStore {
       pack = result.rows[0];
       if (!pack) return { status: 'not_found' };
       if (
-        pack.is_free === true || pack.status !== 'published' || pack.store_status !== 'listed' ||
-        !Number.isSafeInteger(pack.price_tomans) || Number(pack.price_tomans) <= 0
-      ) return { status: 'not_eligible' };
+        pack.is_free === true ||
+        pack.status !== 'published' ||
+        pack.store_status !== 'listed' ||
+        !Number.isSafeInteger(pack.price_tomans) ||
+        Number(pack.price_tomans) <= 0
+      )
+        return { status: 'not_eligible' };
     } finally {
       reader.release();
     }
@@ -134,10 +154,17 @@ export class MyketCatalogSyncStore {
       await writer.query(
         `INSERT INTO audit_logs (actor_user_id, action, entity_type, entity_id, metadata)
          VALUES ($1, 'store_iab_catalog.myket_sync', 'store_iab_catalog_item', $2, $3)`,
-        [input.actorUserId, surrogateUuid(input.packId), {
-          pack_id: input.packId, sku_id: skuId, price_tomans: priceTomans,
-          idempotency_key: input.idempotencyKey, myket_product_active: false,
-        }],
+        [
+          input.actorUserId,
+          surrogateUuid(input.packId),
+          {
+            pack_id: input.packId,
+            sku_id: skuId,
+            price_tomans: priceTomans,
+            idempotency_key: input.idempotencyKey,
+            myket_product_active: false,
+          },
+        ],
       );
       await writer.query('COMMIT');
       return { status: remoteStatus, skuId, syncedPriceTomans: priceTomans };
@@ -165,28 +192,64 @@ function response(body: unknown, status = 200) {
 /** Full Admin mutation gate: trusted origin/type, passkey session, CSRF, fresh auth, idempotency. */
 export function createMyketCatalogSyncRoute(dependencies: Dependencies) {
   return async function POST(request: Request) {
-    if (!dependencies.enabled || !dependencies.config.enabled || !dependencies.sessionStore || !dependencies.store) {
+    if (
+      !dependencies.enabled ||
+      !dependencies.config.enabled ||
+      !dependencies.sessionStore ||
+      !dependencies.store
+    ) {
       return new Response('Not found', { status: 404, headers: { 'Cache-Control': 'no-store' } });
     }
     const config: EnabledAdminAuthConfig = dependencies.config;
-    try { assertTrustedAdminMutation(request, config, ['application/json']); } catch {
-      return new Response('Invalid request', { status: 400, headers: { 'Cache-Control': 'no-store' } });
+    try {
+      assertTrustedAdminMutation(request, config, ['application/json']);
+    } catch {
+      return new Response('Invalid request', {
+        status: 400,
+        headers: { 'Cache-Control': 'no-store' },
+      });
     }
-    const session = await loadAdminSession(request, config, dependencies.sessionStore, (dependencies.now ?? (() => new Date()))());
-    if (!session) return new Response('Unauthorized', { status: 401, headers: { 'Cache-Control': 'no-store' } });
-    try { verifyAdminCsrf(request, session.csrfHash, config); } catch {
-      return new Response('Invalid request', { status: 400, headers: { 'Cache-Control': 'no-store' } });
+    const session = await loadAdminSession(
+      request,
+      config,
+      dependencies.sessionStore,
+      (dependencies.now ?? (() => new Date()))(),
+    );
+    if (!session)
+      return new Response('Unauthorized', {
+        status: 401,
+        headers: { 'Cache-Control': 'no-store' },
+      });
+    try {
+      verifyAdminCsrf(request, session.csrfHash, config);
+    } catch {
+      return new Response('Invalid request', {
+        status: 400,
+        headers: { 'Cache-Control': 'no-store' },
+      });
     }
     if (!session.recent) return response({ code: 'reauthentication_required' }, 428);
     const key = request.headers.get('idempotency-key');
-    if (!key || !uuidPattern.test(key)) return new Response('Invalid request', { status: 400, headers: { 'Cache-Control': 'no-store' } });
-    const body = await request.json().catch(() => undefined) as { packId?: unknown } | undefined;
+    if (!key || !uuidPattern.test(key))
+      return new Response('Invalid request', {
+        status: 400,
+        headers: { 'Cache-Control': 'no-store' },
+      });
+    const body = (await request.json().catch(() => undefined)) as { packId?: unknown } | undefined;
     if (!body || typeof body.packId !== 'string' || !packIdPattern.test(body.packId)) {
-      return new Response('Invalid request', { status: 400, headers: { 'Cache-Control': 'no-store' } });
+      return new Response('Invalid request', {
+        status: 400,
+        headers: { 'Cache-Control': 'no-store' },
+      });
     }
     try {
-      const result = await dependencies.store.sync({ actorUserId: session.userId, packId: body.packId, idempotencyKey: key });
-      if (result.status === 'forbidden' || result.status === 'not_found') return new Response('Not found', { status: 404, headers: { 'Cache-Control': 'no-store' } });
+      const result = await dependencies.store.sync({
+        actorUserId: session.userId,
+        packId: body.packId,
+        idempotencyKey: key,
+      });
+      if (result.status === 'forbidden' || result.status === 'not_found')
+        return new Response('Not found', { status: 404, headers: { 'Cache-Control': 'no-store' } });
       if (result.status === 'not_eligible') return response({ code: 'pack_not_sellable' }, 409);
       return response(result);
     } catch {

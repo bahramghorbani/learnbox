@@ -29,8 +29,11 @@ type KnownSku = { isActive: boolean };
 
 function knownSku(value: unknown, skuId: string): KnownSku | undefined {
   if (!Array.isArray(value)) return undefined;
-  const item = value.find((candidate) =>
-    typeof candidate === 'object' && candidate !== null && (candidate as { skuId?: unknown }).skuId === skuId,
+  const item = value.find(
+    (candidate) =>
+      typeof candidate === 'object' &&
+      candidate !== null &&
+      (candidate as { skuId?: unknown }).skuId === skuId,
   ) as { isActive?: unknown } | undefined;
   return item ? { isActive: item.isActive === true } : undefined;
 }
@@ -63,7 +66,9 @@ export function createMyketCatalogClient(
         const list = (await listed.json()) as MyketProductList;
         const existing = knownSku(list.skus, product.skuId);
         const response = await fetchImpl(
-          existing ? `${baseUrl(config.packageName)}/${encodeURIComponent(product.skuId)}` : baseUrl(config.packageName),
+          existing
+            ? `${baseUrl(config.packageName)}/${encodeURIComponent(product.skuId)}`
+            : baseUrl(config.packageName),
           {
             method: existing ? 'PUT' : 'POST',
             headers,
