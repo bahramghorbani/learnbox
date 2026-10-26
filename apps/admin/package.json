@@ -5,7 +5,7 @@
   "scripts": {
     "build": "pnpm --filter @learnbox/content-models build && next build",
     "dev": "next dev --port 3310",
-    "test": "vitest run",
+    "test": "vitest run --maxWorkers 2 --hookTimeout 60000 --testTimeout 10000",
     "typecheck": "pnpm --filter @learnbox/content-models build && tsc --noEmit"
   },
   "dependencies": {

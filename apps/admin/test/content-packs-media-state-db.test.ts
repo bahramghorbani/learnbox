@@ -124,7 +124,7 @@ suite('content packs media state against real Postgres', () => {
     await pool?.end();
     await root?.query(`DROP DATABASE IF EXISTS ${database} WITH (FORCE)`);
     await root?.end();
-  });
+  }, 60_000);
 
   it('reports real accepted-asset counts, never «unrecorded», for both the media card and the bare one', async () => {
     const store = new PostgresContentPacksStore(pool);

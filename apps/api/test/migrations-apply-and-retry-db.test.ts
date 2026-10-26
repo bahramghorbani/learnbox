@@ -70,7 +70,7 @@ suite('migrations 0001-0044 in an isolated database', () => {
       await root?.query(`DROP DATABASE IF EXISTS ${name} WITH (FORCE)`).catch(() => undefined);
     }
     await root?.end();
-  });
+  }, 60_000);
 
   it('applies the complete set to an empty database and is idempotent on a second run', async () => {
     const { pool, client } = await freshDatabase();
@@ -82,7 +82,7 @@ suite('migrations 0001-0044 in an isolated database', () => {
         'SELECT version FROM schema_migrations ORDER BY version',
       );
       expect(ledger.rows).toHaveLength(allMigrations.length);
-      expect(ledger.rows.at(-1)?.version).toBe('0050_purchase_orders_myket_channel');
+      expect(ledger.rows.at(-1)?.version).toBe('0052_store_iab_catalog_items');
       expect(ledger.rows.map((r) => r.version)).toEqual(allMigrations.map((m) => m.version));
 
       const second = await runDatabaseMigrations(client, allMigrations);
@@ -144,7 +144,7 @@ suite('migrations 0001-0044 in an isolated database', () => {
       const ledger = await pool.query<{ version: string }>(
         'SELECT version FROM schema_migrations ORDER BY version',
       );
-      expect(ledger.rows.at(-1)?.version).toBe('0050_purchase_orders_myket_channel');
+      expect(ledger.rows.at(-1)?.version).toBe('0052_store_iab_catalog_items');
       const listings = await pool.query(
         `SELECT count(*)::int AS n FROM pg_class WHERE relname = 'store_listings'`,
       );
@@ -202,7 +202,7 @@ suite('migrations 0001-0044 in an isolated database', () => {
       const head = await pool.query<{ version: string }>(
         'SELECT version FROM schema_migrations ORDER BY version DESC LIMIT 1',
       );
-      expect(head.rows[0].version).toBe('0050_purchase_orders_myket_channel');
+      expect(head.rows[0].version).toBe('0052_store_iab_catalog_items');
     } finally {
       await pool.end();
     }
@@ -222,7 +222,7 @@ suite('migrations 0001-0044 in an isolated database', () => {
   });
 
   it('ends with the newest migration recorded as the head of the ledger', async () => {
-    expect(files.at(-1)).toBe('0050_purchase_orders_myket_channel.sql');
+    expect(files.at(-1)).toBe('0052_store_iab_catalog_items.sql');
     const numbers = files.map((f) => Number(f.slice(0, 4)));
     expect(numbers).toEqual(numbers.map((_, i) => i + 1));
     // The checksum the release will record, derived from the exact bytes on disk.

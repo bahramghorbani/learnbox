@@ -252,7 +252,9 @@ describe('StoreListingsWorkspace presentation', () => {
     );
 
     await act(async () => {
-      (row?.querySelector('button') as HTMLButtonElement).click();
+      [...(row?.querySelectorAll('button') ?? [])]
+        .find((button) => button.textContent === 'ویرایش تجاری')
+        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
     const dialog = query('.cp-modal');
     expect(dialog).not.toBeNull();

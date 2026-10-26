@@ -54,7 +54,7 @@ suite('content packs list excludes archived packs against real Postgres', () => 
     await pool?.end();
     await root?.query(`DROP DATABASE IF EXISTS ${database} WITH (FORCE)`);
     await root?.end();
-  });
+  }, 60_000);
 
   it('lists the live pack but not the archived one', async () => {
     const store = new PostgresContentPacksStore(pool);

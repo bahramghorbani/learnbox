@@ -279,8 +279,8 @@ suite('deployed application version against the expanded schema', () => {
     );
     // +4: 0039 adds purchase_orders and purchase_order_events; 0040 adds pack-media jobs/items;
     // 0045 adds splash_media_objects (database-backed splash storage, no Blob token needed);
-    // 0046 adds push_subscriptions (daily review-reminder push notification, LB-B19).
-    // All are additive, with nothing dropped.
-    expect(expandedTables.rows[0].n - deployedTables.rows[0].n).toBe(11);
+    // 0046 adds push_subscriptions (daily review-reminder push notification, LB-B19); and 0052
+    // adds store_iab_catalog_items for provider SKU mappings. All are additive, with nothing dropped.
+    expect(expandedTables.rows[0].n - deployedTables.rows[0].n).toBe(12);
   });
 });

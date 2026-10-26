@@ -108,7 +108,7 @@ type PurchaseDependencies = {
  * listing state and current ownership are all server-side facts — a client claiming a 1-toman
  * price, or claiming a draft pack is on sale, changes nothing here.
  */
-async function readPurchasablePack(
+export async function readPurchasablePack(
   pool: Pick<Pool, 'query'>,
   userId: string,
   packId: string,
