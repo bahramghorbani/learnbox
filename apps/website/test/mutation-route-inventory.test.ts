@@ -73,6 +73,12 @@ const INVENTORY: Record<string, Entry> = {
     // The call site, not the bare identifier: the import line would otherwise match first.
     authMarker: 'authenticateLearner(request)',
   },
+  // Native Myket receipts remain cookie-authenticated browser mutations and verify provider state
+  // server-side before any entitlement is granted.
+  'app/api/store/purchase/myket/verify/route.ts': {
+    category: 'guarded',
+    authMarker: 'authenticateLearner(request)',
+  },
 
   // M2.3 made free pack acquisition real; it is a cookie-authenticated guarded mutation.
   'app/api/store/activate/route.ts': {

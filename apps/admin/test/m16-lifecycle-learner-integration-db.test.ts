@@ -283,7 +283,7 @@ afterAll(async () => {
   await pool?.end();
   await admin?.query(`DROP DATABASE IF EXISTS ${dbName} WITH (FORCE)`);
   await admin?.end();
-});
+}, 60_000);
 
 suite('M1.6 — the learner contract this milestone must not break', () => {
   it('still requires BOTH a published pack and a published version in the learner read model', () => {

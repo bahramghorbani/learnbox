@@ -12,10 +12,20 @@ const describeOrSkip = databaseUrl ? describe : describe.skip;
 const migrationsDir = path.resolve(__dirname, '../../../database/migrations');
 
 describeOrSkip('splash promotion is actually visible to the learner-facing route', () => {
-  const pool = new Pool({ connectionString: databaseUrl });
-  afterAll(() => pool.end());
+  let admin: Pool | undefined;
+  let pool: Pool | undefined;
+  const dbName = `splash_proof_${randomUUID().replaceAll('-', '').slice(0, 12)}`;
 
   beforeAll(async () => {
+    if (!databaseUrl) throw new Error('TEST_DATABASE_URL is required for this suite');
+    // Use an isolated database: this suite applies the full schema and must not race other
+    // TEST_DATABASE_URL suites that do the same during the workspace test run.
+    admin = new Pool({ connectionString: databaseUrl, max: 1 });
+    await admin.query(`CREATE DATABASE ${dbName}`);
+    const scoped = new URL(databaseUrl);
+    scoped.pathname = `/${dbName}`;
+    pool = new Pool({ connectionString: scoped.toString(), max: 1 });
+
     // This test exercises the full splash_replacement_actions -> splash_versions ->
     // current_splash chain, so it needs the whole schema, not a curated subset.
     const files = readdirSync(migrationsDir)
@@ -24,9 +34,16 @@ describeOrSkip('splash promotion is actually visible to the learner-facing route
     for (const file of files) {
       await pool.query(readFileSync(path.join(migrationsDir, file), 'utf8'));
     }
-  });
+  }, 60_000);
+
+  afterAll(async () => {
+    await pool?.end();
+    await admin?.query(`DROP DATABASE IF EXISTS ${dbName} WITH (FORCE)`);
+    await admin?.end();
+  }, 60_000);
 
   it('writes image_data so apps/website/lib/launch-splash.ts finds it (not just object_key)', async () => {
+    if (!pool) throw new Error('isolated splash database was not initialized');
     const store = new PostgresSplashStore(pool);
     const candidate = {
       bytes: Buffer.from('fake-webp-bytes-for-proof'),

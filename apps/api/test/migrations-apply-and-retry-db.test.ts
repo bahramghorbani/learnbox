@@ -70,7 +70,7 @@ suite('migrations 0001-0044 in an isolated database', () => {
       await root?.query(`DROP DATABASE IF EXISTS ${name} WITH (FORCE)`).catch(() => undefined);
     }
     await root?.end();
-  });
+  }, 60_000);
 
   it('applies the complete set to an empty database and is idempotent on a second run', async () => {
     const { pool, client } = await freshDatabase();
