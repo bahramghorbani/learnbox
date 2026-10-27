@@ -54,6 +54,29 @@ export type StoreIabDependencies = {
 
 type StoreSkuMapping = { packId: string; syncedPriceTomans?: number };
 
+/** Resolves the only SKU native code may launch for this learner and offered pack. */
+export async function readPurchasableIabSku(
+  pool: Pick<Pool, 'query'>,
+  userId: string,
+  provider: StoreIabProvider,
+  packId: string,
+): Promise<
+  { ok: true; sku: string } | { ok: false; reason: PurchaseDenialReason | 'catalog_out_of_sync' }
+> {
+  const pack = await readPurchasablePack(pool, userId, packId);
+  if (!pack.ok) return pack;
+  const result = await pool.query<{ sku_id: string; synced_price_tomans: number }>(
+    `SELECT sku_id, synced_price_tomans FROM store_iab_catalog_items
+      WHERE provider = $1::billing_provider AND pack_id = $2`,
+    [provider, packId],
+  );
+  const mapping = result.rows[0];
+  if (!mapping || Number(mapping.synced_price_tomans) !== pack.amountTomans) {
+    return { ok: false, reason: 'catalog_out_of_sync' };
+  }
+  return { ok: true, sku: mapping.sku_id };
+}
+
 async function resolvePackMapping(
   pool: Pick<Pool, 'query'>,
   provider: StoreIabProvider,

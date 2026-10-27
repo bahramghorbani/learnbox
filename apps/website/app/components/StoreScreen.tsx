@@ -51,6 +51,20 @@ type ActivationState = {
 
 const ACTIVATION_IDLE: ActivationState = { packId: null, error: null, success: null };
 
+type NativePurchaseResult = {
+  status?: unknown;
+  channel?: unknown;
+  sku?: unknown;
+  purchaseToken?: unknown;
+};
+
+type AndroidPurchaseBridge = { requestPurchase: (sku: string) => string };
+
+function androidPurchaseBridge(): AndroidPurchaseBridge | null {
+  const bridge = (window as Window & { LearnBoxNative?: AndroidPurchaseBridge }).LearnBoxNative;
+  return typeof bridge?.requestPurchase === 'function' ? bridge : null;
+}
+
 function formatPrice(pack: CataloguePack): string {
   if (pack.isFree) return 'رایگان';
   if (typeof pack.priceTomans === 'number' && pack.priceTomans > 0) {
@@ -106,6 +120,7 @@ export function StoreScreen({
   const focusedCardRef = useRef<HTMLLIElement | null>(null);
   const [purchases, setPurchases] = useState<LearnerPurchase[] | 'error'>([]);
   const [checking, setChecking] = useState<string | null>(null);
+  const myketSkuRef = useRef<string | null>(null);
   /** Outcome of the last re-check, announced next to that purchase. */
   const [checkNote, setCheckNote] = useState<{ purchaseId: string; text: string } | null>(null);
 
@@ -178,6 +193,92 @@ export function StoreScreen({
     }
   }, [loadPurchases]);
 
+  const verifyMyketPurchase = useCallback(
+    async (rawResult: string): Promise<void> => {
+      let result: NativePurchaseResult;
+      try {
+        result = JSON.parse(rawResult) as NativePurchaseResult;
+      } catch {
+        setActivation({
+          packId: null,
+          success: null,
+          error: 'نتیجهٔ خرید خوانده نشد. دوباره تلاش کنید.',
+        });
+        return;
+      }
+      const sku = myketSkuRef.current;
+      myketSkuRef.current = null;
+      if (
+        result.status !== 'succeeded' ||
+        result.channel !== 'android_myket' ||
+        typeof result.purchaseToken !== 'string' ||
+        !result.purchaseToken ||
+        result.sku !== sku
+      ) {
+        setActivation({
+          packId: null,
+          success: null,
+          error: 'خرید در مایکت تأیید نشد. دوباره تلاش کنید.',
+        });
+        return;
+      }
+      try {
+        const response = await fetch('/api/store/purchase/myket/verify', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ sku, purchaseToken: result.purchaseToken }),
+        });
+        if (!response.ok) {
+          setActivation({
+            packId: null,
+            success: null,
+            error: 'تأیید خرید انجام نشد. اگر مبلغ کسر شده است با پشتیبانی تماس بگیرید.',
+          });
+          return;
+        }
+        const body = (await response.json()) as { status?: string };
+        if (body.status !== 'verified' && body.status !== 'already_processed') {
+          setActivation({
+            packId: null,
+            success: null,
+            error: 'تأیید خرید انجام نشد. اگر مبلغ کسر شده است با پشتیبانی تماس بگیرید.',
+          });
+          return;
+        }
+        setActivation({
+          packId: null,
+          error: null,
+          success: 'خرید با موفقیت تأیید شد و بسته به حساب شما اضافه شد.',
+        });
+        await load();
+      } catch {
+        setActivation({
+          packId: null,
+          success: null,
+          error: 'ارتباط با سرور برقرار نشد. اگر مبلغ کسر شده است با پشتیبانی تماس بگیرید.',
+        });
+      }
+    },
+    [load],
+  );
+
+  useEffect(() => {
+    const callbacks = window as Window & {
+      LearnBoxNativeCallbacks?: { onPurchaseResult?: (result: string) => void };
+    };
+    const onPurchaseResult = (result: string) => void verifyMyketPurchase(result);
+    callbacks.LearnBoxNativeCallbacks = {
+      ...callbacks.LearnBoxNativeCallbacks,
+      onPurchaseResult,
+    };
+    return () => {
+      if (callbacks.LearnBoxNativeCallbacks?.onPurchaseResult === onPurchaseResult) {
+        delete callbacks.LearnBoxNativeCallbacks.onPurchaseResult;
+      }
+    };
+  }, [verifyMyketPurchase]);
+
   useEffect(() => {
     void load();
   }, [load]);
@@ -238,8 +339,10 @@ export function StoreScreen({
 
   const purchase = async (packId: string): Promise<void> => {
     setActivation({ packId, error: null, success: null });
+    const bridge = androidPurchaseBridge();
+    const endpoint = bridge ? '/api/store/purchase/myket/initiate' : '/api/store/purchase/initiate';
     try {
-      const response = await fetch('/api/store/purchase/initiate', {
+      const response = await fetch(endpoint, {
         method: 'POST',
         credentials: 'same-origin',
         headers: { 'content-type': 'application/json' },
@@ -258,7 +361,28 @@ export function StoreScreen({
         });
         return;
       }
-      const body = (await response.json()) as { redirectUrl?: string };
+      const body = (await response.json()) as { redirectUrl?: string; sku?: string };
+      if (bridge) {
+        if (!body.sku) {
+          setActivation({
+            packId: null,
+            success: null,
+            error: 'شروع خرید انجام نشد. دوباره تلاش کنید.',
+          });
+          return;
+        }
+        myketSkuRef.current = body.sku;
+        const result = JSON.parse(bridge.requestPurchase(body.sku)) as { status?: string };
+        if (result.status !== 'pending') {
+          myketSkuRef.current = null;
+          setActivation({
+            packId: null,
+            success: null,
+            error: 'مایکت برای خرید در دسترس نیست. دوباره تلاش کنید.',
+          });
+        }
+        return;
+      }
       // The gateway URL is built server-side from the Authority the provider issued; the client
       // only follows it. Nothing here decides the amount or what is being bought.
       if (!body.redirectUrl) {
@@ -271,10 +395,13 @@ export function StoreScreen({
       }
       window.location.assign(body.redirectUrl);
     } catch {
+      myketSkuRef.current = null;
       setActivation({
         packId: null,
         success: null,
-        error: 'ارتباط با درگاه پرداخت برقرار نشد. دوباره تلاش کنید.',
+        error: bridge
+          ? 'ارتباط با مایکت برقرار نشد. دوباره تلاش کنید.'
+          : 'ارتباط با درگاه پرداخت برقرار نشد. دوباره تلاش کنید.',
       });
     }
   };

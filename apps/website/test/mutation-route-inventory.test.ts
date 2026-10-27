@@ -73,6 +73,11 @@ const INVENTORY: Record<string, Entry> = {
     // The call site, not the bare identifier: the import line would otherwise match first.
     authMarker: 'authenticateLearner(request)',
   },
+  // Native Myket initiation resolves an offered pack to its database-approved SKU before launch.
+  'app/api/store/purchase/myket/initiate/route.ts': {
+    category: 'guarded',
+    authMarker: 'authenticateLearner(request)',
+  },
   // Native Myket receipts remain cookie-authenticated browser mutations and verify provider state
   // server-side before any entitlement is granted.
   'app/api/store/purchase/myket/verify/route.ts': {

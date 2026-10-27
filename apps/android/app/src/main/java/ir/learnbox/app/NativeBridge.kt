@@ -7,9 +7,9 @@ import android.webkit.JavascriptInterface
  * store (see app/build.gradle.kts "store" flavor dimension and ir.learnbox.app.billing).
  *
  * Response shape mirrors `ZarinpalRequestOutcome` (apps/website/lib/zarinpal.ts):
- * { status: "succeeded" | "rejected" | "error" | "unavailable" | "pending", ... }. A purchase
- * is never reported "succeeded" from this bridge alone — see MyketBillingBridge's doc for why
- * (no server-side verify wired yet). The generic flavor (no billing bridge) and any flavor
+ * { status: "succeeded" | "rejected" | "error" | "unavailable" | "pending", ... }. A
+ * `succeeded` result only means Myket returned a receipt; the website verifies its purchaseToken
+ * server-side before granting access. The generic flavor (no billing bridge) and any flavor
  * before its real wiring lands keep answering "unavailable" — honest, never a faked success.
  */
 object PurchaseBridgeLogic {
