@@ -5,7 +5,7 @@ import { Pool } from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { guardForcedTeardown } from './support/forced-teardown-guard';
-import { verifyStoreIabPurchase } from '../lib/store-iab-purchase';
+import { readPurchasableIabSku, verifyStoreIabPurchase } from '../lib/store-iab-purchase';
 import type { StoreIabVerifier } from '../lib/myket-iab';
 
 /**
@@ -86,6 +86,13 @@ suite('Myket IAB purchase verify-and-grant (real Postgres)', () => {
     await pool?.end();
     await admin.query(`DROP DATABASE IF EXISTS ${dbName}`);
     await admin.end();
+  });
+
+  it('resolves only the database-approved Myket SKU for a purchasable pack', async () => {
+    await expect(readPurchasableIabSku(pool, alice, 'myket', packId)).resolves.toEqual({
+      ok: true,
+      sku,
+    });
   });
 
   it('verifies a paid receipt once and grants the entitlement', async () => {

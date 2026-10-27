@@ -21,18 +21,12 @@ fun createBillingBridge(activity: Activity): BillingBridge = MyketBillingBridge(
 /**
  * Real Myket IAB v3 client — binds to Myket's service over the AIDL interface Myket documents
  * (https://myket.ir/kb/pages/in-app-purchase-implementation-steps/), launches the purchase
- * intent, and hands back the raw purchase JSON + signature.
+ * intent, and hands back the raw purchase JSON + signature. The website submits the purchase token
+ * to its server-side verifier before granting any entitlement.
  *
  * ponytail: deliberately does NOT verify the purchase signature client-side or call
- * consumePurchase. The real security boundary is server-side verify (Myket's partner
- * verify API, POST .../purchases/products/{sku}/verify with X-Access-Token) — that endpoint
- * doesn't exist in our backend yet because we don't have the partner Access-Token from the
- * Myket panel. Until it does, every completed purchase reports "error" (reason
- * "server_verify_not_configured") with the real purchaseToken attached so support can grant
- * access manually; it NEVER reports "succeeded" on its own, since a fake success here would be
- * indistinguishable from a real one to the web app's entitlement code. Upgrade: add the backend
- * verify endpoint once the Access-Token is in hand, then call it here before reporting
- * "succeeded", and only then call consume().
+ * consumePurchase. The server-side Myket verification endpoint is the entitlement boundary; only
+ * it can grant access. Consumption belongs after that endpoint has an explicit Myket contract.
  */
 class MyketBillingBridge(private val activity: Activity) : BillingBridge {
     private var service: IInAppBillingService? = null
@@ -114,12 +108,21 @@ class MyketBillingBridge(private val activity: Activity) : BillingBridge {
             failPending("purchase_response_$responseCode")
             return true
         }
-        // Real purchase captured on-device. Can't call it "succeeded" yet — see class doc.
+        // The server verifies this token with Myket before granting access.
         val purchaseToken = runCatching {
             org.json.JSONObject(purchaseData).optString("purchaseToken")
         }.getOrDefault("")
+        if (purchaseToken.isBlank()) {
+            failPending("purchase_token_missing")
+            return true
+        }
         resolvePending(
-            """{"status":"error","channel":"android_myket","reason":"server_verify_not_configured","sku":"${sku.orEmpty()}","purchaseToken":"$purchaseToken"}""",
+            org.json.JSONObject()
+                .put("status", "succeeded")
+                .put("channel", "android_myket")
+                .put("sku", sku.orEmpty())
+                .put("purchaseToken", purchaseToken)
+                .toString(),
         )
         return true
     }
