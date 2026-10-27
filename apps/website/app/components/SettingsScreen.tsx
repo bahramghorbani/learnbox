@@ -5,6 +5,7 @@ import { learnerGoalTitle, type LearnerLearningGoal } from './ProfileScreen';
 import { DeleteAccountPanel, type AccountDeletionResult } from './DeleteAccountPanel';
 import { LogoutPanel } from './LogoutPanel';
 import { ReminderPanel } from './ReminderPanel';
+import { DailyNewCardsPanel } from './DailyNewCardsPanel';
 import { supportLinkFor } from '../../lib/support-contact';
 
 interface SettingsScreenProps {
@@ -21,6 +22,8 @@ interface SettingsScreenProps {
    * deliver a push to, so the row is hidden rather than shown non-functional.
    */
   remindersAvailable?: boolean;
+  /** Shown only for a real server account because this preference follows the learner across devices. */
+  learningPreferencesAvailable?: boolean;
   vapidPublicKey?: string;
   /** Omitted in the local prototype, where there is no server account to delete. */
   onDeleteAccount?: (input: {
@@ -50,6 +53,7 @@ export function SettingsScreen({
   onChooseGoal,
   onToggleSound,
   remindersAvailable,
+  learningPreferencesAvailable,
   vapidPublicKey,
   onDeleteAccount,
   onAccountDeleted,
@@ -77,7 +81,7 @@ export function SettingsScreen({
         <h1 id="settings-title" tabIndex={-1} ref={headingRef}>
           تنظیمات
         </h1>
-        <p>تنظیمات این نسخه فقط روی همین دستگاه اعمال می‌شود.</p>
+        <p>تنظیمات دستگاه و تنظیمات یادگیری حساب را اینجا مدیریت کنید.</p>
       </section>
       <div className="settings-rows">
         <div className="settings-row settings-row-switch">
@@ -102,6 +106,7 @@ export function SettingsScreen({
           </label>
         </div>
         {remindersAvailable ? <ReminderPanel vapidPublicKey={vapidPublicKey} /> : null}
+        {learningPreferencesAvailable ? <DailyNewCardsPanel /> : null}
         {onChooseGoal ? (
           <button
             className="settings-row settings-row-action"

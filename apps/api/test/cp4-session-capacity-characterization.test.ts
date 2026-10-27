@@ -79,19 +79,19 @@ const read = (repository: LearnerStateRepository, now = NOW) =>
   new LearnerStateService(repository, () => now).readLearnerState('user');
 
 describe('CP4 step 0 — existing session capacity semantics (v1.2.1 behaviour, frozen)', () => {
-  it('a learner with nothing due gets 3 new cards, not 12', async () => {
+  it('a learner with nothing due gets the 7-card default, not 12', async () => {
     const { plan } = await read(world(0).repository);
     expect(plan.mode).toBe('normal');
     expect(plan.reviewCardIds).toHaveLength(0);
-    expect(plan.newCardIds).toHaveLength(3);
+    expect(plan.newCardIds).toHaveLength(7);
   });
 
-  it('capacity is 12 TOTAL: new cards fill only the spare room, at most 3', async () => {
+  it('capacity is 12 TOTAL: new cards fill only the spare room, at most 7', async () => {
     const rows = [
-      { due: 0, review: 0, fresh: 3 },
-      { due: 5, review: 5, fresh: 3 },
+      { due: 0, review: 0, fresh: 7 },
+      { due: 5, review: 5, fresh: 7 },
+      { due: 6, review: 6, fresh: 6 },
       { due: 9, review: 9, fresh: 3 },
-      { due: 10, review: 10, fresh: 2 },
       { due: 11, review: 11, fresh: 1 },
       { due: 12, review: 12, fresh: 0 },
     ];
@@ -112,17 +112,17 @@ describe('CP4 step 0 — existing session capacity semantics (v1.2.1 behaviour, 
     expect(plan.newCardIds).toHaveLength(0);
   });
 
-  it('DEFECT pin: the 3-new limit is per read — answering and re-reading grants 3 more, unbounded', async () => {
+  it('DEFECT pin: the 7-new limit is per read — answering and re-reading grants 7 more, unbounded', async () => {
     const w = world(0);
     const granted: string[] = [];
     for (let session = 0; session < 5; session += 1) {
       const { plan } = await read(w.repository);
-      expect(plan.newCardIds).toHaveLength(3);
+      expect(plan.newCardIds).toHaveLength(7);
       for (const id of plan.newCardIds) w.answer(id, NOW);
       granted.push(...plan.newCardIds);
     }
-    // 5 sessions on one local day => 15 distinct new cards. CP4 caps this at 3 per learner-local day.
-    expect(new Set(granted).size).toBe(15);
+    // 5 sessions on one local day => 35 distinct new cards. CP4 caps this at 7 per learner-local day.
+    expect(new Set(granted).size).toBe(35);
   });
 
   it('a plain refresh without answering is already stable: the same 3 new cards come back', async () => {
@@ -136,18 +136,27 @@ describe('CP4 step 0 — existing session capacity semantics (v1.2.1 behaviour, 
 /** In-memory DailyPlanStore with the same contract as the Postgres one (insert-if-absent, then read). */
 function planStore(
   w: ReturnType<typeof world>,
-  options: { zone?: string | null } = {},
-): DailyPlanStore & { frozen: Map<string, string[]>; zone: string | null; inserts: number } {
+  options: { zone?: string | null; allowance?: number } = {},
+): DailyPlanStore & {
+  frozen: Map<string, string[]>;
+  zone: string | null;
+  allowance: number;
+  inserts: number;
+} {
   const frozen = new Map<string, string[]>();
   const store = {
     frozen,
     zone: options.zone ?? null,
+    allowance: options.allowance ?? DAILY_NEW_CARD_ALLOWANCE,
     inserts: 0,
     async readStoredTimeZone() {
       return store.zone;
     },
     async persistTimeZone(_user: string, zone: string) {
       if (store.zone === null) store.zone = zone;
+    },
+    async readDailyNewCardAllowance() {
+      return store.allowance;
     },
     async readAllowance(_user: string, day: string) {
       return frozen.get(day) ?? null;
@@ -178,23 +187,23 @@ const readPlanned = (
   });
 
 describe("CP4 — the invariant: the server owns the day's new-card allowance", () => {
-  it('constants: session capacity stays 12 TOTAL and the allowance is 3 new cards per day', () => {
+  it('constants: session capacity stays 12 TOTAL and the default allowance is 7 new cards per day', () => {
     expect(SESSION_CAPACITY_CARDS).toBe(12);
-    expect(DAILY_NEW_CARD_ALLOWANCE).toBe(3);
+    expect(DAILY_NEW_CARD_ALLOWANCE).toBe(7);
   });
 
-  it('repeated sessions on one learner-local day never grant more than 3 new cards', async () => {
+  it('repeated sessions on one learner-local day never grant more than the selected 7 new cards', async () => {
     const w = world(0);
     const store = planStore(w);
     const granted = new Set<string>();
     for (let session = 0; session < 6; session += 1) {
       const { plan, newCards } = await readPlanned(w, store);
       for (const id of plan.newCardIds) granted.add(id);
-      expect(plan.newCardIds.length).toBeLessThanOrEqual(3);
+      expect(plan.newCardIds.length).toBeLessThanOrEqual(7);
       expect(newCards.map((c) => c.cardId)).toEqual(plan.newCardIds);
       for (const id of plan.newCardIds) w.answer(id, NOW);
     }
-    expect(granted.size).toBe(3); // was 15 without the allowance
+    expect(granted.size).toBe(7); // was unbounded without the daily plan
     expect(store.inserts).toBe(1);
   });
 
@@ -204,7 +213,7 @@ describe("CP4 — the invariant: the server owns the day's new-card allowance", 
     const a = (await readPlanned(w, store)).plan.newCardIds;
     const b = (await readPlanned(w, store)).plan.newCardIds;
     expect(b).toEqual(a);
-    expect(a).toHaveLength(3);
+    expect(a).toHaveLength(7);
   });
 
   it('answered new cards leave the offer but are NOT replaced by fresh ones the same day', async () => {
@@ -216,14 +225,29 @@ describe("CP4 — the invariant: the server owns the day's new-card allowance", 
     expect(later).toEqual(first.slice(1));
   });
 
-  it('the next learner-local day grants a fresh allowance of 3', async () => {
-    const w = world(0);
+  it('uses the selected ceiling on the next unfrozen day and never rewrites today', async () => {
+    const w = world(0, 35);
+    const store = planStore(w, { allowance: 3 });
+    const today = (await readPlanned(w, store)).plan.newCardIds;
+    expect(today).toHaveLength(3);
+
+    store.allowance = 12;
+    expect((await readPlanned(w, store)).plan.newCardIds).toEqual(today);
+    for (const id of today) w.answer(id, NOW);
+
+    const tomorrow = await readPlanned(w, store, new Date(NOW.getTime() + 24 * 3_600_000));
+    // Today's three cards are due tomorrow, so the 12-card choice fills the nine spare places.
+    expect(tomorrow.plan.newCardIds).toHaveLength(9);
+  });
+
+  it('the next learner-local day admits only five new cards when seven reviews are due', async () => {
+    const w = world(0, 35);
     const store = planStore(w);
     const day1 = (await readPlanned(w, store)).plan.newCardIds;
     for (const id of day1) w.answer(id, NOW);
     const tomorrow = new Date(NOW.getTime() + 24 * 3_600_000);
     const day2 = (await readPlanned(w, store, tomorrow)).plan.newCardIds;
-    expect(day2).toHaveLength(3);
+    expect(day2).toHaveLength(5);
     expect(day2.some((id) => day1.includes(id))).toBe(false);
   });
 
@@ -237,7 +261,7 @@ describe("CP4 — the invariant: the server owns the day's new-card allowance", 
     const same = (await readPlanned(w, store, beforeMidnight, 'UTC')).plan.newCardIds;
     const next = (await readPlanned(w, store, afterMidnight, 'UTC')).plan.newCardIds;
     expect(same).toEqual([]);
-    expect(next).toHaveLength(3);
+    expect(next).toHaveLength(7);
     expect([...store.frozen.keys()]).toEqual(['2026-09-29', '2026-09-30']);
   });
 
@@ -260,16 +284,16 @@ describe("CP4 — the invariant: the server owns the day's new-card allowance", 
     expect(store.inserts).toBe(0);
     // Backlog cleared later the same day: the learner still has today\'s allowance.
     for (let i = 0; i < 13; i += 1) w.schedules.delete(cardId(i));
-    expect((await readPlanned(w, store)).plan.newCardIds).toHaveLength(3);
+    expect((await readPlanned(w, store)).plan.newCardIds).toHaveLength(7);
   });
 
-  it('a nearly full session shrinks the allowance it can show, never the freeze (3 stay reserved)', async () => {
+  it('a nearly full session shrinks the allowance it can show, never the freeze (7 stay reserved)', async () => {
     const w = world(11); // 1 spare slot
     const store = planStore(w);
     const { plan } = await readPlanned(w, store);
     expect(plan.newCardIds).toHaveLength(1);
     expect(plan.reviewCardIds.length + plan.newCardIds.length).toBe(12);
-    expect(store.frozen.get('2026-10-01')).toHaveLength(3);
+    expect(store.frozen.get('2026-10-01')).toHaveLength(7);
   });
 
   it('with no flag/store the service behaves exactly as before (v1.2.1)', async () => {
@@ -277,7 +301,7 @@ describe("CP4 — the invariant: the server owns the day's new-card allowance", 
     const service = new LearnerStateService(w.repository, () => NOW);
     const first = (await service.readLearnerState('user')).plan.newCardIds;
     for (const id of first) w.answer(id, NOW);
-    expect((await service.readLearnerState('user')).plan.newCardIds).toHaveLength(3);
+    expect((await service.readLearnerState('user')).plan.newCardIds).toHaveLength(7);
   });
 
   it('an empty catalogue freezes nothing', async () => {

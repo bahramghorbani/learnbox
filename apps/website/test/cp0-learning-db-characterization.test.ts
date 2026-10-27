@@ -473,13 +473,13 @@ suite('CP0 — daily queue and new-card limit', () => {
   const byUuid = (letters_: string[]) =>
     letters_.map((l) => cardIds[l]).sort((x, y) => x.localeCompare(y));
 
-  it('DEFECT: which 3 new cards are offered is decided by random card UUID, not by curriculum order', async () => {
+  it('which daily new cards are offered is decided by random card UUID, not by curriculum order', async () => {
     const user = await newLearner();
     const state = await stateFor(user);
     expect(state.plan.mode).toBe('normal');
     // Every candidate has the constant importance 1 (placeholder in the service), so the planner's
     // tie-break is cardId.localeCompare — the lowest UUIDs among the pool win.
-    expect(state.plan.newCardIds).toEqual(byUuid(letters).slice(0, 3));
+    expect(state.plan.newCardIds).toEqual(byUuid(letters).slice(0, 7));
     // The repository pool is the first 12 start cards by content_id; the pack's own sort_order
     // (h..a here) and importance are never consulted.
     const { rows } = await pool.query(
@@ -489,7 +489,7 @@ suite('CP0 — daily queue and new-card limit', () => {
     expect(rows.map((r) => r.content_id)).toEqual(['h', 'g', 'f'].map(contentId));
   });
 
-  it('DEFECT: there is no per-user-day cap; every request with spare capacity grants 3 new cards again', async () => {
+  it('legacy mode without a daily-plan store applies the default allowance to each session', async () => {
     const user = await newLearner();
     const offeredSessions: string[][] = [];
     for (let session = 0; session < 3; session += 1) {
@@ -498,9 +498,8 @@ suite('CP0 — daily queue and new-card limit', () => {
       offeredSessions.push(offered);
       for (const letter of offered) await submit(user, letter, 'remembered', new Date());
     }
-    expect(offeredSessions.map((o) => o.length)).toEqual([3, 3, 2]);
-    // 8 brand-new cards introduced within ONE calendar day from a "3 per session" rule,
-    // with no daily ledger anywhere.
+    expect(offeredSessions.map((o) => o.length)).toEqual([7, 1, 0]);
+    // Only the seven-card daily allowance plus the final available catalogue card are introduced.
     const { rows } = await pool.query(
       `SELECT count(DISTINCT card_id)::int AS n FROM review_events WHERE user_id = $1`,
       [user],
@@ -515,7 +514,7 @@ suite('CP0 — daily queue and new-card limit', () => {
     expect(second.plan.newCardIds).toEqual(first.plan.newCardIds);
   });
 
-  it('DEFECT: two definitions of "new": /today counts every published unscheduled card; the planner offers at most 3 start-a1 cards', async () => {
+  it('keeps /today counting all published unscheduled cards while the planner offers up to the default allowance', async () => {
     const user = await newLearner();
     const today = await call<{ newCount: number; dueCount: number; totalTodayCards: number }>(
       todayRoute,
@@ -526,7 +525,7 @@ suite('CP0 — daily queue and new-card limit', () => {
     expect(today.newCount).toBe(9);
     expect(today.totalTodayCards).toBe(9); // comment in route says "capped at daily goal": it is not
     const state = await stateFor(user);
-    expect(state.plan.newCardIds).toHaveLength(3);
+    expect(state.plan.newCardIds).toHaveLength(7);
     expect(state.plan.newCardIds).not.toContain(nonStartCardId);
   });
 

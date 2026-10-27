@@ -168,20 +168,20 @@ const workload = (user: string, now: Date, tz = 'UTC') =>
   readTodayWorkload(pool as never, user, { now, requestedTimeZone: tz, environment: process.env });
 
 suite('CP5-A — canonical Today workload on real Postgres', () => {
-  it('a brand-new learner: 0 due + the daily allowance of 3 (never the whole catalogue)', async () => {
+  it('a brand-new learner: 0 due + the daily allowance of 7 (never the whole catalogue)', async () => {
     planFlagsOn();
     const user = await newLearner();
     const w = await workload(user, T0);
     expect(w).toMatchObject({
-      cardsForToday: 3,
+      cardsForToday: 7,
       reviewCardsToday: 0,
-      newCardsToday: 3,
+      newCardsToday: 7,
       planMode: 'normal',
       unseenCatalogCount: CATALOGUE,
     });
   });
 
-  it('due < 12: new cards fill only the spare capacity, max 3 (10 due → 10 + 2 = 12 session capacity)', async () => {
+  it('due < 12: new cards fill only the spare capacity, max 7 (10 due → 10 + 2 = 12 session capacity)', async () => {
     planFlagsOn();
     const user = await newLearner();
     await dueCards(user, 0, 10);
@@ -192,14 +192,14 @@ suite('CP5-A — canonical Today workload on real Postgres', () => {
     });
   });
 
-  it('5 due → 5 + 3 new = 8 (the max-3 cap binds before the capacity cap)', async () => {
+  it('5 due → 5 + 7 new = 12 (the session capacity binds)', async () => {
     planFlagsOn();
     const user = await newLearner();
     await dueCards(user, 0, 5);
     expect(await workload(user, T0)).toMatchObject({
-      cardsForToday: 8,
+      cardsForToday: 12,
       reviewCardsToday: 5,
-      newCardsToday: 3,
+      newCardsToday: 7,
     });
   });
 
@@ -258,7 +258,7 @@ suite('CP5-A — canonical Today workload on real Postgres', () => {
     planFlagsOn();
     const user = await newLearner();
     const first = await workload(user, T0);
-    expect(first.cardsForToday).toBe(3);
+    expect(first.cardsForToday).toBe(7);
     const state = await call<{ plan: { newCardIds: string[] } }>(stateRoute, user);
     for (const id of state.plan.newCardIds) await scheduleLater(user, id, T0);
     const later = await workload(user, new Date(T0.getTime() + 10 * 60_000));
@@ -274,9 +274,9 @@ suite('CP5-A — canonical Today workload on real Postgres', () => {
     // Same Tehran day (23:59:59.9 local): still the same frozen allowance, now answered → 0.
     const sameDay = await workload(user, new Date('2026-09-30T20:29:59.900Z'), 'UTC');
     expect(sameDay.newCardsToday).toBe(0);
-    // 20:30Z = 00:00 next day in Tehran → a new frozen allowance of 3.
+    // 20:30Z = 00:00 next day in Tehran → a new frozen allowance of 7.
     const nextDay = await workload(user, new Date('2026-09-30T20:30:00Z'), 'UTC');
-    expect(nextDay.newCardsToday).toBe(3);
+    expect(nextDay.newCardsToday).toBe(7);
     const rows = await pool.query(
       `SELECT local_day::text AS day FROM learner_daily_plans WHERE user_id = $1 ORDER BY local_day`,
       [user],
@@ -303,9 +303,9 @@ suite('CP5-A — canonical Today workload on real Postgres', () => {
     expect(today.cardsForToday).toBe(
       state.plan.reviewCardIds.length + state.plan.newCardIds.length,
     );
-    expect(today.cardsForToday).toBe(10);
+    expect(today.cardsForToday).toBe(12);
     expect(today.reviewCardsToday).toBe(7);
-    expect(today.newCardsToday).toBe(3);
+    expect(today.newCardsToday).toBe(5);
     expect(today.totalTodayCards).toBe(today.cardsForToday);
     expect(today.newCount).toBe(today.newCardsToday);
     expect(today.unseenCatalogCount).toBe(CATALOGUE - 7);
@@ -337,8 +337,8 @@ suite('CP5-A — canonical Today workload on real Postgres', () => {
     const user = await newLearner();
     await dueCards(user, 0, 4, new Date());
     const today = await call<Record<string, number>>(todayRoute, user);
-    // Without the frozen allowance the engine still admits at most 3 new → 4 + 3.
-    expect(today.cardsForToday).toBe(7);
-    expect(today.totalTodayCards).toBe(7);
+    // Without the frozen allowance the engine still admits the 7-card default → 4 + 7.
+    expect(today.cardsForToday).toBe(11);
+    expect(today.totalTodayCards).toBe(11);
   });
 });

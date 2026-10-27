@@ -79,7 +79,7 @@ beforeAll(async () => {
   }
   await pool.query(
     `INSERT INTO packs (id, display_name, target_item_count, status, is_free, published_at)
-     VALUES ('cp4-pack', 'CP4 pack', 4, 'published', true, now()),
+     VALUES ('cp4-pack', 'CP4 pack', 16, 'published', true, now()),
             ('cp4-draft', 'CP4 draft', 1, 'draft', false, null)`,
   );
   const make = async (name: string, pack: string, sort: number) => {
@@ -97,13 +97,8 @@ beforeAll(async () => {
     ]);
     return id;
   };
-  for (const [i, name] of [
-    'start-a1-cp4-a',
-    'start-a1-cp4-b',
-    'start-a1-cp4-c',
-    'start-a1-cp4-d',
-  ].entries()) {
-    cards.push(await make(name, 'cp4-pack', i + 1));
+  for (let i = 0; i < 16; i += 1) {
+    cards.push(await make(`start-a1-cp4-${String(i).padStart(2, '0')}`, 'cp4-pack', i + 1));
   }
 });
 
@@ -150,11 +145,11 @@ const plans = async (user: string) =>
   ).rows;
 
 suite('CP4 — daily new-card allowance on real Postgres', () => {
-  it('first read freezes ONE row of 3; refreshes return the same cards (flag-on)', async () => {
+  it('first read freezes the 7-card default; refreshes return the same cards (flag-on)', async () => {
     const user = await newLearner();
     const a = await service(T0).readLearnerState(user, { requestedTimeZone: 'Asia/Tehran' });
     const b = await service(T0).readLearnerState(user, { requestedTimeZone: 'Asia/Tehran' });
-    expect(a.plan.newCardIds).toHaveLength(3);
+    expect(a.plan.newCardIds).toHaveLength(7);
     expect(b.plan.newCardIds).toEqual(a.plan.newCardIds);
     const rows = await plans(user);
     expect(rows).toHaveLength(1);
@@ -174,7 +169,7 @@ suite('CP4 — daily new-card allowance on real Postgres', () => {
     expect(await plans(user)).toHaveLength(1);
   });
 
-  it("answering new cards and re-reading never grants more than the day's 3; next day grants 3 more", async () => {
+  it("answering new cards and re-reading never grants more than the day's 7; next day grants up to 7 more", async () => {
     const user = await newLearner();
     const day1 = (await service(T0).readLearnerState(user, { requestedTimeZone: 'UTC' })).plan
       .newCardIds;
@@ -183,14 +178,35 @@ suite('CP4 — daily new-card allowance on real Postgres', () => {
       requestedTimeZone: 'UTC',
     });
     expect(again.plan.newCardIds).toEqual([]);
-    // Flag OFF is the v1.2.1 defect: it keeps granting.
+    // Flag OFF still offers new cards because the server-owned daily plan is absent.
     const legacy = await flagOff(new Date(T0.getTime() + 600_000)).readLearnerState(user);
-    expect(legacy.plan.newCardIds.length).toBeGreaterThan(0);
+    expect(legacy.plan.newCardIds).toHaveLength(7);
     const tomorrow = await service(new Date(T0.getTime() + 24 * 3_600_000)).readLearnerState(user, {
       requestedTimeZone: 'UTC',
     });
-    expect(tomorrow.plan.newCardIds).toHaveLength(Math.min(3, cards.length - 3));
+    // Seven cards are now due, leaving five places in the 12-card session.
+    expect(tomorrow.plan.newCardIds).toHaveLength(5);
     expect((await plans(user)).map((p) => p.day)).toEqual(['2026-10-01', '2026-10-02']);
+  });
+
+  it('persists the 3/7/12 preference and applies a changed value only after today is frozen', async () => {
+    const user = await newLearner();
+    await pool.query('UPDATE users SET daily_new_card_allowance = 3 WHERE id = $1', [user]);
+    const today = (await service(T0).readLearnerState(user, { requestedTimeZone: 'UTC' })).plan
+      .newCardIds;
+    expect(today).toHaveLength(3);
+
+    await pool.query('UPDATE users SET daily_new_card_allowance = 12 WHERE id = $1', [user]);
+    expect(
+      (await service(T0).readLearnerState(user, { requestedTimeZone: 'UTC' })).plan.newCardIds,
+    ).toEqual(today);
+    for (const id of today) await answer(user, id, T0);
+
+    const tomorrow = await service(new Date(T0.getTime() + 24 * 3_600_000)).readLearnerState(user, {
+      requestedTimeZone: 'UTC',
+    });
+    // Three reviews are due; the 12-card setting uses the remaining nine places.
+    expect(tomorrow.plan.newCardIds).toHaveLength(9);
   });
 
   it('the day boundary follows the stored zone (Tehran 20:30Z), not the device zone', async () => {
