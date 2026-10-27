@@ -159,6 +159,14 @@ export class PostgresLearnerStateRepository implements LearnerStateRepository, D
     ]);
   }
 
+  async readDailyNewCardAllowance(userId: string): Promise<number> {
+    const result = await this.pool.query<{ daily_new_card_allowance: number }>(
+      'SELECT daily_new_card_allowance FROM users WHERE id = $1',
+      [userId],
+    );
+    return result.rows[0]?.daily_new_card_allowance ?? 7;
+  }
+
   async readAllowance(userId: string, localDay: string): Promise<string[] | null> {
     const result = await this.pool.query<{ new_card_ids: string[] }>(
       'SELECT new_card_ids FROM learner_daily_plans WHERE user_id = $1 AND local_day = $2::date',

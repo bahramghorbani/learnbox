@@ -135,7 +135,7 @@ describe('LearnerStateService', () => {
     expect(state.newCards).toEqual([]);
   });
 
-  it('requests one bounded session of candidates and admits at most three', async () => {
+  it('requests one bounded session of candidates and admits at most seven by default', async () => {
     const candidateCalls: Array<{ userId: string; limit: number }> = [];
     const boundedRepository: LearnerStateRepository = {
       ...repository,
@@ -157,8 +157,8 @@ describe('LearnerStateService', () => {
     );
 
     expect(candidateCalls).toEqual([{ userId, limit: 12 }]);
-    expect(state.plan.newCardIds).toHaveLength(3);
-    expect(state.newCards).toHaveLength(3);
+    expect(state.plan.newCardIds).toHaveLength(7);
+    expect(state.newCards).toHaveLength(7);
     expect(state.newCards.map(({ cardId }) => cardId)).toEqual(state.plan.newCardIds);
   });
 });

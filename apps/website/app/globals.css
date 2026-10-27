@@ -3952,6 +3952,24 @@ p {
   min-height: 44px;
   padding: 10px 4px;
 }
+.daily-new-card-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.daily-new-card-options label {
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid #d9d7e8;
+  border-radius: 12px;
+  cursor: pointer;
+}
+.daily-new-card-options input {
+  margin-inline-end: 6px;
+}
 
 /* LB-B04: account deletion. Visually separated and de-emphasised so it cannot be hit casually. */
 .settings-rows-danger {

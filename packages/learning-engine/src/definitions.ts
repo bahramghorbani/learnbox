@@ -234,12 +234,19 @@ const IANA_SHAPE = /^[A-Za-z][A-Za-z0-9_+-]*(?:\/[A-Za-z0-9_+-]+)*$/;
  */
 export const SESSION_CAPACITY_CARDS = 12;
 
+/** The only learner-selectable ceilings for new cards introduced per learner-local day. */
+export const DAILY_NEW_CARD_ALLOWANCE_OPTIONS = [3, 7, 12] as const;
+export type DailyNewCardAllowance = (typeof DAILY_NEW_CARD_ALLOWANCE_OPTIONS)[number];
+
+export function isDailyNewCardAllowance(value: unknown): value is DailyNewCardAllowance {
+  return DAILY_NEW_CARD_ALLOWANCE_OPTIONS.includes(value as DailyNewCardAllowance);
+}
+
 /**
- * At most this many NEW cards are introduced per learner-local day, however many times the plan is
- * read, however many sessions are started and from whichever device. New cards only fill spare
- * session capacity, so one session never holds more than SESSION_CAPACITY_CARDS in total.
+ * The product default. A learner may choose another value from DAILY_NEW_CARD_ALLOWANCE_OPTIONS;
+ * the value is frozen into the first daily plan read, so a mid-day preference change is next-day only.
  */
-export const DAILY_NEW_CARD_ALLOWANCE = 3;
+export const DAILY_NEW_CARD_ALLOWANCE: DailyNewCardAllowance = 7;
 
 /**
  * Which zone a learner's local day is computed in (owner decision O2, LB-B35 CP4).

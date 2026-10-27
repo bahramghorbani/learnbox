@@ -1,6 +1,7 @@
 import {
   DAILY_NEW_CARD_ALLOWANCE,
   createDailySessionPlan,
+  isDailyNewCardAllowance,
   localDayKey,
   resolveLearnerTimeZone,
   type CardSchedule,
@@ -63,6 +64,8 @@ export interface DailyPlanStore {
   readStoredTimeZone(userId: string): Promise<string | null>;
   /** Fill-once: only writes when the stored zone is still NULL. */
   persistTimeZone(userId: string, timeZone: string): Promise<void>;
+  /** The learner's selected daily new-card ceiling; malformed legacy data safely falls back to the default. */
+  readDailyNewCardAllowance(userId: string): Promise<number>;
   /** The allowance already frozen for this learner-local day, or null. */
   readAllowance(userId: string, localDay: string): Promise<string[] | null>;
   /** Freeze `cardIds` for the day unless a row exists; return whatever is stored afterwards. */
@@ -105,9 +108,12 @@ export class LearnerStateService {
     options: ReadLearnerStateOptions = {},
   ): Promise<LearnerStateSnapshot> {
     const schedules = await this.repository.findSchedules(userId);
-    const candidates = this.dailyPlans
+    const daily = this.dailyPlans
       ? await this.dailyAllowanceCandidates(userId, schedules, options)
-      : await this.repository.findNewCardCandidates(userId, NEW_CARD_CANDIDATE_LIMIT);
+      : {
+          candidates: await this.repository.findNewCardCandidates(userId, NEW_CARD_CANDIDATE_LIMIT),
+          suggestedNewCards: SUGGESTED_NEW_CARDS,
+        };
     const plan = createDailySessionPlan({
       durationMinutes: SESSION_DURATION_MINUTES,
       now: this.now(),
@@ -120,10 +126,12 @@ export class LearnerStateService {
         // ponytail: catalog importance is not in card_schedules; default until M1-B defines it.
         importance: 1,
       })),
-      newCards: candidates,
-      suggestedNewCards: SUGGESTED_NEW_CARDS,
+      newCards: daily.candidates,
+      suggestedNewCards: daily.suggestedNewCards,
     });
-    const candidatesById = new Map(candidates.map((candidate) => [candidate.cardId, candidate]));
+    const candidatesById = new Map(
+      daily.candidates.map((candidate) => [candidate.cardId, candidate]),
+    );
     const newCards = plan.newCardIds.flatMap((cardId) => {
       const candidate = candidatesById.get(cardId);
       return candidate ? [candidate] : [];
@@ -147,7 +155,7 @@ export class LearnerStateService {
     userId: string,
     schedules: LearnerScheduleRow[],
     options: ReadLearnerStateOptions,
-  ): Promise<LearnerNewCardCandidate[]> {
+  ): Promise<{ candidates: LearnerNewCardCandidate[]; suggestedNewCards: number }> {
     const store = this.dailyPlans!;
     const stored = await store.readStoredTimeZone(userId);
     const zone = resolveLearnerTimeZone(stored, options.requestedTimeZone);
@@ -155,7 +163,10 @@ export class LearnerStateService {
     const localDay = localDayKey(this.now(), zone.timeZone);
 
     const frozen = await store.readAllowance(userId, localDay);
-    if (frozen) return store.findNewCardsByIds(userId, frozen);
+    if (frozen) {
+      const candidates = await store.findNewCardsByIds(userId, frozen);
+      return { candidates, suggestedNewCards: candidates.length };
+    }
 
     // First read of the learner's day. Recovery (a backlog beyond one session) admits no new cards, so
     // it must not spend the day's allowance either: decide that from the same live schedule.
@@ -173,12 +184,15 @@ export class LearnerStateService {
       newCards: [],
       suggestedNewCards: 0,
     });
-    if (probe.mode === 'recovery') return [];
+    if (probe.mode === 'recovery') return { candidates: [], suggestedNewCards: 0 };
 
     const picked = await this.repository.findNewCardCandidates(userId, NEW_CARD_CANDIDATE_LIMIT);
-    const allowance = picked.slice(0, DAILY_NEW_CARD_ALLOWANCE).map(({ cardId }) => cardId);
-    if (allowance.length === 0) return [];
+    const preference = await store.readDailyNewCardAllowance(userId);
+    const limit = isDailyNewCardAllowance(preference) ? preference : DAILY_NEW_CARD_ALLOWANCE;
+    const allowance = picked.slice(0, limit).map(({ cardId }) => cardId);
+    if (allowance.length === 0) return { candidates: [], suggestedNewCards: 0 };
     const stableIds = await store.freezeAllowance(userId, localDay, zone.timeZone, allowance);
-    return store.findNewCardsByIds(userId, stableIds);
+    const candidates = await store.findNewCardsByIds(userId, stableIds);
+    return { candidates, suggestedNewCards: candidates.length };
   }
 }
