@@ -148,6 +148,14 @@ export class StorePackCoverService {
         await client.query('ROLLBACK');
         return 'not_found' as const;
       }
+      // A pack has one active cover. Clear every older acceptance before promoting this candidate;
+      // the database's partial unique index enforces the same rule across concurrent requests.
+      await client.query(
+        `UPDATE store_pack_cover_candidates
+            SET status='ready', accepted_by_user_id=NULL, accepted_at=NULL
+          WHERE pack_id=$1 AND status='accepted' AND id<>$2`,
+        [packId, candidateId],
+      );
       await client.query(
         `UPDATE store_pack_cover_candidates SET status='accepted', accepted_by_user_id=$2, accepted_at=now() WHERE id=$1`,
         [candidateId, actor],
