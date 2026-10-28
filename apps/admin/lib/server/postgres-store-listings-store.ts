@@ -59,7 +59,8 @@ export type StoreListingUpsert = {
   storeStatus: StoreStatus;
   featured: boolean;
   displayOrder: number;
-  coverObjectKey: string | null;
+  /** Omitted by commercial edits so an accepted private cover cannot be cleared accidentally. */
+  coverObjectKey?: string | null;
   commercialSummary: string | null;
   /** Optimistic concurrency: when present it must match the stored status, or the write is stale. */
   expectedStoreStatus?: StoreStatus | 'absent';
@@ -294,7 +295,7 @@ export class PostgresStoreListingsStore {
            store_status = EXCLUDED.store_status,
            featured = EXCLUDED.featured,
            display_order = EXCLUDED.display_order,
-           cover_object_key = EXCLUDED.cover_object_key,
+           cover_object_key = COALESCE(EXCLUDED.cover_object_key, store_listings.cover_object_key),
            commercial_summary = EXCLUDED.commercial_summary,
            listed_at = EXCLUDED.listed_at`,
         [

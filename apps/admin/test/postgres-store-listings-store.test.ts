@@ -164,6 +164,29 @@ describe('PostgresStoreListingsStore (M2.1)', () => {
     expect(insert?.params?.[6]).toBe(original);
   });
 
+  it('keeps an accepted cover when a later commercial edit omits coverObjectKey', async () => {
+    const client = createClient(
+      world({
+        listing: {
+          store_status: 'listed',
+          listed_at: '2026-09-01T00:00:00.000Z',
+          cover_object_key: 'admin/store-covers/a1/accepted.webp',
+        },
+      }),
+    );
+    const store = new PostgresStoreListingsStore(poolFor(client));
+
+    const { coverObjectKey: originalCover, ...commercialEdit } = baseInput;
+    expect(originalCover).toBe('covers/start.webp');
+    await store.upsertStoreListing(commercialEdit);
+
+    const insert = client.calls.find((call) => call.sql.includes('INSERT INTO store_listings'));
+    expect(insert?.sql).toContain(
+      'cover_object_key = COALESCE(EXCLUDED.cover_object_key, store_listings.cover_object_key)',
+    );
+    expect(insert?.params?.[4]).toBeUndefined();
+  });
+
   it('is idempotent: a replayed key reports the stored state without writing again', async () => {
     const client = createClient(
       world({
