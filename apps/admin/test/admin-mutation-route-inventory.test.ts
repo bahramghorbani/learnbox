@@ -176,6 +176,12 @@ const INVENTORY: Record<string, Entry> = {
     category: 'delegated',
     guardIn: 'lib/server/admin-splash-routes.ts',
   },
+  // Store pack covers: optional, private candidate media. POST is protected by origin, CSRF and
+  // fresh passkey re-auth; learner-visible cover_object_key changes only after explicit acceptance.
+  'app/api/store/covers/route.ts': {
+    category: 'delegated',
+    guardIn: 'lib/server/admin-store-pack-cover-routes.ts',
+  },
   // M2.1 — canonical Store listings. PUT delegates the full guard chain (Origin, session, CSRF,
   // recent re-auth, idempotency key) to the shared module, behind its own default-off
   // LEARNBOX_ADMIN_STORE_ENABLED gate. It writes `store_listings` only, never pack or card content.

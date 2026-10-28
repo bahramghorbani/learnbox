@@ -16,6 +16,8 @@ export interface StoreCataloguePack {
   id: string;
   name: string;
   category: string | null;
+  /** Canonical pack level, used for Store filtering. */
+  targetCefr: string;
   isFree: boolean;
   priceTomans: number | null;
   featured: boolean;
@@ -44,7 +46,7 @@ export async function readStoreCatalogue(
 ): Promise<StoreCataloguePack[]> {
   if (!isLearnerUserId(userId)) return [];
   const result = await pool.query(
-    `SELECT p.id, p.display_name, p.category, p.is_free, p.price_tomans,
+    `SELECT p.id, p.display_name, p.category, p.target_cefr, p.is_free, p.price_tomans,
             sl.featured, sl.display_order, sl.cover_object_key, sl.commercial_summary, sl.listed_at,
             ${PUBLISHED_CARD_COUNT} AS total_cards,
             ${packAccessSql('p', '$1')} AS owned
@@ -58,6 +60,7 @@ export async function readStoreCatalogue(
     id: row.id,
     name: row.display_name,
     category: row.category ?? null,
+    targetCefr: String(row.target_cefr ?? 'A1'),
     isFree: row.is_free === true,
     priceTomans: row.price_tomans ?? null,
     featured: row.featured === true,

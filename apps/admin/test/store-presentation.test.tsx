@@ -259,16 +259,22 @@ describe('StoreListingsWorkspace presentation', () => {
     const dialog = query('.cp-modal');
     expect(dialog).not.toBeNull();
     expect(dialog?.querySelector('#store-status')).not.toBeNull();
-    expect(dialog?.querySelector('#store-featured')).not.toBeNull();
     expect(dialog?.querySelector('#store-order')).not.toBeNull();
-    expect(dialog?.querySelector('#store-cover')).not.toBeNull();
+    expect(dialog?.querySelector('#store-featured')).not.toBeNull();
+    expect(dialog?.querySelector('#store-cover-upload')).not.toBeNull();
     expect(dialog?.querySelector('#store-summary')).not.toBeNull();
     // The reference's editor is a price-and-discount form. Both are business-rule violations here.
     expect(dialog?.textContent).toContain('قابل تغییر نیست');
     expect(dialog?.textContent).toContain('تخفیف و کد تخفیف در سامانه پیاده‌سازی نشده است');
     expect(
       [...(dialog?.querySelectorAll('input, select, textarea') ?? [])].map((f) => f.id),
-    ).toEqual(['store-status', 'store-order', 'store-featured', 'store-cover', 'store-summary']);
+    ).toEqual([
+      'store-status',
+      'store-order',
+      'store-featured',
+      'store-cover-upload',
+      'store-summary',
+    ]);
   });
 
   it('tells the truth about the gateway: unconfigured, and no switch to flip', async () => {

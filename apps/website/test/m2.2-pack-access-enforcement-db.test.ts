@@ -330,6 +330,7 @@ suite('M2.2 canonical pack access enforcement (real Postgres)', () => {
           'name',
           'owned',
           'priceTomans',
+          'targetCefr',
           'totalCards',
         ].sort(),
       );

@@ -77,6 +77,11 @@ import {
   createStoreListingUpsertRoute,
   createStoreListingsRoute,
 } from './admin-store-listing-routes';
+import {
+  createStorePackCoverMutationRoute,
+  createStorePackCoverRoute,
+} from './admin-store-pack-cover-routes';
+import { StorePackCoverService } from './store-pack-cover-service';
 import { createMyketCatalogClient } from './myket-catalog-client';
 import { createMyketCatalogSyncRoute, MyketCatalogSyncStore } from './admin-myket-catalog-routes';
 import {
@@ -295,6 +300,14 @@ export function createAdminContentPacksServer(dependencies: {
       storeEnabled: storeConfig.enabled,
       storeListings: createStoreListingsRoute(storeShared),
       upsertStoreListing: createStoreListingUpsertRoute(storeShared),
+      storePackCover: createStorePackCoverRoute({
+        ...storeShared,
+        service: new StorePackCoverService(pool, mediaProvider),
+      }),
+      storePackCoverMutation: createStorePackCoverMutationRoute({
+        ...storeShared,
+        service: new StorePackCoverService(pool, mediaProvider),
+      }),
       myketCatalogSync: createMyketCatalogSyncRoute(myketCatalogShared),
       transactions: createAdminTransactionsRoute(paymentsShared),
       transactionTimeline: createAdminTransactionTimelineRoute(paymentsShared),
