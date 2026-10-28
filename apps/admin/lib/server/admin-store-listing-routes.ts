@@ -110,8 +110,11 @@ function parseUpsertBody(body: Record<string, unknown>): ParsedUpsert | undefine
     return undefined;
   }
 
-  const coverObjectKey = optionalText(body.coverObjectKey, maxCoverObjectKey);
-  if (coverObjectKey === undefined) return undefined;
+  const hasCoverObjectKey = Object.hasOwn(body, 'coverObjectKey');
+  const coverObjectKey = hasCoverObjectKey
+    ? optionalText(body.coverObjectKey, maxCoverObjectKey)
+    : undefined;
+  if (hasCoverObjectKey && coverObjectKey === undefined) return undefined;
   const commercialSummary = optionalText(body.commercialSummary, maxCommercialSummary);
   if (commercialSummary === undefined) return undefined;
 

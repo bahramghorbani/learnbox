@@ -177,6 +177,19 @@ describe('Store listing upsert authorisation (M2.1)', () => {
     );
   });
 
+  it('preserves an accepted cover by forwarding no cover key when commercial edits omit it', async () => {
+    const deps = dependencies();
+    const { coverObjectKey: originalCover, ...bodyWithoutCover } = validBody;
+    expect(originalCover).toBe('covers/start.webp');
+    const response = await createStoreListingUpsertRoute(deps as never)(put(bodyWithoutCover));
+
+    expect(response.status).toBe(200);
+    const calls = deps.store.upsertStoreListing.mock.calls as unknown as Array<
+      [{ coverObjectKey?: unknown }]
+    >;
+    expect(calls[0]?.[0].coverObjectKey).toBeUndefined();
+  });
+
   it('reports a stale write as 409 so two operators cannot silently overwrite each other', async () => {
     const deps = dependencies();
     deps.store.upsertStoreListing = vi.fn(async () => ({
