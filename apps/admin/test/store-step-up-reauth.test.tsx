@@ -161,7 +161,6 @@ async function openEditorAndFill() {
   await click('ویرایش تجاری');
   await setField('#store-status', 'listed', HTMLSelectElement);
   await setField('#store-summary', 'بستهٔ شروع برای سطح A1 — آمادهٔ فروشگاه', HTMLTextAreaElement);
-  await setField('#store-cover', 'covers/start-a1.webp', HTMLInputElement);
 }
 
 const typedSummary = 'بستهٔ شروع برای سطح A1 — آمادهٔ فروشگاه';
@@ -242,7 +241,6 @@ describe('StoreListingsWorkspace step-up re-authentication', () => {
       const body = JSON.parse(String(call.init?.body)) as Record<string, unknown>;
       expect(Object.keys(body).sort()).toEqual([
         'commercialSummary',
-        'coverObjectKey',
         'displayOrder',
         'expectedStoreStatus',
         'featured',
@@ -274,9 +272,6 @@ describe('StoreListingsWorkspace step-up re-authentication', () => {
     expect(container?.querySelector('.cp-modal')).not.toBeNull();
     expect((container?.querySelector('#store-summary') as HTMLTextAreaElement).value).toBe(
       typedSummary,
-    );
-    expect((container?.querySelector('#store-cover') as HTMLInputElement).value).toBe(
-      'covers/start-a1.webp',
     );
     expect((container?.querySelector('#store-status') as HTMLSelectElement).value).toBe('listed');
   });

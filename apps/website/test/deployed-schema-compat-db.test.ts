@@ -277,10 +277,12 @@ suite('deployed application version against the expanded schema', () => {
       `SELECT count(*)::int AS n FROM information_schema.tables
         WHERE table_schema = 'public' AND table_type = 'BASE TABLE'`,
     );
-    // +4: 0039 adds purchase_orders and purchase_order_events; 0040 adds pack-media jobs/items;
-    // 0045 adds splash_media_objects (database-backed splash storage, no Blob token needed);
-    // 0046 adds push_subscriptions (daily review-reminder push notification, LB-B19); and 0052
-    // adds store_iab_catalog_items for provider SKU mappings. All are additive, with nothing dropped.
-    expect(expandedTables.rows[0].n - deployedTables.rows[0].n).toBe(12);
+    // +14: 0039 adds purchase_orders and purchase_order_events; 0040 adds pack-media jobs/items;
+    // 0045 adds splash_media_objects (database-backed splash storage, no Blob token needed); 0046
+    // adds push_subscriptions (daily review-reminder push notification, LB-B19); 0052 adds
+    // store_iab_catalog_items for provider SKU mappings; 0053 adds learner_daily_preferences; and
+    // 0054 adds private store_pack_cover_objects and store_pack_cover_candidates. All are additive,
+    // with nothing dropped.
+    expect(expandedTables.rows[0].n - deployedTables.rows[0].n).toBe(14);
   });
 });

@@ -74,18 +74,23 @@ type Draft = {
   storeStatus: 'unlisted' | 'listed';
   featured: boolean;
   displayOrder: string;
-  coverObjectKey: string;
   commercialSummary: string;
 };
 
 type Phase = 'loading' | 'ready' | 'disabled' | 'unauthorized' | 'error';
+type CoverCandidate = {
+  id: string;
+  status: 'ready' | 'accepted';
+  source: 'upload' | 'ai';
+  mediaType: string;
+  createdAt: string;
+};
 
 function draftFrom(row: ServerListing): Draft {
   return {
     storeStatus: row.listing?.storeStatus ?? 'unlisted',
     featured: row.listing?.featured ?? false,
     displayOrder: String(row.listing?.displayOrder ?? 0),
-    coverObjectKey: row.listing?.coverObjectKey ?? '',
     commercialSummary: row.listing?.commercialSummary ?? '',
   };
 }
@@ -137,7 +142,6 @@ async function saveListing(
       storeStatus: draft.storeStatus,
       featured: draft.featured,
       displayOrder,
-      coverObjectKey: draft.coverObjectKey.trim() || null,
       commercialSummary: draft.commercialSummary.trim() || null,
       expectedStoreStatus: row.listing?.storeStatus ?? 'absent',
     }),
@@ -215,6 +219,8 @@ export function StoreListingsWorkspace() {
   const [saving, setSaving] = useState(false);
   const [syncingPackId, setSyncingPackId] = useState<string | undefined>(undefined);
   const [formError, setFormError] = useState<string | undefined>(undefined);
+  const [coverCandidates, setCoverCandidates] = useState<CoverCandidate[]>([]);
+  const [coverBusy, setCoverBusy] = useState(false);
   const [notice, setNotice] = useState<string | undefined>(undefined);
   const [reportOpen, setReportOpen] = useState(false);
   const [reportPhase, setReportPhase] = useState<'loading' | 'ready' | 'error'>('loading');
@@ -283,6 +289,12 @@ export function StoreListingsWorkspace() {
   function openEditor(row: ServerListing) {
     setEditing(row);
     setDraft(draftFrom(row));
+    setCoverCandidates([]);
+    void fetch(`/api/store/covers?packId=${encodeURIComponent(row.packId)}`, {
+      credentials: 'same-origin',
+    })
+      .then((response) => (response.ok ? response.json() : { candidates: [] }))
+      .then((body: { candidates: CoverCandidate[] }) => setCoverCandidates(body.candidates));
     setFormError(undefined);
     setNotice(undefined);
   }
@@ -295,6 +307,47 @@ export function StoreListingsWorkspace() {
 
   function update(patch: Partial<Draft>) {
     setDraft((current) => (current ? { ...current, ...patch } : current));
+  }
+
+  async function coverAction(
+    action: 'generate' | 'accept' | 'upload',
+    candidateId?: string,
+    file?: File,
+  ) {
+    if (!editing) return;
+    const csrf = readCsrfToken();
+    if (!csrf) return setFormError('نشان امنیتی CSRF در دسترس نیست؛ صفحه را تازه کنید.');
+    setCoverBusy(true);
+    const body =
+      action === 'upload' && file
+        ? (() => {
+            const data = new FormData();
+            data.set('action', action);
+            data.set('packId', editing.packId);
+            data.set('file', file);
+            return data;
+          })()
+        : JSON.stringify({ action, packId: editing.packId, candidateId });
+    const { response } = await fetchWithStepUp('/api/store/covers', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers:
+        body instanceof FormData
+          ? { 'x-learnbox-csrf-token': csrf }
+          : { 'content-type': 'application/json', 'x-learnbox-csrf-token': csrf },
+      body,
+    });
+    setCoverBusy(false);
+    if (!response.ok) return setFormError('عملیات کاور انجام نشد.');
+    if (action === 'accept') {
+      closeEditor();
+      await load();
+      return;
+    }
+    const state = await fetch(`/api/store/covers?packId=${encodeURIComponent(editing.packId)}`, {
+      credentials: 'same-origin',
+    });
+    if (state.ok) setCoverCandidates((await state.json()).candidates);
   }
 
   async function submit() {
@@ -617,16 +670,49 @@ export function StoreListingsWorkspace() {
                   <span className="hint">در ردیف «ویژه» فروشگاه اپ دیده می‌شود.</span>
                 </span>
               </div>
-              <div className="cp-form-row">
-                <label htmlFor="store-cover">کلید کاور</label>
+              <div className="cp-form-row is-full">
+                <label htmlFor="store-cover-upload">کاور فروشگاه (اختیاری)</label>
                 <input
-                  id="store-cover"
-                  className="cp-input cp-ltr"
-                  type="text"
-                  value={draft.coverObjectKey}
-                  disabled={saving}
-                  onChange={(event) => update({ coverObjectKey: event.target.value })}
+                  id="store-cover-upload"
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  disabled={coverBusy}
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    if (file) void coverAction('upload', undefined, file);
+                  }}
                 />
+                <button
+                  type="button"
+                  className="btn sm"
+                  disabled={coverBusy}
+                  onClick={() => void coverAction('generate')}
+                >
+                  ساخت نامزد با AI
+                </button>
+                <span className="hint">
+                  تولید فقط با کلیک انجام می‌شود؛ نامزد تا پذیرش صریح در فروشگاه نمایش داده نمی‌شود.
+                </span>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {(coverCandidates ?? []).map((candidate) => (
+                    <div key={candidate.id}>
+                      <img
+                        width={72}
+                        height={72}
+                        alt={`پیش‌نمایش ${candidate.source}`}
+                        src={`/api/store/covers?candidateId=${encodeURIComponent(candidate.id)}`}
+                      />
+                      <button
+                        type="button"
+                        className="btn sm"
+                        disabled={coverBusy || candidate.status === 'accepted'}
+                        onClick={() => void coverAction('accept', candidate.id)}
+                      >
+                        {candidate.status === 'accepted' ? 'پذیرفته‌شده' : 'پذیرش کاور'}
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
               <div className="cp-form-row is-full">
                 <label htmlFor="store-summary">توضیح تجاری</label>

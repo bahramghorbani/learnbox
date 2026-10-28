@@ -1,5 +1,7 @@
 'use client';
 
+import '../store-pack-cover.css';
+
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { Bobo } from './Bobo';
@@ -25,6 +27,8 @@ import { toPersianDigits } from '../persian-digits';
 type CataloguePack = {
   id: string;
   name: string;
+  targetCefr: string;
+  coverObjectKey: string | null;
   isFree: boolean;
   priceTomans: number | null;
   featured: boolean;
@@ -114,6 +118,7 @@ export function StoreScreen({
   focusPackId?: string | null;
 }) {
   const [catalogue, setCatalogue] = useState<CataloguePack[]>([]);
+  const [level, setLevel] = useState<string | null>(null);
   const [owned, setOwned] = useState<OwnedPack[]>([]);
   const [state, setState] = useState<LoadState>('loading');
   const [activation, setActivation] = useState<ActivationState>(ACTIVATION_IDLE);
@@ -286,8 +291,12 @@ export function StoreScreen({
   // Bring the requested pack into view once the real catalogue has arrived. Guarded because
   // `scrollIntoView` does not exist in the test environment, and absent entirely when the pack is
   // not on offer — no error, no placeholder, nothing that implies a hidden pack exists.
+  const levels = [...new Set(catalogue.map((pack) => pack.targetCefr).filter(Boolean))].sort();
+  const visibleCatalogue = level
+    ? catalogue.filter((pack) => pack.targetCefr === level)
+    : catalogue;
   const focusedPackPresent =
-    focusPackId !== null && catalogue.some((pack) => pack.id === focusPackId);
+    focusPackId !== null && visibleCatalogue.some((pack) => pack.id === focusPackId);
   useEffect(() => {
     if (state !== 'ready' || !focusedPackPresent) return;
     const card = focusedCardRef.current;
@@ -483,7 +492,28 @@ export function StoreScreen({
 
               <section className="store-section" aria-labelledby="store-catalogue">
                 <h2 id="store-catalogue">بسته‌های موجود</h2>
-                {catalogue.length === 0 ? (
+                {levels.length > 1 ? (
+                  <div className="store-level-chips" role="group" aria-label="فیلتر سطح CEFR">
+                    <button
+                      type="button"
+                      aria-pressed={level === null}
+                      onClick={() => setLevel(null)}
+                    >
+                      همه
+                    </button>
+                    {levels.map((item) => (
+                      <button
+                        key={item}
+                        type="button"
+                        aria-pressed={level === item}
+                        onClick={() => setLevel(item)}
+                      >
+                        {item}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+                {visibleCatalogue.length === 0 ? (
                   <div className="store-empty">
                     <Bobo expression="encourage" size={96} />
                     <p>هنوز بسته‌ای برای عرضه آماده نیست.</p>
@@ -491,7 +521,7 @@ export function StoreScreen({
                   </div>
                 ) : (
                   <ul className="store-pack-list">
-                    {catalogue.map((pack) => {
+                    {visibleCatalogue.map((pack) => {
                       const busy = activation.packId === pack.id;
                       return (
                         <li
@@ -502,6 +532,20 @@ export function StoreScreen({
                           }${focusPackId === pack.id ? ' slide-focused' : ''}`}
                           aria-current={focusPackId === pack.id ? 'true' : undefined}
                         >
+                          {pack.coverObjectKey ? (
+                            <img
+                              className="store-pack-cover"
+                              src={`/api/store/covers/${encodeURIComponent(pack.id)}`}
+                              alt={`کاور ${pack.name}`}
+                            />
+                          ) : (
+                            <div
+                              className="store-pack-cover store-pack-cover-placeholder"
+                              aria-label={`کاور پیش‌فرض ${pack.name}`}
+                            >
+                              {pack.targetCefr}
+                            </div>
+                          )}
                           <div className="store-pack-head">
                             <h3>{pack.name}</h3>
                             {pack.owned ? (
