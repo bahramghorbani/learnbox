@@ -9,6 +9,8 @@ import {
   validateLearningVocabularyItem,
 } from '@learnbox/content-models';
 
+import { splitMultiValue } from './content-import-contract';
+
 /**
  * Phase 1 / Milestone 1.2 — Pack & Card management writes.
  *
@@ -73,6 +75,14 @@ export interface CardCreateInput {
 export interface CardEditInput {
   cardId: string;
   content: CardContentInput;
+  idempotencyKey: string;
+}
+
+/** Applies one AI-reviewer finding's suggestion to the card it was raised for. */
+export interface ApplyFindingSuggestionInput {
+  cardVersionId: string;
+  field: string;
+  suggestion: string;
   idempotencyKey: string;
 }
 
@@ -283,6 +293,82 @@ export function buildCardContent(
       sourceType: 'editorial',
       sourceReference: trimmed(input.sourceReference),
     },
+  };
+}
+
+/**
+ * Reviewer finding keys this method will act on. `finding.field` is free text written by the LLM
+ * reviewer (see `ai-card-review.ts`) — never guess a mapping for an unrecognised key, reject it.
+ */
+const singleValueFindingFields: Partial<Record<string, keyof CardContentInput>> = {
+  lemma: 'lemma',
+  article: 'article',
+  essential_inflection: 'essentialInflection',
+  pronunciation_ipa: 'pronunciationIpa',
+  simple_german_definition: 'simpleGermanDefinition',
+  grammar_note: 'grammarNote',
+  cefr: 'cefr',
+  visual_concept: 'visualConcept',
+  image_prompt: 'imagePrompt',
+  source_reference: 'sourceReference',
+};
+
+/**
+ * Applies one AI-reviewer finding's suggestion to a card's full content. Returns null for an
+ * unrecognised or empty suggestion so the caller rejects the request instead of guessing which
+ * part of the card the model meant.
+ */
+export function applyFindingSuggestionToContent(
+  content: CardContentInput,
+  field: string,
+  suggestion: string,
+): CardContentInput | null {
+  const key = field.trim().toLowerCase();
+  const text = suggestion.trim();
+  if (!text) return null;
+  if (key === 'persian_meanings') return { ...content, persianMeanings: splitMultiValue(text) };
+  if (key === 'topic_tags') return { ...content, topicTags: splitMultiValue(text) };
+  const target = singleValueFindingFields[key];
+  return target ? { ...content, [target]: text } : null;
+}
+
+/** Rebuilds the editable `CardContentInput` shape from a persisted `card_versions` row. */
+function cardContentInputFromRow(row: Record<string, unknown>): CardContentInput {
+  const content = (row.content_json ?? {}) as Record<string, unknown>;
+  const pronunciation = content.pronunciation as Record<string, unknown> | undefined;
+  const examples = Array.isArray(content.examples)
+    ? (content.examples as Array<{ german?: unknown; persian?: unknown }>).map((example) => ({
+        german: String(example.german ?? ''),
+        persian: String(example.persian ?? ''),
+      }))
+    : [];
+  return {
+    lemma: String(content.lemma ?? ''),
+    article:
+      content.article === null || content.article === undefined ? undefined : String(content.article),
+    partOfSpeech: String(content.partOfSpeech ?? 'noun'),
+    essentialInflection:
+      content.essentialInflection === null || content.essentialInflection === undefined
+        ? undefined
+        : String(content.essentialInflection),
+    pronunciationIpa:
+      pronunciation && pronunciation.ipa !== null && pronunciation.ipa !== undefined
+        ? String(pronunciation.ipa)
+        : undefined,
+    persianMeanings: Array.isArray(content.persianMeanings)
+      ? (content.persianMeanings as unknown[]).map(String)
+      : [],
+    examples,
+    simpleGermanDefinition: String(content.simpleGermanDefinition ?? ''),
+    grammarNote: String(content.grammarNote ?? ''),
+    topicTags: Array.isArray(content.topicTags)
+      ? (content.topicTags as unknown[]).map(String)
+      : [],
+    difficulty: Number(content.difficulty ?? 1),
+    cefr: String(content.cefr ?? ''),
+    visualConcept: String(content.visualConcept ?? ''),
+    imagePrompt: String(content.imagePrompt ?? ''),
+    sourceReference: String(row.source_reference ?? ''),
   };
 }
 
@@ -892,5 +978,60 @@ export class PostgresContentPacksWriteStore {
     } finally {
       client.release();
     }
+  }
+
+  /**
+   * Applies one AI-reviewer finding's suggestion to the card it was raised for. This is the
+   * human-triggered counterpart to the automatic repair loop in `ai-pack-generation-service.ts`
+   * (which only runs before a card is first persisted): the admin may accept the AI's wording
+   * instead of retyping it, but every protection on `editCard` still applies — it never writes
+   * `status = 'published'` and a reviewed version is never mutated in place, only replaced by a
+   * new draft. Applying a suggestion therefore always drops the card back to `draft` and out of
+   * the review queue, exactly like any other manual content edit; the pack must be resubmitted
+   * for review afterwards.
+   */
+  async applyFindingSuggestion(
+    input: ApplyFindingSuggestionInput & { actorUserId: string },
+  ): Promise<CardWriteResult> {
+    if (!canonicalUuidPattern.test(input.actorUserId)) throw new Error('Actor user id is invalid.');
+    if (!canonicalUuidPattern.test(input.idempotencyKey)) {
+      throw new Error('Idempotency key is invalid.');
+    }
+    if (!(await this.assertRole(this.pool, input.actorUserId))) return { status: 'forbidden' };
+    if (!canonicalUuidPattern.test(input.cardVersionId)) return { status: 'not_found' };
+
+    const current = await this.pool.query(
+      `SELECT card_id, content_json, source_reference FROM card_versions WHERE id = $1`,
+      [input.cardVersionId],
+    );
+    if (current.rows.length === 0) return { status: 'not_found' };
+    const cardId = String(current.rows[0]!.card_id);
+
+    // The finding was raised against a specific version. If the card moved on since (another
+    // admin, another tab, another applied suggestion), refuse rather than overwrite that change
+    // with content built from the stale version the reviewer is still looking at.
+    const latest = await this.pool.query(
+      'SELECT id FROM card_versions WHERE card_id = $1 ORDER BY version DESC LIMIT 1',
+      [cardId],
+    );
+    if (String(latest.rows[0]?.id ?? '') !== input.cardVersionId) {
+      return { status: 'conflict', reason: 'card_changed_since_review' };
+    }
+
+    const content = cardContentInputFromRow(current.rows[0]!);
+    const updated = applyFindingSuggestionToContent(content, input.field, input.suggestion);
+    if (!updated) {
+      return {
+        status: 'invalid',
+        issues: [{ field: input.field, message: 'این فیلد پیشنهاد قابل اعمال خودکار نیست.' }],
+      };
+    }
+
+    return this.editCard({
+      cardId,
+      content: updated,
+      idempotencyKey: input.idempotencyKey,
+      actorUserId: input.actorUserId,
+    });
   }
 }

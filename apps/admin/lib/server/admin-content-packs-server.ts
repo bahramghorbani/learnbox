@@ -11,6 +11,7 @@ import {
   createContentPacksListRoute,
 } from './admin-content-packs-routes';
 import {
+  createApplyFindingSuggestionRoute,
   createContentCardCreateRoute,
   createContentCardEditRoute,
   createContentCardRemoveFromPackRoute,
@@ -266,6 +267,7 @@ export function createAdminContentPacksServer(dependencies: {
       setPackPrice: createPackPriceRoute({ ...writeShared, store: priceStore }),
       createCard: createContentCardCreateRoute(writeShared),
       editCard: createContentCardEditRoute(writeShared),
+      applyFindingSuggestion: createApplyFindingSuggestionRoute(writeShared),
       removeCardFromPack: createContentCardRemoveFromPackRoute(writeShared),
       importPreview: createContentImportPreviewRoute(importShared),
       importConfirm: createContentImportConfirmRoute(importShared),
