@@ -345,7 +345,9 @@ function cardContentInputFromRow(row: Record<string, unknown>): CardContentInput
   return {
     lemma: String(content.lemma ?? ''),
     article:
-      content.article === null || content.article === undefined ? undefined : String(content.article),
+      content.article === null || content.article === undefined
+        ? undefined
+        : String(content.article),
     partOfSpeech: String(content.partOfSpeech ?? 'noun'),
     essentialInflection:
       content.essentialInflection === null || content.essentialInflection === undefined
@@ -361,9 +363,7 @@ function cardContentInputFromRow(row: Record<string, unknown>): CardContentInput
     examples,
     simpleGermanDefinition: String(content.simpleGermanDefinition ?? ''),
     grammarNote: String(content.grammarNote ?? ''),
-    topicTags: Array.isArray(content.topicTags)
-      ? (content.topicTags as unknown[]).map(String)
-      : [],
+    topicTags: Array.isArray(content.topicTags) ? (content.topicTags as unknown[]).map(String) : [],
     difficulty: Number(content.difficulty ?? 1),
     cefr: String(content.cefr ?? ''),
     visualConcept: String(content.visualConcept ?? ''),

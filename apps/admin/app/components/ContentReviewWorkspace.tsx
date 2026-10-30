@@ -592,8 +592,7 @@ export function ServerBackedContentReview() {
       } else {
         setNotice({
           kind: 'decision-success',
-          text:
-            'پیشنهاد اعمال شد؛ نسخهٔ پیش‌نویس جدیدی ساخته شد و کارت از صف بررسی خارج شد تا بسته دوباره برای بازبینی ارسال شود.',
+          text: 'پیشنهاد اعمال شد؛ نسخهٔ پیش‌نویس جدیدی ساخته شد و کارت از صف بررسی خارج شد تا بسته دوباره برای بازبینی ارسال شود.',
         });
       }
       setPendingApplyKeys((keys) => {

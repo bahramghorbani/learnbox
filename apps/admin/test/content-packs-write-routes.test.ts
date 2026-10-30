@@ -613,7 +613,9 @@ describe('apply-finding route', () => {
       store: {
         applyFindingSuggestion: async () => ({
           status: 'invalid' as const,
-          issues: [{ field: 'translation_quality', message: 'این فیلد پیشنهاد قابل اعمال خودکار نیست.' }],
+          issues: [
+            { field: 'translation_quality', message: 'این فیلد پیشنهاد قابل اعمال خودکار نیست.' },
+          ],
         }),
       },
       now: () => now,
