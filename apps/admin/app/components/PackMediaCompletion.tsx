@@ -382,76 +382,87 @@ export function PackMediaCompletion({
               />
               {job.items
                 .filter((item) => item.status === 'needs_attention' || item.status === 'deferred')
-                .map((item) => (
-                  <div key={item.id}>
-                    <p>
-                      {KIND_LABEL[item.kind]} — کارت <bdi dir="ltr">{item.cardId}</bdi> —{' '}
-                      {item.status === 'deferred' ? 'موکول‌شده' : 'نیازمند رسیدگی'}
-                    </p>
-                    {item.status === 'needs_attention' ? (
-                      <p>{attentionDetail(item.detail)}</p>
-                    ) : null}
-                    {item.status === 'needs_attention' ? (
-                      <>
-                        {job.counts.pending > 0 ? (
+                .map((item) => {
+                  const cardLabel =
+                    cards.find((card) => card.cardId === item.cardId)?.label ?? item.cardId;
+                  return (
+                    <div key={item.id}>
+                      <p>
+                        {KIND_LABEL[item.kind]} —{' '}
+                        <button
+                          type="button"
+                          className="btn"
+                          onClick={() => onOpenCard({ cardId: item.cardId, label: cardLabel })}
+                        >
+                          <bdi dir="ltr">{cardLabel}</bdi>
+                        </button>{' '}
+                        — {item.status === 'deferred' ? 'موکول‌شده' : 'نیازمند رسیدگی'}
+                      </p>
+                      {item.status === 'needs_attention' ? (
+                        <p>{attentionDetail(item.detail)}</p>
+                      ) : null}
+                      {item.status === 'needs_attention' ? (
+                        <>
+                          {job.counts.pending > 0 ? (
+                            <label>
+                              <input
+                                type="checkbox"
+                                checked={confirmedContinuePending}
+                                onChange={(event) =>
+                                  setConfirmedContinuePending(event.target.checked)
+                                }
+                              />
+                              می‌دانم با موکول‌کردن، فقط {faNum(job.counts.pending)} مورد pending
+                              همین job و snapshot ثبت‌شدهٔ آن، پس از فعال‌بودن runner، ادامه
+                              می‌یابد؛ این دکمه هیچ درخواست provider ارسال نمی‌کند.
+                            </label>
+                          ) : null}
+                          <button
+                            type="button"
+                            className="btn"
+                            disabled={
+                              Boolean(busy) ||
+                              !resolutionReason.trim() ||
+                              (job.counts.pending > 0 && !confirmedContinuePending)
+                            }
+                            onClick={() => void resolveItem(item.id, 'defer')}
+                          >
+                            موکول‌کردن این مورد و ادامهٔ بقیه
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <p className="notice error">
+                            هشدار: نتیجهٔ فراخوانی قبلی معلوم نیست؛ retry ممکن است هزینهٔ دوباره
+                            داشته باشد.
+                          </p>
                           <label>
                             <input
                               type="checkbox"
-                              checked={confirmedContinuePending}
+                              checked={confirmedPotentialDuplicateCharge}
                               onChange={(event) =>
-                                setConfirmedContinuePending(event.target.checked)
+                                setConfirmedPotentialDuplicateCharge(event.target.checked)
                               }
                             />
-                            می‌دانم با موکول‌کردن، فقط {faNum(job.counts.pending)} مورد pending همین
-                            job و snapshot ثبت‌شدهٔ آن، پس از فعال‌بودن runner، ادامه می‌یابد؛ این
-                            دکمه هیچ درخواست provider ارسال نمی‌کند.
+                            احتمال هزینهٔ دوباره را فهمیدم و retry این مورد را صریحاً تأیید می‌کنم.
                           </label>
-                        ) : null}
-                        <button
-                          type="button"
-                          className="btn"
-                          disabled={
-                            Boolean(busy) ||
-                            !resolutionReason.trim() ||
-                            (job.counts.pending > 0 && !confirmedContinuePending)
-                          }
-                          onClick={() => void resolveItem(item.id, 'defer')}
-                        >
-                          موکول‌کردن این مورد و ادامهٔ بقیه
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <p className="notice error">
-                          هشدار: نتیجهٔ فراخوانی قبلی معلوم نیست؛ retry ممکن است هزینهٔ دوباره داشته
-                          باشد.
-                        </p>
-                        <label>
-                          <input
-                            type="checkbox"
-                            checked={confirmedPotentialDuplicateCharge}
-                            onChange={(event) =>
-                              setConfirmedPotentialDuplicateCharge(event.target.checked)
+                          <button
+                            type="button"
+                            className="btn"
+                            disabled={
+                              Boolean(busy) ||
+                              !resolutionReason.trim() ||
+                              !confirmedPotentialDuplicateCharge
                             }
-                          />
-                          احتمال هزینهٔ دوباره را فهمیدم و retry این مورد را صریحاً تأیید می‌کنم.
-                        </label>
-                        <button
-                          type="button"
-                          className="btn"
-                          disabled={
-                            Boolean(busy) ||
-                            !resolutionReason.trim() ||
-                            !confirmedPotentialDuplicateCharge
-                          }
-                          onClick={() => void resolveItem(item.id, 'retry')}
-                        >
-                          تأیید retry جداگانهٔ همین مورد
-                        </button>
-                      </>
-                    )}
-                  </div>
-                ))}
+                            onClick={() => void resolveItem(item.id, 'retry')}
+                          >
+                            تأیید retry جداگانهٔ همین مورد
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
             </div>
           ) : null}
           {activeJob ? (
