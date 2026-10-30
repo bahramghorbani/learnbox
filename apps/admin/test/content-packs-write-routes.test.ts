@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { readAdminContentPacksManageConfig } from '../lib/server/admin-content-packs-config';
 import {
+  createApplyFindingSuggestionRoute,
   createContentCardCreateRoute,
   createContentCardEditRoute,
   createContentCardRemoveFromPackRoute,
@@ -10,6 +11,7 @@ import {
 } from '../lib/server/admin-content-packs-write-routes';
 import { hashAdminSecret } from '../lib/server/admin-session.js';
 import {
+  applyFindingSuggestionToContent,
   buildCardContent,
   deriveContentId,
   type CardContentInput,
@@ -474,5 +476,159 @@ describe('canonical content construction', () => {
     expect(validateLearningVocabularyItem(content).map((issue) => issue.field)).toContain(
       'difficulty',
     );
+  });
+});
+
+describe('applyFindingSuggestionToContent', () => {
+  it('splits a multi-value finding field like the import pipeline does', () => {
+    const updated = applyFindingSuggestionToContent(
+      validContent,
+      'persian_meanings',
+      'قفسه؛ قفسه‌ی کتاب',
+    );
+    expect(updated?.persianMeanings).toEqual(['قفسه', 'قفسه‌ی کتاب']);
+    // Nothing else moves — this is a single-field patch, not a rewrite.
+    expect(updated?.lemma).toBe(validContent.lemma);
+  });
+
+  it('writes a scalar finding field as-is', () => {
+    const updated = applyFindingSuggestionToContent(validContent, 'grammar_note', 'اسم مؤنث.');
+    expect(updated?.grammarNote).toBe('اسم مؤنث.');
+  });
+
+  it('rejects a field the reviewer model invented, instead of guessing', () => {
+    expect(applyFindingSuggestionToContent(validContent, 'translation_quality', 'x')).toBeNull();
+  });
+
+  it('rejects an empty suggestion', () => {
+    expect(applyFindingSuggestionToContent(validContent, 'lemma', '   ')).toBeNull();
+  });
+});
+
+describe('apply-finding route', () => {
+  const cardVersionId = '44444444-4444-4444-8444-444444444444';
+
+  it('rejects an unauthenticated request with 401 and never reaches the store', async () => {
+    const route = createApplyFindingSuggestionRoute({
+      enabled: true,
+      config,
+      sessionStore: sessionStore({ userId: null }),
+      store: unreachableStore('applyFindingSuggestion'),
+      now: () => now,
+    });
+
+    const response = await route(
+      mutationRequest(
+        '/api/content/review/apply-finding',
+        { cardVersionId, field: 'lemma', suggestion: 'Tisch' },
+        { cookie: false },
+      ),
+    );
+
+    expect(response.status).toBe(401);
+  });
+
+  it('404s while the manage flag is off', async () => {
+    const route = createApplyFindingSuggestionRoute({
+      enabled: false,
+      config,
+      sessionStore: sessionStore(),
+      store: unreachableStore('applyFindingSuggestion'),
+      now: () => now,
+    });
+
+    const response = await route(
+      mutationRequest('/api/content/review/apply-finding', {
+        cardVersionId,
+        field: 'lemma',
+        suggestion: 'Tisch',
+      }),
+    );
+
+    expect(response.status).toBe(404);
+  });
+
+  it('passes the finding through to the store and reports success', async () => {
+    let seen: unknown;
+    const route = createApplyFindingSuggestionRoute({
+      enabled: true,
+      config,
+      sessionStore: sessionStore(),
+      store: {
+        applyFindingSuggestion: async (input: unknown) => {
+          seen = input;
+          return { status: 'applied' as const, cardId, cardVersionId, version: 2 };
+        },
+      },
+      now: () => now,
+    });
+
+    const response = await route(
+      mutationRequest('/api/content/review/apply-finding', {
+        cardVersionId,
+        field: 'persian_meanings',
+        suggestion: 'قفسه؛ قفسه‌ی کتاب',
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(seen).toMatchObject({
+      cardVersionId,
+      field: 'persian_meanings',
+      suggestion: 'قفسه؛ قفسه‌ی کتاب',
+      actorUserId,
+    });
+  });
+
+  it('surfaces a stale-version conflict as 409, not a silent overwrite', async () => {
+    const route = createApplyFindingSuggestionRoute({
+      enabled: true,
+      config,
+      sessionStore: sessionStore(),
+      store: {
+        applyFindingSuggestion: async () => ({
+          status: 'conflict' as const,
+          reason: 'card_changed_since_review',
+        }),
+      },
+      now: () => now,
+    });
+
+    const response = await route(
+      mutationRequest('/api/content/review/apply-finding', {
+        cardVersionId,
+        field: 'lemma',
+        suggestion: 'Tisch',
+      }),
+    );
+
+    expect(response.status).toBe(409);
+  });
+
+  it('reports an unsupported field as a structured 422', async () => {
+    const route = createApplyFindingSuggestionRoute({
+      enabled: true,
+      config,
+      sessionStore: sessionStore(),
+      store: {
+        applyFindingSuggestion: async () => ({
+          status: 'invalid' as const,
+          issues: [
+            { field: 'translation_quality', message: 'این فیلد پیشنهاد قابل اعمال خودکار نیست.' },
+          ],
+        }),
+      },
+      now: () => now,
+    });
+
+    const response = await route(
+      mutationRequest('/api/content/review/apply-finding', {
+        cardVersionId,
+        field: 'translation_quality',
+        suggestion: 'x',
+      }),
+    );
+
+    expect(response.status).toBe(422);
   });
 });

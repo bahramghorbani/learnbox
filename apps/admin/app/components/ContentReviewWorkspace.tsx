@@ -117,6 +117,24 @@ type ServerAiReview = {
   findings: ServerAiFinding[];
 };
 
+/** Keys this screen can apply automatically; kept in sync with the server whitelist in
+ *  `postgres-content-packs-write-store.ts` (`finding.field` is free LLM text — anything else
+ *  gets no button instead of a guaranteed-failing request). */
+const applicableFindingFields = new Set([
+  'lemma',
+  'article',
+  'essential_inflection',
+  'pronunciation_ipa',
+  'simple_german_definition',
+  'grammar_note',
+  'cefr',
+  'visual_concept',
+  'image_prompt',
+  'source_reference',
+  'persian_meanings',
+  'topic_tags',
+]);
+
 const severityLabels: Record<ServerAiFinding['severity'], string> = {
   critical: 'بحرانی',
   major: 'مهم',
@@ -155,7 +173,17 @@ function aiVerdict(review: ServerAiReview): { text: string; badge: string } {
  * the suggested fix and whether the automatic repair resolved it. Purely informational — it is
  * never a gate dimension, and approving still needs every human check.
  */
-function AiReviewPanel({ review }: { review: ServerAiReview }) {
+function AiReviewPanel({
+  review,
+  onApply,
+  applyingFindingKey,
+  applyDisabled,
+}: {
+  review: ServerAiReview;
+  onApply: (field: string, suggestion: string, findingKey: string) => void;
+  applyingFindingKey: string | undefined;
+  applyDisabled: boolean;
+}) {
   const verdict = aiVerdict(review);
   return (
     <section
@@ -185,34 +213,48 @@ function AiReviewPanel({ review }: { review: ServerAiReview }) {
           <p className="muted-note">بازبین هیچ ایرادی ثبت نکرد.</p>
         ) : (
           <ul className="ai-finding-list">
-            {review.findings.map((finding, index) => (
-              <li
-                key={`${finding.round}-${finding.field}-${index}`}
-                data-finding-status={finding.status}
-              >
-                <div className="ai-finding-head">
-                  <span className={`badge ${severityBadges[finding.severity]}`}>
-                    {severityLabels[finding.severity]}
-                  </span>
-                  <span className="keep-latin ai-finding-field">{finding.field}</span>
-                  <span
-                    className={`badge ${finding.status === 'resolved' ? 'b-green' : 'b-amber'}`}
-                  >
-                    {findingStatusLabels[finding.status]}
-                  </span>
-                </div>
-                <p>
-                  <strong>علت:</strong>{' '}
-                  {finding.source === 'validator' ? 'اعتبارسنج LearnBox — ' : ''}
-                  {finding.reason}
-                </p>
-                {finding.suggestion ? (
+            {review.findings.map((finding, index) => {
+              const findingKey = `${finding.round}-${finding.field}-${index}`;
+              const canApply =
+                finding.status === 'remaining' &&
+                finding.suggestion.trim().length > 0 &&
+                applicableFindingFields.has(finding.field.trim().toLowerCase());
+              return (
+                <li key={findingKey} data-finding-status={finding.status}>
+                  <div className="ai-finding-head">
+                    <span className={`badge ${severityBadges[finding.severity]}`}>
+                      {severityLabels[finding.severity]}
+                    </span>
+                    <span className="keep-latin ai-finding-field">{finding.field}</span>
+                    <span
+                      className={`badge ${finding.status === 'resolved' ? 'b-green' : 'b-amber'}`}
+                    >
+                      {findingStatusLabels[finding.status]}
+                    </span>
+                  </div>
                   <p>
-                    <strong>پیشنهاد اصلاح:</strong> {finding.suggestion}
+                    <strong>علت:</strong>{' '}
+                    {finding.source === 'validator' ? 'اعتبارسنج LearnBox — ' : ''}
+                    {finding.reason}
                   </p>
-                ) : null}
-              </li>
-            ))}
+                  {finding.suggestion ? (
+                    <p>
+                      <strong>پیشنهاد اصلاح:</strong> {finding.suggestion}
+                    </p>
+                  ) : null}
+                  {canApply ? (
+                    <button
+                      type="button"
+                      className="btn"
+                      disabled={applyDisabled}
+                      onClick={() => onApply(finding.field, finding.suggestion, findingKey)}
+                    >
+                      {applyingFindingKey === findingKey ? 'در حال اعمال…' : 'اعمال پیشنهاد'}
+                    </button>
+                  ) : null}
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>
@@ -252,11 +294,13 @@ export function ServerBackedContentReview() {
   const [phase, setPhase] = useState<ServerPhase>('loading');
   const [items, setItems] = useState<ServerQueueItem[]>([]);
   const [selectedId, setSelectedId] = useState<string>();
-  const [busy, setBusy] = useState<'none' | 'check' | 'decision'>('none');
+  const [busy, setBusy] = useState<'none' | 'check' | 'decision' | 'apply'>('none');
   const [busyDimension, setBusyDimension] = useState<ReviewDimension | undefined>();
   const [notice, setNotice] = useState<ServerNotice>({ kind: 'none' });
   const [pendingCheckKeys, setPendingCheckKeys] = useState<Record<string, string>>({});
   const [pendingDecisionKey, setPendingDecisionKey] = useState<string>();
+  const [pendingApplyKeys, setPendingApplyKeys] = useState<Record<string, string>>({});
+  const [applyingFindingKey, setApplyingFindingKey] = useState<string>();
 
   const loadQueue = useCallback(async (reportErrors = true) => {
     try {
@@ -480,6 +524,94 @@ export function ServerBackedContentReview() {
     }
   }
 
+  async function applySuggestion(field: string, suggestion: string, findingKey: string) {
+    if (!selected || busy !== 'none') return;
+    const idempotencyKey = pendingApplyKeys[findingKey] ?? createIdempotencyKey();
+    const csrfToken = readCsrfToken();
+    if (!csrfToken) {
+      setNotice({ kind: 'error', text: 'نشان امنیتی CSRF در دسترس نیست؛ صفحه را تازه کنید.' });
+      return;
+    }
+    setPendingApplyKeys((keys) => ({ ...keys, [findingKey]: idempotencyKey }));
+    setApplyingFindingKey(findingKey);
+    setBusy('apply');
+    setNotice({ kind: 'none' });
+    try {
+      const { response, stepUp } = await fetchWithStepUp('/api/content/review/apply-finding', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+          'content-type': 'application/json',
+          'x-learnbox-csrf-token': csrfToken,
+          'idempotency-key': idempotencyKey,
+        },
+        body: JSON.stringify({ cardVersionId: selected.cardVersionId, field, suggestion }),
+      });
+      if (response.status === 428) {
+        setNotice({ kind: 'reauth', text: stepUpMessage(stepUp) });
+        return;
+      }
+      if (response.status === 409) {
+        setPendingApplyKeys((keys) => {
+          const next = { ...keys };
+          delete next[findingKey];
+          return next;
+        });
+        setNotice({
+          kind: 'conflict',
+          text: 'اعمال نشد: کارت از زمان بازبینی تغییر کرده است؛ صفحه را تازه کنید.',
+        });
+        return;
+      }
+      if (response.status === 422) {
+        setPendingApplyKeys((keys) => {
+          const next = { ...keys };
+          delete next[findingKey];
+          return next;
+        });
+        setNotice({
+          kind: 'error',
+          text: 'این یافته قابل اعمال خودکار نیست؛ باید دستی اصلاح شود.',
+        });
+        return;
+      }
+      if (!response.ok) {
+        setNotice({
+          kind: 'error',
+          text: 'اعمال پیشنهاد در سرور ناموفق بود؛ دوباره تلاش کنید (درخواست تکراری بی‌اثر است).',
+        });
+        return;
+      }
+      const payload = (await response.json().catch(() => undefined)) as
+        { status?: string } | undefined;
+      if (payload?.status === 'idempotent') {
+        setNotice({
+          kind: 'idempotent',
+          text: 'این پیشنهاد قبلاً اعمال شده بود؛ دوباره اعمال نشد.',
+        });
+      } else {
+        setNotice({
+          kind: 'decision-success',
+          text: 'پیشنهاد اعمال شد؛ نسخهٔ پیش‌نویس جدیدی ساخته شد و کارت از صف بررسی خارج شد تا بسته دوباره برای بازبینی ارسال شود.',
+        });
+      }
+      setPendingApplyKeys((keys) => {
+        const next = { ...keys };
+        delete next[findingKey];
+        return next;
+      });
+      await refreshAfterMutation();
+    } catch {
+      setNotice({
+        kind: 'error',
+        text: 'ارتباط با سرور برقرار نشد؛ دوباره تلاش کنید (کلید یکسان دوباره استفاده می‌شود).',
+      });
+    } finally {
+      setBusy('none');
+      setApplyingFindingKey(undefined);
+    }
+  }
+
   return (
     <section
       className="server-review"
@@ -687,7 +819,14 @@ export function ServerBackedContentReview() {
                 </div>
               </article>
 
-              {selected.aiReview ? <AiReviewPanel review={selected.aiReview} /> : null}
+              {selected.aiReview ? (
+                <AiReviewPanel
+                  review={selected.aiReview}
+                  onApply={applySuggestion}
+                  applyingFindingKey={applyingFindingKey}
+                  applyDisabled={busy !== 'none'}
+                />
+              ) : null}
             </div>
 
             <section

@@ -395,6 +395,52 @@ export function createContentCardEditRoute(dependencies: RouteDependencies<'edit
   };
 }
 
+/**
+ * Applies one AI-reviewer finding's suggestion to the card it was raised for. Body-only (not a
+ * `[cardId]` path segment) because the review workspace only knows the card's current
+ * `cardVersionId`; the store resolves the card and verifies that version is still the latest.
+ */
+export function createApplyFindingSuggestionRoute(
+  dependencies: RouteDependencies<'applyFindingSuggestion'>,
+) {
+  return async function POST(request: Request) {
+    if (
+      !dependencies.enabled ||
+      !dependencies.config.enabled ||
+      !dependencies.sessionStore ||
+      !dependencies.store
+    ) {
+      return notFound();
+    }
+    const now = (dependencies.now ?? (() => new Date()))();
+    const authorized = await authorizeMutation(request, dependencies, now);
+    if ('response' in authorized) return authorized.response;
+
+    const body = await parseJsonBody(request);
+    if (!body) return genericInvalid();
+    const cardVersionId = optionalString(body.cardVersionId);
+    const field = optionalString(body.field);
+    const suggestion = optionalString(body.suggestion);
+    if (cardVersionId === undefined || field === undefined || suggestion === undefined) {
+      return genericInvalid();
+    }
+
+    try {
+      const result = await dependencies.store.applyFindingSuggestion({
+        cardVersionId,
+        field,
+        suggestion,
+        idempotencyKey: authorized.idempotencyKey,
+        actorUserId: authorized.actorUserId,
+      });
+      return cardWriteResponse(result);
+    } catch (error) {
+      logWriteFailure('content_card.apply_finding_suggestion', error);
+      return unavailable();
+    }
+  };
+}
+
 export function createContentCardRemoveFromPackRoute(
   dependencies: RouteDependencies<'removeCardFromPack'>,
 ) {

@@ -67,6 +67,10 @@ const INVENTORY: Record<string, Entry> = {
     category: 'delegated',
     guardIn: 'lib/server/admin-content-packs-write-routes.ts',
   },
+  'app/api/content/review/apply-finding/route.ts': {
+    category: 'delegated',
+    guardIn: 'lib/server/admin-content-packs-write-routes.ts',
+  },
   'app/api/content/import/preview/route.ts': {
     category: 'delegated',
     guardIn: 'lib/server/admin-content-import-routes.ts',
