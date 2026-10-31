@@ -4,6 +4,8 @@ Use this brief after `AGENTS.md` and `AI_BOOTSTRAP.md`. The canonical product st
 
 **This is the single provider-neutral entry point.** Hermes, Claude, Codex and any future agent start here to learn what is done, what is deployed, what is blocked, what is approved next and what it may actually do. It is a short index, not a second source of truth: every claim below links to the canonical document that owns it, and when the two disagree the canonical document wins.
 
+**Current approved Bazaar work:** [`CAFE_BAZAAR_MULTICHANNEL_COMMERCE_ROADMAP.md`](../planning/CAFE_BAZAAR_MULTICHANNEL_COMMERCE_ROADMAP.md) owns the provider/channel architecture, Admin reporting scope, compatibility rules and Bazaar release gates. It authorizes roadmap/implementation planning only; it does **not** authorize SKU activation, APK upload, a production flag or a real transaction.
+
 ## State of the system (reviewed 2026-10-16)
 
 **Start here for current Production and content work:** [`ADMIN_PRODUCTION_STATUS.md`](./ADMIN_PRODUCTION_STATUS.md) — running release, rollback, capabilities, the Admin workflow from title to publication, and collaboration rules. Product rules for new packs: [`PDR-010`](../product-decisions/PDR-010-ARTICLE-AWARE-AUDIO-AND-MEDIA-STANDARDS.md#owner-pack-content-decisions-2026-10-16).
