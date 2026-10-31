@@ -515,7 +515,17 @@ export function StoreListingsWorkspace() {
               <div className="card">
                 <div className="card-head">
                   <span className="card-title">بسته‌های فروشگاه</span>
-                  <span className="muted-note">{faNum(paidCount)} بستهٔ پولی</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <a
+                      className="btn sm"
+                      href="/api/store/bazaar/catalog"
+                      download="learnbox-cafe-bazaar-catalog.csv"
+                      title="CSV بسته‌های پولی، منتشرشده و فهرست‌شده را برای بازبینی و ورود دستی در کافه‌بازار دانلود می‌کند؛ هیچ محصول یا پرداختی فعال نمی‌شود."
+                    >
+                      خروجی CSV کافه‌بازار
+                    </a>
+                    <span className="muted-note">{faNum(paidCount)} بستهٔ پولی</span>
+                  </div>
                 </div>
                 {rows.length === 0 ? (
                   <div className="store-state-pad">

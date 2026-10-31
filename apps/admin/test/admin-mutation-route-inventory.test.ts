@@ -296,6 +296,9 @@ const READ_ONLY: Record<string, 'hard-disabled' | 'session-layer'> = {
   'app/api/store/transactions/timeline/route.ts': 'session-layer',
   'app/api/store/payment-config/route.ts': 'session-layer',
   'app/api/store/sales-report/route.ts': 'session-layer',
+  // Bazaar catalog export is read-only and requires the canonical Admin session + Store role.
+  // It returns a reviewable CSV only; it makes no provider call, SKU mapping, or checkout change.
+  'app/api/store/bazaar/catalog/route.ts': 'session-layer',
   'app/api/content/lifecycle/route.ts': 'session-layer',
   'app/api/splash/current/route.ts': 'session-layer',
   'app/api/splash/preview/route.ts': 'session-layer',
