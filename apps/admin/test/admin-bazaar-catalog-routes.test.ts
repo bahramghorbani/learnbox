@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { createCafeBazaarCatalogExportRoute } from '../lib/server/admin-bazaar-catalog-routes';
+import {
+  createCafeBazaarCatalogConfirmRoute,
+  createCafeBazaarCatalogExportRoute,
+} from '../lib/server/admin-bazaar-catalog-routes';
 import {
   bazaarProductIdForPack,
   cafeBazaarCsv,
@@ -46,6 +49,7 @@ function dependencies(enabled = true) {
           },
         ],
       })),
+      confirmCatalog: vi.fn(async () => ({ status: 'confirmed' as const, count: 1 })),
     },
   };
 }
@@ -136,5 +140,96 @@ describe('Cafe Bazaar catalog export', () => {
     expect(query.mock.calls[1][0]).toContain('p.price_tomans > 0');
     expect(query.mock.calls[1][0]).toContain("s.store_status = 'listed'");
     expect(release).toHaveBeenCalledOnce();
+  });
+
+  describe('confirm (POST)', () => {
+    const post = (headers: Record<string, string> = {}) =>
+      new Request('https://admin.learnbox.app/api/store/bazaar/catalog', {
+        method: 'POST',
+        headers: {
+          Origin: config.origin,
+          'Content-Type': 'application/json',
+          'x-learnbox-csrf-token': csrfToken,
+          Cookie: `__Host-learnbox_admin_session=${sessionToken}`,
+          'Idempotency-Key': '33333333-3333-4333-8333-333333333333',
+          ...headers,
+        },
+        body: '{}',
+      });
+
+    it('refuses bad CSRF, foreign origin and missing idempotency before touching the store', async () => {
+      for (const headers of <Array<Record<string, string>>>[
+        { 'x-learnbox-csrf-token': 'wrong' },
+        { Origin: 'https://evil.example' },
+        { 'Idempotency-Key': '' },
+      ]) {
+        const deps = dependencies();
+        const response = await createCafeBazaarCatalogConfirmRoute(deps)(post(headers));
+        expect(response.status).toBe(400);
+        expect(deps.store.confirmCatalog).not.toHaveBeenCalled();
+      }
+    });
+
+    it('records the mappings after the full gate', async () => {
+      const deps = dependencies();
+      const response = await createCafeBazaarCatalogConfirmRoute(deps)(post());
+      expect(response.status).toBe(200);
+      await expect(response.json()).resolves.toEqual({ status: 'confirmed', count: 1 });
+      expect(deps.store.confirmCatalog).toHaveBeenCalledWith({
+        actorUserId: '22222222-2222-4222-8222-222222222222',
+        idempotencyKey: '33333333-3333-4333-8333-333333333333',
+      });
+    });
+
+    it('upserts cafe_bazaar rows with the exported product id and price, then audits', async () => {
+      const query = vi.fn<
+        (
+          sql: string,
+          parameters?: readonly unknown[],
+        ) => Promise<{ rows: Record<string, unknown>[] }>
+      >(async (sql) => {
+        if (sql.includes('admin_role_assignments')) return { rows: [{}] };
+        if (sql.includes('FROM packs'))
+          return {
+            rows: [
+              {
+                pack_id: 'paid-a',
+                display_name: 'A',
+                commercial_summary: '',
+                price_tomans: 25_000,
+              },
+            ],
+          };
+        return { rows: [] };
+      });
+      const store = new PostgresBazaarCatalogExportStore({
+        connect: async () => ({ query, release: vi.fn() }),
+      });
+      await expect(
+        store.confirmCatalog({
+          actorUserId: '22222222-2222-4222-8222-222222222222',
+          idempotencyKey: '33333333-3333-4333-8333-333333333333',
+        }),
+      ).resolves.toEqual({ status: 'confirmed', count: 1 });
+      const upsert = query.mock.calls.find(([sql]) => sql.includes('store_iab_catalog_items'))!;
+      expect(upsert[0]).toContain("'cafe_bazaar'");
+      expect(upsert[1]).toEqual(['paid-a', bazaarProductIdForPack('paid-a'), 25_000]);
+      expect(query.mock.calls.at(-1)![0]).toBe('COMMIT');
+    });
+
+    it('a non-publisher is refused and nothing is written', async () => {
+      const query = vi.fn<(sql: string) => Promise<{ rows: Record<string, unknown>[] }>>(
+        async () => ({ rows: [] }),
+      );
+      const store = new PostgresBazaarCatalogExportStore({
+        connect: async () => ({ query, release: vi.fn() }),
+      });
+      await expect(
+        store.confirmCatalog({ actorUserId: 'x', idempotencyKey: 'y' }),
+      ).resolves.toEqual({ status: 'forbidden' });
+      expect(query.mock.calls.map(([sql]) => sql)).not.toContainEqual(
+        expect.stringContaining('INSERT'),
+      );
+    });
   });
 });
