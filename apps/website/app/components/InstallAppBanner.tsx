@@ -38,6 +38,8 @@ export function InstallAppBanner() {
   useEffect(() => {
     if (window.localStorage.getItem(dismissedKey)) return;
     if (isStandalone()) return;
+    // Inside our own Android/iOS shell the app is already installed.
+    if ('LearnBoxNative' in window) return;
     if (inAppWebviewPattern.test(navigator.userAgent)) return;
 
     const detected = detectPlatform(navigator.userAgent);

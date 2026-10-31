@@ -4,6 +4,7 @@ import { readPurchasablePack, type PurchaseDenialReason } from './store-purchase
 import type { StoreIabVerifier } from './myket-iab';
 import { myketVerifierFromEnvironment } from './myket-config';
 import { bazaarVerifierFromEnvironment } from './bazaar-iab';
+import { sibappVerifierFromEnvironment } from './sibapp-iab';
 
 /**
  * Store (native Android IAB) purchase verification — Myket today, Cafe Bazaar next.
@@ -25,7 +26,7 @@ import { bazaarVerifierFromEnvironment } from './bazaar-iab';
  * call (a flaky network retry on the client) is reported `already_processed`, never double-granted.
  */
 
-export type StoreIabProvider = 'myket' | 'cafe_bazaar';
+export type StoreIabProvider = 'myket' | 'cafe_bazaar' | 'sibapp';
 
 /** `packs.id` is `[a-z0-9-]`; store SKU ids are provider-owned. Their mapping is held in
  * `store_iab_catalog_items`, created by the guarded Admin catalog-sync route — never inferred from
@@ -34,6 +35,7 @@ export type StoreIabProvider = 'myket' | 'cafe_bazaar';
 const channelFor: Record<StoreIabProvider, string> = {
   myket: 'android_myket',
   cafe_bazaar: 'android_bazaar',
+  sibapp: 'ios_sibapp',
 };
 
 /** URL slug (`/api/store/purchase/<slug>/...`) → provider and its env-gated verifier. */
@@ -49,6 +51,7 @@ export const iabStores: Record<
     provider: 'cafe_bazaar',
     verifierFromEnvironment: () => bazaarVerifierFromEnvironment(),
   },
+  sibapp: { provider: 'sibapp', verifierFromEnvironment: () => sibappVerifierFromEnvironment() },
 };
 
 export type StoreIabVerifyOutcome =

@@ -2,6 +2,8 @@ export type BillingProvider =
   | 'cafe_bazaar'
   /** M2-Myket — Myket's own in-app billing. Same channel shape as `cafe_bazaar`, different store. */
   | 'myket'
+  /** iOS — Sibapp's in-app purchase (apps/ios). */
+  | 'sibapp'
   | 'direct_web'
   | 'google_play'
   | 'app_store'

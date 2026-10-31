@@ -385,6 +385,7 @@ describe('M2.4 Store purchase CTA', () => {
     // Myket APKs shipped before the Bazaar flavor have no getStoreChannel: they must stay on Myket.
     { slug: 'myket', channel: 'android_myket', getStoreChannel: undefined },
     { slug: 'bazaar', channel: 'android_bazaar', getStoreChannel: () => 'android_bazaar' },
+    { slug: 'sibapp', channel: 'ios_sibapp', getStoreChannel: () => 'ios_sibapp' },
   ])(
     'uses the server-approved $slug SKU, verifies the native receipt, and reloads ownership',
     async ({ slug, channel, getStoreChannel }) => {
