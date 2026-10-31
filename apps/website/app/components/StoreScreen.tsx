@@ -74,7 +74,9 @@ function nativeStore(bridge: AndroidPurchaseBridge): {
   channel: string;
   name: string;
 } {
-  return bridge.getStoreChannel?.() === 'android_bazaar'
+  const channel = bridge.getStoreChannel?.();
+  if (channel === 'ios_sibapp') return { slug: 'sibapp', channel, name: 'سیب‌اپ' };
+  return channel === 'android_bazaar'
     ? { slug: 'bazaar', channel: 'android_bazaar', name: 'کافه‌بازار' }
     : { slug: 'myket', channel: 'android_myket', name: 'مایکت' };
 }

@@ -190,4 +190,36 @@ suite('Myket IAB purchase verify-and-grant (real Postgres)', () => {
     );
     expect(order.rows).toEqual([{ channel: 'android_bazaar', provider: 'cafe_bazaar' }]);
   });
+
+  it('Sibapp: package-id SKU maps on the ios_sibapp channel; malformed SKUs are refused by the DB', async () => {
+    const sibappSku = '078d1cf1-a7ba-4c00-b6eb-9dc33ae9399b';
+    const carol = '33333333-3333-4333-8333-333333333333';
+    await pool.query(
+      `INSERT INTO users (id, phone_e164, first_name) VALUES ($1, '+4915100000005', 'carol')`,
+      [carol],
+    );
+    await expect(
+      pool.query(
+        `INSERT INTO store_iab_catalog_items (provider, pack_id, sku_id, synced_price_tomans)
+         VALUES ('sibapp', $1, 'bad sku;', $2)`,
+        [packId, packPrice],
+      ),
+    ).rejects.toThrow(/store_iab_catalog_items_sku_format/);
+    await pool.query(
+      `INSERT INTO store_iab_catalog_items (provider, pack_id, sku_id, synced_price_tomans)
+       VALUES ('sibapp', $1, $2, $3)`,
+      [packId, sibappSku, packPrice],
+    );
+    const { verify } = fixtureVerifier({ status: 'paid' });
+    const outcome = await verifyStoreIabPurchase(
+      { pool, verifier: verify },
+      { userId: carol, provider: 'sibapp', sku: sibappSku, purchaseToken: 'token-abc-1' },
+    );
+    expect(outcome).toMatchObject({ status: 'verified', packId, alreadyEntitled: false });
+    const order = await pool.query<{ channel: string; provider: string }>(
+      `SELECT o.channel, e.provider::text FROM purchase_orders o JOIN purchase_events e ON e.order_id = o.id
+        WHERE e.provider = 'sibapp'`,
+    );
+    expect(order.rows).toEqual([{ channel: 'ios_sibapp', provider: 'sibapp' }]);
+  });
 });

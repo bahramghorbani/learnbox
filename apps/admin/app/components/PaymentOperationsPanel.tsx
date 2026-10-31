@@ -100,6 +100,7 @@ const providerLabels: Record<string, string> = {
   zarinpal: 'زرین‌پال',
   myket: 'مایکت',
   cafe_bazaar: 'کافه‌بازار',
+  sibapp: 'سیب‌اپ',
   direct_web: 'وب مستقیم',
   google_play: 'گوگل‌پلی',
   app_store: 'اپ‌استور',
@@ -109,6 +110,7 @@ const channelLabels: Record<string, string> = {
   web_zarinpal: 'وب / زرین‌پال',
   android_myket: 'اندروید / مایکت',
   android_bazaar: 'اندروید / کافه‌بازار',
+  ios_sibapp: 'iOS / سیب‌اپ',
   legacy: 'ثبت قدیمی',
 };
 

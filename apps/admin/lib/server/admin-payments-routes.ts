@@ -41,8 +41,9 @@ const providerValues = new Set([
   'app_store',
   'zarinpal',
   'myket',
+  'sibapp',
 ]);
-const channelValues = new Set(['web_zarinpal', 'android_myket', 'android_bazaar']);
+const channelValues = new Set(['web_zarinpal', 'android_myket', 'android_bazaar', 'ios_sibapp']);
 
 type PaymentsDependencies<TMethod extends keyof PostgresAdminPaymentsStore> = {
   enabled: boolean;

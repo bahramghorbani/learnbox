@@ -31,6 +31,9 @@ const otpLength = 5;
 
 export function AuthGate({ mode, onAuthenticated, sessionEnded }: AuthGateProps) {
   const [stage, setStage] = useState<'phone' | 'code'>('phone');
+  // Inside our own Android/iOS shell there is nothing to add to the home screen.
+  const [inNativeShell, setInNativeShell] = useState(false);
+  useEffect(() => setInNativeShell('LearnBoxNative' in window), []);
   const [phone, setPhone] = useState('');
   const [code, setCode] = useState('');
   const [challenges, setChallenges] = useState<ChallengeResponse[]>([]);
@@ -228,9 +231,11 @@ export function AuthGate({ mode, onAuthenticated, sessionEnded }: AuthGateProps)
           <p className="auth-note">
             با ادامه، با شرایط استفاده و سیاست حریم خصوصی LearnBox موافقت می‌کنی.
           </p>
-          <Link className="auth-install-link" href="/install">
-            راهنمای افزودن LearnBox به صفحهٔ اصلی گوشی
-          </Link>
+          {inNativeShell ? null : (
+            <Link className="auth-install-link" href="/install">
+              راهنمای افزودن LearnBox به صفحهٔ اصلی گوشی
+            </Link>
+          )}
         </section>
       ) : (
         <section className="auth-content" aria-labelledby="code-title">
