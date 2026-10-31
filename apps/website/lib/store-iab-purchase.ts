@@ -2,6 +2,8 @@ import { Pool } from 'pg';
 
 import { readPurchasablePack, type PurchaseDenialReason } from './store-purchase';
 import type { StoreIabVerifier } from './myket-iab';
+import { myketVerifierFromEnvironment } from './myket-config';
+import { bazaarVerifierFromEnvironment } from './bazaar-iab';
 
 /**
  * Store (native Android IAB) purchase verification — Myket today, Cafe Bazaar next.
@@ -23,7 +25,7 @@ import type { StoreIabVerifier } from './myket-iab';
  * call (a flaky network retry on the client) is reported `already_processed`, never double-granted.
  */
 
-export type StoreIabProvider = 'myket';
+export type StoreIabProvider = 'myket' | 'cafe_bazaar';
 
 /** `packs.id` is `[a-z0-9-]`; store SKU ids are provider-owned. Their mapping is held in
  * `store_iab_catalog_items`, created by the guarded Admin catalog-sync route — never inferred from
@@ -31,6 +33,22 @@ export type StoreIabProvider = 'myket';
 
 const channelFor: Record<StoreIabProvider, string> = {
   myket: 'android_myket',
+  cafe_bazaar: 'android_bazaar',
+};
+
+/** URL slug (`/api/store/purchase/<slug>/...`) → provider and its env-gated verifier. */
+export const iabStores: Record<
+  string,
+  {
+    provider: StoreIabProvider;
+    verifierFromEnvironment: () => { verifier: StoreIabVerifier } | null;
+  }
+> = {
+  myket: { provider: 'myket', verifierFromEnvironment: () => myketVerifierFromEnvironment() },
+  bazaar: {
+    provider: 'cafe_bazaar',
+    verifierFromEnvironment: () => bazaarVerifierFromEnvironment(),
+  },
 };
 
 export type StoreIabVerifyOutcome =
@@ -113,8 +131,8 @@ export async function verifyStoreIabPurchase(
 
   const pack = await readPurchasablePack(pool, input.userId, mapping.packId);
   if (!pack.ok) return { status: 'pack_denied', reason: pack.reason };
-  // Myket verify returns no amount. Matching this locally recorded snapshot is the only proof we
-  // have that the price last synchronized to Myket still equals the canonical price we grant for.
+  // Neither store's verify returns an amount. Matching this locally recorded snapshot is the only proof we
+  // have that the price last synchronized to the store still equals the canonical price we grant for.
   if (mapping.syncedPriceTomans !== undefined && mapping.syncedPriceTomans !== pack.amountTomans) {
     return { status: 'catalog_out_of_sync' };
   }

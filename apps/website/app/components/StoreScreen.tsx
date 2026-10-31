@@ -62,7 +62,22 @@ type NativePurchaseResult = {
   purchaseToken?: unknown;
 };
 
-type AndroidPurchaseBridge = { requestPurchase: (sku: string) => string };
+type AndroidPurchaseBridge = {
+  requestPurchase: (sku: string) => string;
+  /** Added with the Bazaar flavor; Myket APKs shipped before it lack this method. */
+  getStoreChannel?: () => string;
+};
+
+/** Which store this Android build bills through — decides the server route and the copy. */
+function nativeStore(bridge: AndroidPurchaseBridge): {
+  slug: string;
+  channel: string;
+  name: string;
+} {
+  return bridge.getStoreChannel?.() === 'android_bazaar'
+    ? { slug: 'bazaar', channel: 'android_bazaar', name: 'کافه‌بازار' }
+    : { slug: 'myket', channel: 'android_myket', name: 'مایکت' };
+}
 
 function androidPurchaseBridge(): AndroidPurchaseBridge | null {
   const bridge = (window as Window & { LearnBoxNative?: AndroidPurchaseBridge }).LearnBoxNative;
@@ -125,7 +140,7 @@ export function StoreScreen({
   const focusedCardRef = useRef<HTMLLIElement | null>(null);
   const [purchases, setPurchases] = useState<LearnerPurchase[] | 'error'>([]);
   const [checking, setChecking] = useState<string | null>(null);
-  const myketSkuRef = useRef<string | null>(null);
+  const nativeSkuRef = useRef<{ sku: string; store: ReturnType<typeof nativeStore> } | null>(null);
   /** Outcome of the last re-check, announced next to that purchase. */
   const [checkNote, setCheckNote] = useState<{ purchaseId: string; text: string } | null>(null);
 
@@ -198,7 +213,7 @@ export function StoreScreen({
     }
   }, [loadPurchases]);
 
-  const verifyMyketPurchase = useCallback(
+  const verifyNativePurchase = useCallback(
     async (rawResult: string): Promise<void> => {
       let result: NativePurchaseResult;
       try {
@@ -211,11 +226,13 @@ export function StoreScreen({
         });
         return;
       }
-      const sku = myketSkuRef.current;
-      myketSkuRef.current = null;
+      const pending = nativeSkuRef.current;
+      nativeSkuRef.current = null;
+      const sku = pending?.sku;
       if (
+        !pending ||
         result.status !== 'succeeded' ||
-        result.channel !== 'android_myket' ||
+        result.channel !== pending.store.channel ||
         typeof result.purchaseToken !== 'string' ||
         !result.purchaseToken ||
         result.sku !== sku
@@ -223,12 +240,12 @@ export function StoreScreen({
         setActivation({
           packId: null,
           success: null,
-          error: 'خرید در مایکت تأیید نشد. دوباره تلاش کنید.',
+          error: `خرید در ${pending?.store.name ?? 'فروشگاه'} تأیید نشد. دوباره تلاش کنید.`,
         });
         return;
       }
       try {
-        const response = await fetch('/api/store/purchase/myket/verify', {
+        const response = await fetch(`/api/store/purchase/${pending.store.slug}/verify`, {
           method: 'POST',
           credentials: 'same-origin',
           headers: { 'content-type': 'application/json' },
@@ -272,7 +289,7 @@ export function StoreScreen({
     const callbacks = window as Window & {
       LearnBoxNativeCallbacks?: { onPurchaseResult?: (result: string) => void };
     };
-    const onPurchaseResult = (result: string) => void verifyMyketPurchase(result);
+    const onPurchaseResult = (result: string) => void verifyNativePurchase(result);
     callbacks.LearnBoxNativeCallbacks = {
       ...callbacks.LearnBoxNativeCallbacks,
       onPurchaseResult,
@@ -282,7 +299,7 @@ export function StoreScreen({
         delete callbacks.LearnBoxNativeCallbacks.onPurchaseResult;
       }
     };
-  }, [verifyMyketPurchase]);
+  }, [verifyNativePurchase]);
 
   useEffect(() => {
     void load();
@@ -349,7 +366,10 @@ export function StoreScreen({
   const purchase = async (packId: string): Promise<void> => {
     setActivation({ packId, error: null, success: null });
     const bridge = androidPurchaseBridge();
-    const endpoint = bridge ? '/api/store/purchase/myket/initiate' : '/api/store/purchase/initiate';
+    const store = bridge ? nativeStore(bridge) : null;
+    const endpoint = store
+      ? `/api/store/purchase/${store.slug}/initiate`
+      : '/api/store/purchase/initiate';
     try {
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -371,7 +391,7 @@ export function StoreScreen({
         return;
       }
       const body = (await response.json()) as { redirectUrl?: string; sku?: string };
-      if (bridge) {
+      if (bridge && store) {
         if (!body.sku) {
           setActivation({
             packId: null,
@@ -380,14 +400,14 @@ export function StoreScreen({
           });
           return;
         }
-        myketSkuRef.current = body.sku;
+        nativeSkuRef.current = { sku: body.sku, store };
         const result = JSON.parse(bridge.requestPurchase(body.sku)) as { status?: string };
         if (result.status !== 'pending') {
-          myketSkuRef.current = null;
+          nativeSkuRef.current = null;
           setActivation({
             packId: null,
             success: null,
-            error: 'مایکت برای خرید در دسترس نیست. دوباره تلاش کنید.',
+            error: `${store.name} برای خرید در دسترس نیست. دوباره تلاش کنید.`,
           });
         }
         return;
@@ -404,12 +424,12 @@ export function StoreScreen({
       }
       window.location.assign(body.redirectUrl);
     } catch {
-      myketSkuRef.current = null;
+      nativeSkuRef.current = null;
       setActivation({
         packId: null,
         success: null,
-        error: bridge
-          ? 'ارتباط با مایکت برقرار نشد. دوباره تلاش کنید.'
+        error: store
+          ? `ارتباط با ${store.name} برقرار نشد. دوباره تلاش کنید.`
           : 'ارتباط با درگاه پرداخت برقرار نشد. دوباره تلاش کنید.',
       });
     }
