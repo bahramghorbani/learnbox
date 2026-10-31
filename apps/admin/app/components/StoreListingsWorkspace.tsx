@@ -229,10 +229,42 @@ async function syncMyket(
   }
 }
 
+async function confirmBazaarCatalog(): Promise<
+  { ok: true; count: number } | { ok: false; message: string }
+> {
+  const csrfToken = readCsrfToken();
+  if (!csrfToken)
+    return { ok: false, message: 'نشان امنیتی CSRF در دسترس نیست؛ صفحه را تازه کنید.' };
+  try {
+    const { response, stepUp } = await fetchWithStepUp('/api/store/bazaar/catalog', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: {
+        'content-type': 'application/json',
+        'x-learnbox-csrf-token': csrfToken,
+        'idempotency-key': createIdempotencyKey(),
+      },
+      body: '{}',
+    });
+    if (response.ok) {
+      const body = (await response.json()) as { count: number };
+      return { ok: true, count: body.count };
+    }
+    const refused = stepUpRefusal(stepUp, response.status);
+    if (refused) return { ok: false, message: refused };
+    if (response.status === 404)
+      return { ok: false, message: 'نقش شما اجازهٔ ثبت محصولات کافه‌بازار را ندارد.' };
+    return { ok: false, message: 'ثبت محصولات کافه‌بازار انجام نشد؛ دوباره تلاش کنید.' };
+  } catch {
+    return { ok: false, message: 'ارتباط با سرور برقرار نشد.' };
+  }
+}
+
 export function StoreListingsWorkspace() {
   const [phase, setPhase] = useState<Phase>('loading');
   const [rows, setRows] = useState<ServerListing[]>([]);
   const [editing, setEditing] = useState<ServerListing | undefined>(undefined);
+  const [confirmingBazaar, setConfirmingBazaar] = useState(false);
   const [draft, setDraft] = useState<Draft | undefined>(undefined);
   const [saving, setSaving] = useState(false);
   const [syncingPackId, setSyncingPackId] = useState<string | undefined>(undefined);
@@ -406,6 +438,23 @@ export function StoreListingsWorkspace() {
     );
   }
 
+  async function confirmBazaar() {
+    if (
+      !window.confirm(
+        'آیا آخرین CSV دانلودشده را در پیشخان کافه‌بازار وارد کرده‌اید؟ با تأیید، این بسته‌ها با همین قیمت‌ها از طریق کافه‌بازار قابل خرید می‌شوند.',
+      )
+    )
+      return;
+    setConfirmingBazaar(true);
+    const result = await confirmBazaarCatalog();
+    setConfirmingBazaar(false);
+    setNotice(
+      result.ok
+        ? `${faNum(result.count)} محصول کافه‌بازار ثبت شد؛ پرداخت کافه‌بازار جداگانه روشن می‌شود.`
+        : result.message,
+    );
+  }
+
   const paidCount = rows.filter((row) => !row.isFree).length;
   const listedCount = rows.filter((row) => row.listing?.storeStatus === 'listed').length;
   const featuredCount = rows.filter((row) => row.listing?.featured).length;
@@ -524,6 +573,15 @@ export function StoreListingsWorkspace() {
                     >
                       خروجی CSV کافه‌بازار
                     </a>
+                    <button
+                      type="button"
+                      className="btn sm"
+                      disabled={confirmingBazaar}
+                      onClick={() => void confirmBazaar()}
+                      title="پس از ورود CSV در پیشخان کافه‌بازار بزنید تا شناسهٔ محصولات و قیمت‌ها در LearnBox ثبت شود."
+                    >
+                      {confirmingBazaar ? 'در حال ثبت…' : 'ثبت ورود CSV در کافه‌بازار'}
+                    </button>
                     <span className="muted-note">{faNum(paidCount)} بستهٔ پولی</span>
                   </div>
                 </div>

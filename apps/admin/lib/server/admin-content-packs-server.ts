@@ -85,7 +85,10 @@ import {
 import { StorePackCoverService } from './store-pack-cover-service';
 import { createMyketCatalogClient } from './myket-catalog-client';
 import { createMyketCatalogSyncRoute, MyketCatalogSyncStore } from './admin-myket-catalog-routes';
-import { createCafeBazaarCatalogExportRoute } from './admin-bazaar-catalog-routes';
+import {
+  createCafeBazaarCatalogConfirmRoute,
+  createCafeBazaarCatalogExportRoute,
+} from './admin-bazaar-catalog-routes';
 import { PostgresBazaarCatalogExportStore } from './postgres-bazaar-catalog-export-store';
 import {
   createPackArchiveRoute,
@@ -321,6 +324,7 @@ export function createAdminContentPacksServer(dependencies: {
       }),
       myketCatalogSync: createMyketCatalogSyncRoute(myketCatalogShared),
       bazaarCatalogExport: createCafeBazaarCatalogExportRoute(bazaarCatalogShared),
+      bazaarCatalogConfirm: createCafeBazaarCatalogConfirmRoute(bazaarCatalogShared),
       transactions: createAdminTransactionsRoute(paymentsShared),
       transactionTimeline: createAdminTransactionTimelineRoute(paymentsShared),
       transactionRecheck: createAdminRecheckRoute(paymentsShared),

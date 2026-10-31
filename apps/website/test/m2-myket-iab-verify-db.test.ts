@@ -164,18 +164,23 @@ suite('Myket IAB purchase verify-and-grant (real Postgres)', () => {
   it('Cafe Bazaar: same token as Myket is a separate receipt, recorded on the android_bazaar channel', async () => {
     await pool.query(
       `INSERT INTO store_iab_catalog_items (provider, pack_id, sku_id, synced_price_tomans)
-       VALUES ('cafe_bazaar', $1, 'BAZAAR_SKU', $2)`,
+       VALUES ('cafe_bazaar', $1, 'learnbox.myket.test.pack.0123456789abcdef', $2)`,
       [packId, packPrice],
     );
     await expect(readPurchasableIabSku(pool, bob, 'cafe_bazaar', packId)).resolves.toEqual({
       ok: true,
-      sku: 'BAZAAR_SKU',
+      sku: 'learnbox.myket.test.pack.0123456789abcdef',
     });
     const { verify } = fixtureVerifier({ status: 'paid' });
     // Token uniqueness is scoped by provider: a Myket token value must not block a Bazaar receipt.
     const outcome = await verifyStoreIabPurchase(
       { pool, verifier: verify },
-      { userId: bob, provider: 'cafe_bazaar', sku: 'BAZAAR_SKU', purchaseToken: 'token-abc-1' },
+      {
+        userId: bob,
+        provider: 'cafe_bazaar',
+        sku: 'learnbox.myket.test.pack.0123456789abcdef',
+        purchaseToken: 'token-abc-1',
+      },
     );
     expect(outcome).toMatchObject({ status: 'verified', packId, alreadyEntitled: false });
     const order = await pool.query<{ channel: string; provider: string }>(
