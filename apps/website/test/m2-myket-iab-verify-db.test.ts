@@ -175,7 +175,12 @@ suite('Myket IAB purchase verify-and-grant (real Postgres)', () => {
     // Token uniqueness is scoped by provider: a Myket token value must not block a Bazaar receipt.
     const outcome = await verifyStoreIabPurchase(
       { pool, verifier: verify },
-      { userId: bob, provider: 'cafe_bazaar', sku: 'learnbox.myket.test.pack.0123456789abcdef', purchaseToken: 'token-abc-1' },
+      {
+        userId: bob,
+        provider: 'cafe_bazaar',
+        sku: 'learnbox.myket.test.pack.0123456789abcdef',
+        purchaseToken: 'token-abc-1',
+      },
     );
     expect(outcome).toMatchObject({ status: 'verified', packId, alreadyEntitled: false });
     const order = await pool.query<{ channel: string; provider: string }>(
