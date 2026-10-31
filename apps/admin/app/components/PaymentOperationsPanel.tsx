@@ -55,6 +55,7 @@ type Transaction = {
   packDisplayName: string | null;
   amountTomans: number | null;
   provider: string;
+  channel: string | null;
   environment: string;
   status: string;
   providerPurchaseId: string;
@@ -93,6 +94,22 @@ const statusLabels: Record<string, string> = {
   rejected: 'ردشده',
   refunded: 'بازگشت‌خورده',
   revoked: 'ابطال‌شده',
+};
+
+const providerLabels: Record<string, string> = {
+  zarinpal: 'زرین‌پال',
+  myket: 'مایکت',
+  cafe_bazaar: 'کافه‌بازار',
+  direct_web: 'وب مستقیم',
+  google_play: 'گوگل‌پلی',
+  app_store: 'اپ‌استور',
+};
+
+const channelLabels: Record<string, string> = {
+  web_zarinpal: 'وب / زرین‌پال',
+  android_myket: 'اندروید / مایکت',
+  android_bazaar: 'اندروید / کافه‌بازار',
+  legacy: 'ثبت قدیمی',
 };
 
 /** The reference's order badges, mapped onto the canonical purchase states. */
@@ -207,6 +224,8 @@ export function PaymentOperationsPanel() {
   /** The search actually applied: set on submit, so typing alone never refetches. */
   const [query, setQuery] = useState('');
   const [reviewOnly, setReviewOnly] = useState(false);
+  const [provider, setProvider] = useState('');
+  const [channel, setChannel] = useState('');
   const [timeline, setTimeline] = useState<TimelineEvent[] | 'loading' | 'error'>('loading');
   const [recheckMessage, setRecheckMessage] = useState<string | undefined>();
   const [recheckBusy, setRecheckBusy] = useState(false);
@@ -217,6 +236,8 @@ export function PaymentOperationsPanel() {
     const params = new URLSearchParams({ limit: '50' });
     if (query) params.set('q', query);
     if (reviewOnly) params.set('review', '1');
+    if (provider) params.set('provider', provider);
+    if (channel) params.set('channel', channel);
     try {
       const [configResponse, transactionsResponse] = await Promise.all([
         fetch('/api/store/payment-config', { credentials: 'same-origin' }),
@@ -246,9 +267,9 @@ export function PaymentOperationsPanel() {
     } catch {
       setPhase('error');
     }
-  }, [query, reviewOnly]);
+  }, [channel, provider, query, reviewOnly]);
 
-  // Reloads on mount, on each submitted search and when the review toggle changes.
+  // Reloads on mount, on each submitted search and when a structured filter changes.
   useEffect(() => {
     void load();
   }, [load]);
@@ -343,6 +364,34 @@ export function PaymentOperationsPanel() {
               placeholder="Authority / RefID / LB-… / شناسه"
               onChange={(event) => setSearch(event.target.value)}
             />
+            <select
+              aria-label="فیلتر درگاه پرداخت"
+              className="cp-input"
+              value={provider}
+              onChange={(event) => setProvider(event.target.value)}
+            >
+              <option value="">همهٔ درگاه‌ها</option>
+              {Object.entries(providerLabels).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+            <select
+              aria-label="فیلتر کانال خرید"
+              className="cp-input"
+              value={channel}
+              onChange={(event) => setChannel(event.target.value)}
+            >
+              <option value="">همهٔ کانال‌ها</option>
+              {Object.entries(channelLabels)
+                .filter(([value]) => value !== 'legacy')
+                .map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+            </select>
             <button className="btn sm" type="submit">
               جست‌وجو
             </button>
@@ -405,6 +454,12 @@ export function PaymentOperationsPanel() {
                       <span className="keep-latin">
                         {transaction.orderCode ?? transaction.transactionId}
                       </span>
+                      {' · '}
+                      {providerLabels[transaction.provider] ?? transaction.provider}
+                      {' · '}
+                      {transaction.channel
+                        ? (channelLabels[transaction.channel] ?? transaction.channel)
+                        : channelLabels.legacy}
                       {transaction.environment === 'sandbox' ? ' · آزمایشی' : ''}
                       {needsAttention(transaction) ? (
                         <span className="badge b-amber" data-transaction-review="true">
@@ -620,8 +675,14 @@ export function PaymentOperationsPanel() {
             <dd>{statusLabels[selected.status] ?? selected.status}</dd>
             <dt>درگاه</dt>
             <dd>
-              {selected.provider}
+              {providerLabels[selected.provider] ?? selected.provider}
               {selected.environment === 'sandbox' ? ' (آزمایشی)' : ''}
+            </dd>
+            <dt>کانال خرید</dt>
+            <dd>
+              {selected.channel
+                ? (channelLabels[selected.channel] ?? selected.channel)
+                : channelLabels.legacy}
             </dd>
             <dt>شناسهٔ خرید درگاه</dt>
             <dd className="keep-latin">{selected.providerPurchaseId}</dd>

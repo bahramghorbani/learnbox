@@ -51,6 +51,8 @@ type SalesReport = {
   pendingCount: number;
   failedCount: number;
   packs: SalesReportPackRow[];
+  byProvider: Array<{ provider: string; verifiedCount: number; revenueTomans: number }>;
+  byChannel: Array<{ channel: string; verifiedCount: number; revenueTomans: number }>;
 };
 
 type ServerListing = {
@@ -107,6 +109,22 @@ const packStatusLabels: Record<string, string> = {
   approved: 'تأییدشده',
   published: 'منتشرشده',
   archived: 'بایگانی',
+};
+
+const providerLabels: Record<string, string> = {
+  zarinpal: 'زرین‌پال',
+  myket: 'مایکت',
+  cafe_bazaar: 'کافه‌بازار',
+  direct_web: 'وب مستقیم',
+  google_play: 'گوگل‌پلی',
+  app_store: 'اپ‌استور',
+};
+
+const channelLabels: Record<string, string> = {
+  web_zarinpal: 'وب / زرین‌پال',
+  android_myket: 'اندروید / مایکت',
+  android_bazaar: 'اندروید / کافه‌بازار',
+  legacy: 'ثبت قدیمی',
 };
 
 /**
@@ -274,7 +292,11 @@ export function StoreListingsWorkspace() {
         return;
       }
       const payload = (await response.json()) as { report: SalesReport };
-      setReport(payload.report);
+      setReport({
+        ...payload.report,
+        byProvider: payload.report.byProvider ?? [],
+        byChannel: payload.report.byChannel ?? [],
+      });
       setReportPhase('ready');
     } catch {
       setReportPhase('error');
@@ -853,6 +875,52 @@ export function StoreListingsWorkspace() {
                     </tbody>
                   </table>
                 )}
+                {report.byProvider.length > 0 ? (
+                  <>
+                    <h3 className="card-title">تفکیک بر اساس درگاه</h3>
+                    <table className="admin-table">
+                      <thead>
+                        <tr>
+                          <th>درگاه</th>
+                          <th>فروش</th>
+                          <th>درآمد (تومان)</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {report.byProvider.map((row) => (
+                          <tr key={row.provider}>
+                            <td>{providerLabels[row.provider] ?? row.provider}</td>
+                            <td>{faNum(row.verifiedCount)}</td>
+                            <td>{faNum(row.revenueTomans)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </>
+                ) : null}
+                {report.byChannel.length > 0 ? (
+                  <>
+                    <h3 className="card-title">تفکیک بر اساس کانال خرید</h3>
+                    <table className="admin-table">
+                      <thead>
+                        <tr>
+                          <th>کانال</th>
+                          <th>فروش</th>
+                          <th>درآمد (تومان)</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {report.byChannel.map((row) => (
+                          <tr key={row.channel}>
+                            <td>{channelLabels[row.channel] ?? row.channel}</td>
+                            <td>{faNum(row.verifiedCount)}</td>
+                            <td>{faNum(row.revenueTomans)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </>
+                ) : null}
               </>
             ) : null}
           </CpModal>

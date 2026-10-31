@@ -90,12 +90,18 @@ beforeAll(async () => {
      VALUES ($1, 'بستهٔ آزمون تراکنش', 1, 'published', false, 50000)`,
     [packId],
   );
+  const order = await pool.query<{ id: string }>(
+    `INSERT INTO purchase_orders (user_id, pack_id, environment, amount_tomans, pack_display_name, status)
+     VALUES ($1, $2, 'production', 50000, 'بستهٔ آزمون تراکنش', 'fulfilled')
+     RETURNING id`,
+    [learner, packId],
+  );
   const created = await pool.query<{ id: string }>(
     `INSERT INTO purchase_events
-       (user_id, provider, environment, provider_purchase_id, status, pack_id, amount_tomans)
-     VALUES ($1, 'zarinpal', 'production', $2, 'verified', $3, 50000)
+       (user_id, provider, environment, provider_purchase_id, status, pack_id, amount_tomans, order_id)
+     VALUES ($1, 'zarinpal', 'production', $2, 'verified', $3, 50000, $4)
      RETURNING id`,
-    [learner, `auth-${randomBytes(4).toString('hex')}`, packId],
+    [learner, `auth-${randomBytes(4).toString('hex')}`, packId, order.rows[0].id],
   );
   purchaseId = created.rows[0].id;
   await pool.query(`UPDATE purchase_events SET verified_at = now() WHERE id = $1`, [purchaseId]);
@@ -121,6 +127,7 @@ suite('Store transactions — authorization against the canonical schema', () =>
       packDisplayName: 'بستهٔ آزمون تراکنش',
       status: 'verified',
       provider: 'zarinpal',
+      channel: 'web_zarinpal',
       environment: 'production',
       amountTomans: 50000,
     });
@@ -251,5 +258,52 @@ suite('Store transactions — authorization against the canonical schema', () =>
     );
     const review = await store.listTransactions({ actorUserId: superAdmin, needsReview: true });
     expect(review.status === 'ok' && review.rows.map((r) => r.transactionId)).toEqual([attemptId]);
+  });
+
+  it('filters by provider/channel and groups verified sales without changing the ledger', async () => {
+    const order = await pool.query<{ id: string }>(
+      `INSERT INTO purchase_orders
+         (user_id, pack_id, environment, amount_tomans, pack_display_name, channel, status)
+       VALUES ($1, $2, 'production', 75000, 'بستهٔ آزمون تراکنش', 'android_myket', 'fulfilled')
+       RETURNING id`,
+      [learner, packId],
+    );
+    await pool.query(
+      `INSERT INTO purchase_events
+         (user_id, provider, environment, provider_purchase_id, status, pack_id, amount_tomans, order_id, verified_at)
+       VALUES ($1, 'myket', 'production', $2, 'verified', $3, 75000, $4, now())`,
+      [learner, `myket-${randomBytes(4).toString('hex')}`, packId, order.rows[0].id],
+    );
+    const before = await ledgerFingerprint();
+
+    const byProvider = await store.listTransactions({ actorUserId: superAdmin, provider: 'myket' });
+    expect(byProvider.status === 'ok' && byProvider.rows).toHaveLength(1);
+    expect(byProvider.status === 'ok' && byProvider.rows[0]).toMatchObject({
+      provider: 'myket',
+      channel: 'android_myket',
+    });
+    const byChannel = await store.listTransactions({
+      actorUserId: superAdmin,
+      channel: 'android_myket',
+    });
+    expect(byChannel.status === 'ok' && byChannel.rows.map((row) => row.provider)).toEqual([
+      'myket',
+    ]);
+
+    const report = await store.getSalesReport({ actorUserId: superAdmin });
+    expect(report).toMatchObject({
+      status: 'ok',
+      report: {
+        byProvider: expect.arrayContaining([
+          { provider: 'zarinpal', verifiedCount: 2, revenueTomans: 100000 },
+          { provider: 'myket', verifiedCount: 1, revenueTomans: 75000 },
+        ]),
+        byChannel: expect.arrayContaining([
+          { channel: 'web_zarinpal', verifiedCount: 2, revenueTomans: 100000 },
+          { channel: 'android_myket', verifiedCount: 1, revenueTomans: 75000 },
+        ]),
+      },
+    });
+    expect(await ledgerFingerprint()).toEqual(before);
   });
 });
