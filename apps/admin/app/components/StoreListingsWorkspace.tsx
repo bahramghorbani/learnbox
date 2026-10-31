@@ -229,6 +229,45 @@ async function syncMyket(
   }
 }
 
+async function syncSibappCatalog(): Promise<
+  | { ok: true; count: number; missing: string[]; priceMismatch: string[] }
+  | { ok: false; message: string }
+> {
+  const csrfToken = readCsrfToken();
+  if (!csrfToken)
+    return { ok: false, message: 'نشان امنیتی CSRF در دسترس نیست؛ صفحه را تازه کنید.' };
+  try {
+    const { response, stepUp } = await fetchWithStepUp('/api/store/sibapp/sync', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: {
+        'content-type': 'application/json',
+        'x-learnbox-csrf-token': csrfToken,
+        'idempotency-key': createIdempotencyKey(),
+      },
+      body: '{}',
+    });
+    if (response.ok) {
+      const body = (await response.json()) as {
+        count: number;
+        missing: string[];
+        priceMismatch: string[];
+      };
+      return { ok: true, ...body };
+    }
+    const refused = stepUpRefusal(stepUp, response.status);
+    if (refused) return { ok: false, message: refused };
+    if (response.status === 404)
+      return {
+        ok: false,
+        message: 'همگام‌سازی سیب‌اپ پیکربندی نشده یا نقش شما اجازهٔ آن را ندارد.',
+      };
+    return { ok: false, message: 'ارتباط با سیب‌اپ برقرار نشد؛ هیچ تغییری ثبت نشد.' };
+  } catch {
+    return { ok: false, message: 'ارتباط با سرور برقرار نشد.' };
+  }
+}
+
 async function confirmBazaarCatalog(): Promise<
   { ok: true; count: number } | { ok: false; message: string }
 > {
@@ -265,6 +304,7 @@ export function StoreListingsWorkspace() {
   const [rows, setRows] = useState<ServerListing[]>([]);
   const [editing, setEditing] = useState<ServerListing | undefined>(undefined);
   const [confirmingBazaar, setConfirmingBazaar] = useState(false);
+  const [syncingSibapp, setSyncingSibapp] = useState(false);
   const [draft, setDraft] = useState<Draft | undefined>(undefined);
   const [saving, setSaving] = useState(false);
   const [syncingPackId, setSyncingPackId] = useState<string | undefined>(undefined);
@@ -455,6 +495,23 @@ export function StoreListingsWorkspace() {
     );
   }
 
+  async function syncSibapp() {
+    setSyncingSibapp(true);
+    const result = await syncSibappCatalog();
+    setSyncingSibapp(false);
+    if (!result.ok) return setNotice(result.message);
+    const problems = [
+      result.missing.length ? `بدون بسته در سیب‌اپ: ${result.missing.join('، ')}` : '',
+      result.priceMismatch.length
+        ? `قیمت متفاوت در سیب‌اپ: ${result.priceMismatch.join('، ')}`
+        : '',
+    ].filter(Boolean);
+    setNotice(
+      `${faNum(result.count)} بسته با سیب‌اپ همگام شد.` +
+        (problems.length ? ` ${problems.join('؛ ')} (این‌ها از سیب‌اپ قابل خرید نیستند).` : ''),
+    );
+  }
+
   const paidCount = rows.filter((row) => !row.isFree).length;
   const listedCount = rows.filter((row) => row.listing?.storeStatus === 'listed').length;
   const featuredCount = rows.filter((row) => row.listing?.featured).length;
@@ -581,6 +638,15 @@ export function StoreListingsWorkspace() {
                       title="پس از ورود CSV در پیشخان کافه‌بازار بزنید تا شناسهٔ محصولات و قیمت‌ها در LearnBox ثبت شود."
                     >
                       {confirmingBazaar ? 'در حال ثبت…' : 'ثبت ورود CSV در کافه‌بازار'}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn sm"
+                      disabled={syncingSibapp}
+                      onClick={() => void syncSibapp()}
+                      title="بسته‌های درون‌اپی را از سیب‌اپ می‌خواند و هر بسته‌ای که شناسهٔ آن در سیب‌اپ با شناسهٔ بستهٔ LearnBox و قیمتش یکی باشد را ثبت می‌کند."
+                    >
+                      {syncingSibapp ? 'در حال همگام‌سازی…' : 'همگام‌سازی سیب‌اپ'}
                     </button>
                     <span className="muted-note">{faNum(paidCount)} بستهٔ پولی</span>
                   </div>

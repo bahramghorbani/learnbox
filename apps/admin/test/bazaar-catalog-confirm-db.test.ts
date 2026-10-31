@@ -9,6 +9,10 @@ import {
   bazaarProductIdForPack,
   PostgresBazaarCatalogExportStore,
 } from '../lib/server/postgres-bazaar-catalog-export-store';
+import {
+  createSibappPackageLister,
+  SibappCatalogSyncStore,
+} from '../lib/server/sibapp-catalog-sync';
 
 /**
  * Bazaar catalog confirm against a REAL Postgres with every migration applied: proves the
@@ -114,5 +118,78 @@ suite('Bazaar catalog confirm (real Postgres)', () => {
          VALUES ('myket', 'bz-paid', 'learnbox.lower.case', 25000)`,
       ),
     ).rejects.toThrow(/store_iab_catalog_items_sku_format/);
+  });
+
+  it('Sibapp sync maps a sellable pack by label at the exact price, and reports the rest', async () => {
+    const app = '078d1cf1-a7ba-4c00-b6eb-9dc33ae9399b';
+    const pkg = '2c286b1a-7465-450e-9ce4-612e7f9b7029';
+    const listed = (price: number, extra: Record<string, unknown> = {}) =>
+      createSibappPackageLister({ secretKey: 'sk', applicationId: app }, (async () =>
+        Response.json({
+          list: [
+            {
+              id: pkg,
+              label: 'bz-paid',
+              price,
+              is_enable: true,
+              application: { id: app },
+              ...extra,
+            },
+            {
+              id: 'x',
+              label: 'bz-unlisted',
+              price: 30000,
+              is_enable: true,
+              application: { id: app },
+            },
+          ],
+        })) as unknown as typeof fetch);
+    const reviewerStore = new SibappCatalogSyncStore(pool as never, listed(25000), app);
+    await expect(
+      reviewerStore.confirmCatalog({ actorUserId: reviewer, idempotencyKey: randomUUID() }),
+    ).resolves.toEqual({ status: 'forbidden' });
+
+    // Wrong price, disabled, or another app's package: reported, nothing written.
+    for (const lister of [
+      listed(24000),
+      listed(25000, { is_enable: false }),
+      listed(25000, { application: { id: 'other' } }),
+    ]) {
+      const result = await new SibappCatalogSyncStore(pool as never, lister, app).confirmCatalog({
+        actorUserId: publisher,
+        idempotencyKey: randomUUID(),
+      });
+      expect(result.status === 'confirmed' && result.count).toBe(0);
+    }
+    expect(
+      (await pool.query(`SELECT 1 FROM store_iab_catalog_items WHERE provider = 'sibapp'`)).rows,
+    ).toHaveLength(0);
+
+    const key = randomUUID();
+    const store = new SibappCatalogSyncStore(pool as never, listed(25000), app);
+    const expected = { status: 'confirmed', count: 1, missing: [], priceMismatch: [] };
+    await expect(
+      store.confirmCatalog({ actorUserId: publisher, idempotencyKey: key }),
+    ).resolves.toEqual(expected);
+    await expect(
+      store.confirmCatalog({ actorUserId: publisher, idempotencyKey: key }),
+    ).resolves.toEqual(expected);
+    const rows = await pool.query(
+      `SELECT pack_id, sku_id, synced_price_tomans FROM store_iab_catalog_items WHERE provider = 'sibapp'`,
+    );
+    expect(rows.rows).toEqual([{ pack_id: 'bz-paid', sku_id: pkg, synced_price_tomans: 25000 }]);
+  });
+
+  it('Sibapp sync writes nothing when Sibapp is unreachable', async () => {
+    const down = createSibappPackageLister(
+      { secretKey: 'sk', applicationId: 'a' },
+      (async () => new Response('{}', { status: 401 })) as unknown as typeof fetch,
+    );
+    await expect(
+      new SibappCatalogSyncStore(pool as never, down, 'a').confirmCatalog({
+        actorUserId: publisher,
+        idempotencyKey: randomUUID(),
+      }),
+    ).rejects.toThrow('sibapp_catalog_unavailable');
   });
 });

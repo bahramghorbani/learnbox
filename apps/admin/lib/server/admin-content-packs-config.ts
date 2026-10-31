@@ -49,6 +49,17 @@ export function readAdminStoreConfig(environment: Environment): AdminAuthConfig 
  * synchronizing a SKU creates new Myket products inactive and preserves an existing product's
  * activation state; it cannot make an activation decision or enable checkout.
  */
+/** Sibapp catalog sync is offered only when the Sibapp API credential is provisioned. */
+export function readAdminSibappCatalogConfig(
+  environment: Environment,
+): { enabled: true; secretKey: string; applicationId: string } | { enabled: false } {
+  if (!readAdminStoreConfig(environment).enabled) return { enabled: false };
+  const secretKey = environment.SIBAPP_SECRET_KEY ?? '';
+  const applicationId = environment.SIBAPP_APPLICATION_ID ?? '';
+  if (!secretKey || !/^[0-9a-f-]{36}$/.test(applicationId)) return { enabled: false };
+  return { enabled: true, secretKey, applicationId };
+}
+
 export function readAdminMyketCatalogConfig(
   environment: Environment,
 ): { enabled: true; accessToken: string; packageName: string } | { enabled: false } {

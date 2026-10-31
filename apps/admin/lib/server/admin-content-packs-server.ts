@@ -4,6 +4,7 @@ import {
   readAdminContentPacksConfig,
   readAdminContentPacksManageConfig,
   readAdminMyketCatalogConfig,
+  readAdminSibappCatalogConfig,
   readAdminStoreConfig,
 } from './admin-content-packs-config';
 import {
@@ -90,6 +91,7 @@ import {
   createCafeBazaarCatalogExportRoute,
 } from './admin-bazaar-catalog-routes';
 import { PostgresBazaarCatalogExportStore } from './postgres-bazaar-catalog-export-store';
+import { createSibappPackageLister, SibappCatalogSyncStore } from './sibapp-catalog-sync';
 import {
   createPackArchiveRoute,
   createPackLifecycleRoute,
@@ -248,6 +250,21 @@ export function createAdminContentPacksServer(dependencies: {
       store: new PostgresBazaarCatalogExportStore(pool),
       now: dependencies.now,
     };
+    const sibappCatalogConfig = readAdminSibappCatalogConfig(dependencies.environment);
+    const sibappCatalogShared = {
+      enabled: sibappCatalogConfig.enabled,
+      config: storeConfig,
+      sessionStore,
+      store: sibappCatalogConfig.enabled
+        ? new SibappCatalogSyncStore(
+            pool,
+            createSibappPackageLister(sibappCatalogConfig),
+            sibappCatalogConfig.applicationId,
+          )
+        : undefined,
+      now: dependencies.now,
+      unavailableCode: 'sibapp_catalog_unavailable',
+    };
     // Payments (M2.4) are read-only operations: transaction inspection and gateway configuration
     // status. They ride the Store gate because a shop without a way to see its payments is not
     // operable, and they add no write path — the merchant credential is server-provisioned and
@@ -325,6 +342,7 @@ export function createAdminContentPacksServer(dependencies: {
       myketCatalogSync: createMyketCatalogSyncRoute(myketCatalogShared),
       bazaarCatalogExport: createCafeBazaarCatalogExportRoute(bazaarCatalogShared),
       bazaarCatalogConfirm: createCafeBazaarCatalogConfirmRoute(bazaarCatalogShared),
+      sibappCatalogSync: createCafeBazaarCatalogConfirmRoute(sibappCatalogShared),
       transactions: createAdminTransactionsRoute(paymentsShared),
       transactionTimeline: createAdminTransactionTimelineRoute(paymentsShared),
       transactionRecheck: createAdminRecheckRoute(paymentsShared),

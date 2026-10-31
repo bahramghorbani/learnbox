@@ -13,6 +13,17 @@ type Dependencies = {
   now?: () => Date;
 };
 
+type ConfirmDependencies = Omit<Dependencies, 'store'> & {
+  store?: {
+    confirmCatalog(input: {
+      actorUserId: string;
+      idempotencyKey: string;
+    }): Promise<{ status: 'forbidden' } | ({ status: 'confirmed' } & Record<string, unknown>)>;
+  };
+  /** Error code returned on provider/database failure; defaults to Bazaar's. */
+  unavailableCode?: string;
+};
+
 function notFound() {
   return new Response('Not found', { status: 404, headers: { 'Cache-Control': 'no-store' } });
 }
@@ -74,7 +85,7 @@ function invalid() {
  * POST: the owner confirms the current CSV is imported in Bazaar's panel, recording the
  * cafe_bazaar SKU mappings. Full Admin mutation gate, mirroring Myket catalog sync.
  */
-export function createCafeBazaarCatalogConfirmRoute(dependencies: Dependencies) {
+export function createCafeBazaarCatalogConfirmRoute(dependencies: ConfirmDependencies) {
   return async function POST(request: Request) {
     if (
       !dependencies.enabled ||
@@ -119,7 +130,7 @@ export function createCafeBazaarCatalogConfirmRoute(dependencies: Dependencies) 
       return Response.json(result, { headers: { 'Cache-Control': 'no-store' } });
     } catch {
       return Response.json(
-        { code: 'bazaar_catalog_unavailable' },
+        { code: dependencies.unavailableCode ?? 'bazaar_catalog_unavailable' },
         { status: 503, headers: { 'Cache-Control': 'no-store' } },
       );
     }
