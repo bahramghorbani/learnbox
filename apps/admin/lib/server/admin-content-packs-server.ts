@@ -85,6 +85,8 @@ import {
 import { StorePackCoverService } from './store-pack-cover-service';
 import { createMyketCatalogClient } from './myket-catalog-client';
 import { createMyketCatalogSyncRoute, MyketCatalogSyncStore } from './admin-myket-catalog-routes';
+import { createCafeBazaarCatalogExportRoute } from './admin-bazaar-catalog-routes';
+import { PostgresBazaarCatalogExportStore } from './postgres-bazaar-catalog-export-store';
 import {
   createPackArchiveRoute,
   createPackLifecycleRoute,
@@ -236,6 +238,13 @@ export function createAdminContentPacksServer(dependencies: {
         : undefined,
       now: dependencies.now,
     };
+    const bazaarCatalogShared = {
+      enabled: storeConfig.enabled,
+      config: storeConfig,
+      sessionStore,
+      store: new PostgresBazaarCatalogExportStore(pool),
+      now: dependencies.now,
+    };
     // Payments (M2.4) are read-only operations: transaction inspection and gateway configuration
     // status. They ride the Store gate because a shop without a way to see its payments is not
     // operable, and they add no write path — the merchant credential is server-provisioned and
@@ -311,6 +320,7 @@ export function createAdminContentPacksServer(dependencies: {
         service: new StorePackCoverService(pool, mediaProvider),
       }),
       myketCatalogSync: createMyketCatalogSyncRoute(myketCatalogShared),
+      bazaarCatalogExport: createCafeBazaarCatalogExportRoute(bazaarCatalogShared),
       transactions: createAdminTransactionsRoute(paymentsShared),
       transactionTimeline: createAdminTransactionTimelineRoute(paymentsShared),
       transactionRecheck: createAdminRecheckRoute(paymentsShared),
