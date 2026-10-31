@@ -46,8 +46,8 @@ android {
 
     // M2: one flavor per app-store distribution, each wiring its own in-app billing
     // (see NativeBridge.kt). "generic" is the current/default build (no store IAB yet,
-    // keeps M1's honest "unavailable" stub). Add "bazaar" the same way once that
-    // developer account is approved — don't add it speculatively before then.
+    // keeps M1's honest "unavailable" stub); myket and bazaar share one AIDL client
+    // (billing/AidlBillingBridge.kt) and differ only in their src/<flavor> manifest + factory.
     flavorDimensions += "store"
     productFlavors {
         create("generic") {
@@ -57,6 +57,10 @@ android {
         create("myket") {
             dimension = "store"
             buildConfigField("String", "STORE_CHANNEL", "\"android_myket\"")
+        }
+        create("bazaar") {
+            dimension = "store"
+            buildConfigField("String", "STORE_CHANNEL", "\"android_bazaar\"")
         }
     }
 
