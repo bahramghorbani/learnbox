@@ -67,6 +67,7 @@ const transactionRow = {
   packDisplayName: 'بستهٔ پولی',
   amountTomans: 150000,
   provider: 'zarinpal',
+  channel: 'web_zarinpal',
   environment: 'sandbox',
   status: 'verified',
   providerPurchaseId: `A${'0'.repeat(35)}`,
@@ -129,6 +130,8 @@ const salesReport = {
       revenueTomans: 20000,
     },
   ],
+  byProvider: [{ provider: 'zarinpal', verifiedCount: 2, revenueTomans: 20000 }],
+  byChannel: [{ channel: 'web_zarinpal', verifiedCount: 2, revenueTomans: 20000 }],
 };
 
 function salesReportStore(forbidden = false) {
@@ -217,9 +220,19 @@ describe('M2.4 Admin transactions route', () => {
       now: () => now,
     });
 
-    await route(get('/api/store/transactions?packId=paid-pack&status=verified&limit=25'));
+    await route(
+      get(
+        '/api/store/transactions?packId=paid-pack&status=verified&provider=zarinpal&channel=web_zarinpal&limit=25',
+      ),
+    );
     expect(store.listTransactions).toHaveBeenCalledWith(
-      expect.objectContaining({ packId: 'paid-pack', status: 'verified', limit: 25 }),
+      expect.objectContaining({
+        packId: 'paid-pack',
+        status: 'verified',
+        provider: 'zarinpal',
+        channel: 'web_zarinpal',
+        limit: 25,
+      }),
     );
   });
 
@@ -235,13 +248,15 @@ describe('M2.4 Admin transactions route', () => {
 
     await route(
       get(
-        `/api/store/transactions?packId=${encodeURIComponent("'; DROP TABLE purchase_events; --")}&status=${encodeURIComponent('verified; DELETE FROM users')}&limit=abc`,
+        `/api/store/transactions?packId=${encodeURIComponent("'; DROP TABLE purchase_events; --")}&status=${encodeURIComponent('verified; DELETE FROM users')}&provider=${encodeURIComponent('zarinpal; DELETE FROM users')}&channel=${encodeURIComponent('android_bazaar; DELETE FROM purchase_orders')}&limit=abc`,
       ),
     );
     expect(store.listTransactions).toHaveBeenCalledWith({
       actorUserId,
       packId: undefined,
       status: undefined,
+      provider: undefined,
+      channel: undefined,
       query: undefined,
       needsReview: false,
       limit: undefined,

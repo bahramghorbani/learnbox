@@ -34,6 +34,15 @@ const statusValues = new Set([
   'refunded',
   'revoked',
 ]);
+const providerValues = new Set([
+  'cafe_bazaar',
+  'direct_web',
+  'google_play',
+  'app_store',
+  'zarinpal',
+  'myket',
+]);
+const channelValues = new Set(['web_zarinpal', 'android_myket', 'android_bazaar']);
 
 type PaymentsDependencies<TMethod extends keyof PostgresAdminPaymentsStore> = {
   enabled: boolean;
@@ -91,6 +100,8 @@ export function createAdminTransactionsRoute(
     const url = new URL(request.url);
     const packId = url.searchParams.get('packId') ?? undefined;
     const status = url.searchParams.get('status') ?? undefined;
+    const provider = url.searchParams.get('provider') ?? undefined;
+    const channel = url.searchParams.get('channel') ?? undefined;
     const query = url.searchParams.get('q')?.trim() || undefined;
     const limitRaw = url.searchParams.get('limit');
     // Unparseable filters are dropped rather than rejected: a bad query string should show the
@@ -102,6 +113,8 @@ export function createAdminTransactionsRoute(
         actorUserId: session.userId,
         packId: packId && packIdPattern.test(packId) ? packId : undefined,
         status: status && statusValues.has(status) ? status : undefined,
+        provider: provider && providerValues.has(provider) ? provider : undefined,
+        channel: channel && channelValues.has(channel) ? channel : undefined,
         query: query && searchPattern.test(query) ? query : undefined,
         needsReview: url.searchParams.get('review') === '1',
         limit,

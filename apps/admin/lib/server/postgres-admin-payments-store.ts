@@ -39,7 +39,10 @@ export type AdminTransactionRow = {
   packId: string | null;
   packDisplayName: string | null;
   amountTomans: number | null;
+  /** Who verified the attempt, from the canonical purchase-event provider enum. */
   provider: string;
+  /** Where the purchase originated; null only for legacy attempts without an order. */
+  channel: string | null;
   environment: string;
   status: string;
   /** Zarinpal Authority — the gateway session handle. */
@@ -122,6 +125,8 @@ export type SalesReport = {
   pendingCount: number;
   failedCount: number;
   packs: SalesReportPackRow[];
+  byProvider: Array<{ provider: string; verifiedCount: number; revenueTomans: number }>;
+  byChannel: Array<{ channel: string; verifiedCount: number; revenueTomans: number }>;
 };
 
 export type SalesReportResult = { status: 'ok'; report: SalesReport } | { status: 'forbidden' };
@@ -160,6 +165,10 @@ export class PostgresAdminPaymentsStore {
     actorUserId: string;
     packId?: string;
     status?: string;
+    /** Server-allowlisted provider value from the route. */
+    provider?: string;
+    /** Server-allowlisted distribution channel value from the route. */
+    channel?: string;
     /** Authority, RefID, order code, attempt id or learner id. */
     query?: string;
     /** Only attempts that need operator attention. */
@@ -189,6 +198,7 @@ export class PostgresAdminPaymentsStore {
                 pe.verified_at,
                 po.public_code,
                 po.status                AS order_status,
+                po.channel,
                 pe.provider_amount::text AS provider_amount,
                 pe.provider_currency,
                 pe.review_reason,
@@ -224,6 +234,8 @@ export class PostgresAdminPaymentsStore {
                  -- check limit reached while still unsettled ('stopped_limit' above)
                  OR (pe.status IN ('pending', 'cancelled') AND pe.order_id IS NOT NULL
                      AND pe.check_count >= ${maxAutomaticChecks}))
+            AND ($7::text IS NULL OR pe.provider::text = $7)
+            AND ($8::text IS NULL OR po.channel = $8)
           ORDER BY pe.created_at DESC
           LIMIT $1`,
         [
@@ -233,6 +245,8 @@ export class PostgresAdminPaymentsStore {
           query,
           query !== null && uuidPattern.test(query),
           input.needsReview === true,
+          input.provider ?? null,
+          input.channel ?? null,
         ],
       );
       return {
@@ -244,6 +258,7 @@ export class PostgresAdminPaymentsStore {
           packDisplayName: text(row.display_name),
           amountTomans: typeof row.amount_tomans === 'number' ? row.amount_tomans : null,
           provider: String(row.provider),
+          channel: text(row.channel),
           environment: String(row.environment),
           status: String(row.status),
           providerPurchaseId: String(row.provider_purchase_id),
@@ -456,6 +471,28 @@ export class PostgresAdminPaymentsStore {
           ORDER BY revenue DESC`,
         [from, to],
       );
+      const perProvider = await client.query(
+        `SELECT pe.provider::text AS provider, count(*) AS verified, sum(pe.amount_tomans) AS revenue
+           FROM purchase_events pe
+          WHERE pe.status = 'verified'
+            AND ($1::date IS NULL OR pe.created_at >= $1::date)
+            AND ($2::date IS NULL OR pe.created_at < $2::date + interval '1 day')
+          GROUP BY pe.provider
+          ORDER BY revenue DESC`,
+        [from, to],
+      );
+      const perChannel = await client.query(
+        `SELECT coalesce(po.channel, 'legacy') AS channel,
+                count(*) AS verified, sum(pe.amount_tomans) AS revenue
+           FROM purchase_events pe
+           LEFT JOIN purchase_orders po ON po.id = pe.order_id
+          WHERE pe.status = 'verified'
+            AND ($1::date IS NULL OR pe.created_at >= $1::date)
+            AND ($2::date IS NULL OR pe.created_at < $2::date + interval '1 day')
+          GROUP BY coalesce(po.channel, 'legacy')
+          ORDER BY revenue DESC`,
+        [from, to],
+      );
       const row = totals.rows[0] ?? {};
       return {
         status: 'ok',
@@ -469,6 +506,16 @@ export class PostgresAdminPaymentsStore {
           packs: perPack.rows.map((r) => ({
             packId: String(r.pack_id),
             packDisplayName: String(r.display_name),
+            verifiedCount: Number(r.verified ?? 0),
+            revenueTomans: Number(r.revenue ?? 0),
+          })),
+          byProvider: perProvider.rows.map((r) => ({
+            provider: String(r.provider),
+            verifiedCount: Number(r.verified ?? 0),
+            revenueTomans: Number(r.revenue ?? 0),
+          })),
+          byChannel: perChannel.rows.map((r) => ({
+            channel: String(r.channel),
             verifiedCount: Number(r.verified ?? 0),
             revenueTomans: Number(r.revenue ?? 0),
           })),

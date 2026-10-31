@@ -383,6 +383,8 @@ describe('StoreListingsWorkspace presentation', () => {
             revenueTomans: 20000,
           },
         ],
+        byProvider: [{ provider: 'zarinpal', verifiedCount: 2, revenueTomans: 20000 }],
+        byChannel: [{ channel: 'web_zarinpal', verifiedCount: 2, revenueTomans: 20000 }],
       },
     });
 
@@ -403,5 +405,9 @@ describe('StoreListingsWorkspace presentation', () => {
     expect(dialog?.querySelector('[data-report-kpi="verified-count"]')?.textContent).toBe('۲');
     expect(dialog?.querySelector('[data-report-kpi="revenue"]')?.textContent).toBe('۲۰,۰۰۰');
     expect(dialog?.textContent).toContain('نام حیوانات: پنج واژه‌ی پایه');
+    expect(dialog?.textContent).toContain('تفکیک بر اساس درگاه');
+    expect(dialog?.textContent).toContain('زرین‌پال');
+    expect(dialog?.textContent).toContain('تفکیک بر اساس کانال خرید');
+    expect(dialog?.textContent).toContain('وب / زرین‌پال');
   });
 });
