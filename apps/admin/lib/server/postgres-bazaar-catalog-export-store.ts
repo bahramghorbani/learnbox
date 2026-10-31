@@ -62,6 +62,38 @@ export function cafeBazaarCsv(items: readonly BazaarCatalogItem[]): string {
   return `\uFEFF${rows.join('\r\n')}\r\n`;
 }
 
+/** Paid, published and listed packs: the one definition of "sellable in a store". */
+export async function sellablePacks(
+  client: Queryable,
+): Promise<Array<{ packId: string; priceTomans: number; item: BazaarCatalogItem }>> {
+  const result = await client.query(
+    `SELECT p.id AS pack_id, p.display_name, s.commercial_summary, p.price_tomans
+       FROM packs p
+       INNER JOIN store_listings s ON s.pack_id = p.id
+      WHERE p.status = 'published'
+        AND p.is_free = false
+        AND p.price_tomans > 0
+        AND s.store_status = 'listed'
+      ORDER BY s.featured DESC, s.display_order, p.id`,
+  );
+  return result.rows.map((row) => {
+    const packId = text(row.pack_id);
+    const title = text(row.display_name);
+    const summary = text(row.commercial_summary);
+    const priceTomans = Number(row.price_tomans);
+    return {
+      packId,
+      priceTomans,
+      item: {
+        productId: bazaarProductIdForPack(packId),
+        title,
+        description: summary || `بستهٔ یادگیری LearnBox: ${title}`,
+        priceRials: priceTomans * 10,
+      },
+    };
+  });
+}
+
 /**
  * Read-only Bazaar catalogue export. It intentionally reads no provider credentials and writes no
  * SKU mapping: the CSV is an owner-reviewed import artifact, not a checkout activation.
@@ -77,35 +109,8 @@ export class PostgresBazaarCatalogExportStore {
     return result.rows.length > 0;
   }
 
-  private async sellable(
-    client: Queryable,
-  ): Promise<Array<{ packId: string; priceTomans: number; item: BazaarCatalogItem }>> {
-    const result = await client.query(
-      `SELECT p.id AS pack_id, p.display_name, s.commercial_summary, p.price_tomans
-         FROM packs p
-         INNER JOIN store_listings s ON s.pack_id = p.id
-        WHERE p.status = 'published'
-          AND p.is_free = false
-          AND p.price_tomans > 0
-          AND s.store_status = 'listed'
-        ORDER BY s.featured DESC, s.display_order, p.id`,
-    );
-    return result.rows.map((row) => {
-      const packId = text(row.pack_id);
-      const title = text(row.display_name);
-      const summary = text(row.commercial_summary);
-      const priceTomans = Number(row.price_tomans);
-      return {
-        packId,
-        priceTomans,
-        item: {
-          productId: bazaarProductIdForPack(packId),
-          title,
-          description: summary || `بستهٔ یادگیری LearnBox: ${title}`,
-          priceRials: priceTomans * 10,
-        },
-      };
-    });
+  private sellable(client: Queryable) {
+    return sellablePacks(client);
   }
 
   /**

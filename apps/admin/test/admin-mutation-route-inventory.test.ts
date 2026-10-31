@@ -201,6 +201,12 @@ const INVENTORY: Record<string, Entry> = {
     category: 'delegated',
     guardIn: 'lib/server/admin-bazaar-catalog-routes.ts',
   },
+  // Sibapp sync reuses the Bazaar confirm guard chain; it reads Sibapp's package list and maps only
+  // packs whose label and price match. Never enables checkout.
+  'app/api/store/sibapp/sync/route.ts': {
+    category: 'delegated',
+    guardIn: 'lib/server/admin-bazaar-catalog-routes.ts',
+  },
   'app/api/store/myket/sync/route.ts': {
     category: 'delegated',
     guardIn: 'lib/server/admin-myket-catalog-routes.ts',
