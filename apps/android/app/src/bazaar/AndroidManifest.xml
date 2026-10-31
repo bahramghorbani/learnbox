@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Merged into src/main/AndroidManifest.xml only for the "bazaar" flavor build. Permission and
+     bind target from Bazaar's IAB guide
+     (developers.cafebazaar.ir/en/guidelines/in-app-billing/migrate-google-play). -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="com.farsitel.bazaar.permission.PAY_THROUGH_BAZAAR" />
+
+    <queries>
+        <package android:name="com.farsitel.bazaar" />
+    </queries>
+</manifest>

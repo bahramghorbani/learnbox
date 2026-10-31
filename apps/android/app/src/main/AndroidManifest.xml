@@ -2,8 +2,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <!-- Required by Myket's documented AIDL billing service; scoped to the Myket client only. -->
-    <uses-permission android:name="ir.mservices.market.BILLING" />
 
     <application
         android:allowBackup="false"
