@@ -160,4 +160,29 @@ suite('Myket IAB purchase verify-and-grant (real Postgres)', () => {
     expect(outcome.status).toBe('unknown_sku');
     expect(calls).toHaveLength(0);
   });
+
+  it('Cafe Bazaar: same token as Myket is a separate receipt, recorded on the android_bazaar channel', async () => {
+    await pool.query(
+      `INSERT INTO store_iab_catalog_items (provider, pack_id, sku_id, synced_price_tomans)
+       VALUES ('cafe_bazaar', $1, 'BAZAAR_SKU', $2)`,
+      [packId, packPrice],
+    );
+    await expect(readPurchasableIabSku(pool, bob, 'cafe_bazaar', packId)).resolves.toEqual({
+      ok: true,
+      sku: 'BAZAAR_SKU',
+    });
+    const { verify } = fixtureVerifier({ status: 'paid' });
+    // Token uniqueness is scoped by provider: a Myket token value must not block a Bazaar receipt.
+    const outcome = await verifyStoreIabPurchase(
+      { pool, verifier: verify },
+      { userId: bob, provider: 'cafe_bazaar', sku: 'BAZAAR_SKU', purchaseToken: 'token-abc-1' },
+    );
+    expect(outcome).toMatchObject({ status: 'verified', packId, alreadyEntitled: false });
+    const order = await pool.query<{ channel: string; provider: string }>(
+      `SELECT o.channel, e.provider::text FROM purchase_orders o JOIN purchase_events e ON e.order_id = o.id
+        WHERE o.user_id = $1 AND o.pack_id = $2`,
+      [bob, packId],
+    );
+    expect(order.rows).toEqual([{ channel: 'android_bazaar', provider: 'cafe_bazaar' }]);
+  });
 });

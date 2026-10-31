@@ -2,8 +2,7 @@ import { Pool } from 'pg';
 
 import { authenticateLearner } from '../../../../../../lib/learner-auth';
 import { guardMutation } from '../../../../../../lib/mutation-guard';
-import { verifyStoreIabPurchase } from '../../../../../../lib/store-iab-purchase';
-import { myketVerifierFromEnvironment } from '../../../../../../lib/myket-config';
+import { iabStores, verifyStoreIabPurchase } from '../../../../../../lib/store-iab-purchase';
 import { requireVerifiedDatabaseTls } from '../../../../../../../api/dist/database/migration-runner.js';
 
 export const runtime = 'nodejs';
@@ -15,14 +14,17 @@ const headers = {
 };
 
 /**
- * POST /api/store/purchase/myket/verify — confirm a native Android IAB receipt (M2-Myket).
+ * POST /api/store/purchase/{myket|bazaar}/verify — confirm a native Android IAB receipt.
  *
  * Called by the web app after `window.LearnBoxNativeCallbacks.onPurchaseResult` delivers a
  * purchaseToken from the native buy flow (see `apps/android` NativeBridge). The body carries the
  * sku and purchaseToken the native layer captured; everything else (pack id, price, ownership) is
  * resolved server-side from `sku` via `store-iab-purchase.ts` — a client cannot claim a pack.
  */
-export async function POST(request: Request): Promise<Response> {
+export async function POST(
+  request: Request,
+  { params }: { params: Promise<{ store: string }> },
+): Promise<Response> {
   const rejected = guardMutation(request, { method: 'POST' });
   if (rejected) return rejected;
 
@@ -34,8 +36,11 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ error: 'unavailable' }, { status: 503, headers });
   }
 
-  const myket = myketVerifierFromEnvironment(process.env);
-  if (!myket) {
+  const slug = (await params).store;
+  const store = Object.hasOwn(iabStores, slug) ? iabStores[slug] : undefined;
+  if (!store) return Response.json({ error: 'notFound' }, { status: 404, headers });
+  const configured = store.verifierFromEnvironment();
+  if (!configured) {
     return Response.json({ error: 'paymentUnavailable' }, { status: 503, headers });
   }
 
@@ -61,10 +66,10 @@ export async function POST(request: Request): Promise<Response> {
   });
   try {
     const outcome = await verifyStoreIabPurchase(
-      { pool, verifier: myket.verifier },
+      { pool, verifier: configured.verifier },
       {
         userId: session.subject,
-        provider: 'myket',
+        provider: store.provider,
         sku: body.sku,
         purchaseToken: body.purchaseToken,
       },

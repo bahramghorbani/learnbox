@@ -381,68 +381,77 @@ describe('M2.4 Store purchase CTA', () => {
     expect(text()).toContain('درگاه پرداخت در دسترس نیست');
   });
 
-  it('uses the server-approved Myket SKU, verifies the native receipt, and reloads ownership', async () => {
-    const nativeRequest = vi.fn(() =>
-      JSON.stringify({ status: 'pending', channel: 'android_myket' }),
-    );
-    vi.stubGlobal('LearnBoxNative', { requestPurchase: nativeRequest });
-    const calls: Array<{ url: string; init?: RequestInit }> = [];
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
-        const url = String(input);
-        calls.push({ url, init });
-        if (url === '/api/store/purchase/myket/initiate') {
-          return {
-            ok: true,
-            status: 200,
-            json: async () => ({ sku: 'DB_APPROVED_SKU' }),
-          } as Response;
-        }
-        if (url === '/api/store/purchase/myket/verify') {
-          return { ok: true, status: 200, json: async () => ({ status: 'verified' }) } as Response;
-        }
-        const packs = url.includes('my-packs') ? [] : [paidPack];
-        return { ok: true, status: 200, json: async () => ({ packs }) } as Response;
-      }),
-    );
-
-    await act(async () => {
-      root.render(createElement(StoreScreen, { onNavigate: () => {} }));
-    });
-    await flush();
-    await clickPurchase();
-    expect(nativeRequest).toHaveBeenCalledWith('DB_APPROVED_SKU');
-
-    await act(async () => {
-      const callback = (
-        window as Window & {
-          LearnBoxNativeCallbacks?: { onPurchaseResult?: (result: string) => void };
-        }
-      ).LearnBoxNativeCallbacks?.onPurchaseResult;
-      callback?.(
-        JSON.stringify({
-          status: 'succeeded',
-          channel: 'android_myket',
-          sku: 'DB_APPROVED_SKU',
-          purchaseToken: 'receipt-token',
+  it.each([
+    // Myket APKs shipped before the Bazaar flavor have no getStoreChannel: they must stay on Myket.
+    { slug: 'myket', channel: 'android_myket', getStoreChannel: undefined },
+    { slug: 'bazaar', channel: 'android_bazaar', getStoreChannel: () => 'android_bazaar' },
+  ])(
+    'uses the server-approved $slug SKU, verifies the native receipt, and reloads ownership',
+    async ({ slug, channel, getStoreChannel }) => {
+      const nativeRequest = vi.fn(() => JSON.stringify({ status: 'pending', channel }));
+      vi.stubGlobal('LearnBoxNative', { requestPurchase: nativeRequest, getStoreChannel });
+      const calls: Array<{ url: string; init?: RequestInit }> = [];
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+          const url = String(input);
+          calls.push({ url, init });
+          if (url === `/api/store/purchase/${slug}/initiate`) {
+            return {
+              ok: true,
+              status: 200,
+              json: async () => ({ sku: 'DB_APPROVED_SKU' }),
+            } as Response;
+          }
+          if (url === `/api/store/purchase/${slug}/verify`) {
+            return {
+              ok: true,
+              status: 200,
+              json: async () => ({ status: 'verified' }),
+            } as Response;
+          }
+          const packs = url.includes('my-packs') ? [] : [paidPack];
+          return { ok: true, status: 200, json: async () => ({ packs }) } as Response;
         }),
       );
-    });
-    await flush();
 
-    const verify = calls.find((call) => call.url === '/api/store/purchase/myket/verify');
-    expect(verify).toBeDefined();
-    expect(JSON.parse(verify!.init!.body as string)).toEqual({
-      sku: 'DB_APPROVED_SKU',
-      purchaseToken: 'receipt-token',
-    });
-    expect(verify!.init!.credentials).toBe('same-origin');
-    expect((verify!.init!.headers as Record<string, string>)['content-type']).toBe(
-      'application/json',
-    );
-    expect(text()).toContain('خرید با موفقیت تأیید شد');
-  });
+      await act(async () => {
+        root.render(createElement(StoreScreen, { onNavigate: () => {} }));
+      });
+      await flush();
+      await clickPurchase();
+      expect(nativeRequest).toHaveBeenCalledWith('DB_APPROVED_SKU');
+
+      await act(async () => {
+        const callback = (
+          window as Window & {
+            LearnBoxNativeCallbacks?: { onPurchaseResult?: (result: string) => void };
+          }
+        ).LearnBoxNativeCallbacks?.onPurchaseResult;
+        callback?.(
+          JSON.stringify({
+            status: 'succeeded',
+            channel,
+            sku: 'DB_APPROVED_SKU',
+            purchaseToken: 'receipt-token',
+          }),
+        );
+      });
+      await flush();
+
+      const verify = calls.find((call) => call.url === `/api/store/purchase/${slug}/verify`);
+      expect(verify).toBeDefined();
+      expect(JSON.parse(verify!.init!.body as string)).toEqual({
+        sku: 'DB_APPROVED_SKU',
+        purchaseToken: 'receipt-token',
+      });
+      expect(verify!.init!.credentials).toBe('same-origin');
+      expect((verify!.init!.headers as Record<string, string>)['content-type']).toBe(
+        'application/json',
+      );
+      expect(text()).toContain('خرید با موفقیت تأیید شد');
+    },
+  );
 
   it('does not redirect when the server returns no gateway URL', async () => {
     stubStore({ status: 200, body: {} });

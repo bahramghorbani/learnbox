@@ -23,6 +23,10 @@ class LearnBoxNativeBridge(private val activity: MainActivity) {
     @JavascriptInterface
     fun getPlatform(): String = "android"
 
+    /** "android_myket" | "android_bazaar" | "none" — lets the web app pick the store's server route. */
+    @JavascriptInterface
+    fun getStoreChannel(): String = BuildConfig.STORE_CHANNEL
+
     /**
      * Returns immediately with "pending" (real store flavors) or "unavailable" (generic / no
      * bridge). The FINAL result arrives later via
