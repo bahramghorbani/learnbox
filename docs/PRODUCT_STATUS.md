@@ -1,7 +1,7 @@
 # LearnBox product status
 
 **Document role:** canonical, human-readable product and delivery status.
-**Last reviewed:** 2026-10-12.
+**Last reviewed:** 2026-10-31 (commerce delta; broader historical inventory is retained below).
 **Status vocabulary:**
 
 - **Implemented:** code or documented foundation exists.
@@ -11,6 +11,14 @@
 - **Blocked:** design/code exists but an external dependency prevents safe activation.
 - **Planned:** approved direction, not implemented as a release feature.
 - **Out of scope:** not part of the current product release.
+
+## Commerce status delta — 2026-10-31
+
+This section supersedes older commerce statements below that describe Zarinpal as unconfigured or Android as not started.
+
+- **Web/Zarinpal:** live and verified in Production; no configuration or activation work is implied by the Bazaar roadmap.
+- **Android:** a signed-capable Kotlin shell exists at `apps/android`, with `versionName=0.1.1` and `versionCode=2`; the Myket IAB bridge is implemented but neither a Bazaar APK nor Bazaar payment flow exists.
+- **Café Bazaar:** developer account approval is confirmed. Bazaar IAB, server verification, catalog CSV import and provider/channel-separated Admin reporting are approved as planned work, not activated functionality. The governing plan is [`CAFE_BAZAAR_MULTICHANNEL_COMMERCE_ROADMAP.md`](planning/CAFE_BAZAAR_MULTICHANNEL_COMMERCE_ROADMAP.md).
 
 ## Product definition
 

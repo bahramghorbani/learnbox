@@ -2,8 +2,7 @@
 /**
  * Version-source boundary.
  *
- * LearnBox versions three products independently: the Learner PWA, Admin Web and (future)
- * Android. The rule this validator protects is simple and easy to break by accident:
+ * LearnBox versions three products independently: the Learner PWA, Admin Web and Android. The rule this validator protects is simple and easy to break by accident:
  *
  *   each product has exactly ONE authoritative version declaration, it is that product's own
  *   file, and no product may display, import or inherit another product's version.
@@ -111,12 +110,26 @@ for (const product of products) {
   }
 }
 
-// --- Android (future product): no implementation exists yet -------------------------------
+// --- Android -------------------------------------------------------------------------------
 //
-// The earlier Flutter prototype in apps/mobile (never released, no build/signing material) was
-// removed 2026-10-24 per owner decision. No Android version source exists until a new Android
-// implementation begins; this validator only checks that the tag/versionCode rules remain
-// documented below for whenever that happens.
+// Android owns its version in the Gradle application module. `versionCode` is global across
+// store flavors: a Bazaar upload consumes the next code just as a Myket upload does.
+const androidVersionFile = 'apps/android/app/build.gradle.kts';
+const androidVersionSource = read(androidVersionFile);
+const androidVersionNames = [
+  ...androidVersionSource.matchAll(/^\s*versionName\s*=\s*"([^"]+)"\s*$/gm),
+];
+const androidVersionCodes = [...androidVersionSource.matchAll(/^\s*versionCode\s*=\s*(\d+)\s*$/gm)];
+check(
+  androidVersionNames.length === 1 && semver.test(androidVersionNames[0]?.[1] ?? ''),
+  `${androidVersionFile} must declare exactly one semver versionName.`,
+);
+check(
+  androidVersionCodes.length === 1 && Number(androidVersionCodes[0]?.[1]) > 0,
+  `${androidVersionFile} must declare exactly one positive integer versionCode.`,
+);
+const androidVersionName = androidVersionNames[0]?.[1];
+const androidVersionCode = androidVersionCodes[0]?.[1];
 
 // --- Documented release-tag architecture --------------------------------------------------
 
@@ -152,4 +165,6 @@ for (const product of products) {
     `  - ${product.name}: ${declaredVersions.get(product.name)} (${product.versionFile}) -> tags ${product.tagPrefix}X.Y.Z`,
   );
 }
-console.log('  - Android (not started): no version source yet -> tags android/vX.Y.Z');
+console.log(
+  `  - Android: ${androidVersionName ?? 'invalid'}+${androidVersionCode ?? 'invalid'} (${androidVersionFile}) -> tags android/vX.Y.Z`,
+);

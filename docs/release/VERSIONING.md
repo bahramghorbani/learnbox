@@ -12,11 +12,11 @@ actions. Each one requires separate owner authorization. Merging a PR authorizes
 LearnBox ships three products that version **independently**. A change to one never renumbers
 another.
 
-| Product                      | Authoritative version source                                                                    | Tag namespace    | Published releases so far                                  |
-| ---------------------------- | ----------------------------------------------------------------------------------------------- | ---------------- | ---------------------------------------------------------- |
-| Learner PWA (`apps/website`) | `apps/website/package.json` → `version`                                                         | `learner/vX.Y.Z` | `v1.0.0`, `v1.2.0`, `v1.2.1` (legacy repository-wide tags) |
-| Admin Web (`apps/admin`)     | `apps/admin/package.json` → `version`                                                           | `admin/vX.Y.Z`   | none                                                       |
-| Android (not started)        | none yet — Flutter prototype removed 2026-10-24; new source declared when implementation begins | `android/vX.Y.Z` | none                                                       |
+| Product                      | Authoritative version source                                        | Tag namespace    | Published releases so far                                  |
+| ---------------------------- | ------------------------------------------------------------------- | ---------------- | ---------------------------------------------------------- |
+| Learner PWA (`apps/website`) | `apps/website/package.json` → `version`                             | `learner/vX.Y.Z` | `v1.0.0`, `v1.2.0`, `v1.2.1` (legacy repository-wide tags) |
+| Admin Web (`apps/admin`)     | `apps/admin/package.json` → `version`                               | `admin/vX.Y.Z`   | none                                                       |
+| Android (`apps/android`)     | `apps/android/app/build.gradle.kts` → `versionName` / `versionCode` | `android/vX.Y.Z` | none                                                       |
 
 `scripts/validate-version-sources.mjs` (`pnpm verify:version-sources`) enforces that each product
 reads only its own source, that no product can display another's version, and that no accessor
@@ -29,11 +29,9 @@ described learner-facing releases and remain valid, immutable history; they are 
 moved or deleted. The Learner PWA continues that numbering under its new namespace, so its next
 release is `learner/v1.3.0` (or `learner/v1.2.2` for a patch) — the number does not restart.
 
-Admin Web and Android have never published a release. Their package versions therefore still read
-`0.1.0`: a deployed artifact is not a published release, and declaring `1.0.0` before the first
-`admin/v1.0.0` release would invent a version that does not exist. Admin's first published release
-is an owner-gated decision, not an automatic consequence of its deployment. Android has no version
-source at all right now (see "Android releases" below).
+Admin Web has never published a release. Its package version therefore still reads `0.1.0`: a deployed artifact is not a published release, and declaring `1.0.0` before the first `admin/v1.0.0` release would invent a version that does not exist. Admin's first published release is an owner-gated decision, not an automatic consequence of its deployment.
+
+Android's checked-in Kotlin baseline is `versionName=0.1.1`, `versionCode=2`. It has no published GitHub Release and no store publication; neither a merged PR, a signed artifact nor a store submission may be described as a release. The next submitted Android build must derive its versionCode from the actual latest submitted artifact, not merely the checked-in value.
 
 ## Semantic Versioning
 
@@ -77,34 +75,16 @@ Every GitHub Release, for every product, states:
 
 Nothing in a release body may contain a secret, credential, phone number or personal data.
 
-## Android releases (not started)
+## Android releases
 
-Android development has not begun. A Flutter prototype previously lived in `apps/mobile`; it was
-never released (no build, signing key, store listing or placeholder artifact ever existed) and
-was removed on 2026-10-24 by owner decision, since the approved implementation direction for
-Android is a thin Kotlin native shell around the existing Learner PWA (not a Flutter rewrite).
-These rules apply to the first Android release when native implementation work is separately
-authorized; nothing below is implemented today.
+`apps/android` is a Kotlin native shell around the existing Learner PWA. Its currently checked-in baseline is `0.1.1+2`; it has neither a GitHub Release nor a store listing/publication. The permanent signing identity is external to the repository. Bazaar implementation and publication remain separately gated by [`CAFE_BAZAAR_MULTICHANNEL_COMMERCE_ROADMAP.md`](../planning/CAFE_BAZAAR_MULTICHANNEL_COMMERCE_ROADMAP.md).
 
-- **versionName** is the semver string (`1.0.0`) and matches the `android/vX.Y.Z` tag.
-- **versionCode** is a separate integer that **increases monotonically on every build submitted
-  to any store**, and never decreases or repeats — not even across a rollback, a re-signed
-  artifact or a store rejection. A rolled-back release burns its versionCode permanently. Both
-  will live in whatever file the new Android project declares as its authoritative version
-  source (to be named in this document when that project is created).
-- **Signed artifact handling** — the upload/signing key and keystore are owner-held secrets.
-  They are never committed, never placed in CI without an owner decision, and never stored in
-  this repository. The GitHub Release records the artifact's SHA-256 so a store binary can be
-  matched back to a commit; the signing material itself never appears in the release.
-- **Backend compatibility** — Android is a client of the same Learner backend as the PWA. It
-  shares accounts, progress, entitlements and the review-sync contract; it does not get its own
-  database, its own account namespace or a divergent sync protocol. An Android release that
-  needs a server change depends on that server release and must state the minimum backend
-  version it requires.
-- **Store publication is separate** — publishing `android/v1.0.0` on GitHub does not submit,
-  release or roll out anything on Café Bazaar or Google Play. Store submission, staged rollout
-  and store takedown are independent owner-authorized actions, tracked in the release's
-  distribution status.
+- **versionName** is the Android component SemVer string and matches the `android/vX.Y.Z` tag when a GitHub Release is authorized.
+- **versionCode** is a separate integer that **increases monotonically on every build submitted to any store**, regardless of flavor. It never decreases or repeats — not across a rollback, re-signed artifact or store rejection. It lives beside `versionName` in `apps/android/app/build.gradle.kts` and must be reconciled with the latest submitted artifact before a release build.
+- **Channel is artifact metadata, not a new app version line.** A Bazaar artifact may be named `learnbox-android-bazaar-v0.2.0+3.apk`, but it remains one Android component with the same signed application identity and global versionCode sequence.
+- **Signed artifact handling** — the upload/signing key and keystore are owner-held secrets. They are never committed, never placed in CI without an owner decision, and never stored in this repository. The GitHub Release records the artifact's SHA-256 so a store binary can be matched back to a commit; the signing material itself never appears in the release.
+- **Backend compatibility** — Android is a client of the same Learner backend as the PWA. It shares accounts, progress, entitlements and the review-sync contract; it does not get its own database, its own account namespace or a divergent sync protocol. An Android release that needs a server change depends on that server release and must state the minimum backend version it requires.
+- **Store publication is separate** — publishing `android/v1.0.0` on GitHub does not submit, release or roll out anything on Café Bazaar or Google Play. Store submission, staged rollout and store takedown are independent owner-authorized actions, tracked in the release's distribution status.
 
 ## Release procedure
 
