@@ -1174,6 +1174,7 @@ export function LearnerHome({
         purchaseToken={purchaseToken}
         onDone={() => {
           setPurchaseToken(null);
+          retryServerStateRead();
           setScreen('today');
         }}
         onRetry={() => {
@@ -1191,6 +1192,9 @@ export function LearnerHome({
         onNavigate={(destination) => {
           setSlidePackId(null);
           setScreen(destination);
+          // A purchase or free activation in the Store changes which cards this learner may read;
+          // the faces/state loaded at sign-in are stale until re-read.
+          retryServerStateRead();
         }}
       />
     );
