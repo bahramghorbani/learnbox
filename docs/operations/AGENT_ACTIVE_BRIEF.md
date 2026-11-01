@@ -37,9 +37,9 @@ The Learner PWA and the future Android app are two clients of **one** backend. T
 
 | Product     | Version on `main` | Tag namespace    | Published releases                                                             |
 | ----------- | ----------------- | ---------------- | ------------------------------------------------------------------------------ |
-| Learner PWA | `1.2.2`           | `learner/vX.Y.Z` | `v1.0.0`–`v1.2.1` (legacy repository-wide tags, history); tag `learner/v1.2.2` |
+| Learner PWA | `1.3.0`           | `learner/vX.Y.Z` | `v1.0.0`–`v1.2.1` (legacy repository-wide tags, history); tag `learner/v1.2.2` |
 | Admin Web   | `0.1.0`           | `admin/vX.Y.Z`   | none — deployed is not released                                                |
-| Android     | `0.1.0+1`         | `android/vX.Y.Z` | none — not started                                                             |
+| Android     | `0.1.2+3`         | `android/vX.Y.Z` | tag `android/v0.1.1`                                                           |
 
 Each version comes from that product's own file and is shown in its own UI (Learner: bottom of the Profile screen; Admin: bottom of the RTL sidebar). `pnpm verify:version-sources` fails if a product can display another's version.
 
