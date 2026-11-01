@@ -12,6 +12,16 @@ entry here.
 A deployment is not a release. A component may run in Production without appearing in this file;
 its deployment evidence belongs in `docs/release/` and its live facts in `PROJECT_STATE.md`.
 
+## learner/v1.3.0 — store in-app purchases (released 2026-11-02)
+
+Commit `495185b73d763f2541470d5ada0f39ee0a74cc2a`, image
+`sha256:f7f67276f0b0e83c2d633e554b277e6f86ee2867c0094d45d4a03c866084a51c`. Deployed to Production
+2026-11-01T21:55:54Z.
+
+- Paid packs via Cafe Bazaar, Myket and Sibapp in-app billing (server-side verification) and Zarinpal on the web.
+- A bought pack's cards appear without restarting the app.
+- Clear message when the store's billing service cannot be reached, instead of an endless wait.
+
 ## android/v0.1.1 — first store release (released 2026-11-01)
 
 Commit `40cd19c3c4b5d726c01b95a4fc2d15e8b0b5c453`, versionCode 2, APK SHA-256
