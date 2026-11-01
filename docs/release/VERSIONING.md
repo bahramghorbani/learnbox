@@ -9,14 +9,15 @@ actions. Each one requires separate owner authorization. Merging a PR authorizes
 
 ## Products and their version lines
 
-LearnBox ships three products that version **independently**. A change to one never renumbers
+LearnBox ships four products that version **independently**. A change to one never renumbers
 another.
 
-| Product                      | Authoritative version source                                        | Tag namespace    | Published releases so far                                  |
-| ---------------------------- | ------------------------------------------------------------------- | ---------------- | ---------------------------------------------------------- |
-| Learner PWA (`apps/website`) | `apps/website/package.json` → `version`                             | `learner/vX.Y.Z` | `v1.0.0`, `v1.2.0`, `v1.2.1` (legacy repository-wide tags) |
-| Admin Web (`apps/admin`)     | `apps/admin/package.json` → `version`                               | `admin/vX.Y.Z`   | none                                                       |
-| Android (`apps/android`)     | `apps/android/app/build.gradle.kts` → `versionName` / `versionCode` | `android/vX.Y.Z` | none                                                       |
+| Product                      | Authoritative version source                                                                    | Tag namespace    | Published releases so far                                  |
+| ---------------------------- | ----------------------------------------------------------------------------------------------- | ---------------- | ---------------------------------------------------------- |
+| Learner PWA (`apps/website`) | `apps/website/package.json` → `version`                                                         | `learner/vX.Y.Z` | `v1.0.0`, `v1.2.0`, `v1.2.1` (legacy repository-wide tags) |
+| Admin Web (`apps/admin`)     | `apps/admin/package.json` → `version`                                                           | `admin/vX.Y.Z`   | none                                                       |
+| Android (`apps/android`)     | `apps/android/app/build.gradle.kts` → `versionName` / `versionCode`                             | `android/vX.Y.Z` | none                                                       |
+| iOS (`apps/ios`)             | `apps/ios/LearnBox.xcodeproj/project.pbxproj` → `MARKETING_VERSION` / `CURRENT_PROJECT_VERSION` | `ios/vX.Y.Z`     | none                                                       |
 
 `scripts/validate-version-sources.mjs` (`pnpm verify:version-sources`) enforces that each product
 reads only its own source, that no product can display another's version, and that no accessor
@@ -31,7 +32,7 @@ release is `learner/v1.3.0` (or `learner/v1.2.2` for a patch) — the number doe
 
 Admin Web has never published a release. Its package version therefore still reads `0.1.0`: a deployed artifact is not a published release, and declaring `1.0.0` before the first `admin/v1.0.0` release would invent a version that does not exist. Admin's first published release is an owner-gated decision, not an automatic consequence of its deployment.
 
-Android's checked-in Kotlin baseline is `versionName=0.1.1`, `versionCode=2`. It has no published GitHub Release and no store publication; neither a merged PR, a signed artifact nor a store submission may be described as a release. The next submitted Android build must derive its versionCode from the actual latest submitted artifact, not merely the checked-in value.
+Android (`0.1.1+2`) and iOS (`0.1.1`, build `2`) are now **published in stores** (Café Bazaar and Sibapp, 2026-11-01) but have no GitHub Release yet. Store publication is recorded in [`STORE_SUBMISSIONS.md`](STORE_SUBMISSIONS.md), never inferred from source. Every future store build must take its build number from that ledger, not from the checked-in value alone.
 
 ## Semantic Versioning
 
@@ -85,6 +86,43 @@ Nothing in a release body may contain a secret, credential, phone number or pers
 - **Signed artifact handling** — the upload/signing key and keystore are owner-held secrets. They are never committed, never placed in CI without an owner decision, and never stored in this repository. The GitHub Release records the artifact's SHA-256 so a store binary can be matched back to a commit; the signing material itself never appears in the release.
 - **Backend compatibility** — Android is a client of the same Learner backend as the PWA. It shares accounts, progress, entitlements and the review-sync contract; it does not get its own database, its own account namespace or a divergent sync protocol. An Android release that needs a server change depends on that server release and must state the minimum backend version it requires.
 - **Store publication is separate** — publishing `android/v1.0.0` on GitHub does not submit, release or roll out anything on Café Bazaar or Google Play. Store submission, staged rollout and store takedown are independent owner-authorized actions, tracked in the release's distribution status.
+
+## iOS releases
+
+`apps/ios` is a SwiftUI `WKWebView` shell around the Learner PWA, distributed through Sibapp
+(bundle `ir.learnbox.app`). The same rules as Android apply:
+
+- **MARKETING_VERSION** is the iOS SemVer string and matches the `ios/vX.Y.Z` tag.
+- **CURRENT_PROJECT_VERSION** (build number) is an integer that increases on every build
+  submitted to a store and is never reused. Debug and Release configurations carry the same values.
+- The IPA's SHA-256 is recorded in the ledger; the signature is added by Sibapp and is not ours.
+
+## Store submissions ledger
+
+[`STORE_SUBMISSIONS.md`](STORE_SUBMISSIONS.md) is the append-only record of every binary sent to a
+store: platform, store, version, build number, source commit, artifact SHA-256, date and status.
+Rows are only appended or have their status updated; a row is never deleted or renumbered.
+`pnpm verify:version-sources` fails when:
+
+- a build number is recorded for two different artifacts on the same platform (reuse), or
+- the checked-in `versionCode` / `CURRENT_PROJECT_VERSION` is lower than the highest submitted one.
+
+Before a new store build: bump the build number above the ledger maximum (and the version per
+SemVer) in a PR, build from the merged commit, then append the ledger row in the same or a
+follow-up PR.
+
+## Native shell and server compatibility
+
+The Android and iOS shells load the Learner PWA from the server, so a server deployment reaches
+every installed shell at once, while a shell update reaches users only when they update from the
+store — often weeks later, sometimes never. Therefore:
+
+- The bridge contract (`window.LearnBoxNative`, `LearnBoxNativeCallbacks.onPurchaseResult`, the
+  `learnbox://` return URL, store channel names and purchase payloads) is **additive only**. A
+  server change may add fields or methods; it may not remove, rename or change the meaning of one
+  that any published shell in the ledger still uses.
+- A change that genuinely needs a newer shell must keep the old path working and feature-detect the
+  new one, until the old shell's ledger rows are marked `superseded` and the owner accepts dropping it.
 
 ## Release procedure
 

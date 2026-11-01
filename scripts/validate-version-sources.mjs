@@ -131,6 +131,73 @@ check(
 const androidVersionName = androidVersionNames[0]?.[1];
 const androidVersionCode = androidVersionCodes[0]?.[1];
 
+// --- iOS ---------------------------------------------------------------------------------
+const iosVersionFile = 'apps/ios/LearnBox.xcodeproj/project.pbxproj';
+const iosSource = read(iosVersionFile);
+const iosVersionNames = new Set(
+  [...iosSource.matchAll(/MARKETING_VERSION = ([^;]+);/g)].map((m) => m[1]),
+);
+const iosBuilds = new Set(
+  [...iosSource.matchAll(/CURRENT_PROJECT_VERSION = ([^;]+);/g)].map((m) => m[1]),
+);
+const [iosVersionName] = iosVersionNames;
+const [iosBuild] = iosBuilds;
+check(
+  iosVersionNames.size === 1 && semver.test(iosVersionName ?? ''),
+  `${iosVersionFile} must declare one semver MARKETING_VERSION across all configurations.`,
+);
+check(
+  iosBuilds.size === 1 && /^\d+$/.test(iosBuild ?? '') && Number(iosBuild) > 0,
+  `${iosVersionFile} must declare one positive integer CURRENT_PROJECT_VERSION across all configurations.`,
+);
+
+// --- Store submissions ledger -------------------------------------------------------------
+//
+// A build number consumed by any store submission is never reused for another artifact, and the
+// checked-in build number never falls below the highest one already submitted.
+const ledgerFile = 'docs/release/STORE_SUBMISSIONS.md';
+const ledger = read(ledgerFile);
+const ledgerBody = ledger.split('<!-- ledger:start -->')[1]?.split('<!-- ledger:end -->')[0] ?? '';
+const submissions = ledgerBody
+  .split('\n')
+  .filter((line) => /^\|\s*(android|ios)\s*\|/.test(line))
+  .map((line) => {
+    const [platform, store, version, build, , sha256, , status] = line
+      .split('|')
+      .slice(1, -1)
+      .map((cell) => cell.trim());
+    return { platform, store, version, build: Number(build), sha256, status };
+  });
+check(submissions.length > 0, `${ledgerFile} must list the submitted store builds.`);
+const statuses = ['submitted', 'in_review', 'published', 'rejected', 'superseded'];
+const artifactByBuild = new Map();
+for (const row of submissions) {
+  const label = `${ledgerFile}: ${row.platform}/${row.store} build ${row.build}`;
+  check(
+    semver.test(row.version) && Number.isInteger(row.build) && row.build > 0,
+    `${label} needs a semver version and positive build.`,
+  );
+  check(/^[0-9a-f]{64}$/.test(row.sha256), `${label} needs the artifact SHA-256.`);
+  check(statuses.includes(row.status), `${label} has unknown status ${row.status}.`);
+  const key = `${row.platform}#${row.build}`;
+  const prior = artifactByBuild.get(key);
+  check(
+    !prior || prior === row.sha256,
+    `${label} reuses a build number already used by another artifact.`,
+  );
+  artifactByBuild.set(key, row.sha256);
+}
+const maxBuild = (platform) =>
+  Math.max(0, ...submissions.filter((row) => row.platform === platform).map((row) => row.build));
+check(
+  Number(androidVersionCode) >= maxBuild('android'),
+  `${androidVersionFile} versionCode ${androidVersionCode} is below the highest submitted Android build ${maxBuild('android')}.`,
+);
+check(
+  Number(iosBuild) >= maxBuild('ios'),
+  `${iosVersionFile} CURRENT_PROJECT_VERSION ${iosBuild} is below the highest submitted iOS build ${maxBuild('ios')}.`,
+);
+
 // --- Documented release-tag architecture --------------------------------------------------
 
 const versioningDoc = read('docs/release/VERSIONING.md');
@@ -143,6 +210,10 @@ for (const product of products) {
 check(
   versioningDoc.includes('android/v'),
   'docs/release/VERSIONING.md must document the android/vX.Y.Z tag namespace.',
+);
+check(
+  versioningDoc.includes('ios/v') && versioningDoc.includes('STORE_SUBMISSIONS.md'),
+  'docs/release/VERSIONING.md must document the ios/vX.Y.Z tags and the store submissions ledger.',
 );
 check(
   versioningDoc.includes('versionCode'),
@@ -167,4 +238,10 @@ for (const product of products) {
 }
 console.log(
   `  - Android: ${androidVersionName ?? 'invalid'}+${androidVersionCode ?? 'invalid'} (${androidVersionFile}) -> tags android/vX.Y.Z`,
+);
+console.log(
+  `  - iOS: ${iosVersionName ?? 'invalid'}+${iosBuild ?? 'invalid'} (${iosVersionFile}) -> tags ios/vX.Y.Z`,
+);
+console.log(
+  `  - Store ledger: ${submissions.length} submissions; next Android build > ${maxBuild('android')}, next iOS build > ${maxBuild('ios')}`,
 );
