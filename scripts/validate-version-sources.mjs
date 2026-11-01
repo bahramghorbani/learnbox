@@ -153,8 +153,8 @@ check(
 
 // --- Store submissions ledger -------------------------------------------------------------
 //
-// A build number consumed by any store submission is never reused for another artifact, and the
-// checked-in build number never falls below the highest one already submitted.
+// A build number is never reused for another artifact in the same store, and the checked-in build
+// number never falls below the highest one submitted to any store.
 const ledgerFile = 'docs/release/STORE_SUBMISSIONS.md';
 const ledger = read(ledgerFile);
 const ledgerBody = ledger.split('<!-- ledger:start -->')[1]?.split('<!-- ledger:end -->')[0] ?? '';
@@ -179,7 +179,7 @@ for (const row of submissions) {
   );
   check(/^[0-9a-f]{64}$/.test(row.sha256), `${label} needs the artifact SHA-256.`);
   check(statuses.includes(row.status), `${label} has unknown status ${row.status}.`);
-  const key = `${row.platform}#${row.build}`;
+  const key = `${row.platform}#${row.store}#${row.build}`;
   const prior = artifactByBuild.get(key);
   check(
     !prior || prior === row.sha256,

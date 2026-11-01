@@ -81,7 +81,7 @@ Nothing in a release body may contain a secret, credential, phone number or pers
 `apps/android` is a Kotlin native shell around the existing Learner PWA. Its currently checked-in baseline is `0.1.1+2`; it has neither a GitHub Release nor a store listing/publication. The permanent signing identity is external to the repository. Bazaar implementation and publication remain separately gated by [`CAFE_BAZAAR_MULTICHANNEL_COMMERCE_ROADMAP.md`](../planning/CAFE_BAZAAR_MULTICHANNEL_COMMERCE_ROADMAP.md).
 
 - **versionName** is the Android component SemVer string and matches the `android/vX.Y.Z` tag when a GitHub Release is authorized.
-- **versionCode** is a separate integer that **increases monotonically on every build submitted to any store**, regardless of flavor. It never decreases or repeats — not across a rollback, re-signed artifact or store rejection. It lives beside `versionName` in `apps/android/app/build.gradle.kts` and must be reconciled with the latest submitted artifact before a release build.
+- **versionCode** is a separate integer. It is never reused within a store — not across a rollback, re-signed artifact or store rejection — and the next build for **any** store takes the highest code submitted to **any** store plus one, so the stores stay aligned. (Historical exception: the first Myket and Bazaar builds are separate flavor artifacts that both use code 2.) It lives beside `versionName` in `apps/android/app/build.gradle.kts`.
 - **Channel is artifact metadata, not a new app version line.** A Bazaar artifact may be named `learnbox-android-bazaar-v0.2.0+3.apk`, but it remains one Android component with the same signed application identity and global versionCode sequence.
 - **Signed artifact handling** — the upload/signing key and keystore are owner-held secrets. They are never committed, never placed in CI without an owner decision, and never stored in this repository. The GitHub Release records the artifact's SHA-256 so a store binary can be matched back to a commit; the signing material itself never appears in the release.
 - **Backend compatibility** — Android is a client of the same Learner backend as the PWA. It shares accounts, progress, entitlements and the review-sync contract; it does not get its own database, its own account namespace or a divergent sync protocol. An Android release that needs a server change depends on that server release and must state the minimum backend version it requires.
@@ -104,7 +104,7 @@ store: platform, store, version, build number, source commit, artifact SHA-256, 
 Rows are only appended or have their status updated; a row is never deleted or renumbered.
 `pnpm verify:version-sources` fails when:
 
-- a build number is recorded for two different artifacts on the same platform (reuse), or
+- a build number is recorded for two different artifacts in the same store (reuse), or
 - the checked-in `versionCode` / `CURRENT_PROJECT_VERSION` is lower than the highest submitted one.
 
 Before a new store build: bump the build number above the ledger maximum (and the version per
