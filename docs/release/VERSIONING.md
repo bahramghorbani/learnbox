@@ -16,8 +16,8 @@ another.
 | ---------------------------- | ----------------------------------------------------------------------------------------------- | ---------------- | ---------------------------------------------------------- |
 | Learner PWA (`apps/website`) | `apps/website/package.json` → `version`                                                         | `learner/vX.Y.Z` | `v1.0.0`, `v1.2.0`, `v1.2.1` (legacy repository-wide tags) |
 | Admin Web (`apps/admin`)     | `apps/admin/package.json` → `version`                                                           | `admin/vX.Y.Z`   | none                                                       |
-| Android (`apps/android`)     | `apps/android/app/build.gradle.kts` → `versionName` / `versionCode`                             | `android/vX.Y.Z` | none                                                       |
-| iOS (`apps/ios`)             | `apps/ios/LearnBox.xcodeproj/project.pbxproj` → `MARKETING_VERSION` / `CURRENT_PROJECT_VERSION` | `ios/vX.Y.Z`     | none                                                       |
+| Android (`apps/android`)     | `apps/android/app/build.gradle.kts` → `versionName` / `versionCode`                             | `android/vX.Y.Z` | `android/v0.1.1`                                           |
+| iOS (`apps/ios`)             | `apps/ios/LearnBox.xcodeproj/project.pbxproj` → `MARKETING_VERSION` / `CURRENT_PROJECT_VERSION` | `ios/vX.Y.Z`     | `ios/v0.1.1`                                               |
 
 `scripts/validate-version-sources.mjs` (`pnpm verify:version-sources`) enforces that each product
 reads only its own source, that no product can display another's version, and that no accessor
@@ -32,7 +32,7 @@ release is `learner/v1.3.0` (or `learner/v1.2.2` for a patch) — the number doe
 
 Admin Web has never published a release. Its package version therefore still reads `0.1.0`: a deployed artifact is not a published release, and declaring `1.0.0` before the first `admin/v1.0.0` release would invent a version that does not exist. Admin's first published release is an owner-gated decision, not an automatic consequence of its deployment.
 
-Android (`0.1.1+2`) and iOS (`0.1.1`, build `2`) are now **published in stores** (Café Bazaar and Sibapp, 2026-11-01) but have no GitHub Release yet. Store publication is recorded in [`STORE_SUBMISSIONS.md`](STORE_SUBMISSIONS.md), never inferred from source. Every future store build must take its build number from that ledger, not from the checked-in value alone.
+Android (`0.1.1+2`) and iOS (`0.1.1`, build `2`) are **published in stores** (Café Bazaar and Sibapp, 2026-11-01) with GitHub Releases `android/v0.1.1` and `ios/v0.1.1`. Store publication is recorded in [`STORE_SUBMISSIONS.md`](STORE_SUBMISSIONS.md), never inferred from source. Every future store build must take its build number from that ledger, not from the checked-in value alone.
 
 ## Semantic Versioning
 
