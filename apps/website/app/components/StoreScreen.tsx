@@ -60,6 +60,7 @@ type NativePurchaseResult = {
   channel?: unknown;
   sku?: unknown;
   purchaseToken?: unknown;
+  reason?: unknown;
 };
 
 type AndroidPurchaseBridge = {
@@ -242,7 +243,10 @@ export function StoreScreen({
         setActivation({
           packId: null,
           success: null,
-          error: `خرید در ${pending?.store.name ?? 'فروشگاه'} تأیید نشد. دوباره تلاش کنید.`,
+          error:
+            result.reason === 'store_connect_timeout'
+              ? `ارتباط با ${pending?.store.name ?? 'فروشگاه'} برقرار نشد. برنامهٔ ${pending?.store.name ?? 'فروشگاه'} را یک‌بار باز کنید و دوباره تلاش کنید. در گوشی‌های شیائومی «اجرای خودکار» آن را در تنظیمات برنامه روشن کنید.`
+              : `خرید در ${pending?.store.name ?? 'فروشگاه'} تأیید نشد. دوباره تلاش کنید.`,
         });
         return;
       }

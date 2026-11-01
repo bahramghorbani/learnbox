@@ -6,12 +6,19 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
+import android.os.Bundle
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
 import android.util.Log
 import com.android.vending.billing.IInAppBillingService
 
 private const val API_VERSION = 3
 private const val REQUEST_CODE = 4821
+
+/** A store whose service is killed and not allowed to restart (MIUI Autostart off) accepts the bind
+ * but never connects; without a deadline the purchase button would wait forever. */
+private const val CONNECT_TIMEOUT_MS = 10_000L
 
 /** One Iranian store's IAB v3 AIDL endpoint; each store flavor's BillingBridgeFactory picks one. */
 data class StoreBilling(
@@ -19,6 +26,10 @@ data class StoreBilling(
     val serviceAction: String,
     val channel: String,
     val tag: String,
+    /** Bazaar: ask getPurchaseConfig for getBuyIntentV3/V2, which return a plain Intent our own
+     * foreground activity starts. The legacy PendingIntent is started on the store's behalf and
+     * MIUI's "background pop-up" permission silently cancels it. */
+    val modernBuyIntent: Boolean = false,
 )
 
 /**
@@ -42,9 +53,20 @@ class AidlBillingBridge(
     private var pendingSku: String? = null
     private var pendingCallback: ((String) -> Unit)? = null
     private var pendingAfterConnect: (() -> Unit)? = null
+    private val mainHandler = Handler(Looper.getMainLooper())
+    private val connectTimeout: Runnable = Runnable {
+        if (service != null) return@Runnable
+        Log.w(store.tag, "${store.servicePackage} billing service did not connect in time")
+        pendingAfterConnect = null
+        // Drop the dead bind so the next tap binds afresh (the store may be running by then).
+        runCatching { activity.unbindService(connection) }
+        bound = false
+        failPending("store_connect_timeout")
+    }
 
-    private val connection = object : ServiceConnection {
+    private val connection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName, binder: IBinder) {
+            mainHandler.removeCallbacks(connectTimeout)
             service = IInAppBillingService.Stub.asInterface(binder)
             Log.i(store.tag, "Connected to ${store.servicePackage} billing service")
             pendingAfterConnect?.invoke()
@@ -71,8 +93,11 @@ class AidlBillingBridge(
                 Log.w(store.tag, "${store.servicePackage} not installed or billing service unavailable")
                 pendingAfterConnect = null
                 failPending("store_unavailable")
+                return
             }
         }
+        mainHandler.removeCallbacks(connectTimeout)
+        mainHandler.postDelayed(connectTimeout, CONNECT_TIMEOUT_MS)
     }
 
     override fun launchPurchase(sku: String, onResult: (String) -> Unit) {
@@ -80,6 +105,7 @@ class AidlBillingBridge(
         pendingCallback = onResult
         ensureConnected {
             val svc = service ?: return@ensureConnected failPending("store_unavailable")
+            if (store.modernBuyIntent && launchModernBuyIntent(svc, sku)) return@ensureConnected
             val buyIntentBundle = runCatching {
                 svc.getBuyIntent(API_VERSION, activity.packageName, sku, "inapp", null)
             }.getOrNull() ?: return@ensureConnected failPending("buy_intent_call_failed")
@@ -100,6 +126,32 @@ class AidlBillingBridge(
                 )
             }.onFailure { failPending("launch_intent_failed") }
         }
+    }
+
+    /** Bazaar's getBuyIntentV3/V2 path (same order as Poolakey). Returns false only when the store
+     * offers neither, so the caller falls back to the legacy PendingIntent. */
+    private fun launchModernBuyIntent(svc: IInAppBillingService, sku: String): Boolean {
+        val config = runCatching { svc.getPurchaseConfig(API_VERSION) }.getOrNull()
+        val bundle = when {
+            config?.getBoolean("INTENT_V3_SUPPORT") == true -> runCatching {
+                svc.getBuyIntentV3(API_VERSION, activity.packageName, sku, null, Bundle())
+            }.getOrNull()
+            config?.getBoolean("INTENT_V2_SUPPORT") == true -> runCatching {
+                svc.getBuyIntentV2(API_VERSION, activity.packageName, sku, "inapp", null)
+            }.getOrNull()
+            else -> return false
+        } ?: run { failPending("buy_intent_call_failed"); return true }
+        val responseCode = bundle.getInt("RESPONSE_CODE", -1)
+        if (responseCode != 0) {
+            failPending("buy_intent_response_$responseCode")
+            return true
+        }
+        @Suppress("DEPRECATION")
+        val intent = bundle.getParcelable<Intent>("BUY_INTENT")
+            ?: run { failPending("buy_intent_missing"); return true }
+        runCatching { activity.startActivityForResult(intent, REQUEST_CODE) }
+            .onFailure { failPending("launch_intent_failed") }
+        return true
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
@@ -149,6 +201,7 @@ class AidlBillingBridge(
     }
 
     override fun dispose() {
+        mainHandler.removeCallbacks(connectTimeout)
         if (bound) {
             runCatching { activity.unbindService(connection) }
             bound = false

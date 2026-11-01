@@ -16,4 +16,13 @@ interface IInAppBillingService {
             String continuationToken);
 
     int consumePurchase(int apiVersion, String packageName, String purchaseToken);
+
+    // Cafe Bazaar extensions, in Bazaar's own transaction order (Poolakey's AIDL). Appended after
+    // consumePurchase so the five shared transaction codes above are unchanged; only the Bazaar
+    // flavor ever calls these (StoreBilling.modernBuyIntent).
+    Bundle getBuyIntentV2(int apiVersion, String packageName, String sku, String type,
+            String developerPayload);
+    Bundle getPurchaseConfig(int apiVersion);
+    Bundle getBuyIntentV3(int apiVersion, String packageName, String sku,
+            String developerPayload, in Bundle extraData);
 }

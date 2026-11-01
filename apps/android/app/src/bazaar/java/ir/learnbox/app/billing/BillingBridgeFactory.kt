@@ -11,5 +11,6 @@ fun createBillingBridge(activity: Activity): BillingBridge = AidlBillingBridge(
         serviceAction = "ir.cafebazaar.pardakht.InAppBillingService.BIND",
         channel = "android_bazaar",
         tag = "BazaarBilling",
+        modernBuyIntent = true,
     ),
 )
