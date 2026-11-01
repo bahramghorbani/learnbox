@@ -6,11 +6,25 @@ required contents of a GitHub Release are in [`docs/release/VERSIONING.md`](docs
 
 The `v1.0.0`–`v1.2.1` entries below are the historical repository-wide line. They described
 learner-facing releases, they remain valid history, and their tags never move. The Learner PWA
-continues that numbering under `learner/v…`; Admin Web and Android have published no release yet,
-so they have no entry here.
+continues that numbering under `learner/v…`. Admin Web has published no release yet, so it has no
+entry here.
 
 A deployment is not a release. A component may run in Production without appearing in this file;
 its deployment evidence belongs in `docs/release/` and its live facts in `PROJECT_STATE.md`.
+
+## android/v0.1.1 — first store release (released 2026-11-01)
+
+Commit `40cd19c3c4b5d726c01b95a4fc2d15e8b0b5c453`, versionCode 2, APK SHA-256
+`e1b8c09299c081ede643c1e0239c8035776f16a03100164aec4675f6d865170d`. Published on Café Bazaar.
+
+- Kotlin WebView shell for the Learner PWA with Café Bazaar in-app billing and server-side receipt verification.
+
+## ios/v0.1.1 — first store release (released 2026-11-01)
+
+Commit `ef9328035b49e203f96cdb9cd6631b01ac62cfa4`, build 2, IPA SHA-256
+`07c1dbc52e64edb1afcb101e72a2ba707f9df23f1817b860b2d3babb697f845e`. Published on Sibapp.
+
+- SwiftUI WebView shell for the Learner PWA with Sibapp in-app purchase and server-side validation.
 
 ## v1.2.1 — LB-B29 shared mutation guard (released 2026-09-30)
 
