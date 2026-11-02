@@ -1,7 +1,7 @@
 # LearnBox product status
 
 **Document role:** canonical, human-readable product and delivery status.
-**Last reviewed:** 2026-10-31 (commerce delta; broader historical inventory is retained below).
+**Last reviewed:** 2026-11-02 (LearnBox League delta; commerce delta 2026-10-31; broader historical inventory is retained below).
 **Status vocabulary:**
 
 - **Implemented:** code or documented foundation exists.
@@ -11,6 +11,19 @@
 - **Blocked:** design/code exists but an external dependency prevents safe activation.
 - **Planned:** approved direction, not implemented as a release feature.
 - **Out of scope:** not part of the current product release.
+
+## Learner engagement delta — 2026-11-02
+
+- **LearnBox League (لیگ لرن‌باکس): Verified, live for all learners** (`learner/v1.4.0`, PR #517).
+  XP, levels, twelve badges, a weekly city league (Bonn → Berlin, groups ≤ 30, Saturday 00:00
+  Tehran close) and a Leaderboard tab that replaces Profile in the bottom bar; Profile opens from the
+  Today avatar. XP is derived on read from `review_events`, daily plans and verified
+  `purchase_events` (nothing stored, refunds remove XP). Migration `0060_learner_league` adds
+  `user_badges`, `league_members`, `league_opt_outs` (cascade with the user; in the account-deletion
+  set). Production flag `LEARNBOX_LEAGUE_ENABLED=all`; tables appear once 10 learners are active in a
+  week (`LEARNBOX_LEAGUE_MIN_ACTIVE`), before that learners see “league is forming” plus their own
+  XP and badges. Evidence: `apps/website/test/league-rules.test.ts`, `league-db.test.ts` (real
+  Postgres), CI on PR #517.
 
 ## Commerce status delta — 2026-10-31
 

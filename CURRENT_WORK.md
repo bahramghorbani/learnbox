@@ -4,6 +4,10 @@
 
 ## Active work
 
+**LearnBox League — RELEASED 2026-11-02 (`learner/v1.4.0`).** Live for all learners. Open follow-ups:
+league tables stay in the “forming” state until 10 learners are active in one week (3 at release);
+league notifications/reminders are not built.
+
 **Draft-only fix/media-image-url-deadline (2026-10-21):** Bounded fallback image URL download through body read; targeted mock regression. Independent of historical AvalAI timeouts; no provider call or Production change. PR link and CI are recorded in the PR itself.
 
 **Flutter mobile prototype removed — 2026-10-24 (owner decision), CLOSED.** The `apps/mobile`
