@@ -15,8 +15,14 @@ const candidate = 'sha256:d327590ca12e919dfff5f2d45394cb909b890a51422092c222ed56
 const bridgeSource = 'a7f582647e0297c04dcf2e967989e39ffd38df9c';
 const candidatePackageHash = '2cd5a3d8fff8d2ac39eefdb8e7ea48faa58570a315385505092f02eef8ff1ba7';
 
+// The development build reads the tracked public push key and must find it in the bundle.
+const vapidKey = readFileSync(
+  join(repositoryRoot, 'infrastructure/production/app/release-build.env'),
+  'utf8',
+).match(/^NEXT_PUBLIC_VAPID_PUBLIC_KEY=(.+)$/m)[1];
 const bundle = [
   'profileIdentityFlag:C="true"',
+  `vapidPublicKey:"${vapidKey}"`,
   'eT({binaryWire:!0,storage:eK(),key:t0,ownerId:Y,...{quarantineKey:eR(t0)}})',
   'JSON.stringify(n?{nextCardIndex:e,nextCardId:n}:{nextCardIndex:e})',
   'sessionEnded&&1',
