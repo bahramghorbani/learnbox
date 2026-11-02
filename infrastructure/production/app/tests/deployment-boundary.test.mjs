@@ -106,3 +106,14 @@ test('the v1.2.2 client flag matrix is wired as build args with the released val
     assert.match(dockerfile, new RegExp(`ENV ${flag}=\\$${flag}`));
   }
 });
+
+test('release builds carry the daily-reminder push key and the build refuses to run without it', () => {
+  const env = readFileSync(resolve(appInfrastructure, 'release-build.env'), 'utf8');
+  assert.match(env, /^NEXT_PUBLIC_VAPID_PUBLIC_KEY=B[A-Za-z0-9_-]{86}$/m);
+  const build = readFileSync(
+    resolve(repositoryRoot, 'infrastructure/production/admin/build-admin-image.sh'),
+    'utf8',
+  );
+  assert.match(build, /unset NEXT_PUBLIC_VAPID_PUBLIC_KEY/);
+  assert.match(build, /reminder push key is inlined in the client bundle/);
+});
