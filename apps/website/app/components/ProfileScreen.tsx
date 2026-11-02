@@ -5,7 +5,6 @@ import { ProfileDetailsPanel } from './ProfileDetailsPanel';
 import { toPersianDigits } from '../persian-digits';
 import { learnerAppVersion } from '../../lib/learner-app-version';
 import type { ProfileDetails } from '../../lib/learner-profile-fields';
-import { supportLinkFor } from '../../lib/support-contact';
 
 export type LearnerLearningGoal = 'life' | 'career' | 'travel';
 
@@ -50,7 +49,8 @@ interface ProfileScreenProps {
 // Approved informational destinations from the landing legal spec (verified public
 // destinations). The learner app opens them without depending on the marketing site.
 const privacyUrl = 'https://learnboxapp.com/privacy';
-const supportEmail = 'mailto:hi@learnboxapp.com';
+const telegramUrl = 'https://t.me/learnboxapp';
+const instagramUrl = 'https://www.instagram.com/learnboxapp/';
 
 export function ProfileScreen({
   goal,
@@ -200,33 +200,47 @@ export function ProfileScreen({
               ↗
             </span>
           </a>
-          <a
-            className="profile-row"
-            href={supportLinkFor('profile')}
-            target="_blank"
-            rel="noreferrer"
-          >
-            <span className="profile-row-copy">
-              <strong>پشتیبانی در تلگرام</strong>
-              <small className="profile-row-url" dir="ltr">
-                @learnboxsupportbot
-              </small>
-            </span>
-            <span className="profile-row-arrow" aria-hidden="true">
-              ↗
-            </span>
-          </a>
-          <a className="profile-row" href={supportEmail}>
-            <span className="profile-row-copy">
-              <strong>پشتیبانی با ایمیل</strong>
-              <small className="profile-row-url" dir="ltr">
-                hi@learnboxapp.com
-              </small>
-            </span>
-            <span className="profile-row-arrow" aria-hidden="true">
-              ↗
-            </span>
-          </a>
+        </div>
+        <div className="profile-social-row">
+          <span className="profile-social-label">ما را در شبکه‌های اجتماعی دنبال کنید</span>
+          <span className="profile-social-icons">
+            <a
+              className="profile-social-icon profile-social-icon-instagram"
+              href={instagramUrl}
+              target="_blank"
+              rel="noreferrer"
+              aria-label="LearnBox در اینستاگرام"
+            >
+              <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+                <rect
+                  x="2"
+                  y="2"
+                  width="20"
+                  height="20"
+                  rx="6"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                />
+                <circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" strokeWidth="2" />
+                <circle cx="17.3" cy="6.7" r="1.3" fill="currentColor" />
+              </svg>
+            </a>
+            <a
+              className="profile-social-icon profile-social-icon-telegram"
+              href={telegramUrl}
+              target="_blank"
+              rel="noreferrer"
+              aria-label="LearnBox در تلگرام"
+            >
+              <svg viewBox="0 0 240 240" width="22" height="22" aria-hidden="true">
+                <path
+                  fill="currentColor"
+                  d="M187 60 39 118c-8 3-8 8-1 10l38 12 15 46c2 5 4 7 8 7 5 0 7-2 10-5l16-16 33 25c7 5 12 3 13-6l24-128c3-11-4-16-13-13Z"
+                />
+              </svg>
+            </a>
+          </span>
         </div>
       </section>
       <LearnerAppVersionLabel />

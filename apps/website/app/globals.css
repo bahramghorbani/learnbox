@@ -2204,6 +2204,49 @@ p {
   font-size: 20px;
   line-height: 1;
 }
+.profile-social-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 12px;
+  padding: 16px 20px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 10px rgba(30, 20, 80, 0.05);
+}
+.profile-social-label {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--ink);
+}
+.profile-social-icons {
+  display: flex;
+  gap: 12px;
+  flex: 0 0 auto;
+}
+.profile-social-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  color: #fff;
+}
+.profile-social-icon-instagram {
+  background: radial-gradient(
+    circle at 30% 107%,
+    #fdf497 0%,
+    #fdf497 5%,
+    #fd5949 45%,
+    #d6249f 60%,
+    #285aeb 90%
+  );
+}
+.profile-social-icon-telegram {
+  background: #28a7e9;
+}
 .settings-footnote {
   margin: 14px 6px 0;
   color: var(--muted);

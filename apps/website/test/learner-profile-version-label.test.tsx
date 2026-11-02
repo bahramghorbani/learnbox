@@ -86,7 +86,7 @@ describe('Learner Profile version label', () => {
     expect(mounted.querySelectorAll('.profile-section').length).toBeGreaterThan(0);
     expect(mounted.querySelector('.learner-nav')).not.toBeNull();
     expect(mounted.textContent).toContain('حریم خصوصی');
-    expect(mounted.textContent).toContain('پشتیبانی در تلگرام');
+    expect(mounted.querySelector('.profile-social-row')).not.toBeNull();
   });
 
   it('renders no label at all when the build injected no version', async () => {
