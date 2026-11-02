@@ -44,6 +44,7 @@ let pool: PgPool;
 let admin: PgPool;
 const cards: string[] = [];
 const users: string[] = [];
+const teardowns: Array<{ beginTeardown: () => void }> = [];
 // Monday 2026-11-02 12:00 Tehran; the league week opened Saturday 2026-10-31.
 const NOW = new Date('2026-11-02T08:30:00Z');
 const NEXT_WEEK = new Date('2026-11-07T08:30:00Z');
@@ -80,12 +81,12 @@ suite('LearnBox League (real Postgres)', () => {
     vi.stubEnv('DATABASE_URL', 'postgres://unused/unused');
     const { Pool } = await vi.importActual<typeof import('pg')>('pg');
     admin = new Pool({ connectionString: url, max: 1 });
-    guardForcedTeardown(admin);
+    teardowns.push(guardForcedTeardown(admin));
     await admin.query(`CREATE DATABASE ${dbName}`);
     const scoped = new URL(url as string);
     scoped.pathname = `/${dbName}`;
     pool = new Pool({ connectionString: scoped.toString(), max: 4 });
-    guardForcedTeardown(pool);
+    teardowns.push(guardForcedTeardown(pool));
     h.shared = pool;
     for (const file of readdirSync(migrationsDir)
       .filter((f) => /^\d{4}_.+\.sql$/.test(f))
@@ -107,6 +108,8 @@ suite('LearnBox League (real Postgres)', () => {
   }, 180_000);
 
   afterAll(async () => {
+    h.shared = null;
+    teardowns.forEach((t) => t.beginTeardown());
     await pool?.end();
     await admin?.query(`DROP DATABASE IF EXISTS ${dbName} WITH (FORCE)`);
     await admin?.end();
