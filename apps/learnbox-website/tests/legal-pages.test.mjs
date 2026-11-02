@@ -11,6 +11,7 @@ const destinationEnvironmentDefaults = {
   NEXT_PUBLIC_SITE_URL: 'https://learnboxapp.com',
   NEXT_PUBLIC_WEB_APP_URL: '',
   NEXT_PUBLIC_CAFE_BAZAAR_URL: '',
+  NEXT_PUBLIC_SIBAPP_URL: '',
   NEXT_PUBLIC_TELEGRAM_URL: 'https://t.me/learnboxapp',
   NEXT_PUBLIC_INSTAGRAM_URL: '',
   NEXT_PUBLIC_LINKEDIN_URL: '',
