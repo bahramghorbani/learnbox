@@ -212,7 +212,16 @@ export function ProfileScreen({
               aria-label="LearnBox در اینستاگرام"
             >
               <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-                <rect x="2" y="2" width="20" height="20" rx="6" fill="none" stroke="currentColor" strokeWidth="2" />
+                <rect
+                  x="2"
+                  y="2"
+                  width="20"
+                  height="20"
+                  rx="6"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                />
                 <circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" strokeWidth="2" />
                 <circle cx="17.3" cy="6.7" r="1.3" fill="currentColor" />
               </svg>
