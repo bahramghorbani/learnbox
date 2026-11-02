@@ -55,6 +55,10 @@ const INVENTORY: Record<string, Entry> = {
     category: 'guarded',
     authMarker: 'authenticateLearner(request)',
   },
+  'app/api/learner/league/route.ts': {
+    category: 'guarded',
+    authMarker: 'authenticateLearner(request)',
+  },
   'app/api/learner/onboarding-tour/route.ts': {
     category: 'guarded',
     authMarker: 'getLearnerSession(request)',

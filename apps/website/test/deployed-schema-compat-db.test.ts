@@ -282,7 +282,7 @@ suite('deployed application version against the expanded schema', () => {
     // adds push_subscriptions (daily review-reminder push notification, LB-B19); 0052 adds
     // store_iab_catalog_items for provider SKU mappings; 0053 adds learner_daily_preferences; and
     // 0054 adds private store_pack_cover_objects and store_pack_cover_candidates. All are additive,
-    // with nothing dropped.
-    expect(expandedTables.rows[0].n - deployedTables.rows[0].n).toBe(14);
+    // with nothing dropped. 0060 adds user_badges, league_members and league_opt_outs (League).
+    expect(expandedTables.rows[0].n - deployedTables.rows[0].n).toBe(17);
   });
 });

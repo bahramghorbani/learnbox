@@ -29,7 +29,6 @@ import {
   shadowGradeFor,
 } from '@learnbox/learning-engine';
 
-import { LearnerNav } from './components/LearnerNav';
 import { ProfileScreen } from './components/ProfileScreen';
 import { SettingsScreen } from './components/SettingsScreen';
 import type { AccountDeletionResult } from './components/DeleteAccountPanel';
@@ -65,6 +64,15 @@ import {
 import { flushWebReviewQueue, quarantineKeyFor } from '../lib/learner-review-web-sync';
 import { fetchWebLearnerProfile } from '../lib/learner-profile-web-client';
 import type { LearnerSyncState } from './learner-sync-state';
+import { LearnerNav, setLeagueNavEnabled, useLeagueNavEnabled } from './components/LearnerNav';
+import {
+  LeagueProfileCard,
+  LeagueScreen,
+  LeagueTodayChip,
+  parseLeague,
+  type LeagueData,
+} from './components/LeagueScreen';
+import './league.css';
 import { accountStorageScope, refuseUnresolvedScope } from '../lib/account-storage-scope';
 import {
   fetchLearnerSummary,
@@ -202,8 +210,21 @@ export function LearnerHome({
   const [newPersian, setNewPersian] = useState('');
   const [personalWordNotice, setPersonalWordNotice] = useState('');
   const [screen, setScreen] = useState<
-    'today' | 'card' | 'complete' | 'progress' | 'words' | 'store' | 'profile' | 'settings'
+    | 'today'
+    | 'card'
+    | 'complete'
+    | 'progress'
+    | 'words'
+    | 'store'
+    | 'profile'
+    | 'settings'
+    | 'league'
   >('today');
+  const [league, setLeague] = useState<LeagueData | null>(null);
+  const [leagueLoading, setLeagueLoading] = useState(false);
+  const [leagueOptOutBusy, setLeagueOptOutBusy] = useState(false);
+  const [leagueReadNonce, setLeagueReadNonce] = useState(0);
+  const leagueNavEnabled = useLeagueNavEnabled();
   /**
    * M4.3: a slider slide may point at a specific pack. There is no pack detail route, so the
    * destination is the Store with that pack brought into view — the Store's own publication,
@@ -841,6 +862,56 @@ export function LearnerHome({
     };
   }, [authenticated, isServerOtp, sessionUserId]);
 
+  // LearnBox League: read on entering Today/League/Profile so XP reflects the reviews just made.
+  // `{ enabled: false }` (outside the LEARNBOX_LEAGUE_ENABLED rollout) keeps the app exactly as before.
+  const leagueScreenActive = screen === 'today' || screen === 'league' || screen === 'profile';
+  useEffect(() => {
+    if (!authenticated || !isServerOtp || !sessionUserId) {
+      setLeague(null);
+      setLeagueNavEnabled(false);
+      return;
+    }
+    if (!leagueScreenActive) return;
+    const expectedUserId = sessionUserId;
+    let cancelled = false;
+    setLeagueLoading(true);
+    void fetch('/api/learner/league', { cache: 'no-store', credentials: 'same-origin' })
+      .then(async (response) => {
+        if (!response.ok) return;
+        const body: unknown = await response.json();
+        if (cancelled || activeSessionSubjectRef.current !== expectedUserId) return;
+        const enabled = (body as { enabled?: unknown } | null)?.enabled === true;
+        setLeagueNavEnabled(enabled);
+        setLeague(enabled ? parseLeague(body) : null);
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        if (!cancelled) setLeagueLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [authenticated, isServerOtp, sessionUserId, screen, leagueScreenActive, leagueReadNonce]);
+
+  useEffect(() => {
+    if (screen === 'league' && !leagueNavEnabled) setScreen('today');
+  }, [screen, leagueNavEnabled]);
+
+  const toggleLeagueOptOut = (optOut: boolean) => {
+    setLeagueOptOutBusy(true);
+    void fetch('/api/learner/league', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ optOut }),
+    })
+      .catch(() => undefined)
+      .finally(() => {
+        setLeagueOptOutBusy(false);
+        setLeagueReadNonce((n) => n + 1);
+      });
+  };
+
   /** Records where to resume. With the flag on it also stores the card's identity. */
   const persistResumePoint = (nextIndex: number) => {
     const nextCardId = studyItems[nextIndex]?.id;
@@ -1350,9 +1421,29 @@ export function LearnerHome({
     );
   }
 
+  if (screen === 'league' && leagueNavEnabled) {
+    return (
+      <LeagueScreen
+        data={league}
+        loading={leagueLoading}
+        onRetry={() => setLeagueReadNonce((n) => n + 1)}
+        onNavigate={(destination) => setScreen(destination)}
+      />
+    );
+  }
+
   if (screen === 'profile') {
     return (
       <ProfileScreen
+        leagueCard={
+          leagueNavEnabled && league ? (
+            <LeagueProfileCard
+              data={league}
+              busy={leagueOptOutBusy}
+              onToggleOptOut={toggleLeagueOptOut}
+            />
+          ) : null
+        }
         goal={goalUxRemoved ? undefined : learningGoal}
         pendingReviewCount={pendingReviewCount}
         // Server sync runs exactly when the session is a real server-backed OTP session.
@@ -1613,6 +1704,12 @@ export function LearnerHome({
       <TodayScreen
         displayName={profileCard?.firstName ?? null}
         avatarId={profileCard?.avatarId ?? null}
+        onOpenProfile={leagueNavEnabled ? () => setScreen('profile') : undefined}
+        leagueChip={
+          leagueNavEnabled && league ? (
+            <LeagueTodayChip data={league} onOpen={() => setScreen('league')} />
+          ) : null
+        }
         reviewCount={remainingTodayReviews}
         syncState={
           isServerOtp
