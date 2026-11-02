@@ -1,4 +1,31 @@
-export type LearnerDestination = 'today' | 'words' | 'store' | 'progress' | 'profile';
+'use client';
+
+import { useSyncExternalStore } from 'react';
+
+export type LearnerDestination = 'today' | 'words' | 'store' | 'progress' | 'profile' | 'league';
+
+/**
+ * True only for learners inside the LEARNBOX_LEAGUE_ENABLED rollout. Then the Profile tab gives
+ * its slot to the Leaderboard (Profile opens from the avatar on Today); otherwise the nav is
+ * exactly what it was before the league existed.
+ */
+let leagueNav = false;
+const listeners = new Set<() => void>();
+export function setLeagueNavEnabled(enabled: boolean) {
+  if (leagueNav === enabled) return;
+  leagueNav = enabled;
+  listeners.forEach((listener) => listener());
+}
+export function useLeagueNavEnabled(): boolean {
+  return useSyncExternalStore(
+    (listener) => {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
+    () => leagueNav,
+    () => false,
+  );
+}
 
 interface LearnerNavProps {
   current: LearnerDestination;
@@ -6,6 +33,8 @@ interface LearnerNavProps {
 }
 
 const navIcons: Record<LearnerDestination, string> = {
+  league:
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="24" height="24" fill="currentColor"><path d="M200,56v55.1c0,39.7-31.75,72.6-71.45,72.9A72,72,0,0,1,56,112V56Z" opacity="0.2"/><path d="M232,64H208V48a8,8,0,0,0-8-8H56a8,8,0,0,0-8,8V64H24A16,16,0,0,0,8,80V96a40,40,0,0,0,40,40h3.65A80.13,80.13,0,0,0,120,191.61V216H96a8,8,0,0,0,0,16h64a8,8,0,0,0,0-16H136V191.58c31.94-3.23,58.44-25.64,68.08-55.58H208a40,40,0,0,0,40-40V80A16,16,0,0,0,232,64ZM48,120A24,24,0,0,1,24,96V80H48v32q0,4,.39,8Zm144-8.9c0,35.52-29,64.64-64,64.9a64,64,0,0,1-64-64V56H192ZM232,96a24,24,0,0,1-24,24h-.5a81.81,81.81,0,0,0,.5-8.9V80h24Z"/></svg>',
   today:
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="24" height="24" fill="currentColor"><path d="M216,115.54V208a8,8,0,0,1-8,8H160a8,8,0,0,1-8-8V160a8,8,0,0,0-8-8H112a8,8,0,0,0-8,8v48a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V115.54a8,8,0,0,1,2.62-5.92l80-75.54a8,8,0,0,1,10.77,0l80,75.54A8,8,0,0,1,216,115.54Z" opacity="0.2"/><path d="M219.31,108.68l-80-75.54a16,16,0,0,0-22.62,0l-80,75.54a16,16,0,0,0-4.69,11.32V208a16,16,0,0,0,16,16H96a16,16,0,0,0,16-16V160h32v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V120A16,16,0,0,0,219.31,108.68Z"/></svg>',
   words:
@@ -27,10 +56,15 @@ const destinations: Array<{ id: LearnerDestination; label: string }> = [
   { id: 'profile', label: 'پروفایل' },
 ];
 
+const leagueDestinations = destinations.map((dest) =>
+  dest.id === 'profile' ? { id: 'league' as const, label: 'لیدربورد' } : dest,
+);
+
 export function LearnerNav({ current, onNavigate }: LearnerNavProps) {
+  const league = useLeagueNavEnabled();
   return (
     <nav className="learner-nav" aria-label="ناوبری اصلی">
-      {destinations.map((dest) => (
+      {(league ? leagueDestinations : destinations).map((dest) => (
         <button
           key={dest.id}
           className={current === dest.id ? 'learner-nav-active' : ''}

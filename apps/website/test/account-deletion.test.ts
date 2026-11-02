@@ -47,6 +47,9 @@ describe('deletion plan ordering', () => {
     const deleted = plan.flatMap((step) => (step.kind === 'delete_rows' ? [step.table] : []));
     // Derived from the live foreign-key map, not from assumption.
     expect(deleted).toEqual([
+      'user_badges',
+      'league_members',
+      'league_opt_outs',
       'review_events',
       'card_schedules',
       'learner_reconciliation_cursors',

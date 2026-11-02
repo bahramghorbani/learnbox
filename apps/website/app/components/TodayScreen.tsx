@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useRef, useState, type Ref } from 'react';
+import { useEffect, useRef, useState, type ReactNode, type Ref } from 'react';
 
 import { type LearnerSyncState } from '../learner-sync-state';
 import { toPersianDigits } from '../persian-digits';
@@ -46,6 +46,10 @@ export interface TodayScreenProps {
   displayName?: string | null;
   /** Server-selected predefined avatar id; unknown/absent keeps the default circle. */
   avatarId?: string | null;
+  /** League rollout only: the avatar becomes the way into Profile. */
+  onOpenProfile?: () => void;
+  /** League rollout only: this-week chip under the header. */
+  leagueChip?: ReactNode;
   reviewCount: number;
   syncState?: LearnerSyncState;
   pendingReviewCount?: number | null;
@@ -113,6 +117,8 @@ function pickWordOfDay(items?: StartSliceItem[]): StartSliceItem | null {
 export function TodayScreen({
   displayName = null,
   avatarId = null,
+  onOpenProfile,
+  leagueChip = null,
   reviewCount,
   syncState = 'local-only',
   pendingReviewCount = 0,
@@ -355,26 +361,42 @@ export function TodayScreen({
               </svg>
             )}
           </button>
-          {avatar ? (
-            <div className="avatar avatar-image" aria-hidden="true" data-avatar-id={avatar.id}>
-              <Image src={avatar.src} alt="" width={36} height={43} />
-            </div>
-          ) : (
-            <div className="avatar" aria-hidden="true">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 256 256"
-                width="26"
-                height="26"
-                fill="currentColor"
+          {(() => {
+            const avatarNode = avatar ? (
+              <div className="avatar avatar-image" aria-hidden="true" data-avatar-id={avatar.id}>
+                <Image src={avatar.src} alt="" width={36} height={43} />
+              </div>
+            ) : (
+              <div className="avatar" aria-hidden="true">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 256 256"
+                  width="26"
+                  height="26"
+                  fill="currentColor"
+                >
+                  <path d="M168,56a40,40,0,1,1-40-40A40,40,0,0,1,168,56Z" opacity="0.2" />
+                  <path d="M230.92,212c-15.23-26.33-38.7-45.21-66.09-54.16a72,72,0,1,0-73.66,0C63.78,166.78,40.31,185.66,25.08,212a8,8,0,1,0,13.85,8C55.71,192.94,83.37,176,128,176s72.29,16.94,89.07,44a8,8,0,1,0,13.85-8Z" />
+                </svg>
+              </div>
+            );
+            return onOpenProfile ? (
+              <button
+                type="button"
+                className="avatar-button"
+                aria-label="پروفایل"
+                onClick={onOpenProfile}
               >
-                <path d="M168,56a40,40,0,1,1-40-40A40,40,0,0,1,168,56Z" opacity="0.2" />
-                <path d="M230.92,212c-15.23-26.33-38.7-45.21-66.09-54.16a72,72,0,1,0-73.66,0C63.78,166.78,40.31,185.66,25.08,212a8,8,0,1,0,13.85,8C55.71,192.94,83.37,176,128,176s72.29,16.94,89.07,44a8,8,0,1,0,13.85-8Z" />
-              </svg>
-            </div>
-          )}
+                {avatarNode}
+              </button>
+            ) : (
+              avatarNode
+            );
+          })()}
         </div>
       </div>
+
+      {leagueChip}
 
       {/* Subtle sync status — only show for real server-sync errors, not local-only mode */}
       {syncState === 'error' && (

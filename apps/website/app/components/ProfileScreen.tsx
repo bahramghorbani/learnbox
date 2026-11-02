@@ -1,4 +1,4 @@
-import type { RefObject } from 'react';
+import type { ReactNode, RefObject } from 'react';
 
 import { LearnerNav, type LearnerDestination } from './LearnerNav';
 import { ProfileDetailsPanel } from './ProfileDetailsPanel';
@@ -43,6 +43,8 @@ interface ProfileScreenProps {
   onChooseGoal?: () => void;
   onNavigate: (destination: LearnerDestination) => void;
   onOpenSettings: () => void;
+  /** League rollout only: XP, level, badges and the leaderboard visibility switch. */
+  leagueCard?: ReactNode;
 }
 
 // Approved informational destinations from the landing legal spec (verified public
@@ -58,6 +60,7 @@ export function ProfileScreen({
   onProfileDetails,
   onRetryIdentity,
   headingRef,
+  leagueCard = null,
   goalRowRef,
   settingsRowRef,
   onChooseGoal,
@@ -79,6 +82,7 @@ export function ProfileScreen({
             : 'شناسهٔ حساب از سرور می‌آید؛ وضعیت پاسخ‌های در انتظار بررسی فقط روی این دستگاه نگه‌داری می‌شود.'}
         </p>
       </section>
+      {leagueCard}
       <section className="profile-section" aria-labelledby="profile-account-title">
         <h2 id="profile-account-title">حساب</h2>
         <div className="profile-card">

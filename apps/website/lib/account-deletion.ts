@@ -57,6 +57,9 @@ export type DeletionAuditRecord = {
  *  - `admin_*` and `content_review_*` — owner/reviewer records, not learner data.
  */
 export const LEARNER_DATA_TABLES: readonly string[] = [
+  'user_badges',
+  'league_members',
+  'league_opt_outs',
   'review_events',
   'card_schedules',
   'learner_reconciliation_cursors',
