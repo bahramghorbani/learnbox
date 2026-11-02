@@ -144,16 +144,21 @@ describe('ProfileScreen', () => {
 
     const links = Array.from(rendered.container.querySelectorAll('a'));
     const privacy = links.find((link) => link.textContent?.includes('حریم خصوصی'));
-    // Two support paths are offered: Telegram (the faster route, and the escape path when OTP SMS
-    // does not arrive) and email. Both must be real, reachable links.
-    const telegramSupport = links.find((link) => link.textContent?.includes('پشتیبانی در تلگرام'));
-    const emailSupport = links.find((link) => link.textContent?.includes('پشتیبانی با ایمیل'));
+    // Support links were replaced by social links (Instagram + Telegram), identified by
+    // aria-label since they render icon-only, no visible text.
+    const instagramSocial = links.find(
+      (link) => link.getAttribute('aria-label') === 'LearnBox در اینستاگرام',
+    );
+    const telegramSocial = links.find(
+      (link) => link.getAttribute('aria-label') === 'LearnBox در تلگرام',
+    );
     expect(privacy?.getAttribute('href')).toBe('https://learnboxapp.com/privacy');
     expect(privacy?.getAttribute('target')).toBe('_blank');
     expect(privacy?.getAttribute('rel')).toContain('noreferrer');
-    expect(telegramSupport?.getAttribute('href')).toBe('https://t.me/learnboxsupportbot');
-    expect(telegramSupport?.getAttribute('rel')).toContain('noreferrer');
-    expect(emailSupport?.getAttribute('href')).toBe('mailto:hi@learnboxapp.com');
+    expect(instagramSocial?.getAttribute('href')).toBe('https://www.instagram.com/learnboxapp/');
+    expect(instagramSocial?.getAttribute('rel')).toContain('noreferrer');
+    expect(telegramSocial?.getAttribute('href')).toBe('https://t.me/learnboxapp');
+    expect(telegramSocial?.getAttribute('rel')).toContain('noreferrer');
   });
 
   it('exposes no sign-out, deletion, purchase, reminder or fake-account controls', async () => {
