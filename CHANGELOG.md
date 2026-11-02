@@ -12,6 +12,20 @@ entry here.
 A deployment is not a release. A component may run in Production without appearing in this file;
 its deployment evidence belongs in `docs/release/` and its live facts in `PROJECT_STATE.md`.
 
+## learner/v1.4.0 — LearnBox League (released 2026-11-02)
+
+Feature merged in `d8e7eab4a358af3c5b2fc3f232e7f4374d06181b` (PR #517); the release commit and image
+digest are recorded in the GitHub Release `learner/v1.4.0`. Migration `0060_learner_league` applied
+to Production 2026-11-02.
+
+- LearnBox League (لیگ لرن‌باکس): XP, levels and twelve badges drawn with Bobo.
+- Weekly city league (Bonn → Dresden → Köln → Hamburg → München → Berlin) in groups of up to 30;
+  the top and bottom of each group move up or down every Saturday 00:00 Tehran time.
+- The Leaderboard tab replaces Profile in the bottom bar; the Today avatar opens Profile.
+- Profile shows level, XP, badges and a switch to hide yourself from league tables.
+- Only first names appear in tables; the whole-app view shows a percentile bucket, not a global rank.
+- XP is derived from reviews, daily plans and verified purchases, so a refund removes its XP.
+
 ## learner/v1.3.0 — store in-app purchases (released 2026-11-02)
 
 Commit `495185b73d763f2541470d5ada0f39ee0a74cc2a`, image
