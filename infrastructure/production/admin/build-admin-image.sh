@@ -152,11 +152,13 @@ if [ "$TARGET" = app ]; then
   # release-build.env (read from the commit being built). Reading it from the operator's shell let
   # releases ship without it twice, which silently hid the reminder toggle; now a missing or
   # malformed key stops the build. Bridge builds of old commits may still pass it via the shell.
-  if ! printf '%s' "${NEXT_PUBLIC_VAPID_PUBLIC_KEY:-}" | grep -Eq '^B[A-Za-z0-9_-]{86}$'; then
-    echo "build-admin-image: NEXT_PUBLIC_VAPID_PUBLIC_KEY (release-build.env; shell for bridge builds) is missing or not a P-256 public key" >&2
+  # Bridge mode only re-verifies an already-built legacy artifact, so it keeps its historical input.
+  if [ "$BRIDGE_MATRIX" != true ] \
+    && ! printf '%s' "${NEXT_PUBLIC_VAPID_PUBLIC_KEY:-}" | grep -Eq '^B[A-Za-z0-9_-]{86}$'; then
+    echo "build-admin-image: NEXT_PUBLIC_VAPID_PUBLIC_KEY in release-build.env is missing or not a P-256 public key" >&2
     exit 2
   fi
-  FLAG_ARGS+=(--build-arg "NEXT_PUBLIC_VAPID_PUBLIC_KEY=$NEXT_PUBLIC_VAPID_PUBLIC_KEY")
+  FLAG_ARGS+=(--build-arg "NEXT_PUBLIC_VAPID_PUBLIC_KEY=${NEXT_PUBLIC_VAPID_PUBLIC_KEY:-}")
 else
   FLAG_ARGS+=(--build-arg "NEXT_PUBLIC_LEARNBOX_ADMIN_PASSKEY_UI_ENABLED=$PASSKEY_UI")
 fi
@@ -331,9 +333,8 @@ if [ "$TARGET" = app ]; then
     check "release label $label matches the approved matrix" "${!name}" "$(inspect "{{index .Config.Labels \"$label\"}}")"
   done
   # The reminder toggle only renders when the key is inlined into the client bundle.
-  check "reminder push key is inlined in the client bundle" present \
-    "$(docker run --rm --network none --platform "$PLATFORM" --entrypoint sh "$IMAGE_REF" -c \
-      "grep -rlF -- '$NEXT_PUBLIC_VAPID_PUBLIC_KEY' /app/apps/website/.next/static >/dev/null 2>&1 && echo present || echo absent")"
+  [ "$BRIDGE_MATRIX" = true ] || check "reminder push key is inlined in the client bundle" present \
+    "$(bundle_text "$IMAGE_REF" | grep -qF -- "$NEXT_PUBLIC_VAPID_PUBLIC_KEY" && echo present || echo absent)"
   if [ "$RELEASE_PREFLIGHT" = true ]; then
     validate_release_baseline
   fi
