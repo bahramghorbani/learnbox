@@ -453,7 +453,6 @@ export function LandingExperience() {
             <small>اعتماد و خرید امن</small>
             <strong>نماد اعتماد الکترونیکی</strong>
           </span>
-          {/* eslint-disable-next-line @next/next/no-img-element -- eNamad requires its own hosted seal */}
           <img
             referrerPolicy="origin"
             src="https://trustseal.enamad.ir/logo.aspx?id=8151872&Code=c6Wx8x0ZQkHizqPS1dYtHRcBRPV1JMeT"
