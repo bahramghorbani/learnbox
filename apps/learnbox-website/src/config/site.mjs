@@ -4,6 +4,7 @@ const definitions = [
     env: 'NEXT_PUBLIC_WEB_APP_URL',
     label: 'نسخه وب',
     protocols: ['https:'],
+    defaultValue: 'https://app.learnboxapp.com/',
   },
   {
     id: 'cafeBazaar',
@@ -11,6 +12,15 @@ const definitions = [
     label: 'کافه‌بازار',
     protocols: ['https:'],
     hosts: ['cafebazaar.ir'],
+    defaultValue: 'https://cafebazaar.ir/app/ir.learnbox.app',
+  },
+  {
+    id: 'sibapp',
+    env: 'NEXT_PUBLIC_SIBAPP_URL',
+    label: 'سیب‌اپ',
+    protocols: ['https:'],
+    hosts: ['sibapp.com'],
+    defaultValue: 'https://sibapp.com/applications/learnbox',
   },
   {
     id: 'telegram',
@@ -26,6 +36,7 @@ const definitions = [
     label: 'Instagram',
     protocols: ['https:'],
     hosts: ['instagram.com', 'www.instagram.com'],
+    defaultValue: 'https://www.instagram.com/learnboxapp/',
   },
   {
     id: 'linkedin',
@@ -140,6 +151,7 @@ export const siteConfig = buildSiteConfig({
   NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
   NEXT_PUBLIC_WEB_APP_URL: process.env.NEXT_PUBLIC_WEB_APP_URL,
   NEXT_PUBLIC_CAFE_BAZAAR_URL: process.env.NEXT_PUBLIC_CAFE_BAZAAR_URL,
+  NEXT_PUBLIC_SIBAPP_URL: process.env.NEXT_PUBLIC_SIBAPP_URL,
   NEXT_PUBLIC_TELEGRAM_URL: process.env.NEXT_PUBLIC_TELEGRAM_URL,
   NEXT_PUBLIC_INSTAGRAM_URL: process.env.NEXT_PUBLIC_INSTAGRAM_URL,
   NEXT_PUBLIC_LINKEDIN_URL: process.env.NEXT_PUBLIC_LINKEDIN_URL,

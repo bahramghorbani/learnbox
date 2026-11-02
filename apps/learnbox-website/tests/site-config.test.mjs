@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { buildSiteConfig } from '../src/config/site.mjs';
 
-test('empty environment activates only the four owner-verified destinations', () => {
+test('empty environment activates only the owner-verified destinations', () => {
   const config = buildSiteConfig({});
 
   assert.deepEqual(
@@ -13,10 +13,11 @@ test('empty environment activates only the four owner-verified destinations', ()
       ]),
     ),
     {
-      webApp: { status: 'unavailable', url: null },
-      cafeBazaar: { status: 'unavailable', url: null },
+      webApp: { status: 'available', url: 'https://app.learnboxapp.com/' },
+      cafeBazaar: { status: 'available', url: 'https://cafebazaar.ir/app/ir.learnbox.app' },
+      sibapp: { status: 'available', url: 'https://sibapp.com/applications/learnbox' },
       telegram: { status: 'available', url: 'https://t.me/learnboxapp' },
-      instagram: { status: 'unavailable', url: null },
+      instagram: { status: 'available', url: 'https://www.instagram.com/learnboxapp/' },
       linkedin: { status: 'unavailable', url: null },
       pinterest: { status: 'unavailable', url: null },
       privacy: { status: 'available', url: '/privacy' },

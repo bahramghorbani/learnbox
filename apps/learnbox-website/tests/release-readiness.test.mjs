@@ -10,6 +10,7 @@ const validReleaseEnvironment = {
   NEXT_PUBLIC_SITE_URL: 'https://learnboxapp.com',
   NEXT_PUBLIC_WEB_APP_URL: 'https://app.learnboxapp.com',
   NEXT_PUBLIC_CAFE_BAZAAR_URL: 'https://cafebazaar.ir/app/com.learnbox.app',
+  NEXT_PUBLIC_SIBAPP_URL: 'https://sibapp.com/applications/learnbox',
   NEXT_PUBLIC_TELEGRAM_URL: 'https://t.me/learnboxapp',
   NEXT_PUBLIC_INSTAGRAM_URL: 'https://instagram.com/learnboxapp',
   NEXT_PUBLIC_LINKEDIN_URL: 'https://linkedin.com/company/learnboxapp',
@@ -49,16 +50,16 @@ test('production gate rejects missing destinations and unapproved product conten
   });
 
   assert.equal(result.status, 1);
-  assert.match(result.stderr, /NEXT_PUBLIC_WEB_APP_URL/);
-  assert.match(result.stderr, /NEXT_PUBLIC_CAFE_BAZAAR_URL/);
-  assert.match(result.stderr, /NEXT_PUBLIC_INSTAGRAM_URL/);
   assert.match(result.stderr, /NEXT_PUBLIC_LINKEDIN_URL/);
   assert.match(result.stderr, /NEXT_PUBLIC_PINTEREST_URL/);
   assert.match(result.stderr, /LEARNBOX_PRODUCT_SCREEN_STATUS/);
   assert.match(result.stderr, /LEARNBOX_QR_STATUS/);
   assert.match(result.stderr, /LEARNBOX_OG_STATUS/);
   assert.match(result.stderr, /LEARNBOX_LEGAL_REVIEW_STATUS/);
-  assert.doesNotMatch(result.stderr, /NEXT_PUBLIC_TELEGRAM_URL/);
+  // Owner-verified official destinations have defaults and never block the gate.
+  for (const name of ['WEB_APP', 'CAFE_BAZAAR', 'SIBAPP', 'INSTAGRAM', 'TELEGRAM']) {
+    assert.doesNotMatch(result.stderr, new RegExp(`NEXT_PUBLIC_${name}_URL`));
+  }
   assert.doesNotMatch(result.stderr, /NEXT_PUBLIC_PRIVACY_URL/);
   assert.doesNotMatch(result.stderr, /NEXT_PUBLIC_TERMS_URL/);
   assert.doesNotMatch(result.stderr, /NEXT_PUBLIC_CONTACT_URL/);

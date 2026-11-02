@@ -9,6 +9,7 @@ import { MotionOrchestrator } from '../MotionOrchestrator';
 import { LandingHeader } from './LandingHeader';
 import { LearningPaths } from './LearningPaths';
 import { ProductStory } from './ProductStory';
+import { StoreBadges } from './StoreBadges';
 
 const wordDetails = [
   ['تلفظ', '/diː ˈvoːnʊŋ/'],
@@ -64,18 +65,22 @@ export function LandingExperience() {
     setNotice(`${label} به‌محض ثبت نشانی رسمی در دسترس قرار می‌گیرد.`);
   const webApp = siteConfig.destinations.webApp;
   const cafeBazaar = siteConfig.destinations.cafeBazaar;
+  const sibapp = siteConfig.destinations.sibapp;
   const destinationHref = (destination: Destination) =>
     destination.status === 'available' ? destination.url : null;
   const hasWebApp = Boolean(destinationHref(webApp));
   const hasCafeBazaar = Boolean(destinationHref(cafeBazaar));
+  const hasSibapp = Boolean(destinationHref(sibapp));
   const downloadAvailabilityCopy =
-    hasWebApp && hasCafeBazaar
-      ? 'نسخهٔ اندروید LearnBox از کافه‌بازار در دسترس است و می‌توانی نسخهٔ وب رسمی را در مرورگر باز کنی.'
-      : hasCafeBazaar
-        ? 'نسخهٔ اندروید LearnBox از پیوند رسمی کافه‌بازار در دسترس است؛ پیوند نسخهٔ وب هنوز اعلام نشده است.'
-        : hasWebApp
-          ? 'نسخهٔ وب رسمی LearnBox در مرورگر در دسترس است؛ پیوند انتشار کافه‌بازار هنوز اعلام نشده است.'
-          : 'پیوندهای رسمی انتشار LearnBox هنوز اعلام نشده‌اند. پس از تأیید مقصدهای رسمی، همین‌جا در دسترس قرار می‌گیرند.';
+    hasWebApp && hasCafeBazaar && hasSibapp
+      ? 'نسخهٔ اندروید LearnBox از کافه‌بازار در دسترس است، نسخهٔ آیفون از سیب‌اپ، و می‌توانی نسخهٔ وب رسمی را در مرورگر باز کنی. پیشرفتت بین همهٔ نسخه‌ها همراهت می‌ماند.'
+      : hasWebApp && hasCafeBazaar
+        ? 'نسخهٔ اندروید LearnBox از کافه‌بازار در دسترس است و می‌توانی نسخهٔ وب رسمی را در مرورگر باز کنی.'
+        : hasCafeBazaar
+          ? 'نسخهٔ اندروید LearnBox از پیوند رسمی کافه‌بازار در دسترس است؛ پیوند نسخهٔ وب هنوز اعلام نشده است.'
+          : hasWebApp
+            ? 'نسخهٔ وب رسمی LearnBox در مرورگر در دسترس است؛ پیوند انتشار کافه‌بازار هنوز اعلام نشده است.'
+            : 'پیوندهای رسمی انتشار LearnBox هنوز اعلام نشده‌اند. پس از تأیید مقصدهای رسمی، همین‌جا در دسترس قرار می‌گیرند.';
 
   return (
     <main className="site-v3">
@@ -120,6 +125,7 @@ export function LandingExperience() {
                 ببین LearnBox چطور کار می‌کند
               </a>
             </div>
+            <StoreBadges variant="hero" priority />
           </div>
           <div className="hero-world" aria-label="BuBu در یک روز تابستانی برلین">
             <div className="location-chip">برلین · Berlin</div>
@@ -323,42 +329,12 @@ export function LandingExperience() {
           <div className="scene-heading chapter-heading-veil">
             <span>کلن · کنار راین</span>
             <h2>
-              {hasWebApp || hasCafeBazaar
+              {hasWebApp || hasCafeBazaar || hasSibapp
                 ? 'از همین امروز یادگیری را شروع کن.'
                 : 'انتشار رسمی LearnBox هنوز آغاز نشده است.'}
             </h2>
             <p>{downloadAvailabilityCopy}</p>
-            <div className="hero-actions">
-              {destinationHref(cafeBazaar) ? (
-                <a
-                  className="button button--primary"
-                  href={destinationHref(cafeBazaar) ?? undefined}
-                >
-                  دانلود از کافه‌بازار
-                </a>
-              ) : (
-                <button
-                  className="button button--primary"
-                  type="button"
-                  onClick={() => unavailable('کافه‌بازار')}
-                >
-                  دانلود از کافه‌بازار
-                </button>
-              )}
-              {destinationHref(webApp) ? (
-                <a className="button button--ghost" href={destinationHref(webApp) ?? undefined}>
-                  ورود به نسخه وب
-                </a>
-              ) : (
-                <button
-                  className="button button--ghost"
-                  type="button"
-                  onClick={() => unavailable('نسخه وب')}
-                >
-                  ورود به نسخه وب
-                </button>
-              )}
-            </div>
+            <StoreBadges variant="download" />
           </div>
           <div className="download-stage">
             <div className="phone-preview">
@@ -371,9 +347,9 @@ export function LandingExperience() {
               <b>مرور امروز</b>
               <i />
             </div>
-            <div className="qr-preview" aria-label="پیش‌نمایش غیرفعال کد دسترسی">
-              <span aria-hidden="true">▦</span>
-              <small>پیش‌نمایش غیرفعال</small>
+            <div className="ios-preview" aria-hidden="true">
+              <b dir="ltr">iOS</b>
+              <small>آیفون و آیپد</small>
             </div>
           </div>
         </div>
@@ -391,31 +367,21 @@ export function LandingExperience() {
             </p>
           </div>
           <ul>
-            {social.map(([id, name, role]) => {
-              const destination = siteConfig.destinations[id];
-              const content = (
-                <>
-                  <b dir="ltr">{name}</b>
-                  <span>{role}</span>
-                </>
-              );
-
-              return (
-                <li key={id}>
-                  {destinationHref(destination) ? (
-                    <a
-                      href={destinationHref(destination) ?? undefined}
-                      target={id === 'telegram' ? '_blank' : undefined}
-                      rel={id === 'telegram' ? 'noopener noreferrer' : undefined}
-                    >
-                      {content}
-                    </a>
-                  ) : (
-                    <span aria-disabled="true">{content}</span>
-                  )}
+            {social
+              .filter(([id]) => destinationHref(siteConfig.destinations[id]))
+              .map(([id, name, role]) => (
+                <li key={id} data-network={id}>
+                  <a
+                    href={destinationHref(siteConfig.destinations[id]) ?? undefined}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <b dir="ltr">{name}</b>
+                    <span>{role}</span>
+                    <i aria-hidden="true">↖</i>
+                  </a>
                 </li>
-              );
-            })}
+              ))}
           </ul>
         </div>
       </section>
@@ -451,12 +417,15 @@ export function LandingExperience() {
                 یادگیری را با BuBu شروع کن
               </button>
             )}
+            <StoreBadges variant="finale" />
           </div>
         </div>
       </section>
       <footer className="footer wrap">
-        <span>LearnBox</span>
-        <small>یادگیری واژگان آلمانی، روشن و ماندگار.</small>
+        <div className="footer__brand">
+          <span className="footer__brand-name">LearnBox</span>
+          <small>یادگیری واژگان آلمانی، روشن و ماندگار.</small>
+        </div>
         <nav aria-label="پیوندهای حقوقی و ارتباطی">
           <DestinationLink destination={siteConfig.destinations.privacy}>
             حریم خصوصی
@@ -467,7 +436,32 @@ export function LandingExperience() {
           <DestinationLink destination={siteConfig.destinations.contact}>
             ارتباط با LearnBox
           </DestinationLink>
+          <DestinationLink destination={siteConfig.destinations.telegram}>تلگرام</DestinationLink>
+          <DestinationLink destination={siteConfig.destinations.instagram}>
+            اینستاگرام
+          </DestinationLink>
         </nav>
+        <a
+          className="footer__trust-seal"
+          referrerPolicy="origin"
+          target="_blank"
+          rel="noopener noreferrer"
+          href="https://trustseal.enamad.ir/?id=8151872&Code=c6Wx8x0ZQkHizqPS1dYtHRcBRPV1JMeT"
+          aria-label="مشاهده اعتبار نماد اعتماد الکترونیکی LearnBox"
+        >
+          <span className="footer__trust-copy">
+            <small>اعتماد و خرید امن</small>
+            <strong>نماد اعتماد الکترونیکی</strong>
+          </span>
+          {/* eslint-disable-next-line @next/next/no-img-element -- eNamad requires its own hosted seal */}
+          <img
+            referrerPolicy="origin"
+            src="https://trustseal.enamad.ir/logo.aspx?id=8151872&Code=c6Wx8x0ZQkHizqPS1dYtHRcBRPV1JMeT"
+            alt="نماد اعتماد الکترونیکی LearnBox"
+            width={125}
+            height={136}
+          />
+        </a>
       </footer>
     </main>
   );

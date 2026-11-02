@@ -26,8 +26,8 @@ const learnBoxFont = localFont({
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.siteUrl),
   title: {
-    default: 'LearnBox | یادگیری آلمانی، ماندگار و هوشمند',
-    template: '%s | LearnBox',
+    default: 'آموزش زبان آلمانی | لرن باکس',
+    template: '%s | لرن باکس',
   },
   description:
     'واژگان آلمانی را با مرور فاصله‌دار، جعبه لایتنر و تمرین‌های کوتاه روزانه بهتر به خاطر بسپار.',
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
     locale: 'fa_IR',
     url: '/',
     siteName: 'LearnBox',
-    title: 'LearnBox | یادگیری آلمانی، ماندگار و هوشمند',
+    title: 'آموزش زبان آلمانی | لرن باکس',
     description: 'واژگان آلمانی را با مرور هوشمند، جعبه لایتنر و تمرین‌های کوتاه روزانه یاد بگیر.',
     images: [
       {
@@ -60,7 +60,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'LearnBox | یادگیری آلمانی، ماندگار و هوشمند',
+    title: 'آموزش زبان آلمانی | لرن باکس',
     description: 'مرور هوشمند واژگان آلمانی برای فارسی‌زبانان.',
     images: ['/themes/summer/backgrounds/berlin-summer-v3.jpg'],
   },
