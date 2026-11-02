@@ -25,6 +25,7 @@ to Production 2026-11-02.
 - Profile shows level, XP, badges and a switch to hide yourself from league tables.
 - Only first names appear in tables; the whole-app view shows a percentile bucket, not a global rank.
 - XP is derived from reviews, daily plans and verified purchases, so a refund removes its XP.
+- Daily-reminder toggle restored: the release build now always includes the public push key (it was missing from v1.3.0 and the first v1.4.0 image).
 
 ## learner/v1.3.0 — store in-app purchases (released 2026-11-02)
 

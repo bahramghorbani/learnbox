@@ -25,13 +25,13 @@
 Supersedes the 2026-10-16 table below for the Learner App and schema rows; other rows remain as
 recorded there.
 
-| Fact                 | Value                                                                                       |
-| -------------------- | ------------------------------------------------------------------------------------------- |
-| Learner release      | `learner/v1.4.0` — commit and image digest in the GitHub Release                            |
-| Schema head          | `0060_learner_league` (60 ledger rows); pre-0060 dump kept on the host under `backups/`     |
-| League flag          | `LEARNBOX_LEAGUE_ENABLED=all` (staged: owner only first, then all, 2026-11-02)              |
-| Payments             | Zarinpal (web), Cafe Bazaar, Myket and Sibapp in-app billing on                             |
-| Learner App rollback | previous image `learnbox-app:495185b-v130` (`learner/v1.3.0`); flag off restores the old UI |
+| Fact                 | Value                                                                                                           |
+| -------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Learner release      | `learner/v1.4.0`; running image `sha256:55c90fb0…` from `422723f` (same app source; reminder push key restored) |
+| Schema head          | `0060_learner_league` (60 ledger rows); pre-0060 dump kept on the host under `backups/`                         |
+| League flag          | `LEARNBOX_LEAGUE_ENABLED=all` (staged: owner only first, then all, 2026-11-02)                                  |
+| Payments             | Zarinpal (web), Cafe Bazaar, Myket and Sibapp in-app billing on                                                 |
+| Learner App rollback | previous image `learnbox-app:495185b-v130` (`learner/v1.3.0`); flag off restores the old UI                     |
 
 ### Production as deployed on 2026-10-16 (historical; partially superseded above)
 
