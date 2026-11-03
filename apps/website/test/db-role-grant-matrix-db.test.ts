@@ -302,6 +302,40 @@ suite('restricted-role grant matrix (real Postgres, real roles)', () => {
         [card, pin(pinned, sum('d'))],
       );
       expect((await read('roles-media', 'word_audio')).rows).toHaveLength(0);
+      // 0061: the reference read applies the same published-pin rule, returns key + checksum, and
+      // returns NULL bytes once the object lives in a file.
+      await admin.query(
+        `UPDATE card_versions SET content_json = $2::jsonb WHERE card_id = $1 AND version = 1`,
+        [card, pin(pinned, sum('b'))],
+      );
+      const ref = () =>
+        app.query<{
+          object_key: string;
+          checksum: string;
+          byte_size: number;
+          bytes: Buffer | null;
+        }>(
+          `SELECT object_key, checksum, byte_size, bytes FROM learner_published_card_media_ref($1, $2)`,
+          ['roles-media', 'word_audio'],
+        );
+      expect((await ref()).rows[0]).toMatchObject({ object_key: pinned, checksum: sum('b') });
+      expect((await ref()).rows[0].bytes?.toString('hex')).toBe('fffb');
+      await admin.query(`UPDATE card_media_objects SET bytes = NULL WHERE object_key = $1`, [
+        pinned,
+      ]);
+      expect((await ref()).rows[0]).toMatchObject({ object_key: pinned, bytes: null });
+      expect((await read('roles-media', 'image')).rows).toHaveLength(0);
+      const refGrants = await admin.query<{
+        public_exec: boolean;
+        admin_exec: boolean;
+        app_exec: boolean;
+      }>(
+        `SELECT
+           has_function_privilege('public', 'learner_published_card_media_ref(text, text)', 'EXECUTE') AS public_exec,
+           has_function_privilege('learnbox_admin', 'learner_published_card_media_ref(text, text)', 'EXECUTE') AS admin_exec,
+           has_function_privilege('learnbox_app', 'learner_published_card_media_ref(text, text)', 'EXECUTE') AS app_exec`,
+      );
+      expect(refGrants.rows[0]).toEqual({ public_exec: false, admin_exec: false, app_exec: true });
       // No table access for the learner, and no EXECUTE for PUBLIC or the Admin role.
       await expectDenied(app, `SELECT bytes FROM card_media_objects WHERE object_key = $1`, [
         unaccepted,

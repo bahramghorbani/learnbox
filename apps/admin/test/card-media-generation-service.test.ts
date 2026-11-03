@@ -263,6 +263,10 @@ function createStorage(): CardMediaStorage & { objects: Map<string, Buffer> } {
       objects.set(objectKey, bytes);
       return { objectKey, checksum: 'a'.repeat(64), byteSize: bytes.length };
     }),
+    storeWithin: vi.fn(async (_runner, objectKey, _mediaType, bytes) => {
+      objects.set(objectKey, bytes);
+    }),
+    discardFile: vi.fn(async (objectKey) => void objects.delete(objectKey)),
     read: vi.fn(async (objectKey) => objects.get(objectKey) ?? Buffer.alloc(0)),
     remove: vi.fn(async (objectKey) => void objects.delete(objectKey)),
   };
