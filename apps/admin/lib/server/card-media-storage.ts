@@ -4,9 +4,9 @@
  * Generated card images and audio are PROTECTED LEARNING CONTENT. They are never written to a
  * public static path and are only ever read back through an authenticated Admin route.
  *
- * Production stores bytes as immutable files under LEARNBOX_CARD_MEDIA_DIR (migration 0061): the
- * database row keeps the key, size and checksum, and every read verifies the file against them.
- * Without that variable (development, tests) bytes stay in the database as before.
+ * Bytes are stored ONLY as immutable files under LEARNBOX_CARD_MEDIA_DIR (migrations 0061/0062):
+ * the database row keeps the key, size and checksum, and a CHECK constraint refuses bytes in the
+ * database. Every read verifies the file against the row.
  *
  * `object_key` is kept as the opaque identity for an asset, and every access goes through the
  * `CardMediaStorage` interface, so moving bytes to private object storage later is a substitution
@@ -50,7 +50,7 @@ export interface CardMediaStorage {
     bytes: Buffer,
     checksum: string,
   ): Promise<void>;
-  /** Removes a file written by `storeWithin` whose row never committed. No-op for database storage. */
+  /** Removes a file written by `storeWithin` whose row never committed. */
   discardFile(objectKey: string): Promise<void>;
   read(objectKey: string): Promise<Buffer>;
   remove(objectKey: string): Promise<void>;
@@ -80,47 +80,6 @@ export function buildCardMediaObjectKey(
     .replace(/[^a-z0-9-]/g, '-')
     .slice(0, 128);
   return `admin/card-media/${safeContentId}/${kind}/${randomUUID()}.${extension}`;
-}
-
-/** Database-backed card media storage (development, tests, and rows not yet moved to files). */
-export function createDatabaseCardMediaStorage(pool: DatabasePool): CardMediaStorage {
-  return {
-    async store(contentId, kind, mediaType, bytes) {
-      if (!bytes.length) throw new Error('رسانهٔ خالی ذخیره نمی‌شود.');
-      const objectKey = buildCardMediaObjectKey(contentId, kind, mediaType);
-      const checksum = sha256(bytes);
-      await this.storeWithin(pool, objectKey, mediaType, bytes, checksum);
-      return { objectKey, checksum, byteSize: bytes.length };
-    },
-
-    async storeWithin(runner, objectKey, mediaType, bytes, checksum) {
-      await runner.query(
-        `INSERT INTO card_media_objects (object_key, media_type, byte_size, checksum, bytes)
-         VALUES ($1, $2, $3, $4, $5)`,
-        [objectKey, mediaType, bytes.length, checksum, bytes],
-      );
-    },
-
-    async discardFile() {},
-
-    async read(objectKey) {
-      const result = await pool.query(
-        'SELECT bytes FROM card_media_objects WHERE object_key = $1',
-        [objectKey],
-      );
-      const row = result.rows[0];
-      if (!row) throw new Error('رسانهٔ ذخیره‌شده یافت نشد.');
-      return Buffer.from(row.bytes as Buffer);
-    },
-
-    /**
-     * Deletes stored bytes. Used only for a candidate whose row could not be written — never for
-     * media that is accepted or superseded, so acceptance history stays auditable.
-     */
-    async remove(objectKey) {
-      await pool.query('DELETE FROM card_media_objects WHERE object_key = $1', [objectKey]);
-    },
-  };
 }
 
 const OBJECT_KEY_SHAPE =
@@ -200,10 +159,11 @@ export async function readVerifiedCardMediaFile(
 
 /**
  * File-backed card media storage. Bytes live in immutable files under `root`; the database row
- * keeps the key, size and checksum with `bytes = NULL`. Rows that still carry bytes (written before
- * the move) are served from the database until they are moved.
+ * keeps the key, size and checksum with `bytes = NULL`.
  */
 export function createFileCardMediaStorage(pool: DatabasePool, root: string): CardMediaStorage {
+  // A relative or empty root would resolve against the working directory.
+  if (!path.isAbsolute(root)) throw new Error('LEARNBOX_CARD_MEDIA_DIR must be an absolute path.');
   return {
     async store(contentId, kind, mediaType, bytes) {
       if (!bytes.length) throw new Error('رسانهٔ خالی ذخیره نمی‌شود.');
@@ -235,12 +195,11 @@ export function createFileCardMediaStorage(pool: DatabasePool, root: string): Ca
 
     async read(objectKey) {
       const result = await pool.query(
-        'SELECT checksum, byte_size, bytes FROM card_media_objects WHERE object_key = $1',
+        'SELECT checksum, byte_size FROM card_media_objects WHERE object_key = $1',
         [objectKey],
       );
       const row = result.rows[0];
       if (!row) throw new Error('رسانهٔ ذخیره‌شده یافت نشد.');
-      if (row.bytes) return Buffer.from(row.bytes as Buffer);
       return readVerifiedCardMediaFile(
         root,
         objectKey,
@@ -257,11 +216,10 @@ export function createFileCardMediaStorage(pool: DatabasePool, root: string): Ca
   };
 }
 
-/** Production sets LEARNBOX_CARD_MEDIA_DIR; without it the database storage is used. */
+/** Card media has no database fallback: without LEARNBOX_CARD_MEDIA_DIR, media storage refuses to start. */
 export function createCardMediaStorage(
   pool: DatabasePool,
   environment: Record<string, string | undefined> = process.env,
 ): CardMediaStorage {
-  const root = environment.LEARNBOX_CARD_MEDIA_DIR?.trim();
-  return root ? createFileCardMediaStorage(pool, root) : createDatabaseCardMediaStorage(pool);
+  return createFileCardMediaStorage(pool, environment.LEARNBOX_CARD_MEDIA_DIR?.trim() ?? '');
 }

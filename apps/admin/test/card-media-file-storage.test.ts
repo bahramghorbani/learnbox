@@ -47,7 +47,7 @@ function fakePool(options: { failInsert?: boolean } = {}) {
         });
         return { rows: [] };
       }
-      if (text.startsWith('SELECT checksum, byte_size, bytes')) {
+      if (text.startsWith('SELECT checksum, byte_size')) {
         const row = rows.get(String(parameters[0]));
         return { rows: row ? [row as unknown as Record<string, unknown>] : [] };
       }
@@ -101,14 +101,6 @@ describe('file-backed card media storage', () => {
     await expect(storage.read(stored.objectKey)).rejects.toThrow();
   });
 
-  it('still serves legacy rows whose bytes are in the database', async () => {
-    const pool = fakePool();
-    const legacy = Buffer.from('legacy');
-    pool.rows.set(KEY, { object_key: KEY, checksum: sha(legacy), byte_size: 6, bytes: legacy });
-    const storage = createFileCardMediaStorage(pool, root);
-    expect(await storage.read(KEY)).toEqual(legacy);
-  });
-
   it('removes the written file when the database insert fails', async () => {
     const storage = createFileCardMediaStorage(fakePool({ failInsert: true }), root);
     const bytes = Buffer.from('mp3');
@@ -146,26 +138,13 @@ describe('file-backed card media storage', () => {
     await expect(readVerifiedCardMediaFile(root, key, sha(Buffer.from('')), 0)).rejects.toThrow();
   });
 
-  it('uses file storage only when LEARNBOX_CARD_MEDIA_DIR is set', async () => {
-    const bytes = Buffer.from('mp3');
-    const filePool = fakePool();
-    await createCardMediaStorage(filePool, { LEARNBOX_CARD_MEDIA_DIR: root }).storeWithin(
-      filePool,
-      KEY,
-      'audio/mpeg',
-      bytes,
-      sha(bytes),
-    );
-    expect(filePool.rows.get(KEY)?.bytes).toBeNull();
-
-    const dbPool = fakePool();
-    await createCardMediaStorage(dbPool, {}).storeWithin(
-      dbPool,
-      KEY,
-      'audio/mpeg',
-      bytes,
-      sha(bytes),
-    );
-    expect(dbPool.rows.get(KEY)?.bytes).toEqual(bytes);
+  it('has no database fallback: refuses to start without an absolute media directory', () => {
+    expect(() => createCardMediaStorage(fakePool(), {})).toThrow('LEARNBOX_CARD_MEDIA_DIR');
+    expect(() =>
+      createCardMediaStorage(fakePool(), { LEARNBOX_CARD_MEDIA_DIR: 'media' }),
+    ).toThrow();
+    expect(() =>
+      createCardMediaStorage(fakePool(), { LEARNBOX_CARD_MEDIA_DIR: root }),
+    ).not.toThrow();
   });
 });

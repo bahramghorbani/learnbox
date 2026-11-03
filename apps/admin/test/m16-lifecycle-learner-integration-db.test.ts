@@ -875,38 +875,23 @@ describe('card media lives in files, never in the database (migration 0061)', ()
     ).toEqual(mp3);
   });
 
-  it('moves legacy database bytes to files: dry-run first, idempotent, then verified', async () => {
-    const legacy = Buffer.from('legacy-image-bytes');
-    const key = `admin/card-media/m16-legacy/image/${randomUUID()}.png`;
-    const checksum = createHash('sha256').update(legacy).digest('hex');
-    await pool.query(
-      `INSERT INTO card_media_objects (object_key, media_type, byte_size, checksum, bytes)
-       VALUES ($1, 'image/png', $2, $3, $4)`,
-      [key, legacy.length, checksum, legacy],
-    );
-
-    const dry = await script('backfill');
-    expect(dry.stdout).toContain('"would_move":1');
-    expect(
-      (await pool.query('SELECT bytes FROM card_media_objects WHERE object_key=$1', [key])).rows[0]
-        .bytes,
-    ).toEqual(legacy);
-
-    const moved = await script('backfill', '--apply');
-    expect(moved.stdout).toContain('"moved":1');
-    expect(
-      (await pool.query('SELECT bytes FROM card_media_objects WHERE object_key=$1', [key])).rows[0]
-        .bytes,
-    ).toBeNull();
-    expect(await readVerifiedCardMediaFile(mediaRoot, key, checksum, legacy.length)).toEqual(
-      legacy,
-    );
-
-    const again = await script('backfill', '--apply');
-    expect(again.stdout).toContain('"candidates":0');
-
+  it('the database refuses media bytes (0062): media can never be stored there again', async () => {
+    const bytes = Buffer.from('should-never-be-in-the-database');
+    await expect(
+      pool.query(
+        `INSERT INTO card_media_objects (object_key, media_type, byte_size, checksum, bytes)
+         VALUES ($1, 'image/png', $2, $3, $4)`,
+        [
+          `admin/card-media/m16-guard/image/${randomUUID()}.png`,
+          bytes.length,
+          createHash('sha256').update(bytes).digest('hex'),
+          bytes,
+        ],
+      ),
+    ).rejects.toMatchObject({ code: '23514' });
+    const { rows } = await pool.query('SELECT count(bytes)::int AS n FROM card_media_objects');
+    expect(rows[0].n).toBe(0);
     const verified = await script('verify');
-    expect(verified.stdout).toMatch(/"ok_file":\d+/);
     expect(verified.stdout).not.toMatch(/MISSING|BAD/);
   });
 

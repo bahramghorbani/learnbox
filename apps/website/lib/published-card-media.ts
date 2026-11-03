@@ -54,14 +54,13 @@ export async function readPublishedCardMedia(
         object_key: string;
         checksum: string;
         byte_size: number;
-        bytes: Buffer | null;
       }
     | undefined;
   try {
     // Migration 0061: a SECURITY DEFINER function returns only the object pinned in the latest
     // published version (key AND checksum must match); the learner role has no table grant.
     const result = await pool.query<NonNullable<typeof row>>(
-      'SELECT media_type, object_key, checksum, byte_size, bytes FROM learner_published_card_media_ref($1, $2)',
+      'SELECT media_type, object_key, checksum, byte_size FROM learner_published_card_media_ref($1, $2)',
       [contentId, kind],
     );
     row = result.rows[0];
@@ -69,8 +68,6 @@ export async function readPublishedCardMedia(
     await pool.end();
   }
   if (!row) return null;
-  // Rows not yet moved to files still carry their bytes.
-  if (row.bytes) return { mediaType: row.media_type, bytes: row.bytes };
   const root = process.env.LEARNBOX_CARD_MEDIA_DIR?.trim();
   if (!root) throw new Error('LEARNBOX_CARD_MEDIA_DIR is not configured');
   const bytes = await readPublishedCardMediaFile(
