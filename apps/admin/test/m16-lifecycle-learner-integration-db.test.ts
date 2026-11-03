@@ -1,6 +1,9 @@
 import { createHash, randomUUID } from 'node:crypto';
-import { readFileSync, readdirSync } from 'node:fs';
+import { execFile } from 'node:child_process';
+import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { promisify } from 'node:util';
 
 import type { Pool as PgPool } from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -12,7 +15,10 @@ import {
 import { readCanonicalImageStandard } from '../lib/server/canonical-image-standard.js';
 import { type AiMediaProvider } from '../lib/server/ai-media-provider.js';
 import { CardMediaGenerationService } from '../lib/server/card-media-generation-service.js';
-import { createDatabaseCardMediaStorage } from '../lib/server/card-media-storage.js';
+import {
+  createFileCardMediaStorage,
+  readVerifiedCardMediaFile,
+} from '../lib/server/card-media-storage.js';
 import { PostgresContentLifecycleStore } from '../lib/server/postgres-content-lifecycle-store.js';
 import { PostgresContentReviewStore } from '../lib/server/postgres-content-review-store.js';
 import {
@@ -40,6 +46,12 @@ const suite = url ? describe : describe.skip;
 const dbName = `m16_${Math.random().toString(36).slice(2, 10)}`;
 const repoRoot = join(__dirname, '../../..');
 const migrationsDir = join(repoRoot, 'database/migrations');
+// Production stores card media as files (migration 0061); the whole lifecycle runs against that.
+const mediaRoot = mkdtempSync(join(tmpdir(), 'm16-media-'));
+const mediaScript = join(
+  repoRoot,
+  'infrastructure/production/iran/card-media/card-media-files.mjs',
+);
 
 /**
  * Verbatim from apps/website/lib/learner-read-model.ts (CURRICULUM_CTE): a card is learner content
@@ -153,7 +165,7 @@ async function seedAcceptedMedia(_pack: string, cardId: string) {
   const service = new CardMediaGenerationService(
     pool as never,
     testMediaProvider(),
-    createDatabaseCardMediaStorage(pool as never),
+    createFileCardMediaStorage(pool as never, mediaRoot),
     DEFAULT_GERMAN_VOICE_MAPPING,
     DEFAULT_AI_MEDIA_LIMITS,
     readCanonicalImageStandard(),
@@ -283,6 +295,7 @@ afterAll(async () => {
   await pool?.end();
   await admin?.query(`DROP DATABASE IF EXISTS ${dbName} WITH (FORCE)`);
   await admin?.end();
+  rmSync(mediaRoot, { recursive: true, force: true });
 }, 60_000);
 
 suite('M1.6 — the learner contract this milestone must not break', () => {
@@ -775,5 +788,142 @@ suite('M1.6 — archive preserves buyer access and history', () => {
       idempotencyKey: randomUUID(),
     });
     expect(result.status).toBe('idempotent');
+  });
+});
+
+describe('card media lives in files, never in the database (migration 0061)', () => {
+  const run = promisify(execFile);
+  const scopedUrl = () => {
+    const scoped = new URL(url as string);
+    scoped.pathname = `/${dbName}`;
+    return scoped.toString();
+  };
+  const script = (mode: string, ...args: string[]) =>
+    run(process.execPath, [mediaScript, mode, ...args], {
+      env: {
+        ...process.env,
+        DATABASE_URL: scopedUrl(),
+        LEARNBOX_CARD_MEDIA_DIR: mediaRoot,
+        LEARNBOX_REQUIRE_FROM: join(repoRoot, 'apps/admin/package.json'),
+      },
+    });
+
+  it('wrote every generated object as a verified file with NULL bytes in the database', async () => {
+    const { rows } = await pool.query(
+      'SELECT object_key, checksum, byte_size, bytes IS NULL AS moved FROM card_media_objects',
+    );
+    expect(rows.length).toBeGreaterThan(0);
+    for (const row of rows) {
+      expect(row.moved).toBe(true);
+      await expect(
+        readVerifiedCardMediaFile(mediaRoot, row.object_key, row.checksum, row.byte_size),
+      ).resolves.toBeInstanceOf(Buffer);
+    }
+  });
+
+  it('serves the learner the published reference, and the file matches it', async () => {
+    const card = cards[0]!;
+    const { rows } = await pool.query(
+      `SELECT media_type, object_key, checksum, byte_size, bytes
+         FROM learner_published_card_media_ref($1, 'word_audio')`,
+      [card.contentId],
+    );
+    expect(rows).toHaveLength(1);
+    expect(rows[0].bytes).toBeNull();
+    expect(rows[0].media_type).toBe('audio/mpeg');
+    const bytes = await readVerifiedCardMediaFile(
+      mediaRoot,
+      rows[0].object_key,
+      rows[0].checksum,
+      rows[0].byte_size,
+    );
+    expect(bytes.length).toBe(rows[0].byte_size);
+  });
+
+  it('imports a manual MP3 as a file, not database bytes', async () => {
+    const service = new CardMediaGenerationService(
+      pool as never,
+      testMediaProvider(),
+      createFileCardMediaStorage(pool as never, mediaRoot),
+      DEFAULT_GERMAN_VOICE_MAPPING,
+      DEFAULT_AI_MEDIA_LIMITS,
+      readCanonicalImageStandard(),
+    );
+    const mp3 = Buffer.alloc(417 * 4);
+    for (let i = 0; i < 4; i += 1) mp3.set([0xff, 0xfb, 0x90, 0xc4], i * 417);
+    mp3[100] = 7;
+    const imported = await service.importWordAudio({
+      cardId: aiCard.cardId,
+      actorUserId: operator,
+      bytes: mp3,
+    });
+    if (imported.status !== 'imported') throw new Error(`import failed: ${imported.status}`);
+    const { rows } = await pool.query(
+      `SELECT o.bytes IS NULL AS moved, o.checksum, o.byte_size, o.object_key
+         FROM card_media_candidates c JOIN card_media_objects o ON o.object_key = c.object_key
+        WHERE c.id = $1`,
+      [imported.candidate.id],
+    );
+    expect(rows[0].moved).toBe(true);
+    expect(
+      await readVerifiedCardMediaFile(
+        mediaRoot,
+        rows[0].object_key,
+        rows[0].checksum,
+        rows[0].byte_size,
+      ),
+    ).toEqual(mp3);
+  });
+
+  it('moves legacy database bytes to files: dry-run first, idempotent, then verified', async () => {
+    const legacy = Buffer.from('legacy-image-bytes');
+    const key = `admin/card-media/m16-legacy/image/${randomUUID()}.png`;
+    const checksum = createHash('sha256').update(legacy).digest('hex');
+    await pool.query(
+      `INSERT INTO card_media_objects (object_key, media_type, byte_size, checksum, bytes)
+       VALUES ($1, 'image/png', $2, $3, $4)`,
+      [key, legacy.length, checksum, legacy],
+    );
+
+    const dry = await script('backfill');
+    expect(dry.stdout).toContain('"would_move":1');
+    expect(
+      (await pool.query('SELECT bytes FROM card_media_objects WHERE object_key=$1', [key])).rows[0]
+        .bytes,
+    ).toEqual(legacy);
+
+    const moved = await script('backfill', '--apply');
+    expect(moved.stdout).toContain('"moved":1');
+    expect(
+      (await pool.query('SELECT bytes FROM card_media_objects WHERE object_key=$1', [key])).rows[0]
+        .bytes,
+    ).toBeNull();
+    expect(await readVerifiedCardMediaFile(mediaRoot, key, checksum, legacy.length)).toEqual(
+      legacy,
+    );
+
+    const again = await script('backfill', '--apply');
+    expect(again.stdout).toContain('"candidates":0');
+
+    const verified = await script('verify');
+    expect(verified.stdout).toMatch(/"ok_file":\d+/);
+    expect(verified.stdout).not.toMatch(/MISSING|BAD/);
+  });
+
+  it('verify fails loudly on a tampered or missing file', async () => {
+    const { rows } = await pool.query('SELECT object_key FROM card_media_objects LIMIT 1');
+    const file = join(mediaRoot, rows[0].object_key);
+    const original = readFileSync(file);
+    writeFileSync(file, Buffer.from('tampered'));
+    await expect(script('verify')).rejects.toMatchObject({ code: 1 });
+    writeFileSync(file, original);
+    await expect(script('verify')).resolves.toBeDefined();
+  });
+
+  it('keeps the learner function grants: App may execute, nobody else', async () => {
+    const { rows } = await pool.query(
+      `SELECT has_function_privilege('public', 'learner_published_card_media_ref(text, text)', 'EXECUTE') AS public_exec`,
+    );
+    expect(rows[0].public_exec).toBe(false);
   });
 });

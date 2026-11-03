@@ -54,7 +54,7 @@ import { readAiGenerationConfig } from './ai-generation-provider';
 import { readAiMediaConfig } from './ai-media-config';
 import { CardMediaGenerationService } from './card-media-generation-service';
 import { PackMediaJobService } from './pack-media-job-service';
-import { createDatabaseCardMediaStorage } from './card-media-storage';
+import { createCardMediaStorage } from './card-media-storage';
 import { readCanonicalImageStandard } from './canonical-image-standard';
 import { AiPackGenerationService } from './ai-pack-generation-service';
 import { ContentImportService } from './content-import-service';
@@ -187,7 +187,7 @@ export function createAdminContentPacksServer(dependencies: {
           ? new CardMediaGenerationService(
               pool,
               mediaProvider,
-              createDatabaseCardMediaStorage(pool),
+              createCardMediaStorage(pool, dependencies.environment),
               mediaConfig.voices,
               mediaConfig.limits,
               readCanonicalImageStandard(),

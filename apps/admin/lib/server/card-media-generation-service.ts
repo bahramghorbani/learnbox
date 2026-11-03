@@ -559,6 +559,8 @@ export class CardMediaGenerationService {
     const audioFormat = readMp3Format(input.bytes);
     if (!audioFormat) return { status: 'unprocessable', reason: 'فایل باید MP3 معتبر باشد.' };
     const client = await this.pool.connect();
+    // Set once the bytes are written, so a rollback can remove a file whose row never committed.
+    let writtenObjectKey: string | undefined;
     try {
       await client.query('BEGIN');
       if (!(await this.hasEditorialRole(client, input.actorUserId))) {
@@ -592,10 +594,8 @@ export class CardMediaGenerationService {
         return { status: 'imported', candidate: toCandidateView(prior.rows[0]) };
       }
       const objectKey = buildCardMediaObjectKey(card.contentId, 'word_audio', 'audio/mpeg');
-      await client.query(
-        `INSERT INTO card_media_objects (object_key, media_type, byte_size, checksum, bytes) VALUES ($1, 'audio/mpeg', $2, $3, $4)`,
-        [objectKey, input.bytes.length, checksum, input.bytes],
-      );
+      await this.storage.storeWithin(client, objectKey, 'audio/mpeg', input.bytes, checksum);
+      writtenObjectKey = objectKey;
       const result = await client.query(
         `INSERT INTO card_media_candidates (card_id, kind, status, provider, model, capability, spoken_target, voice, voice_role, uses_die_fallback_for_das, language, locale, object_key, checksum, byte_size, media_type, audio_sample_rate_hz, audio_bitrate_kbps, audio_channels, provenance, card_version_id)
          VALUES ($1, 'word_audio', 'ready', 'manual', 'manual', 'audio', $2, $3, $4, false, 'de', 'de-DE', $5, $6, $7, 'audio/mpeg', $8, $9, $10, 'manual_import', $11)
@@ -616,6 +616,7 @@ export class CardMediaGenerationService {
       );
       if (!result.rows[0]) {
         await client.query('ROLLBACK');
+        await this.storage.discardFile(objectKey);
         const existing = await this.pool.query(
           `SELECT ${CANDIDATE_COLUMNS} FROM card_media_candidates WHERE card_id=$1 AND kind='word_audio' AND card_version_id=$2 AND checksum=$3 AND provenance='manual_import' ORDER BY created_at DESC LIMIT 1`,
           [input.cardId, card.versionId, checksum],
@@ -624,10 +625,14 @@ export class CardMediaGenerationService {
           return { status: 'unprocessable', reason: 'بارگذاری هم‌زمان ناموفق بود.' };
         return { status: 'imported', candidate: toCandidateView(existing.rows[0]) };
       }
+      // A failed COMMIT is ambiguous (it may have committed), so from here an orphan file is kept
+      // rather than risking deletion of bytes a committed row points at.
+      writtenObjectKey = undefined;
       await client.query('COMMIT');
       return { status: 'imported', candidate: toCandidateView(result.rows[0]) };
     } catch (error) {
       await client.query('ROLLBACK').catch(() => undefined);
+      if (writtenObjectKey) await this.storage.discardFile(writtenObjectKey).catch(() => undefined);
       throw error;
     } finally {
       client.release();
