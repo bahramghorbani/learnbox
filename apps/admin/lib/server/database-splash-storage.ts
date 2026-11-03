@@ -1,7 +1,7 @@
 /**
  * Database-backed splash storage.
  *
- * Mirrors `card-media-storage.ts`'s `createDatabaseCardMediaStorage`: bytes live in their own
+ * Card media moved to files (0061/0062); splash stays here because it is tiny: bytes live in their own
  * table keyed by object_key, with no dependency on an external blob provider or credential. Used
  * by `admin-splash-server.ts` as the fallback when BLOB_READ_WRITE_TOKEN is not configured, so
  * splash replacement works on a self-hosted deployment with no Vercel Blob account.

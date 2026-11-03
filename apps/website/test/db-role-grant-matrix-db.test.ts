@@ -250,7 +250,7 @@ suite('restricted-role grant matrix (real Postgres, real roles)', () => {
       await expectDenied(app, `CREATE TABLE learner_cannot_create (id int)`);
     });
 
-    it('reads only the media pinned in a published version, through the 0038 function', async () => {
+    it('reads only the reference pinned in a published version (0061), never bytes (0062)', async () => {
       const card = randomUUID();
       const key = (name: string) => `admin/card-media/roles-media/word_audio/${name}.mp3`;
       const pinned = key(randomUUID());
@@ -260,14 +260,14 @@ suite('restricted-role grant matrix (real Postgres, real roles)', () => {
         `INSERT INTO cards (id, lemma, content_id) VALUES ($1, 'Tür', 'roles-media')`,
         [card],
       );
-      for (const [objectKey, checksum, hex] of [
-        [pinned, sum('b'), 'fffb'],
-        [unaccepted, sum('c'), 'fff3'],
+      for (const [objectKey, checksum] of [
+        [pinned, sum('b')],
+        [unaccepted, sum('c')],
       ]) {
         await admin.query(
           `INSERT INTO card_media_objects (object_key, media_type, byte_size, checksum, bytes)
-           VALUES ($1, 'audio/mpeg', 2, $2, decode($3, 'hex'))`,
-          [objectKey, checksum, hex],
+           VALUES ($1, 'audio/mpeg', 2, $2, NULL)`,
+          [objectKey, checksum],
         );
       }
       const pin = (objectKey: string, checksum: string) =>
@@ -283,15 +283,16 @@ suite('restricted-role grant matrix (real Postgres, real roles)', () => {
         [card, pin(pinned, sum('b')), pin(unaccepted, sum('c'))],
       );
       const read = (contentId: string, kind: string) =>
-        app.query<{ media_type: string; bytes: Buffer }>(
-          `SELECT media_type, bytes FROM learner_published_card_media($1, $2)`,
+        app.query<{ media_type: string; object_key: string; checksum: string; byte_size: number }>(
+          `SELECT media_type, object_key, checksum, byte_size
+             FROM learner_published_card_media_ref($1, $2)`,
           [contentId, kind],
         );
 
       const served = await read('roles-media', 'word_audio');
-      expect(served.rows).toHaveLength(1);
-      expect(served.rows[0].media_type).toBe('audio/mpeg');
-      expect(served.rows[0].bytes.toString('hex')).toBe('fffb');
+      expect(served.rows).toEqual([
+        { media_type: 'audio/mpeg', object_key: pinned, checksum: sum('b'), byte_size: 2 },
+      ]);
       // Draft pin, other kinds, unknown cards and a non-kind argument return nothing.
       expect((await read('roles-media', 'image')).rows).toHaveLength(0);
       expect((await read('roles-media', 'objectKey')).rows).toHaveLength(0);
@@ -302,30 +303,17 @@ suite('restricted-role grant matrix (real Postgres, real roles)', () => {
         [card, pin(pinned, sum('d'))],
       );
       expect((await read('roles-media', 'word_audio')).rows).toHaveLength(0);
-      // 0061: the reference read applies the same published-pin rule, returns key + checksum, and
-      // returns NULL bytes once the object lives in a file.
-      await admin.query(
-        `UPDATE card_versions SET content_json = $2::jsonb WHERE card_id = $1 AND version = 1`,
-        [card, pin(pinned, sum('b'))],
-      );
-      const ref = () =>
-        app.query<{
-          object_key: string;
-          checksum: string;
-          byte_size: number;
-          bytes: Buffer | null;
-        }>(
-          `SELECT object_key, checksum, byte_size, bytes FROM learner_published_card_media_ref($1, $2)`,
-          ['roles-media', 'word_audio'],
-        );
-      expect((await ref()).rows[0]).toMatchObject({ object_key: pinned, checksum: sum('b') });
-      expect((await ref()).rows[0].bytes?.toString('hex')).toBe('fffb');
-      await admin.query(`UPDATE card_media_objects SET bytes = NULL WHERE object_key = $1`, [
-        pinned,
+      // 0062: the database refuses media bytes.
+      await expect(
+        admin.query(`UPDATE card_media_objects SET bytes = '\\xfffb' WHERE object_key = $1`, [
+          pinned,
+        ]),
+      ).rejects.toMatchObject({ code: '23514' });
+      // No table access for the learner, and no EXECUTE for PUBLIC or the Admin role.
+      await expectDenied(app, `SELECT object_key FROM card_media_objects WHERE object_key = $1`, [
+        unaccepted,
       ]);
-      expect((await ref()).rows[0]).toMatchObject({ object_key: pinned, bytes: null });
-      expect((await read('roles-media', 'image')).rows).toHaveLength(0);
-      const refGrants = await admin.query<{
+      const { rows } = await admin.query<{
         public_exec: boolean;
         admin_exec: boolean;
         app_exec: boolean;
@@ -335,19 +323,7 @@ suite('restricted-role grant matrix (real Postgres, real roles)', () => {
            has_function_privilege('learnbox_admin', 'learner_published_card_media_ref(text, text)', 'EXECUTE') AS admin_exec,
            has_function_privilege('learnbox_app', 'learner_published_card_media_ref(text, text)', 'EXECUTE') AS app_exec`,
       );
-      expect(refGrants.rows[0]).toEqual({ public_exec: false, admin_exec: false, app_exec: true });
-      // No table access for the learner, and no EXECUTE for PUBLIC or the Admin role.
-      await expectDenied(app, `SELECT bytes FROM card_media_objects WHERE object_key = $1`, [
-        unaccepted,
-      ]);
-      const { rows } = await admin.query<{ public_exec: boolean; admin_exec: boolean }>(
-        `SELECT
-           has_function_privilege('public', 'learner_published_card_media(text, text)', 'EXECUTE')
-             AS public_exec,
-           has_function_privilege('learnbox_admin', 'learner_published_card_media(text, text)', 'EXECUTE')
-             AS admin_exec`,
-      );
-      expect(rows[0]).toEqual({ public_exec: false, admin_exec: false });
+      expect(rows[0]).toEqual({ public_exec: false, admin_exec: false, app_exec: true });
     });
   });
 
@@ -377,7 +353,7 @@ suite('restricted-role grant matrix (real Postgres, real roles)', () => {
       // apps/admin/lib/server/card-media-storage.ts
       await adminRole.query(
         `INSERT INTO card_media_objects (object_key, media_type, byte_size, checksum, bytes)
-         VALUES ($1, 'image/png', 4, $2, decode('00010203', 'hex'))`,
+         VALUES ($1, 'image/png', 4, $2, NULL)`,
         [objectKey, 'a'.repeat(64)],
       );
       // apps/admin/lib/server/card-media-generation-service.ts — candidate, then accepted asset.
