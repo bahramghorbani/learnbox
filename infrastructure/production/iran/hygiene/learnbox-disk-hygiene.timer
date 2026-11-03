@@ -1,0 +1,11 @@
+# Weekly, Sunday 04:30 UTC — after the 02:30 backup and the ~04:10 offsite copy.
+# Install: /etc/systemd/system/learnbox-disk-hygiene.timer
+[Unit]
+Description=Weekly LearnBox disk hygiene
+
+[Timer]
+OnCalendar=Sun *-*-* 04:30:00 UTC
+Persistent=true
+
+[Install]
+WantedBy=timers.target

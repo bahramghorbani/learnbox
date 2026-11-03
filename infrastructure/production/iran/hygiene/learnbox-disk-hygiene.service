@@ -1,0 +1,15 @@
+# LearnBox weekly disk hygiene. Install: /etc/systemd/system/learnbox-disk-hygiene.service
+# Dry-run by default. Enable deletion with a drop-in: [Service] Environment=LEARNBOX_HYGIENE_APPLY=1
+[Unit]
+Description=LearnBox disk hygiene (old images, build cache, transfer tars, dump retention)
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+User=ubuntu
+ExecStart=/usr/bin/flock -n /home/ubuntu/learnbox/ops/state/hygiene.lock /home/ubuntu/learnbox/ops/learnbox-disk-hygiene.sh
+Nice=10
+IOSchedulingClass=idle
+StandardOutput=journal
+StandardError=journal
