@@ -1,0 +1,24 @@
+# Install: /etc/systemd/system/learnbox-media-offsite.service (+ .timer). Same sandbox as learnbox-offsite.
+[Unit]
+Description=LearnBox card media encrypted offsite copy (append-only)
+After=network-online.target learnbox-offsite.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/learnbox/offsite
+Environment=HOME=/home/ubuntu
+Environment=XDG_CONFIG_HOME=/tmp
+ExecStart=/usr/bin/flock -n /home/ubuntu/learnbox/offsite/state/media-offsite.lock /usr/bin/python3 /home/ubuntu/learnbox/offsite/scripts/learnbox-media-offsite.py --run
+TimeoutStartSec=3600
+Nice=15
+CPUQuota=20%
+IOSchedulingClass=idle
+MemoryMax=384M
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+StandardOutput=journal
+StandardError=journal

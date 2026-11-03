@@ -1,0 +1,11 @@
+[Unit]
+Description=Daily LearnBox card media offsite copy
+
+[Timer]
+OnCalendar=*-*-* 04:40:00 UTC
+RandomizedDelaySec=600
+Persistent=true
+Unit=learnbox-media-offsite.service
+
+[Install]
+WantedBy=timers.target
