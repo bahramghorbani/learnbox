@@ -33,6 +33,12 @@
   admin and Postgres untouched. Rollback: `docker compose -f <previous release>/compose.yaml up -d
 --no-deps landing` (previous: `20261102T075112Z-landing-ea69e88-enamad`). Public launch
   (`LEARNBOX_DICTIONARY_PUBLIC=true`, sitemap, homepage link) needs separate owner approval.
+- Owner review round 1 deployed 2026-11-04 (PR #529): image `learnbox-landing:da17304-dict-review1`,
+  release dir `releases/20261104T135905Z-landing-da17304-dict-review1`, data `dict-r4.sqlite`
+  (sha256 `dc087743…`). Rollback: previous release dir `20261104T123037Z-landing-a412961-dictionary`.
+- Known data gap: ~17% of the 1,000 most frequent German words in Tatoeba (e.g. groß, lassen,
+  schlecht, sehr, zeigen) have no Persian headword meaning in either source, so they are not entries.
+  Filling them needs translation work (AI cost requires owner approval).
 
 ## Learner engagement delta — 2026-11-02
 
