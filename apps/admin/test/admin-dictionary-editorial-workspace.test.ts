@@ -10,7 +10,9 @@ describe('Admin #dictionary destination', () => {
     const router = source('app/components/AdminWorkspaceRouter.tsx');
     const sidebar = source('app/components/AdminSidebar.tsx');
     expect(router).toContain("if (value === 'dictionary') return 'dictionary';");
-    expect(router).toContain("if (route === 'dictionary') return <DictionaryEditorialWorkspace />;");
+    expect(router).toContain(
+      "if (route === 'dictionary') return <DictionaryEditorialWorkspace />;",
+    );
     expect(sidebar).not.toContain('href="#dictionary"');
   });
 
