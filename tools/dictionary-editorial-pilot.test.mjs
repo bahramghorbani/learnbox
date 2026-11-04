@@ -5,7 +5,7 @@ import { idempotencyKey, pilotRecords, releaseInput } from './dictionary-editori
 
 const record = {
   dictionaryKey: 'Haus',
-  aiPayload: { gloss: 'خانه' },
+  aiPayload: { lemma: 'Haus', gloss: 'خانه' },
   source: 'completed-ai-pilot',
 };
 
@@ -26,9 +26,9 @@ test('release exporter includes approved effective payloads only', () => {
   assert.deepEqual(
     releaseInput([
       { ...record, status: 'queued', manualPayload: null },
-      { ...record, dictionaryKey: 'Baum', status: 'approved', manualPayload: { gloss: 'درخت' } },
+      { ...record, dictionaryKey: 'Baum', aiPayload: { lemma: 'Baum', gloss: 'درخت' }, status: 'approved', manualPayload: { lemma: 'Baum', gloss: 'درخت' } },
       { ...record, dictionaryKey: 'alt', status: 'deleted', manualPayload: null },
     ]),
-    { entries: [{ dictionaryKey: 'Baum', payload: { gloss: 'درخت' } }] },
+    { entries: [{ dictionaryKey: 'Baum', payload: { lemma: 'Baum', gloss: 'درخت' } }] },
   );
 });

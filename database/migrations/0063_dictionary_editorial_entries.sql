@@ -2,9 +2,9 @@
 -- This table never backs public dictionary reads and grants nothing to learnbox_app.
 CREATE TABLE dictionary_editorial_entries (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  dictionary_key TEXT NOT NULL,
-  ai_payload JSONB NOT NULL,
-  manual_payload JSONB,
+  dictionary_key TEXT NOT NULL UNIQUE,
+  ai_payload JSONB NOT NULL CHECK (ai_payload->>'lemma' = dictionary_key),
+  manual_payload JSONB CHECK (manual_payload IS NULL OR manual_payload->>'lemma' = dictionary_key),
   status TEXT NOT NULL DEFAULT 'queued' CHECK (status IN ('queued', 'approved', 'deleted')),
   revision INTEGER NOT NULL DEFAULT 1 CHECK (revision > 0),
   source TEXT NOT NULL,

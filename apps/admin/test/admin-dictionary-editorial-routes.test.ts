@@ -7,7 +7,7 @@ const now = new Date('2026-11-04T12:00:00Z');
 const actor = '71b5b438-99c7-4a2e-a09a-859f7c9f95cb';
 const id = 'dcd8e2a0-3d55-4b2e-9d4b-9b3b8e6f4c7a';
 const token = 't'.repeat(43); const csrf = 'c'.repeat(43);
-const item = { id, dictionaryKey: 'haus', aiPayload: { gloss: 'خانه' }, manualPayload: null, status: 'queued' as const, revision: 1, source: 'test', model: null, costMetadata: {}, createdAt: now.toISOString(), updatedAt: now.toISOString() };
+const item = { id, dictionaryKey: 'haus', aiPayload: { lemma: 'haus', gloss: 'خانه' }, manualPayload: null, status: 'queued' as const, revision: 1, source: 'test', model: null, costMetadata: {}, createdAt: now.toISOString(), updatedAt: now.toISOString() };
 function sessionStore(recent = true) { return { findActiveSession: async () => ({ userId: actor, csrfHash: hashAdminSecret(csrf, config.tokenHashKey), lastSeenAt: now, absoluteExpiresAt: new Date(now.getTime() + 60000), revokedAt: null, recentAuthenticatedAt: recent ? now : new Date(now.getTime() - 360000) }), touchSession: async () => true }; }
 function request(body: unknown, extra: HeadersInit = {}) { return new Request('https://admin.learnbox.app/api/dictionary/editorial', { method: 'POST', headers: { origin: config.origin, 'content-type': 'application/json', cookie: `__Host-learnbox_admin_session=${token}`, 'x-learnbox-csrf-token': csrf, 'idempotency-key': id, ...extra }, body: JSON.stringify(body) }); }
 const deps = { enabled: true, config, now: () => now, sessionStore: sessionStore() };

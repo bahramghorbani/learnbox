@@ -10,6 +10,7 @@ const invalid = () => new Response('Invalid request', { status: 400, headers: no
 const unavailable = () => new Response('Dictionary editorial unavailable', { status: 503, headers: noStore });
 const json = (body: unknown, init?: ResponseInit) => Response.json(body, { ...init, headers: { ...noStore, ...init?.headers } });
 const record = (value: unknown): value is Record<string, unknown> => !!value && typeof value === 'object' && !Array.isArray(value);
+const dictionaryPayload = (value: unknown, key: string) => record(value) && value.lemma === key;
 function key(request: Request) { const value = request.headers.get('idempotency-key'); return value && uuid.test(value) ? value : undefined; }
 async function actor(request: Request, deps: Deps, mutation: boolean) {
   if (!deps.enabled || !deps.config.enabled || !deps.sessionStore || !deps.store) return undefined;
@@ -26,8 +27,9 @@ export function createDictionaryEditorialListRoute(deps: Deps) { return async (r
 export function createDictionaryEditorialCreateRoute(deps: Deps) { return async (request: Request) => {
   const user = await actor(request, deps, true); if (user === undefined) return missing(); if (user === null) return invalid(); if (user === false) return new Response('Unauthorized', { status: 401, headers: noStore }); if (user === 'recent') return json({ code: 'reauthentication_required' }, { status: 428 });
   const idempotencyKey = key(request); let body: Record<string, unknown> | undefined; try { body = await request.json(); } catch { /* invalid */ }
-  if (!idempotencyKey || !record(body) || typeof body.dictionaryKey !== 'string' || !body.dictionaryKey.trim() || body.dictionaryKey.length > 500 || !record(body.aiPayload) || typeof body.source !== 'string' || !body.source.trim() || body.source.length > 200 || (body.model !== undefined && (typeof body.model !== 'string' || body.model.length > 200)) || (body.costMetadata !== undefined && !record(body.costMetadata))) return invalid();
-  try { const result = await deps.store!.create(user, { dictionaryKey: body.dictionaryKey.trim(), aiPayload: body.aiPayload, source: body.source.trim(), model: typeof body.model === 'string' ? body.model : null, costMetadata: record(body.costMetadata) ? body.costMetadata : {}, idempotencyKey }); return result.status === 'forbidden' ? missing() : json({ status: result.status, item: result.item }); } catch { return unavailable(); }
+  if (!idempotencyKey || !record(body) || typeof body.dictionaryKey !== 'string' || !body.dictionaryKey.trim() || body.dictionaryKey.length > 500 || !dictionaryPayload(body.aiPayload, body.dictionaryKey.trim()) || typeof body.source !== 'string' || !body.source.trim() || body.source.length > 200 || (body.model !== undefined && (typeof body.model !== 'string' || body.model.length > 200)) || (body.costMetadata !== undefined && !record(body.costMetadata))) return invalid();
+  const aiPayload = body.aiPayload as Record<string, unknown>;
+  try { const result = await deps.store!.create(user, { dictionaryKey: body.dictionaryKey.trim(), aiPayload, source: body.source.trim(), model: typeof body.model === 'string' ? body.model : null, costMetadata: record(body.costMetadata) ? body.costMetadata : {}, idempotencyKey }); if (result.status === 'forbidden') return missing(); if (result.status === 'duplicate') return json({ code: 'dictionary_key_exists' }, { status: 409 }); return json({ status: result.status, item: result.item }); } catch { return unavailable(); }
 }; }
 export function createDictionaryEditorialUpdateRoute(deps: Deps) { return async (request: Request, id: string) => {
   const user = await actor(request, deps, true); if (user === undefined) return missing(); if (user === null) return invalid(); if (user === false) return new Response('Unauthorized', { status: 401, headers: noStore }); if (user === 'recent') return json({ code: 'reauthentication_required' }, { status: 428 });

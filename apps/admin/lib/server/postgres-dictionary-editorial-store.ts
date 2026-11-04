@@ -101,6 +101,16 @@ export class PostgresDictionaryEditorialStore {
         await client.query('ROLLBACK');
         return { status: 'idempotent' as const, item: entry(row.rows[0]!) };
       }
+      // One editorial record owns a lemma; later AI runs update/requeue it rather than creating
+      // competing approved meanings for the same public dictionary key.
+      const existing = await client.query(
+        'SELECT 1 FROM dictionary_editorial_entries WHERE dictionary_key = $1',
+        [input.dictionaryKey],
+      );
+      if (existing.rows[0]) {
+        await client.query('ROLLBACK');
+        return { status: 'duplicate' as const };
+      }
       const inserted = await client.query(
         `INSERT INTO dictionary_editorial_entries (dictionary_key, ai_payload, source, model, cost_metadata, created_by_user_id, updated_by_user_id)
         VALUES ($1, $2, $3, $4, $5, $6, $6) RETURNING id, dictionary_key, ai_payload, manual_payload, status, revision, source, model, cost_metadata, created_at, updated_at`,

@@ -12,6 +12,7 @@ export function pilotRecords(input) {
       typeof item.dictionaryKey !== 'string' ||
       !item.dictionaryKey.trim() ||
       !object(item.aiPayload) ||
+      item.aiPayload.lemma !== item.dictionaryKey.trim() ||
       typeof item.source !== 'string' ||
       !item.source.trim() ||
       (item.model !== undefined && typeof item.model !== 'string') ||
