@@ -1,7 +1,7 @@
 # LearnBox product status
 
 **Document role:** canonical, human-readable product and delivery status.
-**Last reviewed:** 2026-11-02 (LearnBox League delta; commerce delta 2026-10-31; broader historical inventory is retained below).
+**Last reviewed:** 2026-11-04 (public dictionary plan; LearnBox League delta; commerce delta 2026-10-31; broader historical inventory is retained below).
 **Status vocabulary:**
 
 - **Implemented:** code or documented foundation exists.
@@ -11,6 +11,15 @@
 - **Blocked:** design/code exists but an external dependency prevents safe activation.
 - **Planned:** approved direction, not implemented as a release feature.
 - **Out of scope:** not part of the current product release.
+
+## Public dictionary — 2026-11-04
+
+- **German–Persian dictionary (`learnboxapp.com/dictionary`): Planned.** Owner approved the plan
+  and locked the visual design (`docs/design/dictionary/index.html`, screenshots in `shots/`).
+  Serving boundary: [ADR 0017](architecture/ADR/0017-public-dictionary-read-only-release-file.md) —
+  a read-only SQLite release file in the landing container, no Production database access, behind
+  `LEARNBOX_DICTIONARY_ENABLED` (default off). Phase 1 builds the pages and a free-source dataset
+  on staging; no AI generation, Production DDL or public release without separate owner approval.
 
 ## Learner engagement delta — 2026-11-02
 
