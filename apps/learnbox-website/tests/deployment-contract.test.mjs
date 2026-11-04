@@ -24,6 +24,8 @@ test('marketing deployment emits the required browser security headers', async (
   // The eNamad footer seal is a cross-origin image; img-src must allow only that host.
   const csp = pageRule.headers.find(({ key }) => key === 'Content-Security-Policy').value;
   assert.match(csp, /img-src 'self' data: blob: https:\/\/trustseal\.enamad\.ir;/);
+  // Dictionary audio: only Wikimedia Commons.
+  assert.match(csp, /media-src 'self' https:\/\/upload\.wikimedia\.org;/);
 });
 
 test('marketing deployment config cannot target the learner web app', async () => {
