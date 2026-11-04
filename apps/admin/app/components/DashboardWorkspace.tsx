@@ -507,6 +507,21 @@ const quickActions: QuickAction[] = [
   },
 ];
 
+function DictionaryEditorialLink() {
+  const [enabled, setEnabled] = useState(false);
+  useEffect(() => {
+    void fetch('/api/dictionary/editorial', { credentials: 'same-origin', cache: 'no-store' })
+      .then((response) => setEnabled(response.ok))
+      .catch(() => setEnabled(false));
+  }, []);
+  return enabled ? (
+    <a className="panel-foot-link" href="#dictionary" data-dictionary-link="true">
+      <span>صف واژه‌نامه</span>
+      <span>بازبینی سردبیری</span>
+    </a>
+  ) : null;
+}
+
 function activityTint(entityType: string): { icon: IconName; tint: string } {
   if (entityType.startsWith('content_pack') || entityType.startsWith('card'))
     return { icon: 'box', tint: 't-purple' };
@@ -841,6 +856,7 @@ export function DashboardOverview() {
             <span>صف بازبینی محتوا</span>
             <span>{faNum(overview.reviewQueueCards)} کارت</span>
           </a>
+          <DictionaryEditorialLink />
         </div>
 
         <div className="card" data-panel="recent-activity">
