@@ -1,0 +1,2833 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>دیکشنری آلمانی به فارسی لرن‌باکس — ماکاپ</title>
+    <style>
+      /* ---------- tokens: same names/values as apps/learnbox-website (summer theme) ---------- */
+      @font-face {
+        font-family: 'IRANSansX LB';
+        src: url(../../../apps/learnbox-website/public/fonts/IRANSansX-Regular.woff2)
+          format('woff2');
+        font-weight: 400;
+      }
+      @font-face {
+        font-family: 'IRANSansX LB';
+        src: url(../../../apps/learnbox-website/public/fonts/IRANSansX-Bold.woff2) format('woff2');
+        font-weight: 700;
+      }
+      :root {
+        --ink: #17233d;
+        --muted: #4d5e70;
+        --purple: #6c3ad6;
+        --purple-deep: #472099;
+        --sun: #ffd36a;
+        --paper: #fffdf8;
+        --sky: #61bff2;
+        --leaf: #23784a;
+        --line: #1b35551c;
+        --arrive: cubic-bezier(0.16, 1, 0.3, 1);
+        --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+        /* article colours = learner app tokens, so a word looks the same on the site and in the app */
+        --der: #3b82f6;
+        --die: #ec4899;
+        --das: #22c55e;
+        --type: #2a3550; /* metal type */
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font-family: 'IRANSansX LB', Tahoma, sans-serif;
+        overflow-x: clip;
+      }
+      button {
+        font: inherit;
+        cursor: pointer;
+        color: inherit;
+      }
+      button:focus-visible,
+      a:focus-visible,
+      input:focus-visible {
+        outline: 3px solid #f2b530;
+        outline-offset: 3px;
+      }
+      .de {
+        font-family: 'Avenir Next', 'Segoe UI', system-ui, sans-serif;
+        direction: ltr;
+        unicode-bidi: isolate;
+      }
+      .wrap {
+        width: min(1180px, calc(100% - 48px));
+        margin-inline: auto;
+      }
+
+      /* ---------- header (landing header, dictionary active) ---------- */
+      .hdr {
+        position: relative;
+        z-index: 20;
+        min-height: 84px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        border-bottom: 1px solid #17355b24;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        direction: ltr;
+        font-weight: 700;
+        color: var(--ink);
+        text-decoration: none;
+      }
+      .brand b {
+        display: grid;
+        place-items: center;
+        width: 40px;
+        height: 40px;
+        color: #fff;
+        background: var(--purple);
+        clip-path: polygon(50% 0, 100% 24%, 100% 76%, 50% 100%, 0 76%, 0 24%);
+      }
+      .nav {
+        display: flex;
+        gap: 26px;
+        font-size: 0.92rem;
+        font-weight: 700;
+      }
+      .nav a {
+        color: #243854;
+        text-decoration: none;
+        position: relative;
+      }
+      .nav a.on::after {
+        content: '';
+        position: absolute;
+        inset-inline: 0;
+        bottom: -8px;
+        height: 3px;
+        border-radius: 3px;
+        background: var(--purple);
+      }
+      .hdr-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .saved-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 44px;
+        padding: 0 14px;
+        border-radius: 14px;
+        background: #fff;
+        border: 1px solid var(--line);
+        font-weight: 700;
+      }
+      .saved-pill .n {
+        display: inline-grid;
+        place-items: center;
+        min-width: 24px;
+        height: 24px;
+        padding: 0 6px;
+        border-radius: 99px;
+        background: var(--purple);
+        color: #fff;
+        font-size: 0.8rem;
+      }
+      .saved-pill .n.bump {
+        animation: bump 0.5s var(--spring);
+      }
+      @keyframes bump {
+        40% {
+          transform: scale(1.45);
+        }
+      }
+      .btn {
+        white-space: nowrap;
+        min-height: 48px;
+        padding: 0 20px;
+        border-radius: 14px;
+        border: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-weight: 700;
+        text-decoration: none;
+        transition:
+          transform 0.16s var(--arrive),
+          box-shadow 0.2s,
+          background-color 0.2s;
+      }
+      .btn:active {
+        transform: scale(0.97);
+      }
+      .btn-p {
+        background: var(--purple);
+        color: #fff;
+        box-shadow: 0 10px 24px -10px #6c3ad6aa;
+      }
+      .btn-p:hover {
+        background: var(--purple-deep);
+      }
+      .btn-g {
+        background: #fff;
+        border: 1px solid var(--line);
+      }
+
+      /* ================= VIEW 1: /dictionary ================= */
+      .view {
+        display: none;
+      }
+      .view.on {
+        display: block;
+      }
+      .hero {
+        position: relative;
+        isolation: isolate;
+        min-height: 700px;
+        overflow: hidden;
+      }
+      .hero-sky {
+        position: absolute;
+        inset: 0;
+        z-index: -2;
+        background: url(../../../apps/learnbox-website/public/themes/summer/backgrounds/berlin-summer-v3.jpg)
+          center 70% / cover;
+        transform: scale(1.06);
+      }
+      .hero-sky::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          180deg,
+          #fffdf8f2 0%,
+          #fffdf8b0 28%,
+          #fffdf833 55%,
+          #fffdf8 97%
+        );
+      }
+      .hero-in {
+        position: relative;
+        padding: 70px 0 120px;
+        text-align: center;
+      }
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 14px;
+        border-radius: 99px;
+        background: #ffffffc9;
+        backdrop-filter: blur(8px);
+        color: var(--purple);
+        font-weight: 700;
+        font-size: 0.88rem;
+        border: 1px solid #6c3ad622;
+      }
+      .eyebrow i {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--leaf);
+        box-shadow: 0 0 0 4px #23784a22;
+      }
+      h1.big {
+        margin: 22px auto 14px;
+        max-width: 820px;
+        font-size: clamp(2.1rem, 4.6vw, 3.7rem);
+        line-height: 1.25;
+        letter-spacing: -0.5px;
+      }
+      h1.big em {
+        font-style: normal;
+        color: var(--purple);
+        position: relative;
+        white-space: nowrap;
+      }
+      h1.big em svg {
+        position: absolute;
+        inset-inline: -4%;
+        bottom: -14px;
+        width: 108%;
+        height: 22px;
+        overflow: visible;
+      }
+      h1.big em path {
+        fill: none;
+        stroke: var(--sun);
+        stroke-width: 7;
+        stroke-linecap: round;
+        stroke-dasharray: 400;
+        stroke-dashoffset: 400;
+        animation: draw 1.1s 0.5s var(--arrive) forwards;
+      }
+      @keyframes draw {
+        to {
+          stroke-dashoffset: 0;
+        }
+      }
+      .sub {
+        margin: 0 auto 34px;
+        max-width: 600px;
+        color: var(--muted);
+        font-size: 1.12rem;
+        line-height: 1.9;
+      }
+
+      /* the search — the one control that matters */
+      .search {
+        position: relative;
+        z-index: 5;
+        width: min(720px, 100%);
+        margin: 0 auto;
+      }
+      .field {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        height: 76px;
+        padding: 0 22px;
+        border-radius: 24px;
+        background: #fffffff2;
+        border: 1.5px solid #ffffff;
+        box-shadow:
+          0 30px 60px -30px #17233d55,
+          0 0 0 0 #6c3ad600;
+        transition:
+          box-shadow 0.35s var(--arrive),
+          transform 0.35s var(--arrive);
+      }
+      .search.focus .field {
+        transform: translateY(-4px);
+        box-shadow:
+          0 40px 70px -30px #17233d66,
+          0 0 0 6px #6c3ad626;
+        border-color: #6c3ad655;
+      }
+      .field svg {
+        flex: none;
+        color: var(--purple);
+      }
+      .field input {
+        flex: 1;
+        min-width: 0;
+        height: 100%;
+        border: 0;
+        outline: 0;
+        background: none;
+        font: inherit;
+        font-size: 1.3rem;
+        color: var(--ink);
+      }
+      .field .kbd {
+        flex: none;
+        font-size: 0.78rem;
+        color: var(--muted);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 3px 8px;
+      }
+      .typed {
+        position: absolute;
+        inset-inline-start: 62px;
+        inset-block: 0;
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        pointer-events: none;
+      }
+      .hints {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 16px;
+      }
+      .hint {
+        padding: 8px 14px;
+        border-radius: 99px;
+        background: #ffffffd9;
+        border: 1px solid var(--line);
+        font-size: 0.9rem;
+        font-weight: 700;
+        transition:
+          transform 0.2s var(--spring),
+          background 0.2s;
+      }
+      .hint:hover {
+        transform: translateY(-2px);
+        background: #fff;
+      }
+      .hint small {
+        color: var(--muted);
+        font-weight: 400;
+        margin-inline-start: 4px;
+      }
+
+      /* drifting type sorts — the signature */
+      .sorts {
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        pointer-events: none;
+      }
+      .sort {
+        position: absolute;
+        display: grid;
+        place-items: center;
+        min-width: 54px;
+        height: 64px;
+        padding: 0 12px;
+        border-radius: 10px;
+        font:
+          700 1.7rem/1 'Avenir Next',
+          system-ui,
+          sans-serif;
+        color: #fff;
+        background: linear-gradient(160deg, #3a4767, var(--type));
+        box-shadow:
+          inset 0 2px 0 #ffffff2a,
+          inset 0 -6px 0 #0000002e,
+          0 18px 30px -14px #17233d88;
+        transform: translate(var(--x), var(--y)) rotate(var(--r));
+        transition:
+          transform 1.2s var(--arrive),
+          opacity 0.8s;
+        animation: float var(--d) ease-in-out infinite alternate;
+      }
+      .sort.der {
+        background: linear-gradient(160deg, #60a5fa, var(--der));
+      }
+      .sort.die {
+        background: linear-gradient(160deg, #f472b6, var(--die));
+      }
+      .sort.das {
+        background: linear-gradient(160deg, #4ade80, var(--das));
+      }
+      .sort.sun {
+        background: linear-gradient(160deg, #ffe08f, #f2b530);
+        color: var(--ink);
+      }
+      .sort.paper {
+        background: #fff;
+        color: var(--ink);
+        box-shadow:
+          inset 0 -5px 0 #17233d14,
+          0 18px 30px -16px #17233d66;
+      }
+      @keyframes float {
+        to {
+          translate: 0 -18px;
+          rotate: 3deg;
+        }
+      }
+      .hero.gather .sort {
+        opacity: 0.22;
+      }
+
+      /* live results */
+      .results {
+        position: absolute;
+        inset-inline: 0;
+        top: calc(100% + 10px);
+        z-index: 10;
+        padding: 10px;
+        border-radius: 22px;
+        background: #fffffffa;
+        box-shadow: 0 40px 80px -30px #17233d66;
+        border: 1px solid var(--line);
+        text-align: start;
+        opacity: 0;
+        transform: translateY(-8px) scale(0.98);
+        transform-origin: top;
+        pointer-events: none;
+        transition:
+          opacity 0.25s,
+          transform 0.35s var(--arrive);
+      }
+      .results.on {
+        opacity: 1;
+        transform: none;
+        pointer-events: auto;
+      }
+      .res-h {
+        padding: 8px 14px 6px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--muted);
+      }
+      .res {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        width: 100%;
+        padding: 12px 14px;
+        border: 0;
+        background: none;
+        border-radius: 14px;
+        text-align: start;
+        opacity: 0;
+        transform: translateY(6px);
+        filter: blur(4px);
+      }
+      .results.on .res {
+        animation: resIn 0.45s var(--arrive) forwards;
+        animation-delay: calc(var(--i) * 60ms + 60ms);
+      }
+      @keyframes resIn {
+        to {
+          opacity: 1;
+          transform: none;
+          filter: none;
+        }
+      }
+      .res:hover,
+      .res.kb {
+        background: #f4efff;
+      }
+      .res .art {
+        width: 40px;
+        flex: none;
+        font-weight: 700;
+        font-size: 0.9rem;
+      }
+      .res .w {
+        font-size: 1.2rem;
+        font-weight: 700;
+      }
+      .res .w mark {
+        background: linear-gradient(transparent 60%, #ffd36a 60%);
+        color: inherit;
+      }
+      .res .fa {
+        color: var(--muted);
+        margin-inline-start: auto;
+      }
+      .res .via {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.82rem;
+        color: var(--purple);
+        background: #f4efff;
+        padding: 3px 10px;
+        border-radius: 99px;
+      }
+      .res .lvl {
+        font-size: 0.74rem;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 6px;
+        background: #eef7ff;
+        color: #1e5aa8;
+      }
+
+      /* home sections */
+      .sec {
+        padding: 80px 0;
+      }
+      .sec h2 {
+        font-size: clamp(1.5rem, 2.6vw, 2.1rem);
+        margin: 0 0 8px;
+      }
+      .sec .lead {
+        color: var(--muted);
+        margin: 0 0 32px;
+        line-height: 1.9;
+      }
+      .wotd {
+        display: grid;
+        grid-template-columns: 1.2fr 1fr;
+        gap: 0;
+        border-radius: 32px;
+        overflow: hidden;
+        background: var(--ink);
+        color: #fff;
+        box-shadow: 0 50px 90px -50px #17233d;
+      }
+      .wotd-l {
+        padding: 48px;
+        position: relative;
+      }
+      .wotd-l .tag {
+        color: var(--sun);
+        font-weight: 700;
+        font-size: 0.9rem;
+      }
+      .wotd-l .word {
+        margin: 18px 0 6px;
+        font-size: 3.6rem;
+        font-weight: 700;
+      }
+      .wotd-l .word .a {
+        color: #93c5fd;
+      }
+      .wotd-l p {
+        color: #c9d3e6;
+        line-height: 1.9;
+      }
+      .wotd-r {
+        position: relative;
+        background: radial-gradient(circle at 60% 40%, #6c3ad6 0%, #472099 60%, #2b1466 100%);
+        display: grid;
+        place-items: center;
+        min-height: 340px;
+        overflow: hidden;
+      }
+      .wotd-r img {
+        width: 62%;
+        filter: drop-shadow(0 30px 30px #0005);
+        animation: hover 4s ease-in-out infinite alternate;
+      }
+      @keyframes hover {
+        to {
+          transform: translateY(-14px) rotate(-2deg);
+        }
+      }
+      .ring {
+        position: absolute;
+        border: 1.5px dashed #ffffff33;
+        border-radius: 50%;
+        animation: spin 40s linear infinite;
+      }
+      @keyframes spin {
+        to {
+          rotate: 360deg;
+        }
+      }
+      .levels {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 14px;
+      }
+      .lv {
+        position: relative;
+        padding: 22px;
+        border-radius: 22px;
+        background: #fff;
+        border: 1px solid var(--line);
+        text-align: start;
+        overflow: hidden;
+        transition:
+          transform 0.35s var(--arrive),
+          box-shadow 0.35s;
+      }
+      .lv:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 30px 50px -30px #17233d55;
+      }
+      .lv b {
+        display: block;
+        font:
+          700 2.2rem/1 'Avenir Next',
+          system-ui;
+        direction: ltr;
+        text-align: right;
+      }
+      .lv span {
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+      .lv .bar {
+        position: absolute;
+        inset-inline: 0;
+        bottom: 0;
+        height: 6px;
+        background: var(--c);
+        transform-origin: right;
+        transform: scaleX(0.25);
+        transition: transform 0.5s var(--arrive);
+      }
+      .lv:hover .bar {
+        transform: none;
+      }
+      .topics {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+      .topic {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 18px 12px 14px;
+        border-radius: 16px;
+        background: #fff;
+        border: 1px solid var(--line);
+        font-weight: 700;
+        transition: transform 0.25s var(--spring);
+      }
+      .topic:hover {
+        transform: translateY(-3px) rotate(-1deg);
+      }
+      .topic i {
+        font-style: normal;
+        font-size: 1.3rem;
+      }
+      .topic small {
+        color: var(--muted);
+        font-weight: 400;
+      }
+
+      /* ================= VIEW 2: word page ================= */
+      .crumbs {
+        padding: 22px 0 0;
+        color: var(--muted);
+        font-size: 0.9rem;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .crumbs button {
+        border: 0;
+        background: none;
+        color: var(--purple);
+        font-weight: 700;
+        padding: 0;
+      }
+      .wgrid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 360px;
+        gap: 40px;
+        padding: 26px 0 100px;
+        align-items: start;
+      }
+      .whero {
+        position: relative;
+        padding: 46px 46px 38px;
+        border-radius: 32px;
+        background: #fff;
+        border: 1px solid var(--line);
+        box-shadow: 0 40px 80px -60px #17233d88;
+        overflow: hidden;
+      }
+      .whero::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(600px 220px at 85% -10%, #3b82f61a, transparent 70%),
+          radial-gradient(400px 200px at 0% 110%, #ffd36a26, transparent 70%);
+        pointer-events: none;
+      }
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+        position: relative;
+      }
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 30px;
+        padding: 0 12px;
+        border-radius: 99px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        background: #f3f5f9;
+        color: var(--muted);
+      }
+      .chip.lvl {
+        background: #eef7ff;
+        color: #1e5aa8;
+        direction: ltr;
+      }
+      .chip.ok {
+        background: #e9f7ef;
+        color: var(--leaf);
+      }
+      .freq {
+        display: inline-flex;
+        gap: 3px;
+        align-items: end;
+        height: 14px;
+      }
+      .freq i {
+        width: 4px;
+        border-radius: 2px;
+        background: var(--purple);
+      }
+      .freq i.off {
+        background: #d9d3f3;
+      }
+      .setline {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        margin: 30px 0 8px;
+        direction: ltr;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+      }
+      .stamp {
+        position: relative;
+        display: grid;
+        place-items: center;
+        height: 74px;
+        padding: 0 18px;
+        border-radius: 14px;
+        color: #fff;
+        font:
+          700 2.3rem/1 'Avenir Next',
+          system-ui;
+        background: var(--ac);
+        box-shadow:
+          inset 0 -6px 0 #0000002a,
+          0 16px 30px -14px var(--ac);
+        opacity: 0;
+        transform: scale(1.8) rotate(-12deg);
+      }
+      .stamp.in {
+        animation: stamp 0.55s var(--spring) forwards;
+      }
+      @keyframes stamp {
+        60% {
+          opacity: 1;
+          transform: scale(0.92) rotate(2deg);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+      .stamp::after {
+        content: '';
+        position: absolute;
+        inset: -10px;
+        border-radius: 22px;
+        border: 3px solid var(--ac);
+        opacity: 0;
+      }
+      .stamp.in::after {
+        animation: ripple 0.7s 0.25s ease-out;
+      }
+      @keyframes ripple {
+        from {
+          opacity: 0.7;
+          transform: scale(0.85);
+        }
+        to {
+          opacity: 0;
+          transform: scale(1.35);
+        }
+      }
+      .tiles {
+        display: flex;
+        gap: 6px;
+        perspective: 600px;
+      }
+      .tile {
+        display: grid;
+        place-items: center;
+        width: 62px;
+        height: 78px;
+        border-radius: 12px;
+        font:
+          700 2.7rem/1 'Avenir Next',
+          system-ui;
+        color: var(--ink);
+        background: #fff;
+        box-shadow:
+          inset 0 -5px 0 #17233d12,
+          0 1px 0 var(--line),
+          0 14px 24px -18px #17233d66;
+        transform-origin: 50% 100%;
+        transform: rotateX(-95deg) translateY(-30px);
+        opacity: 0;
+      }
+      .tile.metal {
+        color: #fff;
+        background: linear-gradient(160deg, #3a4767, var(--type));
+      }
+      .tile.in {
+        animation: tileIn 0.7s var(--spring) forwards;
+        animation-delay: calc(var(--i) * 70ms);
+      }
+      @keyframes tileIn {
+        70% {
+          opacity: 1;
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+      .tile.syl-gap {
+        margin-left: 14px;
+      }
+      .tile.lit {
+        background: #f4efff;
+        color: var(--purple);
+        transform: translateY(-6px) !important;
+        transition: all 0.18s;
+      }
+      .path {
+        display: block;
+        width: 100%;
+        height: 26px;
+        margin-top: 2px;
+        overflow: visible;
+      }
+      .path path {
+        fill: none;
+        stroke: var(--purple);
+        stroke-width: 3;
+        stroke-linecap: round;
+        stroke-dasharray: 900;
+        stroke-dashoffset: 900;
+      }
+      .path.in path {
+        animation: draw 1.4s 0.8s var(--arrive) forwards;
+      }
+      .fa-main {
+        margin: 10px 0 0;
+        font-size: 2rem;
+        font-weight: 700;
+        position: relative;
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      .fa-main.in {
+        animation: up 0.6s 1.1s var(--arrive) forwards;
+      }
+      @keyframes up {
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+      .gram {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 22px;
+        margin-top: 14px;
+        color: var(--muted);
+      }
+      .gram b {
+        color: var(--ink);
+      }
+      .toolbar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 26px;
+        flex-wrap: wrap;
+      }
+      .play {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        height: 56px;
+        padding: 0 8px 0 20px;
+        border-radius: 99px;
+        border: 0;
+        background: var(--ink);
+        color: #fff;
+        font-weight: 700;
+      }
+      .play .pb {
+        display: grid;
+        place-items: center;
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: var(--sun);
+        color: var(--ink);
+      }
+      .wave {
+        display: flex;
+        align-items: center;
+        gap: 3px;
+        height: 26px;
+      }
+      .wave i {
+        width: 3px;
+        height: 6px;
+        border-radius: 2px;
+        background: #ffffff88;
+        transition: height 0.12s;
+      }
+      .play.on .wave i {
+        background: var(--sun);
+      }
+      .ipa {
+        font-family: 'Avenir Next', system-ui;
+        color: #d6deef;
+        direction: ltr;
+      }
+      .icon-btn {
+        display: inline-grid;
+        place-items: center;
+        width: 56px;
+        height: 56px;
+        border-radius: 18px;
+        border: 1px solid var(--line);
+        background: #fff;
+        transition:
+          transform 0.2s var(--spring),
+          border-color 0.2s;
+      }
+      .icon-btn:hover {
+        transform: translateY(-2px);
+      }
+      .save svg path {
+        fill: transparent;
+        stroke: var(--purple);
+        stroke-width: 2;
+        transition: fill 0.2s;
+      }
+      .save.on svg {
+        animation: pop 0.5s var(--spring);
+      }
+      .save.on svg path {
+        fill: var(--purple);
+      }
+      @keyframes pop {
+        40% {
+          transform: scale(1.4) rotate(-8deg);
+        }
+      }
+      .save-label {
+        font-weight: 700;
+        color: var(--purple);
+        font-size: 0.92rem;
+      }
+
+      .card {
+        margin-top: 22px;
+        padding: 30px 32px;
+        border-radius: 26px;
+        background: #fff;
+        border: 1px solid var(--line);
+        opacity: 0;
+        transform: translateY(24px);
+        transition:
+          opacity 0.6s,
+          transform 0.8s var(--arrive);
+      }
+      .card.seen {
+        opacity: 1;
+        transform: none;
+      }
+      .card h3 {
+        margin: 0 0 18px;
+        font-size: 1.15rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .card h3 .k {
+        display: inline-grid;
+        place-items: center;
+        width: 30px;
+        height: 30px;
+        border-radius: 10px;
+        background: #f4efff;
+        color: var(--purple);
+        font-size: 0.9rem;
+      }
+      .sense {
+        display: grid;
+        grid-template-columns: 34px 1fr;
+        gap: 12px;
+        padding: 14px 0;
+        border-top: 1px dashed var(--line);
+      }
+      .sense:first-of-type {
+        border-top: 0;
+        padding-top: 0;
+      }
+      .sense .no {
+        display: grid;
+        place-items: center;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: var(--ink);
+        color: #fff;
+        font-weight: 700;
+        font-size: 0.85rem;
+      }
+      .sense b {
+        font-size: 1.15rem;
+      }
+      .sense p {
+        margin: 4px 0 0;
+        color: var(--muted);
+      }
+      .ex {
+        position: relative;
+        padding: 18px 20px;
+        border-radius: 18px;
+        background: #fbfaf5;
+        border: 1px solid #efe9d8;
+        margin-top: 12px;
+      }
+      .ex .g {
+        font-size: 1.15rem;
+        line-height: 1.7;
+        text-align: left;
+      }
+      .ex .g strong {
+        color: var(--der);
+      }
+      .ex .f {
+        margin-top: 6px;
+        color: var(--muted);
+        line-height: 1.8;
+      }
+      .ex .say {
+        position: absolute;
+        top: 14px;
+        inset-inline-start: 14px;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        border: 0;
+        background: #fff;
+        box-shadow: 0 4px 10px -4px #17233d44;
+        display: grid;
+        place-items: center;
+        color: var(--purple);
+      }
+      .colls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      .coll {
+        padding: 10px 14px;
+        border-radius: 14px;
+        background: #f4efff;
+      }
+      .coll .de {
+        font-weight: 700;
+        display: block;
+      }
+      .coll small {
+        color: var(--muted);
+      }
+
+      /* declension */
+      .seg {
+        position: relative;
+        display: inline-flex;
+        padding: 4px;
+        border-radius: 14px;
+        background: #f1f2f6;
+        margin-bottom: 16px;
+      }
+      .seg button {
+        position: relative;
+        z-index: 1;
+        height: 38px;
+        padding: 0 18px;
+        border: 0;
+        background: none;
+        font-weight: 700;
+        color: var(--muted);
+        transition: color 0.25s;
+      }
+      .seg button.on {
+        color: var(--ink);
+      }
+      .seg .thumb {
+        position: absolute;
+        top: 4px;
+        bottom: 4px;
+        border-radius: 10px;
+        background: #fff;
+        box-shadow: 0 4px 10px -6px #17233d66;
+        transition: all 0.4s var(--arrive);
+      }
+      .decl {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+      }
+      .cell {
+        padding: 14px;
+        border-radius: 16px;
+        background: #fbfaf5;
+        border: 1px solid #efe9d8;
+      }
+      .cell small {
+        display: block;
+        color: var(--muted);
+        font-size: 0.78rem;
+        margin-bottom: 6px;
+      }
+      .cell .de {
+        font-size: 1.12rem;
+        font-weight: 700;
+        display: block;
+        text-align: left;
+        transition:
+          opacity 0.2s,
+          transform 0.3s var(--arrive);
+      }
+      .cell .de u {
+        text-decoration: none;
+        color: var(--ac, var(--der));
+      }
+      .decl.swap .cell .de {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+
+      /* trap */
+      .trap {
+        perspective: 1200px;
+      }
+      .trap-in {
+        position: relative;
+        min-height: 190px;
+        transform-style: preserve-3d;
+        transition: transform 0.8s var(--arrive);
+      }
+      .trap.flip .trap-in {
+        transform: rotateY(180deg);
+      }
+      .face {
+        position: absolute;
+        inset: 0;
+        padding: 26px 28px;
+        border-radius: 22px;
+        backface-visibility: hidden;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+      .face.front {
+        background: #fff3f3;
+        border: 1.5px solid #fecaca;
+      }
+      .face.back {
+        background: #effaf3;
+        border: 1.5px solid #bbf7d0;
+        transform: rotateY(180deg);
+      }
+      .face .big {
+        font-size: 1.35rem;
+        font-weight: 700;
+        margin: 8px 0;
+      }
+      .face .x {
+        color: #dc2626;
+        font-weight: 700;
+      }
+      .face .v {
+        color: var(--leaf);
+        font-weight: 700;
+      }
+      .face p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.9;
+      }
+      .face .tap {
+        margin-top: 12px;
+        font-size: 0.85rem;
+        color: var(--purple);
+        font-weight: 700;
+      }
+
+      /* compound */
+      .comp {
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        gap: 0;
+        direction: ltr;
+        padding: 10px 0 0;
+        flex-wrap: wrap;
+      }
+      .part {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        transition: margin 0.9s var(--spring);
+        margin: 0;
+      }
+      .comp.split .part {
+        margin: 0 14px;
+      }
+      .part .blk {
+        padding: 14px 18px;
+        border-radius: 14px;
+        font:
+          700 2rem/1 'Avenir Next',
+          system-ui;
+        background: #fff;
+        box-shadow:
+          inset 0 -5px 0 #17233d12,
+          0 14px 24px -18px #17233d66;
+        border: 1px solid var(--line);
+      }
+      .part:last-child .blk {
+        background: var(--der);
+        color: #fff;
+        border-color: transparent;
+      }
+      .part .m {
+        opacity: 0;
+        transform: translateY(-6px);
+        transition: all 0.5s var(--arrive);
+        text-align: center;
+        direction: rtl;
+      }
+      .part .m b {
+        display: block;
+      }
+      .part .m small {
+        color: var(--muted);
+      }
+      .comp.split .part .m {
+        opacity: 1;
+        transform: none;
+      }
+      .comp.split .part:nth-child(2) .m {
+        transition-delay: 0.15s;
+      }
+      .comp.split .part:nth-child(3) .m {
+        transition-delay: 0.3s;
+      }
+      .comp-sum {
+        text-align: center;
+        margin-top: 22px;
+        opacity: 0;
+        transition: opacity 0.5s 0.6s;
+      }
+      .comp.split + .comp-sum {
+        opacity: 1;
+      }
+      .comp-sum .eq {
+        font-size: 1.3rem;
+        font-weight: 700;
+      }
+      .comp-sum p {
+        color: var(--muted);
+        margin: 6px 0 0;
+      }
+      .comp-sum .rule {
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+        margin-top: 12px;
+        padding: 8px 14px;
+        border-radius: 12px;
+        background: #eef4ff;
+        color: #1e4fa8;
+        font-weight: 700;
+        font-size: 0.92rem;
+      }
+
+      /* sidebar: pack + quiz */
+      .side {
+        position: sticky;
+        top: 24px;
+        display: grid;
+        gap: 18px;
+      }
+      .pack {
+        position: relative;
+        padding: 26px;
+        border-radius: 28px;
+        color: #fff;
+        overflow: hidden;
+        background: radial-gradient(circle at 80% 0%, #8b5cf6, #6c3ad6 45%, #3b1a8c);
+        box-shadow: 0 40px 70px -40px #472099;
+      }
+      .pack .bubu {
+        position: absolute;
+        z-index: 2;
+        width: 118px;
+        left: 4px;
+        top: 10px;
+        filter: drop-shadow(0 20px 20px #0005);
+        transition: transform 0.6s var(--spring);
+      }
+      .pack .bubu.jump {
+        animation: jump 0.8s var(--spring);
+      }
+      @keyframes jump {
+        40% {
+          transform: translateY(-34px) rotate(-6deg) scale(1.05);
+        }
+      }
+      .pack .t {
+        font-size: 0.85rem;
+        color: #e3d8ff;
+        font-weight: 700;
+      }
+      .pack h4 {
+        margin: 8px 0 6px;
+        font-size: 1.3rem;
+        line-height: 1.5;
+        padding-left: 110px;
+      }
+      .pack .stat {
+        color: #e3d8ff;
+        font-size: 0.9rem;
+        padding-left: 110px;
+      }
+      .quiz {
+        margin-top: 18px;
+        padding: 16px;
+        border-radius: 20px;
+        background: #ffffff1a;
+        backdrop-filter: blur(6px);
+      }
+      .qdots {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 10px;
+      }
+      .qdots i {
+        flex: 1;
+        height: 5px;
+        border-radius: 4px;
+        background: #ffffff33;
+        transition: background 0.3s;
+      }
+      .qdots i.ok {
+        background: var(--sun);
+      }
+      .q {
+        font-weight: 700;
+        margin-bottom: 10px;
+      }
+      .opts {
+        display: grid;
+        gap: 8px;
+      }
+      .opt {
+        position: relative;
+        height: 46px;
+        border-radius: 14px;
+        border: 1.5px solid #ffffff40;
+        background: #ffffff14;
+        color: #fff;
+        font-weight: 700;
+        text-align: start;
+        padding: 0 14px;
+        overflow: hidden;
+        transition:
+          background 0.2s,
+          transform 0.2s var(--spring),
+          border-color 0.2s;
+      }
+      .opt:hover {
+        background: #ffffff26;
+      }
+      .opt.right {
+        background: #22c55e;
+        border-color: #22c55e;
+        animation: pop 0.45s var(--spring);
+      }
+      .opt.wrong {
+        background: #ef444455;
+        border-color: #ef4444;
+        animation: shake 0.4s;
+      }
+      @keyframes shake {
+        25% {
+          transform: translateX(-6px);
+        }
+        75% {
+          transform: translateX(6px);
+        }
+      }
+      .xp {
+        position: absolute;
+        inset-inline-end: 12px;
+        top: 50%;
+        translate: 0 -50%;
+        color: var(--sun);
+        font-weight: 700;
+        opacity: 0;
+      }
+      .opt.right .xp {
+        animation: xp 0.9s 0.1s var(--arrive) forwards;
+      }
+      @keyframes xp {
+        30% {
+          opacity: 1;
+        }
+        to {
+          opacity: 0;
+          translate: 0 -160%;
+        }
+      }
+      .pack .cta {
+        margin-top: 16px;
+        width: 100%;
+        background: var(--sun);
+        color: var(--ink);
+      }
+      .pack .cta:hover {
+        background: #ffe08f;
+      }
+      .done {
+        text-align: center;
+        padding: 6px 0;
+      }
+      .done b {
+        font-size: 1.2rem;
+        display: block;
+      }
+      .spark {
+        position: absolute;
+        width: 8px;
+        height: 8px;
+        border-radius: 2px;
+        pointer-events: none;
+      }
+      .mini {
+        padding: 22px;
+        border-radius: 24px;
+        background: #fff;
+        border: 1px solid var(--line);
+      }
+      .mini h5 {
+        margin: 0 0 12px;
+        font-size: 1rem;
+      }
+      .rel {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .rel button {
+        border: 1px solid var(--line);
+        background: #fbfaf5;
+        border-radius: 12px;
+        padding: 8px 12px;
+        font-weight: 700;
+      }
+      .report {
+        border: 0;
+        background: none;
+        color: var(--muted);
+        font-size: 0.88rem;
+        text-decoration: underline;
+        text-underline-offset: 4px;
+      }
+
+      /* save nudge */
+      .sheet:not(.on) {
+        visibility: hidden;
+        transition: visibility 0s 0.7s;
+      }
+      .sheet {
+        position: fixed;
+        z-index: 50;
+        inset-inline: 0;
+        bottom: 0;
+        display: grid;
+        place-items: end center;
+        pointer-events: none;
+      }
+      .sheet-in {
+        width: min(560px, calc(100% - 24px));
+        margin-bottom: 18px;
+        padding: 22px 24px 22px 150px;
+        border-radius: 26px;
+        background: var(--ink);
+        color: #fff;
+        position: relative;
+        transform: translateY(140%);
+        transition: transform 0.7s var(--spring);
+        pointer-events: auto;
+        box-shadow: 0 30px 60px -20px #17233daa;
+      }
+      .sheet.on .sheet-in {
+        transform: none;
+      }
+      .sheet img {
+        position: absolute;
+        left: 6px;
+        bottom: 0;
+        width: 140px;
+      }
+      .sheet b {
+        font-size: 1.15rem;
+      }
+      .sheet p {
+        margin: 6px 0 14px;
+        color: #c9d3e6;
+        line-height: 1.8;
+      }
+
+      /* in-app section */
+      .inapp {
+        display: grid;
+        grid-template-columns: 1fr 360px;
+        gap: 60px;
+        align-items: center;
+      }
+      .phone {
+        width: 340px;
+        height: 690px;
+        margin-inline: auto;
+        border-radius: 48px;
+        padding: 12px;
+        background: #0f172a;
+        box-shadow: 0 60px 90px -50px #17233d;
+      }
+      .screen {
+        position: relative;
+        height: 100%;
+        border-radius: 38px;
+        background: #f1f0ff;
+        overflow: hidden;
+        padding: 54px 16px 16px;
+      }
+      .screen .ttl {
+        font-weight: 700;
+        font-size: 1.3rem;
+        margin-bottom: 12px;
+      }
+      .screen .sbox {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        height: 50px;
+        padding: 0 14px;
+        border-radius: 16px;
+        background: #fff;
+        box-shadow: 0 10px 20px -14px #6d28d966;
+        color: var(--muted);
+      }
+      .screen .grp {
+        margin-top: 16px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--muted);
+      }
+      .screen .row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 8px;
+        padding: 12px;
+        border-radius: 16px;
+        background: #fff;
+      }
+      .screen .row .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--c);
+      }
+      .screen .row .de {
+        font-weight: 700;
+      }
+      .screen .row small {
+        margin-inline-start: auto;
+        color: var(--muted);
+      }
+      .screen .own {
+        font-size: 0.72rem;
+        padding: 2px 8px;
+        border-radius: 6px;
+        background: #e9f7ef;
+        color: var(--leaf);
+        font-weight: 700;
+      }
+      .screen .buy {
+        font-size: 0.72rem;
+        padding: 2px 8px;
+        border-radius: 6px;
+        background: #fff3e6;
+        color: #c2410c;
+        font-weight: 700;
+      }
+      .foot {
+        padding: 40px 0;
+        border-top: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 0.9rem;
+        display: flex;
+        justify-content: space-between;
+      }
+
+      /* tour caption (prototype only, not part of the product) */
+      .cap {
+        position: fixed;
+        z-index: 90;
+        left: 50%;
+        top: 96px;
+        translate: -50% 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        max-width: min(760px, calc(100% - 24px));
+        padding: 12px 20px 12px 14px;
+        border-radius: 18px;
+        background: #17233df0;
+        color: #fff;
+        font-weight: 700;
+        line-height: 1.7;
+        box-shadow: 0 20px 40px -20px #000;
+        opacity: 0;
+        transform: translateY(-14px);
+        transition: all 0.45s var(--arrive);
+      }
+      .cap.on {
+        opacity: 1;
+        transform: none;
+      }
+      .cap .s {
+        flex: none;
+        display: grid;
+        place-items: center;
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        background: var(--sun);
+        color: var(--ink);
+      }
+      .cursor {
+        position: fixed;
+        z-index: 95;
+        width: 26px;
+        height: 26px;
+        margin: -4px 0 0 -4px;
+        pointer-events: none;
+        transition:
+          left 0.7s var(--arrive),
+          top 0.7s var(--arrive);
+        display: none;
+      }
+      .cursor.on {
+        display: block;
+      }
+      .cursor.click::after {
+        content: '';
+        position: absolute;
+        left: -10px;
+        top: -10px;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        border: 3px solid var(--purple);
+        animation: ripple 0.5s ease-out;
+      }
+
+      @media (max-width: 980px) {
+        .wgrid,
+        .wotd,
+        .inapp {
+          grid-template-columns: 1fr;
+        }
+        .side {
+          position: static;
+        }
+        .levels {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .nav {
+          display: none;
+        }
+        .saved-pill .lbl {
+          display: none;
+        }
+        .hdr {
+          gap: 10px;
+        }
+        .wrap {
+          width: calc(100% - 32px);
+        }
+        .tile {
+          width: 44px;
+          height: 58px;
+          font-size: 2rem;
+        }
+        .decl {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .whero {
+          padding: 30px 22px;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          animation-delay: 0ms !important;
+          transition-duration: 0.01ms !important;
+        }
+        .sort {
+          animation: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <a class="skip" href="#main" style="position: absolute; right: -999px">پرش به محتوا</a>
+
+    <div class="wrap">
+      <header class="hdr">
+        <a
+          class="brand"
+          href="#"
+          onclick="
+            go('home');
+            return false;
+          "
+          ><b>LB</b><span>LearnBox</span></a
+        >
+        <nav class="nav" aria-label="اصلی">
+          <a href="#">چطور کار می‌کند</a><a href="#">بسته‌ها</a><a href="#" class="on">دیکشنری</a
+          ><a href="#">قیمت‌ها</a>
+        </nav>
+        <div class="hdr-actions">
+          <span class="saved-pill" title="واژه‌های ذخیره‌شده">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M6 3h12v18l-6-4-6 4z" />
+            </svg>
+            <span class="lbl">ذخیره‌ها</span> <span class="n" id="savedN">۸</span>
+          </span>
+          <a class="btn btn-p" href="#">دانلود اپ</a>
+        </div>
+      </header>
+    </div>
+
+    <main id="main">
+      <!-- ================= /dictionary ================= -->
+      <section class="view on" id="v-home">
+        <div class="hero" id="hero">
+          <div class="hero-sky" id="sky"></div>
+          <div class="sorts" id="sorts" aria-hidden="true"></div>
+          <div class="wrap hero-in">
+            <span class="eyebrow"><i></i>رایگان · بیش از ۱۰۰ هزار واژه · با تلفظ</span>
+            <h1 class="big">
+              هر واژهٔ آلمانی را
+              <em
+                >به فارسی<svg viewBox="0 0 300 22" preserveAspectRatio="none">
+                  <path d="M4 16 C 80 4, 200 4, 296 12" /></svg
+              ></em>
+              بفهم
+            </h1>
+            <p class="sub">
+              معنی دقیق، آرتیکل، جمع، صرف و مثال واقعی؛ حتی اگر شکل صرف‌شده را بنویسی، مثل
+              <span class="de">ging</span> یا <span class="de">Häuser</span>.
+            </p>
+            <div class="search" id="search">
+              <label class="field">
+                <svg
+                  width="26"
+                  height="26"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.4"
+                  stroke-linecap="round"
+                >
+                  <circle cx="11" cy="11" r="7" />
+                  <path d="m20 20-3.5-3.5" />
+                </svg>
+                <input
+                  id="q"
+                  autocomplete="off"
+                  spellcheck="false"
+                  aria-label="جست‌وجوی واژه به آلمانی یا فارسی"
+                  placeholder=""
+                />
+                <span class="kbd de">/</span>
+              </label>
+              <div class="results" id="results" role="listbox"></div>
+              <div class="hints">
+                <button class="hint" data-q="Termin"><span class="de">Termin</span></button>
+                <button class="hint" data-q="ging">
+                  <span class="de">ging</span><small>شکل صرف‌شده</small>
+                </button>
+                <button class="hint" data-q="قرار">قرار<small>فارسی به آلمانی</small></button>
+                <button class="hint" data-q="Haustürschlüssel">
+                  <span class="de">Haustürschlüssel</span><small>واژهٔ مرکب</small>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <section class="sec wrap">
+          <div class="wotd card seen">
+            <div class="wotd-l">
+              <span class="tag">واژهٔ امروز · ۱۴ آبان</span>
+              <div class="word de"><span class="a">der</span> Feierabend</div>
+              <p style="font-size: 1.3rem; color: #fff; font-weight: 700; margin: 0">
+                پایان وقت کاری، زمان استراحت بعد از کار
+              </p>
+              <p>
+                واژه‌ای که ترجمهٔ یک‌کلمه‌ای ندارد؛ آلمانی‌ها آن را جشن می‌گیرند:
+                <span class="de">„Schönen Feierabend!“</span>
+              </p>
+              <button
+                class="btn btn-p"
+                style="margin-top: 10px; background: var(--sun); color: var(--ink)"
+                onclick="go('word')"
+              >
+                ببین چطور به کار می‌رود
+              </button>
+            </div>
+            <div class="wotd-r">
+              <div class="ring" style="width: 380px; height: 380px"></div>
+              <div
+                class="ring"
+                style="width: 250px; height: 250px; animation-direction: reverse"
+              ></div>
+              <img
+                src="../../../apps/learnbox-website/public/themes/summer/bubu/progress-celebrate-v3.png"
+                alt=""
+              />
+            </div>
+          </div>
+        </section>
+
+        <section class="sec wrap" style="padding-top: 0">
+          <h2>واژه‌ها به ترتیب سطح</h2>
+          <p class="lead">همان سطح‌بندی گوته؛ از اولین روزهای آلمان تا امتحان C1.</p>
+          <div class="levels">
+            <button class="lv" style="--c: #22c55e">
+              <b>A1</b><span>۶۵۰ واژه · شروع</span><i class="bar"></i>
+            </button>
+            <button class="lv" style="--c: #3b82f6">
+              <b>A2</b><span>۱٬۳۰۰ واژه · زندگی روزمره</span><i class="bar"></i>
+            </button>
+            <button class="lv" style="--c: #6c3ad6">
+              <b>B1</b><span>۲٬۴۰۰ واژه · گوته B1</span><i class="bar"></i>
+            </button>
+            <button class="lv" style="--c: #f2b530">
+              <b>B2</b><span>۴٬۱۰۰ واژه · کار و دانشگاه</span><i class="bar"></i>
+            </button>
+            <button class="lv" style="--c: #ec4899">
+              <b>C1</b><span>۶٬۰۰۰ واژه · پیشرفته</span><i class="bar"></i>
+            </button>
+          </div>
+        </section>
+
+        <section class="sec wrap" style="padding-top: 0">
+          <h2>واژه‌ها بر اساس موضوع</h2>
+          <p class="lead">هر موضوع به بستهٔ آموزشی همان موضوع در اپ وصل است.</p>
+          <div class="topics">
+            <button class="topic"><i>🏛️</i>اداره و اقامت<small>۴۸۰</small></button>
+            <button class="topic"><i>🩺</i>پزشک و بیمارستان<small>۳۹۰</small></button>
+            <button class="topic"><i>🏠</i>خانه و اجاره<small>۵۲۰</small></button>
+            <button class="topic"><i>💼</i>کار و مصاحبه<small>۶۱۰</small></button>
+            <button class="topic"><i>🚆</i>سفر و حمل‌ونقل<small>۴۴۰</small></button>
+            <button class="topic"><i>🛒</i>خرید و غذا<small>۵۷۰</small></button>
+            <button class="topic"><i>🎓</i>دانشگاه<small>۳۶۰</small></button>
+          </div>
+        </section>
+
+        <section class="sec wrap" style="padding-top: 0">
+          <div class="inapp">
+            <div>
+              <h2>همین دیکشنری، داخل اپ</h2>
+              <p class="lead">
+                در صفحهٔ «واژه‌ها»ی اپ یک جعبهٔ جست‌وجو: بالا واژه‌های بسته‌های خودت، پایین بقیهٔ
+                دیکشنری. ذخیره‌های سایت بعد از ورود با موبایل به حسابت منتقل می‌شوند.
+              </p>
+              <a class="btn btn-p" href="#">دانلود لرن‌باکس</a>
+            </div>
+            <div class="phone">
+              <div class="screen">
+                <div class="ttl">واژه‌ها</div>
+                <div class="sbox">
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.4"
+                  >
+                    <circle cx="11" cy="11" r="7" />
+                    <path d="m20 20-3.5-3.5" /></svg
+                  ><span class="de" style="color: var(--ink); font-weight: 700">Term</span
+                  ><span
+                    style="
+                      width: 2px;
+                      height: 22px;
+                      background: var(--purple);
+                      animation: blink 1s steps(1) infinite;
+                    "
+                  ></span>
+                </div>
+                <div class="grp">واژه‌های من</div>
+                <div class="row" style="--c: var(--der)">
+                  <span class="dot"></span><span class="de">der Termin</span
+                  ><small>وقت ملاقات</small>
+                </div>
+                <div class="grp">در دیکشنری</div>
+                <div class="row" style="--c: var(--der)">
+                  <span class="dot"></span><span class="de">der Terminkalender</span
+                  ><small>تقویم</small>
+                </div>
+                <div class="row" style="--c: var(--der)">
+                  <span class="dot"></span><span class="de">der Arzttermin</span
+                  ><span class="buy">در بستهٔ پزشک</span>
+                </div>
+                <div class="row" style="--c: var(--die)">
+                  <span class="dot"></span><span class="de">die Terminvereinbarung</span
+                  ><small>وقت‌گیری</small>
+                </div>
+                <div class="row" style="--c: #94a3b8">
+                  <span class="dot"></span><span class="de">terminieren</span
+                  ><small>زمان تعیین کردن</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        <footer class="wrap foot">
+          <span>© لرن‌باکس</span><a href="#" style="color: inherit">حریم خصوصی و منابع داده</a>
+        </footer>
+      </section>
+
+      <!-- ================= /dictionary/Termin ================= -->
+      <section class="view" id="v-word">
+        <div class="wrap">
+          <div class="crumbs">
+            <button onclick="go('home')">دیکشنری</button> / <span>A2</span> /
+            <span class="de">Termin</span>
+          </div>
+          <div class="wgrid">
+            <article>
+              <div class="whero" id="whero">
+                <div class="meta">
+                  <span class="chip lvl">A2</span>
+                  <span class="chip">اسم</span>
+                  <span class="chip"
+                    ><span class="freq"
+                      ><i style="height: 6px"></i><i style="height: 9px"></i
+                      ><i style="height: 12px"></i><i style="height: 14px"></i
+                      ><i class="off" style="height: 14px"></i></span
+                    >پرکاربرد</span
+                  >
+                  <span class="chip ok">✓ بازبینی‌شده</span>
+                </div>
+                <div class="setline" id="setline">
+                  <div class="stamp" id="stamp" style="--ac: var(--der)">der</div>
+                  <div class="tiles" id="tiles"></div>
+                </div>
+                <svg class="path" id="path" viewBox="0 0 600 26" preserveAspectRatio="none">
+                  <path d="M598 6 C 450 30, 300 -6, 160 14 S 30 20, 2 10" />
+                </svg>
+                <p class="fa-main" id="famain">وقت ملاقات، نوبت</p>
+                <div class="gram">
+                  <span>جمع: <b class="de">die Termine</b></span>
+                  <span>ملکی: <b class="de">des Termins</b></span>
+                  <span>هجا: <b class="de">Ter·min</b></span>
+                </div>
+                <div class="toolbar">
+                  <button class="play" id="play" aria-label="پخش تلفظ">
+                    <span class="wave" id="wave"></span>
+                    <span class="ipa">[tɛʁˈmiːn]</span>
+                    <span class="pb"
+                      ><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M8 5v14l11-7z" /></svg
+                    ></span>
+                  </button>
+                  <button
+                    class="icon-btn save"
+                    id="save"
+                    aria-pressed="false"
+                    aria-label="ذخیرهٔ واژه"
+                  >
+                    <svg width="24" height="24" viewBox="0 0 24 24">
+                      <path d="M6 3h12v18l-6-4-6 4z" stroke-linejoin="round" />
+                    </svg>
+                  </button>
+                  <span class="save-label" id="saveLabel">ذخیره</span>
+                </div>
+              </div>
+
+              <div class="card">
+                <h3><span class="k">۱</span>معنی‌ها</h3>
+                <div class="sense">
+                  <span class="no">۱</span>
+                  <div>
+                    <b>وقت ملاقات، نوبت</b>
+                    <p>نزد پزشک، اداره، آرایشگاه</p>
+                  </div>
+                </div>
+                <div class="sense">
+                  <span class="no">۲</span>
+                  <div>
+                    <b>قرار (کاری)</b>
+                    <p>جلسه‌ای که از قبل زمانش معلوم شده</p>
+                  </div>
+                </div>
+                <div class="sense">
+                  <span class="no">۳</span>
+                  <div>
+                    <b>موعد، مهلت</b>
+                    <p>مثل <span class="de">Abgabetermin</span> (مهلت تحویل)</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card">
+                <h3><span class="k">۲</span>در جمله</h3>
+                <div class="ex">
+                  <button class="say" aria-label="پخش جمله">▶</button>
+                  <div class="g de">Ich habe morgen einen <strong>Termin</strong> beim Arzt.</div>
+                  <div class="f">فردا وقت دکتر دارم.</div>
+                </div>
+                <div class="ex">
+                  <button class="say" aria-label="پخش جمله">▶</button>
+                  <div class="g de">Können wir den <strong>Termin</strong> verschieben?</div>
+                  <div class="f">می‌شود قرار را عقب بیندازیم؟</div>
+                </div>
+                <h3 style="margin-top: 24px"><span class="k">+</span>با این‌ها می‌آید</h3>
+                <div class="colls">
+                  <span class="coll"
+                    ><span class="de">einen Termin vereinbaren</span><small>وقت گرفتن</small></span
+                  >
+                  <span class="coll"
+                    ><span class="de">einen Termin absagen</span
+                    ><small>قرار را لغو کردن</small></span
+                  >
+                  <span class="coll"
+                    ><span class="de">einen Termin verschieben</span
+                    ><small>عقب انداختن</small></span
+                  >
+                </div>
+              </div>
+
+              <div class="card">
+                <h3><span class="k">۳</span>صرف</h3>
+                <div class="seg" id="seg">
+                  <span class="thumb"></span><button class="on" data-n="sg">مفرد</button
+                  ><button data-n="pl">جمع</button>
+                </div>
+                <div class="decl" id="decl"></div>
+              </div>
+
+              <div class="card">
+                <h3><span class="k">!</span>اشتباه رایج فارسی‌زبان‌ها</h3>
+                <div
+                  class="trap"
+                  id="trap"
+                  role="button"
+                  tabindex="0"
+                  aria-label="برای دیدن پاسخ لمس کن"
+                >
+                  <div class="trap-in">
+                    <div class="face front">
+                      <span class="x">✗ اشتباه</span>
+                      <div class="big de">Ich bin im dritten <u>Termin</u>.</div>
+                      <p>
+                        «ترم» دانشگاه به آلمانی <b>Termin نیست</b>؛ شبیه است، ولی معنی‌اش فرق دارد.
+                      </p>
+                      <span class="tap">برای دیدن شکل درست لمس کن ←</span>
+                    </div>
+                    <div class="face back">
+                      <span class="v">✓ درست</span>
+                      <div class="big de">Ich bin im dritten <u>Semester</u>.</div>
+                      <p>
+                        ترم دانشگاه = <span class="de">das Semester</span> ·
+                        <span class="de">Termin</span> فقط یعنی وقت و قرار.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card">
+                <h3><span class="k">⧉</span>واژهٔ مرکب را باز کن</h3>
+                <div class="comp" id="comp">
+                  <div class="part">
+                    <div class="blk de">Haus</div>
+                    <div class="m"><b>خانه</b><small class="de">das Haus</small></div>
+                  </div>
+                  <div class="part">
+                    <div class="blk de">tür</div>
+                    <div class="m"><b>در</b><small class="de">die Tür</small></div>
+                  </div>
+                  <div class="part">
+                    <div class="blk de">schlüssel</div>
+                    <div class="m"><b>کلید</b><small class="de">der Schlüssel</small></div>
+                  </div>
+                </div>
+                <div class="comp-sum">
+                  <div class="eq">
+                    <span class="de" style="color: var(--der)">der Haustürschlüssel</span> = کلید در
+                    ورودی خانه
+                  </div>
+                  <div class="rule">
+                    💡 آرتیکل واژهٔ مرکب را همیشه <u>آخرین جزء</u> تعیین می‌کند
+                  </div>
+                </div>
+                <div style="text-align: center; margin-top: 18px">
+                  <button class="btn btn-g" id="compBtn">دوباره ببین</button>
+                </div>
+              </div>
+            </article>
+
+            <aside class="side">
+              <div class="pack" id="pack">
+                <img
+                  class="bubu"
+                  id="bubu"
+                  src="../../../apps/learnbox-website/public/themes/summer/bubu/learning-focus-v3.png"
+                  alt=""
+                />
+                <span class="t">این واژه در بستهٔ لرن‌باکس هست</span>
+                <h4>اداره و وقت‌گیری در آلمان</h4>
+                <div class="stat">۱۲۰ واژه · صدای بومی · A2</div>
+                <div class="quiz" id="quiz"></div>
+                <a class="btn cta" href="#">باز کردن بسته در اپ</a>
+              </div>
+              <div class="mini">
+                <h5>خانوادهٔ این واژه</h5>
+                <div class="rel">
+                  <button class="de">der Terminkalender</button
+                  ><button class="de">der Arzttermin</button><button class="de">terminieren</button
+                  ><button class="de">die Terminvereinbarung</button>
+                </div>
+                <h5 style="margin-top: 18px">هم‌معنی</h5>
+                <div class="rel">
+                  <button class="de">die Verabredung</button
+                  ><button class="de">der Zeitpunkt</button>
+                </div>
+                <div style="margin-top: 18px">
+                  <button class="report">اشکالی دیدی؟ گزارش بده</button>
+                </div>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <div class="sheet" id="sheet">
+      <div class="sheet-in">
+        <img
+          src="../../../apps/learnbox-website/public/themes/summer/bubu/progress-celebrate-v3.png"
+          alt=""
+        />
+        <b>۱۰ واژه ذخیره کردی! 🎉</b>
+        <p>با شمارهٔ موبایلت وارد شو تا این فهرست برای همیشه بماند و در اپ هم داشته باشی‌اش.</p>
+        <div style="display: flex; gap: 8px">
+          <a class="btn btn-p" href="#" style="background: var(--sun); color: var(--ink)"
+            >نگهش دار</a
+          ><button class="btn" style="background: #ffffff1a; color: #fff" onclick="sheet(false)">
+            بعداً
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="cap" id="cap"><span class="s" id="capN">۱</span><span id="capT"></span></div>
+    <svg class="cursor" id="cursor" viewBox="0 0 24 24">
+      <path d="M3 2l7 19 2.5-8L21 10z" fill="#17233d" stroke="#fff" stroke-width="1.5" />
+    </svg>
+
+    <script>
+      const $ = (s, r = document) => r.querySelector(s);
+      const fa = (n) => String(n).replace(/\d/g, (d) => '۰۱۲۳۴۵۶۷۸۹'[d]);
+      const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      /* ---------- hero: drifting type sorts ---------- */
+      const SORTS = [
+        ['der', 'der', 8, 18, -8],
+        ['Ä', '', 20, 64, 6],
+        ['die', 'die', 86, 14, 7],
+        ['ß', 'sun', 92, 58, -6],
+        ['das', 'das', 4, 70, 5],
+        ['Ü', 'paper', 74, 78, -4],
+        ['W', '', 30, 10, 4],
+        ['ö', 'paper', 66, 8, -7],
+        ['sch', 'sun', 16, 44, -3],
+        ['en', '', 84, 40, 8],
+      ];
+      const sortsEl = $('#sorts');
+      SORTS.forEach(([t, c, x, y, r], i) => {
+        const s = document.createElement('span');
+        s.className = 'sort ' + c;
+        s.textContent = t;
+        s.style.cssText = `left:${x}%;top:${y}%;--x:0px;--y:0px;--r:${r}deg;--d:${4 + (i % 4)}s;animation-delay:-${i * 0.7}s`;
+        sortsEl.appendChild(s);
+      });
+      const hero = $('#hero');
+      hero.addEventListener('pointermove', (e) => {
+        if (reduce) return;
+        const b = hero.getBoundingClientRect(),
+          dx = (e.clientX - b.left) / b.width - 0.5,
+          dy = (e.clientY - b.top) / b.height - 0.5;
+        sortsEl.querySelectorAll('.sort').forEach((s, i) => {
+          const k = ((i % 3) + 1) * 14;
+          s.style.setProperty('--x', `${-dx * k}px`);
+          s.style.setProperty('--y', `${-dy * k}px`);
+        });
+        $('#sky').style.transform = `scale(1.06) translate(${-dx * 10}px, ${-dy * 6}px)`;
+      });
+
+      /* ---------- placeholder that teaches what you can type ---------- */
+      const q = $('#q');
+      const PH = [
+        'یک واژه بنویس… Termin',
+        'شکل صرف‌شده هم می‌شود… ging',
+        'یا به فارسی… قرار',
+        'واژهٔ مرکب… Haustürschlüssel',
+      ];
+      let phI = 0,
+        phC = 0,
+        phDel = false;
+      (function ph() {
+        if (document.activeElement !== q && !q.value) {
+          const s = PH[phI];
+          phC += phDel ? -1 : 1;
+          q.placeholder = s.slice(0, phC);
+          if (phC === s.length + 12) phDel = true;
+          if (phDel && phC <= 0) {
+            phDel = false;
+            phI = (phI + 1) % PH.length;
+          }
+        }
+        setTimeout(ph, phDel ? 22 : 60);
+      })();
+
+      /* ---------- live search (prototype data) ---------- */
+      const DATA = {
+        termin: {
+          head: 'نتیجه‌ها',
+          rows: [
+            ['der', 'Termin', 'Term', 'وقت ملاقات، نوبت', 'A2', 'word'],
+            ['der', 'Terminkalender', 'Term', 'تقویم قرارها', 'B1'],
+            ['', 'terminieren', 'term', 'زمان تعیین کردن', 'C1'],
+            ['die', 'Terminvereinbarung', 'Term', 'وقت‌گیری', 'B1'],
+          ],
+        },
+        ging: {
+          head: 'شکل صرف‌شده پیدا شد',
+          rows: [
+            ['', 'gehen', 'ge', 'رفتن', 'A1', '', 'ging ← گذشتهٔ ساده'],
+            ['', 'umgehen', 'ge', 'سروکار داشتن، دور زدن', 'B2', '', 'umging ← گذشته'],
+          ],
+        },
+        قرار: {
+          head: 'فارسی به آلمانی',
+          rows: [
+            ['der', 'Termin', '', 'قرار، وقت ملاقات', 'A2', 'word'],
+            ['die', 'Verabredung', '', 'قرار (دوستانه)', 'B1'],
+            ['', 'sich verabreden', '', 'قرار گذاشتن', 'B1'],
+          ],
+        },
+        haustürschlüssel: {
+          head: 'واژهٔ مرکب، تجزیه شد',
+          rows: [
+            ['der', 'Haustürschlüssel', '', 'کلید در خانه', 'B1', 'comp', 'Haus + Tür + Schlüssel'],
+          ],
+        },
+      };
+      const ARTC = { der: 'var(--der)', die: 'var(--die)', das: 'var(--das)' };
+      const res = $('#results');
+      function render(v) {
+        const k = v.trim().toLowerCase();
+        const key = Object.keys(DATA).find(
+          (d) =>
+            k && d.startsWith(k.slice(0, 3)) && (d.startsWith(k) || k.startsWith(d.slice(0, 3))),
+        );
+        if (!key) {
+          res.classList.remove('on');
+          hero.classList.remove('gather');
+          return;
+        }
+        const d = DATA[key];
+        res.innerHTML =
+          `<div class="res-h">${d.head}</div>` +
+          d.rows
+            .map(
+              ([a, w, m, f, l, to, via], i) =>
+                `<button class="res" style="--i:${i}" data-to="${to || ''}"><span class="art de" style="color:${ARTC[a] || 'var(--muted)'}">${a}</span>
+     <span class="w de">${m && !via && w.toLowerCase().startsWith(k) ? `<mark>${w.slice(0, k.length)}</mark>${w.slice(k.length)}` : w}</span>
+     ${via ? `<span class="via">${via}</span>` : ''}<span class="lvl de">${l}</span><span class="fa">${f}</span></button>`,
+            )
+            .join('');
+        res.classList.remove('on');
+        void res.offsetWidth;
+        res.classList.add('on');
+        hero.classList.add('gather');
+        res
+          .querySelectorAll('.res')
+          .forEach(
+            (b) => (b.onclick = () => (b.dataset.to === 'comp' ? go('word', 'comp') : go('word'))),
+          );
+      }
+      q.addEventListener('input', () => render(q.value));
+      q.addEventListener('focus', () => $('#search').classList.add('focus'));
+      q.addEventListener('blur', () =>
+        setTimeout(() => $('#search').classList.remove('focus'), 150),
+      );
+      document.querySelectorAll('.hint').forEach((h) => (h.onclick = () => typeInto(h.dataset.q)));
+      addEventListener('keydown', (e) => {
+        if (e.key === '/' && document.activeElement !== q) {
+          e.preventDefault();
+          q.focus();
+        }
+      });
+      async function typeInto(text, speed = 85) {
+        q.focus();
+        q.value = '';
+        for (const ch of text) {
+          q.value += ch;
+          render(q.value);
+          await wait(speed);
+        }
+      }
+      const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+
+      /* ---------- word page ---------- */
+      function buildWord() {
+        const tiles = $('#tiles');
+        tiles.innerHTML = '';
+        'Termin'.split('').forEach((c, i) => {
+          const t = document.createElement('span');
+          t.className = 'tile' + (i === 3 ? ' syl-gap' : '');
+          t.textContent = c;
+          t.style.setProperty('--i', i);
+          tiles.appendChild(t);
+        });
+        ['#stamp', '#path', '#famain'].forEach((s) => $(s).classList.remove('in'));
+        requestAnimationFrame(() => {
+          tiles.querySelectorAll('.tile').forEach((t) => t.classList.add('in'));
+          setTimeout(() => $('#stamp').classList.add('in'), 520);
+          $('#path').classList.add('in');
+          $('#famain').classList.add('in');
+        });
+        observeCards();
+        quiz(0);
+        decl('sg');
+      }
+      function go(view, focus, instant) {
+        const swap = () => {
+          document
+            .querySelectorAll('.view')
+            .forEach((v) => v.classList.toggle('on', v.id === 'v-' + view));
+          scrollTo({ top: 0, behavior: 'instant' });
+          if (view === 'word') buildWord();
+          res.classList.remove('on');
+          hero.classList.remove('gather');
+          if (focus === 'comp')
+            setTimeout(() => {
+              $('#comp').scrollIntoView({ behavior: 'smooth', block: 'center' });
+              setTimeout(splitComp, 700);
+            }, 900);
+        };
+        document.startViewTransition && !reduce && !instant
+          ? document.startViewTransition(swap)
+          : swap();
+      }
+
+      /* audio: waveform + syllable highlight (real build: Commons recording / speechSynthesis) */
+      const wave = $('#wave');
+      for (let i = 0; i < 18; i++) wave.appendChild(document.createElement('i'));
+      $('#play').onclick = async () => {
+        const p = $('#play');
+        if (p.classList.contains('on')) return;
+        p.classList.add('on');
+        try {
+          const u = new SpeechSynthesisUtterance('Termin');
+          u.lang = 'de-DE';
+          u.rate = 0.8;
+          speechSynthesis.speak(u);
+        } catch {}
+        const bars = [...wave.children],
+          tiles = [...document.querySelectorAll('.tile')];
+        const t0 = performance.now();
+        (function anim(t) {
+          const e = (t - t0) / 1100;
+          bars.forEach(
+            (b, i) =>
+              (b.style.height =
+                6 +
+                Math.abs(Math.sin(e * 9 + i * 0.6)) * 20 * Math.sin(Math.min(e, 1) * Math.PI) +
+                'px'),
+          );
+          tiles.forEach((tl, i) =>
+            tl.classList.toggle('lit', e < 1 && (e < 0.45 ? i < 3 : i >= 3)),
+          );
+          if (e < 1) requestAnimationFrame(anim);
+          else {
+            p.classList.remove('on');
+            bars.forEach((b) => (b.style.height = '6px'));
+          }
+        })(t0);
+      };
+
+      /* save + nudge after 10 */
+      let saved = 8;
+      $('#save').onclick = () => {
+        const b = $('#save'),
+          on = b.getAttribute('aria-pressed') !== 'true';
+        b.setAttribute('aria-pressed', on);
+        b.classList.toggle('on', on);
+        $('#saveLabel').textContent = on ? 'ذخیره شد' : 'ذخیره';
+        saved += on ? 1 : -1;
+        const n = $('#savedN');
+        n.textContent = fa(saved);
+        n.classList.remove('bump');
+        void n.offsetWidth;
+        n.classList.add('bump');
+        if (on && saved >= 9)
+          setTimeout(() => {
+            saved = 10;
+            n.textContent = fa(10);
+            n.classList.remove('bump');
+            void n.offsetWidth;
+            n.classList.add('bump');
+            sheet(true);
+          }, 900);
+      };
+      function sheet(on) {
+        $('#sheet').classList.toggle('on', on);
+      }
+
+      /* declension with sliding segment */
+      const DECL = {
+        sg: [
+          ['نهادی', '<u>der</u> Termin'],
+          ['مفعولی', '<u>den</u> Termin'],
+          ['با واسطه', '<u>dem</u> Termin'],
+          ['ملکی', '<u>des</u> Termin<u>s</u>'],
+        ],
+        pl: [
+          ['نهادی', '<u>die</u> Termin<u>e</u>'],
+          ['مفعولی', '<u>die</u> Termin<u>e</u>'],
+          ['با واسطه', '<u>den</u> Termin<u>en</u>'],
+          ['ملکی', '<u>der</u> Termin<u>e</u>'],
+        ],
+      };
+      function decl(n) {
+        const seg = $('#seg'),
+          btn = seg.querySelector(`[data-n=${n}]`),
+          th = seg.querySelector('.thumb');
+        seg.querySelectorAll('button').forEach((b) => b.classList.toggle('on', b === btn));
+        th.style.left = btn.offsetLeft + 'px';
+        th.style.width = btn.offsetWidth + 'px';
+        const d = $('#decl');
+        d.classList.add('swap');
+        setTimeout(
+          () => {
+            d.innerHTML = DECL[n]
+              .map(
+                ([c, w]) =>
+                  `<div class="cell" style="--ac:${n === 'pl' ? 'var(--die)' : 'var(--der)'}"><small>${c}</small><span class="de">${w}</span></div>`,
+              )
+              .join('');
+            d.classList.add('swap');
+            requestAnimationFrame(() => requestAnimationFrame(() => d.classList.remove('swap')));
+          },
+          d.children.length ? 180 : 0,
+        );
+      }
+      $('#seg').addEventListener('click', (e) => e.target.dataset.n && decl(e.target.dataset.n));
+      $('#trap').onclick = () => $('#trap').classList.toggle('flip');
+      $('#trap').onkeydown = (e) =>
+        (e.key === 'Enter' || e.key === ' ') && $('#trap').classList.toggle('flip');
+      function splitComp() {
+        const c = $('#comp');
+        c.classList.remove('split');
+        void c.offsetWidth;
+        setTimeout(() => c.classList.add('split'), 120);
+      }
+      $('#compBtn').onclick = splitComp;
+
+      /* scroll reveal */
+      let io;
+      function observeCards() {
+        io && io.disconnect();
+        io = new IntersectionObserver(
+          (es) =>
+            es.forEach((e) => {
+              if (e.isIntersecting) {
+                e.target.classList.add('seen');
+                if (e.target.contains($('#comp'))) splitComp();
+                io.unobserve(e.target);
+              }
+            }),
+          { threshold: 0.25 },
+        );
+        document.querySelectorAll('#v-word .card').forEach((c) => {
+          c.classList.remove('seen');
+          io.observe(c);
+        });
+      }
+
+      /* 3-question preview quiz → pack */
+      const QZ = [
+        [
+          '«وقت دکتر گرفتن» یعنی:',
+          ['einen Termin absagen', 'einen Termin vereinbaren', 'einen Termin haben'],
+          1,
+        ],
+        ['جمع Termin کدام است؟', ['die Terminen', 'die Termins', 'die Termine'], 2],
+        ['ترم دانشگاه به آلمانی:', ['das Semester', 'der Termin', 'die Frist'], 0],
+      ];
+      function quiz(i) {
+        const z = $('#quiz');
+        const dots = `<div class="qdots">${QZ.map((_, j) => `<i class="${j < i ? 'ok' : ''}"></i>`).join('')}</div>`;
+        if (i >= QZ.length) {
+          z.innerHTML =
+            dots +
+            `<div class="done"><b>۳ از ۳! 🎉</b><span>۱۲۰ واژهٔ دیگر مثل این در بسته منتظرت است.</span></div>`;
+          jump();
+          return;
+        }
+        const [qq, os, ok] = QZ[i];
+        z.innerHTML =
+          dots +
+          `<div class="q">${qq}</div><div class="opts">${os.map((o, j) => `<button class="opt de" data-j="${j}" style="text-align:left">${o}<span class="xp">+۵</span></button>`).join('')}</div>`;
+        z.querySelectorAll('.opt').forEach(
+          (b) =>
+            (b.onclick = () => {
+              if (+b.dataset.j === ok) {
+                b.classList.add('right');
+                burst(b);
+                jump();
+                setTimeout(() => quiz(i + 1), 900);
+              } else {
+                b.classList.remove('wrong');
+                void b.offsetWidth;
+                b.classList.add('wrong');
+              }
+            }),
+        );
+      }
+      function jump() {
+        const b = $('#bubu');
+        b.src =
+          '../../../apps/learnbox-website/public/themes/summer/bubu/progress-celebrate-v3.png';
+        b.classList.remove('jump');
+        void b.offsetWidth;
+        b.classList.add('jump');
+        setTimeout(
+          () =>
+            (b.src =
+              '../../../apps/learnbox-website/public/themes/summer/bubu/learning-focus-v3.png'),
+          900,
+        );
+      }
+      function burst(el) {
+        if (reduce) return;
+        const r = el.getBoundingClientRect(),
+          host = $('#pack'),
+          h = host.getBoundingClientRect();
+        for (let i = 0; i < 16; i++) {
+          const s = document.createElement('i');
+          s.className = 'spark';
+          s.style.background = ['#ffd36a', '#fff', '#22c55e', '#f472b6'][i % 4];
+          s.style.left = r.left - h.left + r.width / 2 + 'px';
+          s.style.top = r.top - h.top + r.height / 2 + 'px';
+          host.appendChild(s);
+          const a = Math.random() * Math.PI * 2,
+            d = 40 + Math.random() * 60;
+          s.animate(
+            [
+              { transform: 'translate(0,0) rotate(0)', opacity: 1 },
+              {
+                transform: `translate(${Math.cos(a) * d}px, ${Math.sin(a) * d}px) rotate(${Math.random() * 360}deg)`,
+                opacity: 0,
+              },
+            ],
+            { duration: 700 + Math.random() * 300, easing: 'cubic-bezier(.16,1,.3,1)' },
+          ).onfinish = () => s.remove();
+        }
+      }
+
+      /* ---------- guided tour (prototype only: ?tour) ---------- */
+      const cap = $('#cap'),
+        cur = $('#cursor');
+      async function say(n, t, ms = 2600) {
+        $('#capN').textContent = fa(n);
+        $('#capT').textContent = t;
+        cap.classList.add('on');
+        await wait(ms);
+      }
+      async function point(el, click = true) {
+        const r = (typeof el === 'string' ? $(el) : el).getBoundingClientRect();
+        cur.style.left = r.left + r.width / 2 + 'px';
+        cur.style.top = r.top + r.height / 2 + 'px';
+        await wait(750);
+        if (click) {
+          cur.classList.remove('click');
+          void cur.offsetWidth;
+          cur.classList.add('click');
+          (typeof el === 'string' ? $(el) : el).click();
+          await wait(300);
+        }
+      }
+      async function scrollToEl(sel, block = 'center') {
+        $(sel).scrollIntoView({ behavior: 'smooth', block });
+        await wait(1100);
+      }
+      async function tour() {
+        cur.classList.add('on');
+        cur.style.left = '70%';
+        cur.style.top = '70%';
+        await wait(800);
+        await say(
+          1,
+          'صفحهٔ اصلی دیکشنری: آسمان برلینِ سایت لرن‌باکس و حروف آلمانی که مثل حروف سربی چاپخانهٔ گوتنبرگ شناورند',
+          3800,
+        );
+        for (const [x, y] of [
+          [35, 40],
+          [65, 30],
+          [50, 55],
+        ]) {
+          hero.dispatchEvent(
+            new PointerEvent('pointermove', {
+              clientX: (innerWidth * x) / 100,
+              clientY: (innerHeight * y) / 100,
+            }),
+          );
+          await wait(500);
+        }
+        await say(
+          2,
+          'یک جعبهٔ جست‌وجو. با لمس آن، حروف کنار می‌روند و همه‌چیز روی نوشتن متمرکز می‌شود',
+          1200,
+        );
+        await point('#q', false);
+        q.focus();
+        await wait(900);
+        await typeInto('Termin', 140);
+        await wait(1400);
+        await say(
+          3,
+          'شکل صرف‌شده هم پیدا می‌شود: «ging» مستقیم به «gehen» می‌رسد و توضیح می‌دهد چرا',
+          600,
+        );
+        await typeInto('ging', 160);
+        await wait(2400);
+        await say(4, 'جست‌وجوی فارسی به آلمانی: «قرار»', 600);
+        q.value = '';
+        await typeInto('قرار', 180);
+        await wait(2200);
+        await say(5, 'واژه را انتخاب می‌کنی؛ صفحه با یک انتقال نرم به صفحهٔ واژه می‌رود', 700);
+        q.value = '';
+        await typeInto('Termin', 60);
+        await wait(700);
+        await point(res.querySelector('.res'));
+        await say(
+          6,
+          'حروف واژه یکی‌یکی مثل حروف چاپی سر جایشان می‌نشینند، و مُهر آبی der روی آن می‌خورد. آبی یعنی der؛ همان رنگ اپ',
+          4200,
+        );
+        await say(7, 'تلفظ: موج صدا حرکت می‌کند و هجاها (Ter · min) هم‌زمان روشن می‌شوند', 300);
+        await point('#play');
+        await wait(2300);
+        await say(8, 'ذخیرهٔ واژه بدون ثبت‌نام؛ شمارندهٔ بالای صفحه بالا می‌رود', 300);
+        await point('#save');
+        await wait(1600);
+        await say(
+          9,
+          'بعد از ۱۰ ذخیره، بوبو پیشنهاد می‌دهد با موبایل وارد شوی تا فهرست برای همیشه بماند',
+          2600,
+        );
+        sheet(false);
+        await wait(500);
+        await say(
+          10,
+          'کنار صفحه: «این واژه در بستهٔ لرن‌باکس هست» و یک کوییز ۳ سؤالی. هر جواب درست بوبو را به هوا می‌پراند',
+          600,
+        );
+        for (let i = 0; i < 3; i++) {
+          const ok = [1, 2, 0][i];
+          await point($('#quiz').querySelectorAll('.opt')[ok]);
+          await wait(1300);
+        }
+        await wait(1200);
+        await say(
+          11,
+          'معنی‌ها، جمله‌های واقعی و ترکیب‌های پرکاربرد؛ هر بخش هنگام اسکرول با حرکت نرم وارد صفحه می‌شود',
+          400,
+        );
+        await scrollToEl('#v-word .card:nth-of-type(2)');
+        await wait(1600);
+        await scrollToEl('#v-word .card:nth-of-type(3)');
+        await wait(1400);
+        await say(
+          12,
+          'جدول صرف: بین مفرد و جمع جابه‌جا شو؛ پسوندها به رنگ آرتیکل روشن می‌شوند',
+          300,
+        );
+        await scrollToEl('#seg');
+        await point('#seg [data-n=pl]');
+        await wait(1600);
+        await point('#seg [data-n=sg]');
+        await wait(900);
+        await say(
+          13,
+          'ارزش اختصاصی لرن‌باکس: اشتباه رایج فارسی‌زبان‌ها. با لمس، کارت برمی‌گردد و شکل درست را نشان می‌دهد',
+          300,
+        );
+        await scrollToEl('#trap');
+        await wait(1300);
+        await point('#trap');
+        await wait(2600);
+        await say(
+          14,
+          'واژه‌های مرکب از هم باز می‌شوند و معنی هر جزء را نشان می‌دهند، به‌همراه قاعدهٔ آرتیکل',
+          300,
+        );
+        await scrollToEl('#comp');
+        await point('#compBtn');
+        await wait(3600);
+        await say(
+          15,
+          'و همین دیکشنری داخل اپ: یک جعبهٔ جست‌وجو؛ بالا واژه‌های تو، پایین کل دیکشنری',
+          300,
+        );
+        go('home');
+        await wait(900);
+        await scrollToEl('.inapp');
+        await wait(3400);
+        cap.classList.remove('on');
+        cur.classList.remove('on');
+        window.__tourDone = true;
+      }
+      if (location.search.includes('tour')) addEventListener('load', () => setTimeout(tour, 600));
+      if (location.hash === '#word') go('word', null, true);
+    </script>
+    <style>
+      @keyframes blink {
+        50% {
+          opacity: 0;
+        }
+      }
+    </style>
+  </body>
+</html>
