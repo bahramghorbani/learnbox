@@ -169,6 +169,14 @@ const INVENTORY: Record<string, Entry> = {
     category: 'delegated',
     guardIn: 'lib/server/admin-content-review-routes.ts',
   },
+  'app/api/dictionary/editorial/route.ts': {
+    category: 'delegated',
+    guardIn: 'lib/server/admin-dictionary-editorial-routes.ts',
+  },
+  'app/api/dictionary/editorial/[entryId]/route.ts': {
+    category: 'delegated',
+    guardIn: 'lib/server/admin-dictionary-editorial-routes.ts',
+  },
   'app/api/splash/replace/route.ts': {
     category: 'delegated',
     guardIn: 'lib/server/admin-splash-routes.ts',
