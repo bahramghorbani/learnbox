@@ -14,7 +14,7 @@
 
 ## Public dictionary — 2026-11-04
 
-- **German–Persian dictionary (`learnboxapp.com/dictionary`): Built, flag off (not public).** Owner approved the plan
+- **German–Persian dictionary (`learnboxapp.com/dictionary`): Owner preview live (noindex, unlinked, not in sitemap).** Owner approved the plan
   and locked the visual design (`docs/design/dictionary/index.html`, screenshots in `shots/`).
   Serving boundary: [ADR 0017](architecture/ADR/0017-public-dictionary-read-only-release-file.md) —
   a read-only SQLite release file in the landing container, no Production database access, behind
@@ -27,6 +27,12 @@
   21,952 headwords, 113,637 inflected forms, 18,263 with native audio, 4,642 with a Persian example,
   40 MB. Not yet: level/topic lists (needs Goethe lists), sitemap entries, deployment, and a
   human/AI meaning review (compound-part meanings use the first sense and can be wrong, e.g. Schein).
+- Owner preview deployed 2026-11-04 (PR #527): landing image `learnbox-landing:a412961-dictionary`,
+  release dir `releases/20261104T123037Z-landing-a412961-dictionary`; data `dict-r3.sqlite`
+  (sha256 `1430e8e2…`) mounted read-only. Only the landing container was recreated; Caddy, app,
+  admin and Postgres untouched. Rollback: `docker compose -f <previous release>/compose.yaml up -d
+--no-deps landing` (previous: `20261102T075112Z-landing-ea69e88-enamad`). Public launch
+  (`LEARNBOX_DICTIONARY_PUBLIC=true`, sitemap, homepage link) needs separate owner approval.
 
 ## Learner engagement delta — 2026-11-02
 
