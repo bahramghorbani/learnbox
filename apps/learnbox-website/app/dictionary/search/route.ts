@@ -1,10 +1,18 @@
 import { NextResponse } from 'next/server';
-import { dictionaryEnabled, search } from '../../../src/dictionary/store';
+import { brief, dictionaryEnabled, search } from '../../../src/dictionary/store';
 
 export const dynamic = 'force-dynamic';
 
 export function GET(request: Request) {
   if (!dictionaryEnabled()) return new NextResponse(null, { status: 404 });
-  const q = new URL(request.url).searchParams.get('q') ?? '';
-  return NextResponse.json(search(q), { headers: { 'Cache-Control': 'public, max-age=300' } });
+  const params = new URL(request.url).searchParams;
+  const words = params.get('words');
+  // ?words=a,b,c -> short entries for the saved-words panel (words live only in the browser).
+  if (words !== null)
+    return NextResponse.json(brief(words.split(',').filter(Boolean)), {
+      headers: { 'Cache-Control': 'no-store' },
+    });
+  return NextResponse.json(search(params.get('q') ?? ''), {
+    headers: { 'Cache-Control': 'public, max-age=300' },
+  });
 }

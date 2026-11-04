@@ -2,6 +2,7 @@
 
 // Interactive parts of the dictionary. Markup, class names and motion are a one-to-one port of the
 // locked design in docs/design/dictionary/index.html; behaviour comments name the mockup function.
+import { usePathname } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { wordHref } from '../../src/dictionary/href';
 import type {
@@ -51,8 +52,27 @@ function useSaved() {
   return { saved, toggle };
 }
 
+const DOWNLOAD = '/#download';
+
 export function DictHeader() {
-  const { saved } = useSaved();
+  const { saved, toggle } = useSaved();
+  const home = usePathname() === '/dictionary';
+  const [open, setOpen] = useState(false);
+  const [items, setItems] = useState<{ lemma: string; article: Article; fa: string }[]>([]);
+  useEffect(() => {
+    if (!open) return;
+    if (!saved.length) return setItems([]);
+    fetch(`/dictionary/search?words=${encodeURIComponent(saved.join(','))}`)
+      .then((r) => r.json())
+      .then(setItems)
+      .catch(() => setItems(saved.map((lemma) => ({ lemma, article: null, fa: '' }))));
+  }, [open, saved]);
+  useEffect(() => {
+    if (!open) return;
+    const esc = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false);
+    addEventListener('keydown', esc);
+    return () => removeEventListener('keydown', esc);
+  }, [open]);
   const n = useRef<HTMLSpanElement>(null);
   const first = useRef(true);
   useEffect(() => {
@@ -78,7 +98,13 @@ export function DictHeader() {
         <a href="/#download">دانلود</a>
       </nav>
       <div className="hdr-actions">
-        <span className="saved-pill" title="واژه‌های ذخیره‌شده">
+        <button
+          type="button"
+          className="saved-pill"
+          aria-haspopup="dialog"
+          aria-expanded={open}
+          onClick={() => setOpen((o) => !o)}
+        >
           <svg
             width="18"
             height="18"
@@ -93,12 +119,139 @@ export function DictHeader() {
           <span className="n" ref={n}>
             {fa(saved.length)}
           </span>
-        </span>
-        <a className="btn btn-p" href="/#download">
+        </button>
+        <a className="btn btn-p" href={DOWNLOAD}>
           دانلود اپ
         </a>
       </div>
+      {!home && (
+        <form className="hsearch" action="/dictionary" role="search">
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.4"
+            strokeLinecap="round"
+            aria-hidden="true"
+          >
+            <circle cx="11" cy="11" r="7" />
+            <path d="m20 20-3.5-3.5" />
+          </svg>
+          <input
+            name="q"
+            autoComplete="off"
+            spellCheck={false}
+            enterKeyHint="search"
+            aria-label="جست‌وجوی واژهٔ دیگر"
+            placeholder="جست‌وجوی واژهٔ دیگر…"
+          />
+        </form>
+      )}
+      <div
+        className={`saved-panel${open ? ' on' : ''}`}
+        role="dialog"
+        aria-label="واژه‌های ذخیره‌شده"
+        aria-hidden={!open}
+      >
+        <button
+          type="button"
+          className="scrim"
+          tabIndex={-1}
+          aria-label="بستن"
+          onClick={() => setOpen(false)}
+        />
+        <div className="sp-in">
+          <div className="sp-h">
+            <b>ذخیره‌های من</b>
+            <small>{fa(saved.length)} واژه · فقط روی همین دستگاه</small>
+            <button type="button" className="x" aria-label="بستن" onClick={() => setOpen(false)}>
+              ×
+            </button>
+          </div>
+          {saved.length === 0 ? (
+            <p className="sp-empty">
+              هنوز واژه‌ای ذخیره نکرده‌ای. در صفحهٔ هر واژه دکمهٔ «ذخیره» را بزن تا اینجا بیاید.
+            </p>
+          ) : (
+            <ul className="sp-list">
+              {items.map((w) => (
+                <li key={w.lemma}>
+                  <a href={wordHref(w.lemma)} className="de">
+                    {w.article && <em style={{ color: ARTC[w.article] }}>{w.article} </em>}
+                    {w.lemma}
+                  </a>
+                  <small>{w.fa.split('، ')[0]}</small>
+                  <button
+                    type="button"
+                    aria-label={`حذف ${w.lemma}`}
+                    onClick={() => toggle(w.lemma)}
+                  >
+                    ×
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          <a className="btn btn-p sp-cta" href={DOWNLOAD}>
+            مرور با جعبهٔ لایتنر در اپ لرن‌باکس
+          </a>
+        </div>
+      </div>
     </header>
+  );
+}
+
+/** Word-of-the-day buttons: listen and save without leaving the home page. */
+export function WotdActions({ lemma, audio }: { lemma: string; audio: string | null }) {
+  const { saved, toggle } = useSaved();
+  const on = saved.includes(lemma);
+  const play = () => {
+    const tts = () => {
+      try {
+        const u = new SpeechSynthesisUtterance(lemma);
+        u.lang = 'de-DE';
+        u.rate = 0.8;
+        speechSynthesis.speak(u);
+      } catch {
+        // No speech engine available; nothing to play.
+      }
+    };
+    if (!audio) return tts();
+    new Audio(audio).play().catch(tts);
+  };
+  return (
+    <div className="wotd2-actions">
+      <button type="button" className="btn ghost" onClick={play}>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M8 5v14l11-7z" />
+        </svg>
+        تلفظ
+      </button>
+      <button
+        type="button"
+        className={`btn ghost${on ? ' on' : ''}`}
+        aria-pressed={on}
+        onClick={() => toggle(lemma)}
+      >
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill={on ? 'currentColor' : 'none'}
+          stroke="currentColor"
+          strokeWidth="2"
+          aria-hidden="true"
+        >
+          <path d="M6 3h12v18l-6-4-6 4z" />
+        </svg>
+        {on ? 'ذخیره شد' : 'ذخیره'}
+      </button>
+      <a className="btn btn-p sunny" href={wordHref(lemma)}>
+        صفحهٔ کامل واژه
+      </a>
+    </div>
   );
 }
 
@@ -158,15 +311,17 @@ const SORTS: [string, string, number, number, number][] = [
 export function DictionaryHero({
   count,
   hints,
+  initial = '',
 }: {
   count: string;
   hints: { q: string; label?: string }[];
+  initial?: string;
 }) {
   const hero = useRef<HTMLDivElement>(null);
   const sky = useRef<HTMLDivElement>(null);
   const sorts = useRef<HTMLDivElement>(null);
   const q = useRef<HTMLInputElement>(null);
-  const [value, setValue] = useState('');
+  const [value, setValue] = useState(initial);
   const [result, setResult] = useState<{ head: string; hits: Hit[] } | null>(null);
   const [active, setActive] = useState(-1);
   const [focus, setFocus] = useState(false);
@@ -227,7 +382,7 @@ export function DictionaryHero({
         .then((r) => r.json())
         .then((r: { head: string; hits: Hit[] }) => {
           setActive(-1);
-          setResult(r.hits.length ? r : null);
+          setResult(r);
           const el = resRef.current;
           if (el) {
             el.classList.remove('on');
@@ -266,6 +421,17 @@ export function DictionaryHero({
 
   const onKey = (e: React.KeyboardEvent) => {
     const n = result?.hits.length ?? 0;
+    // Enter before the debounced results arrive: ask now, open the best match.
+    if (e.key === 'Enter' && !n && value.trim()) {
+      e.preventDefault();
+      fetch(`/dictionary/search?q=${encodeURIComponent(value.trim())}`)
+        .then((r) => r.json())
+        .then((r: { head: string; hits: Hit[] }) =>
+          r.hits[0] ? (location.href = wordHref(r.hits[0].lemma)) : setResult(r),
+        )
+        .catch(() => {});
+      return;
+    }
     if (!n) return;
     if (e.key === 'ArrowDown') setActive((a) => (a + 1) % n);
     else if (e.key === 'ArrowUp') setActive((a) => (a <= 0 ? n - 1 : a - 1));
@@ -275,7 +441,7 @@ export function DictionaryHero({
   };
 
   const k = value.trim().toLowerCase();
-  const shown = Boolean(result);
+  const shown = Boolean(result) && Boolean(value.trim());
   return (
     <div className={`hero${shown ? ' gather' : ''}`} id="hero" ref={hero} onPointerMove={onMove}>
       <div className="hero-sky" id="sky" ref={sky} />
@@ -352,7 +518,18 @@ export function DictionaryHero({
             <span className="kbd de">/</span>
           </label>
           <div className={`results${shown ? ' on' : ''}`} id="results" role="listbox" ref={resRef}>
-            {result && (
+            {result && !result.hits.length && (
+              <div className="res-none">
+                <b>
+                  «<span className="de">{value.trim()}</span>» پیدا نشد
+                </b>
+                <span>
+                  املای واژه را بررسی کن، شکل پایه را بنویس (مثلاً <span className="de">gehen</span>{' '}
+                  به جای <span className="de">gegangen</span>) یا معنی فارسی‌اش را جست‌وجو کن.
+                </span>
+              </div>
+            )}
+            {result && result.hits.length > 0 && (
               <>
                 <div className="res-h">{result.head}</div>
                 {result.hits.map((h, i) => (
@@ -387,7 +564,6 @@ export function DictionaryHero({
                       )}
                     </span>
                     {h.via && <span className="via">{h.via}</span>}
-                    <span className="lvl de"></span>
                     <span className="fa">{h.fa}</span>
                   </a>
                 ))}
