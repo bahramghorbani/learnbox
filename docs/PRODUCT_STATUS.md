@@ -14,12 +14,19 @@
 
 ## Public dictionary — 2026-11-04
 
-- **German–Persian dictionary (`learnboxapp.com/dictionary`): Planned.** Owner approved the plan
+- **German–Persian dictionary (`learnboxapp.com/dictionary`): Built, flag off (not public).** Owner approved the plan
   and locked the visual design (`docs/design/dictionary/index.html`, screenshots in `shots/`).
   Serving boundary: [ADR 0017](architecture/ADR/0017-public-dictionary-read-only-release-file.md) —
   a read-only SQLite release file in the landing container, no Production database access, behind
   `LEARNBOX_DICTIONARY_ENABLED` (default off). Phase 1 builds the pages and a free-source dataset
   on staging; no AI generation, Production DDL or public release without separate owner approval.
+- Phase 1 code (2026-11-04): `/dictionary`, `/dictionary/[word]` and `/dictionary/search` ported
+  one-to-one from the locked mockup; every route is a 404 unless the flag is on **and** the release
+  file exists. Release builder `apps/learnbox-website/scripts/dictionary/build-release.mjs` runs
+  offline from Wiktionary (CC BY-SA), farhang (CC BY-SA) and Tatoeba (CC BY). Release r3:
+  21,952 headwords, 113,637 inflected forms, 18,263 with native audio, 4,642 with a Persian example,
+  40 MB. Not yet: level/topic lists (needs Goethe lists), sitemap entries, deployment, and a
+  human/AI meaning review (compound-part meanings use the first sense and can be wrong, e.g. Schein).
 
 ## Learner engagement delta — 2026-11-02
 
