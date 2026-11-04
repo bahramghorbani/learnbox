@@ -104,6 +104,19 @@ export function existing(words: string[]): { lemma: string; article: Article }[]
     .sort((x, y) => order.get(x.lemma)! - order.get(y.lemma)!);
 }
 
+/** Lemma, article and first meaning for a list of headwords (saved words, popular words). */
+export function brief(words: string[]): Omit<Hit, 'via' | 'freq'>[] {
+  const ws = words.slice(0, 200);
+  if (!ws.length) return [];
+  const rows = open()
+    .prepare(`SELECT lemma, article, fa FROM entry WHERE lemma IN (${ws.map(() => '?').join(',')})`)
+    .all(...ws) as { lemma: string; article: Article; fa: string }[];
+  const order = new Map(ws.map((w, i) => [w, i]));
+  return rows
+    .map((r) => ({ lemma: r.lemma, article: r.article, fa: r.fa }))
+    .sort((x, y) => order.get(x.lemma)! - order.get(y.lemma)!);
+}
+
 export function stats() {
   const d = open();
   const n = (d.prepare('SELECT COUNT(*) AS n FROM entry').get() as { n: number }).n;
@@ -112,10 +125,11 @@ export function stats() {
 
 export function wordOfTheDay(date: Date): Entry {
   const d = open();
-  // Common nouns with a real example sentence; the same word all day, a different one each day.
+  // Common nouns with a real example sentence that uses the noun itself (instr is case-sensitive,
+  // so "gen Westen" no longer makes das Gen a word of the day); same word all day.
   const pool = d
     .prepare(
-      "SELECT lemma FROM entry WHERE freq >= 3 AND article IS NOT NULL AND json_extract(data, '$.examples[0].fa') IS NOT NULL ORDER BY lemma",
+      "SELECT lemma FROM entry WHERE freq >= 3 AND article IS NOT NULL AND length(lemma) >= 4 AND json_extract(data, '$.examples[0].fa') IS NOT NULL AND instr(json_extract(data, '$.examples[0].de'), lemma) > 0 ORDER BY lemma",
     )
     .all() as { lemma: string }[];
   const day = Math.floor(date.getTime() / 86_400_000);
@@ -147,9 +161,26 @@ const faKey = (s: string) =>
     .replace(/[\s\u200c]+/g, ' ')
     .trim();
 const fold = (s: string) => s.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
+/** True when `q` is `lemma` typed without umlauts/ß or in another case (Kuehlschrank, strasse). */
+export function isSpelling(q: string, lemma: string) {
+  const l = lemma.toLowerCase();
+  return variants(q).some((v) => v.toLowerCase() === l);
+}
+
 function variants(w: string) {
   const t = w.trim();
-  return [...new Set([t, t[0]?.toUpperCase() + t.slice(1), t.toLowerCase()])].filter(Boolean);
+  // Keyboards without umlauts: Kuehlschrank -> Kühlschrank, Strasse -> Straße.
+  const u = t
+    .replace(/ae/g, 'ä')
+    .replace(/oe/g, 'ö')
+    .replace(/ue/g, 'ü')
+    .replace(/Ae/g, 'Ä')
+    .replace(/Oe/g, 'Ö')
+    .replace(/Ue/g, 'Ü');
+  const out = [];
+  for (const x of [t, u, u.replace(/ss/g, 'ß')])
+    out.push(x, x[0]?.toUpperCase() + x.slice(1), x.toLowerCase());
+  return [...new Set(out)].filter(Boolean);
 }
 
 export function search(raw: string, limit = 8): { head: string; hits: Hit[] } {
@@ -200,7 +231,13 @@ export function search(raw: string, limit = 8): { head: string; hits: Hit[] } {
   }
 
   const lemmas = [...score.keys()];
-  if (!lemmas.length) return { head: '', hits: [] };
+  if (!lemmas.length) {
+    // "guten Tag" -> Tag: retry with the longest single word.
+    const words = q.split(/\s+/).sort((x, y) => y.length - x.length);
+    return words.length > 1 && words[0].length >= 2
+      ? search(words[0], limit)
+      : { head: '', hits: [] };
+  }
   const rows = d
     .prepare(
       `SELECT lemma, article, fa, freq FROM entry WHERE lemma IN (${lemmas.map(() => '?').join(',')})`,

@@ -181,6 +181,12 @@ export async function build(dataDir, outPath) {
       continue;
     }
     allLemmas.add(d.word);
+    // farhang predates the 1996 spelling reform (Strasse); file it under Wiktionary's Straße.
+    const old = d.word.includes('ß') ? d.word.replace(/ß/g, 'ss') : null;
+    if (old && farhang.has(old) && !farhang.has(d.word)) {
+      farhang.set(d.word, farhang.get(old));
+      farhang.delete(old);
+    }
     const ety = d.etymology_texts?.[0];
     if (ety && /kompositum aus/i.test(ety) && !compoundEty.has(d.word))
       compoundEty.set(d.word, ety);
@@ -199,15 +205,23 @@ export async function build(dataDir, outPath) {
       (fh?.article && ws.find((x) => x.pos === 'noun')) ||
       ws.find((x) => x.pos !== 'name') ||
       ws[0];
-    // Wiktionary's Persian is tied to a specific sense, so it leads; farhang adds breadth.
-    const senses = [];
+    // A meaning both sources agree on leads (Wiktionary alone put Schule → «کتاب», Bus →
+    // «گذرگاه» first); then Wiktionary's sense-tied Persian, then farhang's breadth.
+    const wk = [];
     for (const t of ws.flatMap((x) => x.translations || []).filter((t) => t.lang_code === 'fa')) {
       const f = cleanFa(t.word.replace(/,/g, '،'));
-      if (f && !senses.some((s) => faKey(s.fa).includes(faKey(f))))
-        senses.push({ fa: f, hint: '' });
+      if (f && !wk.some((s) => faKey(s.fa).includes(faKey(f)))) wk.push({ fa: f, hint: '' });
     }
-    for (const s of fh?.senses || [])
-      if (s.fa && !senses.some((x) => faKey(x.fa) === faKey(s.fa))) senses.push(s);
+    const fs = (fh?.senses || []).filter((s) => s.fa);
+    const agreed = (x) =>
+      fs.some((y) =>
+        faKey(y.fa)
+          .split('،')
+          .some((p) => p.trim() && faKey(x.fa).includes(p.trim())),
+      );
+    const senses = [];
+    for (const x of [...wk.filter(agreed), ...wk, ...fs])
+      if (!senses.some((s) => faKey(s.fa) === faKey(x.fa))) senses.push({ ...x });
     for (const x of senses)
       x.fa = x.fa
         .replace(/<[^>]*>|;/g, ' ')
