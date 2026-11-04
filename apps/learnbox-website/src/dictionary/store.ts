@@ -202,13 +202,13 @@ export function search(raw: string, limit = 8): { head: string; hits: Hit[] } {
             .all(`"${key.replace(/"/g, '')}"`)
         : d.prepare('SELECT lemma, fa FROM search WHERE fa LIKE ? LIMIT 400').all(`%${key}%`)
     ) as { lemma: string; fa: string }[];
+    // Rank by where the meaning sits: first meaning > a listed meaning > a word inside a phrase >
+    // a substring (خانه inside رودخانه). Frequency breaks ties further down in the sort.
+    const word = (p: string) => p.split(/[\s\u200c]+/).includes(key);
     for (const r of rows) {
-      const parts = r.fa.split(/ \| |، /);
-      const s = parts.includes(key)
-        ? 80
-        : parts.some((p) => p.startsWith(key + ' ') || p.endsWith(' ' + key))
-          ? 60
-          : 30;
+      const parts = r.fa.split(/ \| |، /).map((p) => p.trim());
+      const i = parts.indexOf(key);
+      const s = i === 0 ? 100 : i > 0 ? 85 - Math.min(i, 10) : parts.some(word) ? 55 : 25;
       add(r.lemma, s);
     }
   } else {
@@ -230,6 +230,11 @@ export function search(raw: string, limit = 8): { head: string; hits: Hit[] } {
     for (const r of rows) add(r.lemma, fold(r.lemma).startsWith(f) ? 70 : 40);
   }
 
+  // Persian plural/ezafe (خانه‌ها، کتاب‌های): no real match -> retry without the suffix.
+  if (isFa(q) && ![...score.values()].some((v) => v.s >= 55)) {
+    const stem = q.trim().replace(/[\s\u200c]?(های|ها|ان|ی)$/, '');
+    if (stem !== q.trim() && stem.length >= 2) return search(stem, limit);
+  }
   const lemmas = [...score.keys()];
   if (!lemmas.length) {
     // "guten Tag" -> Tag: retry with the longest single word.
@@ -243,9 +248,12 @@ export function search(raw: string, limit = 8): { head: string; hits: Hit[] } {
       `SELECT lemma, article, fa, freq FROM entry WHERE lemma IN (${lemmas.map(() => '?').join(',')})`,
     )
     .all(...lemmas) as Omit<Hit, 'via'>[];
+  const fa = isFa(q);
+  const rank = (h: { s: number; freq: number }) => h.s + (fa ? h.freq * 4 : 0);
   const hits = rows
     .map((r) => ({ ...r, via: score.get(r.lemma)!.via, s: score.get(r.lemma)!.s }))
-    .sort((a, b) => b.s - a.s || b.freq - a.freq || a.lemma.length - b.lemma.length)
+    // Persian queries: a common word (freq 0–5) can outrank a rare one one tier up.
+    .sort((a, b) => rank(b) - rank(a) || b.freq - a.freq || a.lemma.length - b.lemma.length)
     .slice(0, limit)
     .map((h) => ({ lemma: h.lemma, article: h.article, fa: h.fa, freq: h.freq, via: h.via }));
   const head = isFa(q) ? 'فارسی به آلمانی' : hits[0]?.via ? 'شکل صرف‌شده پیدا شد' : 'نتیجه‌ها';
