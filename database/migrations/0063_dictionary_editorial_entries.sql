@@ -1,6 +1,6 @@
 -- Admin-only editorial staging for immutable public dictionary release files (ADR 0017).
 -- This table never backs public dictionary reads and grants nothing to learnbox_app.
-CREATE TABLE dictionary_editorial_entries (
+CREATE TABLE IF NOT EXISTS dictionary_editorial_entries (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   dictionary_key TEXT NOT NULL UNIQUE,
   ai_payload JSONB NOT NULL CHECK (ai_payload->>'lemma' = dictionary_key),
@@ -16,7 +16,7 @@ CREATE TABLE dictionary_editorial_entries (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX dictionary_editorial_entries_queue_idx
+CREATE INDEX IF NOT EXISTS dictionary_editorial_entries_queue_idx
   ON dictionary_editorial_entries (status, updated_at DESC);
 
 DO $$
