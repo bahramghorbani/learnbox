@@ -9,6 +9,9 @@ export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: { default: 'دیکشنری آلمانی به فارسی', template: '%s | دیکشنری لرن‌باکس' },
+  // Owner preview: kept out of search engines until LEARNBOX_DICTIONARY_PUBLIC=true.
+  robots:
+    process.env.LEARNBOX_DICTIONARY_PUBLIC === 'true' ? undefined : { index: false, follow: false },
 };
 
 export default function DictionaryLayout({ children }: { children: React.ReactNode }) {

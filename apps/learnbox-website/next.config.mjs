@@ -7,6 +7,8 @@ const contentSecurityPolicy = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https://trustseal.enamad.ir",
   "font-src 'self'",
+  // Native pronunciation recordings on dictionary pages (Wikimedia Commons).
+  "media-src 'self' https://upload.wikimedia.org",
   "connect-src 'self'",
   "object-src 'none'",
   "base-uri 'self'",
