@@ -257,11 +257,17 @@ export function WotdActions({ lemma, audio }: { lemma: string; audio: string | n
 
 export function SaveSheet({ href }: { href: string }) {
   const [on, setOn] = useState(false);
+  const { saved } = useSaved();
   useEffect(() => {
     const open = () => setOn(true);
     addEventListener('lbd-sheet', open);
     return () => removeEventListener('lbd-sheet', open);
   }, []);
+  // Carries the guest's saved list across origins (localStorage doesn't cross domains); the app
+  // imports it into the account once the learner is signed in (see LearnerHome.tsx bootstrap).
+  const startHref = saved.length
+    ? `${href}?savedWords=${encodeURIComponent(saved.join(','))}`
+    : href;
   return (
     <div
       className={`sheet${on ? ' on' : ''}`}
@@ -276,7 +282,7 @@ export function SaveSheet({ href }: { href: string }) {
         <div style={{ display: 'flex', gap: 8 }}>
           <a
             className="btn btn-p"
-            href={href}
+            href={startHref}
             style={{ background: 'var(--sun)', color: 'var(--ink)' }}
           >
             شروع در اپ

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { LearnerNav, type LearnerDestination } from './LearnerNav';
+import { DictionarySection } from './DictionarySection';
 import { toPersianDigits } from '../persian-digits';
 
 interface WordPack {
@@ -288,6 +289,8 @@ export function WordsScreen({ onNavigate, onStartReview }: WordsScreenProps) {
           </div>
         )}
       </section>
+
+      <DictionarySection ownedGerman={new Set(words.map((w) => w.german.toLowerCase()))} />
 
       {/* Word detail modal */}
       {selectedWord && (
