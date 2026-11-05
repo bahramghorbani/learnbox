@@ -47,6 +47,9 @@ export const BADGE_IDS = [
   'league_promoted',
   'league_medal',
   'league_berlin',
+  'dict_10',
+  'dict_50',
+  'dict_200',
 ] as const;
 export type BadgeId = (typeof BADGE_IDS)[number];
 
@@ -206,6 +209,7 @@ export function earnedBadges(input: {
   learnedWords: number;
   masteredWords: number;
   verifiedPurchases: number;
+  savedDictionaryWords: number;
   everPromoted: boolean;
   everMedal: boolean;
   reachedBerlin: boolean;
@@ -214,6 +218,8 @@ export function earnedBadges(input: {
   for (const n of [3, 7, 30, 100] as const)
     if (input.longestStreak >= n) earned.push(`streak_${n}`);
   for (const n of [50, 200, 500] as const) if (input.learnedWords >= n) earned.push(`words_${n}`);
+  for (const n of [10, 50, 200] as const)
+    if (input.savedDictionaryWords >= n) earned.push(`dict_${n}`);
   if (input.masteredWords > 0) earned.push('first_mastered');
   if (input.verifiedPurchases > 0) earned.push('collector');
   if (input.everPromoted) earned.push('league_promoted');
@@ -406,6 +412,7 @@ async function syncBadges(
   const facts = await client.query<{
     learned: number;
     mastered: number;
+    saved_dictionary_words: number;
     promoted: boolean;
     medal: boolean;
     berlin: boolean;
@@ -413,6 +420,7 @@ async function syncBadges(
     `SELECT
        (SELECT count(*)::int FROM card_schedules WHERE user_id = $1 AND ${learnedPredicateSql('stability_days')}) AS learned,
        (SELECT count(*)::int FROM card_schedules WHERE user_id = $1 AND ${masteredPredicateSql('stability_days')}) AS mastered,
+       (SELECT count(*)::int FROM dictionary_saved_words WHERE user_id = $1) AS saved_dictionary_words,
        EXISTS (SELECT 1 FROM league_members WHERE user_id = $1 AND outcome = 'promoted') AS promoted,
        EXISTS (SELECT 1 FROM league_members WHERE user_id = $1 AND final_rank <= 3) AS medal,
        EXISTS (SELECT 1 FROM league_members WHERE user_id = $1
@@ -425,6 +433,7 @@ async function syncBadges(
     learnedWords: f.learned,
     masteredWords: f.mastered,
     verifiedPurchases: purchases,
+    savedDictionaryWords: f.saved_dictionary_words,
     everPromoted: f.promoted,
     everMedal: f.medal,
     reachedBerlin: f.berlin,
