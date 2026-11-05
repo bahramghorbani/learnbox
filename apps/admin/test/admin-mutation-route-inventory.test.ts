@@ -182,6 +182,11 @@ const INVENTORY: Record<string, Entry> = {
     category: 'delegated',
     guardIn: 'lib/server/admin-dictionary-editorial-routes.ts',
   },
+  // AI-translates example sentences for the next pilot batch; writes land `queued` (review-gated).
+  'app/api/dictionary/editorial/translate-examples/route.ts': {
+    category: 'delegated',
+    guardIn: 'lib/server/admin-dictionary-editorial-routes.ts',
+  },
   'app/api/splash/replace/route.ts': {
     category: 'delegated',
     guardIn: 'lib/server/admin-splash-routes.ts',

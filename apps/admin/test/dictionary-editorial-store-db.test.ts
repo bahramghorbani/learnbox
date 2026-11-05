@@ -204,4 +204,29 @@ suite('dictionary editorial store (real Postgres)', () => {
     );
     expect(audit.rows).toEqual([{ action: 'dictionary_release.publish', file: 'dict-x.sqlite' }]);
   });
+
+  it('finds live words with an untranslated example, highest-frequency first', async () => {
+    const insert = (key: string, payload: Record<string, unknown>, freq: number) =>
+      store.create(superAdmin, {
+        dictionaryKey: key,
+        aiPayload: { lemma: key, freq, senses: [{ fa: 'x' }], examples: payload.examples },
+        source: 'test',
+        model: null,
+        costMetadata: {},
+        status: 'approved',
+        idempotencyKey: randomUUID(),
+      });
+    await insert('Brot', { examples: [{ de: 'Ich esse Brot.' }] }, 50); // missing fa
+    await insert('Wasser', { examples: [{ de: 'Ich trinke Wasser.', fa: 'آب می‌نوشم.' }] }, 80); // has fa
+    await insert('Katze', { examples: [{ de: 'Die Katze schläft.', fa: '' }] }, 30); // blank fa
+    await insert('Hund', { examples: [] }, 90); // no examples at all
+    await insert('Vogel', { examples: [{ de: '  ' }] }, 70); // blank de: not a real sentence
+
+    const found = await store.examplesNeedingTranslation(superAdmin, 10);
+    if (found.status !== 'ok') throw new Error('forbidden');
+    expect(found.items.map((i) => i.dictionaryKey)).toEqual(['Brot', 'Katze']);
+    expect(found.items[0]!.payload.examples).toEqual([{ de: 'Ich esse Brot.' }]);
+
+    expect((await store.examplesNeedingTranslation(outsider, 10)).status).toBe('forbidden');
+  });
 });

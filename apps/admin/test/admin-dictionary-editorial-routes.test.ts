@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   createDictionaryEditorialCreateRoute,
   createDictionaryEditorialListRoute,
+  createDictionaryEditorialTranslateExamplesRoute,
   createDictionaryEditorialUpdateRoute,
 } from '../lib/server/admin-dictionary-editorial-routes.js';
 import { hashAdminSecret } from '../lib/server/admin-session.js';
@@ -72,6 +73,7 @@ describe('dictionary editorial routes', () => {
           return { status: 'applied' as const, item };
         },
         update: async () => ({ status: 'applied' as const, item }),
+        examplesNeedingTranslation: async () => ({ status: 'ok' as const, items: [] }),
       },
     });
     expect((await handler(request({}))).status).toBe(404);
@@ -84,6 +86,7 @@ describe('dictionary editorial routes', () => {
         list: async () => ({ status: 'ok' as const, items: [], total: 0 }),
         create: async () => ({ status: 'applied' as const, item }),
         update: async () => ({ status: 'applied' as const, item }),
+        examplesNeedingTranslation: async () => ({ status: 'ok' as const, items: [] }),
       },
     });
     expect(
@@ -107,6 +110,7 @@ describe('dictionary editorial routes', () => {
         list: async () => ({ status: 'ok' as const, items: [], total: 0 }),
         create: async () => ({ status: 'applied' as const, item }),
         update: async () => ({ status: 'conflict' as const }),
+        examplesNeedingTranslation: async () => ({ status: 'ok' as const, items: [] }),
       },
     });
     const response = await handler(request({ revision: 1, status: 'approved' }), id);
@@ -127,6 +131,7 @@ describe('dictionary editorial list route', () => {
         },
         create: async () => ({ status: 'applied' as const, item }),
         update: async () => ({ status: 'applied' as const, item }),
+        examplesNeedingTranslation: async () => ({ status: 'ok' as const, items: [] }),
       },
     });
     const get = (query: string) =>
@@ -144,5 +149,99 @@ describe('dictionary editorial list route', () => {
     expect((await get('?filter=everything')).status).toBe(400);
     expect((await get(`?q=${'x'.repeat(101)}`)).status).toBe(400);
     expect(seen).toHaveLength(2);
+  });
+});
+
+describe('dictionary editorial translate-examples route', () => {
+  const candidate = {
+    id,
+    dictionaryKey: 'Brot',
+    revision: 3,
+    payload: { lemma: 'Brot', senses: [{ fa: 'نان' }], examples: [{ de: 'Ich esse Brot.' }] },
+  };
+  const baseStore = {
+    list: async () => ({ status: 'ok' as const, items: [], total: 0 }),
+    create: async () => ({ status: 'applied' as const, item }),
+    update: async () => ({ status: 'applied' as const, item }),
+    examplesNeedingTranslation: async () => ({ status: 'ok' as const, items: [candidate] }),
+  };
+  it('is unreachable when the AI provider is not configured', async () => {
+    const handler = createDictionaryEditorialTranslateExamplesRoute({
+      ...deps,
+      store: baseStore,
+      aiProvider: undefined,
+    });
+    const response = await handler(request({}));
+    expect(response.status).toBe(503);
+  });
+  it('rejects a batch bigger than 50 sentences', async () => {
+    const handler = createDictionaryEditorialTranslateExamplesRoute({
+      ...deps,
+      store: baseStore,
+      aiProvider: {
+        provider: 'test',
+        model: 'm',
+        complete: async () => '[]',
+        listTextModels: async () => [],
+      },
+    });
+    expect((await handler(request({ maxSentences: 51 }))).status).toBe(400);
+  });
+  it('writes a translated draft as queued, never changing the German sentence', async () => {
+    let updateCall: unknown;
+    const store = {
+      ...baseStore,
+      update: async (_actor: string, _id: string, patch: unknown) => {
+        updateCall = patch;
+        return { status: 'applied' as const, item };
+      },
+    };
+    const handler = createDictionaryEditorialTranslateExamplesRoute({
+      ...deps,
+      store,
+      aiProvider: {
+        provider: 'test',
+        model: 'm',
+        complete: async () => '[{"i": 1, "fa": "من نان می‌خورم."}]',
+        listTextModels: async () => [],
+      },
+    });
+    const response = await handler(request({ maxSentences: 50 }));
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      translated: 1,
+      words: [{ dictionaryKey: 'Brot', status: 'applied' }],
+    });
+    expect(updateCall).toMatchObject({
+      revision: 3,
+      status: 'queued',
+      manualPayload: {
+        lemma: 'Brot',
+        examples: [{ de: 'Ich esse Brot.', fa: 'من نان می‌خورم.' }],
+      },
+    });
+  });
+  it('writes nothing when the provider reply has no usable translation', async () => {
+    let called = false;
+    const store = {
+      ...baseStore,
+      update: async () => {
+        called = true;
+        return { status: 'applied' as const, item };
+      },
+    };
+    const handler = createDictionaryEditorialTranslateExamplesRoute({
+      ...deps,
+      store,
+      aiProvider: {
+        provider: 'test',
+        model: 'm',
+        complete: async () => 'not json',
+        listTextModels: async () => [],
+      },
+    });
+    const response = await handler(request({ maxSentences: 50 }));
+    expect(response.status).toBe(502);
+    expect(called).toBe(false);
   });
 });
