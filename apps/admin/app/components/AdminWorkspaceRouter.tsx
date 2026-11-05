@@ -8,6 +8,7 @@ import { AuditLogWorkspace } from './AuditLogWorkspace';
 import { ContentPacksWorkspace } from './ContentPacksWorkspace';
 import { ContentReviewWorkspace } from './ContentReviewWorkspace';
 import { DashboardWorkspace } from './DashboardWorkspace';
+import { DictionaryEditorialWorkspace } from './DictionaryEditorialWorkspace';
 import { LearningWorkspace } from './LearningWorkspace';
 import { OperationsWorkspace } from './OperationsWorkspace';
 import { PresentationWorkspace } from './PresentationWorkspace';
@@ -54,6 +55,7 @@ type AdminRoute =
   | 'presentation'
   | 'access'
   | 'review'
+  | 'dictionary'
   | 'home';
 
 function readRoute(hash: string): AdminRoute {
@@ -68,6 +70,7 @@ function readRoute(hash: string): AdminRoute {
   if (value === 'presentation') return 'presentation';
   if (value === 'access') return 'access';
   if (value === 'review') return 'review';
+  if (value === 'dictionary') return 'dictionary';
   return 'home';
 }
 
@@ -89,6 +92,7 @@ export function AdminWorkspaceRouter() {
   if (route === 'presentation') return <PresentationWorkspace />;
   if (route === 'access') return <AccessWorkspace />;
   if (route === 'review') return <ContentReviewWorkspace />;
+  if (route === 'dictionary') return <DictionaryEditorialWorkspace />;
   // The support screen renders its own section inside the shell frame. Stage 5 moved its markup
   // onto the approved vocabulary; the framing here is unchanged.
   if (route === 'users') {
