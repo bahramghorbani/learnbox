@@ -12,7 +12,10 @@ import { DictionaryTranslationPilotPanel } from '../app/components/DictionaryTra
 
 async function mount(post: () => Response) {
   const calls: { url: string; init?: RequestInit }[] = [];
-  vi.stubGlobal('confirm', vi.fn(() => true));
+  vi.stubGlobal(
+    'confirm',
+    vi.fn(() => true),
+  );
   vi.stubGlobal(
     'fetch',
     vi.fn(async (url: string, init?: RequestInit) => {
@@ -61,7 +64,10 @@ describe('dictionary translation pilot panel', () => {
   });
 
   it('does nothing when the admin cancels the confirmation', async () => {
-    vi.stubGlobal('confirm', vi.fn(() => false));
+    vi.stubGlobal(
+      'confirm',
+      vi.fn(() => false),
+    );
     vi.stubGlobal('fetch', vi.fn());
     const container = document.createElement('div');
     document.body.append(container);
