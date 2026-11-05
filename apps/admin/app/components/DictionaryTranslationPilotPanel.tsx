@@ -23,7 +23,7 @@ export function DictionaryTranslationPilotPanel() {
     )
       return;
     setBusy(true);
-    setMessage(undefined);
+    setMessage('در حال ارسال درخواست به هوش مصنوعی… (ممکن است تا چند ده ثانیه طول بکشد)');
     try {
       const { response, stepUp } = await fetchWithStepUp(
         '/api/dictionary/editorial/translate-examples',
