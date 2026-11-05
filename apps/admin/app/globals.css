@@ -3540,3 +3540,100 @@ button {
     align-items: center;
   }
 }
+
+/* Dictionary editorial (#dictionary): list + structured editor. */
+.cp-workspace .dictionary-layout {
+  display: grid;
+  grid-template-columns: minmax(260px, 2fr) minmax(0, 3fr);
+  gap: var(--gap);
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .cp-workspace .dictionary-layout {
+    grid-template-columns: 1fr;
+  }
+}
+.cp-workspace .dictionary-layout .toolbar .cp-input {
+  flex: 1;
+}
+.cp-workspace .dictionary-count {
+  font-size: 11.5px;
+  margin: 0 0 8px;
+}
+.cp-workspace .dictionary-layout .list {
+  max-height: 64vh;
+  overflow-y: auto;
+}
+.cp-workspace .dictionary-entry {
+  width: 100%;
+  text-align: start;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.cp-workspace .dictionary-entry[aria-pressed='true'] {
+  background: var(--lavender-soft);
+}
+.cp-workspace .dictionary-editor {
+  padding-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.cp-workspace .dictionary-note {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  font-size: 12px;
+  line-height: 1.8;
+}
+.cp-workspace .dictionary-group {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px 12px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+}
+.cp-workspace .dictionary-group legend {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--muted);
+  padding: 0 4px;
+}
+.cp-workspace .dictionary-pair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  gap: 8px;
+  width: 100%;
+}
+.cp-workspace .dictionary-preview {
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.9;
+}
+.cp-workspace .dictionary-preview-head {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-end;
+  font-size: 16px;
+}
+.cp-workspace .dictionary-preview ol {
+  margin: 6px 0;
+  padding-inline-start: 20px;
+}
+.cp-workspace .dictionary-example {
+  display: flex;
+  flex-direction: column;
+  margin: 4px 0;
+  text-align: start;
+}
+.cp-workspace .dictionary-example [dir='ltr'] {
+  text-align: left;
+}

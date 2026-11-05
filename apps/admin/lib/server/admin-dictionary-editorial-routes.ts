@@ -5,6 +5,7 @@ import {
 } from './admin-auth-policy';
 import { loadAdminSession, verifyAdminCsrf } from './admin-route-security';
 import {
+  dictionaryEditorialFilters,
   dictionaryEditorialStatuses,
   type DictionaryEditorialStatus,
   type PostgresDictionaryEditorialStore,
@@ -65,9 +66,20 @@ export function createDictionaryEditorialListRoute(deps: Deps) {
     const user = await actor(request, deps, false);
     if (user === undefined) return missing();
     if (!user) return new Response('Unauthorized', { status: 401, headers: noStore });
+    const params = new URL(request.url).searchParams;
+    const q = (params.get('q') ?? '').trim();
+    const filter = params.get('filter') ?? 'all';
+    if (q.length > 100 || !(dictionaryEditorialFilters as readonly string[]).includes(filter))
+      return invalid();
     try {
-      const result = await deps.store!.list(user);
-      return result.status === 'forbidden' ? missing() : json({ items: result.items });
+      const result = await deps.store!.list(user, {
+        q,
+        filter: filter as (typeof dictionaryEditorialFilters)[number],
+        limit: 50,
+      });
+      return result.status === 'forbidden'
+        ? missing()
+        : json({ items: result.items, total: result.total });
     } catch {
       return unavailable();
     }
@@ -98,7 +110,8 @@ export function createDictionaryEditorialCreateRoute(deps: Deps) {
       !body.source.trim() ||
       body.source.length > 200 ||
       (body.model !== undefined && (typeof body.model !== 'string' || body.model.length > 200)) ||
-      (body.costMetadata !== undefined && !record(body.costMetadata))
+      (body.costMetadata !== undefined && !record(body.costMetadata)) ||
+      (body.status !== undefined && body.status !== 'queued' && body.status !== 'approved')
     )
       return invalid();
     const aiPayload = body.aiPayload as Record<string, unknown>;
@@ -109,6 +122,7 @@ export function createDictionaryEditorialCreateRoute(deps: Deps) {
         source: body.source.trim(),
         model: typeof body.model === 'string' ? body.model : null,
         costMetadata: record(body.costMetadata) ? body.costMetadata : {},
+        ...(body.status ? { status: body.status as 'queued' | 'approved' } : {}),
         idempotencyKey,
       });
       if (result.status === 'forbidden') return missing();

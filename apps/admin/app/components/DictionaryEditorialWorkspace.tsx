@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import { AdminSidebar } from './AdminSidebar';
 import { EmptyState, ErrorState, LoadingState } from './AdminStates';
@@ -12,48 +12,121 @@ import {
 } from './step-up-reauth';
 
 type Status = 'queued' | 'approved' | 'deleted';
+type Payload = Record<string, unknown>;
 type Entry = {
   id: string;
   dictionaryKey: string;
-  aiPayload: Record<string, unknown>;
-  manualPayload: Record<string, unknown> | null;
+  aiPayload: Payload;
+  manualPayload: Payload | null;
   status: Status;
   revision: number;
   source: string;
   model: string | null;
+  costMetadata: Record<string, unknown>;
   updatedAt: string;
 };
+type Filter = 'all' | 'review' | 'ai' | 'deleted';
+type Sense = { fa: string; hint: string };
+type Example = { de: string; fa: string };
+type Form = { article: string; pos: string; senses: Sense[]; examples: Example[] };
 
-const labels: Record<Status, string> = {
-  queued: 'در صف',
-  approved: 'تأییدشده',
-  deleted: 'حذف‌شده',
+const filters: { key: Filter; label: string }[] = [
+  { key: 'all', label: 'همهٔ واژه‌ها' },
+  { key: 'review', label: 'نیاز به نگاه' },
+  { key: 'ai', label: 'افزودهٔ هوش مصنوعی' },
+  { key: 'deleted', label: 'حذف‌شده' },
+];
+const posLabels: Record<string, string> = {
+  noun: 'اسم',
+  verb: 'فعل',
+  adj: 'صفت',
+  adv: 'قید',
+  pron: 'ضمیر',
+  prep: 'حرف اضافه',
+  conj: 'حرف ربط',
+  num: 'عدد',
+  particle: 'ادات',
+  intj: 'صوت',
+  phrase: 'عبارت',
+  name: 'نام خاص',
+  abbrev: 'کوته‌نوشت',
 };
-const tones: Record<Status, string> = { queued: 'b-amber', approved: 'b-green', deleted: 'b-rose' };
+// Older AI drafts spell some parts of speech out; editing normalises them to the release codes.
+const posAliases: Record<string, string> = {
+  adverb: 'adv',
+  adjective: 'adj',
+  pronoun: 'pron',
+  preposition: 'prep',
+  conjunction: 'conj',
+};
+const text = (value: unknown) => (typeof value === 'string' ? value : '');
+const list = (value: unknown) => (Array.isArray(value) ? (value as Payload[]) : []);
+
+const effective = (item: Entry) => item.manualPayload ?? item.aiPayload;
+const needsLook = (item: Entry) =>
+  item.status !== 'deleted' && !item.manualPayload && item.costMetadata.reviewVerdict === 'fixed';
+
+/** The release shape uses `examples`; AI drafts carry one `example`. The form edits both as a list. */
+function toForm(payload: Payload): Form {
+  const examples = Array.isArray(payload.examples)
+    ? list(payload.examples)
+    : payload.example
+      ? [payload.example as Payload]
+      : [];
+  return {
+    article: text(payload.article),
+    pos: posAliases[text(payload.pos)] ?? text(payload.pos),
+    senses: list(payload.senses).map((s) => ({ fa: text(s.fa), hint: text(s.hint) })),
+    examples: examples.map((e) => ({ de: text(e.de), fa: text(e.fa) })),
+  };
+}
+function fromForm(base: Payload, lemma: string, form: Form): Payload {
+  const rest = { ...base };
+  delete rest.example;
+  return {
+    ...rest,
+    lemma,
+    article: form.article || null,
+    pos: form.pos || null,
+    senses: form.senses
+      .filter((s) => s.fa.trim())
+      .map((s) => ({ fa: s.fa.trim(), hint: s.hint.trim() })),
+    examples: form.examples
+      .filter((e) => e.de.trim())
+      .map((e) => ({ de: e.de.trim(), fa: e.fa.trim() || null })),
+  };
+}
+const emptyForm = (): Form => ({
+  article: '',
+  pos: '',
+  senses: [{ fa: '', hint: '' }],
+  examples: [],
+});
 
 export function DictionaryEditorialWorkspace() {
   const [items, setItems] = useState<Entry[]>([]);
-  const [selectedId, setSelectedId] = useState<string>();
+  const [total, setTotal] = useState(0);
+  const [q, setQ] = useState('');
+  const [filter, setFilter] = useState<Filter>('all');
+  const [selected, setSelected] = useState<Entry | 'new'>();
+  const [lemma, setLemma] = useState('');
+  const [form, setForm] = useState<Form>(emptyForm);
   const [phase, setPhase] = useState<'loading' | 'ready' | 'disabled' | 'error'>('loading');
-  const [draft, setDraft] = useState('');
   const [message, setMessage] = useState<string>();
   const [busy, setBusy] = useState(false);
-  const selected = useMemo(() => items.find((item) => item.id === selectedId), [items, selectedId]);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (query: string, by: Filter) => {
     try {
-      const response = await fetch('/api/dictionary/editorial', {
+      const params = new URLSearchParams({ q: query, filter: by });
+      const response = await fetch(`/api/dictionary/editorial?${params}`, {
         credentials: 'same-origin',
         cache: 'no-store',
       });
       if (response.status === 404) return setPhase('disabled');
       if (!response.ok) throw new Error('unavailable');
-      const result = (await response.json()) as { items?: Entry[] };
-      const next = result.items ?? [];
-      setItems(next);
-      setSelectedId((current) =>
-        current && next.some((item) => item.id === current) ? current : next[0]?.id,
-      );
+      const result = (await response.json()) as { items?: Entry[]; total?: number };
+      setItems(result.items ?? []);
+      setTotal(result.total ?? 0);
       setPhase('ready');
     } catch {
       setPhase('error');
@@ -61,63 +134,80 @@ export function DictionaryEditorialWorkspace() {
   }, []);
 
   useEffect(() => {
-    void load();
-  }, [load]);
-  useEffect(() => {
-    setDraft(selected ? JSON.stringify(selected.manualPayload ?? selected.aiPayload, null, 2) : '');
-    setMessage(undefined);
-  }, [selected]);
+    const timer = setTimeout(() => void load(q.trim(), filter), 250);
+    return () => clearTimeout(timer);
+  }, [load, q, filter]);
 
-  async function update(
-    change: Pick<Entry, 'status'> | { manualPayload: Record<string, unknown> | null },
-  ) {
-    if (!selected) return;
+  function open(item: Entry | 'new') {
+    setSelected(item);
+    setMessage(undefined);
+    setLemma(item === 'new' ? q.trim() : item.dictionaryKey);
+    setForm(item === 'new' ? emptyForm() : toForm(effective(item)));
+  }
+  const edit = (change: Partial<Form>) => setForm((current) => ({ ...current, ...change }));
+
+  async function send(url: string, method: 'POST' | 'PATCH', body: Payload) {
     setBusy(true);
     setMessage(undefined);
-    const init = {
-      method: 'PATCH',
-      credentials: 'same-origin' as const,
-      headers: {
-        'content-type': 'application/json',
-        'x-learnbox-csrf-token': readCsrfToken() ?? '',
-        'idempotency-key': createIdempotencyKey(),
-      },
-      body: JSON.stringify({ revision: selected.revision, ...change }),
-    };
     try {
-      const { response, stepUp } = await fetchWithStepUp(
-        `/api/dictionary/editorial/${selected.id}`,
-        init,
-      );
+      const { response, stepUp } = await fetchWithStepUp(url, {
+        method,
+        credentials: 'same-origin',
+        headers: {
+          'content-type': 'application/json',
+          'x-learnbox-csrf-token': readCsrfToken() ?? '',
+          'idempotency-key': createIdempotencyKey(),
+        },
+        body: JSON.stringify(body),
+      });
       const refusal = stepUpRefusal(stepUp, response.status);
       if (refusal) throw new Error(refusal);
       if (response.status === 409)
-        throw new Error('این رکورد هم‌زمان تغییر کرده است؛ فهرست دوباره خوانده شد.');
-      if (!response.ok) throw new Error('ذخیره‌سازی انجام نشد.');
-      const result = (await response.json()) as { item: Entry };
+        throw new Error(
+          method === 'POST'
+            ? 'این واژه از قبل در واژه‌نامه هست؛ آن را جست‌وجو و ویرایش کنید.'
+            : 'این واژه هم‌زمان جای دیگری تغییر کرده است؛ دوباره بازش کنید.',
+        );
+      if (!response.ok) throw new Error('ذخیره انجام نشد.');
+      const { item } = (await response.json()) as { item: Entry };
       setItems((current) =>
-        current.map((item) => (item.id === result.item.id ? result.item : item)),
+        current.some((x) => x.id === item.id)
+          ? current.map((x) => (x.id === item.id ? item : x))
+          : [item, ...current],
       );
+      setSelected(item);
+      setForm(toForm(effective(item)));
       setMessage('ذخیره شد.');
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'ذخیره‌سازی انجام نشد.');
+      setMessage(error instanceof Error ? error.message : 'ذخیره انجام نشد.');
     } finally {
       setBusy(false);
     }
   }
 
   function save() {
-    try {
-      const manualPayload = JSON.parse(draft) as Record<string, unknown>;
-      void update(
-        selected?.status === 'approved' ? { manualPayload, status: 'queued' } : { manualPayload },
-      );
-    } catch {
-      setMessage('متن ویرایش باید یک شیء JSON معتبر باشد.');
+    if (!form.senses.some((s) => s.fa.trim())) return setMessage('دست‌کم یک معنی فارسی لازم است.');
+    if (selected === 'new') {
+      const key = lemma.trim();
+      if (!key) return setMessage('واژهٔ آلمانی را بنویسید.');
+      return void send('/api/dictionary/editorial', 'POST', {
+        dictionaryKey: key,
+        aiPayload: fromForm({}, key, form),
+        source: 'admin-manual',
+        status: 'approved',
+      });
     }
+    if (!selected) return;
+    // An admin edit is the final word: it is saved approved, with no second review step.
+    void patch(selected, {
+      manualPayload: fromForm(effective(selected), selected.dictionaryKey, form),
+      ...(selected.status === 'queued' ? { status: 'approved' } : {}),
+    });
   }
+  const patch = (item: Entry, change: Payload) =>
+    send(`/api/dictionary/editorial/${item.id}`, 'PATCH', { revision: item.revision, ...change });
 
-  if (phase === 'loading') return <LoadingState label="در حال خواندن صف واژه‌نامه…" />;
+  if (phase === 'loading') return <LoadingState label="در حال خواندن واژه‌نامه…" />;
   if (phase === 'disabled')
     return (
       <ErrorState
@@ -130,15 +220,18 @@ export function DictionaryEditorialWorkspace() {
     return (
       <ErrorState
         tone="rose"
-        title="صف واژه‌نامه خوانده نشد."
-        description="بدون دریافت صف، هیچ داده‌ای نمایش داده نمی‌شود."
+        title="واژه‌نامه خوانده نشد."
+        description="بدون پاسخ سرور، هیچ داده‌ای نمایش داده نمی‌شود."
         action={
-          <button className="btn" type="button" onClick={() => void load()}>
+          <button className="btn" type="button" onClick={() => void load(q.trim(), filter)}>
             تلاش دوباره
           </button>
         }
       />
     );
+
+  const current = selected && selected !== 'new' ? selected : undefined;
+  const preview = selected ? fromForm({}, lemma, form) : undefined;
 
   return (
     <main className="admin-shell cp-workspace" id="dictionary">
@@ -148,19 +241,48 @@ export function DictionaryEditorialWorkspace() {
           <div>
             <h1>واژه‌نامه</h1>
             <p className="muted">
-              صف سردبیری فقط برای ورودی‌های هوش مصنوعی؛ واژه‌نامهٔ عمومی فقط‌خواندنی می‌ماند.
+              هوش مصنوعی واژه‌ها را می‌سازد، بازبینی و تأیید می‌کند. شما فقط هر جا لازم بود ویرایش،
+              حذف یا اضافه کنید.
             </p>
           </div>
+          <button className="btn primary" type="button" onClick={() => open('new')}>
+            + واژهٔ جدید
+          </button>
         </div>
-        <div className="content-grid">
-          <section className="card" aria-label="فهرست واژه‌نامه">
-            <div className="card-head">
-              <span className="card-title">ورودی‌ها</span>
-              <span className="muted">{items.length}</span>
+        <div className="dictionary-layout">
+          <section className="card" aria-label="فهرست واژه‌ها">
+            <div className="tabs" role="tablist" aria-label="فیلتر واژه‌ها">
+              {filters.map((tab) => (
+                <button
+                  key={tab.key}
+                  type="button"
+                  role="tab"
+                  aria-selected={filter === tab.key}
+                  className={filter === tab.key ? 'tab on' : 'tab'}
+                  onClick={() => setFilter(tab.key)}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+            <div className="toolbar">
+              <input
+                className="cp-input"
+                type="search"
+                aria-label="جست‌وجوی واژه"
+                placeholder="جست‌وجو: آلمانی یا معنی فارسی"
+                value={q}
+                onChange={(event) => setQ(event.target.value)}
+              />
             </div>
             <div className="card-body">
+              <p className="muted dictionary-count" role="status">
+                {total > items.length
+                  ? `${items.length.toLocaleString('fa-IR')} از ${total.toLocaleString('fa-IR')} واژه — برای دیدن بقیه دقیق‌تر جست‌وجو کنید.`
+                  : `${total.toLocaleString('fa-IR')} واژه`}
+              </p>
               {items.length === 0 ? (
-                <EmptyState title="ورودی‌ای در صف نیست." />
+                <EmptyState title="واژه‌ای پیدا نشد." />
               ) : (
                 <div className="list">
                   {items.map((item) => (
@@ -169,91 +291,261 @@ export function DictionaryEditorialWorkspace() {
                       type="button"
                       className="list-row dictionary-entry"
                       data-dictionary-entry={item.id}
-                      aria-pressed={item.id === selectedId}
-                      onClick={() => setSelectedId(item.id)}
+                      aria-pressed={current?.id === item.id}
+                      onClick={() => open(item)}
                     >
                       <div className="list-grow">
                         <div className="list-title" dir="ltr">
-                          {item.dictionaryKey}
+                          {text(effective(item).article)} {item.dictionaryKey}
                         </div>
-                        <div className="list-sub">
-                          {item.source}
-                          {item.model ? ` · ${item.model}` : ''}
-                        </div>
+                        <div className="list-sub">{text(list(effective(item).senses)[0]?.fa)}</div>
                       </div>
-                      <span className={`badge ${tones[item.status]}`}>{labels[item.status]}</span>
+                      {item.status === 'deleted' ? (
+                        <span className="badge b-rose">حذف‌شده</span>
+                      ) : needsLook(item) ? (
+                        <span className="badge b-amber">نیاز به نگاه</span>
+                      ) : item.model ? (
+                        <span className="badge b-grey">AI</span>
+                      ) : null}
                     </button>
                   ))}
                 </div>
               )}
             </div>
           </section>
-          <section className="card" aria-label="ویرایش واژه‌نامه">
-            {selected ? (
-              <>
-                <div className="card-head">
-                  <div>
-                    <span className="card-title" dir="ltr">
-                      {selected.dictionaryKey}
-                    </span>
-                    <div className="list-sub">
-                      نسخه {selected.revision} ·{' '}
-                      {new Date(selected.updatedAt).toLocaleString('fa-IR')}
-                    </div>
+
+          <section className="card" aria-label="ویرایش واژه">
+            {!selected ? (
+              <div className="card-body">
+                <EmptyState title="یک واژه را از فهرست انتخاب کنید یا واژهٔ جدید بسازید." />
+              </div>
+            ) : (
+              <div className="card-body dictionary-editor">
+                {current && needsLook(current) ? (
+                  <div className="dictionary-note" role="note">
+                    <strong>بازبین هوش مصنوعی این مدخل را اصلاح کرده است.</strong>{' '}
+                    {text(current.costMetadata.reviewIssues)}
                   </div>
-                  <span className={`badge ${tones[selected.status]}`}>
-                    {labels[selected.status]}
-                  </span>
-                </div>
-                <div className="card-body">
-                  <label className="field-label" htmlFor="dictionary-payload">
-                    پاسخ مؤثر (ویرایش دستی)
-                  </label>
-                  <textarea
-                    id="dictionary-payload"
-                    className="dictionary-payload"
-                    value={draft}
-                    onChange={(event) => setDraft(event.target.value)}
-                    disabled={busy || selected.status === 'deleted'}
-                    spellCheck={false}
-                    dir="ltr"
-                  />
-                  {message ? (
-                    <p role="status" className="hint">
-                      {message}
-                    </p>
-                  ) : null}
-                  <div className="head-actions">
-                    <button
-                      className="btn"
-                      type="button"
-                      disabled={busy || selected.status === 'deleted'}
-                      onClick={save}
+                ) : null}
+                <div className="cp-form-grid">
+                  <div className="cp-form-row is-full">
+                    <label htmlFor="dict-lemma">واژهٔ آلمانی</label>
+                    <input
+                      id="dict-lemma"
+                      className="cp-input cp-ltr"
+                      dir="ltr"
+                      value={lemma}
+                      readOnly={selected !== 'new'}
+                      onChange={(event) => setLemma(event.target.value)}
+                    />
+                  </div>
+                  <div className="cp-form-row">
+                    <label htmlFor="dict-article">حرف تعریف</label>
+                    <select
+                      id="dict-article"
+                      className="cp-select"
+                      value={form.article}
+                      onChange={(event) => edit({ article: event.target.value })}
                     >
-                      ذخیرهٔ ویرایش
-                    </button>
+                      <option value="">—</option>
+                      <option value="der">der</option>
+                      <option value="die">die</option>
+                      <option value="das">das</option>
+                    </select>
+                  </div>
+                  <div className="cp-form-row">
+                    <label htmlFor="dict-pos">نوع کلمه</label>
+                    <select
+                      id="dict-pos"
+                      className="cp-select"
+                      value={form.pos}
+                      onChange={(event) => edit({ pos: event.target.value })}
+                    >
+                      <option value="">—</option>
+                      {Object.entries(posLabels).map(([key, label]) => (
+                        <option key={key} value={key}>
+                          {label}
+                        </option>
+                      ))}
+                      {form.pos && !posLabels[form.pos] ? (
+                        <option value={form.pos}>{form.pos}</option>
+                      ) : null}
+                    </select>
+                  </div>
+                </div>
+
+                <fieldset className="dictionary-group">
+                  <legend>معنی‌ها</legend>
+                  {form.senses.map((sense, index) => (
+                    <div className="dictionary-pair" key={index}>
+                      <input
+                        className="cp-input"
+                        aria-label={`معنی ${index + 1}`}
+                        placeholder="معنی فارسی"
+                        value={sense.fa}
+                        onChange={(event) =>
+                          edit({
+                            senses: form.senses.map((s, i) =>
+                              i === index ? { ...s, fa: event.target.value } : s,
+                            ),
+                          })
+                        }
+                      />
+                      <input
+                        className="cp-input"
+                        aria-label={`توضیح معنی ${index + 1}`}
+                        placeholder="توضیح کوتاه (اختیاری)"
+                        value={sense.hint}
+                        onChange={(event) =>
+                          edit({
+                            senses: form.senses.map((s, i) =>
+                              i === index ? { ...s, hint: event.target.value } : s,
+                            ),
+                          })
+                        }
+                      />
+                      <button
+                        className="btn"
+                        type="button"
+                        aria-label={`حذف معنی ${index + 1}`}
+                        onClick={() => edit({ senses: form.senses.filter((_, i) => i !== index) })}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    className="chip"
+                    type="button"
+                    onClick={() => edit({ senses: [...form.senses, { fa: '', hint: '' }] })}
+                  >
+                    + معنی
+                  </button>
+                </fieldset>
+
+                <fieldset className="dictionary-group">
+                  <legend>مثال‌ها</legend>
+                  {form.examples.map((example, index) => (
+                    <div className="dictionary-pair" key={index}>
+                      <input
+                        className="cp-input cp-ltr"
+                        dir="ltr"
+                        aria-label={`مثال آلمانی ${index + 1}`}
+                        placeholder="جملهٔ آلمانی"
+                        value={example.de}
+                        onChange={(event) =>
+                          edit({
+                            examples: form.examples.map((e, i) =>
+                              i === index ? { ...e, de: event.target.value } : e,
+                            ),
+                          })
+                        }
+                      />
+                      <input
+                        className="cp-input"
+                        aria-label={`ترجمهٔ مثال ${index + 1}`}
+                        placeholder="ترجمهٔ فارسی"
+                        value={example.fa}
+                        onChange={(event) =>
+                          edit({
+                            examples: form.examples.map((e, i) =>
+                              i === index ? { ...e, fa: event.target.value } : e,
+                            ),
+                          })
+                        }
+                      />
+                      <button
+                        className="btn"
+                        type="button"
+                        aria-label={`حذف مثال ${index + 1}`}
+                        onClick={() =>
+                          edit({ examples: form.examples.filter((_, i) => i !== index) })
+                        }
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    className="chip"
+                    type="button"
+                    onClick={() => edit({ examples: [...form.examples, { de: '', fa: '' }] })}
+                  >
+                    + مثال
+                  </button>
+                </fieldset>
+
+                {preview ? (
+                  <div className="dictionary-preview" aria-label="پیش‌نمایش">
+                    <div className="muted">پیش‌نمایش</div>
+                    <div className="dictionary-preview-head" dir="ltr">
+                      {text(preview.article)} <strong>{lemma || '…'}</strong>
+                      {preview.pos ? (
+                        <span className="badge b-grey">
+                          {posLabels[text(preview.pos)] ?? text(preview.pos)}
+                        </span>
+                      ) : null}
+                    </div>
+                    <ol>
+                      {list(preview.senses).map((s, i) => (
+                        <li key={i}>
+                          {text(s.fa)}
+                          {text(s.hint) ? <span className="muted"> — {text(s.hint)}</span> : null}
+                        </li>
+                      ))}
+                    </ol>
+                    {list(preview.examples).map((e, i) => (
+                      <p key={i} className="dictionary-example">
+                        <span dir="ltr">{text(e.de)}</span>
+                        {text(e.fa) ? <span className="muted">{text(e.fa)}</span> : null}
+                      </p>
+                    ))}
+                  </div>
+                ) : null}
+
+                {message ? (
+                  <p role="status" className="hint">
+                    {message}
+                  </p>
+                ) : null}
+                <div className="head-actions">
+                  {current?.status === 'deleted' ? (
                     <button
                       className="btn primary"
                       type="button"
-                      disabled={busy || selected.status !== 'queued'}
-                      onClick={() => void update({ status: 'approved' })}
+                      disabled={busy}
+                      onClick={() => void patch(current, { status: 'approved' })}
                     >
-                      تأیید
+                      بازگرداندن واژه
                     </button>
-                    <button
-                      className="btn danger"
-                      type="button"
-                      disabled={busy || selected.status === 'deleted'}
-                      onClick={() => void update({ status: 'deleted' })}
-                    >
-                      حذف
-                    </button>
-                  </div>
+                  ) : (
+                    <>
+                      <button className="btn primary" type="button" disabled={busy} onClick={save}>
+                        ذخیره
+                      </button>
+                      {current?.manualPayload ? (
+                        <button
+                          className="btn"
+                          type="button"
+                          disabled={busy}
+                          onClick={() => void patch(current, { manualPayload: null })}
+                        >
+                          برگشت به نسخهٔ اصلی
+                        </button>
+                      ) : null}
+                      {current ? (
+                        <button
+                          className="btn danger"
+                          type="button"
+                          disabled={busy}
+                          onClick={() => void patch(current, { status: 'deleted' })}
+                        >
+                          حذف واژه
+                        </button>
+                      ) : null}
+                    </>
+                  )}
                 </div>
-              </>
-            ) : (
-              <div className="card-body">
-                <EmptyState title="یک ورودی را انتخاب کنید." />
               </div>
             )}
           </section>

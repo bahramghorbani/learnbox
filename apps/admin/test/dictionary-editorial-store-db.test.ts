@@ -109,4 +109,70 @@ suite('dictionary editorial store (real Postgres)', () => {
     expect(audits.rows[0].metadata.dictionary_key).toBe('Haus');
     expect(audits.rows[1].metadata.revision).toBe(2);
   });
+
+  it('seeds a release as approved without overwriting, and searches one bounded page', async () => {
+    const records = [
+      { dictionaryKey: 'Baum', payload: { lemma: 'Baum', freq: 5, senses: [{ fa: 'درخت' }] } },
+      { dictionaryKey: 'Bäume_%', payload: { lemma: 'Bäume_%', freq: 1, senses: [{ fa: 'x' }] } },
+      { dictionaryKey: 'a\\b', payload: { lemma: 'a\\b', senses: [{ fa: 'y' }] } },
+      // Already owned by the editorial record from the first test: must stay as it is.
+      { dictionaryKey: 'Haus', payload: { lemma: 'Haus', senses: [{ fa: 'OVERWRITE' }] } },
+    ];
+    const seedKey = randomUUID();
+    const seeded = await store.seed(superAdmin, {
+      records,
+      source: 'release/t',
+      idempotencyKey: seedKey,
+    });
+    expect(seeded).toEqual({ status: 'applied', inserted: 3 });
+    expect(
+      await store.seed(superAdmin, { records, source: 'release/t', idempotencyKey: seedKey }),
+    ).toEqual({ status: 'idempotent', inserted: 0 });
+    expect(
+      (await store.seed(outsider, { records, source: 'r', idempotencyKey: randomUUID() })).status,
+    ).toBe('forbidden');
+
+    const page = async (q: string, filter: 'all' | 'review' | 'ai' | 'deleted' = 'all') => {
+      const result = await store.list(superAdmin, { q, filter, limit: 50 });
+      if (result.status !== 'ok') throw new Error('forbidden');
+      return result;
+    };
+    const haus = (await page('Haus')).items[0]!;
+    expect(haus.manualPayload).toMatchObject({ senses: [{ fa: 'خانه، منزل' }] });
+    expect((await page('baum')).items.map((x) => x.dictionaryKey)).toEqual(['Baum']);
+    expect((await page('درخت')).items.map((x) => x.dictionaryKey)).toEqual(['Baum']);
+    // LIKE wildcards in the query are literal: «B_um» must not match «Baum».
+    expect((await page('B_um')).items).toEqual([]);
+    expect((await page('Bäume_')).items.map((x) => x.dictionaryKey)).toEqual(['Bäume_%']);
+    expect((await page('')).total).toBe(4);
+    expect((await page('a\\b')).items.map((x) => x.dictionaryKey)).toEqual(['a\\b']);
+    const one = await store.list(superAdmin, { q: '', filter: 'all', limit: 1 });
+    expect(one.status === 'ok' && one.items.length).toBe(1);
+    expect((await page('', 'ai')).items.map((x) => x.dictionaryKey)).toEqual(['Haus']);
+    expect((await page('', 'review')).items).toEqual([]);
+
+    const flagged = await store.create(superAdmin, {
+      dictionaryKey: 'Weg',
+      aiPayload: { lemma: 'Weg', senses: [{ fa: 'راه' }] },
+      source: 'ai',
+      model: 'm',
+      costMetadata: { reviewVerdict: 'fixed' },
+      status: 'approved',
+      idempotencyKey: randomUUID(),
+    });
+    expect(flagged).toMatchObject({ status: 'applied', item: { status: 'approved' } });
+    expect((await page('', 'review')).items.map((x) => x.dictionaryKey)).toEqual(['Weg']);
+    const weg = (flagged as { item: { id: string } }).item.id;
+    await store.update(superAdmin, weg, {
+      revision: 1,
+      status: 'deleted',
+      idempotencyKey: randomUUID(),
+    });
+    expect((await page('', 'review')).items).toEqual([]);
+    expect((await page('', 'deleted')).items.map((x) => x.dictionaryKey)).toEqual(['Weg']);
+    expect((await page('Weg')).items).toEqual([]);
+    expect((await store.list(outsider, { q: '', filter: 'all', limit: 5 })).status).toBe(
+      'forbidden',
+    );
+  });
 });

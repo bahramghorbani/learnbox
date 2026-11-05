@@ -18,11 +18,13 @@ describe('Admin #dictionary destination', () => {
 
   it('keeps the editor behind the guarded fetch/PATCH boundaries', () => {
     const workspace = source('app/components/DictionaryEditorialWorkspace.tsx');
-    expect(workspace).toContain("fetch('/api/dictionary/editorial'");
+    expect(workspace).toContain('fetch(`/api/dictionary/editorial?${params}`');
     expect(workspace).toContain('fetchWithStepUp(');
-    expect(workspace).toContain('`/api/dictionary/editorial/${selected.id}`');
+    expect(workspace).toContain('`/api/dictionary/editorial/${item.id}`');
     expect(workspace).toContain('response.status === 404');
     expect(workspace).toContain("setPhase('disabled')");
-    expect(workspace).toContain("status: 'queued'");
+    // AI-first: an admin save is final, so an edit never sends an entry back to a queue.
+    expect(workspace).not.toContain("status: 'queued'");
+    expect(workspace).not.toContain('<textarea');
   });
 });

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   createDictionaryEditorialCreateRoute,
+  createDictionaryEditorialListRoute,
   createDictionaryEditorialUpdateRoute,
 } from '../lib/server/admin-dictionary-editorial-routes.js';
 import { hashAdminSecret } from '../lib/server/admin-session.js';
@@ -65,7 +66,7 @@ describe('dictionary editorial routes', () => {
       ...deps,
       enabled: false,
       store: {
-        list: async () => ({ status: 'ok' as const, items: [] }),
+        list: async () => ({ status: 'ok' as const, items: [], total: 0 }),
         create: async () => {
           touched = true;
           return { status: 'applied' as const, item };
@@ -80,7 +81,7 @@ describe('dictionary editorial routes', () => {
     const handler = createDictionaryEditorialCreateRoute({
       ...deps,
       store: {
-        list: async () => ({ status: 'ok' as const, items: [] }),
+        list: async () => ({ status: 'ok' as const, items: [], total: 0 }),
         create: async () => ({ status: 'applied' as const, item }),
         update: async () => ({ status: 'applied' as const, item }),
       },
@@ -103,7 +104,7 @@ describe('dictionary editorial routes', () => {
     const handler = createDictionaryEditorialUpdateRoute({
       ...deps,
       store: {
-        list: async () => ({ status: 'ok' as const, items: [] }),
+        list: async () => ({ status: 'ok' as const, items: [], total: 0 }),
         create: async () => ({ status: 'applied' as const, item }),
         update: async () => ({ status: 'conflict' as const }),
       },
@@ -111,5 +112,37 @@ describe('dictionary editorial routes', () => {
     const response = await handler(request({ revision: 1, status: 'approved' }), id);
     expect(response.status).toBe(409);
     expect(await response.json()).toEqual({ code: 'revision_conflict' });
+  });
+});
+
+describe('dictionary editorial list route', () => {
+  it('always asks the store for one bounded page and rejects unknown filters', async () => {
+    const seen: unknown[] = [];
+    const handler = createDictionaryEditorialListRoute({
+      ...deps,
+      store: {
+        list: async (_actor, query) => {
+          seen.push(query);
+          return { status: 'ok' as const, items: [], total: 0 };
+        },
+        create: async () => ({ status: 'applied' as const, item }),
+        update: async () => ({ status: 'applied' as const, item }),
+      },
+    });
+    const get = (query: string) =>
+      handler(
+        new Request(`https://admin.learnbox.app/api/dictionary/editorial${query}`, {
+          headers: { cookie: `__Host-learnbox_admin_session=${token}` },
+        }),
+      );
+    expect((await get('')).status).toBe(200);
+    expect((await get('?q=%20Haus%20&filter=review')).status).toBe(200);
+    expect(seen).toEqual([
+      { q: '', filter: 'all', limit: 50 },
+      { q: 'Haus', filter: 'review', limit: 50 },
+    ]);
+    expect((await get('?filter=everything')).status).toBe(400);
+    expect((await get(`?q=${'x'.repeat(101)}`)).status).toBe(400);
+    expect(seen).toHaveLength(2);
   });
 });
