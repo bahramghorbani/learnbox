@@ -427,6 +427,7 @@ export function LandingExperience() {
           <small>یادگیری واژگان آلمانی، روشن و ماندگار.</small>
         </div>
         <nav aria-label="پیوندهای حقوقی و ارتباطی">
+          <a href="/dictionary">دیکشنری آلمانی به فارسی</a>
           <DestinationLink destination={siteConfig.destinations.privacy}>
             حریم خصوصی
           </DestinationLink>
