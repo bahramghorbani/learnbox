@@ -104,14 +104,32 @@ export function releaseEntry(
   };
 }
 
+/** Key-order-independent JSON: editorial payloads come back from jsonb with sorted keys. */
+const canonical = (v: unknown): unknown =>
+  Array.isArray(v)
+    ? v.map(canonical)
+    : v && typeof v === 'object'
+      ? Object.fromEntries(
+          Object.keys(v)
+            .sort()
+            .map((k) => [k, canonical((v as Record<string, unknown>)[k])]),
+        )
+      : v;
+const sameJson = (a: string, b: string) =>
+  JSON.stringify(canonical(JSON.parse(a))) === JSON.stringify(canonical(JSON.parse(b)));
 const same = (a: EntryRow, b: EntryRow) =>
   a.article === b.article &&
   a.pos === b.pos &&
   a.fa === b.fa &&
   a.freq === b.freq &&
-  JSON.stringify(JSON.parse(a.data)) === b.data;
+  sameJson(a.data, b.data);
 
-/** Copy `basePath` to `outPath`, apply the editorial rows, then verify the result. */
+/**
+ * Copy `basePath` to `outPath`, apply the editorial rows, then verify the result.
+ * ponytail: synchronous and runs inside the request; ~5 ms per rewritten word, so a batch of
+ * ~15k real changes nears the CDN's 100 s cut-off. Move to a background job with status polling
+ * when bulk imports from external sources start.
+ */
 export function buildRelease(input: {
   sqlite: Sqlite;
   basePath: string;

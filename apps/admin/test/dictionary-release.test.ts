@@ -152,6 +152,32 @@ describe('dictionary release builder', () => {
     db.close();
   });
 
+  it('does not count an untouched word as changed when jsonb reordered its keys', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'dict-build-'));
+    const base = fixture(dir, 'dict-base.sqlite');
+    const reordered = JSON.parse(data('خانه', { ipa: 'haʊ̯s', audio: 'haus.ogg' })) as Record<
+      string,
+      unknown
+    >;
+    const payload = Object.fromEntries(
+      Object.entries({
+        lemma: 'Haus',
+        article: 'das',
+        pos: 'noun',
+        freq: 5,
+        ...reordered,
+      }).reverse(),
+    );
+    const report = buildRelease({
+      sqlite: DatabaseSync,
+      basePath: base,
+      outPath: join(dir, 'out.sqlite'),
+      builtAt: 'x',
+      rows: [{ dictionaryKey: 'Haus', status: 'approved', payload }],
+    });
+    expect(report).toMatchObject({ ok: true, changed: 0, added: 0 });
+  });
+
   it('fails the checks when a release would lose too much of the dictionary', () => {
     const dir = mkdtempSync(join(tmpdir(), 'dict-build-'));
     const base = fixture(dir, 'dict-base.sqlite');
