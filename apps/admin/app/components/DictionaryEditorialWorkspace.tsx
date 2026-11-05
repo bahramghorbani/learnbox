@@ -142,7 +142,7 @@ export function DictionaryEditorialWorkspace() {
 
   return (
     <main className="admin-shell cp-workspace" id="dictionary">
-      <AdminSidebar current="home" />
+      <AdminSidebar current="dictionary" />
       <section className="admin-workspace">
         <div className="page-head">
           <div>

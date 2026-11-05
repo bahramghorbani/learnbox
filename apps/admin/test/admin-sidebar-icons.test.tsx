@@ -29,7 +29,7 @@ describe('AdminSidebar iconography', () => {
     await act(async () => root?.render(createElement(AdminSidebar)));
 
     const items = [...container.querySelectorAll('.admin-nav-item')];
-    expect(items).toHaveLength(9);
+    expect(items).toHaveLength(10);
 
     for (const item of items) {
       const icon = item.querySelector('[data-admin-nav-icon]');

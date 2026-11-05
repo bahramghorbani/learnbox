@@ -125,7 +125,7 @@ export class PostgresDictionaryEditorialStore {
       );
       const item = entry(inserted.rows[0]!);
       await client.query(
-        `INSERT INTO audit_logs (actor_user_id, action, entity_type, entity_id, metadata) VALUES ($1, 'dictionary_editorial.create', 'dictionary_editorial_entry', $2, jsonb_build_object('idempotency_key', $3::uuid, 'dictionary_key', $4))`,
+        `INSERT INTO audit_logs (actor_user_id, action, entity_type, entity_id, metadata) VALUES ($1, 'dictionary_editorial.create', 'dictionary_editorial_entry', $2, jsonb_build_object('idempotency_key', $3::uuid, 'dictionary_key', $4::text))`,
         [actor, item.id, input.idempotencyKey, input.dictionaryKey],
       );
       await client.query('COMMIT');
@@ -191,7 +191,7 @@ export class PostgresDictionaryEditorialStore {
       }
       const item = entry(updated.rows[0]);
       await client.query(
-        `INSERT INTO audit_logs (actor_user_id, action, entity_type, entity_id, metadata) VALUES ($1, 'dictionary_editorial.update', 'dictionary_editorial_entry', $2, jsonb_build_object('idempotency_key', $3::uuid, 'revision', $4))`,
+        `INSERT INTO audit_logs (actor_user_id, action, entity_type, entity_id, metadata) VALUES ($1, 'dictionary_editorial.update', 'dictionary_editorial_entry', $2, jsonb_build_object('idempotency_key', $3::uuid, 'revision', $4::int))`,
         [actor, id, input.idempotencyKey, item.revision],
       );
       await client.query('COMMIT');

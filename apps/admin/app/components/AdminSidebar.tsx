@@ -5,6 +5,7 @@ import { adminAppVersion } from '../../lib/admin-app-version';
 type AdminIconName =
   | 'home'
   | 'book'
+  | 'dictionary'
   | 'store'
   | 'users'
   | 'chart'
@@ -20,10 +21,13 @@ type AdminIconName =
  *
  * All nine frozen-design destinations are now implemented as real routes. The sidebar therefore
  * keeps the reference order and icons without advertising a destination that does not exist.
+ * Owner-approved addition (2026-11-05): «واژه‌نامه» (#dictionary) after content; it stays separate
+ * from cards and packs.
  */
 const navItems = [
   { label: 'خانه / نمای کلی', icon: 'home', route: 'home' },
   { label: 'محتوا و بسته‌ها', icon: 'book', route: 'content' },
+  { label: 'واژه‌نامه', icon: 'dictionary', route: 'dictionary' },
   { label: 'فروشگاه', icon: 'store', route: 'store' },
   { label: 'کاربران', icon: 'users', route: 'users' },
   { label: 'یادگیری', icon: 'chart', route: 'learning' },
@@ -60,6 +64,17 @@ function AdminIcon({ name }: { name: AdminIconName }) {
         <svg {...common}>
           <path d="M4 4.5A1.5 1.5 0 0 1 5.5 3H11v18H5.5A1.5 1.5 0 0 1 4 19.5z" />
           <path d="M20 4.5A1.5 1.5 0 0 0 18.5 3H13v18h5.5a1.5 1.5 0 0 0 1.5-1.5z" />
+        </svg>
+      );
+    case 'dictionary':
+      return (
+        <svg {...common}>
+          <path d="m3 19 4.5-13h1L13 19" />
+          <path d="M4.8 14h6.4" />
+          <path d="M15 8h6" />
+          <path d="M18 6v2" />
+          <path d="M20 8c-.6 3.6-2.6 6.4-5 8" />
+          <path d="M16.4 11.2c.9 1.9 2.4 3.5 4.6 4.8" />
         </svg>
       );
     case 'store':

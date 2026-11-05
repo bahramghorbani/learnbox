@@ -6,14 +6,14 @@ const root = resolve(__dirname, '..');
 const source = (relative: string) => readFileSync(resolve(root, relative), 'utf8');
 
 describe('Admin #dictionary destination', () => {
-  it('wires the direct hash destination without modifying the frozen sidebar', () => {
+  it('wires the #dictionary destination and its sidebar item', () => {
     const router = source('app/components/AdminWorkspaceRouter.tsx');
     const sidebar = source('app/components/AdminSidebar.tsx');
     expect(router).toContain("if (value === 'dictionary') return 'dictionary';");
     expect(router).toContain(
       "if (route === 'dictionary') return <DictionaryEditorialWorkspace />;",
     );
-    expect(sidebar).not.toContain('href="#dictionary"');
+    expect(sidebar).toContain("{ label: 'واژه‌نامه', icon: 'dictionary', route: 'dictionary' }");
   });
 
   it('keeps the editor behind the guarded fetch/PATCH boundaries', () => {
