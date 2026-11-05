@@ -229,4 +229,29 @@ suite('dictionary editorial store (real Postgres)', () => {
 
     expect((await store.examplesNeedingTranslation(outsider, 10)).status).toBe('forbidden');
   });
+
+  it('finds live single-sense words, highest-frequency first', async () => {
+    const insert = (key: string, senses: unknown[], freq: number) =>
+      store.create(superAdmin, {
+        dictionaryKey: key,
+        aiPayload: { lemma: key, freq, senses },
+        source: 'test',
+        model: null,
+        costMetadata: {},
+        status: 'approved',
+        idempotencyKey: randomUUID(),
+      });
+    await insert('Bank', [{ fa: 'نیمکت' }], 60); // one sense
+    await insert('Schloss', [{ fa: 'قفل' }, { fa: 'قصر' }], 90); // already two senses
+    await insert('Birne', [{ fa: 'گلابی' }], 40); // one sense, lower freq
+
+    const found = await store.singleSenseWordsNeedingSecondSense(superAdmin, 1000);
+    if (found.status !== 'ok') throw new Error('forbidden');
+    const mine = found.items
+      .map((i) => i.dictionaryKey)
+      .filter((k) => ['Bank', 'Schloss', 'Birne'].includes(k));
+    expect(mine).toEqual(['Bank', 'Birne']);
+
+    expect((await store.singleSenseWordsNeedingSecondSense(outsider, 10)).status).toBe('forbidden');
+  });
 });

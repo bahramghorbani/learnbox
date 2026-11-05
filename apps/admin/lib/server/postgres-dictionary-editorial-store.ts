@@ -157,6 +157,48 @@ export class PostgresDictionaryEditorialStore {
     }
   }
   /**
+   * Live words whose current meaning has exactly one sense, highest-frequency first. These are
+   * the candidates for an AI-proposed additional sense (card generation's second-review pattern:
+   * a reviewer call must confirm a proposal before it is written at all).
+   */
+  async singleSenseWordsNeedingSecondSense(
+    actor: string,
+    limit: number,
+  ): Promise<
+    | {
+        status: 'ok';
+        items: { id: string; dictionaryKey: string; revision: number; payload: Row }[];
+      }
+    | { status: 'forbidden' }
+  > {
+    if (!uuidPattern.test(actor)) throw new Error('Actor user id is invalid.');
+    const client = await this.pool.connect();
+    try {
+      if (!(await this.superAdmin(client, actor))) return { status: 'forbidden' };
+      const rows = await client.query(
+        `SELECT id, dictionary_key, revision, coalesce(manual_payload, ai_payload) AS payload
+        FROM dictionary_editorial_entries
+        WHERE status <> 'deleted'
+          AND jsonb_typeof(coalesce(manual_payload, ai_payload)->'senses') = 'array'
+          AND jsonb_array_length(coalesce(manual_payload, ai_payload)->'senses') = 1
+        ORDER BY coalesce((coalesce(manual_payload, ai_payload)->>'freq')::int, 0) DESC, dictionary_key
+        LIMIT $1::int`,
+        [limit],
+      );
+      return {
+        status: 'ok',
+        items: rows.rows.map((r) => ({
+          id: String(r.id),
+          dictionaryKey: String(r.dictionary_key),
+          revision: Number(r.revision),
+          payload: r.payload as Row,
+        })),
+      };
+    } finally {
+      client.release();
+    }
+  }
+  /**
    * Live words whose German example sentences have no Persian translation, highest-frequency
    * first — the pilot's candidate pool. `limit` bounds words fetched, not sentences; the caller
    * flattens and caps sentences itself, since one word may contribute more than one.

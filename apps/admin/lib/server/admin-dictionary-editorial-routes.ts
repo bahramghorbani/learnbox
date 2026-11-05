@@ -20,7 +20,11 @@ type Deps = {
   sessionStore?: Parameters<typeof loadAdminSession>[2];
   store?: Pick<
     PostgresDictionaryEditorialStore,
-    'list' | 'create' | 'update' | 'examplesNeedingTranslation'
+    | 'list'
+    | 'create'
+    | 'update'
+    | 'examplesNeedingTranslation'
+    | 'singleSenseWordsNeedingSecondSense'
   >;
   now?: () => Date;
   aiProvider?: AiTextProvider;
@@ -28,6 +32,18 @@ type Deps = {
 const noStore = { 'Cache-Control': 'no-store' };
 const missing = () => new Response('Not found', { status: 404, headers: noStore });
 const invalid = () => new Response('Invalid request', { status: 400, headers: noStore });
+
+/** Extracts a JSON array from an AI reply that may wrap it in prose or markdown fences. */
+function parseJsonArray(reply: string): unknown[] {
+  const start = reply.indexOf('[');
+  const end = reply.lastIndexOf(']');
+  try {
+    const parsed = start >= 0 && end > start ? JSON.parse(reply.slice(start, end + 1)) : undefined;
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
 const unavailable = () =>
   new Response('Dictionary editorial unavailable', { status: 503, headers: noStore });
 const json = (body: unknown, init?: ResponseInit) =>
@@ -262,6 +278,142 @@ export function createDictionaryEditorialTranslateExamplesRoute(deps: Deps) {
       }
     }
     return json({ translated: translations.size, words: results });
+  };
+}
+
+export function createDictionaryEditorialAddSenseRoute(deps: Deps) {
+  return async (request: Request) => {
+    const user = await actor(request, deps, true);
+    if (user === undefined) return missing();
+    if (user === null) return invalid();
+    if (user === false) return new Response('Unauthorized', { status: 401, headers: noStore });
+    if (user === 'recent') return json({ code: 'reauthentication_required' }, { status: 428 });
+    if (!deps.aiProvider)
+      return json({ code: 'provider_not_configured' }, { status: 503, headers: noStore });
+    let body: Record<string, unknown> | undefined;
+    try {
+      body = await request.json();
+    } catch {
+      /* invalid */
+    }
+    const maxWords = record(body) && typeof body.maxWords === 'number' ? body.maxWords : 50;
+    if (!Number.isSafeInteger(maxWords) || maxWords < 1 || maxWords > 50) return invalid();
+
+    let candidates: Awaited<
+      ReturnType<NonNullable<Deps['store']>['singleSenseWordsNeedingSecondSense']>
+    >;
+    try {
+      candidates = await deps.store!.singleSenseWordsNeedingSecondSense(user, maxWords);
+    } catch {
+      return unavailable();
+    }
+    if (candidates.status === 'forbidden') return missing();
+    if (!candidates.items.length) return json({ added: 0, words: [] });
+
+    const list = (items: typeof candidates.items) =>
+      items
+        .map((item, i) => {
+          const sense = (item.payload.senses as Record<string, unknown>[])[0];
+          const fa = typeof sense?.fa === 'string' ? sense.fa : '';
+          return `${i + 1}. ${item.dictionaryKey} — existing meaning: ${fa}`;
+        })
+        .join('\n');
+
+    let generated: string;
+    try {
+      generated = await deps.aiProvider.complete({
+        system: [
+          'You are a German-Persian lexicographer. Each numbered German word below is listed with',
+          'the ONE Persian meaning it currently has in a dictionary.',
+          'Only when the word genuinely has another common, distinct, standard-German meaning, give it.',
+          'Never invent a rare, regional, archaic or technical-jargon meaning just to fill a slot.',
+          'Reply with a single JSON array and no other text:',
+          '[{"i": <number>, "hasSense": <bool>, "fa": "...", "hint": "..."}]',
+          'hint is a short Persian usage note (may be empty string). Every "i" must be included.',
+        ].join('\n'),
+        user: list(candidates.items),
+        maxOutputTokens: 4096,
+        timeoutMs: 120_000,
+      });
+    } catch (error) {
+      return json(
+        { code: 'provider_error', message: (error as Error).message },
+        { status: 502, headers: noStore },
+      );
+    }
+    const proposals = parseJsonArray(generated);
+    const bySlot = new Map<number, { fa: string; hint: string }>();
+    for (const entry of proposals) {
+      if (!record(entry)) continue;
+      const i = Number(entry.i);
+      const fa = typeof entry.fa === 'string' ? entry.fa.trim() : '';
+      if (
+        entry.hasSense === true &&
+        Number.isInteger(i) &&
+        i >= 1 &&
+        i <= candidates.items.length &&
+        fa
+      )
+        bySlot.set(i, { fa, hint: typeof entry.hint === 'string' ? entry.hint.trim() : '' });
+    }
+    if (!bySlot.size) return json({ added: 0, words: [] });
+
+    // Independent second reviewer: sees only the words and the proposed new sense, never the
+    // generator's own reasoning, and must confirm each before anything is written.
+    let reviewed: string;
+    try {
+      reviewed = await deps.aiProvider.complete({
+        system: [
+          'You are an independent reviewer of proposed additional dictionary senses for German',
+          'words. You did not write these proposals. For each numbered item, the word already has',
+          'one meaning (given); confirm whether the PROPOSED second meaning is real, standard',
+          'German, genuinely distinct from the existing one, and the Persian is accurate and natural.',
+          'Reject anything invented, redundant, or wrong.',
+          'Reply with a single JSON array and no other text: [{"i": <number>, "approve": <bool>}]',
+        ].join('\n'),
+        user: candidates.items
+          .map((item, i) => {
+            if (!bySlot.has(i + 1)) return undefined;
+            const sense = (item.payload.senses as Record<string, unknown>[])[0];
+            const proposed = bySlot.get(i + 1)!;
+            return `${i + 1}. ${item.dictionaryKey} — existing: ${String(sense?.fa ?? '')}; proposed new: ${proposed.fa}`;
+          })
+          .filter((line): line is string => Boolean(line))
+          .join('\n'),
+        maxOutputTokens: 2048,
+        timeoutMs: 120_000,
+      });
+    } catch (error) {
+      return json(
+        { code: 'provider_error', message: (error as Error).message },
+        { status: 502, headers: noStore },
+      );
+    }
+    const approvals = new Set<number>();
+    for (const entry of parseJsonArray(reviewed)) {
+      if (!record(entry)) continue;
+      const i = Number(entry.i);
+      if (entry.approve === true && Number.isInteger(i)) approvals.add(i);
+    }
+
+    const results: { dictionaryKey: string; status: string }[] = [];
+    for (const [slot, proposed] of bySlot) {
+      if (!approvals.has(slot)) continue;
+      const item = candidates.items[slot - 1]!;
+      const senses = [...(item.payload.senses as Record<string, unknown>[]), proposed];
+      try {
+        const result = await deps.store!.update(user, item.id, {
+          revision: item.revision,
+          manualPayload: { ...item.payload, senses },
+          status: 'queued',
+          idempotencyKey: crypto.randomUUID(),
+        });
+        results.push({ dictionaryKey: item.dictionaryKey, status: result.status });
+      } catch {
+        results.push({ dictionaryKey: item.dictionaryKey, status: 'error' });
+      }
+    }
+    return json({ added: results.length, words: results });
   };
 }
 

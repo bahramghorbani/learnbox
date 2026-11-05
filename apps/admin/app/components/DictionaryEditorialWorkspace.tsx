@@ -6,6 +6,7 @@ import { AdminSidebar } from './AdminSidebar';
 import { DictionaryFeedbackPanel } from './DictionaryFeedbackPanel';
 import { DictionaryReleasePanel } from './DictionaryReleasePanel';
 import { DictionaryTranslationPilotPanel } from './DictionaryTranslationPilotPanel';
+import { DictionaryAddSensePanel } from './DictionaryAddSensePanel';
 import { EmptyState, ErrorState, LoadingState } from './AdminStates';
 import {
   createIdempotencyKey,
@@ -254,6 +255,7 @@ export function DictionaryEditorialWorkspace() {
         </div>
         <DictionaryReleasePanel />
         <DictionaryTranslationPilotPanel />
+        <DictionaryAddSensePanel />
         <DictionaryFeedbackPanel onPick={setQ} />
         <div className="dictionary-layout">
           <section className="card" aria-label="فهرست واژه‌ها">

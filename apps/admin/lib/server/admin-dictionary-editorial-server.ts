@@ -4,6 +4,7 @@ import {
   createDictionaryEditorialCreateRoute,
   createDictionaryEditorialListRoute,
   createDictionaryEditorialTranslateExamplesRoute,
+  createDictionaryEditorialAddSenseRoute,
   createDictionaryEditorialUpdateRoute,
 } from './admin-dictionary-editorial-routes';
 import { readAiGenerationConfig } from './ai-generation-provider';
@@ -63,6 +64,7 @@ export function createAdminDictionaryEditorialServer(deps: {
       create: createDictionaryEditorialCreateRoute(shared),
       update: createDictionaryEditorialUpdateRoute(shared),
       translateExamples: createDictionaryEditorialTranslateExamplesRoute(shared),
+      addSense: createDictionaryEditorialAddSenseRoute(shared),
       releaseStatus: createDictionaryReleaseStatusRoute({ ...shared, publisher: release }),
       releaseAction: createDictionaryReleaseActionRoute({ ...shared, publisher: release }),
       feedback: createDictionaryFeedbackRoute({

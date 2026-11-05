@@ -3,6 +3,7 @@ import {
   createDictionaryEditorialCreateRoute,
   createDictionaryEditorialListRoute,
   createDictionaryEditorialTranslateExamplesRoute,
+  createDictionaryEditorialAddSenseRoute,
   createDictionaryEditorialUpdateRoute,
 } from '../lib/server/admin-dictionary-editorial-routes.js';
 import { hashAdminSecret } from '../lib/server/admin-session.js';
@@ -74,6 +75,7 @@ describe('dictionary editorial routes', () => {
         },
         update: async () => ({ status: 'applied' as const, item }),
         examplesNeedingTranslation: async () => ({ status: 'ok' as const, items: [] }),
+        singleSenseWordsNeedingSecondSense: async () => ({ status: 'ok' as const, items: [] }),
       },
     });
     expect((await handler(request({}))).status).toBe(404);
@@ -87,6 +89,7 @@ describe('dictionary editorial routes', () => {
         create: async () => ({ status: 'applied' as const, item }),
         update: async () => ({ status: 'applied' as const, item }),
         examplesNeedingTranslation: async () => ({ status: 'ok' as const, items: [] }),
+        singleSenseWordsNeedingSecondSense: async () => ({ status: 'ok' as const, items: [] }),
       },
     });
     expect(
@@ -111,6 +114,7 @@ describe('dictionary editorial routes', () => {
         create: async () => ({ status: 'applied' as const, item }),
         update: async () => ({ status: 'conflict' as const }),
         examplesNeedingTranslation: async () => ({ status: 'ok' as const, items: [] }),
+        singleSenseWordsNeedingSecondSense: async () => ({ status: 'ok' as const, items: [] }),
       },
     });
     const response = await handler(request({ revision: 1, status: 'approved' }), id);
@@ -132,6 +136,7 @@ describe('dictionary editorial list route', () => {
         create: async () => ({ status: 'applied' as const, item }),
         update: async () => ({ status: 'applied' as const, item }),
         examplesNeedingTranslation: async () => ({ status: 'ok' as const, items: [] }),
+        singleSenseWordsNeedingSecondSense: async () => ({ status: 'ok' as const, items: [] }),
       },
     });
     const get = (query: string) =>
@@ -164,6 +169,7 @@ describe('dictionary editorial translate-examples route', () => {
     create: async () => ({ status: 'applied' as const, item }),
     update: async () => ({ status: 'applied' as const, item }),
     examplesNeedingTranslation: async () => ({ status: 'ok' as const, items: [candidate] }),
+    singleSenseWordsNeedingSecondSense: async () => ({ status: 'ok' as const, items: [] }),
   };
   it('is unreachable when the AI provider is not configured', async () => {
     const handler = createDictionaryEditorialTranslateExamplesRoute({
@@ -242,6 +248,125 @@ describe('dictionary editorial translate-examples route', () => {
     });
     const response = await handler(request({ maxSentences: 50 }));
     expect(response.status).toBe(502);
+    expect(called).toBe(false);
+  });
+});
+
+describe('dictionary editorial add-sense route', () => {
+  const senseCandidate = {
+    id,
+    dictionaryKey: 'Bank',
+    revision: 2,
+    payload: { lemma: 'Bank', senses: [{ fa: 'نیمکت' }] },
+  };
+  const baseStore = {
+    list: async () => ({ status: 'ok' as const, items: [], total: 0 }),
+    create: async () => ({ status: 'applied' as const, item }),
+    update: async () => ({ status: 'applied' as const, item }),
+    singleSenseWordsNeedingSecondSense: async () => ({
+      status: 'ok' as const,
+      items: [senseCandidate],
+    }),
+    examplesNeedingTranslation: async () => ({ status: 'ok' as const, items: [] }),
+  };
+  const provider = (replies: string[]) => {
+    let call = 0;
+    return {
+      provider: 'test',
+      model: 'm',
+      complete: async () => replies[call++] ?? '[]',
+      listTextModels: async () => [],
+    };
+  };
+
+  it('is unreachable when the AI provider is not configured', async () => {
+    const handler = createDictionaryEditorialAddSenseRoute({
+      ...deps,
+      store: baseStore,
+      aiProvider: undefined,
+    });
+    expect((await handler(request({}))).status).toBe(503);
+  });
+
+  it('rejects a batch bigger than 50 words', async () => {
+    const handler = createDictionaryEditorialAddSenseRoute({
+      ...deps,
+      store: baseStore,
+      aiProvider: provider(['[]']),
+    });
+    expect((await handler(request({ maxWords: 51 }))).status).toBe(400);
+  });
+
+  it('writes a new sense only when the second reviewer approves it', async () => {
+    let updateCall: unknown;
+    const store = {
+      ...baseStore,
+      update: async (_actor: string, _id: string, patch: unknown) => {
+        updateCall = patch;
+        return { status: 'applied' as const, item };
+      },
+    };
+    const handler = createDictionaryEditorialAddSenseRoute({
+      ...deps,
+      store,
+      aiProvider: provider([
+        '[{"i": 1, "hasSense": true, "fa": "بانک", "hint": "مالی"}]',
+        '[{"i": 1, "approve": true}]',
+      ]),
+    });
+    const response = await handler(request({ maxWords: 50 }));
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      added: 1,
+      words: [{ dictionaryKey: 'Bank', status: 'applied' }],
+    });
+    expect(updateCall).toMatchObject({
+      revision: 2,
+      status: 'queued',
+      manualPayload: { lemma: 'Bank', senses: [{ fa: 'نیمکت' }, { fa: 'بانک', hint: 'مالی' }] },
+    });
+  });
+
+  it('writes nothing when the second reviewer rejects the proposal', async () => {
+    let called = false;
+    const store = {
+      ...baseStore,
+      update: async () => {
+        called = true;
+        return { status: 'applied' as const, item };
+      },
+    };
+    const handler = createDictionaryEditorialAddSenseRoute({
+      ...deps,
+      store,
+      aiProvider: provider([
+        '[{"i": 1, "hasSense": true, "fa": "بانک"}]',
+        '[{"i": 1, "approve": false}]',
+      ]),
+    });
+    const response = await handler(request({ maxWords: 50 }));
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ added: 0, words: [] });
+    expect(called).toBe(false);
+  });
+
+  it('writes nothing when the generator proposes no additional sense', async () => {
+    let called = false;
+    const store = {
+      ...baseStore,
+      update: async () => {
+        called = true;
+        return { status: 'applied' as const, item };
+      },
+    };
+    const handler = createDictionaryEditorialAddSenseRoute({
+      ...deps,
+      store,
+      aiProvider: provider(['[{"i": 1, "hasSense": false}]']),
+    });
+    const response = await handler(request({ maxWords: 50 }));
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ added: 0, words: [] });
     expect(called).toBe(false);
   });
 });
