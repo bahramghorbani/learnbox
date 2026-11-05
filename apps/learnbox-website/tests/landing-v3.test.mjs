@@ -818,6 +818,7 @@ test(
       '#method',
       '#paths',
       '#product',
+      '/dictionary',
       '#download',
       'https://t.me/learnboxapp',
       '/privacy',

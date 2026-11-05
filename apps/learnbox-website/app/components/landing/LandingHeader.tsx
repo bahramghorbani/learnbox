@@ -11,6 +11,7 @@ const links = [
   ['روش یادگیری', '#method'],
   ['مسیرها', '#paths'],
   ['نمای اپ', '#product'],
+  ['دیکشنری', '/dictionary'],
   ['دانلود', '#download'],
 ];
 
