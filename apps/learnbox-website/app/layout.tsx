@@ -64,6 +64,8 @@ export const metadata: Metadata = {
     description: 'مرور هوشمند واژگان آلمانی برای فارسی‌زبانان.',
     images: ['/themes/summer/backgrounds/berlin-summer-v3.jpg'],
   },
+  // Google Search Console ownership (URL-prefix property https://learnboxapp.com/). Public token.
+  verification: { google: 'E8cjvDTwlHqZWkoctqJQZ3EzrCekIjpDwariOwkgV0k' },
   robots: {
     index: true,
     follow: true,
