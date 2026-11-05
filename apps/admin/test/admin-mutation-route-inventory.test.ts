@@ -187,6 +187,11 @@ const INVENTORY: Record<string, Entry> = {
     category: 'delegated',
     guardIn: 'lib/server/admin-dictionary-editorial-routes.ts',
   },
+  // AI proposes + independently reviews an extra sense for single-sense words; `queued` only.
+  'app/api/dictionary/editorial/add-sense/route.ts': {
+    category: 'delegated',
+    guardIn: 'lib/server/admin-dictionary-editorial-routes.ts',
+  },
   'app/api/splash/replace/route.ts': {
     category: 'delegated',
     guardIn: 'lib/server/admin-splash-routes.ts',
