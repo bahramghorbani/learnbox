@@ -274,6 +274,8 @@ const INVENTORY: Record<string, Entry> = {
  * included) or a read that goes through the shared server module/session layer.
  */
 const READ_ONLY: Record<string, 'hard-disabled' | 'session-layer'> = {
+  // Dictionary overview: GET-only visitor feedback (missed searches, error reports); super admin.
+  'app/api/dictionary/feedback/route.ts': 'session-layer',
   'app/api/users/route.ts': 'hard-disabled',
   // M3.1 support list: GET-only, so CSRF is not applicable; it still requires a valid Admin
   // session plus an operational role, and sits behind LEARNBOX_ADMIN_SUPPORT_ENABLED. It returns

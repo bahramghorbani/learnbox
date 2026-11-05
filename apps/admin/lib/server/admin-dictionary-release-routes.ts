@@ -3,12 +3,14 @@
 // release. Same guard as the editorial routes: super admin, trusted origin, CSRF, recent sign-in.
 import { randomUUID } from 'node:crypto';
 import { editorialActor, type EditorialDeps } from './admin-dictionary-editorial-routes';
+import { readFeedback } from './dictionary-feedback';
 import type { DictionaryReleasePublisher } from './dictionary-release-publisher';
 import type { PostgresDictionaryEditorialStore } from './postgres-dictionary-editorial-store';
 
 type Deps = Omit<EditorialDeps, 'store'> & {
   store?: Pick<PostgresDictionaryEditorialStore, 'releaseRows' | 'changedSince' | 'recordRelease'>;
-  publisher?: Pick<DictionaryReleasePublisher, 'state' | 'publish' | 'rollback'>;
+  publisher?: Pick<DictionaryReleasePublisher, 'state' | 'publish' | 'rollback' | 'knownWords'>;
+  feedbackDir?: string;
 };
 const noStore = { 'Cache-Control': 'no-store' };
 const json = (body: unknown, init?: ResponseInit) =>
@@ -92,6 +94,20 @@ export function createDictionaryReleaseActionRoute(deps: Deps) {
       });
     } catch {
       return new Response('Dictionary release unavailable', { status: 503, headers: noStore });
+    }
+  };
+}
+
+/** GET: visitor searches that found nothing and error reports, for the dictionary overview. */
+export function createDictionaryFeedbackRoute(deps: Deps) {
+  return async (request: Request) => {
+    if (!deps.feedbackDir) return missing();
+    const g = await guard(request, deps, false);
+    if (g.response) return g.response;
+    try {
+      return json(readFeedback(deps.feedbackDir, (words) => deps.publisher!.knownWords(words)));
+    } catch {
+      return new Response('Dictionary feedback unavailable', { status: 503, headers: noStore });
     }
   };
 }

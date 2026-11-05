@@ -397,6 +397,17 @@ export function DictionaryHero({
     };
   }, [value]);
 
+  // A search that stays empty for a few seconds is a word we are missing: tell the site once.
+  useEffect(() => {
+    const v = value.trim();
+    if (!result || result.hits.length || !v || sentMisses.has(v.toLowerCase())) return;
+    const t = setTimeout(() => {
+      sentMisses.add(v.toLowerCase());
+      sendFeedback({ type: 'miss', q: v });
+    }, 2500);
+    return () => clearTimeout(t);
+  }, [result, value]);
+
   useEffect(() => {
     const slash = (e: KeyboardEvent) => {
       if (e.key === '/' && document.activeElement !== q.current) {
@@ -600,20 +611,107 @@ function underlineDiff(base: string, form: string) {
   );
 }
 
+const sentMisses = new Set<string>();
+function sendFeedback(body: Record<string, string>) {
+  return fetch('/dictionary/feedback', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(body),
+    keepalive: true,
+  })
+    .then((r) => r.ok)
+    .catch(() => false);
+}
+
+const reportOptions = [
+  ['meaning', 'معنی درست نیست'],
+  ['example', 'مثال اشتباه است'],
+  ['article', 'حرف تعریف یا نوع کلمه اشتباه است'],
+  ['other', 'چیز دیگری'],
+] as const;
+
+function ReportForm({ lemma }: { lemma: string }) {
+  const [open, setOpen] = useState(false);
+  const [kind, setKind] = useState<string>('meaning');
+  const [note, setNote] = useState('');
+  const [state, setState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+  if (state === 'sent')
+    return (
+      <p className="report-done" role="status">
+        ممنون! گزارشت رسید و بررسی می‌شود.
+      </p>
+    );
+  if (!open)
+    return (
+      <button type="button" className="report" onClick={() => setOpen(true)}>
+        اشکالی دیدی؟ گزارش بده
+      </button>
+    );
+  return (
+    <form
+      className="report-form"
+      onSubmit={(e) => {
+        e.preventDefault();
+        setState('sending');
+        void sendFeedback({ type: 'report', lemma, kind, note }).then((ok) =>
+          setState(ok ? 'sent' : 'error'),
+        );
+      }}
+    >
+      <fieldset>
+        <legend>چه اشکالی دیدی؟</legend>
+        {reportOptions.map(([value, label]) => (
+          <label key={value}>
+            <input
+              type="radio"
+              name="report-kind"
+              value={value}
+              checked={kind === value}
+              onChange={() => setKind(value)}
+            />{' '}
+            {label}
+          </label>
+        ))}
+      </fieldset>
+      <label>
+        توضیح (اختیاری)
+        <textarea
+          value={note}
+          maxLength={500}
+          rows={3}
+          onChange={(e) => setNote(e.target.value)}
+          placeholder="مثلاً معنی درست را بنویس"
+        />
+      </label>
+      {state === 'error' ? (
+        <p className="report-error" role="alert">
+          ارسال نشد؛ کمی بعد دوباره امتحان کن.
+        </p>
+      ) : null}
+      <div className="report-actions">
+        <button type="submit" disabled={state === 'sending'}>
+          {state === 'sending' ? 'در حال ارسال…' : 'ارسال گزارش'}
+        </button>
+        <button type="button" className="report" onClick={() => setOpen(false)}>
+          انصراف
+        </button>
+      </div>
+    </form>
+  );
+}
+
 export function WordView({
   entry,
   quiz,
   family,
   synonyms,
   appHref,
-  reportHref,
 }: {
   entry: Entry;
   quiz: Quiz;
   family: Rel[];
   synonyms: Rel[];
   appHref: string;
-  reportHref: string;
 }) {
   const { saved, toggle } = useSaved();
   const isSaved = saved.includes(entry.lemma);
@@ -1148,9 +1246,7 @@ export function WordView({
                 </>
               )}
               <div style={{ marginTop: 18 }}>
-                <a className="report" href={reportHref} target="_blank" rel="noopener noreferrer">
-                  اشکالی دیدی؟ گزارش بده
-                </a>
+                <ReportForm lemma={entry.lemma} />
               </div>
             </div>
           )}

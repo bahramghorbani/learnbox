@@ -60,6 +60,28 @@ export class DictionaryReleasePublisher {
   }
 
   /** Only one build at a time; a stale lock (crashed build) expires after 10 minutes. */
+  /** Which of `words` the live release already has (as a word or an inflected form). */
+  knownWords(words: string[]): Set<string> {
+    const current = this.state().current;
+    const known = new Set<string>();
+    if (!current || !words.length) return known;
+    const db = new this.sqlite(join(this.dir, current.file), { readOnly: true });
+    try {
+      // Exact (indexed) lookups on the casings a visitor types: as-is, lower, Capitalised.
+      const has = db.prepare(
+        'SELECT 1 FROM entry WHERE lemma IN (?, ?, ?) UNION ALL SELECT 1 FROM form WHERE form IN (?, ?, ?) LIMIT 1',
+      );
+      for (const w of words) {
+        const lower = w.toLocaleLowerCase('de');
+        const cased = [w, lower, lower.charAt(0).toLocaleUpperCase('de') + lower.slice(1)];
+        if (has.get(...cased, ...cased)) known.add(w);
+      }
+    } finally {
+      db.close();
+    }
+    return known;
+  }
+
   private lock<T>(work: () => T): T | 'busy' {
     const path = join(this.dir, '.publish.lock');
     let fd: number;

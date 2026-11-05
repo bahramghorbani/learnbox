@@ -96,7 +96,6 @@ export default async function WordPage({ params }: Props) {
   const synonyms = existing(e.synonyms.filter((w) => w !== e.lemma)).slice(0, 8);
   const appHref =
     siteConfig.destinations.cafeBazaar.url ?? siteConfig.destinations.webApp.url ?? '/#download';
-  const report = siteConfig.destinations.telegram.url ?? siteConfig.destinations.contact.url ?? '/';
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'DefinedTerm',
@@ -116,14 +115,7 @@ export default async function WordPage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
       />
-      <WordView
-        entry={e}
-        quiz={quizFor(e)}
-        family={family}
-        synonyms={synonyms}
-        appHref={appHref}
-        reportHref={report}
-      />
+      <WordView entry={e} quiz={quizFor(e)} family={family} synonyms={synonyms} appHref={appHref} />
     </>
   );
 }

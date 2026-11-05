@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
+  createDictionaryFeedbackRoute,
   createDictionaryReleaseActionRoute,
   createDictionaryReleaseStatusRoute,
 } from '../lib/server/admin-dictionary-release-routes.js';
@@ -66,6 +67,7 @@ function deps(over: Record<string, unknown> = {}) {
   const publisher = {
     state: vi.fn(() => ({ current: record, history: [record] })),
     publish: vi.fn(() => ({ status: 'published' as const, report })),
+    knownWords: vi.fn((words: string[]) => new Set(words.filter((w) => w === 'Haus'))),
     rollback: vi.fn(() => ({
       status: 'rolled-back' as const,
       record: { ...record, kind: 'rollback' as const },
@@ -143,5 +145,23 @@ describe('dictionary release routes', () => {
       actor,
       expect.objectContaining({ action: 'rollback' }),
     );
+  });
+
+  it('serves visitor feedback to the super admin only, and is a 404 when not configured', async () => {
+    const { mkdtempSync, writeFileSync } = await import('node:fs');
+    const { tmpdir } = await import('node:os');
+    const { join } = await import('node:path');
+    const dir = mkdtempSync(join(tmpdir(), 'fb-route-'));
+    writeFileSync(
+      join(dir, 'feedback.jsonl'),
+      '{"type":"miss","q":"Haus","at":"a"}\n{"type":"miss","q":"Igel","at":"a"}\n',
+    );
+    const d = deps({ feedbackDir: dir });
+    const ok = await createDictionaryFeedbackRoute(d.deps)(get());
+    expect(ok.status).toBe(200);
+    expect(await ok.json()).toMatchObject({ misses: [{ q: 'Igel', count: 1 }], missTotal: 2 });
+    const anon = new Request('https://admin.learnbox.app/api/dictionary/feedback');
+    expect((await createDictionaryFeedbackRoute(d.deps)(anon)).status).toBe(401);
+    expect((await createDictionaryFeedbackRoute(deps().deps)(get())).status).toBe(404);
   });
 });

@@ -11,6 +11,7 @@ import { PostgresOwnerAuthStore } from './postgres-owner-auth-store';
 import { PostgresDictionaryEditorialStore } from './postgres-dictionary-editorial-store';
 import {
   createDictionaryReleaseActionRoute,
+  createDictionaryFeedbackRoute,
   createDictionaryReleaseStatusRoute,
 } from './admin-dictionary-release-routes';
 import { DictionaryReleasePublisher } from './dictionary-release-publisher';
@@ -57,6 +58,11 @@ export function createAdminDictionaryEditorialServer(deps: {
       update: createDictionaryEditorialUpdateRoute(shared),
       releaseStatus: createDictionaryReleaseStatusRoute({ ...shared, publisher: release }),
       releaseAction: createDictionaryReleaseActionRoute({ ...shared, publisher: release }),
+      feedback: createDictionaryFeedbackRoute({
+        ...shared,
+        publisher: release,
+        feedbackDir: deps.environment.LEARNBOX_ADMIN_DICTIONARY_FEEDBACK_DIR,
+      }),
     };
   } catch {
     return { enabled: false as const };

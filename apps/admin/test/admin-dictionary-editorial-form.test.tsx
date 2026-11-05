@@ -55,6 +55,7 @@ describe('dictionary editorial form', () => {
               manualPayload: JSON.parse(String(init.body)).manualPayload,
             },
           });
+        if (url === '/api/dictionary/feedback') return new Response(null, { status: 404 });
         if (url === '/api/dictionary/release')
           return Response.json({ current: null, history: [], pending: 0 });
         return Response.json({ items: [entry], total: 1 });
