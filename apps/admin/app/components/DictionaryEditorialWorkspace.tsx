@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { AdminSidebar } from './AdminSidebar';
+import { DictionaryReleasePanel } from './DictionaryReleasePanel';
 import { EmptyState, ErrorState, LoadingState } from './AdminStates';
 import {
   createIdempotencyKey,
@@ -249,6 +250,7 @@ export function DictionaryEditorialWorkspace() {
             + واژهٔ جدید
           </button>
         </div>
+        <DictionaryReleasePanel />
         <div className="dictionary-layout">
           <section className="card" aria-label="فهرست واژه‌ها">
             <div className="tabs" role="tablist" aria-label="فیلتر واژه‌ها">
@@ -323,8 +325,14 @@ export function DictionaryEditorialWorkspace() {
               <div className="card-body dictionary-editor">
                 {current && needsLook(current) ? (
                   <div className="dictionary-note" role="note">
-                    <strong>بازبین هوش مصنوعی این مدخل را اصلاح کرده است.</strong>{' '}
-                    {text(current.costMetadata.reviewIssues)}
+                    <strong>بازبین هوش مصنوعی این مدخل را اصلاح کرده است.</strong> نسخهٔ اصلاح‌شده
+                    همین است که می‌بینید و تأیید شده؛ اگر درست است کاری لازم نیست.
+                    {text(current.costMetadata.reviewIssues) ? (
+                      <details>
+                        <summary>یادداشت اصلی بازبین (انگلیسی)</summary>
+                        <p dir="ltr">{text(current.costMetadata.reviewIssues)}</p>
+                      </details>
+                    ) : null}
                   </div>
                 ) : null}
                 <div className="cp-form-grid">

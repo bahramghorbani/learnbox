@@ -12,6 +12,7 @@ import {
 } from './postgres-dictionary-editorial-store';
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+export type EditorialDeps = Deps;
 type Deps = {
   enabled: boolean;
   config: AdminAuthConfig;
@@ -32,6 +33,9 @@ const dictionaryPayload = (value: unknown, key: string) => record(value) && valu
 function key(request: Request) {
   const value = request.headers.get('idempotency-key');
   return value && uuid.test(value) ? value : undefined;
+}
+export async function editorialActor(request: Request, deps: Deps, mutation: boolean) {
+  return actor(request, deps, mutation);
 }
 async function actor(request: Request, deps: Deps, mutation: boolean) {
   if (!deps.enabled || !deps.config.enabled || !deps.sessionStore || !deps.store) return undefined;

@@ -40,3 +40,13 @@ the site's real tokens/fonts/assets so it ports 1:1 — no restyling at build ti
 - Word counts, `Termin`/`Feierabend` content and the pack name in the prototype are sample data.
 - Sources (all open): German Wiktionary (kaikki, CC BY-SA), farhang (CC BY-SA 3.0), Tatoeba (CC BY).
   Attribution goes in the privacy page.
+
+## Publishing from Admin (ADR 0018)
+
+- Admin → واژه‌نامه → «انتشار» builds a new release from the live file plus every approved panel
+  entry, runs the gates (integrity, ≤2% word loss, full search index, Persian meaning on every
+  word, German/Persian search smoke) and, only if all pass, swaps `current.json`.
+- «برگرداندن نسخهٔ قبلی» points `current.json` back at the previous file.
+- Host: `/home/ubuntu/learnbox/dictionary/published` (uid 1001). Admin mounts it read-write and sets
+  `LEARNBOX_ADMIN_DICTIONARY_RELEASE_DIR`; the landing mounts it read-only and sets
+  `LEARNBOX_DICTIONARY_DIR`. The landing picks up a new release within 10 seconds, no restart.

@@ -1,6 +1,7 @@
 // Read-only access to the active dictionary release file (ADR 0017). Server-only.
 // The landing has no database credential; this file is its only data source.
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import type { DatabaseSync as Db } from 'node:sqlite';
 
 export type Article = 'der' | 'die' | 'das' | null;
@@ -33,22 +34,54 @@ export type Entry = {
 export type Hit = { lemma: string; article: Article; fa: string; freq: number; via: string | null };
 
 let db: Db | null = null;
+let openFile: string | null = null;
+let checkedAt = 0;
 
-/** On only when the flag is set and the release file is mounted; otherwise every route is a 404. */
-export function dictionaryEnabled() {
+/**
+ * The release to serve. LEARNBOX_DICTIONARY_DIR is the directory Admin publishes into: its
+ * current.json names the live file, so a publish or rollback in the panel reaches the site without
+ * a restart. LEARNBOX_DICTIONARY_FILE (a single mounted file) still works on its own.
+ */
+function releaseFile(): string | null {
+  const dir = process.env.LEARNBOX_DICTIONARY_DIR;
+  if (dir) {
+    try {
+      const { file } = JSON.parse(readFileSync(join(dir, 'current.json'), 'utf8')) as {
+        file?: unknown;
+      };
+      // Only a plain release file name inside the directory, never a path.
+      if (typeof file === 'string' && /^dict-[0-9A-Za-z-]+\.sqlite$/.test(file)) {
+        const path = join(dir, file);
+        if (existsSync(path)) return path;
+      }
+    } catch {
+      // No pointer yet: fall through to the single-file setting.
+    }
+  }
   const file = process.env.LEARNBOX_DICTIONARY_FILE;
-  return (
-    process.env.LEARNBOX_DICTIONARY_ENABLED === 'true' &&
-    Boolean(file) &&
-    existsSync(file as string)
-  );
+  return file && existsSync(file) ? file : null;
+}
+
+/** On only when the flag is set and a release file is mounted; otherwise every route is a 404. */
+export function dictionaryEnabled() {
+  return process.env.LEARNBOX_DICTIONARY_ENABLED === 'true' && Boolean(releaseFile());
 }
 
 function open(): Db {
-  if (db) return db;
+  const now = Date.now();
+  // Look for a newly published release at most every 10 seconds.
+  if (db && now - checkedAt < 10_000) return db;
+  checkedAt = now;
+  const file = releaseFile();
+  if (db && (!file || file === openFile)) return db;
+  if (!file) throw new Error('No dictionary release file.');
   // getBuiltinModule keeps node:sqlite out of the bundler; it is part of the Node 22 runtime image.
   const { DatabaseSync } = process.getBuiltinModule('node:sqlite') as typeof import('node:sqlite');
-  db = new DatabaseSync(process.env.LEARNBOX_DICTIONARY_FILE as string, { readOnly: true });
+  const next = new DatabaseSync(file, { readOnly: true });
+  // Calls are synchronous, so nothing is mid-query on the old handle when it is closed.
+  db?.close();
+  db = next;
+  openFile = file;
   return db;
 }
 
