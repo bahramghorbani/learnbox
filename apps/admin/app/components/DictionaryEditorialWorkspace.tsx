@@ -81,7 +81,8 @@ function toForm(payload: Payload): Form {
   };
 }
 function fromForm(base: Payload, lemma: string, form: Form): Payload {
-  const { example: _single, ...rest } = base;
+  const rest = { ...base };
+  delete rest.example;
   return {
     ...rest,
     lemma,
