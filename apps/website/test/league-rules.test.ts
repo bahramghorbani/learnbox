@@ -127,6 +127,7 @@ describe('league rules (pure)', () => {
         learnedWords: 210,
         masteredWords: 1,
         verifiedPurchases: 1,
+        savedDictionaryWords: 0,
         everPromoted: true,
         everMedal: false,
         reachedBerlin: false,
@@ -140,5 +141,20 @@ describe('league rules (pure)', () => {
       'collector',
       'league_promoted',
     ]);
+  });
+
+  it('dictionary saves earn their own milestone badges', () => {
+    expect(
+      earnedBadges({
+        longestStreak: 0,
+        learnedWords: 0,
+        masteredWords: 0,
+        verifiedPurchases: 0,
+        savedDictionaryWords: 50,
+        everPromoted: false,
+        everMedal: false,
+        reachedBerlin: false,
+      }),
+    ).toEqual(['dict_10', 'dict_50']);
   });
 });

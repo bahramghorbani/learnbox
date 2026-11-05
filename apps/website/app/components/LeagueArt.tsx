@@ -78,6 +78,27 @@ export const BADGES: Record<
     ribbon: 'جعبهٔ ۵',
     bobo: 'welcome',
   },
+  dict_10: {
+    title: 'جست‌وجوگر',
+    hint: '۱۰ واژه در دیکشنری ذخیره شد',
+    family: 'words',
+    ribbon: '۱۰ واژه',
+    bobo: 'encourage',
+  },
+  dict_50: {
+    title: 'واژه‌ساز',
+    hint: '۵۰ واژه در دیکشنری ذخیره شد',
+    family: 'words',
+    ribbon: '۵۰ واژه',
+    bobo: 'focus',
+  },
+  dict_200: {
+    title: 'دانشنامه',
+    hint: '۲۰۰ واژه در دیکشنری ذخیره شد',
+    family: 'words',
+    ribbon: '۲۰۰ واژه',
+    bobo: 'celebrate',
+  },
   collector: {
     title: 'کلکسیونر',
     hint: 'خرید اولین پک',
