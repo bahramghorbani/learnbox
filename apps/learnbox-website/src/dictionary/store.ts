@@ -1,6 +1,6 @@
 // Read-only access to the active dictionary release file (ADR 0017). Server-only.
 // The landing has no database credential; this file is its only data source.
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import type { DatabaseSync as Db } from 'node:sqlite';
 
@@ -102,6 +102,22 @@ const toEntry = (r: Row): Entry => ({
   ...JSON.parse(r.data),
 });
 
+// Headwords the source stores in a non-NFC spelling (fully or partly decomposed), keyed by NFC.
+let nfcFor: { file: string | null; map: Map<string, string> } = { file: null, map: new Map() };
+/** The stored spelling of an NFC headword, for the ~200 the source keeps decomposed. */
+export function storedSpelling(nfc: string): string | null {
+  const d = open();
+  if (nfcFor.file !== openFile) {
+    const map = new Map<string, string>();
+    for (const { lemma } of d.prepare('SELECT lemma FROM entry').all() as { lemma: string }[]) {
+      const n = lemma.normalize('NFC');
+      if (n !== lemma) map.set(n, lemma);
+    }
+    nfcFor = { file: openFile, map };
+  }
+  return nfcFor.map.get(nfc) ?? null;
+}
+
 export function getEntry(lemma: string): Entry | null {
   const r = open().prepare('SELECT * FROM entry WHERE lemma = ?').get(lemma) as Row | undefined;
   return r ? toEntry(r) : null;
@@ -148,6 +164,28 @@ export function brief(words: string[]): Omit<Hit, 'via' | 'freq'>[] {
   return rows
     .map((r) => ({ lemma: r.lemma, article: r.article, fa: r.fa }))
     .sort((x, y) => order.get(x.lemma)! - order.get(y.lemma)!);
+}
+
+/** Public when the owner has opened the dictionary to search engines (otherwise noindex). */
+export function dictionaryPublic() {
+  return process.env.LEARNBOX_DICTIONARY_PUBLIC === 'true' && dictionaryEnabled();
+}
+
+/** Every headword, most frequent first: the dictionary's crawlable pages. */
+export function lemmas(): string[] {
+  return (
+    open().prepare('SELECT lemma FROM entry ORDER BY freq DESC, lemma').all() as { lemma: string }[]
+  ).map((r) => r.lemma);
+}
+
+/** When the live release was published: the honest last-modified date of the dictionary. */
+export function releaseDate(): Date | null {
+  open();
+  try {
+    return openFile ? statSync(openFile).mtime : null;
+  } catch {
+    return null;
+  }
 }
 
 export function stats() {

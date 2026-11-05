@@ -50,3 +50,20 @@ the site's real tokens/fonts/assets so it ports 1:1 — no restyling at build ti
 - Host: `/home/ubuntu/learnbox/dictionary/published` (uid 1001). Admin mounts it read-write and sets
   `LEARNBOX_ADMIN_DICTIONARY_RELEASE_DIR`; the landing mounts it read-only and sets
   `LEARNBOX_DICTIONARY_DIR`. The landing picks up a new release within 10 seconds, no restart.
+
+## Search engines and AI assistants
+
+- `/sitemap.xml` is a sitemap index: `/sitemaps/pages.xml` (landing pages + `/dictionary`) and
+  `/sitemaps/dictionary-N.xml`, 10,000 word URLs each (protocol limit 50,000). Only `<loc>` and an
+  honest `<lastmod>` are sent (Google ignores `changefreq`/`priority`); landing dates live in
+  `src/seo/sitemap.ts` `LANDING_PAGES` — bump a date when that page's content changes. Dictionary
+  children appear only when `LEARNBOX_DICTIONARY_PUBLIC=true`; with it unset the dictionary stays
+  `noindex` and out of the sitemap.
+- One URL per word: `wordHref` emits NFC. ~200 source headwords are stored decomposed (NFD); the
+  word page falls back to the NFD form, and the sitemap dedupes, so no listed URL 404s.
+- `robots.txt` allows everything except machine endpoints (`/dictionary/search`,
+  `/dictionary/feedback`, `/api/`, `/dev/`) and names search and AI crawlers (Googlebot,
+  Google-Extended, GPTBot, OAI-SearchBot, ClaudeBot, PerplexityBot, …) explicitly.
+- `/llms.txt` (llmstxt.org) summarises the site and dictionary for AI assistants.
+- JSON-LD: home `Organization` + `WebSite`; `/dictionary` `WebSite` with `SearchAction`; word
+  pages `DefinedTerm` + `BreadcrumbList`.

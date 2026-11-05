@@ -7,7 +7,9 @@ import {
   getEntry,
   resolveLemma,
   type Entry,
+  storedSpelling,
 } from '../../../src/dictionary/store';
+import { ldJson } from '../../../src/seo/sitemap';
 import { wordHref } from '../../../src/dictionary/href';
 import { WordView, type Quiz } from '../client';
 
@@ -15,7 +17,9 @@ type Props = { params: Promise<{ word: string }> };
 
 function load(raw: string): Entry {
   const word = decodeURIComponent(raw).normalize('NFC');
-  const entry = getEntry(word);
+  // ~200 headwords are stored (partly) decomposed in the source data; URLs always arrive as NFC.
+  const stored = getEntry(word) ? null : storedSpelling(word);
+  const entry = getEntry(stored ?? word);
   if (entry) return entry;
   // ging -> gehen, termin -> Termin: one canonical page per headword.
   const lemma = resolveLemma(word);
@@ -96,25 +100,44 @@ export default async function WordPage({ params }: Props) {
   const synonyms = existing(e.synonyms.filter((w) => w !== e.lemma)).slice(0, 8);
   const appHref =
     siteConfig.destinations.cafeBazaar.url ?? siteConfig.destinations.webApp.url ?? '/#download';
+  const pageUrl = `${siteConfig.siteUrl}${wordHref(e.lemma)}`;
+  const head = `${e.article ? e.article + ' ' : ''}${e.lemma}`;
   const jsonLd = {
     '@context': 'https://schema.org',
-    '@type': 'DefinedTerm',
-    name: e.lemma,
-    description: e.senses.map((s) => s.fa).join('؛ '),
-    inLanguage: 'de',
-    url: `${siteConfig.siteUrl}${wordHref(e.lemma)}`,
-    inDefinedTermSet: {
-      '@type': 'DefinedTermSet',
-      name: 'دیکشنری آلمانی به فارسی لرن‌باکس',
-      url: `${siteConfig.siteUrl}/dictionary`,
-    },
+    '@graph': [
+      {
+        '@type': 'DefinedTerm',
+        '@id': `${pageUrl}#term`,
+        name: e.lemma,
+        ...(head !== e.lemma ? { alternateName: head } : {}),
+        description: e.senses.map((s) => s.fa).join('؛ '),
+        inLanguage: 'de',
+        url: pageUrl,
+        inDefinedTermSet: {
+          '@type': 'DefinedTermSet',
+          name: 'دیکشنری آلمانی به فارسی لرن‌باکس',
+          url: `${siteConfig.siteUrl}/dictionary`,
+        },
+      },
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'لرن‌باکس', item: `${siteConfig.siteUrl}/` },
+          {
+            '@type': 'ListItem',
+            position: 2,
+            name: 'دیکشنری آلمانی به فارسی',
+            item: `${siteConfig.siteUrl}/dictionary`,
+          },
+          { '@type': 'ListItem', position: 3, name: e.lemma, item: pageUrl },
+        ],
+      },
+    ],
   };
+
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
-      />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: ldJson(jsonLd) }} />
       <WordView entry={e} quiz={quizFor(e)} family={family} synonyms={synonyms} appHref={appHref} />
     </>
   );

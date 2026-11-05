@@ -11,7 +11,13 @@ export const metadata: Metadata = {
   title: { default: 'دیکشنری آلمانی به فارسی', template: '%s | دیکشنری لرن‌باکس' },
   // Owner preview: kept out of search engines until LEARNBOX_DICTIONARY_PUBLIC=true.
   robots:
-    process.env.LEARNBOX_DICTIONARY_PUBLIC === 'true' ? undefined : { index: false, follow: false },
+    process.env.LEARNBOX_DICTIONARY_PUBLIC === 'true'
+      ? {
+          index: true,
+          follow: true,
+          googleBot: { index: true, follow: true, 'max-snippet': -1, 'max-image-preview': 'large' },
+        }
+      : { index: false, follow: false },
 };
 
 export default function DictionaryLayout({ children }: { children: React.ReactNode }) {
