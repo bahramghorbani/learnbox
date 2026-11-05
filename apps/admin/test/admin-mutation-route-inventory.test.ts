@@ -197,6 +197,11 @@ const INVENTORY: Record<string, Entry> = {
     category: 'delegated',
     guardIn: 'lib/server/admin-dictionary-editorial-routes.ts',
   },
+  // AI proposes a fix for the newest visitor error reports, independently reviewed; `queued`.
+  'app/api/dictionary/editorial/review-reports/route.ts': {
+    category: 'delegated',
+    guardIn: 'lib/server/admin-dictionary-editorial-routes.ts',
+  },
   'app/api/splash/replace/route.ts': {
     category: 'delegated',
     guardIn: 'lib/server/admin-splash-routes.ts',

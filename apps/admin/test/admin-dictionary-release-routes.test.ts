@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   createDictionaryFeedbackRoute,
   createDictionaryEditorialDraftMissingWordsRoute,
+  createDictionaryEditorialReviewReportsRoute,
   createDictionaryReleaseActionRoute,
   createDictionaryReleaseStatusRoute,
 } from '../lib/server/admin-dictionary-release-routes.js';
@@ -65,6 +66,8 @@ function deps(over: Record<string, unknown> = {}) {
     changedSince: vi.fn(async () => ({ status: 'ok' as const, changed: 3 })),
     recordRelease: vi.fn(async () => undefined),
     create: vi.fn(async () => ({ status: 'applied' as const, item: {} }) as never),
+    entriesByKeys: vi.fn(async () => ({ status: 'ok' as const, items: [] })),
+    update: vi.fn(async () => ({ status: 'applied' as const, item: {} }) as never),
   };
   const publisher = {
     state: vi.fn(() => ({ current: record, history: [record] })),
@@ -284,5 +287,119 @@ describe('dictionary release routes', () => {
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ added: 0, words: [] });
     expect(store.create).not.toHaveBeenCalled();
+  });
+});
+
+describe('dictionary editorial review-reports route', () => {
+  it('is unreachable when the AI provider is not configured', async () => {
+    const { mkdtempSync, writeFileSync } = await import('node:fs');
+    const { tmpdir } = await import('node:os');
+    const { join } = await import('node:path');
+    const dir = mkdtempSync(join(tmpdir(), 'fb-route-'));
+    writeFileSync(
+      join(dir, 'feedback.jsonl'),
+      '{"type":"report","lemma":"Bank","kind":"wrong","note":"n","at":"a"}\n',
+    );
+    const d = deps({ feedbackDir: dir, aiProvider: undefined });
+    const route = createDictionaryEditorialReviewReportsRoute(d.deps);
+    expect((await route(post({}))).status).toBe(503);
+  });
+
+  it('writes a fix only when the second reviewer approves it', async () => {
+    const { mkdtempSync, writeFileSync } = await import('node:fs');
+    const { tmpdir } = await import('node:os');
+    const { join } = await import('node:path');
+    const dir = mkdtempSync(join(tmpdir(), 'fb-route-'));
+    writeFileSync(
+      join(dir, 'feedback.jsonl'),
+      '{"type":"report","lemma":"Bank","kind":"wrong","note":"فقط نیمکت درست است","at":"a"}\n',
+    );
+    let call = 0;
+    const replies = [
+      JSON.stringify([
+        {
+          i: 1,
+          valid: true,
+          senses: [{ fa: 'نیمکت', hint: '' }],
+          examples: [{ de: 'Die Bank ist neu.', fa: 'نیمکت نو است.' }],
+        },
+      ]),
+      JSON.stringify([{ i: 1, approve: true }]),
+    ];
+    const entry = {
+      id: 'e1b5b438-99c7-4a2e-a09a-859f7c9f95cc',
+      dictionaryKey: 'Bank',
+      revision: 2,
+      payload: { lemma: 'Bank', senses: [{ fa: 'بانک', hint: '' }] },
+    };
+    const store = {
+      ...deps().store,
+      entriesByKeys: vi.fn(async () => ({ status: 'ok' as const, items: [entry] })),
+      update: vi.fn(async () => ({ status: 'applied' as const, item: {} }) as never),
+    };
+    const d = deps({
+      feedbackDir: dir,
+      store,
+      aiProvider: {
+        provider: 'test',
+        model: 'm',
+        complete: vi.fn(async () => replies[call++] ?? '[]'),
+        listTextModels: vi.fn(),
+      },
+    });
+    const route = createDictionaryEditorialReviewReportsRoute(d.deps);
+    const response = await route(post({ maxWords: 10 }));
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      added: 1,
+      words: [{ lemma: 'Bank', status: 'applied' }],
+    });
+    expect(store.update).toHaveBeenCalledWith(
+      actor,
+      entry.id,
+      expect.objectContaining({ revision: 2, status: 'queued' }),
+    );
+  });
+
+  it('writes nothing when the second reviewer rejects the fix', async () => {
+    const { mkdtempSync, writeFileSync } = await import('node:fs');
+    const { tmpdir } = await import('node:os');
+    const { join } = await import('node:path');
+    const dir = mkdtempSync(join(tmpdir(), 'fb-route-'));
+    writeFileSync(
+      join(dir, 'feedback.jsonl'),
+      '{"type":"report","lemma":"Bank","kind":"wrong","note":"n","at":"a"}\n',
+    );
+    let call = 0;
+    const replies = [
+      JSON.stringify([{ i: 1, valid: true, senses: [{ fa: 'نیمکت', hint: '' }], examples: [] }]),
+      JSON.stringify([{ i: 1, approve: false }]),
+    ];
+    const entry = {
+      id: 'e1b5b438-99c7-4a2e-a09a-859f7c9f95cc',
+      dictionaryKey: 'Bank',
+      revision: 2,
+      payload: { lemma: 'Bank', senses: [{ fa: 'بانک', hint: '' }] },
+    };
+    const store = {
+      ...deps().store,
+      entriesByKeys: vi.fn(async () => ({ status: 'ok' as const, items: [entry] })),
+      update: vi.fn(),
+    };
+    const d = deps({
+      feedbackDir: dir,
+      store,
+      aiProvider: {
+        provider: 'test',
+        model: 'm',
+        complete: vi.fn(async () => replies[call++] ?? '[]'),
+        listTextModels: vi.fn(),
+      },
+    });
+    const route = createDictionaryEditorialReviewReportsRoute(d.deps);
+    const response = await route(post({ maxWords: 10 }));
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ added: 0, words: [] });
+    expect(store.update).not.toHaveBeenCalled();
   });
 });

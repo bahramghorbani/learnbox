@@ -157,6 +157,48 @@ export class PostgresDictionaryEditorialStore {
     }
   }
   /**
+   * Live entries for an exact set of dictionary keys, in the order given — used to look up the
+   * current content behind a visitor-reported word before proposing a fix.
+   */
+  async entriesByKeys(
+    actor: string,
+    keys: string[],
+  ): Promise<
+    | {
+        status: 'ok';
+        items: { id: string; dictionaryKey: string; revision: number; payload: Row }[];
+      }
+    | { status: 'forbidden' }
+  > {
+    if (!uuidPattern.test(actor)) throw new Error('Actor user id is invalid.');
+    if (!keys.length) return { status: 'ok', items: [] };
+    const client = await this.pool.connect();
+    try {
+      if (!(await this.superAdmin(client, actor))) return { status: 'forbidden' };
+      const rows = await client.query(
+        `SELECT id, dictionary_key, revision, coalesce(manual_payload, ai_payload) AS payload
+        FROM dictionary_editorial_entries
+        WHERE status <> 'deleted' AND dictionary_key = ANY($1::text[])`,
+        [keys],
+      );
+      const byKey = new Map(
+        rows.rows.map((r) => [
+          String(r.dictionary_key),
+          {
+            id: String(r.id),
+            dictionaryKey: String(r.dictionary_key),
+            revision: Number(r.revision),
+            payload: r.payload as Row,
+          },
+        ]),
+      );
+      return { status: 'ok', items: keys.map((k) => byKey.get(k)).filter((v) => v !== undefined) };
+    } finally {
+      client.release();
+    }
+  }
+
+  /**
    * Live words whose current meaning has exactly one sense, highest-frequency first. These are
    * the candidates for an AI-proposed additional sense (card generation's second-review pattern:
    * a reviewer call must confirm a proposal before it is written at all).
