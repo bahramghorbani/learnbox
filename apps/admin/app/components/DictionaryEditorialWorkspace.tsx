@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { AdminSidebar } from './AdminSidebar';
+import { DictionaryFeedbackPanel } from './DictionaryFeedbackPanel';
 import { DictionaryReleasePanel } from './DictionaryReleasePanel';
 import { EmptyState, ErrorState, LoadingState } from './AdminStates';
 import {
@@ -251,6 +252,7 @@ export function DictionaryEditorialWorkspace() {
           </button>
         </div>
         <DictionaryReleasePanel />
+        <DictionaryFeedbackPanel onPick={setQ} />
         <div className="dictionary-layout">
           <section className="card" aria-label="فهرست واژه‌ها">
             <div className="tabs" role="tablist" aria-label="فیلتر واژه‌ها">

@@ -3623,6 +3623,34 @@ button {
   font-size: 12px;
   line-height: 1.9;
 }
+.cp-workspace .dictionary-feedback {
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+}
+.cp-workspace .dictionary-feedback h3 {
+  margin: 0 0 4px;
+  font-size: 14px;
+}
+.cp-workspace .dictionary-feedback-list {
+  margin: 8px 0 0;
+  padding-inline-start: 20px;
+  max-height: 260px;
+  overflow: auto;
+  font-size: 13px;
+  line-height: 1.9;
+}
+.cp-workspace .dictionary-feedback .link {
+  border: 0;
+  background: none;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
 .cp-workspace .dictionary-group {
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
