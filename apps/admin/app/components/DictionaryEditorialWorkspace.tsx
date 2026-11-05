@@ -8,6 +8,7 @@ import { DictionaryReleasePanel } from './DictionaryReleasePanel';
 import { DictionaryTranslationPilotPanel } from './DictionaryTranslationPilotPanel';
 import { DictionaryAddSensePanel } from './DictionaryAddSensePanel';
 import { DictionaryDraftMissingWordsPanel } from './DictionaryDraftMissingWordsPanel';
+import { DictionaryReviewReportsPanel } from './DictionaryReviewReportsPanel';
 import { EmptyState, ErrorState, LoadingState } from './AdminStates';
 import {
   createIdempotencyKey,
@@ -258,6 +259,7 @@ export function DictionaryEditorialWorkspace() {
         <DictionaryTranslationPilotPanel />
         <DictionaryAddSensePanel />
         <DictionaryDraftMissingWordsPanel />
+        <DictionaryReviewReportsPanel />
         <DictionaryFeedbackPanel onPick={setQ} />
         <div className="dictionary-layout">
           <section className="card" aria-label="فهرست واژه‌ها">

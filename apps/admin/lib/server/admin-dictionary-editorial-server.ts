@@ -16,6 +16,7 @@ import {
   createDictionaryReleaseActionRoute,
   createDictionaryFeedbackRoute,
   createDictionaryEditorialDraftMissingWordsRoute,
+  createDictionaryEditorialReviewReportsRoute,
   createDictionaryReleaseStatusRoute,
 } from './admin-dictionary-release-routes';
 import { DictionaryReleasePublisher } from './dictionary-release-publisher';
@@ -74,6 +75,11 @@ export function createAdminDictionaryEditorialServer(deps: {
         feedbackDir: deps.environment.LEARNBOX_ADMIN_DICTIONARY_FEEDBACK_DIR,
       }),
       draftMissingWords: createDictionaryEditorialDraftMissingWordsRoute({
+        ...shared,
+        publisher: release,
+        feedbackDir: deps.environment.LEARNBOX_ADMIN_DICTIONARY_FEEDBACK_DIR,
+      }),
+      reviewReports: createDictionaryEditorialReviewReportsRoute({
         ...shared,
         publisher: release,
         feedbackDir: deps.environment.LEARNBOX_ADMIN_DICTIONARY_FEEDBACK_DIR,

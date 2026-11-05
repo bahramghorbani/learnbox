@@ -254,4 +254,26 @@ suite('dictionary editorial store (real Postgres)', () => {
 
     expect((await store.singleSenseWordsNeedingSecondSense(outsider, 10)).status).toBe('forbidden');
   });
+
+  it('fetches live entries by exact key, in the order asked, skipping unknown keys', async () => {
+    const insert = (key: string, senses: unknown[]) =>
+      store.create(superAdmin, {
+        dictionaryKey: key,
+        aiPayload: { lemma: key, freq: 1, senses },
+        source: 'test',
+        model: null,
+        costMetadata: {},
+        status: 'approved',
+        idempotencyKey: randomUUID(),
+      });
+    await insert('Fenster', [{ fa: 'پنجره' }]);
+    await insert('Tisch', [{ fa: 'میز' }]);
+
+    const found = await store.entriesByKeys(superAdmin, ['Tisch', 'NoSuchWord', 'Fenster']);
+    if (found.status !== 'ok') throw new Error('forbidden');
+    expect(found.items.map((i) => i.dictionaryKey)).toEqual(['Tisch', 'Fenster']);
+    expect(found.items[0]!.payload.senses).toEqual([{ fa: 'میز' }]);
+
+    expect((await store.entriesByKeys(outsider, ['Tisch'])).status).toBe('forbidden');
+  });
 });

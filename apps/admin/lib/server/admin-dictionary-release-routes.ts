@@ -14,7 +14,7 @@ import type { PostgresDictionaryEditorialStore } from './postgres-dictionary-edi
 type Deps = Omit<EditorialDeps, 'store'> & {
   store?: Pick<
     PostgresDictionaryEditorialStore,
-    'releaseRows' | 'changedSince' | 'recordRelease' | 'create'
+    'releaseRows' | 'changedSince' | 'recordRelease' | 'create' | 'entriesByKeys' | 'update'
   >;
   publisher?: Pick<DictionaryReleasePublisher, 'state' | 'publish' | 'rollback' | 'knownWords'>;
   feedbackDir?: string;
@@ -268,6 +268,169 @@ export function createDictionaryEditorialDraftMissingWordsRoute(deps: Deps) {
         results.push({ q: words[i - 1]!.q, status: result.status });
       } catch {
         results.push({ q: words[i - 1]!.q, status: 'error' });
+      }
+    }
+    return json({ added: results.filter((r) => r.status === 'applied').length, words: results });
+  };
+}
+
+/**
+ * POST: the newest visitor error reports (one per lemma, most recent kept). One AI call proposes
+ * a corrected senses/examples payload only when the report looks valid against the word's current
+ * content, a second independent AI call must confirm the fix before anything is written, and a
+ * structural re-check runs on top of that. Writes land `queued`, same gate as the other pilots.
+ */
+export function createDictionaryEditorialReviewReportsRoute(deps: Deps) {
+  return async (request: Request) => {
+    const g = await guard(request, deps, true);
+    if (g.response) return g.response;
+    if (!deps.feedbackDir) return missing();
+    if (!deps.aiProvider)
+      return json({ code: 'provider_not_configured' }, { status: 503, headers: noStore });
+    let body: Record<string, unknown> | undefined;
+    try {
+      body = (await request.json()) as Record<string, unknown>;
+    } catch {
+      /* invalid */
+    }
+    const maxWords = body && typeof body.maxWords === 'number' ? body.maxWords : 10;
+    if (!Number.isSafeInteger(maxWords) || maxWords < 1 || maxWords > 20)
+      return new Response('Invalid request', { status: 400, headers: noStore });
+
+    let reports: { lemma: string; kind: string; note: string; at: string }[];
+    try {
+      reports = readFeedback(deps.feedbackDir, (words) =>
+        deps.publisher!.knownWords(words),
+      ).reports;
+    } catch {
+      return new Response('Dictionary feedback unavailable', { status: 503, headers: noStore });
+    }
+    // One report per lemma: the newest (reports already come newest-first).
+    const byLemma = new Map<string, { lemma: string; kind: string; note: string; at: string }>();
+    for (const r of reports) if (r.lemma && !byLemma.has(r.lemma)) byLemma.set(r.lemma, r);
+    const topReports = [...byLemma.values()].slice(0, maxWords);
+    if (!topReports.length) return json({ added: 0, words: [] });
+
+    let entries;
+    try {
+      entries = await deps.store!.entriesByKeys(
+        g.user,
+        topReports.map((r) => r.lemma),
+      );
+    } catch {
+      return new Response('Dictionary release unavailable', { status: 503, headers: noStore });
+    }
+    if (entries.status === 'forbidden') return missing();
+    const entryByKey = new Map(entries.items.map((e) => [e.dictionaryKey, e]));
+    const slots = topReports
+      .map((r, i) => ({ i: i + 1, report: r, entry: entryByKey.get(r.lemma) }))
+      .filter((s): s is typeof s & { entry: NonNullable<(typeof s)['entry']> } => Boolean(s.entry));
+    if (!slots.length) return json({ added: 0, words: [] });
+
+    let generated: string;
+    try {
+      generated = await deps.aiProvider.complete({
+        system: [
+          'You are a German-Persian lexicographer reviewing visitor error reports on a dictionary.',
+          'Each numbered item gives the German word, its current Persian senses/examples, and the',
+          'report (kind + note). Only when the report describes a real, verifiable error — correct',
+          'if it is, otherwise mark invalid. Propose the full corrected senses and examples arrays',
+          '(keep anything that was already correct, fix only what the report justifies).',
+          'Reply with a single JSON array and no other text:',
+          '[{"i": <number>, "valid": <bool>, "senses": [{"fa": "...", "hint": "..."}],',
+          ' "examples": [{"de": "...", "fa": "..."}]}]',
+          'Every "i" must be included.',
+        ].join('\n'),
+        user: slots
+          .map(
+            (s) =>
+              `${s.i}. word=${s.report.lemma} current=${JSON.stringify(s.entry.payload.senses)} ` +
+              `report_kind=${s.report.kind} report_note=${s.report.note}`,
+          )
+          .join('\n'),
+        maxOutputTokens: 6000,
+        timeoutMs: 120_000,
+      });
+    } catch (error) {
+      return json(
+        { code: 'provider_error', message: (error as Error).message },
+        { status: 502, headers: noStore },
+      );
+    }
+    const proposals = new Map<number, Record<string, unknown>>();
+    for (const entry of parseJsonArray(generated)) {
+      if (!entry || typeof entry !== 'object') continue;
+      const e = entry as Record<string, unknown>;
+      const i = Number(e.i);
+      if (e.valid === true && Number.isInteger(i) && i >= 1 && i <= slots.length)
+        proposals.set(i, e);
+    }
+    if (!proposals.size) return json({ added: 0, words: [] });
+
+    let reviewed: string;
+    try {
+      reviewed = await deps.aiProvider.complete({
+        system: [
+          'You are an independent reviewer of proposed fixes to a German-Persian dictionary made',
+          'in response to a visitor error report. You did not write these. For each numbered item,',
+          'the original report and the proposed corrected senses/examples are given, alongside the',
+          'word. Confirm only if the fix genuinely addresses a real error and every Persian',
+          'translation is accurate and natural. Reject anything unjustified or wrong.',
+          'Reply with a single JSON array and no other text: [{"i": <number>, "approve": <bool>}]',
+        ].join('\n'),
+        user: [...proposals.entries()]
+          .map(
+            ([i, p]) =>
+              `${i}. word=${slots[i - 1]!.report.lemma} report=${slots[i - 1]!.report.note} proposed=${JSON.stringify(p)}`,
+          )
+          .join('\n'),
+        maxOutputTokens: 2048,
+        timeoutMs: 120_000,
+      });
+    } catch (error) {
+      return json(
+        { code: 'provider_error', message: (error as Error).message },
+        { status: 502, headers: noStore },
+      );
+    }
+    const approved = new Set<number>();
+    for (const entry of parseJsonArray(reviewed)) {
+      if (!entry || typeof entry !== 'object') continue;
+      const e = entry as Record<string, unknown>;
+      const i = Number(e.i);
+      if (e.approve === true && Number.isInteger(i)) approved.add(i);
+    }
+
+    const results: { lemma: string; status: string }[] = [];
+    for (const [i, proposal] of proposals) {
+      if (!approved.has(i)) continue;
+      const slot = slots[i - 1]!;
+      const senses = (Array.isArray(proposal.senses) ? proposal.senses : [])
+        .map((s) => ({
+          fa: str((s as Record<string, unknown>)?.fa),
+          hint: str((s as Record<string, unknown>)?.hint),
+        }))
+        .filter((s) => s.fa);
+      if (!senses.length) {
+        results.push({ lemma: slot.report.lemma, status: 'invalid' });
+        continue;
+      }
+      const examples = (Array.isArray(proposal.examples) ? proposal.examples : [])
+        .map((e) => ({
+          de: str((e as Record<string, unknown>)?.de),
+          fa: str((e as Record<string, unknown>)?.fa),
+        }))
+        .filter((e) => e.de);
+      try {
+        const result = await deps.store!.update(g.user, slot.entry.id, {
+          revision: slot.entry.revision,
+          manualPayload: { ...slot.entry.payload, senses, examples },
+          status: 'queued',
+          idempotencyKey: randomUUID(),
+        });
+        results.push({ lemma: slot.report.lemma, status: result.status });
+      } catch {
+        results.push({ lemma: slot.report.lemma, status: 'error' });
       }
     }
     return json({ added: results.filter((r) => r.status === 'applied').length, words: results });
