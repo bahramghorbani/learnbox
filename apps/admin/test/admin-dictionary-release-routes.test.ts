@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
   createDictionaryFeedbackRoute,
+  createDictionaryEditorialDraftMissingWordsRoute,
   createDictionaryReleaseActionRoute,
   createDictionaryReleaseStatusRoute,
 } from '../lib/server/admin-dictionary-release-routes.js';
@@ -63,6 +64,7 @@ function deps(over: Record<string, unknown> = {}) {
     releaseRows: vi.fn(async () => ({ status: 'ok' as const, rows: [] })),
     changedSince: vi.fn(async () => ({ status: 'ok' as const, changed: 3 })),
     recordRelease: vi.fn(async () => undefined),
+    create: vi.fn(async () => ({ status: 'applied' as const, item: {} }) as never),
   };
   const publisher = {
     state: vi.fn(() => ({ current: record, history: [record] })),
@@ -163,5 +165,124 @@ describe('dictionary release routes', () => {
     const anon = new Request('https://admin.learnbox.app/api/dictionary/feedback');
     expect((await createDictionaryFeedbackRoute(d.deps)(anon)).status).toBe(401);
     expect((await createDictionaryFeedbackRoute(deps().deps)(get())).status).toBe(404);
+  });
+
+  it('is unreachable when the AI provider is not configured', async () => {
+    const { mkdtempSync, writeFileSync } = await import('node:fs');
+    const { tmpdir } = await import('node:os');
+    const { join } = await import('node:path');
+    const dir = mkdtempSync(join(tmpdir(), 'fb-route-'));
+    writeFileSync(join(dir, 'feedback.jsonl'), '{"type":"miss","q":"Igel","at":"a"}\n');
+    const d = deps({ feedbackDir: dir, aiProvider: undefined });
+    expect((await createDictionaryEditorialDraftMissingWordsRoute(d.deps)(post({}))).status).toBe(
+      503,
+    );
+  });
+
+  it('rejects a batch bigger than 20 words', async () => {
+    const { mkdtempSync, writeFileSync } = await import('node:fs');
+    const { tmpdir } = await import('node:os');
+    const { join } = await import('node:path');
+    const dir = mkdtempSync(join(tmpdir(), 'fb-route-'));
+    writeFileSync(join(dir, 'feedback.jsonl'), '{"type":"miss","q":"Igel","at":"a"}\n');
+    const d = deps({
+      feedbackDir: dir,
+      aiProvider: { provider: 'test', model: 'm', complete: vi.fn(), listTextModels: vi.fn() },
+    });
+    const route = createDictionaryEditorialDraftMissingWordsRoute(d.deps);
+    expect((await route(post({ maxWords: 21 }))).status).toBe(400);
+  });
+
+  it('writes a full entry only when the second reviewer approves it', async () => {
+    const { mkdtempSync, writeFileSync } = await import('node:fs');
+    const { tmpdir } = await import('node:os');
+    const { join } = await import('node:path');
+    const dir = mkdtempSync(join(tmpdir(), 'fb-route-'));
+    writeFileSync(join(dir, 'feedback.jsonl'), '{"type":"miss","q":"igel","at":"a"}\n');
+    let call = 0;
+    const replies = [
+      JSON.stringify([
+        {
+          i: 1,
+          skip: false,
+          lemma: 'Igel',
+          article: 'der',
+          pos: 'noun',
+          freq: 20,
+          senses: [{ fa: 'جوجه‌تیغی', hint: '' }],
+          examples: [{ de: 'Der Igel schläft.', fa: 'جوجه‌تیغی خواب است.' }],
+        },
+      ]),
+      JSON.stringify([{ i: 1, approve: true }]),
+    ];
+    const store = {
+      ...deps().store,
+      create: vi.fn(async () => ({ status: 'applied' as const, item: {} }) as never),
+    };
+    const d = deps({
+      feedbackDir: dir,
+      store,
+      aiProvider: {
+        provider: 'test',
+        model: 'm',
+        complete: vi.fn(async () => replies[call++] ?? '[]'),
+        listTextModels: vi.fn(),
+      },
+    });
+    const route = createDictionaryEditorialDraftMissingWordsRoute(d.deps);
+    const response = await route(post({ maxWords: 10 }));
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      added: 1,
+      words: [{ q: 'igel', status: 'applied' }],
+    });
+    expect(store.create).toHaveBeenCalledWith(
+      actor,
+      expect.objectContaining({
+        dictionaryKey: 'Igel',
+        source: 'ai-pilot-3/miss',
+        status: 'queued',
+      }),
+    );
+  });
+
+  it('writes nothing when the second reviewer rejects the proposal', async () => {
+    const { mkdtempSync, writeFileSync } = await import('node:fs');
+    const { tmpdir } = await import('node:os');
+    const { join } = await import('node:path');
+    const dir = mkdtempSync(join(tmpdir(), 'fb-route-'));
+    writeFileSync(join(dir, 'feedback.jsonl'), '{"type":"miss","q":"igel","at":"a"}\n');
+    let call = 0;
+    const replies = [
+      JSON.stringify([
+        {
+          i: 1,
+          skip: false,
+          lemma: 'Igel',
+          article: 'der',
+          pos: 'noun',
+          freq: 20,
+          senses: [{ fa: 'جوجه‌تیغی', hint: '' }],
+          examples: [{ de: 'Der Igel schläft.', fa: 'جوجه‌تیغی خواب است.' }],
+        },
+      ]),
+      JSON.stringify([{ i: 1, approve: false }]),
+    ];
+    const store = { ...deps().store, create: vi.fn() };
+    const d = deps({
+      feedbackDir: dir,
+      store,
+      aiProvider: {
+        provider: 'test',
+        model: 'm',
+        complete: vi.fn(async () => replies[call++] ?? '[]'),
+        listTextModels: vi.fn(),
+      },
+    });
+    const route = createDictionaryEditorialDraftMissingWordsRoute(d.deps);
+    const response = await route(post({ maxWords: 10 }));
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ added: 0, words: [] });
+    expect(store.create).not.toHaveBeenCalled();
   });
 });

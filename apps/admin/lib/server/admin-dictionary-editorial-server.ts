@@ -15,6 +15,7 @@ import { PostgresDictionaryEditorialStore } from './postgres-dictionary-editoria
 import {
   createDictionaryReleaseActionRoute,
   createDictionaryFeedbackRoute,
+  createDictionaryEditorialDraftMissingWordsRoute,
   createDictionaryReleaseStatusRoute,
 } from './admin-dictionary-release-routes';
 import { DictionaryReleasePublisher } from './dictionary-release-publisher';
@@ -68,6 +69,11 @@ export function createAdminDictionaryEditorialServer(deps: {
       releaseStatus: createDictionaryReleaseStatusRoute({ ...shared, publisher: release }),
       releaseAction: createDictionaryReleaseActionRoute({ ...shared, publisher: release }),
       feedback: createDictionaryFeedbackRoute({
+        ...shared,
+        publisher: release,
+        feedbackDir: deps.environment.LEARNBOX_ADMIN_DICTIONARY_FEEDBACK_DIR,
+      }),
+      draftMissingWords: createDictionaryEditorialDraftMissingWordsRoute({
         ...shared,
         publisher: release,
         feedbackDir: deps.environment.LEARNBOX_ADMIN_DICTIONARY_FEEDBACK_DIR,

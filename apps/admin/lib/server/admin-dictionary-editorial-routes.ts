@@ -34,7 +34,7 @@ const missing = () => new Response('Not found', { status: 404, headers: noStore 
 const invalid = () => new Response('Invalid request', { status: 400, headers: noStore });
 
 /** Extracts a JSON array from an AI reply that may wrap it in prose or markdown fences. */
-function parseJsonArray(reply: string): unknown[] {
+export function parseJsonArray(reply: string): unknown[] {
   const start = reply.indexOf('[');
   const end = reply.lastIndexOf(']');
   try {

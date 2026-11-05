@@ -192,6 +192,11 @@ const INVENTORY: Record<string, Entry> = {
     category: 'delegated',
     guardIn: 'lib/server/admin-dictionary-editorial-routes.ts',
   },
+  // AI drafts full entries for top unresolved visitor searches, independently reviewed; `queued`.
+  'app/api/dictionary/editorial/draft-missing-words/route.ts': {
+    category: 'delegated',
+    guardIn: 'lib/server/admin-dictionary-editorial-routes.ts',
+  },
   'app/api/splash/replace/route.ts': {
     category: 'delegated',
     guardIn: 'lib/server/admin-splash-routes.ts',
