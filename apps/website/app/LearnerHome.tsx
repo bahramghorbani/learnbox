@@ -115,6 +115,8 @@ const goalUxRemoved = process.env.NEXT_PUBLIC_LEARNBOX_GOAL_UX_REMOVED === 'true
 // Nothing is deleted. Direct process.env reference so Next inlines it at build time.
 const sessionExpiryUxEnabled = process.env.NEXT_PUBLIC_LEARNBOX_SESSION_EXPIRY_UX === 'true';
 const baseReviewSyncStorageKey = 'learnbox:review-sync:v1:local-prototype';
+// Not account-scoped: it holds words saved before the learner had an account at all.
+const PENDING_SAVED_WORDS_KEY = 'learnbox:pending-saved-words:v1';
 const basePersonalVocabularyStorageKey = 'learnbox:personal-vocabulary:v1:local-prototype';
 const basePersonalVocabularySyncStorageKey = 'learnbox:personal-vocabulary-sync:v1:local-prototype';
 const baseOnboardingGoalStorageKey = 'learnbox:onboarding-goal:v1:local-prototype';
@@ -339,6 +341,48 @@ export function LearnerHome({
     cleaned.searchParams.delete('purchase');
     window.history.replaceState(null, '', `${cleaned.pathname}${cleaned.search}${cleaned.hash}`);
   }, []);
+
+  // Words saved as a guest on the public dictionary site (learnboxapp.com) arrive here as a
+  // `?savedWords=` link — localStorage never crosses origins, so this is the only way they travel.
+  // Stashed in this app's own localStorage (not the URL) so the import still happens after the
+  // learner finishes signing in, however many redirects that takes.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const raw = new URLSearchParams(window.location.search).get('savedWords');
+    if (!raw) return;
+    try {
+      const pending = new Set(JSON.parse(localStorage.getItem(PENDING_SAVED_WORDS_KEY) || '[]'));
+      for (const w of raw.split(',').filter(Boolean)) pending.add(w);
+      localStorage.setItem(PENDING_SAVED_WORDS_KEY, JSON.stringify([...pending]));
+    } catch {
+      // No storage access: the words are lost, same as any other guest-only data.
+    }
+    const cleaned = new URL(window.location.href);
+    cleaned.searchParams.delete('savedWords');
+    window.history.replaceState(null, '', `${cleaned.pathname}${cleaned.search}${cleaned.hash}`);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !isServerOtp || !sessionUserId) return;
+    let lemmas: string[] = [];
+    try {
+      lemmas = JSON.parse(localStorage.getItem(PENDING_SAVED_WORDS_KEY) || '[]');
+    } catch {
+      lemmas = [];
+    }
+    if (!lemmas.length) return;
+    fetch('/api/learner/saved-words', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ lemmas }),
+    })
+      .then((r) => {
+        if (r.ok) localStorage.removeItem(PENDING_SAVED_WORDS_KEY);
+      })
+      .catch(() => {
+        // Left in place for a retry on the next time this effect runs.
+      });
+  }, [isServerOtp, sessionUserId]);
 
   useEffect(() => {
     if (!isServerOtp || previousAccountRef.current === sessionUserId) return;

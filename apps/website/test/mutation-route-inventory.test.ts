@@ -55,6 +55,15 @@ const INVENTORY: Record<string, Entry> = {
     category: 'guarded',
     authMarker: 'authenticateLearner(request)',
   },
+  // بخش واژگان: the learner's saved dictionary words (add/remove/bulk-import on login transfer).
+  'app/api/learner/saved-words/route.ts': {
+    category: 'guarded',
+    authMarker: 'authenticateLearner(request)',
+  },
+  'app/api/learner/saved-words/remove/route.ts': {
+    category: 'guarded',
+    authMarker: 'authenticateLearner(request)',
+  },
   'app/api/learner/league/route.ts': {
     category: 'guarded',
     authMarker: 'authenticateLearner(request)',

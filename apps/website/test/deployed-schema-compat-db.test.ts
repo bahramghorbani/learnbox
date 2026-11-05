@@ -283,7 +283,8 @@ suite('deployed application version against the expanded schema', () => {
     // store_iab_catalog_items for provider SKU mappings; 0053 adds learner_daily_preferences; and
     // 0054 adds private store_pack_cover_objects and store_pack_cover_candidates. All are additive,
     // with nothing dropped. 0060 adds user_badges, league_members and league_opt_outs (League).
-    // 0063 adds the Admin-only dictionary_editorial_entries staging table.
-    expect(expandedTables.rows[0].n - deployedTables.rows[0].n).toBe(18);
+    // 0063 adds the Admin-only dictionary_editorial_entries staging table. 0064 adds
+    // dictionary_saved_words (بخش واژگان: a learner's saved dictionary words).
+    expect(expandedTables.rows[0].n - deployedTables.rows[0].n).toBe(19);
   });
 });
