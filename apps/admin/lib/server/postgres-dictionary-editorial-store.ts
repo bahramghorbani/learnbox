@@ -110,6 +110,80 @@ export class PostgresDictionaryEditorialStore {
       client.release();
     }
   }
+  /** Every row with its effective payload, for building a public release. */
+  async releaseRows(actor: string): Promise<
+    | {
+        status: 'ok';
+        rows: {
+          dictionaryKey: string;
+          status: DictionaryEditorialStatus;
+          payload: Record<string, unknown>;
+        }[];
+      }
+    | { status: 'forbidden' }
+  > {
+    if (!uuidPattern.test(actor)) throw new Error('Actor user id is invalid.');
+    const client = await this.pool.connect();
+    try {
+      if (!(await this.superAdmin(client, actor))) return { status: 'forbidden' };
+      const result = await client.query(
+        'SELECT dictionary_key, status, coalesce(manual_payload, ai_payload) AS payload FROM dictionary_editorial_entries ORDER BY dictionary_key',
+      );
+      return {
+        status: 'ok',
+        rows: result.rows.map((r) => ({
+          dictionaryKey: String(r.dictionary_key),
+          status: r.status as DictionaryEditorialStatus,
+          payload: r.payload as Record<string, unknown>,
+        })),
+      };
+    } finally {
+      client.release();
+    }
+  }
+  /** How many words changed in the panel after `since` (what the next release would pick up). */
+  async changedSince(actor: string, since: string | null) {
+    if (!uuidPattern.test(actor)) throw new Error('Actor user id is invalid.');
+    const client = await this.pool.connect();
+    try {
+      if (!(await this.superAdmin(client, actor))) return { status: 'forbidden' as const };
+      const result = await client.query(
+        "SELECT count(*)::int AS n FROM dictionary_editorial_entries WHERE status <> 'queued' AND ($1::timestamptz IS NULL OR updated_at > $1::timestamptz)",
+        [since],
+      );
+      return { status: 'ok' as const, changed: Number(result.rows[0]?.n ?? 0) };
+    } finally {
+      client.release();
+    }
+  }
+  /** Audit trail for publish and rollback; the release files themselves live outside the database. */
+  async recordRelease(
+    actor: string,
+    input: {
+      action: 'publish' | 'rollback';
+      id: string;
+      file: string;
+      sha256: string;
+      entries: number;
+    },
+  ) {
+    const client = await this.pool.connect();
+    try {
+      await client.query(
+        `INSERT INTO audit_logs (actor_user_id, action, entity_type, entity_id, metadata) VALUES ($1, $2::text, 'dictionary_release', $3::uuid, jsonb_build_object('file', $4::text, 'sha256', $5::text, 'entries', $6::int))`,
+        [
+          actor,
+          `dictionary_release.${input.action}`,
+          input.id,
+          input.file,
+          input.sha256,
+          input.entries,
+        ],
+      );
+    } finally {
+      client.release();
+    }
+  }
   /** Bulk-load already-published entries as approved. Existing keys are left untouched. */
   async seed(
     actor: string,

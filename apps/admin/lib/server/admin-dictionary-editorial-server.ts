@@ -9,6 +9,20 @@ import { readAdminDatabaseConfig, type AdminDatabaseConfig } from './admin-datab
 import { getSharedAdminDatabasePool } from './admin-database-pool';
 import { PostgresOwnerAuthStore } from './postgres-owner-auth-store';
 import { PostgresDictionaryEditorialStore } from './postgres-dictionary-editorial-store';
+import {
+  createDictionaryReleaseActionRoute,
+  createDictionaryReleaseStatusRoute,
+} from './admin-dictionary-release-routes';
+import { DictionaryReleasePublisher } from './dictionary-release-publisher';
+
+/** The shared release directory the landing reads (unset: publishing is off, editing still works). */
+function publisher(environment: Environment) {
+  const dir = environment.LEARNBOX_ADMIN_DICTIONARY_RELEASE_DIR;
+  if (!dir) return undefined;
+  // getBuiltinModule keeps node:sqlite out of the bundler; it ships with the Node 22 runtime.
+  const { DatabaseSync } = process.getBuiltinModule('node:sqlite') as typeof import('node:sqlite');
+  return new DictionaryReleasePublisher(dir, DatabaseSync);
+}
 
 type Environment = Record<string, string | undefined>;
 type Client = {
@@ -28,6 +42,7 @@ export function createAdminDictionaryEditorialServer(deps: {
   if (!config.enabled) return { enabled: false as const };
   try {
     const pool = deps.createPool(readAdminDatabaseConfig(deps.environment));
+    const release = publisher(deps.environment);
     const shared = {
       enabled: true,
       config,
@@ -40,6 +55,8 @@ export function createAdminDictionaryEditorialServer(deps: {
       list: createDictionaryEditorialListRoute(shared),
       create: createDictionaryEditorialCreateRoute(shared),
       update: createDictionaryEditorialUpdateRoute(shared),
+      releaseStatus: createDictionaryReleaseStatusRoute({ ...shared, publisher: release }),
+      releaseAction: createDictionaryReleaseActionRoute({ ...shared, publisher: release }),
     };
   } catch {
     return { enabled: false as const };

@@ -3588,6 +3588,41 @@ button {
   font-size: 12px;
   line-height: 1.8;
 }
+.cp-workspace .dictionary-note details {
+  margin-top: 6px;
+}
+.cp-workspace .dictionary-note details p {
+  margin: 4px 0 0;
+  text-align: left;
+}
+.cp-workspace .dictionary-release {
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  display: grid;
+  gap: 10px;
+}
+.cp-workspace .dictionary-release-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.cp-workspace .dictionary-release-actions {
+  display: flex;
+  gap: 8px;
+}
+.cp-workspace .dictionary-release-message {
+  margin: 0;
+  font-size: 13px;
+}
+.cp-workspace .dictionary-release-checks,
+.cp-workspace .dictionary-release-history {
+  margin: 6px 0 0;
+  padding-inline-start: 18px;
+  font-size: 12px;
+  line-height: 1.9;
+}
 .cp-workspace .dictionary-group {
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);

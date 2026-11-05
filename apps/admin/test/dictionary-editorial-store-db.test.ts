@@ -175,4 +175,33 @@ suite('dictionary editorial store (real Postgres)', () => {
       'forbidden',
     );
   });
+  it('exports effective payloads for a release, counts changes since a release, and audits it', async () => {
+    const rows = await store.releaseRows(superAdmin);
+    expect(rows.status).toBe('ok');
+    const byKey = new Map(rows.status === 'ok' ? rows.rows.map((r) => [r.dictionaryKey, r]) : []);
+    expect(byKey.get('Weg')).toMatchObject({ status: 'deleted' });
+    expect(byKey.get('Haus')?.payload.lemma).toBe('Haus');
+    expect((await store.releaseRows(outsider)).status).toBe('forbidden');
+    const all = await store.changedSince(superAdmin, null);
+    expect(all.status === 'ok' && all.changed).toBeGreaterThan(0);
+    expect(
+      await store.changedSince(superAdmin, new Date(Date.now() + 60_000).toISOString()),
+    ).toEqual({
+      status: 'ok',
+      changed: 0,
+    });
+    const id = randomUUID();
+    await store.recordRelease(superAdmin, {
+      action: 'publish',
+      id,
+      file: 'dict-x.sqlite',
+      sha256: 'f'.repeat(64),
+      entries: 3,
+    });
+    const audit = await pool.query(
+      "SELECT action, metadata->>'file' AS file FROM audit_logs WHERE entity_type = 'dictionary_release' AND entity_id = $1",
+      [id],
+    );
+    expect(audit.rows).toEqual([{ action: 'dictionary_release.publish', file: 'dict-x.sqlite' }]);
+  });
 });

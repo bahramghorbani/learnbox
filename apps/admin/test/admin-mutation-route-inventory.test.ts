@@ -177,6 +177,11 @@ const INVENTORY: Record<string, Entry> = {
     category: 'delegated',
     guardIn: 'lib/server/admin-dictionary-editorial-routes.ts',
   },
+  // Publish / roll back the public dictionary; reuses the editorial guard (editorialActor).
+  'app/api/dictionary/release/route.ts': {
+    category: 'delegated',
+    guardIn: 'lib/server/admin-dictionary-editorial-routes.ts',
+  },
   'app/api/splash/replace/route.ts': {
     category: 'delegated',
     guardIn: 'lib/server/admin-splash-routes.ts',
