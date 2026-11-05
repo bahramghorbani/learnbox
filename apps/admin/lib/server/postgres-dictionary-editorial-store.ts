@@ -7,6 +7,14 @@ type Client = {
   release(): void;
 };
 type Pool = { connect(): Promise<Client> };
+const columns =
+  'id, dictionary_key, ai_payload, manual_payload, status, revision, source, model, cost_metadata, created_at, updated_at';
+export const dictionaryEditorialFilters = ['all', 'review', 'ai', 'deleted'] as const;
+export type DictionaryEditorialQuery = {
+  q: string;
+  filter: (typeof dictionaryEditorialFilters)[number];
+  limit: number;
+};
 
 export type DictionaryEditorialEntry = {
   id: string;
@@ -57,17 +65,93 @@ export class PostgresDictionaryEditorialStore {
       [action, key],
     );
   }
+  /**
+   * Without a query: every row (release export). With one: a bounded search page for the Admin UI —
+   * the table holds the whole published dictionary, so the route never returns it unbounded.
+   */
   async list(
     actor: string,
-  ): Promise<{ status: 'ok'; items: DictionaryEditorialEntry[] } | { status: 'forbidden' }> {
+    query?: DictionaryEditorialQuery,
+  ): Promise<
+    { status: 'ok'; items: DictionaryEditorialEntry[]; total: number } | { status: 'forbidden' }
+  > {
     if (!uuidPattern.test(actor)) throw new Error('Actor user id is invalid.');
     const client = await this.pool.connect();
     try {
       if (!(await this.superAdmin(client, actor))) return { status: 'forbidden' };
-      const rows =
-        await client.query(`SELECT id, dictionary_key, ai_payload, manual_payload, status, revision, source, model, cost_metadata, created_at, updated_at
-        FROM dictionary_editorial_entries ORDER BY updated_at DESC, id DESC`);
-      return { status: 'ok', items: rows.rows.map(entry) };
+      if (!query) {
+        const rows = await client.query(
+          `SELECT ${columns} FROM dictionary_editorial_entries ORDER BY updated_at DESC, id DESC`,
+        );
+        return { status: 'ok', items: rows.rows.map(entry), total: rows.rows.length };
+      }
+      const like = query.q.replace(/[\\%_]/g, (c) => `\\${c}`);
+      // ponytail: sequential scan over ~22k JSONB rows (tens of ms); add a trigram index if it grows 10x.
+      const rows = await client.query(
+        `SELECT ${columns}, count(*) OVER () AS total FROM dictionary_editorial_entries
+        WHERE ($1::text = '' OR dictionary_key ILIKE $2::text OR (coalesce(manual_payload, ai_payload)->'senses')::text ILIKE $3::text)
+          AND CASE $4::text
+            WHEN 'review' THEN status <> 'deleted' AND manual_payload IS NULL AND cost_metadata->>'reviewVerdict' = 'fixed'
+            WHEN 'ai' THEN status <> 'deleted' AND model IS NOT NULL
+            WHEN 'deleted' THEN status = 'deleted'
+            ELSE status <> 'deleted' END
+        ORDER BY lower(dictionary_key) = lower($1::text) DESC, dictionary_key ILIKE $2::text DESC,
+          CASE WHEN $1::text = '' THEN updated_at END DESC,
+          coalesce((ai_payload->>'freq')::int, 0) DESC, length(dictionary_key), dictionary_key
+        LIMIT $5::int`,
+        [query.q, `${like}%`, `%${like}%`, query.filter, query.limit],
+      );
+      return {
+        status: 'ok',
+        items: rows.rows.map(entry),
+        total: Number(rows.rows[0]?.total ?? 0),
+      };
+    } finally {
+      client.release();
+    }
+  }
+  /** Bulk-load already-published entries as approved. Existing keys are left untouched. */
+  async seed(
+    actor: string,
+    input: {
+      records: { dictionaryKey: string; payload: Record<string, unknown> }[];
+      source: string;
+      idempotencyKey: string;
+    },
+  ) {
+    if (!uuidPattern.test(actor) || !uuidPattern.test(input.idempotencyKey))
+      throw new Error('Invalid identity.');
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      if (!(await this.superAdmin(client, actor))) {
+        await client.query('ROLLBACK');
+        return { status: 'forbidden' as const };
+      }
+      const replay = await this.replay(client, 'dictionary_editorial.seed', input.idempotencyKey);
+      if (replay.rows[0]) {
+        await client.query('ROLLBACK');
+        return { status: 'idempotent' as const, inserted: 0 };
+      }
+      const result = await client.query(
+        `WITH ins AS (
+          INSERT INTO dictionary_editorial_entries (dictionary_key, ai_payload, status, source, created_by_user_id, updated_by_user_id)
+          SELECT r->>'dictionaryKey', r->'payload', 'approved', $2::text, $3::uuid, $3::uuid
+          FROM jsonb_array_elements($1::jsonb) r
+          ON CONFLICT (dictionary_key) DO NOTHING RETURNING 1)
+        SELECT count(*)::int AS inserted FROM ins`,
+        [JSON.stringify(input.records), input.source, actor],
+      );
+      const inserted = Number(result.rows[0]!.inserted);
+      await client.query(
+        `INSERT INTO audit_logs (actor_user_id, action, entity_type, entity_id, metadata) VALUES ($1, 'dictionary_editorial.seed', 'dictionary_editorial_seed', $2::uuid, jsonb_build_object('idempotency_key', $2::uuid, 'source', $3::text, 'records', $4::int, 'inserted', $5::int))`,
+        [actor, input.idempotencyKey, input.source, input.records.length, inserted],
+      );
+      await client.query('COMMIT');
+      return { status: 'applied' as const, inserted };
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
     } finally {
       client.release();
     }
@@ -80,6 +164,7 @@ export class PostgresDictionaryEditorialStore {
       source: string;
       model: string | null;
       costMetadata: Record<string, unknown>;
+      status?: 'queued' | 'approved';
       idempotencyKey: string;
     },
   ) {
@@ -95,7 +180,7 @@ export class PostgresDictionaryEditorialStore {
       const replay = await this.replay(client, 'dictionary_editorial.create', input.idempotencyKey);
       if (replay.rows[0]) {
         const row = await client.query(
-          `SELECT id, dictionary_key, ai_payload, manual_payload, status, revision, source, model, cost_metadata, created_at, updated_at FROM dictionary_editorial_entries WHERE id = $1`,
+          `SELECT ${columns} FROM dictionary_editorial_entries WHERE id = $1`,
           [replay.rows[0].entity_id],
         );
         await client.query('ROLLBACK');
@@ -112,8 +197,8 @@ export class PostgresDictionaryEditorialStore {
         return { status: 'duplicate' as const };
       }
       const inserted = await client.query(
-        `INSERT INTO dictionary_editorial_entries (dictionary_key, ai_payload, source, model, cost_metadata, created_by_user_id, updated_by_user_id)
-        VALUES ($1, $2, $3, $4, $5, $6, $6) RETURNING id, dictionary_key, ai_payload, manual_payload, status, revision, source, model, cost_metadata, created_at, updated_at`,
+        `INSERT INTO dictionary_editorial_entries (dictionary_key, ai_payload, source, model, cost_metadata, created_by_user_id, updated_by_user_id, status)
+        VALUES ($1, $2, $3, $4, $5, $6, $6, $7::text) RETURNING ${columns}`,
         [
           input.dictionaryKey,
           input.aiPayload,
@@ -121,6 +206,7 @@ export class PostgresDictionaryEditorialStore {
           input.model,
           input.costMetadata,
           actor,
+          input.status ?? 'queued',
         ],
       );
       const item = entry(inserted.rows[0]!);
@@ -163,7 +249,7 @@ export class PostgresDictionaryEditorialStore {
       const replay = await this.replay(client, 'dictionary_editorial.update', input.idempotencyKey);
       if (replay.rows[0]) {
         const row = await client.query(
-          `SELECT id, dictionary_key, ai_payload, manual_payload, status, revision, source, model, cost_metadata, created_at, updated_at FROM dictionary_editorial_entries WHERE id = $1`,
+          `SELECT ${columns} FROM dictionary_editorial_entries WHERE id = $1`,
           [replay.rows[0].entity_id],
         );
         await client.query('ROLLBACK');
@@ -171,7 +257,7 @@ export class PostgresDictionaryEditorialStore {
       }
       const updated = await client.query(
         `UPDATE dictionary_editorial_entries SET manual_payload = CASE WHEN $1 THEN $2 ELSE manual_payload END, status = COALESCE($3, status), revision = revision + 1, updated_by_user_id = $4, updated_at = now()
-        WHERE id = $5 AND revision = $6 RETURNING id, dictionary_key, ai_payload, manual_payload, status, revision, source, model, cost_metadata, created_at, updated_at`,
+        WHERE id = $5 AND revision = $6 RETURNING ${columns}`,
         [
           Object.hasOwn(input, 'manualPayload'),
           input.manualPayload ?? null,
