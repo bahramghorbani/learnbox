@@ -5,6 +5,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { AdminSidebar } from './AdminSidebar';
 import { DictionaryFeedbackPanel } from './DictionaryFeedbackPanel';
 import { DictionaryReleasePanel } from './DictionaryReleasePanel';
+import { DictionaryTranslationPilotPanel } from './DictionaryTranslationPilotPanel';
 import { EmptyState, ErrorState, LoadingState } from './AdminStates';
 import {
   createIdempotencyKey,
@@ -252,6 +253,7 @@ export function DictionaryEditorialWorkspace() {
           </button>
         </div>
         <DictionaryReleasePanel />
+        <DictionaryTranslationPilotPanel />
         <DictionaryFeedbackPanel onPick={setQ} />
         <div className="dictionary-layout">
           <section className="card" aria-label="فهرست واژه‌ها">
