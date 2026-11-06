@@ -3,7 +3,7 @@
 import { useRef, useState } from 'react';
 
 const slideCount = 5;
-const slideSrc = (n: number) => `/images/onboarding/slide-${n}.jpg`;
+const slideSrc = (n: number) => `/images/onboarding/slide-${n}.webp`;
 
 const slideCopy = [
   {
@@ -40,6 +40,21 @@ function persistSlide(body: Record<string, unknown>) {
     body: JSON.stringify(body),
     credentials: 'same-origin',
   }).catch(() => undefined);
+}
+
+// shortcut: retries a failed slide image once after a short delay (covers a
+// transient network blip); a second failure just leaves the gradient card
+// background showing instead of a broken-image icon.
+function SlideImage({ src, alt }: { src: string; alt: string }) {
+  const [attempt, setAttempt] = useState(0);
+  if (attempt > 1) return null;
+  return (
+    <img
+      src={attempt === 0 ? src : `${src}?retry=1`}
+      alt={alt}
+      onError={() => setTimeout(() => setAttempt((n) => n + 1), 600)}
+    />
+  );
 }
 
 /**
@@ -115,12 +130,9 @@ export function OnboardingTour({
       >
         {slideCopy.map((copy, index) => (
           <div key={index} className="onboarding-tour-slide">
-            <div
-              className="onboarding-tour-art"
-              style={{ backgroundImage: `url(${slideSrc(index + 1)})` }}
-              role="img"
-              aria-label={copy.title}
-            />
+            <div className="onboarding-tour-art">
+              <SlideImage src={slideSrc(index + 1)} alt={copy.title} />
+            </div>
             <div className="onboarding-tour-card">
               <div className="onboarding-tour-dots">
                 {slideCopy.map((_, dotIndex) => (
