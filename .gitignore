@@ -32,3 +32,4 @@ ios/Pods/
 apps/website/dist-cp8/
 # CP8 first-pass harness, superseded in full and NOT authoritative evidence.
 tools/cp8/superseded/
+.DS_Store
