@@ -181,6 +181,11 @@ export function AuthGate({ mode, onAuthenticated, sessionEnded }: AuthGateProps)
       ) : null}
       {stage === 'phone' ? (
         <section className="auth-content" aria-labelledby="auth-title">
+          <span className="auth-icon-badge" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.97.36 1.93.68 2.85a2 2 0 0 1-.45 2.11L8.1 9.9a16 16 0 0 0 6 6l1.22-1.23a2 2 0 0 1 2.11-.45c.92.32 1.88.55 2.85.68A2 2 0 0 1 22 16.92z" />
+            </svg>
+          </span>
           <AuthStep current={1} />
           <h1 id="auth-title">به LearnBox خوش آمدی</h1>
           <p>
@@ -247,6 +252,12 @@ export function AuthGate({ mode, onAuthenticated, sessionEnded }: AuthGateProps)
           >
             تغییر شماره
           </button>
+          <span className="auth-icon-badge" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <rect x="3" y="11" width="18" height="10" rx="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+          </span>
           <AuthStep current={2} />
           <h1 id="code-title">
             {isLocalPrototype ? 'کد آزمایشی را وارد کن' : 'کد پیامک‌شده را وارد کن'}

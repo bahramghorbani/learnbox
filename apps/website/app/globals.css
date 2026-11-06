@@ -719,6 +719,9 @@ button {
 .phone-input-row {
   display: grid;
   grid-template-columns: auto 1fr;
+  /* LB fix: force ltr so +98 sits physically first (left) and the number runs after it,
+     matching how phone numbers are actually read — was inheriting the page's rtl flow. */
+  direction: ltr;
   overflow: hidden;
   border: 1.5px solid #d9d7df;
   border-radius: 18px;
@@ -727,7 +730,9 @@ button {
 }
 .phone-input-row span {
   align-self: stretch;
-  border-left: 1px solid #e6e4eb;
+  display: flex;
+  align-items: center;
+  border-inline-end: 1px solid #e6e4eb;
   padding: 15px 15px;
   color: var(--ink);
   font:
@@ -749,7 +754,7 @@ button {
   min-width: 0;
   padding: 14px 16px;
   direction: ltr;
-  text-align: right;
+  text-align: left;
 }
 .phone-input-row:focus-within,
 .auth-code:focus {
@@ -765,6 +770,39 @@ button {
   letter-spacing: 0.4em;
   text-align: center;
   direction: ltr;
+  /* 5-cell look from a single input: vertical dividers at the otpLength=5 boundaries.
+     No JS, no multi-input focus/paste/autofill reimplementation — autocomplete="one-time-code"
+     and native paste keep working exactly as before. */
+  background-image:
+    linear-gradient(to left, #e6e4eb 1px, transparent 1px),
+    linear-gradient(to left, #e6e4eb 1px, transparent 1px),
+    linear-gradient(to left, #e6e4eb 1px, transparent 1px),
+    linear-gradient(to left, #e6e4eb 1px, transparent 1px);
+  background-position:
+    20% 2px,
+    40% 2px,
+    60% 2px,
+    80% 2px;
+  background-size: 1px calc(100% - 4px);
+  background-repeat: no-repeat;
+}
+.auth-icon-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 54px;
+  height: 54px;
+  margin-bottom: 16px;
+  border-radius: 18px;
+  background: var(--primary-grad);
+  box-shadow: 0 14px 28px rgba(109, 40, 217, 0.3);
+}
+.auth-icon-badge svg {
+  width: 24px;
+  height: 24px;
+  stroke: #fff;
+  fill: none;
+  stroke-width: 2;
 }
 .auth-form .primary-button {
   margin-top: 6px;
