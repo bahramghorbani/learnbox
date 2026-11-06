@@ -4729,7 +4729,9 @@ p {
   height: 7px;
   border-radius: 999px;
   background: #d9d4f7;
-  transition: width 260ms ease, background 260ms ease;
+  transition:
+    width 260ms ease,
+    background 260ms ease;
 }
 
 .onboarding-tour-dots span.active {
