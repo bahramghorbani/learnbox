@@ -7,14 +7,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 describe('OnboardingTour', () => {
   let root: ReturnType<typeof createRoot> | undefined;
   let container: HTMLDivElement | undefined;
-  let observerCallback: IntersectionObserverCallback | undefined;
-  const observed: Element[] = [];
 
   afterEach(async () => {
     await act(async () => root?.unmount());
     container?.remove();
-    observed.length = 0;
-    observerCallback = undefined;
     vi.unstubAllGlobals();
   });
 
@@ -25,85 +21,67 @@ describe('OnboardingTour', () => {
     ).IS_REACT_ACT_ENVIRONMENT = true;
   }
 
-  function stubScrollIntoView() {
-    Element.prototype.scrollIntoView = vi.fn();
-  }
-
-  function stubIntersectionObserver() {
-    vi.stubGlobal(
-      'IntersectionObserver',
-      class {
-        constructor(callback: IntersectionObserverCallback) {
-          observerCallback = callback;
-        }
-        observe(el: Element) {
-          observed.push(el);
-        }
-        disconnect() {}
-      },
-    );
-  }
-
-  it('persists whichever slide the native scroll-snap reports visible, either direction', async () => {
-    const fetch = vi.fn(async () => new Response(null, { status: 204 }));
-    vi.stubGlobal('fetch', fetch);
-    stubReactGlobal();
-    stubScrollIntoView();
-    stubIntersectionObserver();
+  async function mount(props: { initialSlide: number; onDone: () => void }) {
     const { OnboardingTour } = await import('./OnboardingTour.js');
     container = document.createElement('div');
     document.body.append(container);
     root = createRoot(container);
     await act(async () => {
-      root!.render(createElement(OnboardingTour, { initialSlide: 0, onDone: vi.fn() }));
+      root!.render(createElement(OnboardingTour, props));
     });
+  }
+
+  it('persists the slide when advancing via the next button', async () => {
+    const fetch = vi.fn(async () => new Response(null, { status: 204 }));
+    vi.stubGlobal('fetch', fetch);
+    stubReactGlobal();
+    await mount({ initialSlide: 0, onDone: vi.fn() });
     fetch.mockClear();
 
-    // Swiped forward: third slide (index 2) becomes visible.
+    const ctas = container!.querySelectorAll('.onboarding-tour-cta');
     await act(async () => {
-      observerCallback!(
-        [{ isIntersecting: true, target: observed[2] } as IntersectionObserverEntry],
-        {} as IntersectionObserver,
-      );
+      ctas[0]!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
     expect(fetch).toHaveBeenCalledWith(
       '/api/learner/onboarding-tour',
-      expect.objectContaining({ body: JSON.stringify({ slide: 2 }), method: 'POST' }),
-    );
-
-    // Swiped backward: first slide (index 0) becomes visible again.
-    fetch.mockClear();
-    await act(async () => {
-      observerCallback!(
-        [{ isIntersecting: true, target: observed[0] } as IntersectionObserverEntry],
-        {} as IntersectionObserver,
-      );
-    });
-    expect(fetch).toHaveBeenCalledWith(
-      '/api/learner/onboarding-tour',
-      expect.objectContaining({ body: JSON.stringify({ slide: 0 }), method: 'POST' }),
+      expect.objectContaining({ body: JSON.stringify({ slide: 1 }), method: 'POST' }),
     );
   });
 
-  it('finishes only when tapping the last slide', async () => {
+  it('resumes at initialSlide and finishes only on the last slide CTA', async () => {
     const fetch = vi.fn(async () => new Response(null, { status: 204 }));
     vi.stubGlobal('fetch', fetch);
     stubReactGlobal();
-    stubScrollIntoView();
-    stubIntersectionObserver();
-    const { OnboardingTour } = await import('./OnboardingTour.js');
-    container = document.createElement('div');
-    document.body.append(container);
-    root = createRoot(container);
     const onDone = vi.fn();
-    await act(async () => {
-      root!.render(createElement(OnboardingTour, { initialSlide: 4, onDone }));
-    });
+    await mount({ initialSlide: 4, onDone });
 
-    const images = container.querySelectorAll('img');
+    const ctas = container!.querySelectorAll('.onboarding-tour-cta');
+    expect(ctas).toHaveLength(5);
     await act(async () => {
-      images[4]?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      ctas[4]!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
     expect(onDone).toHaveBeenCalledTimes(1);
+    expect(fetch).toHaveBeenCalledWith(
+      '/api/learner/onboarding-tour',
+      expect.objectContaining({ body: JSON.stringify({ done: true }), method: 'POST' }),
+    );
+  });
+
+  it('finishes early when tapping the skip button', async () => {
+    const fetch = vi.fn(async () => new Response(null, { status: 204 }));
+    vi.stubGlobal('fetch', fetch);
+    stubReactGlobal();
+    const onDone = vi.fn();
+    await mount({ initialSlide: 0, onDone });
+
+    const skip = container!.querySelector('.onboarding-tour-skip');
+    await act(async () => {
+      skip!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    expect(onDone).toHaveBeenCalledTimes(1);
+    expect(fetch).toHaveBeenCalledWith(
+      '/api/learner/onboarding-tour',
+      expect.objectContaining({ body: JSON.stringify({ done: true }), method: 'POST' }),
+    );
   });
 });
