@@ -273,21 +273,39 @@ export function AuthGate({ mode, onAuthenticated, sessionEnded }: AuthGateProps)
           </p>
           <form className="auth-form" onSubmit={submitCode} noValidate>
             <label htmlFor="login-code">کد ورود</label>
-            <input
-              className="auth-code"
-              id="login-code"
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              value={code}
-              onChange={(event) => {
-                setCode(event.target.value);
-                setError('');
-              }}
-              placeholder="— — — — —"
-              aria-describedby="auth-error"
-              aria-invalid={error ? true : undefined}
-              disabled={pending}
-            />
+            {/*
+              LB-B22 fix: a single real input (unchanged id/behaviour — every setInputValue(...,
+              'login-code', ...) test helper across the suite keeps working) drives both focus/typing
+              AND the 5 visible box cells below, via React state. No CSS placeholder/background-image
+              alignment tricks — those don't reliably line text up with box borders on real devices.
+            */}
+            <div className="auth-code-wrap">
+              <input
+                className="auth-code-input"
+                id="login-code"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                dir="ltr"
+                maxLength={otpLength}
+                value={code}
+                onChange={(event) => {
+                  setCode(event.target.value);
+                  setError('');
+                }}
+                aria-describedby="auth-error"
+                aria-invalid={error ? true : undefined}
+                disabled={pending}
+              />
+              <div className="auth-code-cells" dir="ltr" aria-hidden="true">
+                {Array.from({ length: otpLength }, (_, i) => normalizeOtpDigits(code)[i] ?? '').map(
+                  (digit, i) => (
+                    <span key={i} data-filled={digit ? 'true' : 'false'}>
+                      {digit}
+                    </span>
+                  ),
+                )}
+              </div>
+            </div>
             {error ? (
               <p className="auth-error" id="auth-error" role="alert">
                 {error}

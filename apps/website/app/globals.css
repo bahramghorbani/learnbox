@@ -761,30 +761,49 @@ button {
   border-color: var(--primary);
   box-shadow: 0 0 0 4px rgba(109, 40, 217, 0.14);
 }
-.auth-code {
+.auth-code-wrap {
+  position: relative;
+  margin-bottom: 20px;
+}
+.auth-code-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: transparent;
+  caret-color: transparent;
+  opacity: 0;
+}
+.auth-code-cells {
+  display: flex;
+  gap: 10px;
+  pointer-events: none;
+}
+.auth-code-cells span {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 58px;
   border: 1.5px solid #d9d7df;
-  border-radius: 18px;
-  padding: 14px 16px;
+  border-radius: 16px;
   background: var(--surface);
-  font-size: 26px;
-  letter-spacing: 0.4em;
-  text-align: center;
-  direction: ltr;
-  /* 5-cell look from a single input: vertical dividers at the otpLength=5 boundaries.
-     No JS, no multi-input focus/paste/autofill reimplementation — autocomplete="one-time-code"
-     and native paste keep working exactly as before. */
-  background-image:
-    linear-gradient(to left, #e6e4eb 1px, transparent 1px),
-    linear-gradient(to left, #e6e4eb 1px, transparent 1px),
-    linear-gradient(to left, #e6e4eb 1px, transparent 1px),
-    linear-gradient(to left, #e6e4eb 1px, transparent 1px);
-  background-position:
-    20% 2px,
-    40% 2px,
-    60% 2px,
-    80% 2px;
-  background-size: 1px calc(100% - 4px);
-  background-repeat: no-repeat;
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--ink);
+}
+.auth-code-cells span[data-filled='true'] {
+  border-color: var(--primary);
+  background: #faf8ff;
+}
+.auth-code-wrap:focus-within .auth-code-cells span {
+  box-shadow: 0 0 0 4px rgba(109, 40, 217, 0.12);
 }
 .auth-icon-badge {
   display: flex;
@@ -899,7 +918,7 @@ button {
 }
 /* Error state ties the message to its field (aria-invalid is set by AuthGate). */
 .phone-input-row:has(input[aria-invalid='true']),
-.auth-code[aria-invalid='true'] {
+.auth-code-wrap:has(.auth-code-input[aria-invalid='true']) .auth-code-cells span {
   border-color: #bd3f3f;
 }
 .auth-content .text-button:disabled {
