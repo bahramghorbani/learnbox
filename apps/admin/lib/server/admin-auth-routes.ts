@@ -6,7 +6,12 @@ import {
   type AdminAuthConfig,
   type EnabledAdminAuthConfig,
 } from './admin-auth-policy';
-import { adminSessionCookie, absoluteSessionLifetimeMs, createAdminSessionSecrets, hashAdminSecret } from './admin-session';
+import {
+  adminSessionCookie,
+  absoluteSessionLifetimeMs,
+  createAdminSessionSecrets,
+  hashAdminSecret,
+} from './admin-session';
 import { clearAdminSessionCookie, loadAdminSession, verifyAdminCsrf } from './admin-route-security';
 
 const ceremonyCookieName = '__Host-learnbox_admin_ceremony';
