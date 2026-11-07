@@ -5,7 +5,7 @@ import {
   type AdminAuthConfig,
   type AdminOtpConfig,
   type EnabledAdminAuthConfig,
-} from './admin-auth-policy.js';
+} from './admin-auth-policy';
 import {
   createOtpChallenge,
   createOtpCode,
@@ -13,12 +13,12 @@ import {
   hashOtpCode,
   hashOtpPhone,
   otpPolicy,
-} from './admin-otp-challenge.js';
+} from './admin-otp-challenge';
 import {
   absoluteSessionLifetimeMs,
   adminSessionCookie,
   createAdminSessionSecrets,
-} from './admin-session.js';
+} from './admin-session';
 
 const otpChallengeCookieName = '__Host-learnbox_admin_otp_challenge';
 const csrfCookieName = '__Host-learnbox_admin_csrf';

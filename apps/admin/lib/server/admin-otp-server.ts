@@ -1,12 +1,12 @@
 import { Pool } from 'pg';
 
-import { readAdminAuthConfig, readAdminOtpConfig } from './admin-auth-policy.js';
-import { readAdminDatabaseConfig } from './admin-database.js';
-import { getSharedAdminDatabasePool } from './admin-database-pool.js';
-import { createOtpRequestRoute, createOtpVerifyRoute } from './admin-otp-routes.js';
-import { PostgresAdminOtpStore } from './postgres-admin-otp-store.js';
-import { PostgresOwnerAuthStore } from './postgres-owner-auth-store.js';
-import { smsIrVerificationClientFromEnvironment } from './admin-sms-ir-client.js';
+import { readAdminAuthConfig, readAdminOtpConfig } from './admin-auth-policy';
+import { readAdminDatabaseConfig } from './admin-database';
+import { getSharedAdminDatabasePool } from './admin-database-pool';
+import { createOtpRequestRoute, createOtpVerifyRoute } from './admin-otp-routes';
+import { PostgresAdminOtpStore } from './postgres-admin-otp-store';
+import { PostgresOwnerAuthStore } from './postgres-owner-auth-store';
+import { smsIrVerificationClientFromEnvironment } from './admin-sms-ir-client';
 
 export function getAdminOtpServer() {
   const env = process.env;

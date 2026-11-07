@@ -6,7 +6,7 @@ import {
   type OtpChallengeRecord,
   type OtpRequestRateLimitOutcome,
   type OtpVerificationOutcome,
-} from './admin-otp-challenge.js';
+} from './admin-otp-challenge';
 
 type OtpChallengeRow = {
   id: string;
