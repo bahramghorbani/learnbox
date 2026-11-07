@@ -14,12 +14,16 @@ import {
   hashOtpPhone,
   otpPolicy,
 } from './admin-otp-challenge.js';
-import { adminSessionCookie, createAdminSessionSecrets } from './admin-session.js';
+import {
+  absoluteSessionLifetimeMs,
+  adminSessionCookie,
+  createAdminSessionSecrets,
+} from './admin-session.js';
 
 const otpChallengeCookieName = '__Host-learnbox_admin_otp_challenge';
 const csrfCookieName = '__Host-learnbox_admin_csrf';
 const challengeCookieMaxAge = otpPolicy.expiresInMs / 1000;
-const absoluteSessionLifetimeMs = 8 * 60 * 60_000;
+const csrfCookieMaxAge = absoluteSessionLifetimeMs / 1000;
 
 type OtpStore = {
   createIfRequestAllowed(
@@ -54,7 +58,7 @@ function clearOtpChallengeCookie() {
 }
 
 function csrfCookie(token: string) {
-  return `${csrfCookieName}=${token}; Max-Age=28800; Path=/; Secure; SameSite=Strict`;
+  return `${csrfCookieName}=${token}; Max-Age=${csrfCookieMaxAge}; Path=/; Secure; SameSite=Strict`;
 }
 
 function readCookie(request: Request, name: string) {

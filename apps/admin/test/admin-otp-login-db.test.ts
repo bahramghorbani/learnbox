@@ -245,7 +245,7 @@ suite('admin OTP login against real Postgres', () => {
   it('rate-limits after 3 OTP requests for the same phone in the window', async () => {
     // Clear prior events by creating a fresh phone hash set via a different secret to isolate.
     const isolatedSecret = 'isolated-secret-for-rate-limit-test-at-least-32-chars';
-    const isolatedPhone = '+989130000001';
+    const isolatedPhone = '+989120000001';
     const isolatedOtpConfig = {
       enabled: true as const,
       secret: isolatedSecret,
