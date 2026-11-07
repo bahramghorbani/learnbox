@@ -160,10 +160,13 @@ export class StorePackCoverService {
         `UPDATE store_pack_cover_candidates SET status='accepted', accepted_by_user_id=$2, accepted_at=now() WHERE id=$1`,
         [candidateId, actor],
       );
-      await client.query(`UPDATE store_listings SET cover_object_key=$2 WHERE pack_id=$1`, [
-        packId,
-        candidate.rows[0].object_key,
-      ]);
+      // shortcut-free: a cover may be accepted before the pack has a store_listings row
+      // (e.g. cover chosen before commercial status is set), so this must create the row too.
+      await client.query(
+        `INSERT INTO store_listings (pack_id, cover_object_key) VALUES ($1,$2)
+           ON CONFLICT (pack_id) DO UPDATE SET cover_object_key=EXCLUDED.cover_object_key`,
+        [packId, candidate.rows[0].object_key],
+      );
       await client.query('COMMIT');
       return 'accepted' as const;
     } catch (error) {
