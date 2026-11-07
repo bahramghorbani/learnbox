@@ -77,11 +77,12 @@ GRANT SELECT ON
   current_splash, splash_versions, splash_replacement_actions, private_media_cleanup_jobs,
   content_review_checks, content_review_decisions, admin_owner, admin_role_assignments,
   admin_sessions, admin_passkey_credentials, admin_webauthn_challenges, audit_logs,
-  billing_products, payment_logs
+  billing_products, payment_logs, admin_otp_challenges, admin_otp_request_events
 TO learnbox_admin;
 GRANT INSERT, UPDATE ON admin_owner, admin_passkey_credentials, admin_sessions,
-  admin_webauthn_challenges, content_review_checks, splash_versions,
+  admin_webauthn_challenges, admin_otp_challenges, content_review_checks, splash_versions,
   private_media_cleanup_jobs, splash_replacement_actions, banners TO learnbox_admin;
+GRANT INSERT ON admin_otp_request_events TO learnbox_admin;
 GRANT INSERT ON audit_logs, content_review_decisions TO learnbox_admin;
 GRANT INSERT, UPDATE ON current_splash TO learnbox_admin;  -- INSERT .. ON CONFLICT DO UPDATE (splash activation)
 GRANT UPDATE (status, published_at) ON card_versions TO learnbox_admin;
