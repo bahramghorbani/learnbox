@@ -1,9 +1,12 @@
 import { createHmac, randomBytes } from 'node:crypto';
 
-export const adminSessionIdleLifetimeMs = 60 * 60_000;
+// Owner requested a 24h login: no more re-authenticating mid-day. The 5-minute step-up
+// window for sensitive writes (price/catalog changes) is untouched by design.
+export const adminSessionIdleLifetimeMs = 24 * 60 * 60_000;
 export const adminSessionIdleLifetimeSeconds = adminSessionIdleLifetimeMs / 1_000;
-const absoluteLifetimeSeconds = 8 * 60 * 60;
-const operationalAuthenticationMs = 60 * 60_000;
+export const absoluteSessionLifetimeMs = 24 * 60 * 60_000;
+const absoluteLifetimeSeconds = absoluteSessionLifetimeMs / 1_000;
+const operationalAuthenticationMs = 24 * 60 * 60_000;
 const recentAuthenticationMs = 5 * 60_000;
 
 type RandomBytes = (size: number) => Uint8Array;

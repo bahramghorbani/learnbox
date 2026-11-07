@@ -6,13 +6,12 @@ import {
   type AdminAuthConfig,
   type EnabledAdminAuthConfig,
 } from './admin-auth-policy';
-import { adminSessionCookie, createAdminSessionSecrets, hashAdminSecret } from './admin-session';
+import { adminSessionCookie, absoluteSessionLifetimeMs, createAdminSessionSecrets, hashAdminSecret } from './admin-session';
 import { clearAdminSessionCookie, loadAdminSession, verifyAdminCsrf } from './admin-route-security';
 
 const ceremonyCookieName = '__Host-learnbox_admin_ceremony';
 const csrfCookieName = '__Host-learnbox_admin_csrf';
 const ceremonyLifetimeSeconds = 5 * 60;
-const absoluteSessionLifetimeMs = 8 * 60 * 60_000;
 
 type LoginService = {
   createLoginOptions(browserNonce: string): Promise<Record<string, unknown>>;
