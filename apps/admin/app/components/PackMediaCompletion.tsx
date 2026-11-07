@@ -132,6 +132,7 @@ export function PackMediaCompletion({
   reconcileJob,
   onOpenCard,
   onFinished,
+  acceptItem,
 }: {
   packId: string;
   cards: { cardId: string; label: string }[];
@@ -151,10 +152,18 @@ export function PackMediaCompletion({
   reconcileJob?: (jobId: string) => Promise<ReconcileJobResult>;
   onOpenCard: (card: { cardId: string; label: string }) => void;
   onFinished: () => void;
+  /** Accepts one ready candidate; the bulk button below calls this once per queued item in turn. */
+  acceptItem?: (
+    cardId: string,
+    kind: CardMediaKind,
+    candidateId: string,
+  ) => Promise<{ ok: true } | { ok: false; message: string }>;
 }) {
   const [busy, setBusy] = useState<
-    'scanning' | 'creating' | 'stopping' | 'resolving' | 'reconciling'
+    'scanning' | 'creating' | 'stopping' | 'resolving' | 'reconciling' | 'accepting'
   >();
+  const [acceptAllProgress, setAcceptAllProgress] = useState<{ done: number; total: number }>();
+  const [acceptAllError, setAcceptAllError] = useState<string>();
   const [resolutionReason, setResolutionReason] = useState('');
   const [confirmedPotentialDuplicateCharge, setConfirmedPotentialDuplicateCharge] = useState(false);
   const [confirmedContinuePending, setConfirmedContinuePending] = useState(false);
@@ -208,6 +217,37 @@ export function PackMediaCompletion({
     } finally {
       setBusy(undefined);
     }
+  }
+
+  /**
+   * Accepts every item already listed under `awaitingAcceptance`, one at a time — each call is
+   * the exact same accept the Admin would otherwise click inside the single-card media panel, so
+   * it carries the same step-up guard and audit trail. A refused item is skipped, not retried
+   * silently, and the run always ends with a rescan so the list reflects server truth.
+   */
+  async function acceptAll() {
+    if (!acceptItem || !scan || scan.awaitingAcceptance.length === 0) return;
+    const todo = scan.awaitingAcceptance;
+    setBusy('accepting');
+    setAcceptAllError(undefined);
+    setAcceptAllProgress({ done: 0, total: todo.length });
+    let failures = 0;
+    for (let index = 0; index < todo.length; index += 1) {
+      const item = todo[index];
+      if (item.candidateId) {
+        const result = await acceptItem(item.cardId, item.kind, item.candidateId);
+        if (!result.ok) failures += 1;
+      }
+      setAcceptAllProgress({ done: index + 1, total: todo.length });
+    }
+    if (failures > 0) {
+      setAcceptAllError(
+        `${faNum(failures)} مورد از ${faNum(todo.length)} تأیید نشد؛ دوباره تلاش کنید.`,
+      );
+    }
+    setBusy(undefined);
+    setAcceptAllProgress(undefined);
+    await rescan();
   }
 
   async function start() {
@@ -526,15 +566,33 @@ export function PackMediaCompletion({
         </div>
       ) : null}
 
-      {scan && scan.awaitingAcceptance.length > 0 && !busy ? (
+      {scan && scan.awaitingAcceptance.length > 0 && (!busy || busy === 'accepting') ? (
         <div data-pack-media="acceptance">
           <p>منتظر پذیرش شما ({faNum(scan.awaitingAcceptance.length)}):</p>
+          {acceptItem ? (
+            <button
+              className="btn primary"
+              type="button"
+              disabled={busy === 'accepting'}
+              onClick={() => void acceptAll()}
+            >
+              {busy === 'accepting' && acceptAllProgress
+                ? `در حال تأیید… (${faNum(acceptAllProgress.done)} از ${faNum(acceptAllProgress.total)})`
+                : `تأیید همهٔ ${faNum(scan.awaitingAcceptance.length)} مورد منتظر پذیرش`}
+            </button>
+          ) : null}
+          {acceptAllError ? (
+            <p className="notice error" role="alert">
+              {acceptAllError}
+            </p>
+          ) : null}
           <ul>
             {scan.awaitingAcceptance.map((item) => (
               <li key={`${item.cardId}-${item.kind}`}>
                 <button
                   className="btn"
                   type="button"
+                  disabled={busy === 'accepting'}
                   onClick={() => onOpenCard({ cardId: item.cardId, label: item.label })}
                 >
                   <bdi dir="ltr">{item.label}</bdi> — {KIND_LABEL[item.kind]}

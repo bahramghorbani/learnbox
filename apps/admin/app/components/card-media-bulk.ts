@@ -16,7 +16,13 @@ import type { CardMediaKind, MediaKindState } from './CardMediaPanel';
 
 export const MEDIA_KIND_ORDER: readonly CardMediaKind[] = ['image', 'word_audio', 'sentence_audio'];
 
-export type PackMediaItem = { cardId: string; label: string; kind: CardMediaKind };
+export type PackMediaItem = {
+  cardId: string;
+  label: string;
+  kind: CardMediaKind;
+  /** Set only on `awaitingAcceptance` items: the candidate a bulk accept would confirm. */
+  candidateId?: string;
+};
 
 export interface PackMediaScan {
   /** Media to generate: paid calls, run only after confirmation. */
@@ -59,7 +65,7 @@ export async function scanPackMedia(
       const item = { ...card, kind };
       if (state?.latestCandidate?.status === 'generating') scan.generating.push(item);
       else if (state?.latestCandidate?.status === 'ready' && state.latestValidity === 'valid')
-        scan.awaitingAcceptance.push(item);
+        scan.awaitingAcceptance.push({ ...item, candidateId: state.latestCandidate.id });
       else if (state?.acceptedValidity === 'unverifiable') scan.unverifiable.push(item);
       else if (state?.needsGeneration) scan.needed.push(item);
     }

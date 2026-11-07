@@ -301,6 +301,7 @@ export function ServerBackedContentReview() {
   const [pendingDecisionKey, setPendingDecisionKey] = useState<string>();
   const [pendingApplyKeys, setPendingApplyKeys] = useState<Record<string, string>>({});
   const [applyingFindingKey, setApplyingFindingKey] = useState<string>();
+  const [bulkApprove, setBulkApprove] = useState<{ done: number; total: number; failed: number }>();
 
   const loadQueue = useCallback(async (reportErrors = true) => {
     try {
@@ -351,13 +352,23 @@ export function ServerBackedContentReview() {
     await loadQueue(false);
   }
 
-  async function submitCheck(dimension: ReviewDimension, outcome: 'passed' | 'failed') {
-    if (!selected || busy !== 'none') return;
+  /**
+   * Returns 'ok' on a persisted (or idempotent-replayed) success, 'skip' when this one check
+   * failed but another card may still succeed (conflict, validation, transient network error),
+   * and 'abort' only for an unrecovered step-up refusal (428) — the caller must stop the whole
+   * run there instead of prompting re-auth again for every remaining card.
+   */
+  async function submitCheck(
+    target: ServerQueueItem,
+    dimension: ReviewDimension,
+    outcome: 'passed' | 'failed',
+  ): Promise<'ok' | 'skip' | 'abort'> {
+    if (busy !== 'none') return 'skip';
     const idempotencyKey = pendingCheckKeys[dimension] ?? createIdempotencyKey();
     const csrfToken = readCsrfToken();
     if (!csrfToken) {
       setNotice({ kind: 'error', text: 'نشان امنیتی CSRF در دسترس نیست؛ صفحه را تازه کنید.' });
-      return;
+      return 'skip';
     }
     setPendingCheckKeys((keys) => ({ ...keys, [dimension]: idempotencyKey }));
     setBusy('check');
@@ -373,14 +384,14 @@ export function ServerBackedContentReview() {
           'idempotency-key': idempotencyKey,
         },
         body: JSON.stringify({
-          cardVersionId: selected.cardVersionId,
+          cardVersionId: target.cardVersionId,
           dimension,
           outcome,
         }),
       });
       if (response.status === 428) {
         setNotice({ kind: 'reauth', text: stepUpMessage(stepUp) });
-        return;
+        return 'abort';
       }
       if (response.status === 409) {
         setPendingCheckKeys((keys) => {
@@ -401,14 +412,14 @@ export function ServerBackedContentReview() {
             text: 'ثبت نشد: نتیجه یا کلید متفاوتی برای این بُعد قبلاً در سرور ثبت شده است.',
           });
         }
-        return;
+        return 'skip';
       }
       if (!response.ok) {
         setNotice({
           kind: 'error',
           text: 'ثبت بررسی در سرور ناموفق بود؛ دوباره تلاش کنید (درخواست تکراری بی‌اثر است).',
         });
-        return;
+        return 'skip';
       }
       const payload = (await response.json().catch(() => undefined)) as
         { status?: string } | undefined;
@@ -426,24 +437,30 @@ export function ServerBackedContentReview() {
         return next;
       });
       await refreshAfterMutation();
+      return 'ok';
     } catch {
       setNotice({
         kind: 'error',
         text: 'ارتباط با سرور برقرار نشد؛ دوباره تلاش کنید (کلید یکسان دوباره استفاده می‌شود).',
       });
+      return 'skip';
     } finally {
       setBusy('none');
       setBusyDimension(undefined);
     }
   }
 
-  async function submitDecision(action: 'approve' | 'return_for_revision') {
-    if (!selected || busy !== 'none') return;
+  /** Same 'ok' | 'skip' | 'abort' contract as `submitCheck` — see its docstring. */
+  async function submitDecision(
+    target: ServerQueueItem,
+    action: 'approve' | 'return_for_revision',
+  ): Promise<'ok' | 'skip' | 'abort'> {
+    if (busy !== 'none') return 'skip';
     const idempotencyKey = pendingDecisionKey ?? createIdempotencyKey();
     const csrfToken = readCsrfToken();
     if (!csrfToken) {
       setNotice({ kind: 'error', text: 'نشان امنیتی CSRF در دسترس نیست؛ صفحه را تازه کنید.' });
-      return;
+      return 'skip';
     }
     setPendingDecisionKey(idempotencyKey);
     setBusy('decision');
@@ -458,13 +475,13 @@ export function ServerBackedContentReview() {
           'idempotency-key': idempotencyKey,
         },
         body: JSON.stringify({
-          cardVersionId: selected.cardVersionId,
+          cardVersionId: target.cardVersionId,
           action,
         }),
       });
       if (response.status === 428) {
         setNotice({ kind: 'reauth', text: stepUpMessage(stepUp) });
-        return;
+        return 'abort';
       }
       if (response.status === 409) {
         const payload = (await response.json().catch(() => undefined)) as
@@ -487,14 +504,14 @@ export function ServerBackedContentReview() {
             text: 'تصمیم ثبت نشد: تصمیم دیگری با همین کلید قبلاً در سرور ثبت شده است.',
           });
         }
-        return;
+        return 'skip';
       }
       if (!response.ok) {
         setNotice({
           kind: 'error',
           text: 'ثبت تصمیم در سرور ناموفق بود؛ دوباره تلاش کنید (درخواست تکراری بی‌اثر است).',
         });
-        return;
+        return 'skip';
       }
       const payload = (await response.json().catch(() => undefined)) as
         { status?: string } | undefined;
@@ -514,11 +531,13 @@ export function ServerBackedContentReview() {
       }
       setPendingDecisionKey(undefined);
       await refreshAfterMutation();
+      return 'ok';
     } catch {
       setNotice({
         kind: 'error',
         text: 'ارتباط با سرور برقرار نشد؛ دوباره تلاش کنید (کلید یکسان دوباره استفاده می‌شود).',
       });
+      return 'skip';
     } finally {
       setBusy('none');
     }
@@ -610,6 +629,61 @@ export function ServerBackedContentReview() {
       setBusy('none');
       setApplyingFindingKey(undefined);
     }
+  }
+
+  /**
+   * Approves every `needs_review` card currently on the queue, one at a time: for each, pass all
+   * six dimensions then submit the same editorial decision a human click would. Reuses
+   * `submitCheck`/`submitDecision` verbatim, so every mutation keeps its usual step-up guard,
+   * idempotency key and audit trail — this only automates the clicking, not the server contract.
+   * A card a dimension check fails for is left in the queue (skipped, not force-approved); an
+   * unrecovered step-up refusal stops the whole run rather than prompting 428 after 428.
+   */
+  async function approveAllInQueue() {
+    if (busy !== 'none' || bulkApprove) return;
+    const todo = items.filter((item) => item.status === 'needs_review');
+    if (todo.length === 0) return;
+    setNotice({ kind: 'none' });
+    setBulkApprove({ done: 0, total: todo.length, failed: 0 });
+    let succeeded = 0;
+    let failed = 0;
+    let aborted = false;
+    for (let index = 0; index < todo.length; index += 1) {
+      const target = todo[index];
+      let itemOk = true;
+      for (const dimension of dimensions) {
+        const result = await submitCheck(target, dimension, 'passed');
+        if (result === 'abort') {
+          aborted = true;
+          itemOk = false;
+          break;
+        }
+        if (result === 'skip') {
+          itemOk = false;
+          break;
+        }
+      }
+      if (itemOk && !aborted) {
+        const result = await submitDecision(target, 'approve');
+        if (result === 'abort') aborted = true;
+        if (result !== 'ok') itemOk = false;
+      }
+      if (itemOk) succeeded += 1;
+      else failed += 1;
+      setBulkApprove({ done: index + 1, total: todo.length, failed });
+      if (aborted) break;
+    }
+    setNotice({
+      kind: aborted ? 'reauth' : failed > 0 ? 'conflict' : 'decision-success',
+      text: aborted
+        ? `روند تأیید همه متوقف شد: نیاز به تأیید هویت دوباره بود و رد/لغو شد. ${fa(
+            succeeded,
+          )} از ${fa(todo.length)} کارت پیش از توقف تأیید نهایی شد؛ برای ادامه دوباره روی دکمه بزنید.`
+        : failed > 0
+          ? `${fa(succeeded)} از ${fa(todo.length)} کارت تأیید نهایی شد؛ ${fa(failed)} مورد رد یا متوقف شد و در صف باقی ماند.`
+          : `هر ${fa(todo.length)} کارت صف تأیید نهایی شد.`,
+    });
+    setBulkApprove(undefined);
   }
 
   return (
@@ -726,6 +800,18 @@ export function ServerBackedContentReview() {
                 <h3 className="card-title" id="review-queue-panel-title">
                   کارت‌های صف
                 </h3>
+                {pendingReviewCount > 0 ? (
+                  <button
+                    type="button"
+                    className="btn primary sm"
+                    disabled={busy !== 'none' || !!bulkApprove}
+                    onClick={() => void approveAllInQueue()}
+                  >
+                    {bulkApprove
+                      ? `در حال تأیید همه… (${fa(bulkApprove.done)} از ${fa(bulkApprove.total)})`
+                      : `تأیید همهٔ ${fa(pendingReviewCount)} موردِ نیازمند بررسی`}
+                  </button>
+                ) : null}
               </div>
               <div className="card-body">
                 <div className="server-queue-list">
@@ -869,16 +955,16 @@ export function ServerBackedContentReview() {
                             <button
                               type="button"
                               className="btn primary sm"
-                              disabled={busy !== 'none'}
-                              onClick={() => void submitCheck(dimension, 'passed')}
+                              disabled={busy !== 'none' || !!bulkApprove}
+                              onClick={() => void submitCheck(selected, dimension, 'passed')}
                             >
                               {isBusy ? 'در حال ثبت…' : 'تأیید'}
                             </button>
                             <button
                               type="button"
                               className="btn sm"
-                              disabled={busy !== 'none'}
-                              onClick={() => void submitCheck(dimension, 'failed')}
+                              disabled={busy !== 'none' || !!bulkApprove}
+                              onClick={() => void submitCheck(selected, dimension, 'failed')}
                             >
                               ناموفق
                             </button>
@@ -893,16 +979,16 @@ export function ServerBackedContentReview() {
                   <button
                     type="button"
                     className="btn primary"
-                    disabled={busy !== 'none' || !allChecksPassed}
-                    onClick={() => void submitDecision('approve')}
+                    disabled={busy !== 'none' || !!bulkApprove || !allChecksPassed}
+                    onClick={() => void submitDecision(selected, 'approve')}
                   >
                     {busy === 'decision' ? 'در حال ثبت…' : 'تأیید نهایی سردبیری'}
                   </button>
                   <button
                     type="button"
                     className="btn"
-                    disabled={busy !== 'none'}
-                    onClick={() => void submitDecision('return_for_revision')}
+                    disabled={busy !== 'none' || !!bulkApprove}
+                    onClick={() => void submitDecision(selected, 'return_for_revision')}
                   >
                     بازگرداندن برای اصلاح
                   </button>

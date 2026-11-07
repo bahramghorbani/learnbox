@@ -392,8 +392,16 @@ describe('content review workspace (figure honesty and reference anatomy)', () =
       );
       // 3 pending dimensions × 2 + final approve + return = 8 controls, and nothing else.
       expect(labels).toHaveLength(8);
-      // Outside the decision panel the only buttons are the 3 queue rows, which just select.
-      expect(rendered.container.querySelectorAll('button')).toHaveLength(11);
+      // Outside the decision panel: 3 queue rows (select only) + 1 bulk-approve-queue button —
+      // still editorial-only, never a publish control.
+      expect(rendered.container.querySelectorAll('button')).toHaveLength(12);
+      const queueBulkButton = Array.from(rendered.container.querySelectorAll('button')).find(
+        (button) => button.textContent?.includes('نیازمند بررسی'),
+      );
+      expect(queueBulkButton).toBeTruthy();
+      for (const forbidden of ['انتشار', 'حذف', 'قیمت']) {
+        expect(queueBulkButton?.textContent?.includes(forbidden)).toBe(false);
+      }
       expect(labels.filter((label) => label === 'تأیید')).toHaveLength(3);
       expect(labels.filter((label) => label === 'ناموفق')).toHaveLength(3);
       expect(labels).toContain('تأیید نهایی سردبیری');
