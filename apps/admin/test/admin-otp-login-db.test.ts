@@ -3,7 +3,7 @@ import { randomBytes } from 'node:crypto';
 import { Pool } from 'pg';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { hashOtpCode, hashOtpPhone } from '../lib/server/admin-otp-challenge';
+import { hashOtpPhone } from '../lib/server/admin-otp-challenge';
 import { createOtpRequestRoute, createOtpVerifyRoute } from '../lib/server/admin-otp-routes';
 import { PostgresAdminOtpStore } from '../lib/server/postgres-admin-otp-store';
 import { PostgresOwnerAuthStore } from '../lib/server/postgres-owner-auth-store';
