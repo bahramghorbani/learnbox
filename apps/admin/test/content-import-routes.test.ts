@@ -41,7 +41,7 @@ function sessionStore(overrides: { userId?: string | null; recent?: boolean } = 
             lastSeenAt: now,
             absoluteExpiresAt: new Date(now.getTime() + 60_000),
             revokedAt: null,
-            recentAuthenticatedAt: recent ? now : new Date(now.getTime() - 86_400_000),
+            recentAuthenticatedAt: recent ? now : new Date(now.getTime() - 25 * 60 * 60_000),
           },
     touchSession: async () => true,
   };
