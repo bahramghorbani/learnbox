@@ -89,11 +89,17 @@ fi
 # without ever calling /api/auth/session or offering the passkey prompt. A default would make that
 # the quiet consequence of forgetting one variable, so this script fails closed instead.
 PASSKEY_UI="${NEXT_PUBLIC_LEARNBOX_ADMIN_PASSKEY_UI_ENABLED:-}"
+OTP_UI="${NEXT_PUBLIC_LEARNBOX_ADMIN_OTP_UI_ENABLED:-false}"
 if [ "${LEARNBOX_IMAGE_TARGET:-admin}" = admin ]; then
 if [ "$PASSKEY_UI" != "true" ]; then
   echo "build-admin-image: NEXT_PUBLIC_LEARNBOX_ADMIN_PASSKEY_UI_ENABLED must be exactly 'true'" >&2
   echo "build-admin-image: for a production Admin image, got '${PASSKEY_UI:-<unset>}'." >&2
   echo "build-admin-image: a lower value ships an Admin that signs itself in without a passkey." >&2
+  exit 2
+fi
+if [ "$OTP_UI" != "true" ] && [ "$OTP_UI" != "false" ]; then
+  echo "build-admin-image: NEXT_PUBLIC_LEARNBOX_ADMIN_OTP_UI_ENABLED must be 'true' or 'false'" >&2
+  echo "build-admin-image: got '$OTP_UI'." >&2
   exit 2
 fi
 fi
@@ -161,6 +167,7 @@ if [ "$TARGET" = app ]; then
   FLAG_ARGS+=(--build-arg "NEXT_PUBLIC_VAPID_PUBLIC_KEY=${NEXT_PUBLIC_VAPID_PUBLIC_KEY:-}")
 else
   FLAG_ARGS+=(--build-arg "NEXT_PUBLIC_LEARNBOX_ADMIN_PASSKEY_UI_ENABLED=$PASSKEY_UI")
+  FLAG_ARGS+=(--build-arg "NEXT_PUBLIC_LEARNBOX_ADMIN_OTP_UI_ENABLED=$OTP_UI")
 fi
 
 IMAGE_TAG="learnbox-$TARGET:${SOURCE_SHA:0:7}-${TAG_SUFFIX}"
