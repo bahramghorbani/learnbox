@@ -197,7 +197,7 @@ describe('M1.4 AI route guard chain', () => {
       it('demands re-authentication after the operational window', async () => {
         const svc = service();
         const route = factory(
-          deps({ sessionStore: sessionStore({ ageMinutes: 61 }), service: svc }),
+          deps({ sessionStore: sessionStore({ ageMinutes: 24 * 60 + 1 }), service: svc }),
         );
         const response = await route(post(body));
         expect(response.status).toBe(428);

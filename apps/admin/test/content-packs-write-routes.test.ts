@@ -51,7 +51,7 @@ function sessionStore(overrides: { userId?: string | null; recent?: boolean } = 
             absoluteExpiresAt: new Date(now.getTime() + 60_000),
             revokedAt: null,
             // A stale reauthentication must force 428 on a content write.
-            recentAuthenticatedAt: recent ? now : new Date(now.getTime() - 86_400_000),
+            recentAuthenticatedAt: recent ? now : new Date(now.getTime() - 25 * 60 * 60_000),
           },
     touchSession: async () => true,
   };

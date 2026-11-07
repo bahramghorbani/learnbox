@@ -33,7 +33,7 @@ describe('evaluateAdminSession', () => {
     recentAuthenticatedAt: new Date(now.getTime() - 4 * 60_000),
   };
 
-  it('accepts a one-hour operational window while retaining the five-minute sensitive window', () => {
+  it('accepts a 24-hour operational window while retaining the five-minute sensitive window', () => {
     expect(evaluateAdminSession(activeSession, now)).toEqual({
       active: true,
       operational: true,
@@ -47,7 +47,10 @@ describe('evaluateAdminSession', () => {
     ).toEqual({ active: true, operational: true, recent: false });
     expect(
       evaluateAdminSession(
-        { ...activeSession, recentAuthenticatedAt: new Date(now.getTime() - 60 * 60_000 - 1) },
+        {
+          ...activeSession,
+          recentAuthenticatedAt: new Date(now.getTime() - 24 * 60 * 60_000 - 1),
+        },
         now,
       ),
     ).toEqual({ active: true, operational: false, recent: false });
@@ -88,7 +91,7 @@ describe('evaluateAdminSession', () => {
 describe('adminSessionCookie', () => {
   it('uses strict host-only production attributes', () => {
     expect(adminSessionCookie('opaque-token')).toBe(
-      '__Host-learnbox_admin_session=opaque-token; Max-Age=28800; Path=/; HttpOnly; Secure; SameSite=Strict',
+      '__Host-learnbox_admin_session=opaque-token; Max-Age=86400; Path=/; HttpOnly; Secure; SameSite=Strict',
     );
   });
 });
