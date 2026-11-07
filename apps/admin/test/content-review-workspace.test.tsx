@@ -520,6 +520,66 @@ describe('ServerBackedContentReview (authenticated server mode)', () => {
     }
   });
 
+  it('bulk-approves every needs_review card in the queue with one click, via the same per-item requests', async () => {
+    const queueState = { items: [itemHaus, itemTisch] };
+    const { calls } = stubReviewFetch({
+      '/api/content/review': () => jsonResponse(queueState),
+      '/api/content/review/check': () => jsonResponse({ status: 'applied' }),
+      '/api/content/review/decision': (init) => {
+        expect(String(init?.body)).toContain('"action":"approve"');
+        return jsonResponse({ status: 'applied', nextStatus: 'approved' });
+      },
+    });
+    const rendered = await renderServer();
+    try {
+      await rendered.clickButton('تأیید همهٔ ۲ موردِ نیازمند بررسی');
+      await flush();
+
+      const checkCalls = calls.filter((call) => call.url === '/api/content/review/check');
+      const decisionCalls = calls.filter((call) => call.url === '/api/content/review/decision');
+      // Six dimensions each, for both queued cards — exactly the per-item calls a human
+      // clicking through both cards one at a time would have produced, nothing extra.
+      expect(checkCalls).toHaveLength(allDimensions.length * 2);
+      expect(decisionCalls).toHaveLength(2);
+      const decisionIds = decisionCalls.map((call) => String(call.init?.body));
+      expect(decisionIds.some((body) => body.includes(itemHaus.cardVersionId))).toBe(true);
+      expect(decisionIds.some((body) => body.includes(itemTisch.cardVersionId))).toBe(true);
+      expect(rendered.text).toContain('هر ۲ کارت صف تأیید نهایی شد.');
+      // The button reverts to its idle label once the run ends (no stuck "در حال تأیید…").
+      expect(rendered.text).not.toContain('در حال تأیید همه…');
+    } finally {
+      await rendered.unmount();
+    }
+  });
+
+  it('stops a bulk approval run on the first unrecoverable failure, leaving later cards untouched', async () => {
+    const queueState = { items: [itemHaus, itemTisch] };
+    const { calls } = stubReviewFetch({
+      '/api/content/review': () => jsonResponse(queueState),
+      '/api/content/review/check': (init) => {
+        const body = JSON.parse(String(init?.body)) as { dimension: ReviewDimension };
+        // The very first check the bulk run makes for Haus is refused by a dropped step-up.
+        if (body.dimension === allDimensions[0]) return jsonResponse({}, 428);
+        return jsonResponse({ status: 'applied' });
+      },
+    });
+    const rendered = await renderServer();
+    try {
+      await rendered.clickButton('تأیید همهٔ ۲ موردِ نیازمند بررسی');
+      await flush();
+
+      // Haus fails its first dimension with a 428 — the whole run stops there rather than
+      // prompting re-auth again for Tisch, so Tisch is never even attempted.
+      const checkCalls = calls.filter((call) => call.url === '/api/content/review/check');
+      expect(checkCalls).toHaveLength(1);
+      expect(calls.filter((call) => call.url === '/api/content/review/decision')).toHaveLength(0);
+      expect(rendered.text).toContain('روند تأیید همه متوقف شد');
+      expect(rendered.text).toContain('۰ از ۲ کارت پیش از توقف تأیید نهایی شد');
+    } finally {
+      await rendered.unmount();
+    }
+  });
+
   it('labels an idempotent replay and a return_for_revision decision truthfully', async () => {
     const { calls } = stubReviewFetch({
       '/api/content/review': () => jsonResponse({ items: [itemApproved] }),

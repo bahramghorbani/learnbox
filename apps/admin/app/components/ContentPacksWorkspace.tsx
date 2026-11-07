@@ -1159,6 +1159,16 @@ export function ContentPacksWorkspace() {
                       onFinished={() => {
                         if (openPackId) void loadCards(openPackId, { background: true });
                       }}
+                      acceptItem={async (cardId, kind, candidateId) => {
+                        const result = await postAiJson<unknown>('/api/content/media/accept', {
+                          cardId,
+                          kind,
+                          candidateId,
+                        });
+                        return result.ok
+                          ? { ok: true as const }
+                          : { ok: false as const, message: result.message };
+                      }}
                     />
                   ) : null}
                   {cardsPhase === 'loading' ? (
