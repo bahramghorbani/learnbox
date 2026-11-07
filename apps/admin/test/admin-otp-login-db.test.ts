@@ -137,9 +137,18 @@ suite('admin OTP login against real Postgres', () => {
 
   it('authorized phone creates a challenge row and calls the SMS client', async () => {
     const sent: { phone: string; code: string }[] = [];
-    const smsClient = { sendVerificationCode: vi.fn(async (p: string, c: string) => { sent.push({ phone: p, code: c }); }) };
+    const smsClient = {
+      sendVerificationCode: vi.fn(async (p: string, c: string) => {
+        sent.push({ phone: p, code: c });
+      }),
+    };
     const otpStore = new PostgresAdminOtpStore(pool as never);
-    const handler = createOtpRequestRoute({ authConfig, otpConfig, store: otpStore as never, smsClient });
+    const handler = createOtpRequestRoute({
+      authConfig,
+      otpConfig,
+      store: otpStore as never,
+      smsClient,
+    });
 
     const response = await handler(otpRequest({ phone: '09121234567' }));
 
@@ -161,7 +170,12 @@ suite('admin OTP login against real Postgres', () => {
     const before = await pool.query('SELECT COUNT(*) FROM admin_otp_challenges');
     const smsClient = { sendVerificationCode: vi.fn(async () => {}) };
     const otpStore = new PostgresAdminOtpStore(pool as never);
-    const handler = createOtpRequestRoute({ authConfig, otpConfig, store: otpStore as never, smsClient });
+    const handler = createOtpRequestRoute({
+      authConfig,
+      otpConfig,
+      store: otpStore as never,
+      smsClient,
+    });
 
     const response = await handler(otpRequest({ phone: OTHER_PHONE }));
 
@@ -178,9 +192,18 @@ suite('admin OTP login against real Postgres', () => {
   it('correct code returns 204 and creates an admin_sessions row', async () => {
     // First, request an OTP challenge.
     let capturedCode = '';
-    const smsClient = { sendVerificationCode: vi.fn(async (_p: string, c: string) => { capturedCode = c; }) };
+    const smsClient = {
+      sendVerificationCode: vi.fn(async (_p: string, c: string) => {
+        capturedCode = c;
+      }),
+    };
     const otpStore = new PostgresAdminOtpStore(pool as never);
-    const requestHandler = createOtpRequestRoute({ authConfig, otpConfig, store: otpStore as never, smsClient });
+    const requestHandler = createOtpRequestRoute({
+      authConfig,
+      otpConfig,
+      store: otpStore as never,
+      smsClient,
+    });
     const requestResponse = await requestHandler(otpRequest({ phone: '09121234567' }));
     expect(requestResponse.status).toBe(202);
 
@@ -189,7 +212,12 @@ suite('admin OTP login against real Postgres', () => {
 
     // Verify with the captured code.
     const sessionStore = new PostgresOwnerAuthStore(pool as never);
-    const verifyHandler = createOtpVerifyRoute({ authConfig, otpConfig, otpStore: otpStore as never, sessionStore });
+    const verifyHandler = createOtpVerifyRoute({
+      authConfig,
+      otpConfig,
+      otpStore: otpStore as never,
+      sessionStore,
+    });
     const verifyCookie = `__Host-learnbox_admin_otp_challenge=${challengeId}`;
     const verifyResponse = await verifyHandler(otpVerify({ code: capturedCode }, verifyCookie));
 
@@ -211,9 +239,18 @@ suite('admin OTP login against real Postgres', () => {
 
   it('wrong code 5 times locks the challenge', async () => {
     let capturedCode = '';
-    const smsClient = { sendVerificationCode: vi.fn(async (_p: string, c: string) => { capturedCode = c; }) };
+    const smsClient = {
+      sendVerificationCode: vi.fn(async (_p: string, c: string) => {
+        capturedCode = c;
+      }),
+    };
     const otpStore = new PostgresAdminOtpStore(pool as never);
-    const requestHandler = createOtpRequestRoute({ authConfig, otpConfig, store: otpStore as never, smsClient });
+    const requestHandler = createOtpRequestRoute({
+      authConfig,
+      otpConfig,
+      store: otpStore as never,
+      smsClient,
+    });
     const requestResponse = await requestHandler(otpRequest({ phone: '09121234567' }));
 
     const challengeId = setCookieValue(requestResponse, '__Host-learnbox_admin_otp_challenge');
@@ -222,7 +259,12 @@ suite('admin OTP login against real Postgres', () => {
 
     const wrongCode = capturedCode === '00000' ? '11111' : '00000';
     const sessionStore = new PostgresOwnerAuthStore(pool as never);
-    const verifyHandler = createOtpVerifyRoute({ authConfig, otpConfig, otpStore: otpStore as never, sessionStore });
+    const verifyHandler = createOtpVerifyRoute({
+      authConfig,
+      otpConfig,
+      otpStore: otpStore as never,
+      sessionStore,
+    });
     const verifyCookie = `__Host-learnbox_admin_otp_challenge=${challengeId}`;
 
     // 5 wrong attempts → locked on the last.

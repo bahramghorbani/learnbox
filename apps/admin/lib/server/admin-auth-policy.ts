@@ -57,8 +57,7 @@ export function readAdminAuthConfig(environment: Environment): AdminAuthConfig {
 }
 
 export type AdminOtpConfig =
-  | { enabled: false }
-  | { enabled: true; secret: string; authorizedPhoneHash: string };
+  { enabled: false } | { enabled: true; secret: string; authorizedPhoneHash: string };
 
 export function readAdminOtpConfig(environment: Environment): AdminOtpConfig {
   if (environment.LEARNBOX_ADMIN_OTP_ENABLED !== 'true') return { enabled: false };

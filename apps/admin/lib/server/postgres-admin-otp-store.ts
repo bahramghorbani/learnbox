@@ -138,10 +138,10 @@ export class PostgresAdminOtpStore {
         );
       }
       if (outcome.status === 'invalid' || outcome.status === 'locked') {
-        await client.query(
-          'UPDATE admin_otp_challenges SET attempt_count = $2 WHERE id = $1',
-          [challengeId, outcome.record.attemptCount],
-        );
+        await client.query('UPDATE admin_otp_challenges SET attempt_count = $2 WHERE id = $1', [
+          challengeId,
+          outcome.record.attemptCount,
+        ]);
       }
 
       await client.query('COMMIT');

@@ -32,8 +32,7 @@ export type OtpVerificationOutcome =
   | { status: 'expired' | 'used' };
 
 export type OtpRequestRateLimitOutcome =
-  | { status: 'allowed' }
-  | { status: 'rate_limited'; scope: 'phone' | 'ip'; retryAfterMs: number };
+  { status: 'allowed' } | { status: 'rate_limited'; scope: 'phone' | 'ip'; retryAfterMs: number };
 
 type CreateOtpChallengeInput = {
   id: string;
