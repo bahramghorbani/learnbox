@@ -284,7 +284,9 @@ suite('deployed application version against the expanded schema', () => {
     // 0054 adds private store_pack_cover_objects and store_pack_cover_candidates. All are additive,
     // with nothing dropped. 0060 adds user_badges, league_members and league_opt_outs (League).
     // 0063 adds the Admin-only dictionary_editorial_entries staging table. 0064 adds
-    // dictionary_saved_words (بخش واژگان: a learner's saved dictionary words).
-    expect(expandedTables.rows[0].n - deployedTables.rows[0].n).toBe(19);
+    // dictionary_saved_words (بخش واژگان: a learner's saved dictionary words). 0065 adds
+    // admin_otp_challenges and admin_otp_request_events (phone+SMS.ir login, additive alongside
+    // the existing Passkey flow, nothing dropped or renamed).
+    expect(expandedTables.rows[0].n - deployedTables.rows[0].n).toBe(21);
   });
 });
