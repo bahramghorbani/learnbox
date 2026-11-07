@@ -56,6 +56,20 @@ export function readAdminAuthConfig(environment: Environment): AdminAuthConfig {
   return { enabled: true, origin: parsedOrigin.origin, rpId, tokenHashKey };
 }
 
+export type AdminOtpConfig =
+  { enabled: false } | { enabled: true; secret: string; authorizedPhoneHash: string };
+
+export function readAdminOtpConfig(environment: Environment): AdminOtpConfig {
+  if (environment.LEARNBOX_ADMIN_OTP_ENABLED !== 'true') return { enabled: false };
+  const secret = environment.LEARNBOX_ADMIN_OTP_SECRET;
+  const authorizedPhoneHash = environment.LEARNBOX_ADMIN_OTP_PHONE_HASH;
+  if (!secret || secret.length < 32) {
+    throw new Error('Admin OTP secret is required and must be >= 32 chars.');
+  }
+  if (!authorizedPhoneHash) throw new Error('Admin OTP authorized phone hash is required.');
+  return { enabled: true, secret, authorizedPhoneHash };
+}
+
 export function readAdminBootstrapConfig(environment: Environment): AdminBootstrapConfig {
   const auth = readAdminAuthConfig(environment);
   const secret = environment.LEARNBOX_ADMIN_BOOTSTRAP_SECRET;

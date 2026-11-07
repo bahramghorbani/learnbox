@@ -5,3 +5,9 @@ export function resolveAdminAuthMode(
 ): AdminAuthMode {
   return value === 'true' ? 'server-passkey' : 'local-prototype';
 }
+
+export function resolveAdminOtpUiEnabled(
+  value = process.env.NEXT_PUBLIC_LEARNBOX_ADMIN_OTP_UI_ENABLED,
+): boolean {
+  return value === 'true';
+}

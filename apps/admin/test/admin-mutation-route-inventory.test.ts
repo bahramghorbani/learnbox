@@ -39,6 +39,14 @@ const INVENTORY: Record<string, Entry> = {
     category: 'delegated',
     guardIn: 'lib/server/admin-auth-routes.ts',
   },
+  'app/api/auth/otp/request/route.ts': {
+    category: 'delegated',
+    guardIn: 'lib/server/admin-otp-routes.ts',
+  },
+  'app/api/auth/otp/verify/route.ts': {
+    category: 'delegated',
+    guardIn: 'lib/server/admin-otp-routes.ts',
+  },
   'app/api/auth/reauth/verify/route.ts': {
     category: 'delegated',
     guardIn: 'lib/server/admin-auth-routes.ts',

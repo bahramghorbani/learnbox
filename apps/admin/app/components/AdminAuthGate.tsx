@@ -3,8 +3,10 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
 import type { AdminAuthMode } from '../admin-auth-mode';
+import { resolveAdminOtpUiEnabled } from '../admin-auth-mode';
 import { ErrorState, LoadingState } from './AdminStates';
 import { PasskeySignIn } from './PasskeySignIn';
+import { PhoneOtpSignIn } from './PhoneOtpSignIn';
 
 export type AdminWorkspaceAccess = 'local-prototype' | 'server-authenticated';
 
@@ -89,7 +91,40 @@ export function AdminAuthGate({ mode, children }: AdminAuthGateProps) {
       </main>
     );
   }
-  if (state === 'signed-out')
-    return <PasskeySignIn onAuthenticated={() => setState('signed-in')} />;
+  if (state === 'signed-out') {
+    const otpEnabled = resolveAdminOtpUiEnabled();
+    return <SignInGate onAuthenticated={() => setState('signed-in')} otpEnabled={otpEnabled} />;
+  }
   return <WorkspaceAccess access="server-authenticated">{children}</WorkspaceAccess>;
+}
+
+function SignInGate({
+  onAuthenticated,
+  otpEnabled,
+}: {
+  onAuthenticated: () => void;
+  otpEnabled: boolean;
+}) {
+  const [method, setMethod] = useState<'passkey' | 'otp'>('passkey');
+
+  return (
+    <>
+      {method === 'passkey' ? (
+        <PasskeySignIn onAuthenticated={onAuthenticated} />
+      ) : (
+        <PhoneOtpSignIn onAuthenticated={onAuthenticated} />
+      )}
+      {otpEnabled ? (
+        <div style={{ textAlign: 'center', marginTop: '1rem' }}>
+          <button
+            type="button"
+            className="admin-auth-toggle"
+            onClick={() => setMethod(method === 'passkey' ? 'otp' : 'passkey')}
+          >
+            {method === 'passkey' ? 'ورود با شماره موبایل' : 'ورود با Passkey'}
+          </button>
+        </div>
+      ) : null}
+    </>
+  );
 }
