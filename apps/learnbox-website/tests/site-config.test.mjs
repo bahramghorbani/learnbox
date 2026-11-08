@@ -16,6 +16,7 @@ test('empty environment activates only the owner-verified destinations', () => {
       webApp: { status: 'available', url: 'https://app.learnboxapp.com/' },
       cafeBazaar: { status: 'available', url: 'https://cafebazaar.ir/app/ir.learnbox.app' },
       sibapp: { status: 'available', url: 'https://sibapp.com/applications/learnbox' },
+      myket: { status: 'available', url: 'https://myket.ir/app/ir.learnbox.app' },
       telegram: { status: 'available', url: 'https://t.me/learnboxapp' },
       instagram: { status: 'available', url: 'https://www.instagram.com/learnboxapp/' },
       linkedin: { status: 'unavailable', url: null },
