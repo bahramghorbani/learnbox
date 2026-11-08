@@ -2348,3 +2348,82 @@
 .lbd .foot a {
   color: inherit;
 }
+
+/* ---------- app picker modal (quiz CTA: pick web / Bazaar / Sibapp / Myket) ---------- */
+.lbd .app-picker {
+  width: min(680px, calc(100% - 32px));
+  max-height: min(90dvh, 720px);
+  margin: auto;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 0 24px 80px #17233d55;
+  overflow: auto;
+}
+.lbd .app-picker[open] {
+  animation: app-picker-in 0.35s var(--arrive) both;
+}
+.lbd .app-picker::backdrop {
+  background: #17233d99;
+}
+.lbd .app-picker[open]::backdrop {
+  animation: app-picker-scrim 0.3s ease both;
+}
+.lbd .app-picker-inner {
+  position: relative;
+  padding: clamp(24px, 5vw, 40px);
+}
+.lbd .app-picker-close {
+  position: absolute;
+  inset-block-start: 20px;
+  inset-inline-end: 20px;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.lbd .app-picker-kicker {
+  color: var(--purple);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+.lbd .app-picker h2 {
+  margin: 10px 0 8px;
+  padding-inline-end: 42px;
+  font-size: clamp(1.3rem, 4vw, 1.7rem);
+}
+.lbd .app-picker p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.8;
+}
+.lbd .app-picker .store-badges--download {
+  justify-content: center;
+  margin-top: 28px;
+}
+@keyframes app-picker-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes app-picker-scrim {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

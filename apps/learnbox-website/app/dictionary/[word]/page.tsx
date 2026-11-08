@@ -98,8 +98,6 @@ export default async function WordPage({ params }: Props) {
   const e = load((await params).word);
   const family = existing(e.family.filter((w) => w !== e.lemma)).slice(0, 8);
   const synonyms = existing(e.synonyms.filter((w) => w !== e.lemma)).slice(0, 8);
-  const appHref =
-    siteConfig.destinations.cafeBazaar.url ?? siteConfig.destinations.webApp.url ?? '/#download';
   const pageUrl = `${siteConfig.siteUrl}${wordHref(e.lemma)}`;
   const head = `${e.article ? e.article + ' ' : ''}${e.lemma}`;
   const jsonLd = {
@@ -138,7 +136,7 @@ export default async function WordPage({ params }: Props) {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: ldJson(jsonLd) }} />
-      <WordView entry={e} quiz={quizFor(e)} family={family} synonyms={synonyms} appHref={appHref} />
+      <WordView entry={e} quiz={quizFor(e)} family={family} synonyms={synonyms} />
     </>
   );
 }
