@@ -531,6 +531,7 @@ export function StoreScreen({
                       <button
                         key={item}
                         type="button"
+                        data-level={item}
                         aria-pressed={level === item}
                         onClick={() => setLevel(item)}
                       >
@@ -567,6 +568,7 @@ export function StoreScreen({
                           ) : (
                             <div
                               className="store-pack-cover store-pack-cover-placeholder"
+                              data-level={pack.targetCefr}
                               aria-label={`کاور پیش‌فرض ${pack.name}`}
                             >
                               {pack.targetCefr}

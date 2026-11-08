@@ -9,6 +9,22 @@
   font-weight: 700;
   outline: 2px solid currentColor;
 }
+/* CEFR level colors: A = green family, B = blue family, C = purple family */
+.store-level-chips button[data-level^='A'][aria-pressed='true'],
+.store-pack-cover-placeholder[data-level^='A'] {
+  color: #1f7a4d;
+  background: #e3f6ea;
+}
+.store-level-chips button[data-level^='B'][aria-pressed='true'],
+.store-pack-cover-placeholder[data-level^='B'] {
+  color: #1d5fa8;
+  background: #e4edfb;
+}
+.store-level-chips button[data-level^='C'][aria-pressed='true'],
+.store-pack-cover-placeholder[data-level^='C'] {
+  color: #6a3ca8;
+  background: #efe5fa;
+}
 .store-pack-cover {
   width: 88px;
   height: 88px;
