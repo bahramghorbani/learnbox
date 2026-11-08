@@ -23,6 +23,14 @@ const definitions = [
     defaultValue: 'https://sibapp.com/applications/learnbox',
   },
   {
+    id: 'myket',
+    env: 'NEXT_PUBLIC_MYKET_URL',
+    label: 'مایکت',
+    protocols: ['https:'],
+    hosts: ['myket.ir'],
+    defaultValue: 'https://myket.ir/app/ir.learnbox.app',
+  },
+  {
     id: 'telegram',
     env: 'NEXT_PUBLIC_TELEGRAM_URL',
     label: 'Telegram',
@@ -152,6 +160,7 @@ export const siteConfig = buildSiteConfig({
   NEXT_PUBLIC_WEB_APP_URL: process.env.NEXT_PUBLIC_WEB_APP_URL,
   NEXT_PUBLIC_CAFE_BAZAAR_URL: process.env.NEXT_PUBLIC_CAFE_BAZAAR_URL,
   NEXT_PUBLIC_SIBAPP_URL: process.env.NEXT_PUBLIC_SIBAPP_URL,
+  NEXT_PUBLIC_MYKET_URL: process.env.NEXT_PUBLIC_MYKET_URL,
   NEXT_PUBLIC_TELEGRAM_URL: process.env.NEXT_PUBLIC_TELEGRAM_URL,
   NEXT_PUBLIC_INSTAGRAM_URL: process.env.NEXT_PUBLIC_INSTAGRAM_URL,
   NEXT_PUBLIC_LINKEDIN_URL: process.env.NEXT_PUBLIC_LINKEDIN_URL,

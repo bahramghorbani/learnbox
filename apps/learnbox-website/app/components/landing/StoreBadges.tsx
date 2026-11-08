@@ -25,6 +25,15 @@ const badges = [
     caption: 'آیفون و آیپد',
   },
   {
+    id: 'myket',
+    platform: 'android',
+    src: '/badges/myket.svg',
+    width: 1000,
+    height: 333,
+    label: 'دریافت از مایکت',
+    caption: 'اندروید',
+  },
+  {
     id: 'webApp',
     platform: 'web',
     src: '/badges/webapp.webp',
