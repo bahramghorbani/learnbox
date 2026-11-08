@@ -5,6 +5,7 @@
 import { usePathname } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { wordHref } from '../../src/dictionary/href';
+import { GetAppModal } from './GetAppModal';
 import type {
   Article,
   CompoundPart,
@@ -711,14 +712,13 @@ export function WordView({
   quiz,
   family,
   synonyms,
-  appHref,
 }: {
   entry: Entry;
   quiz: Quiz;
   family: Rel[];
   synonyms: Rel[];
-  appHref: string;
 }) {
+  const [appOpen, setAppOpen] = useState(false);
   const { saved, toggle } = useSaved();
   const isSaved = saved.includes(entry.lemma);
   const root = useRef<HTMLDivElement>(null);
@@ -1219,10 +1219,11 @@ export function WordView({
                 </>
               )}
             </div>
-            <a className="btn cta" href={appHref}>
+            <button type="button" className="btn cta" onClick={() => setAppOpen(true)}>
               شروع رایگان در اپ
-            </a>
+            </button>
           </div>
+          <GetAppModal open={appOpen} onClose={() => setAppOpen(false)} />
           {(family.length > 0 || synonyms.length > 0) && (
             <div className="mini">
               {family.length > 0 && (
