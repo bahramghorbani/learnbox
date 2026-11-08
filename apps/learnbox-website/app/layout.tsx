@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
 import { siteConfig } from '../src/config/site.mjs';
+import { GoogleAnalytics } from './components/GoogleAnalytics';
 import './globals.css';
 import '../src/themes/summer/germany-chapters.css';
 import '../src/themes/summer/summer-theme.css';
@@ -81,7 +82,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="fa" dir="rtl">
-      <body className={learnBoxFont.variable}>{children}</body>
+      <body className={learnBoxFont.variable}>
+        <GoogleAnalytics />
+        {children}
+      </body>
     </html>
   );
 }
