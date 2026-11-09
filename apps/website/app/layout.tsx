@@ -5,6 +5,7 @@ import { ServiceWorkerRegistration } from './components/ServiceWorkerRegistratio
 import { LaunchScreen } from './components/LaunchScreen';
 import { NetworkStatus } from './components/NetworkStatus';
 import { InstallAppBanner } from './components/InstallAppBanner';
+import Script from 'next/script';
 
 export const metadata: Metadata = {
   title: 'LearnBox',
@@ -29,6 +30,13 @@ export default function Layout({ children }: Readonly<{ children: React.ReactNod
         <NetworkStatus />
         {children}
         <InstallAppBanner />
+        <Script
+          id="ZwSg9rf6GA"
+          src="https://statsfa.com/js/script.js"
+          data-host="https://statsfa.com"
+          data-dnt="false"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );
