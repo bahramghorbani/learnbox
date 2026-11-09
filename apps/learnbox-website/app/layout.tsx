@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
 import { siteConfig } from '../src/config/site.mjs';
+import Script from 'next/script';
 import './globals.css';
 import '../src/themes/summer/germany-chapters.css';
 import '../src/themes/summer/summer-theme.css';
@@ -81,7 +82,16 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="fa" dir="rtl">
-      <body className={learnBoxFont.variable}>{children}</body>
+      <body className={learnBoxFont.variable}>
+        {children}
+        <Script
+          id="ZwSg9rf6GA"
+          src="https://statsfa.com/js/script.js"
+          data-host="https://statsfa.com"
+          data-dnt="false"
+          strategy="afterInteractive"
+        />
+      </body>
     </html>
   );
 }
