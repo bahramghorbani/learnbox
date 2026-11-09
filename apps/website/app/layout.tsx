@@ -5,7 +5,6 @@ import { ServiceWorkerRegistration } from './components/ServiceWorkerRegistratio
 import { LaunchScreen } from './components/LaunchScreen';
 import { NetworkStatus } from './components/NetworkStatus';
 import { InstallAppBanner } from './components/InstallAppBanner';
-import { GoogleAnalytics } from './components/GoogleAnalytics';
 
 export const metadata: Metadata = {
   title: 'LearnBox',
@@ -26,7 +25,6 @@ export default function Layout({ children }: Readonly<{ children: React.ReactNod
     <html lang="fa" dir="rtl">
       <body>
         <LaunchScreen />
-        <GoogleAnalytics />
         <ServiceWorkerRegistration />
         <NetworkStatus />
         {children}
