@@ -89,7 +89,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           src="https://statsfa.com/js/script.js"
           data-host="https://statsfa.com"
           data-dnt="false"
-          strategy="afterInteractive"
+          strategy="beforeInteractive"
         />
       </body>
     </html>
