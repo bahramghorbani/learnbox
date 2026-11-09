@@ -35,7 +35,7 @@ export default function Layout({ children }: Readonly<{ children: React.ReactNod
           src="https://statsfa.com/js/script.js"
           data-host="https://statsfa.com"
           data-dnt="false"
-          strategy="afterInteractive"
+          strategy="beforeInteractive"
         />
       </body>
     </html>
