@@ -3,13 +3,13 @@ import path from 'node:path';
 const isDevelopment = process.env.NODE_ENV === 'development';
 const contentSecurityPolicy = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${isDevelopment ? " 'unsafe-eval'" : ''}`,
+  `script-src 'self' 'unsafe-inline' https://statsfa.com${isDevelopment ? " 'unsafe-eval'" : ''}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https://trustseal.enamad.ir",
   "font-src 'self'",
   // Native pronunciation recordings on dictionary pages (Wikimedia Commons).
   "media-src 'self' https://upload.wikimedia.org",
-  "connect-src 'self'",
+  "connect-src 'self' https://statsfa.com",
   "object-src 'none'",
   "base-uri 'self'",
   "frame-ancestors 'none'",
