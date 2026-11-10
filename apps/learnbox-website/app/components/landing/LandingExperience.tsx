@@ -446,7 +446,7 @@ export function LandingExperience() {
           className="footer__trust-seal"
           referrerPolicy="origin"
           target="_blank"
-          rel="noopener noreferrer"
+          rel="noopener"
           href="https://trustseal.enamad.ir/?id=8151872&Code=c6Wx8x0ZQkHizqPS1dYtHRcBRPV1JMeT"
           aria-label="مشاهده اعتبار نماد اعتماد الکترونیکی LearnBox"
         >
