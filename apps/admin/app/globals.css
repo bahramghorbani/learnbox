@@ -1106,6 +1106,23 @@ button {
   gap: var(--gap);
   align-items: start;
 }
+/* Two equal site cards on «گزارش بازدیدها»; collapses with the same breakpoints as grid-4/split-wide. */
+.cp-workspace .visits-sites {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--gap);
+}
+.cp-workspace .visits-kpi-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--gap);
+  margin-bottom: var(--gap);
+}
+.cp-workspace .visits-chart-title {
+  font-size: 11.5px;
+  color: var(--muted);
+  margin: 0 0 4px;
+}
 .cp-workspace .stack {
   display: flex;
   flex-direction: column;
@@ -1568,6 +1585,9 @@ button {
   .cp-workspace .split-wide {
     grid-template-columns: 1fr 1fr;
   }
+  .cp-workspace .visits-sites {
+    grid-template-columns: 1fr;
+  }
   /* Deviation from the reference, deliberate: the prototype lets a six-column pack table push the
      whole page sideways on a phone, which drags the header and nav off-screen with it. Scrolling
      the table inside its own card keeps every column reachable and the page itself still. */
@@ -1581,6 +1601,9 @@ button {
     grid-template-columns: 1fr;
   }
   .cp-workspace .split-wide {
+    grid-template-columns: 1fr;
+  }
+  .cp-workspace .visits-kpi-row {
     grid-template-columns: 1fr;
   }
   .cp-workspace .pack-grid {
