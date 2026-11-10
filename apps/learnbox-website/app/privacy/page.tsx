@@ -15,21 +15,30 @@ export default function PrivacyPage() {
       eyebrow="حریم خصوصی"
       title="اطلاعات شما در LearnBox"
       description="این متن به زبان ساده توضیح می‌دهد چه داده‌ای نگهداری می‌شود، چرا، و چگونه می‌توانید حساب خود را حذف کنید."
-      effectiveDate="۶ مهر ۱۴۰۵"
+      effectiveDate="۱۹ آبان ۱۴۰۵"
     >
       <section>
         <h2>۱. وضعیت سند و راه تماس</h2>
         <p>
           این متن رفتار فعلی LearnBox را توضیح می‌دهد و با فعال‌شدن قابلیت‌های تازه به‌روز می‌شود.
-          برای هر پرسش حریم خصوصی یا درخواست مربوط به داده‌هایتان می‌توانید در تلگرام به{' '}
-          <a dir="ltr" href="https://t.me/learnboxsupportbot" target="_blank" rel="noreferrer">
-            @learnboxsupportbot
+          برای هر پرسش حریم خصوصی یا درخواست مربوط به داده‌هایتان می‌توانید به نشانی{' '}
+          <a dir="ltr" href="mailto:bahrameghorbani@gmail.com">
+            bahrameghorbani@gmail.com
           </a>{' '}
-          یا به نشانی{' '}
-          <a dir="ltr" href="mailto:hi@learnboxapp.com">
-            hi@learnboxapp.com
+          ایمیل بزنید یا از طریق شبکه‌های اجتماعی لرن‌باکس (
+          <a dir="ltr" href="https://t.me/learnboxapp" target="_blank" rel="noreferrer">
+            تلگرام
           </a>{' '}
-          پیام بدهید.
+          و{' '}
+          <a
+            dir="ltr"
+            href="https://www.instagram.com/learnboxapp/"
+            target="_blank"
+            rel="noreferrer"
+          >
+            اینستاگرام
+          </a>
+          ) با ما در ارتباط باشید.
         </p>
       </section>
 
@@ -174,14 +183,10 @@ export default function PrivacyPage() {
         <p>
           تغییر مهم با توضیح روشن و تاریخ اجرای تازه در همین صفحه منتشر می‌شود. اگر تغییر به رضایت
           جدید نیاز داشته باشد، پیش از اعمال آن رضایت درخواست می‌شود. راه‌های تماس رسمی{' '}
-          <a dir="ltr" href="https://t.me/learnboxsupportbot" target="_blank" rel="noreferrer">
-            @learnboxsupportbot
+          <a dir="ltr" href="mailto:bahrameghorbani@gmail.com">
+            bahrameghorbani@gmail.com
           </a>{' '}
-          و{' '}
-          <a dir="ltr" href="mailto:hi@learnboxapp.com">
-            hi@learnboxapp.com
-          </a>{' '}
-          است.
+          و شبکه‌های اجتماعی لرن‌باکس است.
         </p>
       </section>
     </LegalPageLayout>

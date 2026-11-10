@@ -32,9 +32,18 @@ export default function ContactPage() {
             </a>
           </li>
           <li>
-            پیام‌رسان تلگرام:{' '}
-            <a dir="ltr" href="https://t.me/learnboxsupportbot" target="_blank" rel="noreferrer">
-              @learnboxsupportbot
+            شبکه‌های اجتماعی:{' '}
+            <a dir="ltr" href="https://t.me/learnboxapp" target="_blank" rel="noreferrer">
+              تلگرام
+            </a>{' '}
+            و{' '}
+            <a
+              dir="ltr"
+              href="https://www.instagram.com/learnboxapp/"
+              target="_blank"
+              rel="noreferrer"
+            >
+              اینستاگرام
             </a>
           </li>
         </ul>
@@ -52,8 +61,9 @@ export default function ContactPage() {
       <section>
         <h2>۳. زمان پاسخ‌گویی</h2>
         <p>
-          پیام‌های ایمیل و تلگرام معمولاً در طول روزهای کاری بررسی و پاسخ داده می‌شوند. برای
-          پرسش‌های فوری مرتبط با حساب کاربری یا پرداخت، استفاده از تلگرام پشتیبانی سریع‌تر است.
+          پیام‌های ایمیل معمولاً در طول روزهای کاری بررسی و پاسخ داده می‌شوند. برای پرسش‌های فوری
+          می‌توانید از طریق شبکه‌های اجتماعی لرن‌باکس (تلگرام و اینستاگرام) هم با ما در ارتباط
+          باشید.
         </p>
       </section>
     </LegalPageLayout>

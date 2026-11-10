@@ -111,7 +111,7 @@ test('privacy route verifies the rewritten truthful disclosure after B21', () =>
   assert.match(privacyOutput, /تعداد[\s\S]*?درخواست کد برای هر شماره محدود شده/);
   assert.match(privacyOutput, /۳۰ روز/); // backup retention
   assert.match(privacyOutput, /فقط برای کاربر واردشده قابل دریافت/); // authenticated-only media
-  assert.match(privacyOutput, /href="mailto:hi@learnboxapp\.com"/);
+  assert.match(privacyOutput, /href="mailto:bahrameghorbani@gmail\.com"/);
 });
 
 test('terms route prerenders the complete approved conditions', () => {
@@ -131,9 +131,9 @@ test('terms route prerenders the complete approved conditions', () => {
     assert.match(termsOutput, new RegExp(phrase), `Missing terms condition: ${phrase}`);
   }
 
-  assert.match(termsOutput, /ابتدا[^<]+hi@learnboxapp\.com[^<]+حل نشود/);
+  assert.match(termsOutput, /ابتدا[^<]+bahrameghorbani@gmail\.com[^<]+حل نشود/);
   assert.match(termsOutput, /href="\/"/);
-  assert.match(termsOutput, /href="mailto:hi@learnboxapp\.com"/);
+  assert.match(termsOutput, /href="mailto:bahrameghorbani@gmail\.com"/);
 });
 
 test('unavailable release destinations render an honest download claim boundary', () => {

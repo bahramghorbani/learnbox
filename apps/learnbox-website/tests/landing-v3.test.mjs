@@ -1069,7 +1069,7 @@ test(
         legalMarkup,
         new RegExp(`<link rel="canonical" href="https://learnboxapp\\.com${route}">`),
       );
-      assert.match(legalMarkup, /href="mailto:hi@learnboxapp\.com"/);
+      assert.match(legalMarkup, /href="mailto:bahrameghorbani@gmail\.com"/);
       assert.match(legalMarkup, /<main\b[^>]*>[\s\S]{500,}<\/main>/);
       assert.match(legalMarkup, /<h1\b[^>]*>[^<]+<\/h1>/);
       t.diagnostic(`JavaScript-disabled ${route}: ${legalMarkup.length} bytes of static HTML`);
