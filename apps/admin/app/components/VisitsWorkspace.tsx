@@ -99,26 +99,34 @@ function SiteCard({ site }: { site: VisitsSiteOverview }) {
         <span className="muted-note">{site.domain}</span>
       </div>
       <div className="card-body">
-        <div className="operations-grid">
-          <div>
-            <p className="muted-note">بازدید صفحه</p>
-            <p className="kpi-value">{faNum(site.pageviewsTotal)}</p>
-            <VisitsLineChart
-              points={site.series}
-              valueKey="pageviews"
-              label="بازدید صفحه"
-              color="#6b42df"
-            />
+        <div className="visits-kpi-row">
+          <div className="kpi" data-kpi="visits-pageviews">
+            <div className="kpi-top">
+              <span className="kpi-label">بازدید صفحه</span>
+            </div>
+            <div className="kpi-value">{faNum(site.pageviewsTotal)}</div>
+            <div className="chart-wrap">
+              <VisitsLineChart
+                points={site.series}
+                valueKey="pageviews"
+                label="بازدید صفحه"
+                color="#6b42df"
+              />
+            </div>
           </div>
-          <div>
-            <p className="muted-note">بازدیدکنندگان یکتا</p>
-            <p className="kpi-value">{faNum(site.visitorsTotal)}</p>
-            <VisitsLineChart
-              points={site.series}
-              valueKey="visitors"
-              label="بازدیدکنندگان یکتا"
-              color="#1a9e6b"
-            />
+          <div className="kpi" data-kpi="visits-visitors">
+            <div className="kpi-top">
+              <span className="kpi-label">بازدیدکنندگان یکتا</span>
+            </div>
+            <div className="kpi-value">{faNum(site.visitorsTotal)}</div>
+            <div className="chart-wrap">
+              <VisitsLineChart
+                points={site.series}
+                valueKey="visitors"
+                label="بازدیدکنندگان یکتا"
+                color="#1a9e6b"
+              />
+            </div>
           </div>
         </div>
         {site.series.length > 0 ? (
@@ -228,7 +236,7 @@ export function VisitsWorkspace() {
         {state.kind === 'available' ? (
           <>
             <p className="muted-note">{fa(state.overview.windowDays)} روز اخیر</p>
-            <div className="operations-grid">
+            <div className="visits-sites">
               {state.overview.sites.map((site) => (
                 <SiteCard key={site.domain} site={site} />
               ))}
