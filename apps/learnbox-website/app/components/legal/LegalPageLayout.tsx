@@ -49,8 +49,8 @@ export function LegalPageLayout({
       <footer className="legal-footer">
         <p>
           برای پرسش دربارهٔ این سند به{' '}
-          <a dir="ltr" href="mailto:hi@learnboxapp.com">
-            hi@learnboxapp.com
+          <a dir="ltr" href="mailto:bahrameghorbani@gmail.com">
+            bahrameghorbani@gmail.com
           </a>{' '}
           ایمیل بزنید.
         </p>
