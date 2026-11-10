@@ -659,7 +659,7 @@ export function DashboardOverview() {
           icon="wifi"
           tint="t-blue"
           metric={overview.learners.onlineNow}
-          foot="اتصال داده فعال نشده"
+          foot="فعال در ۱۵ دقیقهٔ گذشته"
         />
         <KpiCard
           testId="sales-count"

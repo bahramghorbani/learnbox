@@ -26,6 +26,7 @@ const grantSources = [
   'database/migrations/0032_role_grant_repair.sql',
   'database/migrations/0033_admin_content_management_grants.sql',
   'database/migrations/0034_admin_pack_metadata_grants.sql',
+  'database/migrations/0066_admin_online_learners_grant.sql',
 ];
 
 function readIfPresent(relative: string): string {

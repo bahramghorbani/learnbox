@@ -64,6 +64,7 @@ const counterRow = {
   pack_needs_review: '5',
   pack_draft: '2',
   review_queue_cards: '9',
+  learner_online_now: '26',
 };
 
 /**
@@ -194,14 +195,14 @@ describe('admin dashboard overview route', () => {
     expect(fakePool.statements.some((sql) => sql.includes('count(*)'))).toBe(true);
   });
 
-  it('reports the online-learner metric as unavailable, never as zero', async () => {
+  it('reports a real online-learner count from the granted session table', async () => {
     const { handler } = route({});
     const { overview } = (await (await handler(request())).json()) as {
-      overview: { learners: { onlineNow: { state: string; reason?: string } } };
+      overview: { learners: { onlineNow: { state: string; value?: number } } };
     };
     expect(overview.learners.onlineNow).toEqual({
-      state: 'unavailable',
-      reason: 'no_data_source',
+      state: 'available',
+      value: 26,
     });
   });
 

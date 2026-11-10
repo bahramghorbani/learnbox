@@ -93,7 +93,7 @@ export type DashboardOverview = {
     joinedInWindow: number;
     /** Distinct learners with at least one review event inside the window. */
     activeInWindow: number;
-    /** No granted session/heartbeat source exists, so this is never a number. */
+    /** Distinct learners with an unrevoked refresh session used in the last 15 minutes. */
     onlineNow: DashboardMetric;
   };
   packs: {
@@ -155,6 +155,10 @@ const countersSql = `
     SELECT count(DISTINCT user_id) AS active_in_window
       FROM review_events
      WHERE occurred_at >= $1
+  ), online AS (
+    SELECT count(DISTINCT user_id) AS online_now
+      FROM mobile_learner_sessions
+     WHERE revoked_at IS NULL AND last_used_at >= $2
   ), pack AS (
     SELECT count(*)                                                                AS total,
            count(*) FILTER (WHERE status = 'published')                            AS published,
@@ -175,8 +179,9 @@ const countersSql = `
          pack.published_in_window    AS pack_published_in_window,
          pack.needs_review           AS pack_needs_review,
          pack.draft                  AS pack_draft,
-         queue.cards                 AS review_queue_cards
-    FROM learner, active, pack, queue`;
+         queue.cards                 AS review_queue_cards,
+         online.online_now           AS learner_online_now
+    FROM learner, active, pack, queue, online`;
 
 export class PostgresAdminDashboardStore {
   constructor(private readonly pool: DatabasePool) {}
@@ -235,7 +240,9 @@ export class PostgresAdminDashboardStore {
     try {
       if (!(await this.hasRole(client, input.actorUserId))) return { status: 'forbidden' };
 
-      const counters = (await client.query(countersSql, [windowStart])).rows[0] ?? {};
+      const counters =
+        (await client.query(countersSql, [windowStart, new Date(now.getTime() - 15 * 60 * 1000)]))
+          .rows[0] ?? {};
 
       // Deliberately NOT a card_schedules.state distribution. Admin holds no learning rule and
       // may not name a scheduler state (LB-B35 CP2); the content pipeline is Admin's own domain,
@@ -348,10 +355,10 @@ export class PostgresAdminDashboardStore {
             total: count(counters.learner_total),
             joinedInWindow: count(counters.learner_joined_in_window),
             activeInWindow: count(counters.learner_active_in_window),
-            // The reference shows a live "online now" counter. There is no session heartbeat the
-            // Admin role may read (`mobile_learner_sessions` is not granted to it), and inventing
-            // one from review events would be a guess presented as telemetry.
-            onlineNow: { state: 'unavailable', reason: 'no_data_source' },
+            // "Online" = a refresh session that was last used in the past 15 minutes and is not
+            // revoked (`mobile_learner_sessions`, granted to Admin by migration 0040). This is an
+            // approximation of presence from refresh-token activity, not a true heartbeat.
+            onlineNow: { state: 'available', value: count(counters.learner_online_now) },
           },
           packs: {
             total: count(counters.pack_total),

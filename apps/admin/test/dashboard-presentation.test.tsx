@@ -41,7 +41,7 @@ function overviewPayload(overrides: Record<string, unknown> = {}) {
         total: 1204,
         joinedInWindow: 37,
         activeInWindow: 512,
-        onlineNow: { state: 'unavailable', reason: 'no_data_source' },
+        onlineNow: { state: 'available', value: 26 },
       },
       packs: {
         total: 31,
@@ -207,14 +207,12 @@ describe('dashboard figures', () => {
     await view.unmount();
   });
 
-  it('shows an em dash and a reason for a metric with no live source', async () => {
+  it('renders the online-learner count as a real number with its window footer', async () => {
     const view = await renderOverview(() => jsonResponse(overviewPayload()));
     const online = view.container.querySelector('[data-kpi="learners-online"]');
-    expect(online?.getAttribute('data-metric-state')).toBe('unavailable');
-    expect(online?.querySelector('.kpi-value')?.textContent).toBe('—');
-    expect(online?.querySelector('.kpi-value')?.className).toContain('muted');
-    expect(online?.querySelector('.unavailable')?.textContent).toBe('اتصال داده فعال نشده');
-    expect(online?.textContent).not.toContain('۰');
+    expect(online?.getAttribute('data-metric-state')).toBe('available');
+    expect(online?.querySelector('.kpi-value')?.textContent).toBe('۲۶');
+    expect(online?.querySelector('.kpi-foot')?.textContent).toContain('۱۵ دقیقه');
     await view.unmount();
   });
 
