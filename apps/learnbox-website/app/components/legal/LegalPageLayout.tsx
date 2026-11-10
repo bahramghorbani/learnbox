@@ -6,7 +6,7 @@ type LegalPageLayoutProps = {
   eyebrow: string;
   title: string;
   description: string;
-  effectiveDate: string;
+  effectiveDate?: string;
   children: ReactNode;
 };
 
@@ -30,16 +30,18 @@ export function LegalPageLayout({
         <p className="legal-eyebrow">{eyebrow}</p>
         <h1>{title}</h1>
         <p className="legal-description">{description}</p>
-        <dl className="legal-version" aria-label="وضعیت سند">
-          <div>
-            <dt>نسخه</dt>
-            <dd>پیش‌نویس عملیاتی ۱٫۰</dd>
-          </div>
-          <div>
-            <dt>تاریخ اجرا</dt>
-            <dd>{effectiveDate}</dd>
-          </div>
-        </dl>
+        {effectiveDate && (
+          <dl className="legal-version" aria-label="وضعیت سند">
+            <div>
+              <dt>نسخه</dt>
+              <dd>پیش‌نویس عملیاتی ۱٫۰</dd>
+            </div>
+            <div>
+              <dt>تاریخ اجرا</dt>
+              <dd>{effectiveDate}</dd>
+            </div>
+          </dl>
+        )}
       </header>
       <article id="legal-content" className="legal-content">
         {children}
