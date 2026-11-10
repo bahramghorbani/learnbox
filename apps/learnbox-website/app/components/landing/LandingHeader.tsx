@@ -13,6 +13,7 @@ const links = [
   ['نمای اپ', '#product'],
   ['دیکشنری', '/dictionary'],
   ['دانلود', '#download'],
+  ['تماس با ما', '/contact'],
 ];
 
 export function LandingHeader({ onStart, startHref }: LandingHeaderProps) {
