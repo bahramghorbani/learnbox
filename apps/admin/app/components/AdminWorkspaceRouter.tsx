@@ -15,6 +15,7 @@ import { PresentationWorkspace } from './PresentationWorkspace';
 import { SettingsWorkspace } from './SettingsWorkspace';
 import { StoreListingsWorkspace } from './StoreListingsWorkspace';
 import { UsersManagement } from './UsersManagement';
+import { VisitsWorkspace } from './VisitsWorkspace';
 
 /**
  * Minimal hash router for the approved Admin navigation model. Milestone 1.1 made two destinations
@@ -43,6 +44,9 @@ import { UsersManagement } from './UsersManagement';
  * progress, retention and quality figures remain unavailable until a permitted read model exists.
  * Stage 10 completes «عملیات» and «تنظیمات» with only existing read-only operational contracts;
  * health, queue, deployment and environment details remain unavailable without a source.
+ * Owner-approved addition (2026-11-10): «گزارش بازدیدها» (#visits) — read-only traffic numbers and
+ * charts for both tracked domains, sourced from StatsFA (`admin-visits-store.ts`), not from an
+ * internal pageview table that does not exist.
  */
 type AdminRoute =
   | 'content'
@@ -56,6 +60,7 @@ type AdminRoute =
   | 'access'
   | 'review'
   | 'dictionary'
+  | 'visits'
   | 'home';
 
 function readRoute(hash: string): AdminRoute {
@@ -71,6 +76,7 @@ function readRoute(hash: string): AdminRoute {
   if (value === 'access') return 'access';
   if (value === 'review') return 'review';
   if (value === 'dictionary') return 'dictionary';
+  if (value === 'visits') return 'visits';
   return 'home';
 }
 
@@ -93,6 +99,7 @@ export function AdminWorkspaceRouter() {
   if (route === 'access') return <AccessWorkspace />;
   if (route === 'review') return <ContentReviewWorkspace />;
   if (route === 'dictionary') return <DictionaryEditorialWorkspace />;
+  if (route === 'visits') return <VisitsWorkspace />;
   // The support screen renders its own section inside the shell frame. Stage 5 moved its markup
   // onto the approved vocabulary; the framing here is unchanged.
   if (route === 'users') {

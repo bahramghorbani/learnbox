@@ -13,6 +13,7 @@ type AdminIconName =
   | 'shield'
   | 'ops'
   | 'settings'
+  | 'visits'
   | 'collapse';
 
 /**
@@ -23,6 +24,8 @@ type AdminIconName =
  * keeps the reference order and icons without advertising a destination that does not exist.
  * Owner-approved addition (2026-11-05): «واژه‌نامه» (#dictionary) after content; it stays separate
  * from cards and packs.
+ * Owner-approved addition (2026-11-10): «گزارش بازدیدها» (#visits), between «عملیات» and
+ * «تنظیمات» as the owner specified — the StatsFA-backed traffic report for both domains.
  */
 const navItems = [
   { label: 'خانه / نمای کلی', icon: 'home', route: 'home' },
@@ -34,6 +37,7 @@ const navItems = [
   { label: 'نمایش اپ', icon: 'image', route: 'presentation' },
   { label: 'نشست‌ها و دسترسی', icon: 'shield', route: 'access' },
   { label: 'عملیات', icon: 'ops', route: 'ops' },
+  { label: 'گزارش بازدیدها', icon: 'visits', route: 'visits' },
   { label: 'تنظیمات', icon: 'settings', route: 'settings' },
 ] as const satisfies readonly {
   label: string;
@@ -125,6 +129,15 @@ function AdminIcon({ name }: { name: AdminIconName }) {
           <rect height="6" rx="2" width="18" x="3" y="4" />
           <rect height="6" rx="2" width="18" x="3" y="14" />
           <path d="M7 7h.01M7 17h.01" />
+        </svg>
+      );
+    case 'visits':
+      return (
+        <svg {...common}>
+          <path d="M3 20h18" />
+          <path d="M6 20V11" />
+          <path d="M12 20V6" />
+          <path d="M18 20v-7" />
         </svg>
       );
     case 'settings':

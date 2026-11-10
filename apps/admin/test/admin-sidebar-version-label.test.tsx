@@ -69,7 +69,7 @@ describe('Admin sidebar version label', () => {
     vi.stubEnv('NEXT_PUBLIC_LEARNBOX_ADMIN_VERSION', adminPackageVersion);
     const mounted = await renderSidebar();
 
-    expect(mounted.querySelectorAll('.admin-nav-item')).toHaveLength(10);
+    expect(mounted.querySelectorAll('.admin-nav-item')).toHaveLength(11);
     expect(mounted.querySelector('.collapse-control')).not.toBeNull();
     expect(mounted.querySelector('.admin-logo')).not.toBeNull();
   });
