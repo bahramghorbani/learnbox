@@ -334,6 +334,11 @@ const READ_ONLY: Record<string, 'hard-disabled' | 'session-layer'> = {
   // series or a LIMIT-ed newest-first list, with no personal learner field and no credential, and
   // it has no write companion — an overview is a projection of state other surfaces own.
   'app/api/dashboard/overview/route.ts': 'session-layer',
+  // Owner-approved «گزارش بازدیدها»: GET-only, so CSRF is not applicable; it requires a valid
+  // Admin session plus an operational role and sits behind the default-off
+  // LEARNBOX_ADMIN_VISITS_ENABLED. Data is StatsFA aggregates, never a personal learner field or
+  // credential, and there is no write companion — same shape as the dashboard overview.
+  'app/api/visits/overview/route.ts': 'session-layer',
   // M1.4 model catalogue: GET-only, so CSRF is not applicable; it still requires a valid Admin
   // session, and it returns model ids and the configured default only — never the credential.
   'app/api/content/ai/models/route.ts': 'session-layer',
