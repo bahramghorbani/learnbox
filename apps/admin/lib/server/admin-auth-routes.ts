@@ -17,6 +17,10 @@ import { clearAdminSessionCookie, loadAdminSession, verifyAdminCsrf } from './ad
 const ceremonyCookieName = '__Host-learnbox_admin_ceremony';
 const csrfCookieName = '__Host-learnbox_admin_csrf';
 const ceremonyLifetimeSeconds = 5 * 60;
+// Must match the session cookie's lifetime (owner's 24h-login decision) — a shorter CSRF
+// cookie expires mid-session and every mutation then fails client-side with a stale-looking
+// "CSRF badge unavailable" error that a page refresh cannot fix (only a fresh login re-issues it).
+const csrfCookieMaxAgeSeconds = absoluteSessionLifetimeMs / 1000;
 
 type LoginService = {
   createLoginOptions(browserNonce: string): Promise<Record<string, unknown>>;
@@ -82,7 +86,7 @@ function ceremonyCookie(nonce: string) {
 }
 
 function csrfCookie(token: string) {
-  return `${csrfCookieName}=${token}; Max-Age=28800; Path=/; Secure; SameSite=Strict`;
+  return `${csrfCookieName}=${token}; Max-Age=${csrfCookieMaxAgeSeconds}; Path=/; Secure; SameSite=Strict`;
 }
 
 function clearCeremonyCookie() {
