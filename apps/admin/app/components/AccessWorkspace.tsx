@@ -14,6 +14,45 @@ type SessionState =
   | { kind: 'error' }
   | { kind: 'unavailable' };
 
+function readCsrfCookie(): string | undefined {
+  return document.cookie
+    ?.split(';')
+    .map((item) => item.trim())
+    .find((item) => item.startsWith('__Host-learnbox_admin_csrf='))
+    ?.slice('__Host-learnbox_admin_csrf='.length);
+}
+
+export function LogoutButton() {
+  const [state, setState] = useState<'idle' | 'loading' | 'error'>('idle');
+
+  async function handleLogout() {
+    setState('loading');
+    try {
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-learnbox-csrf-token': readCsrfCookie() ?? '',
+        },
+      });
+      if (!response.ok && response.status !== 204) throw new Error('logout failed');
+      window.location.reload();
+    } catch {
+      setState('error');
+    }
+  }
+
+  return (
+    <>
+      <button type="button" className="btn" onClick={handleLogout} disabled={state === 'loading'}>
+        {state === 'loading' ? 'در حال خروج...' : 'خروج از حساب'}
+      </button>
+      {state === 'error' ? <p className="muted-note">خروج ناموفق بود. دوباره تلاش کنید.</p> : null}
+    </>
+  );
+}
+
 /**
  * PDR-009's access screen is deliberately limited to facts the current Admin contracts can prove.
  * The existing session API reports only the current session and its recent-auth state; it does not
@@ -121,6 +160,7 @@ export function AccessWorkspace() {
                       <dd>انقضای بی‌فعالیتی و اعتبار مطلق سمت سرور</dd>
                     </div>
                   </dl>
+                  <LogoutButton />
                 </div>
               </article>
 
