@@ -504,19 +504,22 @@ export async function readLeague(
     const today = plain.byDay.get(tehranDayKey(now));
     const level = levelForXp(total);
 
-    const [optOut, membership, activeCount] = await Promise.all([
-      pool.query('SELECT 1 FROM league_opt_outs WHERE user_id = $1', [userId]),
-      pool.query<{ tier: number; group_no: number }>(
-        'SELECT tier, group_no FROM league_members WHERE week_start = $1::date AND user_id = $2',
-        [week, userId],
-      ),
-      pool.query<{ n: number }>(
-        'SELECT count(*)::int AS n FROM league_members WHERE week_start = $1::date',
-        [week],
-      ),
-    ]);
+    // Sequential, and on the same already-checked-out client: `client` is a single connection
+    // (not the shared pool), so concurrent queries on it would corrupt the wire protocol, and
+    // extra pool.query() calls here would each need another connection from the tiny league
+    // pool (max: 2) while `client` still holds one — that starves/deadlocks it under concurrent
+    // requests, which is exactly what made this route hang forever for every learner.
+    const optOut = await client.query('SELECT 1 FROM league_opt_outs WHERE user_id = $1', [userId]);
+    const membership = await client.query<{ tier: number; group_no: number }>(
+      'SELECT tier, group_no FROM league_members WHERE week_start = $1::date AND user_id = $2',
+      [week, userId],
+    );
+    const activeCount = await client.query<{ n: number }>(
+      'SELECT count(*)::int AS n FROM league_members WHERE week_start = $1::date',
+      [week],
+    );
     const optedOut = (optOut.rowCount ?? 0) > 0;
-    const prior = await pool.query<{ week_start: string; tier: number; outcome: string | null }>(
+    const prior = await client.query<{ week_start: string; tier: number; outcome: string | null }>(
       `SELECT week_start::text, tier, outcome FROM league_members WHERE user_id = $1 AND week_start < $2::date
         ORDER BY week_start DESC LIMIT 1`,
       [userId, week],
@@ -559,7 +562,7 @@ export async function readLeague(
     };
     if (optedOut || activeCount.rows[0].n < minActiveLearners()) return base;
 
-    const names = await pool.query<{
+    const names = await client.query<{
       id: string;
       first_name: string | null;
       avatar_id: string | null;
@@ -584,7 +587,7 @@ export async function readLeague(
     const view: LeagueView = { ...base, league: { ...base.league, state: 'live' } };
     const group = membership.rows[0];
     if (group) {
-      const members = await pool.query<{ user_id: string; joined_at: Date }>(
+      const members = await client.query<{ user_id: string; joined_at: Date }>(
         `SELECT user_id, joined_at FROM league_members
           WHERE week_start = $1::date AND tier = $2 AND group_no = $3
             AND user_id NOT IN (SELECT user_id FROM league_opt_outs)`,
@@ -619,20 +622,20 @@ export async function readLeague(
     }
 
     const optedOutIds = new Set(
-      (await pool.query<{ user_id: string }>('SELECT user_id FROM league_opt_outs')).rows.map(
+      (await client.query<{ user_id: string }>('SELECT user_id FROM league_opt_outs')).rows.map(
         (r) => r.user_id,
       ),
     );
     const badgeCounts = new Map(
       (
-        await pool.query<{ user_id: string; n: number }>(
+        await client.query<{ user_id: string; n: number }>(
           'SELECT user_id, count(*)::int AS n FROM user_badges GROUP BY user_id',
         )
       ).rows.map((r) => [r.user_id, r.n]),
     );
     const tiers = new Map(
       (
-        await pool.query<{ user_id: string; tier: number }>(
+        await client.query<{ user_id: string; tier: number }>(
           `SELECT DISTINCT ON (user_id) user_id, tier FROM league_members ORDER BY user_id, week_start DESC`,
         )
       ).rows.map((r) => [r.user_id, r.tier]),
