@@ -655,7 +655,11 @@ export function ServerBackedContentReview() {
    * `submitCheck`/`submitDecision` verbatim, so every mutation keeps its usual step-up guard,
    * idempotency key and audit trail — this only automates the clicking, not the server contract.
    * A card a dimension check fails for is left in the queue (skipped, not force-approved); an
-   * unrecovered step-up refusal stops the whole run rather than prompting 428 after 428.
+   * unrecovered step-up refusal stops the whole run rather than prompting 428 after 428. Resuming
+   * after an interrupted run is safe: a dimension already 'passed' is never resubmitted (the
+   * client's idempotency key is fresh every call, so the server would reject a repeat as a
+   * conflict, not treat it as a replay), and one already 'failed' is left for a human, never
+   * force-flipped to 'passed'.
    *
    * Two things a 198-card queue exposed that a single manual click never did:
    *
@@ -703,6 +707,21 @@ export function ServerBackedContentReview() {
       const target = todo[index];
       let itemOk = true;
       for (const dimension of dimensions) {
+        const existing = target.checks.find((check) => check.dimension === dimension);
+        // A dimension already passed (e.g. a card left half-done by an earlier interrupted run)
+        // must not be resubmitted: the client always mints a fresh idempotency key here, and the
+        // server only treats a repeat as idempotent when the key matches exactly — a fresh key
+        // against an already-'passed' row is a genuine conflict, not a replay. Resubmitting it
+        // was silently stalling every resumed run on its very first dimension, before it ever
+        // reached whichever dimension the previous run actually stopped on.
+        if (existing?.outcome === 'passed') continue;
+        // A dimension a human (or an earlier automated pass) already marked 'failed' is an
+        // editorial judgment call; bulk-approve must leave it for manual attention, never
+        // silently flip it to 'passed'.
+        if (existing?.outcome === 'failed') {
+          itemOk = false;
+          break;
+        }
         const result = await submitCheck(target, dimension, 'passed', { refresh: false });
         if (result === 'abort') {
           aborted = true;
