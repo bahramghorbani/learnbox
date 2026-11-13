@@ -625,6 +625,43 @@ describe('ServerBackedContentReview (authenticated server mode)', () => {
     }
   });
 
+  it('resumes a card an earlier interrupted run left half-done, instead of re-stalling on it', async () => {
+    // Regression: a card whose first five dimensions already passed (from an earlier run that
+    // got interrupted, e.g. by a step-up refusal) used to get re-submitted from dimension one on
+    // the next "تأیید همه" click. The client always mints a fresh idempotency key, so the server
+    // correctly rejected that resubmission as a conflict (a fresh key against an already-'passed'
+    // row is not a replay) — which stalled the card on its very first dimension forever, never
+    // letting the run reach the one dimension (app_flow here) actually still missing. The loop
+    // must skip dimensions already 'passed' and go straight to finishing the card.
+    const halfDone = makeItem(
+      'd00dfeed-0000-4000-8000-000000000002',
+      'start-a1-halbfertig',
+      'Halbfertig',
+      ['german_linguistic', 'persian_translation', 'provenance', 'visual', 'audio'],
+    );
+    const { calls } = stubReviewFetch({
+      '/api/content/review': () => jsonResponse({ items: [halfDone] }),
+      '/api/content/review/check': () => jsonResponse({ status: 'applied' }),
+      '/api/content/review/decision': () =>
+        jsonResponse({ status: 'applied', nextStatus: 'approved' }),
+    });
+    const rendered = await renderServer();
+    try {
+      await rendered.clickButton('تأیید همهٔ ۱ موردِ نیازمند بررسی');
+      await flush();
+
+      const checkCalls = calls.filter((call) => call.url === '/api/content/review/check');
+      // Only the one still-missing dimension is submitted — the five already-passed ones never
+      // get a second, conflicting request.
+      expect(checkCalls).toHaveLength(1);
+      expect(String(checkCalls[0]?.init?.body)).toContain('app_flow');
+      expect(calls.filter((call) => call.url === '/api/content/review/decision')).toHaveLength(1);
+      expect(rendered.text).toContain('هر ۱ کارت صف تأیید نهایی شد.');
+    } finally {
+      await rendered.unmount();
+    }
+  });
+
   it('stops a bulk approval run on the first unrecoverable failure, leaving later cards untouched', async () => {
     const queueState = { items: [itemHaus, itemTisch] };
     const { calls } = stubReviewFetch({
