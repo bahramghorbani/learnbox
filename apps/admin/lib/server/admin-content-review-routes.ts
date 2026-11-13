@@ -203,7 +203,7 @@ export function createContentReviewCheckRoute(dependencies: CheckDependencies) {
     } catch {
       return genericInvalid();
     }
-    if (!session.recent) {
+    if (!session.editorialRecent) {
       return json({ code: 'reauthentication_required' }, { status: 428 });
     }
 
@@ -271,7 +271,7 @@ export function createContentReviewDecisionRoute(dependencies: DecisionDependenc
     } catch {
       return genericInvalid();
     }
-    if (!session.recent) {
+    if (!session.editorialRecent) {
       return json({ code: 'reauthentication_required' }, { status: 428 });
     }
 

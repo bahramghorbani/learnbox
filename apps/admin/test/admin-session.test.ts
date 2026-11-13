@@ -38,13 +38,14 @@ describe('evaluateAdminSession', () => {
       active: true,
       operational: true,
       recent: true,
+      editorialRecent: true,
     });
     expect(
       evaluateAdminSession(
         { ...activeSession, recentAuthenticatedAt: new Date(now.getTime() - 5 * 60_000 - 1) },
         now,
       ),
-    ).toEqual({ active: true, operational: true, recent: false });
+    ).toEqual({ active: true, operational: true, recent: false, editorialRecent: true });
     expect(
       evaluateAdminSession(
         {
@@ -53,7 +54,25 @@ describe('evaluateAdminSession', () => {
         },
         now,
       ),
-    ).toEqual({ active: true, operational: false, recent: false });
+    ).toEqual({ active: true, operational: false, recent: false, editorialRecent: false });
+  });
+
+  it('gives content-review writes a 12-hour window, separate from the 5-minute sensitive one', () => {
+    expect(
+      evaluateAdminSession(
+        { ...activeSession, recentAuthenticatedAt: new Date(now.getTime() - 12 * 60 * 60_000) },
+        now,
+      ),
+    ).toEqual({ active: true, operational: true, recent: false, editorialRecent: true });
+    expect(
+      evaluateAdminSession(
+        {
+          ...activeSession,
+          recentAuthenticatedAt: new Date(now.getTime() - 12 * 60 * 60_000 - 1),
+        },
+        now,
+      ),
+    ).toEqual({ active: true, operational: true, recent: false, editorialRecent: false });
   });
 
   it('keeps ordinary work active at 16 and 59 minutes without extending sensitive reauthentication', () => {
@@ -67,7 +86,7 @@ describe('evaluateAdminSession', () => {
           },
           now,
         ),
-      ).toEqual({ active: true, operational: true, recent: false });
+      ).toEqual({ active: true, operational: true, recent: false, editorialRecent: true });
     }
   });
 

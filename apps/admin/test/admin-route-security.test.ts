@@ -51,6 +51,7 @@ describe('admin route session security', () => {
       userId: '2efaf676-84e4-45b1-8a13-50735a8df2c8',
       operational: true,
       recent: true,
+      editorialRecent: true,
       csrfHash: hashAdminSecret('csrf-token', hashKey),
     });
     expect(calls).toEqual([tokenHash, tokenHash]);
