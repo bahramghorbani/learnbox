@@ -13,6 +13,7 @@ import {
   createIdempotencyKey,
   fetchWithStepUp,
   readCsrfToken,
+  requestStepUpReauth,
   stepUpMessage,
 } from './step-up-reauth';
 
@@ -301,7 +302,12 @@ export function ServerBackedContentReview() {
   const [pendingDecisionKey, setPendingDecisionKey] = useState<string>();
   const [pendingApplyKeys, setPendingApplyKeys] = useState<Record<string, string>>({});
   const [applyingFindingKey, setApplyingFindingKey] = useState<string>();
-  const [bulkApprove, setBulkApprove] = useState<{ done: number; total: number; failed: number }>();
+  const [bulkApprove, setBulkApprove] = useState<{
+    done: number;
+    total: number;
+    failed: number;
+    awaitingReauth?: boolean;
+  }>();
 
   const loadQueue = useCallback(async (reportErrors = true) => {
     try {
@@ -362,7 +368,9 @@ export function ServerBackedContentReview() {
     target: ServerQueueItem,
     dimension: ReviewDimension,
     outcome: 'passed' | 'failed',
+    options: { refresh?: boolean } = {},
   ): Promise<'ok' | 'skip' | 'abort'> {
+    const refresh = options.refresh ?? true;
     if (busy !== 'none') return 'skip';
     const idempotencyKey = pendingCheckKeys[dimension] ?? createIdempotencyKey();
     const csrfToken = readCsrfToken();
@@ -423,7 +431,13 @@ export function ServerBackedContentReview() {
       }
       const payload = (await response.json().catch(() => undefined)) as
         { status?: string } | undefined;
-      if (payload?.status === 'idempotent') {
+      if (!refresh) {
+        // Bulk run: skip the per-item notice flash and full-queue refetch — both would otherwise
+        // fire ~1,400 times across a 198-card batch, which is what made the screen visibly jump
+        // (list + selected-card panel reflowing on every single check) and slowed the run down
+        // enough to make the 5-minute step-up window expire mid-batch. The caller resyncs once,
+        // after the whole batch finishes.
+      } else if (payload?.status === 'idempotent') {
         setNotice({
           kind: 'idempotent',
           text: 'این نتیجه قبلاً در سرور ثبت شده بود؛ ثبت تکراری اعمال نشد.',
@@ -436,7 +450,7 @@ export function ServerBackedContentReview() {
         delete next[dimension];
         return next;
       });
-      await refreshAfterMutation();
+      if (refresh) await refreshAfterMutation();
       return 'ok';
     } catch {
       setNotice({
@@ -454,7 +468,9 @@ export function ServerBackedContentReview() {
   async function submitDecision(
     target: ServerQueueItem,
     action: 'approve' | 'return_for_revision',
+    options: { refresh?: boolean } = {},
   ): Promise<'ok' | 'skip' | 'abort'> {
+    const refresh = options.refresh ?? true;
     if (busy !== 'none') return 'skip';
     const idempotencyKey = pendingDecisionKey ?? createIdempotencyKey();
     const csrfToken = readCsrfToken();
@@ -515,7 +531,9 @@ export function ServerBackedContentReview() {
       }
       const payload = (await response.json().catch(() => undefined)) as
         { status?: string } | undefined;
-      if (payload?.status === 'idempotent') {
+      if (!refresh) {
+        // Bulk run — see the matching comment in submitCheck: resync happens once, at the end.
+      } else if (payload?.status === 'idempotent') {
         setNotice({
           kind: 'idempotent',
           text: 'این تصمیم قبلاً در سرور ثبت شده بود؛ ثبت تکراری اعمال نشد.',
@@ -530,7 +548,7 @@ export function ServerBackedContentReview() {
         });
       }
       setPendingDecisionKey(undefined);
-      await refreshAfterMutation();
+      if (refresh) await refreshAfterMutation();
       return 'ok';
     } catch {
       setNotice({
@@ -638,6 +656,21 @@ export function ServerBackedContentReview() {
    * idempotency key and audit trail — this only automates the clicking, not the server contract.
    * A card a dimension check fails for is left in the queue (skipped, not force-approved); an
    * unrecovered step-up refusal stops the whole run rather than prompting 428 after 428.
+   *
+   * Two things a 198-card queue exposed that a single manual click never did:
+   *
+   * - Every per-item call used to flash its own notice and refetch the whole queue
+   *   (`refreshAfterMutation`), ~1,400 times across a 198-card run — visibly reflowing the
+   *   list and the selected-card panel on every single check and slowing the run down enough
+   *   that the 5-minute step-up window (`recentAuthenticatedAt`, server-enforced, unchanged
+   *   here) could lapse mid-batch. Both calls pass `{ refresh: false }` here; the queue is
+   *   resynced once, after the whole run finishes.
+   * - A step-up refusal used to only surface via a live 428, i.e. a native passkey prompt could
+   *   pop up on whichever card happened to be in flight when the 5-minute window expired —
+   *   unannounced, easy to miss while watching the progress counter, and once it timed out
+   *   unanswered the run reported itself stopped on that "random" card. The loop now checks the
+   *   window proactively before every item and requests step-up itself, with a visible
+   *   "در حال تأیید هویت" state, instead of waiting to be caught by surprise.
    */
   async function approveAllInQueue() {
     if (busy !== 'none' || bulkApprove) return;
@@ -648,11 +681,29 @@ export function ServerBackedContentReview() {
     let succeeded = 0;
     let failed = 0;
     let aborted = false;
+    // One minute of safety margin under the server's 5-minute freshness window: proactive, so
+    // the operator sees it coming instead of a prompt appearing mid-item. Only an explicit,
+    // confirmed step-up moves this clock — an ordinary successful mutation does not, exactly
+    // like the server's own `recentAuthenticatedAt` (see admin-auth-policy.ts: "a poll can
+    // refresh lastSeenAt, never this Passkey-authentication window").
+    const reauthSafetyMarginMs = 4 * 60_000;
+    let lastAuthenticatedAt = Date.now();
     for (let index = 0; index < todo.length; index += 1) {
+      if (Date.now() - lastAuthenticatedAt >= reauthSafetyMarginMs) {
+        setBulkApprove({ done: index, total: todo.length, failed, awaitingReauth: true });
+        const outcome = await requestStepUpReauth();
+        if (outcome !== 'confirmed') {
+          aborted = true;
+          setNotice({ kind: 'reauth', text: stepUpMessage(outcome) });
+          break;
+        }
+        lastAuthenticatedAt = Date.now();
+        setBulkApprove({ done: index, total: todo.length, failed, awaitingReauth: false });
+      }
       const target = todo[index];
       let itemOk = true;
       for (const dimension of dimensions) {
-        const result = await submitCheck(target, dimension, 'passed');
+        const result = await submitCheck(target, dimension, 'passed', { refresh: false });
         if (result === 'abort') {
           aborted = true;
           itemOk = false;
@@ -664,7 +715,7 @@ export function ServerBackedContentReview() {
         }
       }
       if (itemOk && !aborted) {
-        const result = await submitDecision(target, 'approve');
+        const result = await submitDecision(target, 'approve', { refresh: false });
         if (result === 'abort') aborted = true;
         if (result !== 'ok') itemOk = false;
       }
@@ -673,6 +724,7 @@ export function ServerBackedContentReview() {
       setBulkApprove({ done: index + 1, total: todo.length, failed });
       if (aborted) break;
     }
+    await refreshAfterMutation();
     setNotice({
       kind: aborted ? 'reauth' : failed > 0 ? 'conflict' : 'decision-success',
       text: aborted
@@ -808,7 +860,9 @@ export function ServerBackedContentReview() {
                     onClick={() => void approveAllInQueue()}
                   >
                     {bulkApprove
-                      ? `در حال تأیید همه… (${fa(bulkApprove.done)} از ${fa(bulkApprove.total)})`
+                      ? bulkApprove.awaitingReauth
+                        ? 'در حال تأیید هویت برای ادامه… لطفاً منتظر درخواست گذرکلید باشید'
+                        : `در حال تأیید همه… (${fa(bulkApprove.done)} از ${fa(bulkApprove.total)})`
                       : `تأیید همهٔ ${fa(pendingReviewCount)} موردِ نیازمند بررسی`}
                   </button>
                 ) : null}
