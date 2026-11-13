@@ -552,6 +552,79 @@ describe('ServerBackedContentReview (authenticated server mode)', () => {
     }
   });
 
+  it('resyncs the queue from the server once per bulk run, not once per item', async () => {
+    // Regression: the bulk run used to call refreshAfterMutation (a full GET /api/content/review)
+    // after every single check/decision — ~1,400 times across a 198-card queue — which is what
+    // made the list and selected-card panel visibly reflow on every item. It must now resync
+    // exactly once at the end, no matter how many cards the run processes.
+    const queueState = { items: [itemHaus, itemTisch] };
+    const { calls } = stubReviewFetch({
+      '/api/content/review': () => jsonResponse(queueState),
+      '/api/content/review/check': () => jsonResponse({ status: 'applied' }),
+      '/api/content/review/decision': () =>
+        jsonResponse({ status: 'applied', nextStatus: 'approved' }),
+    });
+    const rendered = await renderServer();
+    try {
+      const getCallsBefore = calls.filter((call) => call.url === '/api/content/review').length;
+      await rendered.clickButton('تأیید همهٔ ۲ موردِ نیازمند بررسی');
+      await flush();
+
+      const getCallsAfter = calls.filter((call) => call.url === '/api/content/review').length;
+      // Exactly one resync for the whole run (the initial mount fetch does not count).
+      expect(getCallsAfter - getCallsBefore).toBe(1);
+      expect(calls.filter((call) => call.url === '/api/content/review/decision')).toHaveLength(2);
+      expect(rendered.text).toContain('هر ۲ کارت صف تأیید نهایی شد.');
+    } finally {
+      await rendered.unmount();
+    }
+  });
+
+  it('proactively re-authenticates mid-run instead of waiting for a live 428', async () => {
+    // Regression: a bulk run only found out the 5-minute step-up window had lapsed when a
+    // per-item request came back 428 — a native passkey prompt could then appear on whichever
+    // card happened to be in flight, unannounced, and once it timed out unanswered the run
+    // reported itself stopped on that "random" card. The loop must now notice the window is
+    // about to lapse and request step-up itself, between items, before any 428 happens.
+    let simulatedNow = Date.now();
+    vi.spyOn(Date, 'now').mockImplementation(() => simulatedNow);
+    let reauthOptionsCalls = 0;
+    let reauthVerifyCalls = 0;
+    const { calls } = stubReviewFetch({
+      '/api/content/review': () => jsonResponse({ items: [itemHaus, itemTisch] }),
+      '/api/content/review/check': () => jsonResponse({ status: 'applied' }),
+      '/api/content/review/decision': (init) => {
+        // Simulate 5 minutes elapsing while Haus's decision round-trips, so the margin check
+        // ahead of Tisch finds the step-up window has lapsed.
+        if (String(init?.body).includes(itemHaus.cardVersionId)) simulatedNow += 5 * 60_000;
+        return jsonResponse({ status: 'applied', nextStatus: 'approved' });
+      },
+      '/api/auth/reauth/options': () => {
+        reauthOptionsCalls += 1;
+        return jsonResponse({ challenge: 'c' });
+      },
+      '/api/auth/reauth/verify': () => {
+        reauthVerifyCalls += 1;
+        return new Response(null, { status: 204 });
+      },
+    });
+    const rendered = await renderServer();
+    try {
+      await rendered.clickButton('تأیید همهٔ ۲ موردِ نیازمند بررسی');
+      await flush();
+
+      // No 428 anywhere — the run never hit the server-enforced expiry at all.
+      expect(calls.some((call) => call.url === '/api/content/review/check')).toBe(true);
+      expect(reauthOptionsCalls).toBe(1);
+      expect(reauthVerifyCalls).toBe(1);
+      expect(calls.filter((call) => call.url === '/api/content/review/decision')).toHaveLength(2);
+      expect(rendered.text).toContain('هر ۲ کارت صف تأیید نهایی شد.');
+    } finally {
+      await rendered.unmount();
+      vi.restoreAllMocks();
+    }
+  });
+
   it('stops a bulk approval run on the first unrecoverable failure, leaving later cards untouched', async () => {
     const queueState = { items: [itemHaus, itemTisch] };
     const { calls } = stubReviewFetch({
