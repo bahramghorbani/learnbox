@@ -1,13 +1,16 @@
 import { createHmac, randomBytes } from 'node:crypto';
 
 // Owner requested a 24h login: no more re-authenticating mid-day. The 5-minute step-up
-// window for sensitive writes (price/catalog changes) is untouched by design.
+// window for sensitive writes (price/catalog changes) is untouched by design. Content
+// review (approve/check — editorial only, no publish) gets its own longer window per
+// owner request: these cards get re-queued in large batches and never touch pricing.
 export const adminSessionIdleLifetimeMs = 24 * 60 * 60_000;
 export const adminSessionIdleLifetimeSeconds = adminSessionIdleLifetimeMs / 1_000;
 export const absoluteSessionLifetimeMs = 24 * 60 * 60_000;
 const absoluteLifetimeSeconds = absoluteSessionLifetimeMs / 1_000;
 const operationalAuthenticationMs = 24 * 60 * 60_000;
 const recentAuthenticationMs = 5 * 60_000;
+const editorialAuthenticationMs = 12 * 60 * 60_000;
 
 type RandomBytes = (size: number) => Uint8Array;
 
@@ -19,7 +22,7 @@ export type AdminSessionRecord = {
 };
 
 export type AdminSessionEvaluation =
-  | { active: true; operational: boolean; recent: boolean }
+  | { active: true; operational: boolean; recent: boolean; editorialRecent: boolean }
   | { active: false; reason: 'revoked' | 'idle_expired' | 'absolute_expired' };
 
 export function hashAdminSecret(secret: string, hashKey: string) {
@@ -57,6 +60,7 @@ export function evaluateAdminSession(
     // A poll can refresh lastSeenAt, never this Passkey-authentication window.
     operational: authenticationAgeMs <= operationalAuthenticationMs,
     recent: authenticationAgeMs <= recentAuthenticationMs,
+    editorialRecent: authenticationAgeMs <= editorialAuthenticationMs,
   };
 }
 

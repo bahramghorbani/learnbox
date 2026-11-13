@@ -52,6 +52,7 @@ export async function loadAdminSession(
     csrfHash: session.csrfHash,
     operational: evaluation.operational,
     recent: evaluation.recent,
+    editorialRecent: evaluation.editorialRecent,
   };
 }
 
