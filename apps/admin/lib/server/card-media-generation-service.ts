@@ -40,6 +40,7 @@ import {
 } from './ai-media-config';
 import type { AiMediaProvider } from './ai-media-provider';
 import { readCanonicalCardBrief } from './canonical-image-standard';
+import { reencodeCardImageToWebp } from './card-image-webp';
 import {
   buildCardMediaObjectKey,
   type CardMediaKind,
@@ -445,9 +446,13 @@ export class CardMediaGenerationService {
           model: input.model?.trim() || undefined,
           timeoutMs: this.limits.imageTimeoutMs,
         });
-        bytes = image.bytes;
-        mediaType = image.contentType;
         costUnit = image.estimatedCostUnit;
+        // Re-encode to WebP before storage: same compression already used for splash/slide
+        // images, applied here too so card images take less bandwidth and disk. Fail-open — a
+        // provider image that cannot be re-encoded is stored exactly as the provider sent it.
+        const reencoded = await reencodeCardImageToWebp(image.bytes, image.contentType);
+        bytes = reencoded.bytes;
+        mediaType = reencoded.contentType;
         if (bytes.length > this.limits.maxImageBytes) {
           throw new AiProviderError('provider_rejected', 'تصویر تولیدشده از حد مجاز بزرگ‌تر است.');
         }

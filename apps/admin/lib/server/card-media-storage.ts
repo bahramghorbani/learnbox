@@ -59,6 +59,7 @@ export interface CardMediaStorage {
 const EXTENSION_BY_MEDIA_TYPE: Record<string, string> = {
   'image/png': 'png',
   'image/jpeg': 'jpg',
+  'image/webp': 'webp',
   'audio/mpeg': 'mp3',
 };
 
@@ -83,7 +84,7 @@ export function buildCardMediaObjectKey(
 }
 
 const OBJECT_KEY_SHAPE =
-  /^admin\/card-media\/[a-z0-9-]{1,128}\/(image|word_audio|sentence_audio)\/[0-9a-f-]{36}\.(png|jpg|mp3)$/;
+  /^admin\/card-media\/[a-z0-9-]{1,128}\/(image|word_audio|sentence_audio)\/[0-9a-f-]{36}\.(png|jpg|webp|mp3)$/;
 
 function sha256(bytes: Buffer): string {
   return createHash('sha256').update(bytes).digest('hex');
