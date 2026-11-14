@@ -63,7 +63,10 @@ describe('published content media authorization', () => {
   it('serves a WebP-stored Admin-pack image with the correct content type', async () => {
     mocked.published.mockResolvedValue(true);
     mocked.read.mockRejectedValue(new Error('ENOENT'));
-    mocked.stored.mockResolvedValue({ mediaType: 'image/webp', bytes: Buffer.from('RIFF....WEBP') });
+    mocked.stored.mockResolvedValue({
+      mediaType: 'image/webp',
+      bytes: Buffer.from('RIFF....WEBP'),
+    });
     const response = await GET(request(), context('image', 'studium-b1-hoersaal'));
     expect(response.status).toBe(200);
     expect(response.headers.get('content-type')).toBe('image/webp');

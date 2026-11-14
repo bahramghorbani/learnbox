@@ -19,7 +19,11 @@ export async function reencodeCardImageToWebp(
 ): Promise<{ bytes: Buffer; contentType: string }> {
   if (contentType === 'image/webp') return { bytes, contentType };
   try {
-    const webp = await sharp(bytes, { animated: false, failOn: 'error', limitInputPixels: 40_000_000 })
+    const webp = await sharp(bytes, {
+      animated: false,
+      failOn: 'error',
+      limitInputPixels: 40_000_000,
+    })
       .rotate()
       .webp({ effort: 4, quality: 86 })
       .toBuffer();
