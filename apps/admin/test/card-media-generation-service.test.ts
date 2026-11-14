@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import sharp from 'sharp';
 
 import {
   DEFAULT_AI_MEDIA_LIMITS,
@@ -272,7 +273,13 @@ function createStorage(): CardMediaStorage & { objects: Map<string, Buffer> } {
   };
 }
 
-function createProvider(overrides: Partial<Record<'image' | 'speech', unknown>> = {}) {
+function createProvider(
+  overrides: Partial<Record<'image' | 'speech', unknown>> = {},
+  imageResult: { bytes: Buffer; contentType: 'image/png' | 'image/jpeg' } = {
+    bytes: Buffer.from('89504e470d0a1a0a', 'hex'),
+    contentType: 'image/png',
+  },
+) {
   const calls: { text?: string; voice?: string; prompt?: string }[] = [];
   return {
     calls,
@@ -283,8 +290,8 @@ function createProvider(overrides: Partial<Record<'image' | 'speech', unknown>> 
       calls.push({ prompt: request.prompt });
       if (overrides.image instanceof Error) throw overrides.image;
       return {
-        bytes: Buffer.from('89504e470d0a1a0a', 'hex'),
-        contentType: 'image/png' as const,
+        bytes: imageResult.bytes,
+        contentType: imageResult.contentType,
         model: 'flux.2-pro',
         provider: 'avalai.ir',
         estimatedCostUnit: 0.03,
@@ -313,10 +320,11 @@ function createService(
     voices?: GermanVoiceMapping;
     editorial?: boolean;
     providerOverrides?: Partial<Record<'image' | 'speech', unknown>>;
+    imageResult?: { bytes: Buffer; contentType: 'image/png' | 'image/jpeg' };
   } = {},
 ) {
   const pool = createPool(card, { editorial: options.editorial });
-  const provider = createProvider(options.providerOverrides);
+  const provider = createProvider(options.providerOverrides, options.imageResult);
   const storage = createStorage();
   const service = new CardMediaGenerationService(
     pool as never,
@@ -486,6 +494,45 @@ describe('image generation reuses the canonical standard', () => {
 
     expect(result).toMatchObject({ status: 'unprocessable' });
     expect(provider.generateImage).not.toHaveBeenCalled();
+  });
+  it('re-encodes a decodable provider image to WebP before storing it', async () => {
+    const png = await sharp({
+      create: { width: 512, height: 512, channels: 3, background: '#6b42df' },
+    })
+      .png()
+      .toBuffer();
+    const { service, storage } = createService(
+      { lemma: 'Tisch', article: 'der' },
+      { imageResult: { bytes: png, contentType: 'image/png' } },
+    );
+
+    const result = await service.generate({ cardId: CARD_ID, kind: 'image', actorUserId: ACTOR });
+
+    if (result.status !== 'generated') throw new Error('expected generation');
+    expect(storage.store).toHaveBeenCalledWith(
+      expect.anything(),
+      'image',
+      'image/webp',
+      expect.any(Buffer),
+    );
+    const storedBytes = vi.mocked(storage.store).mock.calls[0]![3] as Buffer;
+    expect(storedBytes.subarray(0, 4).toString('ascii')).toBe('RIFF');
+    expect(storedBytes.byteLength).toBeLessThan(png.byteLength);
+  });
+  it('keeps storing the provider bytes unchanged when the image cannot be decoded', async () => {
+    // The default fixture image (magic header only, no pixel data) is intentionally undecodable,
+    // which is what proves the WebP re-encode step is fail-open rather than fail-closed.
+    const { service, storage } = createService({ lemma: 'Tisch', article: 'der' });
+
+    const result = await service.generate({ cardId: CARD_ID, kind: 'image', actorUserId: ACTOR });
+
+    if (result.status !== 'generated') throw new Error('expected generation');
+    expect(storage.store).toHaveBeenCalledWith(
+      expect.anything(),
+      'image',
+      'image/png',
+      Buffer.from('89504e470d0a1a0a', 'hex'),
+    );
   });
 });
 

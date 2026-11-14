@@ -46,6 +46,7 @@ async function tryReadFile(candidates: string[]): Promise<{ data: Buffer; ext: s
 const mimeTypes: Record<string, string> = {
   jpg: 'image/jpeg',
   png: 'image/png',
+  webp: 'image/webp',
   mp3: 'audio/mpeg',
 };
 
@@ -92,6 +93,8 @@ export async function GET(
   if (kind === 'image') {
     const imgDir = path.join(base, 'images');
     candidates = [
+      path.join(imgDir, `${contentId}-image-v2.webp`),
+      path.join(imgDir, `${contentId}-image-v1.webp`),
       path.join(imgDir, `${contentId}-image-v2.jpg`),
       path.join(imgDir, `${contentId}-image-v1.jpg`),
       path.join(imgDir, `${contentId}-image-v1.png`),
@@ -126,7 +129,11 @@ export async function GET(
       status: 200,
       headers: {
         'Content-Type': stored.mediaType,
-        'Cache-Control': 'private, no-store',
+        // The object key always embeds a fresh random UUID (card-media-storage.ts never
+        // overwrites a key with different bytes), so a given URL's content never changes once
+        // served: safe to let the browser cache it for a year without revalidation. The route
+        // itself still re-checks auth and publication on every request before reaching here.
+        'Cache-Control': 'private, max-age=31536000, immutable',
         'X-Content-Type-Options': 'nosniff',
       },
     });
@@ -137,8 +144,10 @@ export async function GET(
     status: 200,
     headers: {
       'Content-Type': contentType,
-      // Private: never cache publicly; authenticated per-request
-      'Cache-Control': 'private, no-store',
+      // Starter filenames are versioned (-v1/-v2): a given URL's bytes never change, so this is
+      // safe to cache for a year. A content refresh ships under a new version suffix, which is a
+      // new URL, not a mutation of this one.
+      'Cache-Control': 'private, max-age=31536000, immutable',
     },
   });
 }

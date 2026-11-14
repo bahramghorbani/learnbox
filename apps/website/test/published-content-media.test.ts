@@ -35,7 +35,10 @@ describe('published content media authorization', () => {
       mocked.read.mockResolvedValue(Buffer.from('private test fixture'));
       const response = await GET(request(), context(kind));
       expect(response.status).toBe(200);
-      expect(response.headers.get('cache-control')).toBe('private, no-store');
+      // Each Starter filename is versioned (-v1/-v2) and each Admin object key carries a fresh
+      // random UUID, so a given URL's bytes never change once served: safe for the browser to
+      // cache for a year. Auth and publication are still re-checked on every request above.
+      expect(response.headers.get('cache-control')).toBe('private, max-age=31536000, immutable');
       expect(await response.text()).toBe('private test fixture');
     },
   );
@@ -53,8 +56,18 @@ describe('published content media authorization', () => {
     const response = await GET(request(), context('word-audio', 'studium-b1-hoersaal'));
     expect(response.status).toBe(200);
     expect(response.headers.get('content-type')).toBe('audio/mpeg');
-    expect(response.headers.get('cache-control')).toBe('private, no-store');
+    expect(response.headers.get('cache-control')).toBe('private, max-age=31536000, immutable');
     expect(mocked.stored).toHaveBeenCalledWith('studium-b1-hoersaal', 'word_audio');
+  });
+
+  it('serves a WebP-stored Admin-pack image with the correct content type', async () => {
+    mocked.published.mockResolvedValue(true);
+    mocked.read.mockRejectedValue(new Error('ENOENT'));
+    mocked.stored.mockResolvedValue({ mediaType: 'image/webp', bytes: Buffer.from('RIFF....WEBP') });
+    const response = await GET(request(), context('image', 'studium-b1-hoersaal'));
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toBe('image/webp');
+    expect(response.headers.get('cache-control')).toBe('private, max-age=31536000, immutable');
   });
 
   it('never reads stored media for a learner without access to the pack', async () => {

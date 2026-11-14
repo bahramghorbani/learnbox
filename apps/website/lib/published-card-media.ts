@@ -9,7 +9,7 @@ import { requireVerifiedDatabaseTls } from '../../api/dist/database/migration-ru
 export type PublishedMediaKind = 'image' | 'word_audio' | 'sentence_audio';
 
 const OBJECT_KEY_SHAPE =
-  /^admin\/card-media\/[a-z0-9-]{1,128}\/(image|word_audio|sentence_audio)\/[0-9a-f-]{36}\.(png|jpg|mp3)$/;
+  /^admin\/card-media\/[a-z0-9-]{1,128}\/(image|word_audio|sentence_audio)\/[0-9a-f-]{36}\.(png|jpg|webp|mp3)$/;
 
 /**
  * Reads a moved media file (migration 0061) from the read-only media root and refuses bytes that do
