@@ -36,8 +36,8 @@ carries a hardcoded fallback version.
 
 Tags `v1.0.0`, `v1.1.0`, `v1.2.0` and `v1.2.1` are the historical repository-wide line. They
 described learner-facing releases and remain valid, immutable history; they are never renamed,
-moved or deleted. The Learner PWA continues that numbering under its new namespace, so its next
-release is `learner/v1.3.0` (or `learner/v1.2.2` for a patch) — the number does not restart.
+moved or deleted. The Learner PWA continues that numbering under its new namespace (its first
+namespaced release was `learner/v1.2.2`); the number does not restart.
 
 Admin Web ran in Production at `0.1.0` with no release until its first release, `admin/v1.0.0`
 (2026-11-15), made under the delegation above.
