@@ -4,6 +4,14 @@
 
 ## Active work
 
+**Admin phone sign-in visibility fix — IN REVIEW.** Production still has the OTP server route and
+SMS configuration enabled, but the running Admin artifact was built without
+`NEXT_PUBLIC_LEARNBOX_ADMIN_OTP_UI_ENABLED=true`, so its sign-in page exposes only Passkey. The fix
+moves both public Admin sign-in surfaces into one tracked release-build matrix read from the exact
+source commit; the official image builder now fails closed unless both Passkey and phone OTP are
+compiled in. UI and deployment-contract regressions cover the phone toggle. No Production artifact
+has been changed yet.
+
 **LearnBox League — RELEASED 2026-11-02 (`learner/v1.4.0`).** Live for all learners. Open follow-ups:
 league tables stay in the “forming” state until 10 learners are active in one week (3 at release);
 league notifications/reminders are not built.

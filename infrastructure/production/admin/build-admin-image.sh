@@ -79,41 +79,36 @@ if [ "$BRIDGE_MATRIX" != true ] && ! git cat-file -e "${SOURCE_SHA}^{commit}" 2>
   exit 2
 fi
 
-# The build-time public flag. Next.js inlines NEXT_PUBLIC_* into the client bundle, so it is part of
-# the artifact's identity, not of its configuration: two images built from one commit with different
-# values are different images, and no runtime environment variable can change the value an image
-# already carries.
-#
-# It is therefore required rather than defaulted. Built as anything but "true", resolveAdminAuthMode()
-# returns 'local-prototype', and AdminAuthGate then renders the workspace as already signed in
-# without ever calling /api/auth/session or offering the passkey prompt. A default would make that
-# the quiet consequence of forgetting one variable, so this script fails closed instead.
-PASSKEY_UI="${NEXT_PUBLIC_LEARNBOX_ADMIN_PASSKEY_UI_ENABLED:-}"
-OTP_UI="${NEXT_PUBLIC_LEARNBOX_ADMIN_OTP_UI_ENABLED:-false}"
-if [ "${LEARNBOX_IMAGE_TARGET:-admin}" = admin ]; then
-if [ "$PASSKEY_UI" != "true" ]; then
-  echo "build-admin-image: NEXT_PUBLIC_LEARNBOX_ADMIN_PASSKEY_UI_ENABLED must be exactly 'true'" >&2
-  echo "build-admin-image: for a production Admin image, got '${PASSKEY_UI:-<unset>}'." >&2
-  echo "build-admin-image: a lower value ships an Admin that signs itself in without a passkey." >&2
-  exit 2
-fi
-if [ "$OTP_UI" != "true" ] && [ "$OTP_UI" != "false" ]; then
-  echo "build-admin-image: NEXT_PUBLIC_LEARNBOX_ADMIN_OTP_UI_ENABLED must be 'true' or 'false'" >&2
-  echo "build-admin-image: got '$OTP_UI'." >&2
-  exit 2
-fi
-fi
+# Build from the commit, not the working tree. Create this before reading either release matrix
+# because each matrix is part of the exact source tree to be built.
+BUILD_DIR="$(mktemp -d)"
+cleanup() { rm -rf "$BUILD_DIR"; }
+trap cleanup EXIT
 
+# Next.js inlines NEXT_PUBLIC_* into the client bundle, so Admin's public authentication surfaces
+# come from one tracked matrix in the exact commit being built. Shell defaults previously let a
+# later Admin build silently hide phone login while its server route stayed enabled.
+if [ "$TARGET" = admin ]; then
+  ADMIN_RELEASE_CONFIG="infrastructure/production/admin/release-build.env"
+  if ! git cat-file -e "$SOURCE_SHA:$ADMIN_RELEASE_CONFIG" 2>/dev/null; then
+    echo "build-admin-image: $ADMIN_RELEASE_CONFIG is missing from $SOURCE_SHA" >&2
+    exit 2
+  fi
+  admin_config_file="$BUILD_DIR/admin-release-build.env"
+  git show "$SOURCE_SHA:$ADMIN_RELEASE_CONFIG" > "$admin_config_file"
+  unset NEXT_PUBLIC_LEARNBOX_ADMIN_PASSKEY_UI_ENABLED NEXT_PUBLIC_LEARNBOX_ADMIN_OTP_UI_ENABLED
+  set -a; . "$admin_config_file"; set +a
+  PASSKEY_UI="${NEXT_PUBLIC_LEARNBOX_ADMIN_PASSKEY_UI_ENABLED:-}"
+  OTP_UI="${NEXT_PUBLIC_LEARNBOX_ADMIN_OTP_UI_ENABLED:-}"
+  if [ "$PASSKEY_UI" != true ] || [ "$OTP_UI" != true ]; then
+    echo "build-admin-image: $ADMIN_RELEASE_CONFIG must keep Passkey and OTP UI exactly 'true'" >&2
+    exit 2
+  fi
+fi
 
 # The Production host is linux/amd64. Build for it explicitly: on an arm64 workstation the default
 # platform is arm64, and such an image starts and then dies on exec format in Production.
 PLATFORM=linux/amd64
-
-# Build from the commit, not the working tree. Create this before reading the app matrix because the
-# matrix itself is part of the exact source tree to be built.
-BUILD_DIR="$(mktemp -d)"
-cleanup() { rm -rf "$BUILD_DIR"; }
-trap cleanup EXIT
 
 # Learner app client flags. Like the passkey flag they are inlined at build time, and the Dockerfile
 # and compose.yaml defaults have drifted from what Production runs (Production has binary review

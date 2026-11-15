@@ -17,7 +17,7 @@ describe('admin deployment contract', () => {
     expect(source).not.toMatch(/apps\/website|@learnbox\/website/);
   });
 
-  it('passes the public Passkey UI flag into Docker builds without exposing server secrets', async () => {
+  it('pins both public sign-in methods in the exact source commit without exposing server secrets', async () => {
     const dockerfile = await readFile(
       resolve(repoRoot, 'infrastructure/production/admin/Dockerfile'),
       'utf8',
@@ -26,13 +26,30 @@ describe('admin deployment contract', () => {
       resolve(repoRoot, 'infrastructure/production/admin/compose.yaml'),
       'utf8',
     );
-
-    expect(dockerfile).toContain('ARG NEXT_PUBLIC_LEARNBOX_ADMIN_PASSKEY_UI_ENABLED=false');
-    expect(dockerfile).toContain(
-      'ENV NEXT_PUBLIC_LEARNBOX_ADMIN_PASSKEY_UI_ENABLED=$NEXT_PUBLIC_LEARNBOX_ADMIN_PASSKEY_UI_ENABLED',
+    const releaseBuild = await readFile(
+      resolve(repoRoot, 'infrastructure/production/admin/release-build.env'),
+      'utf8',
     );
-    expect(compose).toContain(
-      'NEXT_PUBLIC_LEARNBOX_ADMIN_PASSKEY_UI_ENABLED: ${NEXT_PUBLIC_LEARNBOX_ADMIN_PASSKEY_UI_ENABLED:-false}',
+    const buildScript = await readFile(
+      resolve(repoRoot, 'infrastructure/production/admin/build-admin-image.sh'),
+      'utf8',
+    );
+
+    for (const flag of [
+      'NEXT_PUBLIC_LEARNBOX_ADMIN_PASSKEY_UI_ENABLED',
+      'NEXT_PUBLIC_LEARNBOX_ADMIN_OTP_UI_ENABLED',
+    ]) {
+      expect(dockerfile).toContain(`ARG ${flag}=false`);
+      expect(dockerfile).toContain(`ENV ${flag}=$${flag}`);
+      expect(compose).toContain(`${flag}: \${${flag}:-false}`);
+      expect(releaseBuild).toContain(`${flag}=true`);
+    }
+    expect(buildScript).toContain(
+      'unset NEXT_PUBLIC_LEARNBOX_ADMIN_PASSKEY_UI_ENABLED NEXT_PUBLIC_LEARNBOX_ADMIN_OTP_UI_ENABLED',
+    );
+    expect(buildScript).toContain('git show "$SOURCE_SHA:$ADMIN_RELEASE_CONFIG"');
+    expect(buildScript).not.toContain(
+      'OTP_UI="${NEXT_PUBLIC_LEARNBOX_ADMIN_OTP_UI_ENABLED:-false}"',
     );
     expect(dockerfile).not.toMatch(/ARG LEARNBOX_ADMIN_(TOKEN_HASH_KEY|BOOTSTRAP_SECRET)/);
   });

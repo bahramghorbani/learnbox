@@ -92,6 +92,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.unstubAllEnvs();
   vi.unstubAllGlobals();
 });
 
@@ -162,6 +163,27 @@ describe('admin passkey UI', () => {
     );
 
     expect(rendered.findText('ورود مدیر LearnBox')).toBe(true);
+    expect(rendered.button('ورود با Passkey')).not.toBeNull();
+    await rendered.unmount();
+  });
+
+  it('shows the phone sign-in path when the release enables OTP', async () => {
+    vi.stubEnv('NEXT_PUBLIC_LEARNBOX_ADMIN_OTP_UI_ENABLED', 'true');
+    stubSessionFetch(401);
+    const rendered = await render(
+      createElement(
+        AdminAuthGate,
+        { mode: 'server-passkey' },
+        createElement('div', null, 'workspace'),
+      ),
+    );
+
+    const phoneButton = rendered.button('ورود با شماره موبایل');
+    expect(phoneButton).not.toBeNull();
+    await act(async () => {
+      phoneButton!.click();
+    });
+    expect(rendered.findText('شماره موبایل مدیر را وارد کنید')).toBe(true);
     expect(rendered.button('ورود با Passkey')).not.toBeNull();
     await rendered.unmount();
   });
