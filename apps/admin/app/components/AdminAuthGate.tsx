@@ -40,6 +40,7 @@ export function AdminAuthGate({ mode, children }: AdminAuthGateProps) {
     mode === 'local-prototype' ? 'signed-in' : 'checking',
   );
   const [retry, setRetry] = useState(0);
+  const otpEnabled = resolveAdminOtpUiEnabled();
 
   useEffect(() => {
     if (mode === 'local-prototype') return;
@@ -71,7 +72,10 @@ export function AdminAuthGate({ mode, children }: AdminAuthGateProps) {
   }
   if (state === 'checking') {
     return (
-      <main className="admin-auth-loading">
+      <main
+        className="admin-auth-loading"
+        data-admin-otp-ui-enabled={otpEnabled ? 'true' : 'false'}
+      >
         <LoadingState label="در حال بررسی ورود امن…" />
       </main>
     );
@@ -92,7 +96,6 @@ export function AdminAuthGate({ mode, children }: AdminAuthGateProps) {
     );
   }
   if (state === 'signed-out') {
-    const otpEnabled = resolveAdminOtpUiEnabled();
     return <SignInGate onAuthenticated={() => setState('signed-in')} otpEnabled={otpEnabled} />;
   }
   return <WorkspaceAccess access="server-authenticated">{children}</WorkspaceAccess>;

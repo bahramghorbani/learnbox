@@ -137,7 +137,7 @@ for (const required of [
   '.next/server/app/index.html',
   "rendered_has 'server-passkey'",
   "rendered_has 'local-prototype'",
-  "rendered_has 'ورود با شماره موبایل'",
+  'rendered_has \'data-admin-otp-ui-enabled="true"\'',
 ]) {
   if (!productionBuildSource.includes(required)) {
     throw new Error(
