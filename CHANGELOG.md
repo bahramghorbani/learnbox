@@ -6,11 +6,52 @@ required contents of a GitHub Release are in [`docs/release/VERSIONING.md`](docs
 
 The `v1.0.0`–`v1.2.1` entries below are the historical repository-wide line. They described
 learner-facing releases, they remain valid history, and their tags never move. The Learner PWA
-continues that numbering under `learner/v…`. Admin Web has published no release yet, so it has no
-entry here.
+continues that numbering under `learner/v…`. Admin Web's first release is `admin/v1.0.0`.
 
 A deployment is not a release. A component may run in Production without appearing in this file;
 its deployment evidence belongs in `docs/release/` and its live facts in `PROJECT_STATE.md`.
+
+## learner/v1.5.0 — vocabulary, new onboarding, faster media (released 2026-11-15)
+
+Release commit and image digest are in the GitHub Release `learner/v1.5.0`. Every change below
+already ran in Production since 2026-11-14 (image built from `97e0bf7`); this release adds only the
+version number.
+
+- New Vocabulary section: search the dictionary and save words; League badges for saved words.
+- Redesigned first-login tour.
+- Store: CEFR level chips are colour-coded, with a level badge on pack covers.
+- Profile support rows replaced by Instagram and Telegram icons.
+- Sign-in: phone box is left-to-right and the code boxes line up on a grid.
+- Card images and audio are cached on the device; new card images are stored as WebP.
+- Card media are stored as verified files instead of database bytes.
+- Visit statistics now use Iran-hosted StatsFA; Google Analytics was removed.
+- Fix: the League page no longer stalls under load.
+
+## admin/v1.0.0 — first Admin release (released 2026-11-15)
+
+Release commit and image digest are in the GitHub Release `admin/v1.0.0`. Admin had been running
+in Production under `0.1.0` without a release; this is its first versioned release, describing the
+console as it runs today (Production image built from `587f1fb`, version label aside).
+
+- Sign-in with Passkey or with a phone number and SMS code; visible logout; a 12-hour confirmation
+  window for content-review edits.
+- Content: packs and cards, CSV/XLSX import, AI-assisted pack generation, review and publish
+  lifecycle, durable pack media generation and media review.
+- Dictionary: editorial queue, AI-first editor, one-click publish and rollback, missed-search and
+  error-report review.
+- Store and payments: Zarinpal, Cafe Bazaar, Myket and Sibapp catalog tools, sales and payment
+  reports, purchase review.
+- Users and support: suspension, manual pack grants, audit log, sessions and access.
+- Dashboard with real online-learner count and a visits report.
+
+## android/v0.1.2 — Bazaar purchase fix (released 2026-11-15)
+
+Built from `237119c02d6d42bfef7a7e959e83fbd27105a231`, version `0.1.2`, build `3`. Artifacts and
+store state are in [`docs/release/STORE_SUBMISSIONS.md`](docs/release/STORE_SUBMISSIONS.md).
+
+- Fix: Cafe Bazaar purchases no longer hang on Xiaomi (MIUI) phones.
+- Distribution: published on Myket 2026-11-08. Café Bazaar published it and disabled it on
+  2026-11-14 because of a Google Play Protect install warning; Bazaar serves 0.1.1 meanwhile.
 
 ## learner/v1.4.0 — LearnBox League (released 2026-11-02)
 

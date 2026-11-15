@@ -5,19 +5,28 @@ is the single source of truth for version numbers and release tags; `CHANGELOG.m
 each released version contained, and `docs/release/` holds the per-release evidence records.
 
 Creating a Git tag, publishing a GitHub Release and deploying to Production are three distinct
-actions. Each one requires separate owner authorization. Merging a PR authorizes none of them.
+actions; merging a PR implies none of them.
+
+**Delegation (owner decision, 2026-11-15).** The owner has delegated version management of every
+LearnBox product to the repository's AI maintainer: choosing version numbers, bumping version
+sources, writing `CHANGELOG.md`, creating tags and publishing GitHub Releases. These no longer wait
+for a per-release owner approval. Still separately gated: store submission and store-side actions
+(signing material is owner-held), Production deployment under its own runbooks, and legal or
+public-launch decisions. A deployment that ships user-visible change must be followed by its
+release in the same work session, so Production never runs unversioned change for long.
 
 ## Products and their version lines
 
-LearnBox ships four products that version **independently**. A change to one never renumbers
+LearnBox ships five products that version **independently**. A change to one never renumbers
 another.
 
-| Product                      | Authoritative version source                                                                    | Tag namespace    | Published releases so far                                  |
-| ---------------------------- | ----------------------------------------------------------------------------------------------- | ---------------- | ---------------------------------------------------------- |
-| Learner PWA (`apps/website`) | `apps/website/package.json` → `version`                                                         | `learner/vX.Y.Z` | `v1.0.0`, `v1.2.0`, `v1.2.1` (legacy repository-wide tags) |
-| Admin Web (`apps/admin`)     | `apps/admin/package.json` → `version`                                                           | `admin/vX.Y.Z`   | none                                                       |
-| Android (`apps/android`)     | `apps/android/app/build.gradle.kts` → `versionName` / `versionCode`                             | `android/vX.Y.Z` | `android/v0.1.1`                                           |
-| iOS (`apps/ios`)             | `apps/ios/LearnBox.xcodeproj/project.pbxproj` → `MARKETING_VERSION` / `CURRENT_PROJECT_VERSION` | `ios/vX.Y.Z`     | `ios/v0.1.1`                                               |
+| Product                           | Authoritative version source                                                                    | Tag namespace    | Published releases so far                                      |
+| --------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------- | -------------------------------------------------------------- |
+| Learner PWA (`apps/website`)      | `apps/website/package.json` → `version`                                                         | `learner/vX.Y.Z` | `learner/v1.2.2` … `learner/v1.5.0` (legacy `v1.0.0`–`v1.2.1`) |
+| Admin Web (`apps/admin`)          | `apps/admin/package.json` → `version`                                                           | `admin/vX.Y.Z`   | `admin/v1.0.0`                                                 |
+| Android (`apps/android`)          | `apps/android/app/build.gradle.kts` → `versionName` / `versionCode`                             | `android/vX.Y.Z` | `android/v0.1.1`, `android/v0.1.2`                             |
+| iOS (`apps/ios`)                  | `apps/ios/LearnBox.xcodeproj/project.pbxproj` → `MARKETING_VERSION` / `CURRENT_PROJECT_VERSION` | `ios/vX.Y.Z`     | `ios/v0.1.1`                                                   |
+| Landing (`apps/learnbox-website`) | `apps/learnbox-website/package.json` → `version`                                                | `landing/vX.Y.Z` | none                                                           |
 
 `scripts/validate-version-sources.mjs` (`pnpm verify:version-sources`) enforces that each product
 reads only its own source, that no product can display another's version, and that no accessor
@@ -30,9 +39,17 @@ described learner-facing releases and remain valid, immutable history; they are 
 moved or deleted. The Learner PWA continues that numbering under its new namespace, so its next
 release is `learner/v1.3.0` (or `learner/v1.2.2` for a patch) — the number does not restart.
 
-Admin Web has never published a release. Its package version therefore still reads `0.1.0`: a deployed artifact is not a published release, and declaring `1.0.0` before the first `admin/v1.0.0` release would invent a version that does not exist. Admin's first published release is an owner-gated decision, not an automatic consequence of its deployment.
+Admin Web ran in Production at `0.1.0` with no release until its first release, `admin/v1.0.0`
+(2026-11-15), made under the delegation above.
 
-Android (`0.1.1+2`) and iOS (`0.1.1`, build `2`) are **published in stores** (Café Bazaar and Sibapp, 2026-11-01) with GitHub Releases `android/v0.1.1` and `ios/v0.1.1`. Store publication is recorded in [`STORE_SUBMISSIONS.md`](STORE_SUBMISSIONS.md), never inferred from source. Every future store build must take its build number from that ledger, not from the checked-in value alone.
+The Landing site has no release yet. Its Production image is built without the OCI revision
+label, so the commit it runs cannot be proven; its first `landing/v…` release waits for a build
+that records its source commit.
+
+Android `0.1.2+3` is published on Myket (2026-11-08) with GitHub Release `android/v0.1.2`; Café
+Bazaar published it and then disabled it on 2026-11-14 pending a Google Play Protect warning, so
+Bazaar users receive `0.1.1+2` again. iOS `0.1.1` (build `2`) is published on Sibapp with
+`ios/v0.1.1`. Store publication is recorded in [`STORE_SUBMISSIONS.md`](STORE_SUBMISSIONS.md), never inferred from source. Every future store build must take its build number from that ledger, not from the checked-in value alone.
 
 ## Semantic Versioning
 
@@ -78,7 +95,7 @@ Nothing in a release body may contain a secret, credential, phone number or pers
 
 ## Android releases
 
-`apps/android` is a Kotlin native shell around the existing Learner PWA. Its currently checked-in baseline is `0.1.1+2`; it has neither a GitHub Release nor a store listing/publication. The permanent signing identity is external to the repository. Bazaar implementation and publication remain separately gated by [`CAFE_BAZAAR_MULTICHANNEL_COMMERCE_ROADMAP.md`](../planning/CAFE_BAZAAR_MULTICHANNEL_COMMERCE_ROADMAP.md).
+`apps/android` is a Kotlin native shell around the existing Learner PWA. Its checked-in version is `0.1.2+3`; store state is in the ledger. The permanent signing identity is external to the repository. Bazaar implementation and publication remain separately gated by [`CAFE_BAZAAR_MULTICHANNEL_COMMERCE_ROADMAP.md`](../planning/CAFE_BAZAAR_MULTICHANNEL_COMMERCE_ROADMAP.md).
 
 - **versionName** is the Android component SemVer string and matches the `android/vX.Y.Z` tag when a GitHub Release is authorized.
 - **versionCode** is a separate integer. It is never reused within a store — not across a rollback, re-signed artifact or store rejection — and the next build for **any** store takes the highest code submitted to **any** store plus one, so the stores stay aligned. (Historical exception: the first Myket and Bazaar builds are separate flavor artifacts that both use code 2.) It lives beside `versionName` in `apps/android/app/build.gradle.kts`.
@@ -129,7 +146,8 @@ store — often weeks later, sometimes never. Therefore:
 1. Merge the change through a reviewed PR with all four required checks green.
 2. Decide the new version per the rules above and update that product's version source in its
    own PR (or in the feature PR when the release is immediate).
-3. **Owner authorization gate.** Obtain explicit owner approval before the next step.
+3. Confirm store state from the stores' public pages (not from memory) before releasing a native
+   build; a native build is released only once a store publishes it.
 4. Create the annotated tag on the exact released commit and publish the GitHub Release with the
    six fields above.
 5. Deploy, if deploying, as a separately authorized action; then update the release's deployment

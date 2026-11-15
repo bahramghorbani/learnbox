@@ -169,7 +169,7 @@ const submissions = ledgerBody
     return { platform, store, version, build: Number(build), sha256, status };
   });
 check(submissions.length > 0, `${ledgerFile} must list the submitted store builds.`);
-const statuses = ['submitted', 'in_review', 'published', 'rejected', 'superseded'];
+const statuses = ['submitted', 'in_review', 'published', 'suspended', 'rejected', 'superseded'];
 const artifactByBuild = new Map();
 for (const row of submissions) {
   const label = `${ledgerFile}: ${row.platform}/${row.store} build ${row.build}`;

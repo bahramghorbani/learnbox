@@ -112,14 +112,16 @@ Future work begins at v1.1; the normalized backlog lives in `BACKLOG.md`.
 
 Products version independently; `docs/release/VERSIONING.md` is the authoritative rule.
 
-| Product     | Version on `main`                                                                                   | Tag namespace    | Published releases                                                                 |
-| ----------- | --------------------------------------------------------------------------------------------------- | ---------------- | ---------------------------------------------------------------------------------- |
-| Learner PWA | `1.2.1` (`apps/website/package.json`)                                                               | `learner/vX.Y.Z` | `v1.0.0`, `v1.2.0`, `v1.2.1` (legacy repository-wide tags, preserved)              |
-| Admin Web   | `0.1.0` (`apps/admin/package.json`)                                                                 | `admin/vX.Y.Z`   | **none** — deployed is not released; the first `admin/v1.0.0` is an owner decision |
-| Android     | not declared — Flutter prototype removed 2026-10-24; new source declared when implementation begins | `android/vX.Y.Z` | **none** — development has not started                                             |
+| Product     | Version on `main` | Tag namespace    | Latest release / store state                                                    |
+| ----------- | ----------------- | ---------------- | ------------------------------------------------------------------------------- |
+| Learner PWA | `1.5.0`           | `learner/vX.Y.Z` | `learner/v1.5.0`                                                                |
+| Admin Web   | `1.0.0`           | `admin/vX.Y.Z`   | `admin/v1.0.0` (first release)                                                  |
+| Landing     | `1.0.0`           | `landing/vX.Y.Z` | none — image lacks a source-commit label                                        |
+| Android     | `0.1.2+3`         | `android/vX.Y.Z` | `android/v0.1.2`; live on Myket, disabled on Café Bazaar (Play Protect) → 0.1.1 |
+| iOS         | `0.1.1+2`         | `ios/vX.Y.Z`     | `ios/v0.1.1`; live on Sibapp                                                    |
 
-Merging a PR, creating a tag, publishing a GitHub Release and deploying to Production are four
-distinct actions. The last three each require separate owner authorization.
+Version management is delegated to the AI maintainer (`docs/release/VERSIONING.md`); store
+submission and Production deployment stay separately gated.
 
 ## Product
 

@@ -6,6 +6,7 @@
 - For vocabulary media, follow [`PDR-010`](./docs/product-decisions/PDR-010-ARTICLE-AWARE-AUDIO-AND-MEDIA-STANDARDS.md): keep `der`/`die`/`das` voices distinct, speak each noun as article plus lemma with its role voice, preserve the approved `flux.2-pro` Start V2 visual contract, and never choose or replace a voice without recorded de-DE listening QA and owner-approved candidate spend. This rule does not authorize provider activation, paid generation, media replacement, or Production changes.
 - Prefer privacy, offline resilience, measurable learning value, and rollback capability. Production, payment, legal, public-release, and destructive actions require owner approval.
 - Every feature needs acceptance criteria, tests proportionate to risk, analytics intent, documentation, and a rollback/feature-flag assessment.
+- Version management (numbers, `CHANGELOG.md`, tags, GitHub Releases) is delegated to the AI maintainer per [`docs/release/VERSIONING.md`](./docs/release/VERSIONING.md); release user-visible change in the same session it is deployed. Store submission and deployment stay separately gated.
 - Keep Bobo canonical assets versioned and do not alter their canonical appearance without owner approval.
 - Version each product independently from its own source of truth, per
   [`docs/release/VERSIONING.md`](./docs/release/VERSIONING.md). Merging a PR, creating a tag,
