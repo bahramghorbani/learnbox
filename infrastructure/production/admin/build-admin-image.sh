@@ -403,6 +403,8 @@ check "shipped authentication mode is server-passkey" present \
   "$([ "$(rendered_has 'server-passkey')" != 0 ] && echo present || echo absent)"
 check "shipped authentication mode cannot bypass the gate as local-prototype" absent \
   "$([ "$(rendered_has 'local-prototype')" = 0 ] && echo absent || echo present)"
+check "shipped phone OTP sign-in is visible" present \
+  "$([ "$(rendered_has 'ورود با شماره موبایل')" != 0 ] && echo present || echo absent)"
 fi
 
 DIGEST="$(inspect '{{.Id}}')"

@@ -92,34 +92,56 @@ for (const required of [
   }
 }
 
-// NEXT_PUBLIC_LEARNBOX_ADMIN_PASSKEY_UI_ENABLED is inlined into the client bundle by Next at build
-// time, so it is the only Admin auth control that a deployment cannot set, correct or override. An
-// image built without it resolves to 'local-prototype', and the gate above then short-circuits to
-// signed-in: the workspace renders with no passkey prompt and no session call. Defaults-off is the
-// right posture everywhere else, which is exactly why the production build must be the one place
-// that refuses it — and must confirm the result from the built artifact instead of trusting the
-// argument it just passed, since a cache hit or a silent Dockerfile default would otherwise pass.
+// NEXT_PUBLIC_* values are inlined into the client bundle by Next at build time, so Production's
+// public Admin authentication surfaces must come from the exact commit rather than operator shell
+// state. Defaults stay off elsewhere; the release matrix is the one reviewed place that enables
+// Passkey and phone OTP, and the builder verifies both from the resulting artifact.
 const productionBuildSource = await readFile(
   new URL('../infrastructure/production/admin/build-admin-image.sh', import.meta.url),
   'utf8',
 );
+const productionReleaseSource = await readFile(
+  new URL('../infrastructure/production/admin/release-build.env', import.meta.url),
+  'utf8',
+);
 
-if (productionBuildSource.includes('NEXT_PUBLIC_LEARNBOX_ADMIN_PASSKEY_UI_ENABLED:-false')) {
-  throw new Error(
-    'Production Admin builds must not default the Passkey UI flag to false: one forgotten variable would ship local-prototype authentication.',
-  );
+for (const required of [
+  'NEXT_PUBLIC_LEARNBOX_ADMIN_PASSKEY_UI_ENABLED=true',
+  'NEXT_PUBLIC_LEARNBOX_ADMIN_OTP_UI_ENABLED=true',
+]) {
+  if (!productionReleaseSource.includes(required)) {
+    throw new Error(
+      `Production Admin release matrix must enable both sign-in methods: ${required}`,
+    );
+  }
+}
+
+for (const forbidden of [
+  'NEXT_PUBLIC_LEARNBOX_ADMIN_PASSKEY_UI_ENABLED:-false',
+  'NEXT_PUBLIC_LEARNBOX_ADMIN_OTP_UI_ENABLED:-false',
+]) {
+  if (productionBuildSource.includes(forbidden)) {
+    throw new Error(
+      `Production Admin builds must not default a sign-in method to false: ${forbidden}`,
+    );
+  }
 }
 
 for (const required of [
+  'ADMIN_RELEASE_CONFIG="infrastructure/production/admin/release-build.env"',
+  'git show "$SOURCE_SHA:$ADMIN_RELEASE_CONFIG"',
+  'unset NEXT_PUBLIC_LEARNBOX_ADMIN_PASSKEY_UI_ENABLED NEXT_PUBLIC_LEARNBOX_ADMIN_OTP_UI_ENABLED',
   'PASSKEY_UI="${NEXT_PUBLIC_LEARNBOX_ADMIN_PASSKEY_UI_ENABLED:-}"',
-  'if [ "$PASSKEY_UI" != "true" ]; then',
+  'OTP_UI="${NEXT_PUBLIC_LEARNBOX_ADMIN_OTP_UI_ENABLED:-}"',
+  'if [ "$PASSKEY_UI" != true ] || [ "$OTP_UI" != true ]; then',
   '.next/server/app/index.html',
   "rendered_has 'server-passkey'",
   "rendered_has 'local-prototype'",
+  "rendered_has 'ورود با شماره موبایل'",
 ]) {
   if (!productionBuildSource.includes(required)) {
     throw new Error(
-      `Production Admin build must enforce and prove server-passkey authentication: ${required}`,
+      `Production Admin build must enforce and prove Passkey plus phone OTP authentication: ${required}`,
     );
   }
 }
