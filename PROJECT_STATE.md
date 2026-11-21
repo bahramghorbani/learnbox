@@ -1,10 +1,22 @@
 # LearnBox stable project state
 
-**Last reviewed:** 2026-10-16 (Production release reconciliation)
+**Last reviewed:** 2026-11-21 (Admin v1.1.0 production release)
 
 ## Release position
 
 **Web/PWA v1 is LIVE and CLOSED.** Public activation completed 2026-09-28.
+
+### Admin v1.1.0 — deployed 2026-11-21
+
+| Fact          | Value                                                                                                                               |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Admin release | `admin/v1.1.0` — [GitHub Release](https://github.com/bahramghorbani/learnbox/releases/tag/admin/v1.1.0)                             |
+| Source commit | `92e02d53dde57a316905380e03eab58029a0e409` (PR #585)                                                                                |
+| Running image | `sha256:e7c7c88189f8bac2ed8b47fcc2b1fab3499a5bc0b620732c2d7bb945a57c45d6`                                                           |
+| Verification  | OCI label and runtime `APP_SOURCE_SHA` both equal the source commit; container healthy; public Admin returned HTTP 200 three times  |
+| Scope         | Per-package copy/paste guide for manual Café Bazaar product entry; per-package confirmation only after manual creation in Bazaar    |
+| Database      | No migration and no data change                                                                                                     |
+| Rollback      | `learnbox-admin:rollback-bazaar585-20261121T151436Z`; compose backup `compose.yaml.pre-bazaar585-20261121T151436Z` on the Iran host |
 
 ### At v1.0.0 public activation (2026-09-28, historical record)
 
@@ -115,7 +127,7 @@ Products version independently; `docs/release/VERSIONING.md` is the authoritativ
 | Product     | Version on `main` | Tag namespace    | Latest release / store state                                                    |
 | ----------- | ----------------- | ---------------- | ------------------------------------------------------------------------------- |
 | Learner PWA | `1.5.0`           | `learner/vX.Y.Z` | `learner/v1.5.0`                                                                |
-| Admin Web   | `1.0.0`           | `admin/vX.Y.Z`   | `admin/v1.0.0` (first release)                                                  |
+| Admin Web   | `1.1.0`           | `admin/vX.Y.Z`   | `admin/v1.1.0`; Production image `sha256:e7c7c881…`, healthy                    |
 | Landing     | `1.0.0`           | `landing/vX.Y.Z` | none — image lacks a source-commit label                                        |
 | Android     | `0.1.2+3`         | `android/vX.Y.Z` | `android/v0.1.2`; live on Myket, disabled on Café Bazaar (Play Protect) → 0.1.1 |
 | iOS         | `0.1.1+2`         | `ios/vX.Y.Z`     | `ios/v0.1.1`; live on Sibapp                                                    |
