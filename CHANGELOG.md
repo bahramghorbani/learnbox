@@ -11,7 +11,13 @@ continues that numbering under `learner/v…`. Admin Web's first release is `adm
 A deployment is not a release. A component may run in Production without appearing in this file;
 its deployment evidence belongs in `docs/release/` and its live facts in `PROJECT_STATE.md`.
 
-## learner/v1.5.0 — vocabulary, new onboarding, faster media (released 2026-11-15)
+## admin/v1.1.0 — ثبت دستی محصول‌های کافه‌بازار (آمادهٔ انتشار)
+
+- برای هر بستهٔ آمادهٔ فروش، پنل یک فایل آمادهٔ کپی/پیست برای فرم محصول جدید کافه‌بازار می‌سازد.
+- تأیید ثبت، فقط همان بسته را پس از ساخت دستی در بازار به LearnBox وصل می‌کند؛ ثبت گروهی قدیمی
+  CSV حذف شد تا بسته‌ای که هنوز در بازار ساخته نشده، اشتباهی قابل خرید نشان داده نشود.
+- این تغییر هیچ محصولی را خودکار در بازار نمی‌سازد یا فعال نمی‌کند.
+
 
 Release commit and image digest are in the GitHub Release `learner/v1.5.0`. Every change below
 already ran in Production since 2026-11-14 (image built from `97e0bf7`); this release adds only the
