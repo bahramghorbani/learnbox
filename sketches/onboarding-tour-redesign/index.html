@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>LearnBox — پیشنهاد بازطراحی تور خوش‌آمدگویی</title>
+<style>
+  :root {
+    --primary: #6d28d9;
+    --primary-2: #7c3aed;
+    --bg: #f1f0ff;
+    --ink: #1e293b;
+    --muted: #646b78;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    height: 100%;
+    font-family: "Vazirmatn", -apple-system, "Segoe UI", Tahoma, sans-serif;
+    background: #0b0b14;
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  }
+
+  /* page chrome just for viewing the mockup on desktop */
+  .demo-wrap {
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 32px 12px;
+  }
+  .demo-caption {
+    color: #cbd5f5;
+    font-size: 13px;
+    text-align: center;
+    max-width: 380px;
+    line-height: 1.8;
+  }
+  .phone {
+    width: 390px;
+    height: 844px;
+    max-width: 96vw;
+    max-height: 86vh;
+    border-radius: 46px;
+    overflow: hidden;
+    box-shadow: 0 30px 80px rgba(0,0,0,.55), 0 0 0 10px #15151f, 0 0 0 11px #2a2a3a;
+    position: relative;
+    background: var(--bg);
+  }
+
+  /* ===== the actual onboarding tour component ===== */
+  .onboarding-tour {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    background: var(--bg);
+  }
+  .onboarding-track {
+    display: flex;
+    height: 100%;
+    width: 100%;
+    transition: transform 420ms cubic-bezier(.22,.9,.3,1);
+    will-change: transform;
+  }
+  .onboarding-track.dragging { transition: none; }
+  .onboarding-slide {
+    flex: 0 0 100%;
+    width: 100%;
+    height: 100%;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+  .onboarding-slide .art {
+    flex: 1 1 auto;
+    min-height: 0;
+    background-size: cover;
+    background-position: center 18%;
+    position: relative;
+  }
+  .onboarding-slide .art::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, var(--bg) 0%, rgba(241,240,255,0) 38%);
+  }
+
+  .onboarding-skip {
+    position: absolute;
+    top: max(18px, env(safe-area-inset-top));
+    left: 18px;
+    z-index: 5;
+    background: rgba(255,255,255,.65);
+    backdrop-filter: blur(6px);
+    border: none;
+    border-radius: 999px;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+  }
+  .onboarding-skip:active { transform: scale(.96); }
+
+  .onboarding-card {
+    flex: 0 0 auto;
+    padding: 6px 26px max(26px, env(safe-area-inset-bottom)) 26px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 14px;
+    background: var(--bg);
+  }
+  .onboarding-dots {
+    display: flex;
+    gap: 7px;
+    /* explicit LTR for the dot row, same precedent as the phone-input-row fix:
+       progress indicators read left->right even inside an RTL screen, so this
+       doesn't depend on the browser's RTL-flex-reversal behavior at all. */
+    direction: ltr;
+  }
+  .onboarding-dots span {
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: #d9d4f7;
+    transition: width 260ms ease, background 260ms ease;
+  }
+  .onboarding-dots span.active {
+    width: 22px;
+    background: linear-gradient(90deg, var(--primary), var(--primary-2));
+  }
+  .onboarding-card h1 {
+    font-size: 21px;
+    font-weight: 800;
+    color: var(--ink);
+    line-height: 1.5;
+  }
+  .onboarding-card p {
+    font-size: 14.5px;
+    color: var(--muted);
+    line-height: 1.8;
+    max-width: 310px;
+  }
+  .onboarding-cta {
+    width: 100%;
+    max-width: 320px;
+    margin-top: 4px;
+    border: none;
+    border-radius: 16px;
+    padding: 15px;
+    font-size: 15.5px;
+    font-weight: 700;
+    color: #fff;
+    background: linear-gradient(90deg, var(--primary), var(--primary-2));
+    box-shadow: 0 14px 28px rgba(109,40,217,.32);
+    cursor: pointer;
+  }
+  .onboarding-cta:active { transform: scale(.98); }
+
+  .finished-screen {
+    position: absolute;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 10px;
+    background: var(--bg);
+    text-align: center;
+    padding: 20px;
+  }
+  .finished-screen.show { display: flex; }
+  .finished-screen .emoji { font-size: 52px; }
+  .finished-screen h2 { font-size: 19px; color: var(--ink); }
+  .finished-screen p { font-size: 13.5px; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<div class="demo-wrap">
+  <div class="phone">
+    <div class="onboarding-tour" id="tour">
+      <button class="onboarding-skip" id="skipBtn">رد کردن</button>
+
+      <div class="onboarding-track" id="track">
+        <!-- slides injected by JS from the data array below -->
+      </div>
+    </div>
+    <div class="finished-screen" id="finished">
+      <div class="emoji">🎉</div>
+      <h2>آماده‌ای؟ بزن بریم!</h2>
+      <p>این یعنی رفتیم داخل اپ (اینجا فقط یک ماکاپه)</p>
+    </div>
+  </div>
+
+  <p class="demo-caption">
+    ماکاپ HTML تعاملی — با انگشت بکش یا دکمه‌ها رو بزن. تصاویر با مدل OpenAI/Codex ساخته شدن،
+    متن و دکمه‌ها و نقطه‌های پیشرفت واقعی HTML هستن (نه بخشی از عکس).
+  </p>
+</div>
+
+<script>
+  const slides = [
+    {
+      img: 'images/slide-1.png',
+      title: 'به LearnBox خوش اومدی 👋',
+      body: 'یادگیری لغات آلمانی رو با خرگوش کوچولوی ما شروع کن — ساده، سریع و هر روز.',
+      cta: 'بعدی',
+    },
+    {
+      img: 'images/slide-2.png',
+      title: 'هر کارت رو با یه لمس جواب بده',
+      body: 'اگه بلدی «بلدم» رو بزن، اگه نه «بلد نیستم» — خودمون بقیه‌ش رو می‌چینیم.',
+      cta: 'بعدی',
+    },
+    {
+      img: 'images/slide-3.png',
+      title: 'جعبه‌ی هوشمند یادآوری',
+      body: 'لغاتی که سخت‌ترن بیشتر برمی‌گردن، لغاتی که بلدی کمتر مزاحمت می‌شن.',
+      cta: 'بعدی',
+    },
+    {
+      img: 'images/slide-4.png',
+      title: 'فروشگاه بسته‌های آموزشی',
+      body: 'وقتی آماده بودی، بسته‌های تخصصی‌تر رو از فروشگاه LearnBox بردار.',
+      cta: 'بعدی',
+    },
+    {
+      img: 'images/slide-5.png',
+      title: 'همین الان شروع کن 🚀',
+      body: 'اولین کارتت منتظرته. بریم که یاد بگیریم!',
+      cta: 'بزن بریم 🚀',
+    },
+  ];
+
+  const track = document.getElementById('track');
+  const skipBtn = document.getElementById('skipBtn');
+  const finished = document.getElementById('finished');
+  let index = 0;
+
+  function renderSlide(data, slideIndex) {
+    const el = document.createElement('div');
+    el.className = 'onboarding-slide';
+    el.innerHTML = `
+      <div class="art" style="background-image:url('${data.img}')"></div>
+      <div class="onboarding-card">
+        <div class="onboarding-dots">
+          ${slides.map((_, i) => `<span data-dot="${i}" class="${i === slideIndex ? 'active' : ''}"></span>`).join('')}
+        </div>
+        <h1>${data.title}</h1>
+        <p>${data.body}</p>
+        <button class="onboarding-cta" data-next>${data.cta}</button>
+      </div>
+    `;
+    return el;
+  }
+
+  slides.forEach((s, i) => track.appendChild(renderSlide(s, i)));
+
+  function goTo(i, animate = true) {
+    index = Math.max(0, Math.min(slides.length - 1, i));
+    track.style.transition = animate ? '' : 'none';
+    // RTL-correct, explicit transform math (no native direction:rtl scroll bugs):
+    // slide 0 sits at translateX(0); each next slide shifts further toward the
+    // reading-start edge. Works identically in every browser because we never
+    // rely on browser-computed RTL scroll offsets.
+    track.style.transform = `translateX(${index * 100}%)`;
+    document.querySelectorAll('[data-dot]').forEach((dot) => {
+      dot.classList.toggle('active', Number(dot.dataset.dot) === index);
+    });
+    if (!animate) requestAnimationFrame(() => { track.style.transition = ''; });
+  }
+
+  // in dir="rtl", flex children lay out right-to-left, so translateX(+) moves
+  // the next slide into view from the left — matches a right-to-left reading
+  // flow's "forward" direction, and the sign is explicit/testable, not left to
+  // the browser's own RTL-scroll heuristics (the actual bug in the old version).
+  track.style.flexDirection = 'row';
+
+  function next() {
+    if (index >= slides.length - 1) {
+      finish();
+      return;
+    }
+    goTo(index + 1);
+  }
+
+  function finish() {
+    finished.classList.add('show');
+    skipBtn.style.display = 'none';
+  }
+
+  track.addEventListener('click', (e) => {
+    if (e.target.closest('[data-next]')) next();
+  });
+  skipBtn.addEventListener('click', finish);
+
+  // pointer-based swipe, direction made explicit instead of relying on
+  // native RTL scroll-snap (which is what broke swipe direction before)
+  let startX = 0;
+  let dx = 0;
+  let dragging = false;
+
+  track.addEventListener('pointerdown', (e) => {
+    dragging = true;
+    startX = e.clientX;
+    track.classList.add('dragging');
+    track.setPointerCapture(e.pointerId);
+  });
+  track.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    dx = e.clientX - startX;
+    const base = index * 100;
+    const trackWidth = track.getBoundingClientRect().width;
+    const deltaPct = (dx / trackWidth) * 100;
+    track.style.transform = `translateX(${base + deltaPct}%)`;
+  });
+  function endDrag() {
+    if (!dragging) return;
+    dragging = false;
+    track.classList.remove('dragging');
+    const threshold = 40;
+    if (dx < -threshold && index < slides.length - 1) {
+      goTo(index + 1);
+    } else if (dx > threshold && index > 0) {
+      goTo(index - 1);
+    } else {
+      goTo(index);
+    }
+    dx = 0;
+  }
+  track.addEventListener('pointerup', endDrag);
+  track.addEventListener('pointercancel', endDrag);
+
+  goTo(0, false);
+</script>
+</body>
+</html>
