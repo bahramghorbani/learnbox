@@ -23,7 +23,7 @@ another.
 | Product                           | Authoritative version source                                                                    | Tag namespace    | Published releases so far                                      |
 | --------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------- | -------------------------------------------------------------- |
 | Learner PWA (`apps/website`)      | `apps/website/package.json` → `version`                                                         | `learner/vX.Y.Z` | `learner/v1.2.2` … `learner/v1.5.0` (legacy `v1.0.0`–`v1.2.1`) |
-| Admin Web (`apps/admin`)          | `apps/admin/package.json` → `version`                                                           | `admin/vX.Y.Z`   | `admin/v1.0.0`, `admin/v1.1.0`                                 |
+| Admin Web (`apps/admin`)          | `apps/admin/package.json` → `version`                                                           | `admin/vX.Y.Z`   | `admin/v1.0.0`, `admin/v1.1.0`, `admin/v1.2.0`                 |
 | Android (`apps/android`)          | `apps/android/app/build.gradle.kts` → `versionName` / `versionCode`                             | `android/vX.Y.Z` | `android/v0.1.1`, `android/v0.1.2`                             |
 | iOS (`apps/ios`)                  | `apps/ios/LearnBox.xcodeproj/project.pbxproj` → `MARKETING_VERSION` / `CURRENT_PROJECT_VERSION` | `ios/vX.Y.Z`     | `ios/v0.1.1`                                                   |
 | Landing (`apps/learnbox-website`) | `apps/learnbox-website/package.json` → `version`                                                | `landing/vX.Y.Z` | none                                                           |
@@ -40,8 +40,9 @@ moved or deleted. The Learner PWA continues that numbering under its new namespa
 namespaced release was `learner/v1.2.2`); the number does not restart.
 
 Admin Web ran in Production at `0.1.0` with no release until its first release, `admin/v1.0.0`
-(2026-11-15). `admin/v1.1.0` was released on 2026-11-21 with the manual Café Bazaar product-entry
-workflow.
+(2026-11-15). `admin/v1.1.0` added the manual Café Bazaar product-entry workflow on 2026-11-21;
+`admin/v1.2.0` was released later that day to show each package's exact SibApp label in the Store
+workspace.
 
 The Landing site has no release yet. Its Production image is built without the OCI revision
 label, so the commit it runs cannot be proven; its first `landing/v…` release waits for a build

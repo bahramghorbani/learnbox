@@ -11,6 +11,15 @@ continues that numbering under `learner/v…`. Admin Web's first release is `adm
 A deployment is not a release. A component may run in Production without appearing in this file;
 its deployment evidence belongs in `docs/release/` and its live facts in `PROJECT_STATE.md`.
 
+## admin/v1.2.0 — نمایش برچسب سیب‌اپ (released 2026-11-21)
+
+Release commit `a7b13227690310a1e68fdb73389073024820f86b`, image
+`sha256:f2496b16ee7280bcae7d5cc58d19f293c2ce947275579a2e823f513294870d86`.
+
+- در فهرست فروشگاه، برچسب دقیق سیب‌اپ برای هر بسته نمایش داده می‌شود تا هنگام ساخت محصول
+  در سیب‌اپ، مالک آن را بدون حدس‌زدن کپی کند.
+- این تغییر فقط یک مقدار خواندنی به پنل افزود؛ قیمت، وضعیت خرید و همگام‌سازی را تغییر نمی‌دهد.
+
 ## admin/v1.1.0 — ثبت دستی محصول‌های کافه‌بازار (released 2026-11-21)
 
 Release commit `92e02d53dde57a316905380e03eab58029a0e409`, image
