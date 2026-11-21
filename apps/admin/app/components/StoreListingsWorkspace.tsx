@@ -268,9 +268,9 @@ async function syncSibappCatalog(): Promise<
   }
 }
 
-async function confirmBazaarCatalog(): Promise<
-  { ok: true; count: number } | { ok: false; message: string }
-> {
+async function confirmBazaarCatalogItem(
+  row: ServerListing,
+): Promise<{ ok: true; productId: string } | { ok: false; message: string }> {
   const csrfToken = readCsrfToken();
   if (!csrfToken)
     return { ok: false, message: 'نشان امنیتی CSRF در دسترس نیست؛ صفحه را تازه کنید.' };
@@ -283,17 +283,20 @@ async function confirmBazaarCatalog(): Promise<
         'x-learnbox-csrf-token': csrfToken,
         'idempotency-key': createIdempotencyKey(),
       },
-      body: '{}',
+      body: JSON.stringify({ packId: row.packId }),
     });
     if (response.ok) {
-      const body = (await response.json()) as { count: number };
-      return { ok: true, count: body.count };
+      const body = (await response.json()) as { productId: string };
+      return { ok: true, productId: body.productId };
     }
     const refused = stepUpRefusal(stepUp, response.status);
     if (refused) return { ok: false, message: refused };
     if (response.status === 404)
-      return { ok: false, message: 'نقش شما اجازهٔ ثبت محصولات کافه‌بازار را ندارد.' };
-    return { ok: false, message: 'ثبت محصولات کافه‌بازار انجام نشد؛ دوباره تلاش کنید.' };
+      return {
+        ok: false,
+        message: 'فقط بستهٔ پولی، منتشرشده و فهرست‌شده قابل ثبت در کافه‌بازار است.',
+      };
+    return { ok: false, message: 'ثبت این محصول کافه‌بازار انجام نشد؛ دوباره تلاش کنید.' };
   } catch {
     return { ok: false, message: 'ارتباط با سرور برقرار نشد.' };
   }
@@ -303,7 +306,9 @@ export function StoreListingsWorkspace() {
   const [phase, setPhase] = useState<Phase>('loading');
   const [rows, setRows] = useState<ServerListing[]>([]);
   const [editing, setEditing] = useState<ServerListing | undefined>(undefined);
-  const [confirmingBazaar, setConfirmingBazaar] = useState(false);
+  const [confirmingBazaarPackId, setConfirmingBazaarPackId] = useState<string | undefined>(
+    undefined,
+  );
   const [syncingSibapp, setSyncingSibapp] = useState(false);
   const [draft, setDraft] = useState<Draft | undefined>(undefined);
   const [saving, setSaving] = useState(false);
@@ -478,19 +483,19 @@ export function StoreListingsWorkspace() {
     );
   }
 
-  async function confirmBazaar() {
+  async function confirmBazaar(row: ServerListing) {
     if (
       !window.confirm(
-        'آیا آخرین CSV دانلودشده را در پیشخان کافه‌بازار وارد کرده‌اید؟ با تأیید، این بسته‌ها با همین قیمت‌ها از طریق کافه‌بازار قابل خرید می‌شوند.',
+        `آیا محصول «${row.packDisplayName}» را با فایل راهنما در پیشخان کافه‌بازار ساخته و فعال کرده‌اید؟ فقط همان محصول با قیمت فعلی در LearnBox ثبت می‌شود.`,
       )
     )
       return;
-    setConfirmingBazaar(true);
-    const result = await confirmBazaarCatalog();
-    setConfirmingBazaar(false);
+    setConfirmingBazaarPackId(row.packId);
+    const result = await confirmBazaarCatalogItem(row);
+    setConfirmingBazaarPackId(undefined);
     setNotice(
       result.ok
-        ? `${faNum(result.count)} محصول کافه‌بازار ثبت شد؛ پرداخت کافه‌بازار جداگانه روشن می‌شود.`
+        ? `محصول کافه‌بازار «${row.packDisplayName}» ثبت شد (${result.productId}).`
         : result.message,
     );
   }
@@ -622,23 +627,6 @@ export function StoreListingsWorkspace() {
                 <div className="card-head">
                   <span className="card-title">بسته‌های فروشگاه</span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <a
-                      className="btn sm"
-                      href="/api/store/bazaar/catalog"
-                      download="learnbox-cafe-bazaar-catalog.csv"
-                      title="CSV بسته‌های پولی، منتشرشده و فهرست‌شده را برای بازبینی و ورود دستی در کافه‌بازار دانلود می‌کند؛ هیچ محصول یا پرداختی فعال نمی‌شود."
-                    >
-                      خروجی CSV کافه‌بازار
-                    </a>
-                    <button
-                      type="button"
-                      className="btn sm"
-                      disabled={confirmingBazaar}
-                      onClick={() => void confirmBazaar()}
-                      title="پس از ورود CSV در پیشخان کافه‌بازار بزنید تا شناسهٔ محصولات و قیمت‌ها در LearnBox ثبت شود."
-                    >
-                      {confirmingBazaar ? 'در حال ثبت…' : 'ثبت ورود CSV در کافه‌بازار'}
-                    </button>
                     <button
                       type="button"
                       className="btn sm"
@@ -729,6 +717,45 @@ export function StoreListingsWorkspace() {
                                   {syncingPackId === row.packId
                                     ? 'در حال همگام‌سازی…'
                                     : 'همگام‌سازی مایکت'}
+                                </button>
+                                {row.isFree ||
+                                row.priceTomans === null ||
+                                row.packStatus !== 'published' ||
+                                row.listing?.storeStatus !== 'listed' ? (
+                                  <button
+                                    type="button"
+                                    className="btn sm"
+                                    disabled
+                                    title="راهنمای بازار فقط بعد از پولی‌بودن، انتشار محتوا و فهرست‌شدن بسته فعال می‌شود."
+                                  >
+                                    راهنمای کافه‌بازار
+                                  </button>
+                                ) : (
+                                  <a
+                                    className="btn sm"
+                                    href={`/api/store/bazaar/catalog?packId=${encodeURIComponent(row.packId)}`}
+                                    download={`learnbox-bazaar-${row.packId}.txt`}
+                                    title="فایل آمادهٔ کپی/پیست برای فرم «محصول جدید» پیشخان کافه‌بازار؛ هیچ محصولی را خودکار ایجاد نمی‌کند."
+                                  >
+                                    راهنمای کافه‌بازار
+                                  </a>
+                                )}
+                                <button
+                                  type="button"
+                                  className="btn sm"
+                                  disabled={
+                                    confirmingBazaarPackId === row.packId ||
+                                    row.isFree ||
+                                    row.priceTomans === null ||
+                                    row.packStatus !== 'published' ||
+                                    row.listing?.storeStatus !== 'listed'
+                                  }
+                                  onClick={() => void confirmBazaar(row)}
+                                  title="فقط بعد از ساخت و فعال‌کردن همین محصول در پیشخان کافه‌بازار بزنید؛ شناسه و قیمت همین بسته ثبت می‌شود."
+                                >
+                                  {confirmingBazaarPackId === row.packId
+                                    ? 'در حال ثبت…'
+                                    : 'تأیید ثبت در بازار'}
                                 </button>
                                 <button
                                   type="button"

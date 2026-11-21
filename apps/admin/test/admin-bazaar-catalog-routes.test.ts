@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import {
-  createCafeBazaarCatalogConfirmRoute,
+  createCafeBazaarCatalogItemConfirmRoute,
   createCafeBazaarCatalogExportRoute,
 } from '../lib/server/admin-bazaar-catalog-routes';
 import {
@@ -38,26 +38,39 @@ function dependencies(enabled = true) {
       touchSession: async () => true,
     },
     store: {
-      exportCatalog: vi.fn(async () => ({
+      exportCatalogItem: vi.fn(async () => ({
         status: 'ok' as const,
-        items: [
-          {
-            productId: bazaarProductIdForPack('first-30-days-in-germany-a1'),
-            title: '۳۰ روز اول در آلمان',
-            description: 'آمادگی برای زندگی روزمره',
-            priceRials: 250_000,
-          },
-        ],
+        item: {
+          productId: bazaarProductIdForPack('first-30-days-in-germany-a1'),
+          title: '۳۰ روز اول در آلمان',
+          description: 'آمادگی برای زندگی روزمره',
+          targetCefr: 'A1',
+          targetItemCount: 120,
+          priceRials: 250_000,
+        },
       })),
-      confirmCatalog: vi.fn(async () => ({ status: 'confirmed' as const, count: 1 })),
+      confirmCatalogItem: vi.fn(async () => ({
+        status: 'confirmed' as const,
+        item: {
+          productId: bazaarProductIdForPack('first-30-days-in-germany-a1'),
+          title: '۳۰ روز اول در آلمان',
+          description: 'آمادگی برای زندگی روزمره',
+          targetCefr: 'A1',
+          targetItemCount: 120,
+          priceRials: 250_000,
+        },
+      })),
     },
   };
 }
 
 function request(cookie = true) {
-  return new Request('https://admin.learnbox.app/api/store/bazaar/catalog', {
-    headers: cookie ? { Cookie: `__Host-learnbox_admin_session=${sessionToken}` } : {},
-  });
+  return new Request(
+    'https://admin.learnbox.app/api/store/bazaar/catalog?packId=first-30-days-in-germany-a1',
+    {
+      headers: cookie ? { Cookie: `__Host-learnbox_admin_session=${sessionToken}` } : {},
+    },
+  );
 }
 
 describe('Cafe Bazaar catalog export', () => {
@@ -65,30 +78,29 @@ describe('Cafe Bazaar catalog export', () => {
     const deps = dependencies(false);
     const response = await createCafeBazaarCatalogExportRoute(deps)(request());
     expect(response.status).toBe(404);
-    expect(deps.store.exportCatalog).not.toHaveBeenCalled();
+    expect(deps.store.exportCatalogItem).not.toHaveBeenCalled();
   });
 
   it('requires an authenticated Admin session', async () => {
     const deps = dependencies();
     const response = await createCafeBazaarCatalogExportRoute(deps)(request(false));
     expect(response.status).toBe(401);
-    expect(deps.store.exportCatalog).not.toHaveBeenCalled();
+    expect(deps.store.exportCatalogItem).not.toHaveBeenCalled();
   });
 
-  it('returns only a downloadable CSV artifact and does not mutate catalog state', async () => {
+  it('returns a downloadable one-pack copy/paste sheet and does not mutate catalog state', async () => {
     const deps = dependencies();
     const response = await createCafeBazaarCatalogExportRoute(deps)(request());
     expect(response.status).toBe(200);
-    expect(response.headers.get('Content-Type')).toBe('text/csv; charset=utf-8');
+    expect(response.headers.get('Content-Type')).toBe('text/plain; charset=utf-8');
     expect(response.headers.get('Content-Disposition')).toContain(
-      'learnbox-cafe-bazaar-catalog.csv',
+      'learnbox-bazaar-first-30-days-in-germany-a1.txt',
     );
     expect(response.headers.get('Cache-Control')).toBe('no-store');
-    await expect(response.text()).resolves.toContain(
-      '"product_id","title","description","status","price"',
-    );
-    expect(deps.store.exportCatalog).toHaveBeenCalledWith({
+    await expect(response.text()).resolves.toContain('شناسهٔ کالا');
+    expect(deps.store.exportCatalogItem).toHaveBeenCalledWith({
       actorUserId: '22222222-2222-4222-8222-222222222222',
+      packId: 'first-30-days-in-germany-a1',
     });
   });
 
@@ -98,7 +110,14 @@ describe('Cafe Bazaar catalog export', () => {
     expect(productId).toBe(bazaarProductIdForPack('First 30 Days / Germany A1'));
     expect(
       cafeBazaarCsv([
-        { productId, title: 'یک "عنوان"', description: 'خط اول, خط دوم', priceRials: 10 },
+        {
+          productId,
+          title: 'یک "عنوان"',
+          description: 'خط اول, خط دوم',
+          targetCefr: 'A1',
+          targetItemCount: 1,
+          priceRials: 10,
+        },
       ]),
     ).toContain('"یک ""عنوان""","خط اول, خط دوم","unpublished","10"');
   });
@@ -112,6 +131,8 @@ describe('Cafe Bazaar catalog export', () => {
           {
             pack_id: 'first-30-days-in-germany-a1',
             display_name: '۳۰ روز اول در آلمان',
+            target_cefr: 'A1',
+            target_item_count: 120,
             commercial_summary: null,
             price_tomans: 25_000,
           },
@@ -131,6 +152,8 @@ describe('Cafe Bazaar catalog export', () => {
           productId: bazaarProductIdForPack('first-30-days-in-germany-a1'),
           title: '۳۰ روز اول در آلمان',
           description: 'بستهٔ یادگیری LearnBox: ۳۰ روز اول در آلمان',
+          targetCefr: 'A1',
+          targetItemCount: 120,
           priceRials: 250_000,
         },
       ],
@@ -154,7 +177,7 @@ describe('Cafe Bazaar catalog export', () => {
           'Idempotency-Key': '33333333-3333-4333-8333-333333333333',
           ...headers,
         },
-        body: '{}',
+        body: JSON.stringify({ packId: 'first-30-days-in-germany-a1' }),
       });
 
     it('refuses bad CSRF, foreign origin and missing idempotency before touching the store', async () => {
@@ -164,19 +187,23 @@ describe('Cafe Bazaar catalog export', () => {
         { 'Idempotency-Key': '' },
       ]) {
         const deps = dependencies();
-        const response = await createCafeBazaarCatalogConfirmRoute(deps)(post(headers));
+        const response = await createCafeBazaarCatalogItemConfirmRoute(deps)(post(headers));
         expect(response.status).toBe(400);
-        expect(deps.store.confirmCatalog).not.toHaveBeenCalled();
+        expect(deps.store.confirmCatalogItem).not.toHaveBeenCalled();
       }
     });
 
     it('records the mappings after the full gate', async () => {
       const deps = dependencies();
-      const response = await createCafeBazaarCatalogConfirmRoute(deps)(post());
+      const response = await createCafeBazaarCatalogItemConfirmRoute(deps)(post());
       expect(response.status).toBe(200);
-      await expect(response.json()).resolves.toEqual({ status: 'confirmed', count: 1 });
-      expect(deps.store.confirmCatalog).toHaveBeenCalledWith({
+      await expect(response.json()).resolves.toEqual({
+        status: 'confirmed',
+        productId: bazaarProductIdForPack('first-30-days-in-germany-a1'),
+      });
+      expect(deps.store.confirmCatalogItem).toHaveBeenCalledWith({
         actorUserId: '22222222-2222-4222-8222-222222222222',
+        packId: 'first-30-days-in-germany-a1',
         idempotencyKey: '33333333-3333-4333-8333-333333333333',
       });
     });
