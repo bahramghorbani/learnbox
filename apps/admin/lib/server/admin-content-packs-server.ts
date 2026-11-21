@@ -88,6 +88,7 @@ import { createMyketCatalogClient } from './myket-catalog-client';
 import { createMyketCatalogSyncRoute, MyketCatalogSyncStore } from './admin-myket-catalog-routes';
 import {
   createCafeBazaarCatalogConfirmRoute,
+  createCafeBazaarCatalogItemConfirmRoute,
   createCafeBazaarCatalogExportRoute,
 } from './admin-bazaar-catalog-routes';
 import { PostgresBazaarCatalogExportStore } from './postgres-bazaar-catalog-export-store';
@@ -341,7 +342,7 @@ export function createAdminContentPacksServer(dependencies: {
       }),
       myketCatalogSync: createMyketCatalogSyncRoute(myketCatalogShared),
       bazaarCatalogExport: createCafeBazaarCatalogExportRoute(bazaarCatalogShared),
-      bazaarCatalogConfirm: createCafeBazaarCatalogConfirmRoute(bazaarCatalogShared),
+      bazaarCatalogConfirm: createCafeBazaarCatalogItemConfirmRoute(bazaarCatalogShared),
       sibappCatalogSync: createCafeBazaarCatalogConfirmRoute(sibappCatalogShared),
       transactions: createAdminTransactionsRoute(paymentsShared),
       transactionTimeline: createAdminTransactionTimelineRoute(paymentsShared),

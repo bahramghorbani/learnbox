@@ -14,9 +14,48 @@ export type BazaarCatalogItem = {
   productId: string;
   title: string;
   description: string;
+  targetCefr: string;
+  targetItemCount: number;
   /** Bazaar prices are Rials; LearnBox's canonical price is Tomans. */
   priceRials: number;
 };
+
+/**
+ * The exact fields Bazaar's current manual «محصول جدید» form asks the operator to paste.
+ * This is deliberately a plain-text artifact: Bazaar removed catalogue CSV import and exposes no
+ * product API, so a file is safer and less error-prone than pretending we can synchronize remotely.
+ */
+export function cafeBazaarManualEntry(item: BazaarCatalogItem): string {
+  const englishTitle = `LearnBox German Vocabulary — ${item.targetCefr}`;
+  const englishDescription = `A LearnBox German vocabulary pack for ${item.targetCefr} learners. Includes ${item.targetItemCount} words and useful expressions.`;
+  return [
+    'کافه‌بازار — ثبت دستی محصول درون‌برنامه‌ای',
+    'نوع محصول: یک‌بار خرید',
+    '',
+    'شناسهٔ کالا',
+    item.productId,
+    '',
+    'عنوان (فارسی)',
+    item.title,
+    '',
+    'عنوان (انگلیسی)',
+    englishTitle,
+    '',
+    'توضیح (فارسی)',
+    item.description,
+    '',
+    'توضیح (انگلیسی)',
+    englishDescription,
+    '',
+    'قیمت شامل مالیات (ریال)',
+    String(item.priceRials),
+    '',
+    'وضعیت',
+    'فعال',
+    '',
+    'پس از ساخت موفق محصول در پیشخان بازار، به LearnBox برگردید و فقط دکمهٔ «تأیید ثبت در بازار» همین بسته را بزنید.',
+  ].join('\n');
+}
 
 /** Writing provider SKU mappings is a publishing capability (same as Myket sync). */
 const publisherRoles = ['content_publisher', 'super_admin'] as const;
@@ -67,7 +106,8 @@ export async function sellablePacks(
   client: Queryable,
 ): Promise<Array<{ packId: string; priceTomans: number; item: BazaarCatalogItem }>> {
   const result = await client.query(
-    `SELECT p.id AS pack_id, p.display_name, s.commercial_summary, p.price_tomans
+    `SELECT p.id AS pack_id, p.display_name, p.target_cefr, p.target_item_count,
+            s.commercial_summary, p.price_tomans
        FROM packs p
        INNER JOIN store_listings s ON s.pack_id = p.id
       WHERE p.status = 'published'
@@ -88,6 +128,8 @@ export async function sellablePacks(
         productId: bazaarProductIdForPack(packId),
         title,
         description: summary || `بستهٔ یادگیری LearnBox: ${title}`,
+        targetCefr: text(row.target_cefr),
+        targetItemCount: Number(row.target_item_count),
         priceRials: priceTomans * 10,
       },
     };
@@ -174,6 +216,93 @@ export class PostgresBazaarCatalogExportStore {
       );
       await client.query('COMMIT');
       return { status: 'confirmed', count: packs.length };
+    } catch (error) {
+      await client.query('ROLLBACK').catch(() => undefined);
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
+  async exportCatalogItem(input: {
+    actorUserId: string;
+    packId: string;
+  }): Promise<
+    { status: 'ok'; item: BazaarCatalogItem } | { status: 'forbidden' | 'not_eligible' }
+  > {
+    const client = await this.pool.connect();
+    try {
+      if (!(await this.hasRole(client, input.actorUserId))) return { status: 'forbidden' };
+      const pack = (await this.sellable(client)).find((item) => item.packId === input.packId);
+      return pack ? { status: 'ok', item: pack.item } : { status: 'not_eligible' };
+    } finally {
+      client.release();
+    }
+  }
+
+  /**
+   * Records exactly one product after the owner created that same SKU manually in Bazaar.
+   * It never contacts Bazaar, and eligibility is rechecked inside this transaction so a stale
+   * download cannot make an unlisted, free or unpublished pack purchasable.
+   */
+  async confirmCatalogItem(input: {
+    actorUserId: string;
+    packId: string;
+    idempotencyKey: string;
+  }): Promise<
+    { status: 'confirmed'; item: BazaarCatalogItem } | { status: 'forbidden' | 'not_eligible' }
+  > {
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      const role = await client.query(
+        `SELECT 1 FROM admin_role_assignments WHERE user_id = $1 AND role = ANY($2::admin_role[])`,
+        [input.actorUserId, publisherRoles],
+      );
+      if (!role.rows[0]) {
+        await client.query('ROLLBACK');
+        return { status: 'forbidden' };
+      }
+      const prior = await client.query(
+        `SELECT 1 FROM audit_logs
+          WHERE action = 'store_iab_catalog.bazaar_confirm_item'
+            AND metadata->>'idempotency_key' = $1
+          LIMIT 1`,
+        [input.idempotencyKey],
+      );
+      const pack = (await this.sellable(client)).find((item) => item.packId === input.packId);
+      if (!pack) {
+        await client.query('ROLLBACK');
+        return { status: 'not_eligible' };
+      }
+      if (prior.rows[0]) {
+        await client.query('COMMIT');
+        return { status: 'confirmed', item: pack.item };
+      }
+      await client.query(
+        `INSERT INTO store_iab_catalog_items (provider, pack_id, sku_id, synced_price_tomans)
+         VALUES ('cafe_bazaar', $1, $2, $3)
+         ON CONFLICT (provider, pack_id) DO UPDATE SET
+           sku_id = EXCLUDED.sku_id,
+           synced_price_tomans = EXCLUDED.synced_price_tomans,
+           synced_at = now()`,
+        [pack.packId, pack.item.productId, pack.priceTomans],
+      );
+      await client.query(
+        `INSERT INTO audit_logs (actor_user_id, action, entity_type, entity_id, metadata)
+         VALUES ($1, 'store_iab_catalog.bazaar_confirm_item', 'store_iab_catalog', $1, $2)`,
+        [
+          input.actorUserId,
+          {
+            idempotency_key: input.idempotencyKey,
+            pack_id: pack.packId,
+            sku_id: pack.item.productId,
+            price_tomans: pack.priceTomans,
+          },
+        ],
+      );
+      await client.query('COMMIT');
+      return { status: 'confirmed', item: pack.item };
     } catch (error) {
       await client.query('ROLLBACK').catch(() => undefined);
       throw error;
