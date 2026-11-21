@@ -13,8 +13,8 @@ android {
         targetSdk = 34
         // M0: starting point only. See docs/release/VERSIONING.md "Android releases" for the
         // real source of truth once this leaves the prototype stage.
-        versionCode = 3
-        versionName = "0.1.2"
+        versionCode = 4
+        versionName = "0.1.3"
     }
 
     // M2: release signing reads from env vars, never committed. The keystore itself lives
