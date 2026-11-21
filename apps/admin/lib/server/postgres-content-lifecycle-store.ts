@@ -13,6 +13,7 @@ import {
   evaluatePackPublishReadiness,
   isPackLifecycleStatus,
   pinCardMedia,
+  PACK_ID_PATTERN,
   type ContentValidationIssue,
   type GermanVoiceMapping,
 } from '@learnbox/content-models';
@@ -24,7 +25,7 @@ import { type ResolvedCardMedia, resolveCardMediaReadiness } from './card-media-
 const canonicalUuidPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 /** `packs.id` is a canonical text slug, not a uuid. Mirrors the content-packs write store. */
-const packIdPattern = /^[a-z0-9][a-z0-9-]{1,119}$/;
+const packIdPattern = PACK_ID_PATTERN;
 
 type Row = Record<string, unknown>;
 type QueryResult = { rows: Row[] };

@@ -11,11 +11,11 @@ import {
   type PublishPackResult,
   type SubmitForReviewResult,
 } from './postgres-content-lifecycle-store';
-import { isPackLifecycleStatus } from '@learnbox/content-models';
+import { isPackLifecycleStatus, PACK_ID_PATTERN } from '@learnbox/content-models';
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 /** `packs.id` is a canonical text slug, not a uuid. Mirrors the content-packs routes. */
-const packIdPattern = /^[a-z0-9][a-z0-9-]{1,119}$/;
+const packIdPattern = PACK_ID_PATTERN;
 
 type LifecycleDependencies<TMethod extends keyof PostgresContentLifecycleStore> = {
   enabled: boolean;

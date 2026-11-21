@@ -11,6 +11,13 @@ import {
 } from './card-standard.js';
 
 /**
+ * Canonical `packs.id` slug shape. Underscore is allowed because the documented Starter id is
+ * `learnbox_start_a1_essentials` (issue #428); every Admin route validating a pack id must use
+ * this one pattern instead of redefining it.
+ */
+export const PACK_ID_PATTERN = /^[a-z0-9][a-z0-9_-]{1,119}$/;
+
+/**
  * Canonical LearnBox content lifecycle rules (M1.6).
  *
  * This module is the single runtime source of truth for how authored content reaches learners:

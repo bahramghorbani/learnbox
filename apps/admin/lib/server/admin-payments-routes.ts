@@ -1,6 +1,7 @@
 import { assertTrustedAdminMutation, type AdminAuthConfig } from './admin-auth-policy';
 import { loadAdminSession, verifyAdminCsrf } from './admin-route-security';
 import type { PostgresAdminPaymentsStore } from './postgres-admin-payments-store';
+import { PACK_ID_PATTERN } from '@learnbox/content-models';
 
 /**
  * Admin payment routes (Phase 2 / M2.4; commerce core v1).
@@ -23,7 +24,7 @@ const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}
 const searchPattern = /^[A-Za-z0-9-]{4,64}$/;
 
 /** `packs.id` is a canonical text slug, not a uuid. */
-const packIdPattern = /^[a-z0-9][a-z0-9-]{1,119}$/;
+const packIdPattern = PACK_ID_PATTERN;
 /** Canonical payment statuses an operator may filter by. */
 const statusValues = new Set([
   'pending',
