@@ -672,6 +672,9 @@ export function StoreListingsWorkspace() {
                                 <div>
                                   <div className="t-name">{row.packDisplayName}</div>
                                   <div className="t-sub">{row.category ?? 'بدون دسته'}</div>
+                                  <div className="t-sub" data-sibapp-label={row.packId}>
+                                    برچسب سیب‌اپ: <code dir="ltr">{row.packId}</code>
+                                  </div>
                                 </div>
                               </div>
                             </td>

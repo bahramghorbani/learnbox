@@ -245,6 +245,9 @@ describe('StoreListingsWorkspace presentation', () => {
     expect(row?.querySelector('.badge.b-green')?.textContent).toBe('فهرست‌شده');
     expect(row?.querySelector('.badge.b-amber')?.textContent).toBe('ویژه');
     expect(row?.querySelector('.lvl')?.textContent).toBe('منتشرشده');
+    expect(row?.querySelector(`[data-sibapp-label="${paidPack.packId}"] code`)?.textContent).toBe(
+      paidPack.packId,
+    );
     expect(query(`[data-store-pack="${freePack.packId}"]`)?.textContent).toContain('رایگان');
     // A paid pack with no price cannot be sold; the operator sees that, phrased as a fact.
     expect(query(`[data-store-pack="${pricelessPaidPack.packId}"]`)?.textContent).toContain(
