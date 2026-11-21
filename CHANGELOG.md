@@ -18,7 +18,6 @@ its deployment evidence belongs in `docs/release/` and its live facts in `PROJEC
   CSV حذف شد تا بسته‌ای که هنوز در بازار ساخته نشده، اشتباهی قابل خرید نشان داده نشود.
 - این تغییر هیچ محصولی را خودکار در بازار نمی‌سازد یا فعال نمی‌کند.
 
-
 Release commit and image digest are in the GitHub Release `learner/v1.5.0`. Every change below
 already ran in Production since 2026-11-14 (image built from `97e0bf7`); this release adds only the
 version number.
