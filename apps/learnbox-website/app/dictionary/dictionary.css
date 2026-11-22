@@ -754,15 +754,15 @@
 }
 .lbd .tiles.compact {
   flex: 1 1 0;
+  flex-wrap: wrap;
   min-width: 0;
 }
 .lbd .tiles.compact .tile {
   box-sizing: border-box;
-  flex: 1 1 0;
-  min-width: 0;
-  width: auto;
+  flex: 0 0 40px;
+  width: 40px;
   height: 58px;
-  font-size: clamp(1rem, 2.05rem, 2.7rem);
+  font-size: 1.75rem;
 }
 .lbd .tiles.compact .tile.syl-gap {
   margin-left: 4px;
