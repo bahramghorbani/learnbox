@@ -8,12 +8,12 @@ const appRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
 const client = readFileSync(join(appRoot, 'app/dictionary/client.tsx'), 'utf8');
 const css = readFileSync(join(appRoot, 'app/dictionary/dictionary.css'), 'utf8');
 
-test('long dictionary lemmas use shrinking desktop tiles and wrapping mobile tiles', () => {
+test('long dictionary lemmas use readable wrapped tiles at every viewport', () => {
   assert.match(client, /tiles\.length > 8 \? ' compact' : ''/);
-  assert.match(css, /\.tiles\.compact \{\s*flex: 1 1 0;\s*min-width: 0;/);
+  assert.match(css, /\.tiles\.compact \{\s*flex: 1 1 0;\s*flex-wrap: wrap;\s*min-width: 0;/);
   assert.match(
     css,
-    /\.tiles\.compact \.tile \{\s*box-sizing: border-box;\s*flex: 1 1 0;\s*min-width: 0;/,
+    /\.tiles\.compact \.tile \{\s*box-sizing: border-box;\s*flex: 0 0 40px;\s*width: 40px;/,
   );
   assert.match(css, /\.tiles\.compact \{\s*flex-basis: 100%;\s*flex-wrap: wrap;/);
 });
