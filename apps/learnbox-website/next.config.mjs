@@ -1,5 +1,7 @@
+import { createRequire } from 'node:module';
 import path from 'node:path';
 
+const { version: landingAppVersion } = createRequire(import.meta.url)('./package.json');
 const isDevelopment = process.env.NODE_ENV === 'development';
 const contentSecurityPolicy = [
   "default-src 'self'",
@@ -30,6 +32,7 @@ export default {
   poweredByHeader: false,
   output: 'standalone',
   outputFileTracingRoot: path.join(import.meta.dirname, '../..'),
+  env: { NEXT_PUBLIC_LEARNBOX_LANDING_VERSION: landingAppVersion },
   images: {
     deviceSizes: [384, 512, 640, 750, 828, 1080, 1200, 1920, 2048, 3840],
   },

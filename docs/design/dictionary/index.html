@@ -833,6 +833,21 @@
         gap: 6px;
         perspective: 600px;
       }
+      .tiles.compact {
+        flex: 1 1 0;
+        min-width: 0;
+      }
+      .tiles.compact .tile {
+        box-sizing: border-box;
+        flex: 1 1 0;
+        min-width: 0;
+        width: auto;
+        height: 58px;
+        font-size: clamp(1rem, 2.05rem, 2.7rem);
+      }
+      .tiles.compact .tile.syl-gap {
+        margin-left: 4px;
+      }
       .tile {
         display: grid;
         place-items: center;
@@ -1762,6 +1777,15 @@
           height: 58px;
           font-size: 2rem;
         }
+        .tiles.compact {
+          flex-basis: 100%;
+          flex-wrap: wrap;
+        }
+        .tiles.compact .tile {
+          flex: 1 0 34px;
+          height: 48px;
+          font-size: 1.25rem;
+        }
         .decl {
           grid-template-columns: repeat(2, 1fr);
         }
@@ -2411,8 +2435,10 @@
       /* ---------- word page ---------- */
       function buildWord() {
         const tiles = $('#tiles');
+        const word = 'Termin';
+        tiles.classList.toggle('compact', word.length > 8);
         tiles.innerHTML = '';
-        'Termin'.split('').forEach((c, i) => {
+        word.split('').forEach((c, i) => {
           const t = document.createElement('span');
           t.className = 'tile' + (i === 3 ? ' syl-gap' : '');
           t.textContent = c;

@@ -4,6 +4,7 @@ import Image from 'next/image';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { siteConfig } from '../../../src/config/site.mjs';
+import { landingAppVersion } from '../../../src/landing-app-version';
 import { GermanyChapterBackdrop, SummerBackdrop } from '../../../src/themes/summer';
 import { MotionOrchestrator } from '../MotionOrchestrator';
 import { LandingHeader } from './LandingHeader';
@@ -71,6 +72,7 @@ export function LandingExperience() {
   const hasWebApp = Boolean(destinationHref(webApp));
   const hasCafeBazaar = Boolean(destinationHref(cafeBazaar));
   const hasSibapp = Boolean(destinationHref(sibapp));
+  const version = landingAppVersion();
   const downloadAvailabilityCopy =
     hasWebApp && hasCafeBazaar && hasSibapp
       ? 'نسخهٔ اندروید LearnBox از کافه‌بازار در دسترس است، نسخهٔ آیفون از سیب‌اپ، و می‌توانی نسخهٔ وب رسمی را در مرورگر باز کنی. پیشرفتت بین همهٔ نسخه‌ها همراهت می‌ماند.'
@@ -425,6 +427,11 @@ export function LandingExperience() {
         <div className="footer__brand">
           <span className="footer__brand-name">LearnBox</span>
           <small>یادگیری واژگان آلمانی، روشن و ماندگار.</small>
+          {version ? (
+            <small className="footer__version" data-landing-app-version={version} dir="ltr">
+              v{version}
+            </small>
+          ) : null}
         </div>
         <nav aria-label="پیوندهای حقوقی و ارتباطی">
           <a href="/dictionary">دیکشنری آلمانی به فارسی</a>

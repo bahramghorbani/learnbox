@@ -1040,6 +1040,11 @@ a:focus-visible {
   direction: ltr;
   justify-self: start;
 }
+.footer__version {
+  font-size: 0.68rem;
+  direction: ltr;
+  justify-self: start;
+}
 .footer__trust-seal {
   display: flex;
   align-items: center;
@@ -1623,7 +1628,8 @@ a:focus-visible {
     gap: 14px;
     padding-block: 24px;
   }
-  .footer__brand-name {
+  .footer__brand-name,
+  .footer__version {
     justify-self: center;
   }
   .footer nav {

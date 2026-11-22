@@ -1011,7 +1011,11 @@ export function WordView({
                   {art}
                 </div>
               )}
-              <h1 className="tiles" id="tiles" aria-label={`${art ? art + ' ' : ''}${entry.lemma}`}>
+              <h1
+                className={`tiles${tiles.length > 8 ? ' compact' : ''}`}
+                id="tiles"
+                aria-label={`${art ? art + ' ' : ''}${entry.lemma}`}
+              >
                 {tiles.map((t, i) => (
                   <span
                     key={i}
