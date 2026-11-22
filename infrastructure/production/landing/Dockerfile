@@ -26,7 +26,12 @@ RUN pnpm --filter @learnbox/marketing-website build
 
 FROM node:22-bookworm-slim AS runner
 
+ARG APP_SOURCE_SHA=unknown
+LABEL org.opencontainers.image.revision="${APP_SOURCE_SHA}"
+LABEL org.opencontainers.image.title="learnbox-landing"
+
 ENV NODE_ENV=production
+ENV APP_SOURCE_SHA=${APP_SOURCE_SHA}
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV HOSTNAME=0.0.0.0
 ENV PORT=3000

@@ -136,6 +136,18 @@ jobs:
         name: Build learner app production image
         run: docker build --file infrastructure/production/app/Dockerfile --tag learnbox-learner-app:ci .
       - if: needs.changes.outputs.infra == 'true'
+        name: Build landing production image with source provenance
+        run: >-
+          docker build
+          --file infrastructure/production/landing/Dockerfile
+          --build-arg APP_SOURCE_SHA=$GITHUB_SHA
+          --tag learnbox-landing:ci .
+      - if: needs.changes.outputs.infra == 'true'
+        name: Verify landing image provenance
+        run: |
+          test "$(docker image inspect learnbox-landing:ci --format '{{index .Config.Labels "org.opencontainers.image.revision"}}')" = "$GITHUB_SHA"
+          test "$(docker image inspect learnbox-landing:ci --format '{{range .Config.Env}}{{println .}}{{end}}' | grep '^APP_SOURCE_SHA=' | cut -d= -f2-)" = "$GITHUB_SHA"
+      - if: needs.changes.outputs.infra == 'true'
         name: Validate Caddy routing configuration
         run: >-
           docker run --rm

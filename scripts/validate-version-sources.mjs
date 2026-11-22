@@ -2,7 +2,7 @@
 /**
  * Version-source boundary.
  *
- * LearnBox versions three products independently: the Learner PWA, Admin Web and Android. The rule this validator protects is simple and easy to break by accident:
+ * LearnBox versions five products independently: the Learner PWA, Admin Web, Landing, Android and iOS. The rule this validator protects is simple and easy to break by accident:
  *
  *   each product has exactly ONE authoritative version declaration, it is that product's own
  *   file, and no product may display, import or inherit another product's version.
@@ -41,6 +41,16 @@ const products = [
     envVar: 'NEXT_PUBLIC_LEARNBOX_LEARNER_VERSION',
     surface: 'apps/website/app/components/ProfileScreen.tsx',
     accessorImport: 'learnerAppVersion',
+  },
+  {
+    name: 'Landing',
+    tagPrefix: 'landing/v',
+    versionFile: 'apps/learnbox-website/package.json',
+    nextConfig: 'apps/learnbox-website/next.config.mjs',
+    accessor: 'apps/learnbox-website/src/landing-app-version.ts',
+    envVar: 'NEXT_PUBLIC_LEARNBOX_LANDING_VERSION',
+    surface: 'apps/learnbox-website/app/components/landing/LandingExperience.tsx',
+    accessorImport: 'landingAppVersion',
   },
   {
     name: 'Admin Web',
