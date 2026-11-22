@@ -11,6 +11,16 @@ continues that numbering under `learner/v…`. Admin Web's first release is `adm
 A deployment is not a release. A component may run in Production without appearing in this file;
 its deployment evidence belongs in `docs/release/` and its live facts in `PROJECT_STATE.md`.
 
+## landing/v1.0.1 — نمایش کامل واژه‌های بلند دیکشنری (released 2026-11-22)
+
+Release commit `8195c4027374b6fcf00d09de1806e2b8dcebce8a`, image
+`sha256:e7f7bceacfa3131597cb7a63c2245284f086af774b0c543fb035cd2498b625db`.
+
+- خانه‌های حروف واژه‌های بلند دیکشنری اکنون در چند ردیف خوانا می‌چینند؛ هیچ حرفی از قاب بیرون
+  نمی‌زند یا فشرده نمی‌شود.
+- چیدمان با یک واژهٔ زندهٔ ۴۰ حرفی، روی دسکتاپ و موبایل بررسی شد. داده‌ها و محتوای دیکشنری
+  تغییری نکرده‌اند.
+
 ## admin/v1.2.0 — نمایش برچسب سیب‌اپ (released 2026-11-21)
 
 Release commit `a7b13227690310a1e68fdb73389073024820f86b`, image

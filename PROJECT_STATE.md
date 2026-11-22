@@ -1,10 +1,22 @@
 # LearnBox stable project state
 
-**Last reviewed:** 2026-11-21 (Admin v1.2.0 production release)
+**Last reviewed:** 2026-11-22 (Landing v1.0.1 production release)
 
 ## Release position
 
 **Web/PWA v1 is LIVE and CLOSED.** Public activation completed 2026-09-28.
+
+### Landing v1.0.1 — deployed 2026-11-22
+
+| Fact            | Value                                                                                                                                        |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Landing release | `landing/v1.0.1` — [GitHub Release](https://github.com/bahramghorbani/learnbox/releases/tag/landing/v1.0.1)                                  |
+| Source commit   | `8195c4027374b6fcf00d09de1806e2b8dcebce8a` (PR #591)                                                                                         |
+| Running image   | `sha256:e7f7bceacfa3131597cb7a63c2245284f086af774b0c543fb035cd2498b625db`                                                                    |
+| Verification    | OCI label and runtime `APP_SOURCE_SHA` both equal the source commit; container healthy; live 40-character word checked on desktop and mobile |
+| Scope           | Long dictionary word tiles wrap in readable rows instead of clipping or becoming too narrow                                                  |
+| Data            | No dictionary data, database schema or published entry changed                                                                               |
+| Rollback        | Previous image `learnbox-landing:a9c7913259d6-dictionary590`; release directories are retained on the Iran host                              |
 
 ### Admin v1.2.0 — deployed 2026-11-21
 
@@ -140,7 +152,7 @@ Products version independently; `docs/release/VERSIONING.md` is the authoritativ
 | ----------- | ----------------- | ---------------- | ------------------------------------------------------------------------------- |
 | Learner PWA | `1.5.0`           | `learner/vX.Y.Z` | `learner/v1.5.0`                                                                |
 | Admin Web   | `1.2.0`           | `admin/vX.Y.Z`   | `admin/v1.2.0`; Production image `sha256:f2496b16…`, healthy                    |
-| Landing     | `1.0.0`           | `landing/vX.Y.Z` | none — image lacks a source-commit label                                        |
+| Landing     | `1.0.1`           | `landing/vX.Y.Z` | `landing/v1.0.1`; Production image `sha256:e7f7bcea…`, healthy                  |
 | Android     | `0.1.2+3`         | `android/vX.Y.Z` | `android/v0.1.2`; live on Myket, disabled on Café Bazaar (Play Protect) → 0.1.1 |
 | iOS         | `0.1.1+2`         | `ios/vX.Y.Z`     | `ios/v0.1.1`; live on Sibapp                                                    |
 

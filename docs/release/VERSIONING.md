@@ -26,7 +26,7 @@ another.
 | Admin Web (`apps/admin`)          | `apps/admin/package.json` → `version`                                                           | `admin/vX.Y.Z`   | `admin/v1.0.0`, `admin/v1.1.0`, `admin/v1.2.0`                 |
 | Android (`apps/android`)          | `apps/android/app/build.gradle.kts` → `versionName` / `versionCode`                             | `android/vX.Y.Z` | `android/v0.1.1`, `android/v0.1.2`                             |
 | iOS (`apps/ios`)                  | `apps/ios/LearnBox.xcodeproj/project.pbxproj` → `MARKETING_VERSION` / `CURRENT_PROJECT_VERSION` | `ios/vX.Y.Z`     | `ios/v0.1.1`                                                   |
-| Landing (`apps/learnbox-website`) | `apps/learnbox-website/package.json` → `version`                                                | `landing/vX.Y.Z` | none                                                           |
+| Landing (`apps/learnbox-website`) | `apps/learnbox-website/package.json` → `version`                                                | `landing/vX.Y.Z` | `landing/v1.0.1`                                               |
 
 `scripts/validate-version-sources.mjs` (`pnpm verify:version-sources`) enforces that each product
 reads only its own source, that no product can display another's version, and that no accessor
@@ -44,9 +44,10 @@ Admin Web ran in Production at `0.1.0` with no release until its first release, 
 `admin/v1.2.0` was released later that day to show each package's exact SibApp label in the Store
 workspace.
 
-The Landing site has no release yet. Its Production image is built without the OCI revision
-label, so the commit it runs cannot be proven; its first `landing/v…` release waits for a build
-that records its source commit.
+Landing `v1.0.1` is its first release (2026-11-22). It fixes long dictionary words so their
+letter tiles wrap into readable rows instead of clipping or shrinking. Its Production image records
+source commit `8195c4027374b6fcf00d09de1806e2b8dcebce8a` in both its OCI revision label and runtime
+`APP_SOURCE_SHA`.
 
 Android `0.1.2+3` is published on Myket (2026-11-08) with GitHub Release `android/v0.1.2`; Café
 Bazaar published it and then disabled it on 2026-11-14 pending a Google Play Protect warning, so
