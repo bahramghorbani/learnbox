@@ -26,7 +26,7 @@ another.
 | Admin Web (`apps/admin`)          | `apps/admin/package.json` → `version`                                                           | `admin/vX.Y.Z`   | `admin/v1.0.0`, `admin/v1.1.0`, `admin/v1.2.0`                 |
 | Android (`apps/android`)          | `apps/android/app/build.gradle.kts` → `versionName` / `versionCode`                             | `android/vX.Y.Z` | `android/v0.1.1`, `android/v0.1.2`                             |
 | iOS (`apps/ios`)                  | `apps/ios/LearnBox.xcodeproj/project.pbxproj` → `MARKETING_VERSION` / `CURRENT_PROJECT_VERSION` | `ios/vX.Y.Z`     | `ios/v0.1.1`                                                   |
-| Landing (`apps/learnbox-website`) | `apps/learnbox-website/package.json` → `version`                                                | `landing/vX.Y.Z` | `landing/v1.0.1`                                              |
+| Landing (`apps/learnbox-website`) | `apps/learnbox-website/package.json` → `version`                                                | `landing/vX.Y.Z` | `landing/v1.0.1`                                               |
 
 `scripts/validate-version-sources.mjs` (`pnpm verify:version-sources`) enforces that each product
 reads only its own source, that no product can display another's version, and that no accessor

@@ -8,15 +8,15 @@
 
 ### Landing v1.0.1 — deployed 2026-11-22
 
-| Fact | Value |
-| --- | --- |
-| Landing release | `landing/v1.0.1` — [GitHub Release](https://github.com/bahramghorbani/learnbox/releases/tag/landing/v1.0.1) |
-| Source commit | `8195c4027374b6fcf00d09de1806e2b8dcebce8a` (PR #591) |
-| Running image | `sha256:e7f7bceacfa3131597cb7a63c2245284f086af774b0c543fb035cd2498b625db` |
-| Verification | OCI label and runtime `APP_SOURCE_SHA` both equal the source commit; container healthy; live 40-character word checked on desktop and mobile |
-| Scope | Long dictionary word tiles wrap in readable rows instead of clipping or becoming too narrow |
-| Data | No dictionary data, database schema or published entry changed |
-| Rollback | Previous image `learnbox-landing:a9c7913259d6-dictionary590`; release directories are retained on the Iran host |
+| Fact            | Value                                                                                                                                        |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Landing release | `landing/v1.0.1` — [GitHub Release](https://github.com/bahramghorbani/learnbox/releases/tag/landing/v1.0.1)                                  |
+| Source commit   | `8195c4027374b6fcf00d09de1806e2b8dcebce8a` (PR #591)                                                                                         |
+| Running image   | `sha256:e7f7bceacfa3131597cb7a63c2245284f086af774b0c543fb035cd2498b625db`                                                                    |
+| Verification    | OCI label and runtime `APP_SOURCE_SHA` both equal the source commit; container healthy; live 40-character word checked on desktop and mobile |
+| Scope           | Long dictionary word tiles wrap in readable rows instead of clipping or becoming too narrow                                                  |
+| Data            | No dictionary data, database schema or published entry changed                                                                               |
+| Rollback        | Previous image `learnbox-landing:a9c7913259d6-dictionary590`; release directories are retained on the Iran host                              |
 
 ### Admin v1.2.0 — deployed 2026-11-21
 
