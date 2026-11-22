@@ -11,6 +11,9 @@ const css = readFileSync(join(appRoot, 'app/dictionary/dictionary.css'), 'utf8')
 test('long dictionary lemmas use shrinking desktop tiles and wrapping mobile tiles', () => {
   assert.match(client, /tiles\.length > 8 \? ' compact' : ''/);
   assert.match(css, /\.tiles\.compact \{\s*flex: 1 1 0;\s*min-width: 0;/);
-  assert.match(css, /\.tiles\.compact \.tile \{\s*box-sizing: border-box;\s*flex: 1 1 0;\s*min-width: 0;/);
+  assert.match(
+    css,
+    /\.tiles\.compact \.tile \{\s*box-sizing: border-box;\s*flex: 1 1 0;\s*min-width: 0;/,
+  );
   assert.match(css, /\.tiles\.compact \{\s*flex-basis: 100%;\s*flex-wrap: wrap;/);
 });
