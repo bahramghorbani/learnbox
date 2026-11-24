@@ -8,6 +8,7 @@ import { promisify } from 'node:util';
 import type { Pool as PgPool } from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
+import { guardForcedTeardown } from '../../website/test/support/forced-teardown-guard.js';
 import {
   DEFAULT_AI_MEDIA_LIMITS,
   DEFAULT_GERMAN_VOICE_MAPPING,
@@ -65,6 +66,8 @@ const CURRICULUM_SQL = `
 
 let pool: PgPool;
 let admin: PgPool;
+let poolTeardown: ReturnType<typeof guardForcedTeardown>;
+let adminTeardown: ReturnType<typeof guardForcedTeardown>;
 let lifecycle: PostgresContentLifecycleStore;
 let review: PostgresContentReviewStore;
 
@@ -250,12 +253,12 @@ async function publishedLemma(cardId: string): Promise<string | null> {
 beforeAll(async () => {
   const { Pool } = await import('pg');
   admin = new Pool({ connectionString: url, max: 1 });
-  admin.on('error', () => undefined);
+  adminTeardown = guardForcedTeardown(admin);
   await admin.query(`CREATE DATABASE ${dbName}`);
   const scoped = new URL(url as string);
   scoped.pathname = `/${dbName}`;
   pool = new Pool({ connectionString: scoped.toString(), max: 4 });
-  pool.on('error', () => undefined);
+  poolTeardown = guardForcedTeardown(pool);
 
   for (const file of readdirSync(migrationsDir)
     .filter((name) => /^\d{4}_.+\.sql$/.test(name))
@@ -292,6 +295,8 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  poolTeardown?.beginTeardown();
+  adminTeardown?.beginTeardown();
   await pool?.end();
   await admin?.query(`DROP DATABASE IF EXISTS ${dbName} WITH (FORCE)`);
   await admin?.end();

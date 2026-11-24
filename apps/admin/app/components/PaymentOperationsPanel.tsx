@@ -229,6 +229,10 @@ export function PaymentOperationsPanel() {
   const [provider, setProvider] = useState('');
   const [channel, setChannel] = useState('');
   const [timeline, setTimeline] = useState<TimelineEvent[] | 'loading' | 'error'>('loading');
+  const [customerPhone, setCustomerPhone] = useState<{
+    transactionId: string;
+    value: string | null | undefined;
+  }>();
   const [recheckMessage, setRecheckMessage] = useState<string | undefined>();
   const [recheckBusy, setRecheckBusy] = useState(false);
   const [reconciliationEnabled, setReconciliationEnabled] = useState(false);
@@ -280,6 +284,32 @@ export function PaymentOperationsPanel() {
     setSelected(transaction);
     setRecheckMessage(undefined);
     setTimeline('loading');
+    setCustomerPhone({ transactionId: transaction.transactionId, value: undefined });
+    void (async () => {
+      const setPhoneForSelectedTransaction = (value: string | null) => {
+        setCustomerPhone((current) =>
+          current?.transactionId === transaction.transactionId
+            ? { transactionId: transaction.transactionId, value }
+            : current,
+        );
+      };
+      try {
+        const { response } = await fetchWithStepUp(
+          `/api/store/transactions/customer?transactionId=${encodeURIComponent(transaction.transactionId)}`,
+          { credentials: 'same-origin', cache: 'no-store' },
+        );
+        if (!response.ok) {
+          setPhoneForSelectedTransaction(null);
+          return;
+        }
+        const body = (await response.json()) as { customer?: { phoneE164?: unknown } };
+        setPhoneForSelectedTransaction(
+          typeof body.customer?.phoneE164 === 'string' ? body.customer.phoneE164 : null,
+        );
+      } catch {
+        setPhoneForSelectedTransaction(null);
+      }
+    })();
     try {
       const response = await fetch(
         `/api/store/transactions/timeline?transactionId=${encodeURIComponent(transaction.transactionId)}`,
@@ -692,6 +722,13 @@ export function PaymentOperationsPanel() {
             <dd className="keep-latin">{selected.providerReference ?? '—'}</dd>
             <dt>شناسهٔ کاربر</dt>
             <dd className="keep-latin">{selected.userId}</dd>
+            <dt>شمارهٔ خریدار</dt>
+            <dd className="keep-latin">
+              {customerPhone?.transactionId !== selected.transactionId ||
+              customerPhone.value === undefined
+                ? 'در حال دریافت…'
+                : (customerPhone.value ?? '—')}
+            </dd>
             <dt>ایجاد</dt>
             <dd>{formatDateTime(selected.createdAt)}</dd>
             <dt>آخرین تغییر</dt>

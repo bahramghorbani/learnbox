@@ -202,6 +202,42 @@ export function createAdminTransactionTimelineRoute(
   };
 }
 
+/** GET ?transactionId= — buyer contact for one selected transaction after fresh authentication. */
+export function createAdminTransactionCustomerRoute(
+  dependencies: PaymentsDependencies<'readTransactionCustomer'>,
+) {
+  return async function GET(request: Request) {
+    if (
+      !dependencies.enabled ||
+      !dependencies.config.enabled ||
+      !dependencies.sessionStore ||
+      !dependencies.store
+    ) {
+      return notFound();
+    }
+    const session = await loadAdminSession(
+      request,
+      dependencies.config,
+      dependencies.sessionStore,
+      (dependencies.now ?? (() => new Date()))(),
+    );
+    if (!session) return unauthorized();
+    if (!session.recent) return json({ code: 'reauthentication_required' }, { status: 428 });
+    const transactionId = new URL(request.url).searchParams.get('transactionId') ?? '';
+    if (!uuidPattern.test(transactionId)) return notFound();
+    try {
+      const result = await dependencies.store.readTransactionCustomer({
+        actorUserId: session.userId,
+        transactionId,
+      });
+      if (result.status !== 'ok') return notFound();
+      return json({ customer: { phoneE164: result.phoneE164 } });
+    } catch {
+      return unavailable();
+    }
+  };
+}
+
 /**
  * POST { transactionId } — queue a provider re-check for one unsettled attempt.
  *

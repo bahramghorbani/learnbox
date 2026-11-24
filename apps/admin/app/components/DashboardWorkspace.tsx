@@ -667,7 +667,7 @@ export function DashboardOverview() {
           icon="cart"
           tint="t-amber"
           metric={overview.sales.verifiedTotal}
-          foot="خرید تأییدشده"
+          foot="خریدهای تأییدشدهٔ همهٔ کانال‌ها"
         />
         <KpiCard
           testId="sales-revenue"
@@ -675,7 +675,7 @@ export function DashboardOverview() {
           icon="money"
           tint="t-rose"
           metric={overview.sales.revenueTomansInWindow}
-          foot="تومان"
+          foot="تومان · ناخالصِ تأییدشده"
           small
         />
       </section>
@@ -707,14 +707,14 @@ export function DashboardOverview() {
           {overview.salesSeries === null ? (
             <div data-metric-state="unavailable">
               <EmptyState
-                title="اتصال داده فعال نشده"
-                description="درگاه پرداخت در این محیط فعال نیست، پس هیچ عدد فروشی وجود ندارد که نشان داده شود."
+                title="دادهٔ فروش در دسترس نیست"
+                description="گزارش فروش از دفتر ثبت مرکزی خوانده نشد؛ بعداً دوباره تلاش کنید."
               />
             </div>
           ) : salesTotal === 0 ? (
             <EmptyState
               title="در این بازه فروشی ثبت نشده است."
-              description="درگاه فعال است و هیچ خرید تأییدشده‌ای در بازه وجود ندارد."
+              description="هیچ خرید تأییدشده‌ای در هیچ‌یک از کانال‌ها در این بازه وجود ندارد."
             />
           ) : (
             <>

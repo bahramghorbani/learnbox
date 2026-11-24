@@ -213,8 +213,8 @@ export class PostgresAdminDashboardStore {
     const windowDays = Math.min(Math.max(input.windowDays ?? 30, 1), 90);
     // `windowDays` buckets need `windowDays + 1` edges: the first is midnight on the oldest day in
     // the window, the last is midnight after today, so `width_bucket` returns 1..windowDays for
-    // everything inside it. The filter uses the first edge, so the SQL window and the chart axis
-    // cannot disagree.
+    // everything inside it. The SQL filter uses the first and final edges, so the window and chart
+    // axis cannot disagree.
     const today = zonedDayStart(now, reportingTimeZone);
     const dayEdges = Array.from(
       { length: windowDays + 1 },
@@ -225,16 +225,12 @@ export class PostgresAdminDashboardStore {
       .slice(0, windowDays)
       .map((edge) => zonedDayLabel(edge, reportingTimeZone));
     const windowStart = dayEdges[0];
+    const windowEnd = dayEdges[dayEdges.length - 1];
 
-    // Same derivation as the Store's gateway status card: Admin never reads the merchant
-    // credential, only whether the learner runtime's paid flow is switched on and which gateway
-    // environment it targets. With it off, no sales figure exists to report — not even zero.
-    const paymentsEnabled = input.environment.LEARNBOX_ZARINPAL_ENABLED === 'true';
-    const gatewayEnvironment: 'sandbox' | 'production' | null = paymentsEnabled
-      ? input.environment.ZARINPAL_SANDBOX !== 'false'
-        ? 'sandbox'
-        : 'production'
-      : null;
+    // Sales are recorded in the canonical ledger by every provider. The dashboard must not depend
+    // on one gateway's feature flag or verification timestamp: mobile stores may not supply
+    // `verified_at` even when the purchase is already verified.
+    const gatewayEnvironment = 'production' as const;
 
     const client = await this.pool.connect();
     try {
@@ -266,50 +262,50 @@ export class PostgresAdminDashboardStore {
         [windowStart, dayEdges],
       );
 
-      let verifiedTotal: DashboardMetric = { state: 'unavailable', reason: 'payments_disabled' };
-      let revenueInWindow: DashboardMetric = { state: 'unavailable', reason: 'payments_disabled' };
-      let salesSeries: DashboardSalesPoint[] | null = null;
-
-      if (gatewayEnvironment) {
-        const totals =
-          (
-            await client.query(
-              `SELECT count(*) FILTER (WHERE status = 'verified') AS verified_total,
-                    coalesce(sum(amount_tomans)
-                      FILTER (WHERE status = 'verified' AND verified_at >= $2), 0) AS revenue_in_window
-               FROM purchase_events
-              WHERE provider = 'zarinpal' AND environment::text = $1`,
-              [gatewayEnvironment, windowStart],
-            )
-          ).rows[0] ?? {};
-        verifiedTotal = { state: 'available', value: count(totals.verified_total) };
-        revenueInWindow = { state: 'available', value: count(totals.revenue_in_window) };
-
-        const series = await client.query(
-          `SELECT width_bucket(verified_at, $3::timestamptz[]) AS bucket,
-                  count(*) AS total,
-                  coalesce(sum(amount_tomans), 0) AS revenue
+      const totals =
+        (
+          await client.query(
+            `SELECT count(*) FILTER (WHERE status = 'verified') AS verified_total,
+                  coalesce(sum(amount_tomans)
+                    FILTER (WHERE status = 'verified' AND created_at >= $2 AND created_at < $3), 0) AS revenue_in_window
              FROM purchase_events
-            WHERE provider = 'zarinpal'
-              AND environment::text = $1
-              AND status = 'verified'
-              AND verified_at >= $2
-            GROUP BY 1
-            ORDER BY 1`,
-          [gatewayEnvironment, windowStart, dayEdges],
-        );
-        const salesByDay = new Map(
-          series.rows.map((row) => [
-            Number(row.bucket),
-            { count: count(row.total), revenueTomans: count(row.revenue) },
-          ]),
-        );
-        salesSeries = dayLabels.map((day, index) => ({
-          day,
-          count: salesByDay.get(index + 1)?.count ?? 0,
-          revenueTomans: salesByDay.get(index + 1)?.revenueTomans ?? 0,
-        }));
-      }
+            WHERE environment::text = $1`,
+            [gatewayEnvironment, windowStart, windowEnd],
+          )
+        ).rows[0] ?? {};
+      const verifiedTotal: DashboardMetric = {
+        state: 'available',
+        value: count(totals.verified_total),
+      };
+      const revenueInWindow: DashboardMetric = {
+        state: 'available',
+        value: count(totals.revenue_in_window),
+      };
+
+      const series = await client.query(
+        `SELECT width_bucket(created_at, $4::timestamptz[]) AS bucket,
+                count(*) AS total,
+                coalesce(sum(amount_tomans), 0) AS revenue
+           FROM purchase_events
+          WHERE environment::text = $1
+            AND status = 'verified'
+            AND created_at >= $2
+            AND created_at < $3
+          GROUP BY 1
+          ORDER BY 1`,
+        [gatewayEnvironment, windowStart, windowEnd, dayEdges],
+      );
+      const salesByDay = new Map(
+        series.rows.map((row) => [
+          Number(row.bucket),
+          { count: count(row.total), revenueTomans: count(row.revenue) },
+        ]),
+      );
+      const salesSeries = dayLabels.map((day, index) => ({
+        day,
+        count: salesByDay.get(index + 1)?.count ?? 0,
+        revenueTomans: salesByDay.get(index + 1)?.revenueTomans ?? 0,
+      }));
 
       // No name, no phone, no e-mail: an overview has no business holding identity.
       const recentLearners = await client.query(

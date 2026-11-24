@@ -4,6 +4,7 @@ import {
   createAdminPaymentConfigRoute,
   createAdminRecheckRoute,
   createAdminSalesReportRoute,
+  createAdminTransactionCustomerRoute,
   createAdminTransactionsRoute,
 } from '../lib/server/admin-payments-routes';
 import type {
@@ -11,6 +12,7 @@ import type {
   ListTransactionsResult,
   PaymentConfigurationResult,
   SalesReportResult,
+  TransactionCustomerResult,
 } from '../lib/server/postgres-admin-payments-store';
 import { hashAdminSecret } from '../lib/server/admin-session.js';
 
@@ -103,6 +105,14 @@ function transactionsStore(forbidden = false) {
   return {
     listTransactions: vi.fn(async (): Promise<ListTransactionsResult> =>
       forbidden ? { status: 'forbidden' } : { status: 'ok', rows: [transactionRow] },
+    ),
+  };
+}
+
+function customerStore(status: TransactionCustomerResult['status'] = 'ok') {
+  return {
+    readTransactionCustomer: vi.fn(async (): Promise<TransactionCustomerResult> =>
+      status === 'ok' ? { status, phoneE164: '+98900000000' } : { status },
     ),
   };
 }
@@ -297,6 +307,49 @@ describe('M2.4 Admin transactions route', () => {
     const response = await route(get('/api/store/transactions'));
     expect(response.status).toBe(503);
     expect(await response.text()).not.toContain('10.0.0.5');
+  });
+});
+
+describe('Admin transaction customer route', () => {
+  const transactionId = '44444444-4444-4444-8444-444444444444';
+
+  const route = (overrides: Record<string, unknown> = {}) =>
+    createAdminTransactionCustomerRoute({
+      enabled: true,
+      config,
+      sessionStore: sessionStore(),
+      store: customerStore(),
+      now: () => now,
+      ...overrides,
+    } as never);
+
+  it('returns the phone only after a fresh authenticated super-admin request', async () => {
+    const store = customerStore();
+    const response = await route({ store })(
+      get(`/api/store/transactions/customer?transactionId=${transactionId}`),
+    );
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ customer: { phoneE164: '+98900000000' } });
+    expect(store.readTransactionCustomer).toHaveBeenCalledWith({ actorUserId, transactionId });
+  });
+
+  it('does not call the store until recent authentication is present', async () => {
+    const store = customerStore();
+    const response = await route({ store, sessionStore: sessionStore({ recent: false }) })(
+      get(`/api/store/transactions/customer?transactionId=${transactionId}`),
+    );
+    expect(response.status).toBe(428);
+    expect(store.readTransactionCustomer).not.toHaveBeenCalled();
+  });
+
+  it('returns 404 without revealing a customer contact to a non-super-admin', async () => {
+    expect(
+      (
+        await route({ store: customerStore('forbidden') })(
+          get(`/api/store/transactions/customer?transactionId=${transactionId}`),
+        )
+      ).status,
+    ).toBe(404);
   });
 });
 

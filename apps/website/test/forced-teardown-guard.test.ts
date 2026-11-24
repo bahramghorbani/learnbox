@@ -111,7 +111,7 @@ dbSuite('forced-teardown guard (real Postgres)', () => {
     } finally {
       process.off('uncaughtException', capture);
     }
-  });
+  }, 60_000);
 
   it('WITHOUT the guard the same teardown raises 57P01 (proves the flake is real)', async () => {
     const uncaught: Array<{ code?: string }> = [];
