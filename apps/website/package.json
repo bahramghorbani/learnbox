@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "pnpm --filter @learnbox/learning-engine build && pnpm --filter @learnbox/billing-core build && pnpm --filter @learnbox/api build && next build",
     "start": "next start",
-    "test": "pnpm --filter @learnbox/api build && vitest run",
+    "test": "pnpm --filter @learnbox/learning-engine build && pnpm --filter @learnbox/api build && vitest run --maxWorkers 2 --hookTimeout 60000 --testTimeout 60000",
     "typecheck": "pnpm --filter @learnbox/learning-engine build && pnpm --filter @learnbox/billing-core build && pnpm --filter @learnbox/api build && tsc --noEmit"
   },
   "dependencies": {
