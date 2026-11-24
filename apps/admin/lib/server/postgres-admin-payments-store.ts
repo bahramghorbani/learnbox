@@ -25,6 +25,8 @@ type DatabasePool = Queryable & { connect(): Promise<Client> };
 const readerRoles = ['content_reviewer', 'content_publisher', 'super_admin'] as const;
 /** Asking for a provider re-check is an operator action, kept to the top role. */
 const recheckRoles = ['super_admin'] as const;
+/** A buyer's phone is sensitive support data, never part of transaction-list payloads. */
+const customerContactRoles = ['super_admin'] as const;
 /** Same cap as `maxAutomaticChecks` in apps/website/lib/store-purchase.ts. */
 const maxAutomaticChecks = 20;
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -88,6 +90,9 @@ export type RequestRecheckResult =
 
 export type ListTransactionsResult =
   { status: 'ok'; rows: AdminTransactionRow[] } | { status: 'forbidden' };
+
+export type TransactionCustomerResult =
+  { status: 'ok'; phoneE164: string } | { status: 'forbidden' | 'not_found' };
 
 export type PaymentConfigurationStatus = {
   /**
@@ -316,6 +321,37 @@ export class PostgresAdminPaymentsStore {
           createdAt: timestamp(row.created_at) ?? '',
         })),
       };
+    } finally {
+      client.release();
+    }
+  }
+
+  /**
+   * Returns the buyer contact for one selected transaction only. It intentionally remains separate
+   * from `listTransactions`, so a broad operations read cannot accidentally expose phone numbers.
+   */
+  async readTransactionCustomer(input: {
+    actorUserId: string;
+    transactionId: string;
+  }): Promise<TransactionCustomerResult> {
+    if (!uuidPattern.test(input.transactionId)) return { status: 'not_found' };
+    const client = await this.pool.connect();
+    try {
+      if (!(await this.hasRole(client, input.actorUserId, customerContactRoles))) {
+        return { status: 'forbidden' };
+      }
+      const row = (
+        await client.query(
+          `SELECT u.phone_e164
+             FROM purchase_events pe
+             JOIN users u ON u.id = pe.user_id
+            WHERE pe.id = $1::uuid
+            LIMIT 1`,
+          [input.transactionId],
+        )
+      ).rows[0];
+      const phoneE164 = text(row?.phone_e164);
+      return phoneE164 ? { status: 'ok', phoneE164 } : { status: 'not_found' };
     } finally {
       client.release();
     }

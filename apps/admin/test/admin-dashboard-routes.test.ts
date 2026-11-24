@@ -73,8 +73,10 @@ const counterRow = {
  */
 function pool(options: { hasRole?: boolean; purchases?: boolean } = {}) {
   const statements: string[] = [];
-  const query = async (sql: string) => {
+  const parameters: unknown[][] = [];
+  const query = async (sql: string, values: unknown[] = []) => {
     statements.push(sql);
+    parameters.push(values);
     if (sql.includes('admin_role_assignments'))
       return { rows: options.hasRole === false ? [] : [{ '?column?': 1 }] };
     if (sql.includes('WITH learner AS')) return { rows: [counterRow] };
@@ -128,6 +130,7 @@ function pool(options: { hasRole?: boolean; purchases?: boolean } = {}) {
   const release = vi.fn();
   return {
     statements,
+    parameters,
     release,
     query,
     connect: async () => ({ query, release }),
@@ -206,25 +209,26 @@ describe('admin dashboard overview route', () => {
     });
   });
 
-  it('reports sales and revenue as unavailable while the paid flow is off', async () => {
+  it('reports all production verified sales even when the Zarinpal flow is off', async () => {
     const { handler, fakePool } = route({ environment: {} });
     const { overview } = (await (await handler(request())).json()) as {
       overview: {
-        sales: { gatewayEnvironment: null; verifiedTotal: { state: string; reason: string } };
-        salesSeries: null;
+        sales: {
+          gatewayEnvironment: string;
+          verifiedTotal: { state: string; value: number };
+          revenueTomansInWindow: { state: string; value: number };
+        };
+        salesSeries: { day: string; count: number; revenueTomans: number }[];
       };
     };
-    expect(overview.sales.gatewayEnvironment).toBeNull();
-    expect(overview.sales.verifiedTotal).toEqual({
-      state: 'unavailable',
-      reason: 'payments_disabled',
-    });
-    expect(overview.salesSeries).toBeNull();
-    // With payments off the store must not even touch the purchase table.
-    expect(fakePool.statements.some((sql) => sql.includes('purchase_events'))).toBe(false);
+    expect(overview.sales.gatewayEnvironment).toBe('production');
+    expect(overview.sales.verifiedTotal).toEqual({ state: 'available', value: 18 });
+    expect(overview.sales.revenueTomansInWindow).toEqual({ state: 'available', value: 5400000 });
+    expect(overview.salesSeries).toHaveLength(30);
+    expect(fakePool.statements.some((sql) => sql.includes('purchase_events'))).toBe(true);
   });
 
-  it('reads real sales for the configured gateway environment once the paid flow is on', async () => {
+  it('reads the canonical production ledger rather than filtering to Zarinpal or verified_at', async () => {
     const { handler, fakePool } = route({
       environment: { LEARNBOX_ZARINPAL_ENABLED: 'true', ZARINPAL_SANDBOX: 'false' },
     });
@@ -250,7 +254,23 @@ describe('admin dashboard overview route', () => {
       revenueTomans: 300000,
     });
     expect(overview.salesSeries.slice(0, 29).every((point) => point.count === 0)).toBe(true);
-    expect(fakePool.statements.some((sql) => sql.includes("provider = 'zarinpal'"))).toBe(true);
+    expect(fakePool.statements.some((sql) => sql.includes("provider = 'zarinpal'"))).toBe(false);
+    expect(fakePool.statements.some((sql) => sql.includes('verified_at >= $2'))).toBe(false);
+    expect(fakePool.statements.some((sql) => sql.includes('created_at >= $2'))).toBe(true);
+  });
+
+  it('bounds sales queries at the final chart edge', async () => {
+    const { handler, fakePool } = route({});
+    expect((await handler(request())).status).toBe(200);
+    const salesQueries = fakePool.statements
+      .map((sql, index) => ({ sql, values: fakePool.parameters[index] }))
+      .filter(({ sql }) => sql.includes('FROM purchase_events'));
+    expect(salesQueries).toHaveLength(2);
+    expect(salesQueries.every(({ sql }) => sql.includes('created_at < $3'))).toBe(true);
+    expect(salesQueries[0].values).toHaveLength(3);
+    expect(salesQueries[1].values).toHaveLength(4);
+    expect(salesQueries[0].values[2]).toEqual(salesQueries[1].values[2]);
+    expect(salesQueries[0].values[2]).toEqual((salesQueries[1].values[3] as Date[]).at(-1));
   });
 
   it('selects no personal learner field', async () => {

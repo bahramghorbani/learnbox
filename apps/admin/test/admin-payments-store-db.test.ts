@@ -133,6 +133,18 @@ suite('Store transactions — authorization against the canonical schema', () =>
     });
   });
 
+  it('reveals a buyer phone only to a super_admin for one selected transaction', async () => {
+    await expect(
+      store.readTransactionCustomer({ actorUserId: superAdmin, transactionId: purchaseId }),
+    ).resolves.toEqual({ status: 'ok', phoneE164: '+989****5104' });
+    await expect(
+      store.readTransactionCustomer({ actorUserId: reviewer, transactionId: purchaseId }),
+    ).resolves.toEqual({ status: 'forbidden' });
+    await expect(
+      store.readTransactionCustomer({ actorUserId: superAdmin, transactionId: randomUUID() }),
+    ).resolves.toEqual({ status: 'not_found' });
+  });
+
   it('reports gateway status for a super_admin while payments stay disabled', async () => {
     const result = await store.readConfigurationStatus({
       actorUserId: superAdmin,

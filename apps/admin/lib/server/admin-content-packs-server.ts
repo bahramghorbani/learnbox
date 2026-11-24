@@ -72,6 +72,7 @@ import {
   createAdminPaymentConfigRoute,
   createAdminRecheckRoute,
   createAdminSalesReportRoute,
+  createAdminTransactionCustomerRoute,
   createAdminTransactionTimelineRoute,
   createAdminTransactionsRoute,
 } from './admin-payments-routes';
@@ -346,6 +347,7 @@ export function createAdminContentPacksServer(dependencies: {
       sibappCatalogSync: createCafeBazaarCatalogConfirmRoute(sibappCatalogShared),
       transactions: createAdminTransactionsRoute(paymentsShared),
       transactionTimeline: createAdminTransactionTimelineRoute(paymentsShared),
+      transactionCustomer: createAdminTransactionCustomerRoute(paymentsShared),
       transactionRecheck: createAdminRecheckRoute(paymentsShared),
       paymentConfiguration: createAdminPaymentConfigRoute(paymentsShared),
       salesReport: createAdminSalesReportRoute(paymentsShared),

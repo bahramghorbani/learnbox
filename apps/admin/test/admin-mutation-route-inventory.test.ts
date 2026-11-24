@@ -349,11 +349,14 @@ const READ_ONLY: Record<string, 'hard-disabled' | 'session-layer'> = {
   'app/api/content/media/state/route.ts': 'session-layer',
   'app/api/content/media/asset/route.ts': 'session-layer',
   // M2.4 payment operations: GET-only, so CSRF is not applicable; each still requires a valid
-  // Admin session plus an operational role, and both sit behind LEARNBOX_ADMIN_STORE_ENABLED.
+  // Admin session plus an operational role, and all sit behind LEARNBOX_ADMIN_STORE_ENABLED.
   // `payment-config` returns flags, counts and timestamps only — never the merchant credential,
   // which the underlying store does not read at all. There is deliberately no write companion.
   'app/api/store/transactions/route.ts': 'session-layer',
   'app/api/store/transactions/timeline/route.ts': 'session-layer',
+  // Contact is fetched only for the selected transaction: it is no-store, super_admin-only and
+  // requires fresh Passkey re-auth. The listing payload intentionally carries no phone number.
+  'app/api/store/transactions/customer/route.ts': 'session-layer',
   'app/api/store/payment-config/route.ts': 'session-layer',
   'app/api/store/sales-report/route.ts': 'session-layer',
   // It returns a reviewable CSV only; it makes no provider call, SKU mapping, or checkout change.

@@ -27,6 +27,7 @@ const grantMigrations = [
   '0033_admin_content_management_grants.sql',
   '0034_admin_pack_metadata_grants.sql',
   '0066_admin_online_learners_grant.sql',
+  '0069_admin_unified_sales_grant.sql',
 ];
 
 const isDenied = (error: unknown) => (error as { code?: string } | null)?.code === '42501';
@@ -128,6 +129,32 @@ suite('online-learner counter under the restricted learnbox_admin role', () => {
       .query(`UPDATE mobile_learner_sessions SET last_used_at = now() WHERE user_id = $1`, [
         onlineLearnerId,
       ])
+      .then(
+        () => 'allowed',
+        (error) => (isDenied(error) ? 'denied' : `other:${String(error)}`),
+      );
+    expect(outcome).toBe('denied');
+  });
+
+  it('permits the production verified-sales aggregate without expanding the post-reset grant', async () => {
+    await expect(
+      restricted.query(
+        `SELECT count(*)
+           FROM purchase_events
+          WHERE environment::text = 'production'
+            AND status = 'verified'
+            AND created_at >= now() - interval '30 days'`,
+      ),
+    ).resolves.toBeDefined();
+    const unrelatedColumn = await restricted
+      .query('SELECT provider_purchase_id FROM purchase_events LIMIT 1')
+      .then(
+        () => 'allowed',
+        (error) => (isDenied(error) ? 'denied' : `other:${String(error)}`),
+      );
+    expect(unrelatedColumn).toBe('denied');
+    const outcome = await restricted
+      .query(`UPDATE purchase_events SET updated_at = now() WHERE false`)
       .then(
         () => 'allowed',
         (error) => (isDenied(error) ? 'denied' : `other:${String(error)}`),
