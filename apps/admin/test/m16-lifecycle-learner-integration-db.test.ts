@@ -298,7 +298,12 @@ afterAll(async () => {
   poolTeardown?.beginTeardown();
   adminTeardown?.beginTeardown();
   await pool?.end();
-  await admin?.query(`DROP DATABASE IF EXISTS ${dbName} WITH (FORCE)`);
+  try {
+    await admin?.query(`DROP DATABASE IF EXISTS ${dbName} WITH (FORCE)`);
+  } catch (error) {
+    // WITH (FORCE) can terminate the issuing pool's final backend as well.
+    if ((error as { code?: unknown }).code !== '57P01') throw error;
+  }
   await admin?.end();
   rmSync(mediaRoot, { recursive: true, force: true });
 }, 60_000);
