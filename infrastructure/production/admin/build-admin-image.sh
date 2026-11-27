@@ -118,7 +118,7 @@ PLATFORM=linux/amd64
 # Learner app client flags. Like the passkey flag they are inlined at build time, and the Dockerfile
 # and compose.yaml defaults have drifted from what Production runs (Production has binary review
 # on, which both default to off). So every flag must be stated for the build; none is defaulted.
-APP_FLAGS="PROFILE_IDENTITY_ENABLED QUEUE_QUARANTINE SERVER_SESSION_PLAN GOAL_UX_REMOVED SESSION_EXPIRY_UX BINARY_REVIEW_UI"
+APP_FLAGS="PROFILE_IDENTITY_ENABLED QUEUE_QUARANTINE SERVER_SESSION_PLAN GOAL_UX_REMOVED SESSION_EXPIRY_UX BINARY_REVIEW_UI SUPPORT_TICKETS_ENABLED"
 FLAG_ARGS=(--build-arg "APP_SOURCE_SHA=$SOURCE_SHA")
 if [ "$TARGET" = app ]; then
   # Ordinary builds use the exact source matrix. The one-time bridge carries the same six values
@@ -129,6 +129,9 @@ if [ "$TARGET" = app ]; then
       name="NEXT_PUBLIC_LEARNBOX_$flag"
       bridge_name="BASELINE_$flag"
       value="${!bridge_name:-}"
+      # The bridge image predates the support-ticket label and matrix entry. Its only safe
+      # historical interpretation is disabled; current release matrices must state a value.
+      if [ "$flag" = SUPPORT_TICKETS_ENABLED ] && [ -z "$value" ]; then value=false; fi
       if [ "$value" != true ] && [ "$value" != false ]; then
         echo "build-admin-image: $bridge_name in $BRIDGE_FILE must be true or false" >&2; exit 2
       fi
@@ -148,9 +151,12 @@ if [ "$TARGET" = app ]; then
     set -a; . "$config_file"; set +a
     for flag in $APP_FLAGS; do
       name="NEXT_PUBLIC_LEARNBOX_$flag"; value="${!name:-}"
+      # Archives from before this UI existed build as disabled; new source must carry the matrix key.
+      if [ "$flag" = SUPPORT_TICKETS_ENABLED ] && [ -z "$value" ]; then value=false; fi
       if [ "$value" != true ] && [ "$value" != false ]; then
         echo "build-admin-image: $name in $APP_RELEASE_CONFIG must be true or false" >&2; exit 2
       fi
+      printf -v "$name" '%s' "$value"
       FLAG_ARGS+=(--build-arg "$name=$value")
     done
   fi
@@ -237,6 +243,7 @@ release_label() {
     GOAL_UX_REMOVED) printf '%s' io.learnbox.release.goal_ux_removed ;;
     SESSION_EXPIRY_UX) printf '%s' io.learnbox.release.session_expiry_ux ;;
     BINARY_REVIEW_UI) printf '%s' io.learnbox.release.binary_review_ui ;;
+    SUPPORT_TICKETS_ENABLED) printf '%s' io.learnbox.release.support_tickets_ui ;;
   esac
 }
 
@@ -248,6 +255,9 @@ check_true_bundle_markers() {
   local image="$1" role="$2" bundle marker flag
   bundle="$(bundle_text "$image")"
   for flag in $APP_FLAGS; do
+    # This capability is introduced by the candidate, so legacy artifacts do not have a
+    # comparable client-bundle marker. Its inspectable artifact label is verified separately.
+    [ "$flag" = SUPPORT_TICKETS_ENABLED ] && continue
     case "$flag" in
       PROFILE_IDENTITY_ENABLED) marker='profileIdentityFlag:[A-Za-z_$]+="true"' ;;
       QUEUE_QUARANTINE) marker='\.\.\.\{quarantineKey:[A-Za-z_$]+\(t0\)\}' ;;
@@ -293,8 +303,22 @@ validate_release_baseline() {
       name="NEXT_PUBLIC_LEARNBOX_$flag"
       bridge_name="BASELINE_$flag"
       expected="${!name}"
-      check "bridge records $flag" "$expected" "${!bridge_name}"
-      check "candidate $flag matches bridge" "$expected" "$(image_label "$candidate_id" "$(release_label "$flag")")"
+      if [ "$flag" = SUPPORT_TICKETS_ENABLED ] && [ -z "${!bridge_name:-}" ]; then
+        # The v1.6.0 bridge predates this label. Its absence is an intentional legacy boundary;
+        # the candidate must still make the approved activation inspectable.
+        check "legacy bridge has no support-tickets UI label" absent \
+          "$([ -z "$(image_label "$baseline_id" "$(release_label "$flag")")" ] && echo absent || echo present)"
+        if [ "$expected" = true ]; then
+          check "candidate explicitly records support-tickets UI activation" true \
+            "$(image_label "$candidate_id" "$(release_label "$flag")")"
+        else
+          check "legacy candidate has no support-tickets UI label" absent \
+            "$([ -z "$(image_label "$candidate_id" "$(release_label "$flag")")" ] && echo absent || echo present)"
+        fi
+      else
+        check "bridge records $flag" "$expected" "${!bridge_name}"
+        check "candidate $flag matches bridge" "$expected" "$(image_label "$candidate_id" "$(release_label "$flag")")"
+      fi
     done
     check_true_bundle_markers "$baseline_id" baseline
     check_true_bundle_markers "$candidate_id" candidate
@@ -316,6 +340,18 @@ validate_release_baseline() {
     name="NEXT_PUBLIC_LEARNBOX_$flag"
     label="$(release_label "$flag")"
     expected="$(image_label "$baseline_id" "$label")"
+    if [ "$flag" = SUPPORT_TICKETS_ENABLED ] && [ -z "$expected" ]; then
+      check "legacy baseline has no support-tickets UI label" absent \
+        "$([ -z "$expected" ] && echo absent || echo present)"
+      if [ "${!name}" = true ]; then
+        check "candidate explicitly records support-tickets UI activation" true \
+          "$(image_label "$candidate_id" "$label")"
+      else
+        check "legacy candidate has no support-tickets UI label" absent \
+          "$([ -z "$(image_label "$candidate_id" "$label")" ] && echo absent || echo present)"
+      fi
+      continue
+    fi
     if [ "$expected" != true ] && [ "$expected" != false ]; then
       echo "FAIL running baseline lacks comparable $label; no bridge applies" >&2
       failures=$((failures + 1)); checks=$((checks + 1))
@@ -338,7 +374,13 @@ if [ "$TARGET" = app ]; then
   for flag in $APP_FLAGS; do
     label="$(release_label "$flag")"
     name="NEXT_PUBLIC_LEARNBOX_$flag"
-    check "release label $label matches the approved matrix" "${!name}" "$(inspect "{{index .Config.Labels \"$label\"}}")"
+    expected="${!name:-false}"
+    actual="$(inspect "{{index .Config.Labels \"$label\"}}")"
+    if [ "$flag" = SUPPORT_TICKETS_ENABLED ] && [ "$expected" = false ] && [ -z "$actual" ]; then
+      check "legacy image has no support-tickets UI label" absent absent
+    else
+      check "release label $label matches the approved matrix" "$expected" "$actual"
+    fi
   done
   # The reminder toggle only renders when the key is inlined into the client bundle.
   [ "$BRIDGE_MATRIX" = true ] || check "reminder push key is inlined in the client bundle" present \

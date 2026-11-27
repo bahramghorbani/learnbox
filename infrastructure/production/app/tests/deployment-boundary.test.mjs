@@ -89,7 +89,7 @@ test('every LB-B35 CP4/CP5/CP7 server flag is reachable in the image and default
 // declared here IS the released learner behaviour. v1.2.2 activates four (their server halves are
 // already live in Production); BINARY_REVIEW_UI is already live and is supplied explicitly by the
 // deploy build, so its repository default stays off rather than being relied upon.
-test('the v1.2.2 client flag matrix is wired as build args with the released values', () => {
+test('the client flag matrix is wired as build args with the released values', () => {
   const service = renderedCompose().services['learner-app'];
   const dockerfile = readFileSync(resolve(appInfrastructure, 'Dockerfile'), 'utf8');
   const released = {
@@ -98,6 +98,7 @@ test('the v1.2.2 client flag matrix is wired as build args with the released val
     NEXT_PUBLIC_LEARNBOX_GOAL_UX_REMOVED: 'true',
     NEXT_PUBLIC_LEARNBOX_SESSION_EXPIRY_UX: 'true',
     NEXT_PUBLIC_LEARNBOX_BINARY_REVIEW_UI: 'false',
+    NEXT_PUBLIC_LEARNBOX_SUPPORT_TICKETS_ENABLED: 'false',
   };
 
   for (const [flag, value] of Object.entries(released)) {
@@ -105,6 +106,26 @@ test('the v1.2.2 client flag matrix is wired as build args with the released val
     assert.match(dockerfile, new RegExp(`ARG ${flag}=${value}`));
     assert.match(dockerfile, new RegExp(`ENV ${flag}=\\$${flag}`));
   }
+});
+
+test('the support-ticket Profile entry needs both an explicit public build flag and a server gate', () => {
+  const service = renderedCompose().services['learner-app'];
+  const dockerfile = readFileSync(resolve(appInfrastructure, 'Dockerfile'), 'utf8');
+  const releaseMatrix = readFileSync(resolve(appInfrastructure, 'release-build.env'), 'utf8');
+  const buildScript = readFileSync(
+    resolve(repositoryRoot, 'infrastructure/production/admin/build-admin-image.sh'),
+    'utf8',
+  );
+
+  assert.equal(service.build.args.NEXT_PUBLIC_LEARNBOX_SUPPORT_TICKETS_ENABLED, 'false');
+  assert.equal(service.environment.WEB_LEARNER_SUPPORT_TICKETS_ENABLED, 'false');
+  assert.match(dockerfile, /ARG NEXT_PUBLIC_LEARNBOX_SUPPORT_TICKETS_ENABLED=false/);
+  assert.match(
+    dockerfile,
+    /ENV NEXT_PUBLIC_LEARNBOX_SUPPORT_TICKETS_ENABLED=\$NEXT_PUBLIC_LEARNBOX_SUPPORT_TICKETS_ENABLED/,
+  );
+  assert.match(releaseMatrix, /^NEXT_PUBLIC_LEARNBOX_SUPPORT_TICKETS_ENABLED=true$/m);
+  assert.match(buildScript, /SUPPORT_TICKETS_ENABLED/);
 });
 
 test('release builds carry the daily-reminder push key and the build refuses to run without it', () => {

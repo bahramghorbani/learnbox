@@ -74,6 +74,7 @@ if [ "$command" = image ] && [ "$1" = inspect ]; then
     *'io.learnbox.release.goal_ux_removed'*) echo true ;;
     *'io.learnbox.release.session_expiry_ux'*) echo true ;;
     *'io.learnbox.release.binary_review_ui'*) echo true ;;
+    *'io.learnbox.release.support_tickets_ui'*) [ "\${FAKE_SUPPORT_TICKETS_UI:-false}" = true ] && echo true ;;
     *'range .Config.Env'*) printf 'APP_SOURCE_SHA=%s\\nNODE_ENV=production\\n' "$source_sha" ;;
   esac
   exit 0
@@ -190,6 +191,7 @@ test('ordinary builds are explicitly development-only', () => {
       LEARNBOX_IMAGE_TARGET: 'app',
       FAKE_CANDIDATE_SOURCE: developmentSource,
       FAKE_PACKAGE_SHA: developmentPackageHash,
+      FAKE_SUPPORT_TICKETS_UI: 'true',
     },
     encoding: 'utf8',
   });
