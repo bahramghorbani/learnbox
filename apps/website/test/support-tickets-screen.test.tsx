@@ -149,4 +149,16 @@ describe('SupportTicketsScreen', () => {
     );
     expect(container?.textContent).toContain('پیام شما ثبت شد');
   });
+
+  it('keeps the ticket form available when this WebView cannot format Persian dates', async () => {
+    vi.stubGlobal('Intl', {
+      DateTimeFormat: () => {
+        throw new RangeError('unsupported locale');
+      },
+    });
+    await render();
+
+    expect(input('support-subject')).not.toBeNull();
+    expect(container?.textContent).toContain('2026-11-25 10:00:00 UTC');
+  });
 });

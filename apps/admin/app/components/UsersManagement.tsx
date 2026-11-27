@@ -395,8 +395,6 @@ export function UsersManagement() {
         </div>
       </div>
 
-      {supportTicketsEnabled ? <SupportTicketsPanel /> : null}
-
       <div className="card">
         <div className="toolbar">
           <span className="field grow">

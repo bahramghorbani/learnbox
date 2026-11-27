@@ -14,8 +14,12 @@ import { OperationsWorkspace } from './OperationsWorkspace';
 import { PresentationWorkspace } from './PresentationWorkspace';
 import { SettingsWorkspace } from './SettingsWorkspace';
 import { StoreListingsWorkspace } from './StoreListingsWorkspace';
+import { SupportTicketsPanel } from './SupportTicketsPanel';
 import { UsersManagement } from './UsersManagement';
 import { VisitsWorkspace } from './VisitsWorkspace';
+
+const supportTicketsEnabled =
+  process.env.NEXT_PUBLIC_LEARNBOX_ADMIN_SUPPORT_TICKETS_ENABLED === 'true';
 
 /**
  * Minimal hash router for the approved Admin navigation model. Milestone 1.1 made two destinations
@@ -51,6 +55,7 @@ import { VisitsWorkspace } from './VisitsWorkspace';
 type AdminRoute =
   | 'content'
   | 'store'
+  | 'support'
   | 'users'
   | 'learning'
   | 'ops'
@@ -67,6 +72,7 @@ function readRoute(hash: string): AdminRoute {
   const value = hash.replace(/^#/, '');
   if (value === 'content') return 'content';
   if (value === 'store') return 'store';
+  if (value === 'support') return 'support';
   if (value === 'users') return 'users';
   if (value === 'learning') return 'learning';
   if (value === 'ops') return 'ops';
@@ -92,6 +98,24 @@ export function AdminWorkspaceRouter() {
 
   if (route === 'content') return <ContentPacksWorkspace />;
   if (route === 'store') return <StoreListingsWorkspace />;
+  if (route === 'support' && supportTicketsEnabled) {
+    return (
+      <main className="admin-shell cp-workspace" id="support">
+        <AdminSidebar current="support" />
+        <section className="admin-workspace">
+          <section className="users-management" aria-labelledby="support-title">
+            <div className="page-head">
+              <div>
+                <h2 id="support-title">پشتیبانی</h2>
+                <p>تیکت‌های کاربران را بررسی، پاسخ و پس از رسیدگی ببندید.</p>
+              </div>
+            </div>
+            <SupportTicketsPanel />
+          </section>
+        </section>
+      </main>
+    );
+  }
   if (route === 'audit') return <AuditLogWorkspace />;
   if (route === 'ops') return <OperationsWorkspace />;
   if (route === 'settings') return <SettingsWorkspace />;

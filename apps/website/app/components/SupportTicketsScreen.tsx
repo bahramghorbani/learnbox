@@ -15,9 +15,14 @@ function ticketReference(ticketNumber: number) {
 }
 
 function ticketDate(value: string) {
-  return new Intl.DateTimeFormat('fa-IR', { dateStyle: 'medium', timeStyle: 'short' }).format(
-    new Date(value),
-  );
+  try {
+    return new Intl.DateTimeFormat('fa-IR', { dateStyle: 'medium', timeStyle: 'short' }).format(
+      new Date(value),
+    );
+  } catch {
+    // Older WebViews can lack the locale/date-style data; a ticket list must not crash the app.
+    return value.replace('T', ' ').replace(/\+00(?::00)?$/, ' UTC');
+  }
 }
 
 function newRequestId() {
