@@ -96,12 +96,17 @@ if [ "$TARGET" = admin ]; then
   fi
   admin_config_file="$BUILD_DIR/admin-release-build.env"
   git show "$SOURCE_SHA:$ADMIN_RELEASE_CONFIG" > "$admin_config_file"
-  unset NEXT_PUBLIC_LEARNBOX_ADMIN_PASSKEY_UI_ENABLED NEXT_PUBLIC_LEARNBOX_ADMIN_OTP_UI_ENABLED
+  unset NEXT_PUBLIC_LEARNBOX_ADMIN_PASSKEY_UI_ENABLED NEXT_PUBLIC_LEARNBOX_ADMIN_OTP_UI_ENABLED NEXT_PUBLIC_LEARNBOX_ADMIN_SUPPORT_TICKETS_ENABLED
   set -a; . "$admin_config_file"; set +a
   PASSKEY_UI="${NEXT_PUBLIC_LEARNBOX_ADMIN_PASSKEY_UI_ENABLED:-}"
   OTP_UI="${NEXT_PUBLIC_LEARNBOX_ADMIN_OTP_UI_ENABLED:-}"
+  TICKETS_UI="${NEXT_PUBLIC_LEARNBOX_ADMIN_SUPPORT_TICKETS_ENABLED:-}"
   if [ "$PASSKEY_UI" != true ] || [ "$OTP_UI" != true ]; then
     echo "build-admin-image: $ADMIN_RELEASE_CONFIG must keep Passkey and OTP UI exactly 'true'" >&2
+    exit 2
+  fi
+  if [ "$TICKETS_UI" != true ] && [ "$TICKETS_UI" != false ]; then
+    echo "build-admin-image: $ADMIN_RELEASE_CONFIG must set Admin support tickets UI to true or false" >&2
     exit 2
   fi
 fi
@@ -163,6 +168,7 @@ if [ "$TARGET" = app ]; then
 else
   FLAG_ARGS+=(--build-arg "NEXT_PUBLIC_LEARNBOX_ADMIN_PASSKEY_UI_ENABLED=$PASSKEY_UI")
   FLAG_ARGS+=(--build-arg "NEXT_PUBLIC_LEARNBOX_ADMIN_OTP_UI_ENABLED=$OTP_UI")
+  FLAG_ARGS+=(--build-arg "NEXT_PUBLIC_LEARNBOX_ADMIN_SUPPORT_TICKETS_ENABLED=$TICKETS_UI")
 fi
 
 IMAGE_TAG="learnbox-$TARGET:${SOURCE_SHA:0:7}-${TAG_SUFFIX}"

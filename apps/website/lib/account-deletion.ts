@@ -66,6 +66,9 @@ export const LEARNER_DATA_TABLES: readonly string[] = [
   'mobile_learner_sessions',
   'user_packs',
   'payment_logs',
+  // Learner-authored support content is live personal data. It is removed before the user row so
+  // the ticket foreign key cannot block a deletion or leave a retained account link behind.
+  'support_tickets',
 ];
 
 /**

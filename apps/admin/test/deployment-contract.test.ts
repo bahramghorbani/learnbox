@@ -44,8 +44,13 @@ describe('admin deployment contract', () => {
       expect(compose).toContain(`${flag}: \${${flag}:-false}`);
       expect(releaseBuild).toContain(`${flag}=true`);
     }
+    const ticketsFlag = 'NEXT_PUBLIC_LEARNBOX_ADMIN_SUPPORT_TICKETS_ENABLED';
+    expect(dockerfile).toContain(`ARG ${ticketsFlag}=false`);
+    expect(dockerfile).toContain(`ENV ${ticketsFlag}=$${ticketsFlag}`);
+    expect(compose).toContain(`${ticketsFlag}: \${${ticketsFlag}:-false}`);
+    expect(releaseBuild).toContain(`${ticketsFlag}=false`);
     expect(buildScript).toContain(
-      'unset NEXT_PUBLIC_LEARNBOX_ADMIN_PASSKEY_UI_ENABLED NEXT_PUBLIC_LEARNBOX_ADMIN_OTP_UI_ENABLED',
+      'unset NEXT_PUBLIC_LEARNBOX_ADMIN_PASSKEY_UI_ENABLED NEXT_PUBLIC_LEARNBOX_ADMIN_OTP_UI_ENABLED NEXT_PUBLIC_LEARNBOX_ADMIN_SUPPORT_TICKETS_ENABLED',
     );
     expect(buildScript).toContain('git show "$SOURCE_SHA:$ADMIN_RELEASE_CONFIG"');
     expect(buildScript).not.toContain(

@@ -97,6 +97,8 @@ const packsRead: Route = () => Response.json({ packs: [] });
 
 async function renderList(users: unknown[], total?: number) {
   stubFetch([
+    ['/api/support/users/tickets', () => Response.json({ tickets: [] })],
+    ['/api/support/tickets', () => Response.json({ tickets: [] })],
     ['/api/support/users/packs', packsRead],
     ['/api/support/users', listOf(users, total)],
   ]);
@@ -203,7 +205,10 @@ describe('UsersManagement presentation', () => {
   });
 
   it('reports a failed list read as a rose error state with a retry', async () => {
-    stubFetch([['/api/support/users', () => new Response('boom', { status: 500 })]]);
+    stubFetch([
+      ['/api/support/tickets', () => Response.json({ tickets: [] })],
+      ['/api/support/users', () => new Response('boom', { status: 500 })],
+    ]);
     await render();
 
     const block = container?.querySelector('.err-block');
