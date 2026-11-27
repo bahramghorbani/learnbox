@@ -11,6 +11,21 @@ continues that numbering under `learner/v…`. Admin Web's first release is `adm
 A deployment is not a release. A component may run in Production without appearing in this file;
 its deployment evidence belongs in `docs/release/` and its live facts in `PROJECT_STATE.md`.
 
+## learner/v1.7.0 — فعال‌سازی تیکت در پروفایل (released 2026-11-27)
+
+Release commit `7486a9641f8391a0c76e9323282e7e0129ead07e`, image
+`sha256:87a8dd24521dc79d5f6fee0fb85b4edbbf798c4a5936aae760517aa4fa313c53`.
+
+- کاربران واردشده اکنون از پروفایل، «پشتیبانی و تیکت‌ها» را می‌بینند و به درخواست‌ها و پاسخ‌های خود دسترسی دارند.
+- درخواست ناشناس همچنان `401` می‌گیرد و تاریخچهٔ تیکت هیچ کاربری عمومی نیست.
+
+## admin/v1.5.0 — فعال‌سازی رسیدگی به تیکت (released 2026-11-27)
+
+Release commit `7486a9641f8391a0c76e9323282e7e0129ead07e`, image
+`sha256:a906ab1b293c117948cba1a193596b78aebcea34b86cd874a46b6665b85aa49b`.
+
+- پنل رسیدگی به تیکت برای مدیران فعال است و همچنان نیازمند احراز هویت Admin است.
+
 ## learner/v1.6.0 — پشتیبانی تیکت (released 2026-11-27)
 
 Release commit `5145710026bc10497303745468af2cc491706d0d`, image

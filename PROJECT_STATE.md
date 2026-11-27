@@ -6,17 +6,17 @@
 
 **Web/PWA v1 is LIVE and CLOSED.** Public activation completed 2026-09-28.
 
-### Learner v1.6.0 and Admin v1.4.0 — deployed 2026-11-27
+### Learner v1.7.0 and Admin v1.5.0 — deployed 2026-11-27
 
-| Fact           | Value                                                                                                                                                                                                                                                      |
-| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Releases       | [`learner/v1.6.0`](https://github.com/bahramghorbani/learnbox/releases/tag/learner/v1.6.0) and [`admin/v1.4.0`](https://github.com/bahramghorbani/learnbox/releases/tag/admin/v1.4.0)                                                                      |
-| Source commit  | `5145710026bc10497303745468af2cc491706d0d` (PRs #595 and #596)                                                                                                                                                                                             |
-| Running images | Learner `sha256:c4e11bd8e6554c06a5ce16a73ae4f9ff7b2362ffe626f6e21ba5ec7a783f7595`; Admin `sha256:8b90b08bcade9322b98ef7e4f8dbb1856bb4c8a84afe6876e0673a441077a9e2`                                                                                         |
-| Verification   | Both containers healthy with `APP_SOURCE_SHA` equal to the release commit; all three public sites returned HTTP 200; the learner ticket endpoint denied anonymous access with `401 private, no-store`; the disabled Admin endpoint returned `404 no-store` |
-| Database       | Migration `0070_support_tickets` applied: 69 → 70 ledger rows, checksum verified; existing `users`, `cards`, `review_events`, and `purchase_events` counts unchanged                                                                                       |
-| Activation     | Learner and Admin ticket controls remain disabled by their dedicated gates; no test ticket or user data was created                                                                                                                                        |
-| Rollback       | Learner `learnbox-app:rollback-support-tickets-20261127T160000Z`; Admin `learnbox-admin:rollback-support-tickets-20261127T160000Z`; matching compose backups retained on the Iran host                                                                     |
+| Fact           | Value                                                                                                                                                                                                                                                           |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Releases       | [`learner/v1.7.0`](https://github.com/bahramghorbani/learnbox/releases/tag/learner/v1.7.0) and [`admin/v1.5.0`](https://github.com/bahramghorbani/learnbox/releases/tag/admin/v1.5.0)                                                                           |
+| Source commit  | `7486a9641f8391a0c76e9323282e7e0129ead07e` (PR #598)                                                                                                                                                                                                            |
+| Running images | Learner `sha256:87a8dd24521dc79d5f6fee0fb85b4edbbf798c4a5936aae760517aa4fa313c53`; Admin `sha256:a906ab1b293c117948cba1a193596b78aebcea34b86cd874a46b6665b85aa49b`                                                                                              |
+| Verification   | Both containers healthy with OCI source label equal to the release commit; learner root and health returned `200`; learner and Admin ticket endpoints denied anonymous access with `401`                                                                        |
+| Database       | Fresh logical archive `neondb-pre-support-tickets-20261127T194608Z.dump` (SHA-256 `71751b7e7dbbf56f0b60a7e9f45e89915db8ba409c96947a1146a48bff7b4d26`) restored successfully into a disposable PostgreSQL instance (62 tables); no migration or user data change |
+| Activation     | Learner Profile support entry and Admin ticket operations are enabled; no test ticket or user data was created                                                                                                                                                  |
+| Rollback       | Learner `learnbox-app:rollback-20261127T194958Z`; Admin `learnbox-admin:rollback-20261127T194958Z`; matching compose and environment backups retained on the Iran host                                                                                          |
 
 ### Landing v1.0.1 — deployed 2026-11-22
 
@@ -162,8 +162,8 @@ Products version independently; `docs/release/VERSIONING.md` is the authoritativ
 
 | Product     | Version on `main` | Tag namespace    | Latest release / store state                                                    |
 | ----------- | ----------------- | ---------------- | ------------------------------------------------------------------------------- |
-| Learner PWA | `1.6.0`           | `learner/vX.Y.Z` | `learner/v1.6.0`; Production image `sha256:c4e11bd…`, healthy                   |
-| Admin Web   | `1.4.0`           | `admin/vX.Y.Z`   | `admin/v1.4.0`; Production image `sha256:8b90b08b…`, healthy                    |
+| Learner PWA | `1.7.0`           | `learner/vX.Y.Z` | `learner/v1.7.0`; Production image `sha256:87a8dd24…`, healthy                  |
+| Admin Web   | `1.5.0`           | `admin/vX.Y.Z`   | `admin/v1.5.0`; Production image `sha256:a906ab1b…`, healthy                    |
 | Landing     | `1.0.1`           | `landing/vX.Y.Z` | `landing/v1.0.1`; Production image `sha256:e7f7bcea…`, healthy                  |
 | Android     | `0.1.2+3`         | `android/vX.Y.Z` | `android/v0.1.2`; live on Myket, disabled on Café Bazaar (Play Protect) → 0.1.1 |
 | iOS         | `0.1.1+2`         | `ios/vX.Y.Z`     | `ios/v0.1.1`; live on Sibapp                                                    |
