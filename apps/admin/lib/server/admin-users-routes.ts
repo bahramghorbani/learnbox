@@ -27,7 +27,7 @@ type UsersDependencies<TMethod extends keyof PostgresAdminUsersStore> = {
   now?: () => Date;
 };
 
-function notFound() {
+export function notFound() {
   return new Response('Not found', { status: 404, headers: { 'Cache-Control': 'no-store' } });
 }
 
@@ -39,7 +39,7 @@ function genericInvalid() {
   return new Response('Invalid request', { status: 400, headers: { 'Cache-Control': 'no-store' } });
 }
 
-function unavailable() {
+export function unavailable() {
   return new Response('Support data unavailable', {
     status: 503,
     headers: { 'Cache-Control': 'no-store' },
@@ -47,7 +47,7 @@ function unavailable() {
 }
 
 /** Support data is personal data: never cached, never stored by an intermediary. */
-function json(data: unknown, init?: ResponseInit) {
+export function json(data: unknown, init?: ResponseInit) {
   return new Response(JSON.stringify(data), {
     ...init,
     headers: {
@@ -97,7 +97,7 @@ function parseStatusChange(body: Record<string, unknown>): ParsedStatusChange | 
  * and Phase 2 Store gates — suspending a learner's account is exactly as hard to trigger as
  * publishing content or changing what a pack costs.
  */
-async function authorizeMutation<TChange>(
+export async function authorizeMutation<TChange>(
   request: Request,
   dependencies: {
     enabled: boolean;

@@ -6,6 +6,8 @@ import { Pool } from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { PostgresAdminDashboardStore } from '../lib/server/postgres-admin-dashboard-store';
+import { PostgresAdminSupportTicketsStore } from '../lib/server/postgres-admin-support-tickets-store';
+import { createLearnerSupportTicket } from '../../website/lib/support-tickets-store';
 
 /**
  * P1 regression guard, same shape as `pack-metadata-role-grants-db.test.ts`: the REAL dashboard
@@ -28,6 +30,7 @@ const grantMigrations = [
   '0034_admin_pack_metadata_grants.sql',
   '0066_admin_online_learners_grant.sql',
   '0069_admin_unified_sales_grant.sql',
+  '0070_support_tickets.sql',
 ];
 
 const isDenied = (error: unknown) => (error as { code?: string } | null)?.code === '42501';
@@ -40,6 +43,7 @@ suite('online-learner counter under the restricted learnbox_admin role', () => {
   let root: Pool;
   let owner: Pool;
   let restricted: Pool;
+  let app: Pool;
 
   beforeAll(async () => {
     root = new Pool({ connectionString: url, max: 1 });
@@ -73,7 +77,7 @@ suite('online-learner counter under the restricted learnbox_admin role', () => {
       [actorUserId, onlineLearnerId, staleLearnerId],
     );
     await owner.query(
-      `INSERT INTO admin_role_assignments (user_id, role) VALUES ($1, 'content_reviewer')`,
+      `INSERT INTO admin_role_assignments (user_id, role) VALUES ($1, 'content_reviewer'), ($1, 'super_admin')`,
       [actorUserId],
     );
     // One session used 5 minutes ago (inside the 15-minute window), one used 2 hours ago
@@ -92,9 +96,14 @@ suite('online-learner counter under the restricted learnbox_admin role', () => {
     asAdmin.searchParams.set('options', '-c role=learnbox_admin');
     restricted = new Pool({ connectionString: asAdmin.toString(), max: 2 });
     restricted.on('error', () => undefined);
+    const asApp = new URL(scoped.toString());
+    asApp.searchParams.set('options', '-c role=learnbox_app');
+    app = new Pool({ connectionString: asApp.toString(), max: 2 });
+    app.on('error', () => undefined);
   });
 
   afterAll(async () => {
+    await app?.end().catch(() => undefined);
     await restricted?.end().catch(() => undefined);
     await owner?.end().catch(() => undefined);
     await root?.query(`DROP DATABASE IF EXISTS ${dbName} WITH (FORCE)`).catch(() => undefined);
@@ -160,5 +169,94 @@ suite('online-learner counter under the restricted learnbox_admin role', () => {
         (error) => (isDenied(error) ? 'denied' : `other:${String(error)}`),
       );
     expect(outcome).toBe('denied');
+  });
+
+  it('gives the learner runtime only ticket insert/select and the admin only ticket transition columns', async () => {
+    await expect(
+      app.query(
+        `INSERT INTO support_tickets (user_id, request_id, subject, message)
+         VALUES ($1, 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'ورود', 'لطفاً حساب من را بررسی کنید.')`,
+        [onlineLearnerId],
+      ),
+    ).resolves.toBeDefined();
+    await expect(
+      restricted.query('SELECT ticket_number, status FROM support_tickets'),
+    ).resolves.toBeDefined();
+
+    const appUpdate = await app
+      .query(`UPDATE support_tickets SET status = 'closed' WHERE false`)
+      .then(
+        () => 'allowed',
+        (error) => (isDenied(error) ? 'denied' : `other:${String(error)}`),
+      );
+    expect(appUpdate).toBe('denied');
+    const adminInsert = await restricted
+      .query(
+        `INSERT INTO support_tickets (user_id, request_id, subject, message) VALUES ($1, 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'ورود', 'بررسی کنید')`,
+        [onlineLearnerId],
+      )
+      .then(
+        () => 'allowed',
+        (error) => (isDenied(error) ? 'denied' : `other:${String(error)}`),
+      );
+    expect(adminInsert).toBe('denied');
+    const adminUserRewrite = await restricted
+      .query(`UPDATE support_tickets SET user_id = $1 WHERE false`, [staleLearnerId])
+      .then(
+        () => 'allowed',
+        (error) => (isDenied(error) ? 'denied' : `other:${String(error)}`),
+      );
+    expect(adminUserRewrite).toBe('denied');
+  });
+
+  it('uses the real stores for idempotent creation and one-way ticket transitions', async () => {
+    const learner = {
+      userId: onlineLearnerId,
+      requestId: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
+      subject: 'مشکل ورود',
+      message: 'لطفاً حساب من را بررسی کنید.',
+    };
+    const created = await createLearnerSupportTicket(app, learner);
+    const replayed = await createLearnerSupportTicket(app, learner);
+    expect(replayed.id).toBe(created.id);
+
+    const tickets = new PostgresAdminSupportTicketsStore(restricted);
+    await expect(
+      restricted.query('SELECT id, phone_e164, first_name, last_name FROM users WHERE id = $1', [
+        onlineLearnerId,
+      ]),
+    ).resolves.toBeDefined();
+    await expect(
+      tickets.mutate({
+        actorUserId,
+        idempotencyKey: 'answer-1',
+        mutation: { action: 'answer', ticketId: created.id, reply: 'بررسی شد.' },
+      }),
+    ).resolves.toMatchObject({ status: 'applied' });
+    await expect(
+      tickets.mutate({
+        actorUserId,
+        idempotencyKey: 'answer-1',
+        mutation: { action: 'answer', ticketId: created.id, reply: 'بررسی شد.' },
+      }),
+    ).resolves.toMatchObject({ status: 'idempotent' });
+    await expect(
+      tickets.mutate({
+        actorUserId,
+        idempotencyKey: 'close-1',
+        mutation: { action: 'close', ticketId: created.id },
+      }),
+    ).resolves.toMatchObject({ status: 'applied' });
+    const openTicket = await createLearnerSupportTicket(app, {
+      ...learner,
+      requestId: 'dddddddd-dddd-4ddd-8ddd-dddddddddddd',
+    });
+    await expect(
+      tickets.mutate({
+        actorUserId,
+        idempotencyKey: 'close-open',
+        mutation: { action: 'close', ticketId: openTicket.id },
+      }),
+    ).resolves.toMatchObject({ status: 'conflict' });
   });
 });

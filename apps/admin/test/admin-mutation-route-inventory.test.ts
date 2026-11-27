@@ -259,6 +259,12 @@ const INVENTORY: Record<string, Entry> = {
     category: 'delegated',
     guardIn: 'lib/server/admin-payments-routes.ts',
   },
+  // Support tickets can change status and write the support reply. POST delegates origin, session,
+  // CSRF, recent re-auth and idempotency to the shared Admin mutation helper.
+  'app/api/support/tickets/route.ts': {
+    category: 'delegated',
+    guardIn: 'lib/server/admin-users-routes.ts',
+  },
   // M3.1 — account suspension. POST delegates the full guard chain (Origin, session, CSRF, recent
   // re-auth, idempotency key, required reason) to the shared module, behind its own default-off
   // LEARNBOX_ADMIN_SUPPORT_ENABLED gate. It writes `users.status`, the canonical session cutoff and
@@ -313,6 +319,9 @@ const READ_ONLY: Record<string, 'hard-disabled' | 'session-layer'> = {
   // plus an operational role and sits behind LEARNBOX_ADMIN_SUPPORT_ENABLED. It reads the canonical
   // append-only trail and has no write companion — audit records are evidence, not editable rows.
   'app/api/support/audit/route.ts': 'session-layer',
+  // User-scoped support ticket reads are session-layer protected. The global list shares its file
+  // with the separately inventoried POST reply/close mutation and is therefore classified above.
+  'app/api/support/users/tickets/route.ts': 'session-layer',
   // M4.2 slide image: GET-only, so CSRF is not applicable; it requires a valid Admin session plus
   // super_admin and sits behind LEARNBOX_ADMIN_PRESENTATION_ENABLED. The caller names a SLIDE, not
   // an object key or a path, so the route cannot be walked to any other stored object, and the

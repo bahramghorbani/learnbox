@@ -1,6 +1,7 @@
 import type { Pool, PoolClient } from 'pg';
 
 import { summariseAuditMetadata, type AuditDetail } from './audit-metadata';
+import { hasAdminSupportRole } from './admin-support-role';
 
 /**
  * Canonical Admin support store for account status (Phase 3 / M3.1).
@@ -34,9 +35,6 @@ export type AccountStatus = 'active' | 'disabled';
 export function isAccountStatus(value: unknown): value is AccountStatus {
   return value === 'active' || value === 'disabled';
 }
-
-/** Account control is an owner-level capability, not a content one. */
-const allowedRoles = ['super_admin'] as const;
 
 export type AdminUserRow = {
   id: string;
@@ -228,14 +226,7 @@ export class PostgresAdminUsersStore {
   private static readonly listLimit = 100;
 
   private async hasRole(client: Queryable, actorUserId: string): Promise<boolean> {
-    const result = await client.query<{ ok: boolean }>(
-      `SELECT EXISTS (
-         SELECT 1 FROM admin_role_assignments
-          WHERE user_id = $1 AND role = ANY($2::admin_role[])
-       ) AS ok`,
-      [actorUserId, allowedRoles],
-    );
-    return result.rows[0]?.ok === true;
+    return hasAdminSupportRole(client, actorUserId);
   }
 
   private async readUser(client: Queryable, userId: string): Promise<AdminUserRow | undefined> {

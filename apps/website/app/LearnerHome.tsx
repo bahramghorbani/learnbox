@@ -30,6 +30,7 @@ import {
 } from '@learnbox/learning-engine';
 
 import { ProfileScreen } from './components/ProfileScreen';
+import { SupportTicketsScreen } from './components/SupportTicketsScreen';
 import { SettingsScreen } from './components/SettingsScreen';
 import type { AccountDeletionResult } from './components/DeleteAccountPanel';
 import { accountDeletionResultFromResponse } from '../lib/account-deletion-result';
@@ -114,6 +115,8 @@ const goalUxRemoved = process.env.NEXT_PUBLIC_LEARNBOX_GOAL_UX_REMOVED === 'true
 // "session ended, sign in again" notice with the number of unsent answers kept on this device.
 // Nothing is deleted. Direct process.env reference so Next inlines it at build time.
 const sessionExpiryUxEnabled = process.env.NEXT_PUBLIC_LEARNBOX_SESSION_EXPIRY_UX === 'true';
+// Support stays invisible until both the learner runtime and this public UI flag are deliberately enabled.
+const supportTicketsEnabled = process.env.NEXT_PUBLIC_LEARNBOX_SUPPORT_TICKETS_ENABLED === 'true';
 const baseReviewSyncStorageKey = 'learnbox:review-sync:v1:local-prototype';
 // Not account-scoped: it holds words saved before the learner had an account at all.
 const PENDING_SAVED_WORDS_KEY = 'learnbox:pending-saved-words:v1';
@@ -219,6 +222,7 @@ export function LearnerHome({
     | 'words'
     | 'store'
     | 'profile'
+    | 'support'
     | 'settings'
     | 'league'
   >('today');
@@ -1501,10 +1505,15 @@ export function LearnerHome({
         goalRowRef={profileGoalRowRef}
         settingsRowRef={profileSettingsRowRef}
         onChooseGoal={goalUxRemoved ? undefined : editLearningGoal}
+        supportTicketsAvailable={authenticated && isServerOtp && supportTicketsEnabled}
         onNavigate={(destination) => setScreen(destination)}
         onOpenSettings={openSettings}
       />
     );
+  }
+
+  if (screen === 'support' && authenticated && isServerOtp && supportTicketsEnabled) {
+    return <SupportTicketsScreen onBack={() => setScreen('profile')} />;
   }
 
   if (screen === 'settings') {

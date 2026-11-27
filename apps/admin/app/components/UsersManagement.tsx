@@ -6,6 +6,7 @@ import { CpModal } from './AdminModal';
 import { EmptyState, ErrorState, LoadingState } from './AdminStates';
 import { faDateTime } from './fa-dates';
 import { faNum } from './fa-digits';
+import { SupportTicketsPanel } from './SupportTicketsPanel';
 import {
   createIdempotencyKey,
   fetchWithStepUp,
@@ -14,6 +15,8 @@ import {
 } from './step-up-reauth';
 
 type AccountStatus = 'active' | 'disabled';
+const supportTicketsEnabled =
+  process.env.NEXT_PUBLIC_LEARNBOX_ADMIN_SUPPORT_TICKETS_ENABLED === 'true';
 
 type User = {
   id: string;
@@ -392,6 +395,8 @@ export function UsersManagement() {
         </div>
       </div>
 
+      {supportTicketsEnabled ? <SupportTicketsPanel /> : null}
+
       <div className="card">
         <div className="toolbar">
           <span className="field grow">
@@ -601,6 +606,8 @@ export function UsersManagement() {
               )}
             </div>
           </div>
+
+          {supportTicketsEnabled ? <SupportTicketsPanel userId={selected.id} /> : null}
 
           <section className="user-packs" aria-labelledby="user-packs-title">
             <div className="card-title" id="user-packs-title">

@@ -286,7 +286,7 @@ suite('deployed application version against the expanded schema', () => {
     // 0063 adds the Admin-only dictionary_editorial_entries staging table. 0064 adds
     // dictionary_saved_words (بخش واژگان: a learner's saved dictionary words). 0065 adds
     // admin_otp_challenges and admin_otp_request_events (phone+SMS.ir login, additive alongside
-    // the existing Passkey flow, nothing dropped or renamed).
-    expect(expandedTables.rows[0].n - deployedTables.rows[0].n).toBe(21);
+    // the existing Passkey flow, nothing dropped or renamed). 0070 adds support_tickets.
+    expect(expandedTables.rows[0].n - deployedTables.rows[0].n).toBe(22);
   });
 });

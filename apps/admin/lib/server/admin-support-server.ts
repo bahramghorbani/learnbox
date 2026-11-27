@@ -10,6 +10,8 @@ import {
   createAdminUserStatusRoute,
   createAdminUsersRoute,
 } from './admin-users-routes';
+import { createAdminTicketsRoute, createAdminUserTicketsRoute } from './admin-tickets-routes';
+import { PostgresAdminSupportTicketsStore } from './postgres-admin-support-tickets-store';
 import { PostgresAdminUsersStore } from './postgres-admin-users-store';
 import { PostgresOwnerAuthStore } from './postgres-owner-auth-store';
 
@@ -36,6 +38,7 @@ export function createAdminSupportServer(dependencies: {
       config,
       sessionStore: new PostgresOwnerAuthStore(pool),
       store: new PostgresAdminUsersStore(pool),
+      ticketsStore: new PostgresAdminSupportTicketsStore(pool),
       now: dependencies.now,
     };
     return {
@@ -45,6 +48,16 @@ export function createAdminSupportServer(dependencies: {
       userPacks: createAdminUserPacksRoute(shared),
       setPackEntitlement: createAdminUserPackEntitlementRoute(shared),
       auditLog: createAdminAuditLogRoute(shared),
+      tickets: createAdminTicketsRoute({
+        ...shared,
+        enabled: dependencies.environment.LEARNBOX_ADMIN_SUPPORT_TICKETS_ENABLED === 'true',
+        store: shared.ticketsStore,
+      }),
+      userTickets: createAdminUserTicketsRoute({
+        ...shared,
+        enabled: dependencies.environment.LEARNBOX_ADMIN_SUPPORT_TICKETS_ENABLED === 'true',
+        store: shared.ticketsStore,
+      }),
     };
   } catch {
     return { enabled: false as const };

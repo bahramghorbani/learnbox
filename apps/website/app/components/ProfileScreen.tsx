@@ -40,6 +40,7 @@ interface ProfileScreenProps {
   goalRowRef?: RefObject<HTMLButtonElement | null>;
   settingsRowRef?: RefObject<HTMLButtonElement | null>;
   onChooseGoal?: () => void;
+  supportTicketsAvailable?: boolean;
   onNavigate: (destination: LearnerDestination) => void;
   onOpenSettings: () => void;
   /** League rollout only: XP, level, badges and the leaderboard visibility switch. */
@@ -64,6 +65,7 @@ export function ProfileScreen({
   goalRowRef,
   settingsRowRef,
   onChooseGoal,
+  supportTicketsAvailable = false,
   onNavigate,
   onOpenSettings,
 }: ProfileScreenProps) {
@@ -189,6 +191,17 @@ export function ProfileScreen({
               ←
             </span>
           </button>
+          {supportTicketsAvailable ? (
+            <button className="profile-row" type="button" onClick={() => onNavigate('support')}>
+              <span className="profile-row-copy">
+                <strong>پشتیبانی و تیکت‌ها</strong>
+                <small>ثبت درخواست و مشاهدهٔ پاسخ واحد پشتیبانی</small>
+              </span>
+              <span className="profile-row-arrow" aria-hidden="true">
+                ←
+              </span>
+            </button>
+          ) : null}
           <a className="profile-row" href={privacyUrl} target="_blank" rel="noreferrer">
             <span className="profile-row-copy">
               <strong>حریم خصوصی</strong>

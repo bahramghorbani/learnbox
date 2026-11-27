@@ -114,6 +114,13 @@ suite('schema reconciliation 0022 (real Postgres)', () => {
   });
 
   it('real account deletion runs end to end on a migrations-only database', async () => {
+    // The ticket contains learner-authored support content. Prove the account-deletion path removes
+    // it before deleting the RESTRICT user foreign key, rather than relying on a schema cascade.
+    await pool.query(
+      `INSERT INTO support_tickets (user_id, request_id, subject, message)
+       VALUES ($1, 'cccccccc-cccc-4ccc-8ccc-cccccccccccc', 'Deletion test ticket', 'This support message must not outlive the account.')`,
+      [USER],
+    );
     const result = await deleteAccount(pool, {
       userId: USER,
       subjectHash: 'b'.repeat(64),
@@ -128,5 +135,10 @@ suite('schema reconciliation 0022 (real Postgres)', () => {
       USER,
     ]);
     expect(packs.rows[0].n).toBe(0);
+    const tickets = await pool.query(
+      `SELECT count(*)::int n FROM support_tickets WHERE user_id = $1`,
+      [USER],
+    );
+    expect(tickets.rows[0].n).toBe(0);
   });
 });

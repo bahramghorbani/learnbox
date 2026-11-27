@@ -56,6 +56,9 @@ describe('deletion plan ordering', () => {
       'mobile_learner_sessions',
       'user_packs',
       'payment_logs',
+      // A support ticket carries the learner's message and support reply, both of which are live
+      // personal data. Its RESTRICT foreign key must be cleared before the account row.
+      'support_tickets',
     ]);
   });
 
