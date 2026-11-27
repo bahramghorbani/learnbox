@@ -1,10 +1,22 @@
 # LearnBox stable project state
 
-**Last reviewed:** 2026-11-22 (Landing v1.0.1 production release)
+**Last reviewed:** 2026-11-27 (support-ticket production release)
 
 ## Release position
 
 **Web/PWA v1 is LIVE and CLOSED.** Public activation completed 2026-09-28.
+
+### Learner v1.6.0 and Admin v1.4.0 — deployed 2026-11-27
+
+| Fact           | Value                                                                                                                                                                                                                                                      |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Releases       | [`learner/v1.6.0`](https://github.com/bahramghorbani/learnbox/releases/tag/learner/v1.6.0) and [`admin/v1.4.0`](https://github.com/bahramghorbani/learnbox/releases/tag/admin/v1.4.0)                                                                      |
+| Source commit  | `5145710026bc10497303745468af2cc491706d0d` (PRs #595 and #596)                                                                                                                                                                                             |
+| Running images | Learner `sha256:c4e11bd8e6554c06a5ce16a73ae4f9ff7b2362ffe626f6e21ba5ec7a783f7595`; Admin `sha256:8b90b08bcade9322b98ef7e4f8dbb1856bb4c8a84afe6876e0673a441077a9e2`                                                                                         |
+| Verification   | Both containers healthy with `APP_SOURCE_SHA` equal to the release commit; all three public sites returned HTTP 200; the learner ticket endpoint denied anonymous access with `401 private, no-store`; the disabled Admin endpoint returned `404 no-store` |
+| Database       | Migration `0070_support_tickets` applied: 69 → 70 ledger rows, checksum verified; existing `users`, `cards`, `review_events`, and `purchase_events` counts unchanged                                                                                       |
+| Activation     | Learner and Admin ticket controls remain disabled by their dedicated gates; no test ticket or user data was created                                                                                                                                        |
+| Rollback       | Learner `learnbox-app:rollback-support-tickets-20261127T160000Z`; Admin `learnbox-admin:rollback-support-tickets-20261127T160000Z`; matching compose backups retained on the Iran host                                                                     |
 
 ### Landing v1.0.1 — deployed 2026-11-22
 
@@ -150,8 +162,8 @@ Products version independently; `docs/release/VERSIONING.md` is the authoritativ
 
 | Product     | Version on `main` | Tag namespace    | Latest release / store state                                                    |
 | ----------- | ----------------- | ---------------- | ------------------------------------------------------------------------------- |
-| Learner PWA | `1.5.0`           | `learner/vX.Y.Z` | `learner/v1.5.0`                                                                |
-| Admin Web   | `1.2.0`           | `admin/vX.Y.Z`   | `admin/v1.2.0`; Production image `sha256:f2496b16…`, healthy                    |
+| Learner PWA | `1.6.0`           | `learner/vX.Y.Z` | `learner/v1.6.0`; Production image `sha256:c4e11bd…`, healthy                   |
+| Admin Web   | `1.4.0`           | `admin/vX.Y.Z`   | `admin/v1.4.0`; Production image `sha256:8b90b08b…`, healthy                    |
 | Landing     | `1.0.1`           | `landing/vX.Y.Z` | `landing/v1.0.1`; Production image `sha256:e7f7bcea…`, healthy                  |
 | Android     | `0.1.2+3`         | `android/vX.Y.Z` | `android/v0.1.2`; live on Myket, disabled on Café Bazaar (Play Protect) → 0.1.1 |
 | iOS         | `0.1.1+2`         | `ios/vX.Y.Z`     | `ios/v0.1.1`; live on Sibapp                                                    |

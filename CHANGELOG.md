@@ -11,6 +11,23 @@ continues that numbering under `learner/v…`. Admin Web's first release is `adm
 A deployment is not a release. A component may run in Production without appearing in this file;
 its deployment evidence belongs in `docs/release/` and its live facts in `PROJECT_STATE.md`.
 
+## learner/v1.6.0 — پشتیبانی تیکت (released 2026-11-27)
+
+Release commit `5145710026bc10497303745468af2cc491706d0d`, image
+`sha256:c4e11bd8e6554c06a5ce16a73ae4f9ff7b2362ffe626f6e21ba5ec7a783f7595`.
+
+- زیرساخت تیکت پشتیبانی برای حساب کاربر، با ارسال مقاوم در برابر تلاش دوباره و تاریخچهٔ هر کاربر اضافه شد.
+- مهاجرت `0070_support_tickets` افزایشی است و به داده‌های قبلی دست نمی‌زند.
+- فعال‌سازی رابط تیکت کاربر جداگانه انجام می‌شود؛ این انتشار آن را خودکار روشن نکرده است.
+
+## admin/v1.4.0 — رسیدگی به تیکت پشتیبانی (released 2026-11-27)
+
+Release commit `5145710026bc10497303745468af2cc491706d0d`, image
+`sha256:8b90b08bcade9322b98ef7e4f8dbb1856bb4c8a84afe6876e0673a441077a9e2`.
+
+- پنل مدیریت، APIهای پاسخ و بستن تیکت را دارد؛ دسترسی آن به‌صورت مستقل و پیش‌فرض خاموش است.
+- محدودیت‌های دسترسی دیتابیس فقط خواندن/ثبت را به اپ کاربر و فقط پاسخ‌گویی لازم را به پنل مدیریت می‌دهند.
+
 ## landing/v1.0.1 — نمایش کامل واژه‌های بلند دیکشنری (released 2026-11-22)
 
 Release commit `8195c4027374b6fcf00d09de1806e2b8dcebce8a`, image
