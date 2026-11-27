@@ -11,6 +11,15 @@ continues that numbering under `learner/v…`. Admin Web's first release is `adm
 A deployment is not a release. A component may run in Production without appearing in this file;
 its deployment evidence belongs in `docs/release/` and its live facts in `PROJECT_STATE.md`.
 
+## learner/v1.7.1 — اصلاح فرم و تأیید تیکت (released 2026-11-27)
+
+Release commit `e8bd620051758b2dc7d9fbc62ec3c477f27b3d48`, image
+`sha256:52df34a6b35d38291f8f6bfc5d3dbbbd652d03251b3d3df820784451d2e80958`.
+
+- فیلدهای عنوان و پیام در موبایل تمام‌عرض، راست‌چین و دارای focus واضح هستند.
+- پس از ثبت موفق، پیام تأیید و دکمهٔ «بازگشت به صفحه اصلی» نمایش داده می‌شود.
+- مرورگرهایی که `crypto.randomUUID()` ندارند، شناسهٔ idempotency معتبر می‌سازند.
+
 ## learner/v1.7.0 — فعال‌سازی تیکت در پروفایل (released 2026-11-27)
 
 Release commit `7486a9641f8391a0c76e9323282e7e0129ead07e`, image

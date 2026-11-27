@@ -6,6 +6,17 @@
 
 **Web/PWA v1 is LIVE and CLOSED.** Public activation completed 2026-09-28.
 
+### Learner v1.7.1 — deployed 2026-11-27
+
+| Fact          | Value                                                                                                                                                                                                           |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Release       | [`learner/v1.7.1`](https://github.com/bahramghorbani/learnbox/releases/tag/learner/v1.7.1)                                                                                                                      |
+| Source commit | `e8bd620051758b2dc7d9fbc62ec3c477f27b3d48` (PR #600)                                                                                                                                                            |
+| Running image | Learner `sha256:52df34a6b35d38291f8f6bfc5d3dbbbd652d03251b3d3df820784451d2e80958`                                                                                                                               |
+| Verification  | Container healthy with OCI source label equal to the release commit; learner root and health returned `200`; ticket endpoint denied anonymous access with `401`; deployed bundle contains the confirmation copy |
+| Activation    | Learner Profile support entry stays enabled; ticket form is mobile-safe and submission displays its explicit confirmation screen; no test ticket or user data was created                                       |
+| Rollback      | Learner `learnbox-app:rollback-support-ticket-form-20261127T204215Z`; matching compose backup retained on the Iran host                                                                                         |
+
 ### Learner v1.7.0 and Admin v1.5.0 — deployed 2026-11-27
 
 | Fact           | Value                                                                                                                                                                                                                                                           |
@@ -162,7 +173,7 @@ Products version independently; `docs/release/VERSIONING.md` is the authoritativ
 
 | Product     | Version on `main` | Tag namespace    | Latest release / store state                                                    |
 | ----------- | ----------------- | ---------------- | ------------------------------------------------------------------------------- |
-| Learner PWA | `1.7.0`           | `learner/vX.Y.Z` | `learner/v1.7.0`; Production image `sha256:87a8dd24…`, healthy                  |
+| Learner PWA | `1.7.1`           | `learner/vX.Y.Z` | `learner/v1.7.1`; Production image `sha256:52df34a6…`, healthy                  |
 | Admin Web   | `1.5.0`           | `admin/vX.Y.Z`   | `admin/v1.5.0`; Production image `sha256:a906ab1b…`, healthy                    |
 | Landing     | `1.0.1`           | `landing/vX.Y.Z` | `landing/v1.0.1`; Production image `sha256:e7f7bcea…`, healthy                  |
 | Android     | `0.1.2+3`         | `android/vX.Y.Z` | `android/v0.1.2`; live on Myket, disabled on Café Bazaar (Play Protect) → 0.1.1 |
