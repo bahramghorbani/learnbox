@@ -22,8 +22,8 @@ another.
 
 | Product                           | Authoritative version source                                                                    | Tag namespace    | Published releases so far                                      |
 | --------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------- | -------------------------------------------------------------- |
-| Learner PWA (`apps/website`)      | `apps/website/package.json` → `version`                                                         | `learner/vX.Y.Z` | `learner/v1.2.2` … `learner/v1.5.0` (legacy `v1.0.0`–`v1.2.1`) |
-| Admin Web (`apps/admin`)          | `apps/admin/package.json` → `version`                                                           | `admin/vX.Y.Z`   | `admin/v1.0.0`, `admin/v1.1.0`, `admin/v1.2.0`                 |
+| Learner PWA (`apps/website`)      | `apps/website/package.json` → `version`                                                         | `learner/vX.Y.Z` | `learner/v1.2.2` … `learner/v1.6.0` (legacy `v1.0.0`–`v1.2.1`) |
+| Admin Web (`apps/admin`)          | `apps/admin/package.json` → `version`                                                           | `admin/vX.Y.Z`   | `admin/v1.0.0` … `admin/v1.4.0`                                |
 | Android (`apps/android`)          | `apps/android/app/build.gradle.kts` → `versionName` / `versionCode`                             | `android/vX.Y.Z` | `android/v0.1.1`, `android/v0.1.2`                             |
 | iOS (`apps/ios`)                  | `apps/ios/LearnBox.xcodeproj/project.pbxproj` → `MARKETING_VERSION` / `CURRENT_PROJECT_VERSION` | `ios/vX.Y.Z`     | `ios/v0.1.1`                                                   |
 | Landing (`apps/learnbox-website`) | `apps/learnbox-website/package.json` → `version`                                                | `landing/vX.Y.Z` | `landing/v1.0.1`                                               |
