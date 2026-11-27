@@ -48,7 +48,7 @@ describe('admin deployment contract', () => {
     expect(dockerfile).toContain(`ARG ${ticketsFlag}=false`);
     expect(dockerfile).toContain(`ENV ${ticketsFlag}=$${ticketsFlag}`);
     expect(compose).toContain(`${ticketsFlag}: \${${ticketsFlag}:-false}`);
-    expect(releaseBuild).toContain(`${ticketsFlag}=false`);
+    expect(releaseBuild).toContain(`${ticketsFlag}=true`);
     expect(buildScript).toContain(
       'unset NEXT_PUBLIC_LEARNBOX_ADMIN_PASSKEY_UI_ENABLED NEXT_PUBLIC_LEARNBOX_ADMIN_OTP_UI_ENABLED NEXT_PUBLIC_LEARNBOX_ADMIN_SUPPORT_TICKETS_ENABLED',
     );

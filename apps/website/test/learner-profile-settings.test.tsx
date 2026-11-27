@@ -50,6 +50,16 @@ describe('ProfileScreen', () => {
     vi.useRealTimers();
   });
 
+  it('shows the support-ticket entry in Profile only when the authenticated capability is available', async () => {
+    rendered = await renderProfile({ supportTicketsAvailable: true });
+    expect(rendered.text()).toContain('پشتیبانی و تیکت‌ها');
+    expect(rendered.text()).toContain('ثبت درخواست و مشاهدهٔ پاسخ واحد پشتیبانی');
+
+    await rendered.unmount();
+    rendered = await renderProfile({ supportTicketsAvailable: false });
+    expect(rendered.text()).not.toContain('پشتیبانی و تیکت‌ها');
+  });
+
   it('shows the neutral account label and the real device-local learning goal', async () => {
     rendered = await renderProfile({ goal: 'travel', pendingReviewCount: 0 });
 
@@ -799,6 +809,7 @@ type ProfileScreenProps = {
   onNavigate?: () => void;
   onOpenSettings?: () => void;
   pendingReviewCount?: number;
+  supportTicketsAvailable?: boolean;
   identity?:
     | { status: 'loading' }
     | { status: 'ok'; maskedPhone: string }

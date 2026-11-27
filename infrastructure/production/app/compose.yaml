@@ -14,6 +14,9 @@ services:
         NEXT_PUBLIC_LEARNBOX_SESSION_EXPIRY_UX: ${NEXT_PUBLIC_LEARNBOX_SESSION_EXPIRY_UX:-true}
         # Live in Production since CP13; the deploy build must pass it explicitly (see Dockerfile).
         NEXT_PUBLIC_LEARNBOX_BINARY_REVIEW_UI: ${NEXT_PUBLIC_LEARNBOX_BINARY_REVIEW_UI:-false}
+        # The Profile support entry is compiled into the client artifact; runtime configuration
+        # alone cannot make it visible.
+        NEXT_PUBLIC_LEARNBOX_SUPPORT_TICKETS_ENABLED: ${NEXT_PUBLIC_LEARNBOX_SUPPORT_TICKETS_ENABLED:-false}
         # LB-B19: public half of the Push VAPID keypair. Not a secret; the matching private key
         # lives only with the notification-worker service.
         NEXT_PUBLIC_VAPID_PUBLIC_KEY: ${NEXT_PUBLIC_VAPID_PUBLIC_KEY:-}
@@ -46,6 +49,8 @@ services:
       LEARNBOX_TODAY_WORKLOAD: ${LEARNBOX_TODAY_WORKLOAD:-false}
       # LB-B35 CP7: GR-1.8 scheduler. Default off; REQUIRES migration 0023 (fails closed without it).
       LEARNBOX_SCHEDULER_V2: ${LEARNBOX_SCHEDULER_V2:-false}
+      # Paired with the public build flag above. The API remains closed unless both gates are on.
+      WEB_LEARNER_SUPPORT_TICKETS_ENABLED: ${WEB_LEARNER_SUPPORT_TICKETS_ENABLED:-false}
     healthcheck:
       test:
         [

@@ -55,6 +55,9 @@ ARG NEXT_PUBLIC_LEARNBOX_SESSION_EXPIRY_UX=true
 # since CP13/D-FV-1: the deploy build passes =true explicitly, so this default must NOT be relied
 # on — a build that omits the arg would ship four grades again. Left unchanged by v1.2.2.
 ARG NEXT_PUBLIC_LEARNBOX_BINARY_REVIEW_UI=false
+# Support tickets are intentionally exposed from the authenticated Profile screen only. Like the
+# other public flags, this must be set while building: a runtime variable cannot reveal it later.
+ARG NEXT_PUBLIC_LEARNBOX_SUPPORT_TICKETS_ENABLED=false
 # LB-B19: the public VAPID key the browser needs to create a Push subscription. Not a secret —
 # only the matching private key (held by the notification-worker service, never shipped here)
 # can actually send a push with it.
@@ -64,6 +67,7 @@ ENV NEXT_PUBLIC_LEARNBOX_GOAL_UX_REMOVED=$NEXT_PUBLIC_LEARNBOX_GOAL_UX_REMOVED
 ENV NEXT_PUBLIC_LEARNBOX_SESSION_EXPIRY_UX=$NEXT_PUBLIC_LEARNBOX_SESSION_EXPIRY_UX
 ENV NEXT_PUBLIC_LEARNBOX_SERVER_SESSION_PLAN=$NEXT_PUBLIC_LEARNBOX_SERVER_SESSION_PLAN
 ENV NEXT_PUBLIC_LEARNBOX_BINARY_REVIEW_UI=$NEXT_PUBLIC_LEARNBOX_BINARY_REVIEW_UI
+ENV NEXT_PUBLIC_LEARNBOX_SUPPORT_TICKETS_ENABLED=$NEXT_PUBLIC_LEARNBOX_SUPPORT_TICKETS_ENABLED
 ENV NEXT_PUBLIC_VAPID_PUBLIC_KEY=$NEXT_PUBLIC_VAPID_PUBLIC_KEY
 
 RUN pnpm --filter @learnbox/website build
@@ -88,6 +92,7 @@ ARG NEXT_PUBLIC_LEARNBOX_SERVER_SESSION_PLAN
 ARG NEXT_PUBLIC_LEARNBOX_GOAL_UX_REMOVED
 ARG NEXT_PUBLIC_LEARNBOX_SESSION_EXPIRY_UX
 ARG NEXT_PUBLIC_LEARNBOX_BINARY_REVIEW_UI
+ARG NEXT_PUBLIC_LEARNBOX_SUPPORT_TICKETS_ENABLED
 LABEL org.opencontainers.image.revision="${APP_SOURCE_SHA}"
 LABEL org.opencontainers.image.title="learnbox-app"
 # Public build-time configuration is artifact identity. Keep it inspectable for the next release's
@@ -98,6 +103,7 @@ LABEL io.learnbox.release.server_session_plan="${NEXT_PUBLIC_LEARNBOX_SERVER_SES
 LABEL io.learnbox.release.goal_ux_removed="${NEXT_PUBLIC_LEARNBOX_GOAL_UX_REMOVED}"
 LABEL io.learnbox.release.session_expiry_ux="${NEXT_PUBLIC_LEARNBOX_SESSION_EXPIRY_UX}"
 LABEL io.learnbox.release.binary_review_ui="${NEXT_PUBLIC_LEARNBOX_BINARY_REVIEW_UI}"
+LABEL io.learnbox.release.support_tickets_ui="${NEXT_PUBLIC_LEARNBOX_SUPPORT_TICKETS_ENABLED}"
 ENV APP_SOURCE_SHA=${APP_SOURCE_SHA}
 
 RUN groupadd --system --gid 1001 nodejs \
