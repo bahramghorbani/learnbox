@@ -14,7 +14,10 @@ describe('Admin support tickets destination', () => {
 
   beforeEach(() => {
     vi.stubEnv('NEXT_PUBLIC_LEARNBOX_ADMIN_SUPPORT_TICKETS_ENABLED', 'true');
-    vi.stubGlobal('fetch', vi.fn(async () => Response.json({ tickets: [] })));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => Response.json({ tickets: [] })),
+    );
   });
 
   afterEach(async () => {
