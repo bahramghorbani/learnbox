@@ -20,13 +20,34 @@ function ticketDate(value: string) {
   );
 }
 
-export function SupportTicketsScreen({ onBack }: { onBack: () => void }) {
+function newRequestId() {
+  const cryptoApi = globalThis.crypto;
+  if (cryptoApi?.randomUUID) return cryptoApi.randomUUID();
+
+  const bytes = new Uint8Array(16);
+  if (cryptoApi?.getRandomValues) cryptoApi.getRandomValues(bytes);
+  else bytes.forEach((_, index) => (bytes[index] = Math.floor(Math.random() * 256)));
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  return [...bytes]
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('')
+    .replace(/^(........)(....)(....)(....)(............)$/, '$1-$2-$3-$4-$5');
+}
+
+export function SupportTicketsScreen({
+  onBack,
+  onDone,
+}: {
+  onBack: () => void;
+  onDone: () => void;
+}) {
   const [tickets, setTickets] = useState<LearnerSupportTicket[]>([]);
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [notice, setNotice] = useState<string | null>(null);
+  const [submittedTicket, setSubmittedTicket] = useState<LearnerSupportTicket | null>(null);
   const [error, setError] = useState<string | null>(null);
   const requestId = useRef<string | null>(null);
 
@@ -55,9 +76,8 @@ export function SupportTicketsScreen({ onBack }: { onBack: () => void }) {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSaving(true);
-    setNotice(null);
     setError(null);
-    requestId.current ??= crypto.randomUUID();
+    requestId.current ??= newRequestId();
     try {
       const response = await fetch('/api/learner/support/tickets', {
         method: 'POST',
@@ -75,12 +95,32 @@ export function SupportTicketsScreen({ onBack }: { onBack: () => void }) {
       setSubject('');
       setMessage('');
       requestId.current = null;
-      setNotice(`تیکت ${ticketReference(payload.ticket.ticketNumber)} ثبت شد.`);
+      setSubmittedTicket(payload.ticket);
     } catch {
       setError('ثبت تیکت ممکن نشد. لطفاً دوباره تلاش کنید.');
     } finally {
       setSaving(false);
     }
+  }
+
+  if (submittedTicket) {
+    return (
+      <main
+        className="app-shell profile-shell support-ticket-confirmation"
+        data-testid="support-ticket-confirmation"
+      >
+        <section className="profile-card" aria-labelledby="support-ticket-confirmation-title">
+          <h1 id="support-ticket-confirmation-title">پیام شما ثبت شد</h1>
+          <p>کارشناسان از همین صفحه پاسخ می‌دهند.</p>
+          <p className="profile-card-note" dir="ltr">
+            {ticketReference(submittedTicket.ticketNumber)}
+          </p>
+          <button className="primary-button" type="button" onClick={onDone}>
+            بازگشت به صفحه اصلی
+          </button>
+        </section>
+      </main>
+    );
   }
 
   return (
@@ -97,7 +137,7 @@ export function SupportTicketsScreen({ onBack }: { onBack: () => void }) {
       </section>
       <section className="profile-section" aria-labelledby="new-ticket-title">
         <h2 id="new-ticket-title">تیکت جدید</h2>
-        <form className="profile-card" onSubmit={submit}>
+        <form className="profile-card support-ticket-form" onSubmit={submit}>
           <label htmlFor="support-subject">عنوان</label>
           <input
             id="support-subject"
@@ -119,11 +159,6 @@ export function SupportTicketsScreen({ onBack }: { onBack: () => void }) {
             onChange={(event) => setMessage(event.target.value)}
             placeholder="موضوع را با جزئیات بنویسید."
           />
-          {notice ? (
-            <p className="profile-card-note" role="status">
-              {notice}
-            </p>
-          ) : null}
           {error ? (
             <p className="profile-card-note" role="alert">
               {error}

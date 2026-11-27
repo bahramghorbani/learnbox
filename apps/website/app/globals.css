@@ -2121,6 +2121,62 @@ p {
   background: var(--surface);
   box-shadow: 0 12px 28px #34426f09;
 }
+.support-ticket-form {
+  display: grid;
+  gap: 12px;
+}
+.support-ticket-form label {
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 700;
+}
+.support-ticket-form input,
+.support-ticket-form textarea {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  border: 1px solid #e5e3ec;
+  border-radius: 14px;
+  outline: none;
+  padding: 13px;
+  background: #fff;
+  color: var(--ink);
+  font: 400 16px/1.6 var(--persian-font);
+  text-align: right;
+}
+.support-ticket-form textarea {
+  min-height: 136px;
+  resize: vertical;
+}
+.support-ticket-form input:focus,
+.support-ticket-form textarea:focus {
+  border-color: #aeb9ff;
+  box-shadow: 0 0 0 4px #4d6bfe12;
+}
+.support-ticket-form .primary-button {
+  margin-top: 4px;
+  padding: 15px;
+  font-size: 17px;
+}
+.support-ticket-confirmation {
+  justify-content: center;
+}
+.support-ticket-confirmation .profile-card {
+  text-align: center;
+}
+.support-ticket-confirmation h1 {
+  margin-bottom: 12px;
+  font-size: clamp(30px, 8vw, 38px);
+}
+.support-ticket-confirmation p:not(.profile-card-note) {
+  color: var(--muted);
+  line-height: 1.9;
+}
+.support-ticket-confirmation .primary-button {
+  margin-top: 22px;
+  padding: 15px;
+  font-size: 17px;
+}
 .profile-account-name {
   display: block;
   font-size: 21px;

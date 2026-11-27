@@ -1513,7 +1513,9 @@ export function LearnerHome({
   }
 
   if (screen === 'support' && authenticated && isServerOtp && supportTicketsEnabled) {
-    return <SupportTicketsScreen onBack={() => setScreen('profile')} />;
+    return (
+      <SupportTicketsScreen onBack={() => setScreen('profile')} onDone={() => setScreen('today')} />
+    );
   }
 
   if (screen === 'settings') {

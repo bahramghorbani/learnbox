@@ -30,8 +30,10 @@ const createdTicket = {
 
 let container: HTMLElement | undefined;
 let root: ReturnType<typeof createRoot> | undefined;
+let onDone = vi.fn();
 
 beforeEach(() => {
+  onDone = vi.fn();
   vi.stubGlobal('React', { createElement, Fragment });
   (
     globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }
@@ -58,7 +60,7 @@ async function render() {
   document.body.append(container);
   root = createRoot(container);
   await act(async () => {
-    root?.render(createElement(SupportTicketsScreen, { onBack: vi.fn() }));
+    root?.render(createElement(SupportTicketsScreen, { onBack: vi.fn(), onDone }));
     await Promise.resolve();
   });
 }
@@ -116,6 +118,35 @@ describe('SupportTicketsScreen', () => {
       /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
     );
     expect(container?.textContent).toContain('TK1002');
-    expect(container?.textContent).toContain('ثبت شد');
+    expect(container?.textContent).toContain('پیام شما ثبت شد');
+    expect(container?.textContent).toContain('کارشناسان از همین صفحه پاسخ می‌دهند.');
+    const done = [...(container?.querySelectorAll('button') ?? [])].find(
+      (button) => button.textContent === 'بازگشت به صفحه اصلی',
+    );
+    await act(async () => done?.dispatchEvent(new MouseEvent('click', { bubbles: true })));
+    expect(onDone).toHaveBeenCalledOnce();
+  });
+
+  it('submits with a valid idempotency UUID when randomUUID is unavailable', async () => {
+    await render();
+    vi.stubGlobal('crypto', {
+      getRandomValues: (bytes: Uint8Array) => bytes.fill(0),
+    });
+    await act(async () => {
+      setValue(input('support-subject'), createdTicket.subject);
+      setValue(input('support-message'), createdTicket.message);
+    });
+    await act(async () => {
+      container
+        ?.querySelector('form')
+        ?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+      await Promise.resolve();
+    });
+
+    const [, init] = vi.mocked(fetch).mock.calls[1] ?? [];
+    expect(new Headers(init?.headers).get('idempotency-key')).toBe(
+      '00000000-0000-4000-8000-000000000000',
+    );
+    expect(container?.textContent).toContain('پیام شما ثبت شد');
   });
 });
