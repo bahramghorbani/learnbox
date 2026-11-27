@@ -7,6 +7,7 @@ type AdminIconName =
   | 'book'
   | 'dictionary'
   | 'store'
+  | 'support'
   | 'users'
   | 'chart'
   | 'image'
@@ -15,6 +16,9 @@ type AdminIconName =
   | 'settings'
   | 'visits'
   | 'collapse';
+
+const supportTicketsEnabled =
+  process.env.NEXT_PUBLIC_LEARNBOX_ADMIN_SUPPORT_TICKETS_ENABLED === 'true';
 
 /**
  * Navigation is the APPROVED, DESIGN FROZEN Admin prototype's nav, verbatim:
@@ -32,6 +36,9 @@ const navItems = [
   { label: 'محتوا و بسته‌ها', icon: 'book', route: 'content' },
   { label: 'واژه‌نامه', icon: 'dictionary', route: 'dictionary' },
   { label: 'فروشگاه', icon: 'store', route: 'store' },
+  ...(supportTicketsEnabled
+    ? ([{ label: 'پشتیبانی', icon: 'support', route: 'support' }] as const)
+    : []),
   { label: 'کاربران', icon: 'users', route: 'users' },
   { label: 'یادگیری', icon: 'chart', route: 'learning' },
   { label: 'نمایش اپ', icon: 'image', route: 'presentation' },
@@ -87,6 +94,14 @@ function AdminIcon({ name }: { name: AdminIconName }) {
           <path d="M3 7h18l-1 4.2a3 3 0 0 1-2.9 2.3H6.9A3 3 0 0 1 4 11.2z" />
           <path d="M5 13.5V21h14v-7.5" />
           <path d="M8 7V5a4 4 0 0 1 8 0v2" />
+        </svg>
+      );
+    case 'support':
+      return (
+        <svg {...common}>
+          <path d="M5 18.2V7.5A3.5 3.5 0 0 1 8.5 4h7A3.5 3.5 0 0 1 19 7.5v5A3.5 3.5 0 0 1 15.5 16H9z" />
+          <path d="M9 10h6M9 13h3" />
+          <path d="m9 16-4 2.2" />
         </svg>
       );
     case 'users':
