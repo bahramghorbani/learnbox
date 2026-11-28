@@ -36,7 +36,9 @@ const selection = `
 `;
 
 export type TicketMutation =
-  { action: 'answer'; ticketId: string; reply: string } | { action: 'close'; ticketId: string };
+  | { action: 'answer'; ticketId: string; reply: string }
+  | { action: 'close'; ticketId: string }
+  | { action: 'reopen'; ticketId: string };
 
 export class PostgresAdminSupportTicketsStore {
   static readonly listLimit = 100;
@@ -134,16 +136,25 @@ export class PostgresAdminSupportTicketsStore {
         await client.query('ROLLBACK');
         return { status: 'conflict' };
       }
+      if (input.mutation.action === 'reopen' && ticket.status !== 'closed') {
+        await client.query('ROLLBACK');
+        return { status: 'conflict' };
+      }
       const updated = await client.query<{ id: string }>(
         input.mutation.action === 'answer'
           ? `UPDATE support_tickets SET support_reply = $2, status = 'answered', updated_at = now(),
                 responded_at = now(), responded_by_user_id = $3::uuid
               WHERE id = $1::uuid RETURNING id`
-          : `UPDATE support_tickets SET status = 'closed', updated_at = now(), closed_at = now(),
-                closed_by_user_id = $2::uuid WHERE id = $1::uuid RETURNING id`,
+          : input.mutation.action === 'close'
+            ? `UPDATE support_tickets SET status = 'closed', updated_at = now(), closed_at = now(),
+                  closed_by_user_id = $2::uuid WHERE id = $1::uuid RETURNING id`
+            : `UPDATE support_tickets SET status = 'open', updated_at = now(), closed_at = NULL,
+                  closed_by_user_id = NULL WHERE id = $1::uuid RETURNING id`,
         input.mutation.action === 'answer'
           ? [ticket.id, input.mutation.reply, input.actorUserId]
-          : [ticket.id, input.actorUserId],
+          : input.mutation.action === 'close'
+            ? [ticket.id, input.actorUserId]
+            : [ticket.id],
       );
       if (updated.rowCount !== 1) throw new Error('ticket update lost');
       await client.query(
@@ -151,7 +162,11 @@ export class PostgresAdminSupportTicketsStore {
          VALUES ($1::uuid, $2, 'support_ticket', $3::uuid, $4)`,
         [
           input.actorUserId,
-          input.mutation.action === 'answer' ? 'support_ticket.answer' : 'support_ticket.close',
+          input.mutation.action === 'answer'
+            ? 'support_ticket.answer'
+            : input.mutation.action === 'close'
+              ? 'support_ticket.close'
+              : 'support_ticket.reopen',
           ticket.id,
           { ticket_number: ticket.ticketNumber, idempotency_key: input.idempotencyKey },
         ],

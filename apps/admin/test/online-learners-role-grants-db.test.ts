@@ -258,5 +258,12 @@ suite('online-learner counter under the restricted learnbox_admin role', () => {
         mutation: { action: 'close', ticketId: openTicket.id },
       }),
     ).resolves.toMatchObject({ status: 'conflict' });
+    await expect(
+      tickets.mutate({
+        actorUserId,
+        idempotencyKey: 'reopen-1',
+        mutation: { action: 'reopen', ticketId: created.id },
+      }),
+    ).resolves.toMatchObject({ status: 'applied', ticket: { status: 'open' } });
   });
 });

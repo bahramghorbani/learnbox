@@ -180,6 +180,14 @@ describe('Admin support ticket routes', () => {
       idempotencyKey: 'ticket-answer-1',
       mutation: { action: 'answer', ticketId, reply: 'مشکل بررسی شد.' },
     });
+
+    const reopen = await route.POST(post({ action: 'reopen', ticketId }));
+    expect(reopen.status).toBe(200);
+    expect(tickets.mutate).toHaveBeenLastCalledWith({
+      actorUserId,
+      idempotencyKey: 'ticket-answer-1',
+      mutation: { action: 'reopen', ticketId },
+    });
   });
 
   it('reads a selected learner ticket history through the same role gate', async () => {

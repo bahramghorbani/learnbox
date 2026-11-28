@@ -37,7 +37,9 @@ async function authorizeRead(request: Request, dependencies: Dependencies) {
 
 function parseMutation(body: Record<string, unknown>): TicketMutation | undefined {
   if (typeof body.ticketId !== 'string' || !uuidPattern.test(body.ticketId)) return undefined;
-  if (body.action === 'close') return { action: 'close', ticketId: body.ticketId };
+  if (body.action === 'close' || body.action === 'reopen') {
+    return { action: body.action, ticketId: body.ticketId };
+  }
   if (body.action !== 'answer' || typeof body.reply !== 'string') return undefined;
   const reply = body.reply.trim();
   if (reply.length < 1 || reply.length > 3000) return undefined;
