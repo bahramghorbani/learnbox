@@ -2052,6 +2052,162 @@ button {
   display: grid;
   gap: 14px;
 }
+/* Compact ticket rows keep large support queues scannable; message and reply stay one intentional
+   interaction deeper, so operators can scan identity, state and recency without losing context. */
+.support-ticket {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgb(30 20 60 / 0.03);
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+.support-ticket:hover,
+.support-ticket.is-expanded {
+  border-color: #d9cff8;
+  box-shadow: 0 5px 18px rgb(93 58 180 / 0.08);
+}
+.support-ticket-summary {
+  display: grid;
+  grid-template-columns: 86px minmax(0, 1fr) max-content 132px 18px;
+  align-items: center;
+  gap: 14px;
+  inline-size: 100%;
+  min-block-size: 72px;
+  padding: 13px 16px;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+.support-ticket-summary:hover {
+  background: #fdfcff;
+}
+.support-ticket-summary:focus-visible {
+  outline: 3px solid rgb(124 78 220 / 0.32);
+  outline-offset: -3px;
+}
+.support-ticket-reference {
+  color: var(--purple);
+  font-size: 12px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.support-ticket-primary {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+.support-ticket-primary strong {
+  overflow: hidden;
+  font-size: 13px;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.support-ticket-owner,
+.support-ticket-date {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 11.5px;
+  line-height: 1.5;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.support-ticket-status {
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+.support-ticket-status.is-open {
+  background: #fff4dd;
+  color: #9a6400;
+}
+.support-ticket-status.is-answered {
+  background: #efe9ff;
+  color: #6940c5;
+}
+.support-ticket-status.is-closed {
+  background: #e9f7ef;
+  color: #16734c;
+}
+.support-ticket-date {
+  font-variant-numeric: tabular-nums;
+}
+.support-ticket-chevron {
+  color: var(--purple);
+  font-size: 18px;
+  line-height: 1;
+}
+.support-ticket-detail {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border-block-start: 1px solid var(--line);
+  background: #fcfbff;
+}
+.support-ticket-message,
+.support-ticket-reply {
+  padding: 12px 14px;
+  border-radius: 10px;
+  line-height: 1.8;
+}
+.support-ticket-message {
+  background: #fff;
+  border: 1px solid #eeeaf7;
+}
+.support-ticket-reply {
+  background: #f3efff;
+  color: #38256f;
+}
+.support-ticket-kicker {
+  display: block;
+  margin-block-end: 5px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+.support-ticket-message p,
+.support-ticket-reply p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 760px) {
+  .support-ticket-summary {
+    grid-template-columns: 1fr max-content 18px;
+    gap: 8px 10px;
+    min-block-size: 78px;
+    padding: 12px;
+  }
+  .support-ticket-reference {
+    grid-column: 1 / 2;
+  }
+  .support-ticket-primary {
+    grid-row: 2;
+    grid-column: 1 / -1;
+  }
+  .support-ticket-status {
+    grid-column: 2;
+  }
+  .support-ticket-date {
+    display: none;
+  }
+  .support-ticket-chevron {
+    grid-column: 3;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .support-ticket {
+    transition: none;
+  }
+}
 /* The reference search control is a `.field` wrapper; the input itself carries no chrome. */
 .cp-workspace .field input {
   flex: 1;

@@ -79,6 +79,11 @@ async function mutate(
   }
 }
 
+function ticketOwner(ticket: Ticket) {
+  const name = `${ticket.userFirstName ?? ''} ${ticket.userLastName ?? ''}`.trim();
+  return name || 'کاربر بدون نام';
+}
+
 function TicketCard({
   ticket,
   onUpdated,
@@ -86,9 +91,11 @@ function TicketCard({
   ticket: Ticket;
   onUpdated: (ticket: Ticket) => void;
 }) {
+  const [expanded, setExpanded] = useState(false);
   const [reply, setReply] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const detailId = `ticket-detail-${ticket.id}`;
   async function apply(action: 'answer' | 'close' | 'reopen') {
     if (action === 'answer' && !reply.trim()) {
       setError('پاسخ را بنویسید.');
@@ -106,65 +113,90 @@ function TicketCard({
     onUpdated(result.ticket);
   }
   return (
-    <article className="card" style={{ marginTop: 12 }}>
-      <div className="card-title" dir="ltr">
-        {reference(ticket)} <span dir="rtl">— {labels[ticket.status]}</span>
-      </div>
-      <p className="t-sub">
-        کاربر:{' '}
-        {ticket.userFirstName || ticket.userLastName
-          ? `${ticket.userFirstName ?? ''} ${ticket.userLastName ?? ''}`.trim()
-          : 'بدون نام'}{' '}
-        <span dir="ltr">({ticket.userPhone})</span>
-      </p>
-      <strong>{ticket.subject}</strong>
-      <p>{ticket.message}</p>
-      <p className="t-sub">ثبت: {faDateTime(ticket.createdAt)}</p>
-      {ticket.supportReply ? (
-        <div className="user-status-explainer">
-          <strong>واحد پشتیبانی LearnBox</strong>
-          <p>{ticket.supportReply}</p>
+    <article className={`support-ticket ${expanded ? 'is-expanded' : ''}`}>
+      <button
+        type="button"
+        className="support-ticket-summary"
+        aria-expanded={expanded}
+        aria-controls={detailId}
+        aria-label={`${expanded ? 'بستن جزئیات' : 'نمایش جزئیات'} ${reference(ticket)}`}
+        onClick={() => setExpanded((value) => !value)}
+      >
+        <span className="support-ticket-reference" dir="ltr">
+          {reference(ticket)}
+        </span>
+        <span className="support-ticket-primary">
+          <strong>{ticket.subject}</strong>
+          <span className="support-ticket-owner">
+            {ticketOwner(ticket)} <span dir="ltr">· {ticket.userPhone}</span>
+          </span>
+        </span>
+        <span className={`support-ticket-status is-${ticket.status}`}>{labels[ticket.status]}</span>
+        <time className="support-ticket-date" dateTime={ticket.createdAt}>
+          {faDateTime(ticket.createdAt)}
+        </time>
+        <span className="support-ticket-chevron" aria-hidden="true">
+          {expanded ? '⌃' : '⌄'}
+        </span>
+      </button>
+      {expanded ? (
+        <div id={detailId} className="support-ticket-detail">
+          <div className="support-ticket-message">
+            <span className="support-ticket-kicker">پیام کاربر</span>
+            <p>{ticket.message}</p>
+          </div>
+          {ticket.supportReply ? (
+            <div className="support-ticket-reply">
+              <span className="support-ticket-kicker">پاسخ پشتیبانی</span>
+              <p>{ticket.supportReply}</p>
+            </div>
+          ) : null}
+          {error ? (
+            <p className="users-error" role="alert">
+              {error}
+            </p>
+          ) : null}
+          {ticket.status === 'open' ? (
+            <div className="user-status-form">
+              <label htmlFor={`ticket-reply-${ticket.id}`}>پاسخ واحد پشتیبانی</label>
+              <textarea
+                id={`ticket-reply-${ticket.id}`}
+                value={reply}
+                maxLength={3000}
+                rows={3}
+                onChange={(event) => setReply(event.target.value)}
+              />
+              <button
+                type="button"
+                className="btn primary"
+                disabled={saving || !reply.trim()}
+                onClick={() => void apply('answer')}
+              >
+                {saving ? 'در حال ثبت...' : 'ارسال پاسخ'}
+              </button>
+            </div>
+          ) : null}
+          {ticket.status === 'answered' ? (
+            <button
+              type="button"
+              className="btn"
+              disabled={saving}
+              onClick={() => void apply('close')}
+            >
+              {saving ? 'در حال ثبت...' : 'بستن تیکت'}
+            </button>
+          ) : null}
+          {ticket.status === 'closed' ? (
+            <button
+              type="button"
+              className="btn"
+              disabled={saving}
+              onClick={() => void apply('reopen')}
+            >
+              {saving ? 'در حال ثبت...' : 'بازگشایی تیکت'}
+            </button>
+          ) : null}
         </div>
-      ) : null}
-      {error ? (
-        <p className="users-error" role="alert">
-          {error}
-        </p>
-      ) : null}
-      {ticket.status === 'open' ? (
-        <div className="user-status-form">
-          <label htmlFor={`ticket-reply-${ticket.id}`}>پاسخ واحد پشتیبانی</label>
-          <textarea
-            id={`ticket-reply-${ticket.id}`}
-            value={reply}
-            maxLength={3000}
-            rows={3}
-            onChange={(event) => setReply(event.target.value)}
-          />
-          <button
-            type="button"
-            className="btn primary"
-            disabled={saving || !reply.trim()}
-            onClick={() => void apply('answer')}
-          >
-            {saving ? 'در حال ثبت...' : 'ارسال پاسخ'}
-          </button>
-        </div>
-      ) : null}
-      {ticket.status === 'answered' ? (
-        <button type="button" className="btn" disabled={saving} onClick={() => void apply('close')}>
-          {saving ? 'در حال ثبت...' : 'بستن تیکت'}
-        </button>
-      ) : null}
-      {ticket.status === 'closed' ? (
-        <button
-          type="button"
-          className="btn"
-          disabled={saving}
-          onClick={() => void apply('reopen')}
-        >
-          {saving ? 'در حال ثبت...' : 'بازگشایی تیکت'}
-        </button>
       ) : null}
     </article>
   );

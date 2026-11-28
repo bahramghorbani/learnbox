@@ -1,6 +1,6 @@
 {
   "name": "@learnbox/admin",
-  "version": "1.7.0",
+  "version": "1.7.1",
   "private": true,
   "scripts": {
     "build": "pnpm --filter @learnbox/content-models build && next build",
