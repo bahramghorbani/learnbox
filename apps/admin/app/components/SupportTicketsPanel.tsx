@@ -33,13 +33,20 @@ const labels: Record<TicketStatus, string> = {
   answered: 'پاسخ داده شده',
   closed: 'بسته شده',
 };
+type TicketFilter = 'all' | TicketStatus;
+const filterLabels: Record<TicketFilter, string> = {
+  all: 'همه',
+  open: 'باز',
+  answered: 'پاسخ داده شده',
+  closed: 'بسته',
+};
 const reference = (ticket: Ticket) => `TK${ticket.ticketNumber}`;
 
 type TicketMutationResult = { ok: true; ticket: Ticket } | { ok: false; message: string };
 
 async function mutate(
   ticket: Ticket,
-  action: 'answer' | 'close',
+  action: 'answer' | 'close' | 'reopen',
   reply?: string,
 ): Promise<TicketMutationResult> {
   const csrf = readCsrfToken();
@@ -82,7 +89,7 @@ function TicketCard({
   const [reply, setReply] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  async function apply(action: 'answer' | 'close') {
+  async function apply(action: 'answer' | 'close' | 'reopen') {
     if (action === 'answer' && !reply.trim()) {
       setError('پاسخ را بنویسید.');
       return;
@@ -103,6 +110,13 @@ function TicketCard({
       <div className="card-title" dir="ltr">
         {reference(ticket)} <span dir="rtl">— {labels[ticket.status]}</span>
       </div>
+      <p className="t-sub">
+        کاربر:{' '}
+        {ticket.userFirstName || ticket.userLastName
+          ? `${ticket.userFirstName ?? ''} ${ticket.userLastName ?? ''}`.trim()
+          : 'بدون نام'}{' '}
+        <span dir="ltr">({ticket.userPhone})</span>
+      </p>
       <strong>{ticket.subject}</strong>
       <p>{ticket.message}</p>
       <p className="t-sub">ثبت: {faDateTime(ticket.createdAt)}</p>
@@ -142,6 +156,16 @@ function TicketCard({
           {saving ? 'در حال ثبت...' : 'بستن تیکت'}
         </button>
       ) : null}
+      {ticket.status === 'closed' ? (
+        <button
+          type="button"
+          className="btn"
+          disabled={saving}
+          onClick={() => void apply('reopen')}
+        >
+          {saving ? 'در حال ثبت...' : 'بازگشایی تیکت'}
+        </button>
+      ) : null}
     </article>
   );
 }
@@ -149,20 +173,27 @@ function TicketCard({
 export function SupportTicketsPanel({ userId }: { userId?: string }) {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [query, setQuery] = useState('');
+  const [filter, setFilter] = useState<TicketFilter>('all');
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   async function load() {
     setLoading(true);
     setError(null);
     try {
+      const params = new URLSearchParams();
+      if (query.trim()) params.set('q', query.trim().toUpperCase());
+      if (filter !== 'all') params.set('status', filter);
+      const queryString = params.toString();
       const url = userId
         ? `/api/support/users/tickets?userId=${encodeURIComponent(userId)}`
-        : `/api/support/tickets?${new URLSearchParams(query.trim() ? { q: query.trim().toUpperCase() } : { status: 'open' })}`;
+        : `/api/support/tickets${queryString ? `?${queryString}` : ''}`;
       const response = await fetch(url, { credentials: 'same-origin', cache: 'no-store' });
       if (!response.ok) throw new Error('tickets');
-      const payload = (await response.json()) as { tickets?: unknown };
+      const payload = (await response.json()) as { tickets?: unknown; total?: unknown };
       if (!Array.isArray(payload.tickets)) throw new Error('invalid_tickets_response');
       setTickets(payload.tickets as Ticket[]);
+      setTotal(typeof payload.total === 'number' ? payload.total : payload.tickets.length);
     } catch {
       setError('دریافت تیکت‌ها ممکن نشد.');
     } finally {
@@ -171,25 +202,41 @@ export function SupportTicketsPanel({ userId }: { userId?: string }) {
   }
   useEffect(() => {
     void load();
-  }, [userId]);
+  }, [userId, filter]);
   const update = (updated: Ticket) =>
     setTickets((rows) => rows.map((row) => (row.id === updated.id ? updated : row)));
   return (
     <section className="user-packs" aria-label={userId ? 'تیکت‌های کاربر' : 'تیکت‌های پشتیبانی'}>
-      <div className="card-title">{userId ? 'تیکت‌های کاربر' : 'تیکت‌های باز پشتیبانی'}</div>
+      <div className="card-title">{userId ? 'تیکت‌های کاربر' : 'تیکت‌های پشتیبانی'}</div>
       {!userId ? (
-        <div className="toolbar">
-          <input
-            type="search"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="جستجو با TK1001"
-            aria-label="جستجوی شماره تیکت"
-          />
-          <button type="button" className="btn" onClick={() => void load()}>
-            جستجو
-          </button>
-        </div>
+        <>
+          <div className="toolbar" role="group" aria-label="فیلتر وضعیت تیکت‌ها">
+            {(Object.keys(filterLabels) as TicketFilter[]).map((value) => (
+              <button
+                key={value}
+                type="button"
+                className={filter === value ? 'btn primary' : 'btn'}
+                aria-pressed={filter === value}
+                onClick={() => setFilter(value)}
+              >
+                {filterLabels[value]}
+              </button>
+            ))}
+          </div>
+          <div className="toolbar">
+            <input
+              type="search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="جستجو با TK1001"
+              aria-label="جستجوی شماره تیکت"
+            />
+            <button type="button" className="btn" onClick={() => void load()}>
+              جستجو
+            </button>
+          </div>
+          {!loading ? <p className="t-sub">{total} تیکت یافت شد.</p> : null}
+        </>
       ) : null}
       {loading ? <LoadingState label="در حال بارگذاری تیکت‌ها..." /> : null}
       {error ? (

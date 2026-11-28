@@ -16,7 +16,28 @@ describe('Admin support tickets destination', () => {
     vi.stubEnv('NEXT_PUBLIC_LEARNBOX_ADMIN_SUPPORT_TICKETS_ENABLED', 'true');
     vi.stubGlobal(
       'fetch',
-      vi.fn(async () => Response.json({ tickets: [] })),
+      vi.fn(async () =>
+        Response.json({
+          total: 1,
+          tickets: [
+            {
+              id: '33333333-3333-4333-8333-333333333333',
+              ticketNumber: 1001,
+              userId: '22222222-2222-4222-8222-222222222222',
+              userPhone: '+989000000000',
+              userFirstName: 'سارا',
+              userLastName: 'رضایی',
+              subject: 'مشکل ورود',
+              message: 'کد ورود دریافت نمی‌شود.',
+              supportReply: null,
+              status: 'open',
+              createdAt: '2026-11-25T10:00:00.000Z',
+              respondedAt: null,
+              closedAt: null,
+            },
+          ],
+        }),
+      ),
     );
   });
 
@@ -48,8 +69,14 @@ describe('Admin support tickets destination', () => {
     );
     expect(entry?.getAttribute('href')).toBe('#support');
     expect(entry?.getAttribute('aria-current')).toBe('page');
-    expect(container.textContent).toContain('تیکت‌های باز پشتیبانی');
-    expect(fetch).toHaveBeenCalledWith('/api/support/tickets?status=open', {
+    expect(container.textContent).toContain('تیکت‌های پشتیبانی');
+    expect(container.textContent).toContain('همه');
+    expect(container.textContent).toContain('باز');
+    expect(container.textContent).toContain('بسته');
+    expect(container.textContent).toContain('TK1001');
+    expect(container.textContent).toContain('کاربر: سارا رضایی');
+    expect(container.textContent).toContain('+989000000000');
+    expect(fetch).toHaveBeenCalledWith('/api/support/tickets', {
       credentials: 'same-origin',
       cache: 'no-store',
     });
