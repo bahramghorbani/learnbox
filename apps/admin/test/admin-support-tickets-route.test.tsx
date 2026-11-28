@@ -74,8 +74,16 @@ describe('Admin support tickets destination', () => {
     expect(container.textContent).toContain('باز');
     expect(container.textContent).toContain('بسته');
     expect(container.textContent).toContain('TK1001');
-    expect(container.textContent).toContain('کاربر: سارا رضایی');
+    expect(container.textContent).toContain('سارا رضایی');
     expect(container.textContent).toContain('+989000000000');
+    expect(container.textContent).not.toContain('کد ورود دریافت نمی‌شود.');
+    const details = [...container.querySelectorAll('button')].find((button) =>
+      button.getAttribute('aria-label')?.includes('TK1001'),
+    );
+    await act(async () => details?.click());
+    expect(details?.getAttribute('aria-expanded')).toBe('true');
+    expect(container.textContent).toContain('پیام کاربر');
+    expect(container.textContent).toContain('کد ورود دریافت نمی‌شود.');
     expect(fetch).toHaveBeenCalledWith('/api/support/tickets', {
       credentials: 'same-origin',
       cache: 'no-store',
